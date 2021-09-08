@@ -2,7 +2,7 @@
  * @copyright Microsoft 2020
  */
 
-import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument, EventHelper, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument, isNullOrUndefined, attachEvent } from "@microsoft/applicationinsights-core-js";
 import { IAutoCaptureHandler, IPageActionOverrideValues, IClickAnalyticsConfiguration } from '../Interfaces/Datamodel'
 import { isRightClick, isLeftClick, isKeyboardEnter, isKeyboardSpace, isMiddleClick, isElementDnt } from '../common/Utils';
 import { ActionType } from '../Enums';
@@ -28,13 +28,13 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         if (win) {
             // IE9 onwards addEventListener is available, 'click' event captures mouse click. mousedown works on other browsers
             const event = (navigator.appVersion.indexOf('MSIE') !== -1) ? 'click' : 'mousedown';
-            EventHelper.Attach(win, event , (evt:any) => { this._processClick(evt); });
-            EventHelper.Attach(win, 'keyup' , (evt:any) => { this._processClick(evt); });
+            attachEvent(win, event , (evt:any) => { this._processClick(evt); });
+            attachEvent(win, 'keyup' , (evt:any) => { this._processClick(evt); });
         } else if (doc) {
             // IE8 and below doesn't have addEventListener so it will use attachEvent
             // attaching to window does not work in IE8
-            EventHelper.Attach(doc, 'onclick' , (evt:any) => { this._processClick(evt); });
-            EventHelper.Attach(doc, 'keyup' , (evt:any) => { this._processClick(evt); });
+            attachEvent(doc, 'click' , (evt:any) => { this._processClick(evt); });
+            attachEvent(doc, 'keyup' , (evt:any) => { this._processClick(evt); });
         }
     }
 

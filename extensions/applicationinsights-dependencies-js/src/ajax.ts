@@ -4,16 +4,15 @@
 import {
     RequestHeaders, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
-    IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes, IRequestContext
+    IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint
 } from '@microsoft/applicationinsights-common';
 import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys, ICustomProperties
+    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys, ICustomProperties, isXhrSupported, attachEvent
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord, IAjaxRecordResponse } from './ajaxRecord';
-import { EventHelper } from './ajaxUtils';
 import { Traceparent } from './TraceParent';
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -47,7 +46,7 @@ function _supportsFetch(): (input: RequestInfo, init?: RequestInit) => Promise<R
 function _supportsAjaxMonitoring(ajaxMonitorInstance:AjaxMonitor): boolean {
     let result = false;
 
-    if (typeof XMLHttpRequest !== strUndefined && !isNullOrUndefined(XMLHttpRequest)) {
+    if (isXhrSupported()) {
         let proto = XMLHttpRequest[strPrototype];
         result = !isNullOrUndefined(proto) &&
             !isNullOrUndefined(proto.open) && // eslint-disable-line security/detect-non-literal-fs-filename -- false positive
@@ -596,6 +595,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             (init ? init[DisabledPropertyName] === true : false);
                 }
 
+                // Also add extra check just in case the XHR or fetch objects where not decorated with the DisableProperty due to sealing or freezing
+                if (!isDisabled && theUrl && isInternalApplicationInsightsEndpoint(theUrl)) {
+                    isDisabled = true;
+                }
+
                 if (isDisabled) {
                     // Add the disabled url if not present
                     if (!_disabledUrls[theUrl]) {
@@ -644,7 +648,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
-                xhr[strAjaxData].xhrMonitoringState.stateChangeAttached = EventHelper.Attach(xhr, "readystatechange", () => {
+                xhr[strAjaxData].xhrMonitoringState.stateChangeAttached = attachEvent(xhr, "readystatechange", () => {
                     try {
                         if (xhr && xhr.readyState === 4 && _isMonitoredXhrInstance(xhr)) {
                             _onAjaxComplete(xhr);

@@ -3,20 +3,20 @@
 
 import { StorageType } from "./Enums";
 import {
-    _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin,
-    getGlobal, getGlobalInst, getDocument, getNavigator, getPerformance,
-    getExceptionName as coreGetExceptionName, dumpObj, objForEachKey,
-    isString, isNullOrUndefined, strTrim, random32, isArray, isError, isDate,
+    _InternalMessageId, IDiagnosticLogger, IPlugin, getPerformance,
+    getExceptionName as coreGetExceptionName, dumpObj,
+    isNullOrUndefined, strTrim, random32, isArray, isError, isDate,
     newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent, 
     dateNow, uaDisallowsSameSiteNone, disableCookies as coreDisableCookies,
     canUseCookies as coreCanUseCookies, getCookie as coreGetCookie,
-    setCookie as coreSetCookie, deleteCookie as coreDeleteCookie
+    setCookie as coreSetCookie, deleteCookie as coreDeleteCookie,
+    isBeaconsSupported
 } from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 import { createDomEvent } from './DomHelperFuncs';
-import { stringToBoolOrDefault, msToTimeSpan, isBeaconApiSupported, isCrossOriginError, getExtensionByName } from "./HelperFuncs";
+import { stringToBoolOrDefault, msToTimeSpan, isCrossOriginError, getExtensionByName } from "./HelperFuncs";
 import { strNotSpecified } from "./Constants";
 import { utlCanUseLocalStorage, utlCanUseSessionStorage, utlDisableStorage, utlGetSessionStorage, utlGetSessionStorageKeys, utlGetLocalStorage, utlRemoveSessionStorage, utlRemoveStorage, utlSetSessionStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 import { urlGetAbsoluteUrl, urlGetCompleteUrl, urlGetPathName, urlParseFullHost, urlParseHost, urlParseUrl } from "./UrlHelperFuncs";
@@ -273,7 +273,7 @@ export const Util: IUtil = {
     dump: dumpObj,
     getExceptionName: coreGetExceptionName,
     addEventHandler: attachEvent,
-    IsBeaconApiSupported: isBeaconApiSupported,
+    IsBeaconApiSupported: isBeaconsSupported,
     getExtension: getExtensionByName
 };
 

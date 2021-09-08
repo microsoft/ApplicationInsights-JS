@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, getNavigator, IPlugin, isString } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, IPlugin, isString } from "@microsoft/applicationinsights-core-js";
 
 export function stringToBoolOrDefault(str: any, defaultValue = false): boolean {
     if (str === undefined || str === null) {
@@ -33,20 +33,6 @@ export function msToTimeSpan(totalms: number): string {
     hour = hour.length < 2 ? "0" + hour : hour;
 
     return (days > 0 ? days + "." : "") + hour + ":" + min + ":" + sec + "." + ms;
-}
-
-export function isBeaconApiSupported(): boolean {
-    let result = false;
-    try {
-        let nav = getNavigator();
-        if (nav) {
-            result = ('sendBeacon' in nav && (nav as any).sendBeacon);
-        }
-    } catch (e) {
-        // This can happen with some native browser objects, but should not happen for the type we are checking for
-    }
-
-    return result;
 }
 
 export function getExtensionByName(extensions: IPlugin[], identifier: string): IPlugin | null {

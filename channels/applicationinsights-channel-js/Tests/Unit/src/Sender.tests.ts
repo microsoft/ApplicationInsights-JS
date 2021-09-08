@@ -283,6 +283,54 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
+            name: 'FetchAPI is used when isBeaconApiDisabled flag is true and disableXhr flag is true , use fetch sender.',
+            test: () => {
+                let window = getGlobalInst("window");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return false;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: true,
+                    disableXhr: true
+                }, cr, []);
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API is disabled, Beacon API is not called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(fetchstub.called, "fetch sender is called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+
+        this.testCase({
             name: 'FetchAPI is used when isBeaconApiDisabled flag is true and XMLHttpRequest is not supported, use fetch sender.',
             test: () => {
                 let window = getGlobalInst("window");

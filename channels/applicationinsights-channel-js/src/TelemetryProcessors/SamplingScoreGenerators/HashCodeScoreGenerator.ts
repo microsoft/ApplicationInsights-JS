@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// (Magic number) DJB algorithm can't work on shorter strings (results in poor distribution
+const MIN_INPUT_LENGTH: number = 8;
+
 export class HashCodeScoreGenerator {
     // We're using 32 bit math, hence max value is (2^31 - 1)
     public static INT_MAX_VALUE: number = 2147483647;
-
-    // (Magic number) DJB algorithm can't work on shorter strings (results in poor distribution
-    private static MIN_INPUT_LENGTH: number = 8;
 
     public getHashCodeScore(key: string): number {
         const score = this.getHashCode(key) / HashCodeScoreGenerator.INT_MAX_VALUE;
@@ -16,7 +16,7 @@ export class HashCodeScoreGenerator {
     public getHashCode(input: string): number {
         if (input === "") { return 0; }
 
-        while (input.length < HashCodeScoreGenerator.MIN_INPUT_LENGTH) {
+        while (input.length < MIN_INPUT_LENGTH) {
             input = input.concat(input);
         }
 

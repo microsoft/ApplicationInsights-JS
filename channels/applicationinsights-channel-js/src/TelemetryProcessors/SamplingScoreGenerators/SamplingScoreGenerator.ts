@@ -6,29 +6,30 @@ import { ITelemetryItem } from '@microsoft/applicationinsights-core-js';
 import { ContextTagKeys } from '@microsoft/applicationinsights-common';
 
 export class SamplingScoreGenerator {
-    private hashCodeGeneragor: HashCodeScoreGenerator;
-    private keys: ContextTagKeys;
+
+    public getSamplingScore: (item: ITelemetryItem) => number;
 
     constructor() {
-        this.hashCodeGeneragor = new HashCodeScoreGenerator();
-        this.keys = new ContextTagKeys();
-    }
+        let _self = this;
+        let hashCodeGenerator: HashCodeScoreGenerator = new HashCodeScoreGenerator();
+        let keys: ContextTagKeys = new ContextTagKeys();
 
-    public getSamplingScore(item: ITelemetryItem): number {
-        let score: number = 0;
-        if (item.tags && item.tags[this.keys.userId]) { // search in tags first, then ext
-            score = this.hashCodeGeneragor.getHashCodeScore(item.tags[this.keys.userId]);
-        } else if (item.ext && item.ext.user && item.ext.user.id) {
-            score = this.hashCodeGeneragor.getHashCodeScore(item.ext.user.id);
-        } else if (item.tags && item.tags[this.keys.operationId]) { // search in tags first, then ext
-            score = this.hashCodeGeneragor.getHashCodeScore(item.tags[this.keys.operationId]);
-        } else if (item.ext && item.ext.telemetryTrace && item.ext.telemetryTrace.traceID) {
-            score = this.hashCodeGeneragor.getHashCodeScore(item.ext.telemetryTrace.traceID);
-        } else {
-            // tslint:disable-next-line:insecure-random
-            score = (Math.random() * 100);
+        _self.getSamplingScore = (item: ITelemetryItem): number => {
+            let score: number = 0;
+            if (item.tags && item.tags[keys.userId]) { // search in tags first, then ext
+                score = hashCodeGenerator.getHashCodeScore(item.tags[keys.userId]);
+            } else if (item.ext && item.ext.user && item.ext.user.id) {
+                score = hashCodeGenerator.getHashCodeScore(item.ext.user.id);
+            } else if (item.tags && item.tags[keys.operationId]) { // search in tags first, then ext
+                score = hashCodeGenerator.getHashCodeScore(item.tags[keys.operationId]);
+            } else if (item.ext && item.ext.telemetryTrace && item.ext.telemetryTrace.traceID) {
+                score = hashCodeGenerator.getHashCodeScore(item.ext.telemetryTrace.traceID);
+            } else {
+                // tslint:disable-next-line:insecure-random
+                score = (Math.random() * 100);
+            }
+    
+            return score;
         }
-
-        return score;
     }
 }

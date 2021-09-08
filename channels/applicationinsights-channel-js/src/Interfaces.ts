@@ -38,6 +38,17 @@ export interface ISenderConfig {
     isBeaconApiDisabled: () => boolean;
 
     /**
+     * Don't use XMLHttpRequest or XDomainRequest (for IE < 9) by default instead attempt to use fetch() or sendBeacon.
+     * If no other transport is available it will still use XMLHttpRequest
+     */
+    disableXhr: () => boolean;
+
+    /**
+     * If fetch keepalive is supported do not use it for sending events during unload, it may still fallback to fetch() without keepalive
+     */
+    onunloadDisableFetch: () => boolean;
+
+    /**
      * Is beacon disabled on page unload.
      * If enabled, flush events through beaconSender.
      */

@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
+// Licensed under the
 export { 
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper,
     IDateTimeUtils, DateTimeUtils, dateTimeUtilsNow, dateTimeUtilsDuration,
@@ -59,7 +58,8 @@ export { IUser, IUserContext } from './Interfaces/Context/IUser';
 export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTrace';
 export { IRequestContext } from './Interfaces/IRequestContext';
 export { DistributedTracingModes } from './Enums';
-export { stringToBoolOrDefault, msToTimeSpan, isBeaconApiSupported, getExtensionByName, isCrossOriginError } from './HelperFuncs';
+export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from './HelperFuncs';
+export { isBeaconsSupported as isBeaconApiSupported } from "@microsoft/applicationinsights-core-js"
 export { createDomEvent } from './DomHelperFuncs';
 export { 
     utlDisableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage, 
