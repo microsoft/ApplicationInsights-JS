@@ -1,16 +1,41 @@
 # Releases
 
-## 2.7.0 (General Release -- Not Yet Released)
+## 2.7.0 (Sept 7th, 2021)
 
-___Major change___: Upgrades build environment to TypeScript 4.x
-
-[2.7.0-beta.1 Milestone](https://github.com/microsoft/ApplicationInsights-JS/)milestone/54
+___Major change___: Upgrades build environment to TypeScript __4.x__
+- No known breaking, configuration or definition changes
 
 ## Changelog
 
+- #1640 [BUG] enableAjaxErrorStatusText: false (which is the default setting) does not turn off logging error response body
+- #1642 trackEvent() doesn't allow replacing the iKey
+- #1647 [BUG] customProperties parameter missing from trackException function
+- #1648 Update error reporting when a plugin throws an exception
+- #1650 [DebugPlugin] Add an option to disable DebugPlugin processTelemetry logging
+- #1653 Some requests are returning a CORB error for responses containing text content type
+  - The warning is only being reported via the sendBeacon request, therefore not loss of events
+  - Changes the 'unload' operations to try and use fetch with keepalive if available, fallsback to sendBeacon()
+  - Also attempts to send as manay events as possible via sendBeacon, when the payload size is > 64kb
+- #1656 [BUG] 'Cannot use 'in' operator to search for 'ver' in Timeout', name: 'TypeError'}​​​​​
+- #1660 [BUG] ITelemetryTrace parentId cannot be set to undefined
+
+Includes: [2.7.0-beta.1 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/54)
+
+- #1171 ___Update to TypeScript 4.x___
+- #1526 [TypeScript Compile Error] Property 'sessionManager' does not exist on type 'ITelemetryContext'
+  - #1627 Add sesId to allow access to sessionManager session info
+- #1471 Convert undefined to blank in customDimensions?
+  - #1630 Convert undefined custom properties to empty string
+- #1585 ai_user cookie not present after re-enabling the cookie
+- #1561 How to enrich dependencies logs with context at the beginning of api call?
+  - #1624 Provide a way to enrich dependencies logs with context at the beginning of api call
+- #1633 Add GitHub Automated Lock closed issue action
+
+### New feature (may be release after primary release - out of band)
+
 - #617 Add performance.mark and performance.measure for performance browser tool integration
 
-### 2.7.0-beta.1 (August 24th, 2021)
+### <span style='color:blue'>2.7.0-beta.1</span> (August 24th, 2021)
 
 - #1171 ___Update to TypeScript 4.x___
 - #1526 [TypeScript Compile Error] Property 'sessionManager' does not exist on type 'ITelemetryContext'
@@ -22,11 +47,11 @@ ___Major change___: Upgrades build environment to TypeScript 4.x
   - #1624 Provide a way to enrich dependencies logs with context at the beginning of api call
 - #1633 Add GitHub Automated Lock closed issue action
 
-### Update React plugin to v3.2.0-beta.1
+### Update React plugin to <span style='color:blue'>v3.2.0-beta.1</span>
 
 - Update Core dependency to v2.7.0-beta.1 Core changes
 
-### Update React Native plugin to v2.4.0-beta.1
+### Update React Native plugin to <span style='color:blue'>v2.4.0-beta.1</span>
 
 - Update Core dependency to v2.7.0-beta.1 Core changes
 
