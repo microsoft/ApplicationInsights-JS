@@ -5,12 +5,12 @@ export interface ITelemetryTrace {
     /**
      * Trace id
      */
-    traceID: string;
+    traceID?: string;
 
     /**
      * Parent id
      */
-    parentID: string;
+    parentID?: string;
 
     /**
      * Trace state
