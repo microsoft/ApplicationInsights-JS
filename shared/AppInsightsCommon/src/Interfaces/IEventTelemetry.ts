@@ -10,4 +10,11 @@ export interface IEventTelemetry extends IPartC {
      * @memberof IEventTelemetry
      */
     name: string;
+
+    /**
+     * @description custom defined iKey
+     * @type {string}
+     * @memberof IEventTelemetry
+     */
+    iKey?: string;
 }

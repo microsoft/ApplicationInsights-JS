@@ -15,19 +15,21 @@ import { IDebugPluginConfig } from './interfaces/IDebugPluginConfig';
 
 interface IDebugConfig {
 
-    trackers?: () => string[];
+    trackers: () => string[];
 
-    excludeKeys?: () => string[];
+    excludeKeys: () => string[];
 
-    cssPrefix?: () => string;
+    cssPrefix: () => string;
 
-    disableNotifications?: () => boolean;
+    disableNotifications: () => boolean;
 
-    dumpToConsole?: () => boolean;
+    dumpToConsole: () => boolean;
 
-    maxMessages?: () => number;
+    maxMessages: () => number;
 
-    showFunctions?: () => boolean;
+    showFunctions: () => boolean;
+
+    logProcessTelemetry: () => boolean;    
 }
 
 const getDefaultConfig = (): IDebugConfig => {
@@ -64,7 +66,8 @@ const getDefaultConfig = (): IDebugConfig => {
         disableNotifications: () => false,
         dumpToConsole: () => false,
         maxMessages: () => 5000,
-        showFunctions: () => false
+        showFunctions: () => false,
+        logProcessTelemetry: () => false
     };
 
     return config;
@@ -111,7 +114,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
         /**
          * the config for this plugin
          */
-        let _theConfig: IDebugConfig = {};
+        let _theConfig: IDebugConfig = getDefaultConfig();
 
         dynamicProto(DebugPlugin, this, (_self, base) => {
             _self.initialize = (config: IConfiguration | IDebugPluginConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) => {
@@ -355,7 +358,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                     console.log(`[${_self.identifier}:processTelemetry] complete`);
                 }
 
-                if (!debugBins['processTelemetry']) {
+                if (!debugBins['processTelemetry'] && _theConfig.logProcessTelemetry() === true) {
                     dashboard.newLogEntry(event, dateNow() - startTime, `[${_self.identifier}:processTelemetry[${event.baseType}]`, 0, 'processTelemetry');
                 }
                 _self.processNext(event, itemCtx);

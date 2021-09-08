@@ -157,11 +157,12 @@ export class ApplicationInsightsTests extends TestClass {
             steps: [() => {
                 this._ai.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
             }].concat(this.asserts(1)).concat(() => {
-
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
+                    Assert.ok( payload && payload.iKey);
+                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
                     Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
                     Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
                 }
@@ -928,8 +929,29 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.ok(this.envelopeConstructorSpy.called);
                 const envelope = this.envelopeConstructorSpy.returnValues[0];
                 Assert.equal(envelope.sampleRate, 50, "sampleRate is generated");
+                Assert.equal(envelope.iKey, ApplicationInsightsTests._instrumentationKey, "default config iKey is used");
             }
-        })
+        });
+
+        this.testCase({
+            name: 'iKey replacement: envelope will use the non-empty iKey defined in track method',
+            test: () => {
+                this._ai.trackEvent({ name: 'event1', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 }, iKey:"1a6933ad-aaaa-aaaa-aaaa-000000000000" });
+                Assert.ok(this.envelopeConstructorSpy.called);
+                const envelope = this.envelopeConstructorSpy.returnValues[0];
+                Assert.equal(envelope.iKey, "1a6933ad-aaaa-aaaa-aaaa-000000000000", "trackEvent iKey is replaced");
+            }
+        });
+
+        this.testCase({
+            name: 'iKey replacement: envelope will use the config iKey if defined ikey in track method is empty',
+            test: () => {
+                this._ai.trackEvent({ name: 'event1', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 }, iKey:"" });
+                Assert.ok(this.envelopeConstructorSpy.called);
+                const envelope = this.envelopeConstructorSpy.returnValues[0];
+                Assert.equal(envelope.iKey, ApplicationInsightsTests._instrumentationKey, "trackEvent iKey should not be replaced");
+            }
+        });
     }
 
     private boilerPlateAsserts = () => {

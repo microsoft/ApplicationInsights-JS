@@ -321,7 +321,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     const convertUndefined = _self._senderConfig.convertUndefined() || undefined;
                     // construct an envelope that Application Insights endpoint can understand
-                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog(), convertUndefined);
+                    // if ikey of telemetry is provided and not empty, envelope will use this iKey instead of senderConfig iKey
+                    let defaultEnvelopeIkey = telemetryItem.iKey || _self._senderConfig.instrumentationKey();
+                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, itemCtx.diagLog(), convertUndefined);
                     if (!aiEnvelope) {
                         itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
