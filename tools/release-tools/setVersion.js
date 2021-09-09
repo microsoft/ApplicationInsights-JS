@@ -7,6 +7,7 @@ let buildNum = null;
 let preRel = null;
 let isRelease = false;
 let testOnly = null;
+let updateAll = true;
 let isReact = false;
 let isReactNative = false;
 
@@ -58,6 +59,10 @@ function setPreRelVer(name) {
             newVer = defaultVer.substring(0, idx);
             preRel = defaultVer.substring(idx);
         }
+
+        if (newVer) {
+            updateAll = false;      // We have mixed versions so we can't update all of them if we have a version#
+        }
     }
 
     return true;
@@ -95,10 +100,6 @@ function parseArgs() {
                 return false;
             }
         } else if (!isRelease && !preRel && theArg === "-release") {
-            if (!setPreRelVer("release")) {
-                return false;
-            }
-
             isRelease = true;
             preRel = "";
         } else if (!isRelease && !preRel && theArg === "-pre") {
@@ -112,7 +113,7 @@ function parseArgs() {
             idx++;
         } else if (theArg === "-test") {
             testOnly = true;
-        } else if (!newVer && !autoInc) {
+        } else if (!isRelease && !newVer && !autoInc) {
             let theParts = theArg.split(".");
             if(theParts.length < 3) {
                 console.error("!!! The provided version [" + theArg + "] appears invalid");
@@ -120,10 +121,13 @@ function parseArgs() {
             }
 
             newVer = theArg;
+            updateAll = false;      // We have mixed versions so we can't update all of them if we have a version#
         } else if (!isReact && theArg === "-react") {
             isReact = true;
+            updateAll = false;
         } else if (!isReactNative && theArg === "-reactNative") {
             isReactNative = true;
+            updateAll = false;
         } else {
             console.error("!!! Invalid Argument [" + theArg + "] detected");
             return false;
@@ -156,7 +160,7 @@ function updateVersions() {
     let newVersion = calculateVersion(rootVersion.version);
     if (newVersion) {
         console.log("New version [" + theVersion.release + "] => [" + newVersion + "]");
-        if (!isReact && !isReactNative) {
+        if (updateAll || (!isReact && !isReactNative)) {
             theVersion.release = newVersion;
         }
     }
@@ -239,6 +243,9 @@ function calculateVersion(rootVersion) {
             parts[0]++;
             parts[1] = 0;
             parts[2] = 0;
+        } else if (isRelease) {
+            // Don't update the numbers just remove the preRel
+            postfix = "";
         }
 
         newVersion = parts[0] + "." + parts[1] + "." + parts[2];
@@ -287,18 +294,24 @@ function getVersionDetails(theVersion) {
 }
 
 function shouldUpdatePackage(name) {
-    if (name.indexOf("-react-js") !== -1) {
-        return isReact;
+    if (!updateAll) {
+        if (name.indexOf("-react-js") !== -1) {
+            return isReact;
+        }
+
+        if (name.indexOf("-react-native") !== -1) {
+            return isReactNative;
+        }
+
+        return !isReact && !isReactNative;
     }
 
-    if (name.indexOf("-react-native") !== -1) {
-        return isReactNative;
-    }
-
-    return !isReact && !isReactNative;
+    return updateAll;
 }
 
 function shouldProcess(name) {
+    let updateDefPkgs = updateAll || (!isReact && !isReactNative);
+
     if (name.indexOf("node_modules/") !== -1) {
         return false;
     }
@@ -312,38 +325,39 @@ function shouldProcess(name) {
     }
 
     if (name.indexOf("-react-js") !== -1) {
-        return isReact;
+        return updateAll || isReact;
     }
 
     if (name.indexOf("-react-native") !== -1) {
-        return isReactNative;
+        return updateAll || isReactNative;
     }
+
     if (name.indexOf("-angularplugin") !== -1) {
         return false;
     }
 
     if (name.indexOf("AISKU/") !== -1) {
-        return !isReact && !isReactNative;
+        return updateDefPkgs;
     }
 
     if (name.indexOf("AISKULight/") !== -1) {
-        return !isReact && !isReactNative;
+        return updateDefPkgs;
     }
 
     if (name.indexOf("channels/") !== -1) {
-        return !isReact && !isReactNative;
+        return updateDefPkgs;
     }
 
     if (name.indexOf("extensions/") !== -1) {
-        return !isReact && !isReactNative;
+        return updateDefPkgs;
     }
 
     if (name.indexOf("shared/") !== -1) {
-        return !isReact && !isReactNative;
+        return updateDefPkgs;
     }
 
     if (name === "package.json") {
-        return !isReact && !isReactNative;
+        return updateDefPkgs;
     }
 
     return false;
@@ -377,15 +391,27 @@ function updateDependencies(target, orgVersion, newVersion) {
         Object.keys(target).forEach((value) => {
             if (value.indexOf("@microsoft/applicationinsights-") !== -1 && 
                     value.indexOf("@microsoft/applicationinsights-rollup") === -1) {
+
                 let version = target[value];
-                if (version === orgVersion) {
-                    target[value] = newVersion;
-                }
-                else if (version === "^" + orgVersion) {
-                    target[value] = "^" + newVersion;
-                }
-                else if (version === "~" + orgVersion) {
-                    target[value] = "~" + newVersion;
+                if (theVersion.pkgs[value]) {
+                    let pkgVersion = theVersion.pkgs[value].release;
+                    if (version.startsWith("^")) {
+                        target[value] = "^" + pkgVersion;
+                    } else if (version.startsWith("~")) {
+                        target[value] = "~" + pkgVersion;
+                    } else {
+                        target[value] = pkgVersion;
+                    }
+                } else {
+                    if (version === orgVersion) {
+                        target[value] = newVersion;
+                    }
+                    else if (version === "^" + orgVersion) {
+                        target[value] = "^" + newVersion;
+                    }
+                    else if (version === "~" + orgVersion) {
+                        target[value] = "~" + newVersion;
+                    }
                 }
             }
         });
