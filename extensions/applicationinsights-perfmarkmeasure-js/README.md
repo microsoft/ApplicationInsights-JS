@@ -12,7 +12,7 @@ And there is a limit on the number of performance events that browsers will reta
 
 See the [basic documentation](https://github.com/microsoft/ApplicationInsights-JS/blob/master/docs/PerformanceMonitoring.md) on the performance monitoring support helpers and interfaces, this extension builds on top of the basic support.
 
-## NPM Setup (ignore if using Snippet Setup)
+## NPM Setup
 
 Install npm package:
 
@@ -23,7 +23,7 @@ npm install --save @microsoft/applicationinsights-applicationinsights-perfmarkme
 ```js
 
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { PerfMarkMeasureManager } from '@microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js';
+import { PerfMarkMeasureManager } from '@microsoft/applicationinsights-perfmarkmeasure-js';
 
 const perfManager = new PerfMarkMeasureManager();
 
@@ -40,8 +40,7 @@ appInsights.core.setPerfMgr(perfManager);
 ### Direct usage with the doPerf() helper
 
 ```js
-import { doPerf } from '@microsoft/applicationinsights-core-js';
-import { PerfMarkMeasureManager } from '@microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js';
+import { doPerf, PerfMarkMeasureManager } from '@microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js';
 
 const perfManager = new PerfMarkMeasureManager();
 
@@ -57,8 +56,8 @@ doPerf(perfManager, () => "code", (perfEvent) => {
 ### Direct usage with the doPerf() helper and a notification manager
 
 ```js
-import { doPerf, IPerfEvent, INotificationManager  } from '@microsoft/applicationinsights-core-js';
-import { PerfMarkMeasureManager } from '@microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js';
+import { INotificationManager  } from '@microsoft/applicationinsights-core-js';
+import { doPerf, IPerfEvent, PerfMarkMeasureManager } from '@microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js';
 
 let perfEvents: IPerfEvent[] = [];
 const perfManager = new PerfMarkMeasureManager(
@@ -82,6 +81,25 @@ doPerf(perfManager, () => "code", (perfEvent) => {
 // perfEvents.length === 1 with perfEvents[0].name === "code"
 
 ```
+
+## CDN Usage
+
+```html
+<script src="https://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.2.min.js"></script>
+<script type="application/javascript">
+    const perfManager = new Microsoft.ApplicationInsights.PerfMarkMeasureManager();
+
+    Microsoft.ApplicationInsights.doPerf(perfManager, () => "code", (perfEvent) => {
+        // Code to run that will have a mark and measure
+    });
+
+    // window.performance will now contain 
+    // - a mark called 'ai.prfmrk.code'
+    // - a measure called 'ai.prf.msr.code'
+</script>
+```
+
+Also see the [Example Html Usage](./example/cdn-usage.html)
 
 ## Configuration Options
 
