@@ -1,11 +1,10 @@
-import { TestClass } from "./TestFramework/TestClass";
-import { Assert } from "./TestFramework/Assert";
+import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import * as pako from "pako";
 
-export class AISKUSizeCheck extends TestClass {
+export class AISKUSizeCheck extends AITestClass {
     private readonly MAX_DEFLATE_SIZE = 40;
-    private readonly rawFilePath = "../../dist/applicationinsights-web.min.js";
-    private readonly prodFilePath = "../../browser/ai.2.min.js";
+    private readonly rawFilePath = "../dist/applicationinsights-web.min.js";
+    private readonly prodFilePath = "../browser/ai.2.min.js";
 
     public testInitialize() {
     }

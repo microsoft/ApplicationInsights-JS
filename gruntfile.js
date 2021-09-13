@@ -199,13 +199,19 @@ module.exports = function (grunt) {
                     ],
                     out: 'extensions/applicationinsights-analytics-js/Tests/Unit/dist/appinsights-analytics.tests.js'
                 },
-                aiskutests: {
+                aiskuunittests: {
                     tsconfig: './AISKU/Tests/tsconfig.json',
                     src: [
-                        'AISKU/Tests/Selenium/*.ts',
-                        'AISKU/Tests/*.ts'
+                        './AISKU/Tests/Unit/src/**/*.ts',
                     ],
-                    out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
+                    out: 'AISKU/Tests/Unit/dist/aiskuunittests.tests.js'
+                },
+                aiskuperftests: {
+                    tsconfig: './AISKU/Tests/tsconfig.json',
+                    src: [
+                        './AISKU/Tests/Perf/src/**/*.ts',
+                    ],
+                    out: 'AISKU/Tests/Perf/dist/aisku-perftests.js'
                 },
                 clickanalyticstests: {
                     tsconfig: './extensions/applicationinsights-clickanalytics-js/Tests/tsconfig.json',
@@ -419,7 +425,18 @@ module.exports = function (grunt) {
                 aisku: {
                     options: {
                         urls: [
-                            'http://localhost:9001/AISKU/Tests/Selenium/Tests.html'
+                            'http://localhost:9001/AISKU/Tests/UnitTests.html'
+                        ],
+                        timeout: 5 * 60 * 1000, // 5 min
+                        console: true,
+                        summaryOnly: false,
+                        '--web-security': 'false'
+                    }
+                },
+                aiskuperf: {
+                    options: {
+                        urls: [
+                            'http://localhost:9001/AISKU/Tests/PerfTests.html'
                         ],
                         timeout: 5 * 60 * 1000, // 5 min
                         console: true,
@@ -500,7 +517,8 @@ module.exports = function (grunt) {
         grunt.registerTask("aisku", tsBuildActions("aisku"));
         grunt.registerTask("aiskulite", tsBuildActions("aiskulite"));
         grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
-        grunt.registerTask("aiskutests", ["connect", "ts:aiskutests", "qunit:aisku"]);
+        grunt.registerTask("aiskuunittests", ["connect", "ts:aiskuunittests", "qunit:aisku"]);
+        grunt.registerTask("aiskuperftests", ["connect", "ts:aiskuperftests", "qunit:aiskuperf"]);
         grunt.registerTask("test", ["connect", "ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
         grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
         grunt.registerTask("coreunittest", ["connect", "ts:coreunittest", "qunit:core"]);

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-control" content="no-Cache" />
+    <title>Perf Tests for Application Insights JavaScript AISKU</title>
+    <script>
+        !function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t(e.oneDS={})}(this,function(e){"use strict";function u(e){return t(e,"number")}function o(e){return t(e,"boolean")}function s(e,t,n){var r,i=-1;return l(e)?i:(t&&0<t&&(32===t?i=8192:t<=13&&(i=t<<5)),v(n)&&u(r=n)&&0<=r&&r<=9?(-1===i&&(i=0),i|n):(f(e)&&(e=e[0]),-1!==i?i|(l(e)?-1:u(e)?6:a(e)?1:o(e)?7:-1):u(e)?6:i))}function p(e,t,n){if(void 0===n&&(n=!1),y(t)){var r=n?"qsp=true&":"&";return u(t)||o(t)?r+=e+"="+t:r+="object"==typeof t?e+"="+JSON.stringify(t):e+'="'+encodeURIComponent(t)+'"',r}return""}function y(e){return!i(e)&&""!==e}function i(e){return l(e)||null===e}function l(e){return e===undefined||void 0===e}function t(e,t){return typeof e===t}function a(e){return t(e,"string")}function f(e){return e instanceof Array}function v(e){return!l(e)}function m(e,t,n){if(!a(e)||i(t)||""===t)return null;if(a(t)||u(t)||o(t)||f(t))t={value:t};else if("object"!=typeof t||t.hasOwnProperty("value")){if(i(t.value)||""===t.value||!a(t.value)&&!u(t.value)&&!o(t.value)&&!f(t.value))return null}else t={value:n?JSON.stringify(t):t};if(f(t.value)&&!(0<t.value.length))return null;if(v(t.kind)){if(f(t.value)||!((r=t.kind)&&u(r)&&(0<=r&&r<=13||32===r)))return null;t.value=t.value.toString()}var r;return t}e.getCollectorUrlGenerator=function(e,t){var n="https://browser.events.data.microsoft.com/OneCollector/1.0/";t&&t.endpointUrl&&(n=t.endpointUrl);var r=function(e){if("[object Date]"===Object.prototype.toString.call(e)){var t=function(e){var t=e+"";return 1===t.length&&(t="0"+t),t};return e.getUTCFullYear()+"-"+t(1+e.getUTCMonth())+"-"+t(e.getUTCDate())+"T"+t(e.getUTCHours())+":"+t(e.getUTCMinutes())+":"+t(e.getUTCSeconds())+"."+((e.getUTCMilliseconds()/1e3).toFixed(3)+"").slice(2,5)+"Z"}}(new Date),i=0;if(null==e)return"input is null or undefined";if(null===e.name||"undefined"==typeof e.name)return"telemetry item expects valid name";if(null===e.iKey||"undefined"==typeof e.iKey)return"telemetry item expects valid ikey";null!==e.time&&"undefined"!=typeof e.time||(e.time=r);var u=e.baseData,o=e.data,l=p("name",e.name,!0);if(l+=p("time",e.time),l+=p("ver",e.ver),l+=p("iKey","o:"+function(e){if(e){var t=e.indexOf("-");if(-1<t)return e.substring(0,t)}return""}(e.iKey)),l+="&apikey="+e.iKey,e.ext)for(var a in e.ext)if(e.ext.hasOwnProperty(a))for(var f in e.ext[a])e.ext[a].hasOwnProperty(f)&&y(e.ext[a][f])&&y(d=m(f,e.ext[a][f],!0))&&(l+=p("ext."+a+"."+f,d.value));for(var v in u){var c="-"+v;(d=m(v,u[v],!0))&&(0<(i=s(d.value,d.kind,d.propertyType))&&(c=c+"*"+i.toString()),l+=p(c,d.value))}for(var v in o){var d,c="*"+v;(d=m(v,o[v],!0))&&(0<(i=s(d.value,d.kind,d.propertyType))&&(c=c+"*"+i.toString()),l+=p(c,d.value))}return n+"t.js?"+l},Object.defineProperty(e,"__esModule",{value:!0})});
+    </script>
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css"> 
+    <!-- <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script> -->
+    <script src="../../../common/Tests/External/require-2.2.0.js"></script>    
+    <script src="../../../common/Tests/Selenium/ModuleLoader.js"></script>
+    <script src="../../../common/Tests/Selenium/SimpleSyncPromise.js"></script>
+   
+
+    <script>
+        var modules = new ModuleLoader({
+            baseUrl: '../',
+            paths: {
+                qunit: "../../common/Tests/External/qunit-1.23.1",
+                "whatwg-fetch": "../../common/Tests/External/whatwg-fetch.3.0.0",
+            }
+        });
+
+        // Load qunit here instead of with tests, otherwise will not work
+        modules.add("qunit");
+    
+        loadFetchModule(modules, "whatwg-fetch");
+        loadCommonModules(modules);
+
+        // Load Core
+        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
+
+        // Load Common
+        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
+
+
+        // Load and define the app insights test framework module
+        modules.add("@microsoft/ai-test-framework", "./node_modules/@microsoft/ai-test-framework/dist/ai-test-framework");
+
+        var testModule = modules.add("Tests/Perf/src/aisku-perftests", "./Tests/Perf/dist/aisku-perftests");
+        testModule.run = function (tests) {
+            console && console.log("Starting tests");
+            QUnit.start();
+            tests.runTests();
+        };
+
+        modules.run();
+    </script>
+</head>
+
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <div id="error-message"></div>
+</body>
+
+</html>
