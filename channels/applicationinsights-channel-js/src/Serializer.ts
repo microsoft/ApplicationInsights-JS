@@ -1,5 +1,5 @@
 ﻿import { ISerializable, FieldType } from '@microsoft/applicationinsights-common';
-import { 
+import {
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, objForEachKey, isFunction, isObject, isArray
 } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from '@microsoft/dynamicproto-js'

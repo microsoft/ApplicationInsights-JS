@@ -27,5 +27,5 @@ export const EventsDiscardedReason = {
     /**
      * The event queue is full.
      */
-    QueueFull: 5,
+    QueueFull: 5
 };

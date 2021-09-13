@@ -36,7 +36,7 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
         dependencyKind: FieldType.Default,
         dependencySource: FieldType.Default,
         commandName: FieldType.Default,
-        dependencyTypeName: FieldType.Default,
+        dependencyTypeName: FieldType.Default
     }
 
     /**

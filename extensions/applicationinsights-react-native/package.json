@@ -29,7 +29,7 @@
         "grunt-contrib-uglify": "^5.0.1",
         "grunt-run": "^0.8.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
-        "@nevware21/grunt-eslint-ts": "^0.2.1",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@typescript-eslint/eslint-plugin": "^4.28.0",
         "@typescript-eslint/parser": "^4.28.0",
         "eslint": "^7.29.0",

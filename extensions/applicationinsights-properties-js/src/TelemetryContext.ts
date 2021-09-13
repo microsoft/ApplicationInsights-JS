@@ -145,7 +145,7 @@ export class TelemetryContext implements IPropTelemetryContext {
         
             _self.applyUserContext = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 let user = _self.user;
-                if (user) {                
+                if (user) {
                     let tags = getSetValue(evt, strTags, []);
 
                     // stays in tags

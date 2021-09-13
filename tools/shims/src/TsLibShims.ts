@@ -46,7 +46,7 @@ var extendStaticsFn = function(d: any, b: any): any {
         // tslint:disable-next-line: only-arrow-functions
         ({ __proto__: [] } instanceof Array && function (d: any, b: any) { d.__proto__ = b; }) ||
         // tslint:disable-next-line: only-arrow-functions
-        function (d: any, b: any) { 
+        function (d: any, b: any) {
             for (var p in b) {
                 if (b[strShimHasOwnProperty](p)) {
                     d[p] = b[p];
@@ -58,7 +58,7 @@ var extendStaticsFn = function(d: any, b: any): any {
 
 export function __extendsFn(d: any, b: any) {
     if (typeof b !== strShimFunction && b !== null) {
-        throwTypeError("Class extends value " + String(b) + " is not a constructor or null"); 
+        throwTypeError("Class extends value " + String(b) + " is not a constructor or null");
     }
     extendStaticsFn(d, b);
     function __() { this.constructor = d; }
@@ -101,8 +101,8 @@ export function __decorateFn(decorators: any, target: any, key: any, desc: any) 
 }
 
 export function __paramFn(paramIndex: number, decorator: Function) {
-    return function (target: any, key: any) { 
-        decorator(target, key, paramIndex); 
+    return function (target: any, key: any) {
+        decorator(target, key, paramIndex);
     }
 }
 
@@ -126,11 +126,11 @@ export function __createBindingFn(o: any, m: any, k: any, k2?: any) {
     }
     
     if (ObjCreate) {
-        ObjDefineProperty(o, k2, { 
-            enumerable: true, 
-            get() { 
-                return m[k]; 
-            } 
+        ObjDefineProperty(o, k2, {
+            enumerable: true,
+            get() {
+                return m[k];
+            }
         });
     } else {
         o[k2] = m[k];
@@ -168,20 +168,20 @@ export function __readFn(o: any, n: any) {
         while ((n === void 0 || n-- > 0) && !(r = i.next()).done) {
             ar.push(r.value);
         }
-    } catch (error) { 
-        e = { 
-            error 
-        }; 
+    } catch (error) {
+        e = {
+            error
+        };
     } finally {
         try {
             // tslint:disable-next-line:no-conditional-assignment
             if (r && !r.done && (m = i["return"])) {
                 m.call(i);
             }
-        } finally { 
+        } finally {
             if (e) {
                 // eslint-disable-next-line no-unsafe-finally
-                throw e.error; 
+                throw e.error;
             }
         }
     }
@@ -215,14 +215,14 @@ export function __spreadArrayFn(to: any, from: any) {
 }
 
 export function __makeTemplateObjectFn(cooked: any, raw: any) {
-    if (ObjDefineProperty) { 
-        ObjDefineProperty(cooked, "raw", { value: raw }); 
-    } else { 
-        cooked.raw = raw; 
+    if (ObjDefineProperty) {
+        ObjDefineProperty(cooked, "raw", { value: raw });
+    } else {
+        cooked.raw = raw;
     }
 
     return cooked;
-};
+}
 
 export function __importStarFn(mod: any) {
     if (mod && mod.__esModule) {
@@ -243,10 +243,10 @@ export function __importStarFn(mod: any) {
         ObjDefineProperty( result, strDefault, { enumerable: true, value: mod });
     } else {
         result[strDefault] = mod;
-    }    
+    }
 
     return result;
-};
+}
 
 export function __importDefaultFn(mod:any) {
     return (mod && mod.__esModule) ? mod : { strDefault: mod };

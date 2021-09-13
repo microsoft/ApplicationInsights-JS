@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { 
+import {
     getGlobal, strShimUndefined, strShimObject, strShimPrototype
 } from "@microsoft/applicationinsights-shims";
 import { isString, isUndefined, strContains } from "./HelperFuncs";
@@ -13,7 +13,7 @@ declare var XDomainRequest: any;
 /**
  * This file exists to hold environment utilities that are required to check and
  * validate the current operating environment. Unless otherwise required, please
- * only use defined methods (functions) in this class so that users of these 
+ * only use defined methods (functions) in this class so that users of these
  * functions/properties only need to include those that are used within their own modules.
  */
 
@@ -68,7 +68,7 @@ function _hasProperty(theClass: any, property: string) {
 
 /**
  * Enable the lookup of test mock objects if requested
- * @param enabled 
+ * @param enabled
  */
 export function setEnableEnvMocks(enabled: boolean) {
     _enableMocks = enabled;
@@ -94,9 +94,9 @@ export function getGlobalInst<T>(name:string): T {
 }
 
 /**
- * Checks if window object is available, this is required as we support the API running without a 
- * window /document (eg. Node server, electron webworkers) and if we attempt to assign a window 
- * object to a local variable or pass as an argument an "Uncaught ReferenceError: window is not defined" 
+ * Checks if window object is available, this is required as we support the API running without a
+ * window /document (eg. Node server, electron webworkers) and if we attempt to assign a window
+ * object to a local variable or pass as an argument an "Uncaught ReferenceError: window is not defined"
  * exception will be thrown.
  * Defined as a function to support lazy / late binding environments.
  */
@@ -119,9 +119,9 @@ export function getWindow(): Window | null {
 }
 
 /**
- * Checks if document object is available, this is required as we support the API running without a 
- * window /document (eg. Node server, electron webworkers) and if we attempt to assign a document 
- * object to a local variable or pass as an argument an "Uncaught ReferenceError: document is not defined" 
+ * Checks if document object is available, this is required as we support the API running without a
+ * window /document (eg. Node server, electron webworkers) and if we attempt to assign a document
+ * object to a local variable or pass as an argument an "Uncaught ReferenceError: document is not defined"
  * exception will be thrown.
  * Defined as a function to support lazy / late binding environments.
  */
@@ -144,9 +144,9 @@ export function getDocument(): Document | null {
 
 
 /**
- * Checks if navigator object is available, this is required as we support the API running without a 
- * window /document (eg. Node server, electron webworkers) and if we attempt to assign a navigator 
- * object to a local variable or pass as an argument an "Uncaught ReferenceError: navigator is not defined" 
+ * Checks if navigator object is available, this is required as we support the API running without a
+ * window /document (eg. Node server, electron webworkers) and if we attempt to assign a navigator
+ * object to a local variable or pass as an argument an "Uncaught ReferenceError: navigator is not defined"
  * exception will be thrown.
  * Defined as a function to support lazy / late binding environments.
  */
@@ -168,9 +168,9 @@ export function getNavigator(): Navigator | null {
 }
 
 /**
- * Checks if history object is available, this is required as we support the API running without a 
- * window /document (eg. Node server, electron webworkers) and if we attempt to assign a history 
- * object to a local variable or pass as an argument an "Uncaught ReferenceError: history is not defined" 
+ * Checks if history object is available, this is required as we support the API running without a
+ * window /document (eg. Node server, electron webworkers) and if we attempt to assign a history
+ * object to a local variable or pass as an argument an "Uncaught ReferenceError: history is not defined"
  * exception will be thrown.
  * Defined as a function to support lazy / late binding environments.
  */
@@ -232,9 +232,9 @@ export function getPerformance(): Performance | null {
 }
 
 /**
- * Checks if JSON object is available, this is required as we support the API running without a 
- * window /document (eg. Node server, electron webworkers) and if we attempt to assign a history 
- * object to a local variable or pass as an argument an "Uncaught ReferenceError: JSON is not defined" 
+ * Checks if JSON object is available, this is required as we support the API running without a
+ * window /document (eg. Node server, electron webworkers) and if we attempt to assign a history
+ * object to a local variable or pass as an argument an "Uncaught ReferenceError: JSON is not defined"
  * exception will be thrown.
  * Defined as a function to support lazy / late binding environments.
  */
@@ -342,7 +342,7 @@ export function isSafari(userAgentStr ?: string) {
     if (!userAgentStr || !isString(userAgentStr)) {
         let navigator = getNavigator() || ({} as Navigator);
         userAgentStr = navigator ? (navigator.userAgent || "").toLowerCase() : "";
-    }    
+    }
 
     var ua = (userAgentStr || "").toLowerCase();
     return (ua.indexOf('safari') >= 0);

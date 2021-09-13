@@ -18,7 +18,7 @@ export interface IClickAnalyticsConfiguration {
      */
     callback?: IValueCallback;
     /**
-     * Page tags 
+     * Page tags
      */
     pageTags?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object };
     /**
@@ -34,7 +34,7 @@ export interface IClickAnalyticsConfiguration {
      */
     behaviorValidator?: (value: string | number) => string | number;
     /**
-     * Default Behavior value when Right Click event has occured. This 
+     * Default Behavior value when Right Click event has occured. This
      * value will be ovverriden if the element has the data-*-bhvr attribute present.
      */
     defaultRightClickBhvr?: string | number;
@@ -182,7 +182,7 @@ export interface IAutoCaptureHandler {
    */
 export interface IOverrideValues {
     /**
-     * One of the awa.behavior values. 
+     * One of the awa.behavior values.
      */
     behavior?: string | number;
     /**
@@ -212,8 +212,8 @@ export interface IContent {
      */
     cN?: string;
     /**
-     * Unique identifier (friendly names allowed) of the content (Content Id) as designated by the content provider. 
-     * The name should be unique per contentSource such that the two make up the compound key and such that the contentId can be 
+     * Unique identifier (friendly names allowed) of the content (Content Id) as designated by the content provider.
+     * The name should be unique per contentSource such that the two make up the compound key and such that the contentId can be
      * looked up in the contentSource for additional metadata.
      */
     id?: string;
@@ -228,11 +228,11 @@ export interface IContent {
   */
 export interface IContentHandler {
     /**
-     * Get meta data 
+     * Get meta data
      */
     getMetadata: () => { [name: string]: string };
     /**
-     * Get element content 
+     * Get element content
      */
     getElementContent: (element: Element) => IContent;
     
@@ -251,7 +251,7 @@ export interface IPageActionTelemetry extends IEventTelemetry {
      */
     actionType?: string;
     /**
-     * One of the awa.behavior values. 
+     * One of the awa.behavior values.
      */
     behavior?: string | number;
     /**
@@ -259,7 +259,7 @@ export interface IPageActionTelemetry extends IEventTelemetry {
      */
     clickCoordinates?: string;
     /**
-     * JSON-formatted array of content acted upon 
+     * JSON-formatted array of content acted upon
      */
     content?: any;
     /**

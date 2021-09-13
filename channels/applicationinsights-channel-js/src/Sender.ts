@@ -61,7 +61,7 @@ function _getDefaultAppInsightsChannelConfig(): ISenderConfig {
         namePrefix: () => undefined,
         samplingPercentage: () => 100,
         customHeaders: () => undefined,
-        convertUndefined: () => undefined,
+        convertUndefined: () => undefined
     }
 }
 
@@ -774,8 +774,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
 
                     /**
-                     * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500. 
-                     * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure 
+                     * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500.
+                     * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure
                      * or if anything prevented the request from completing.
                      */
                     if (!response.ok) {
@@ -846,7 +846,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _setupTimer();
             }
         
-            /** 
+            /**
              * Calculates the time to wait before retrying in case of an error based on
              * http://en.wikipedia.org/wiki/Exponential_backoff
              */
@@ -979,7 +979,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
             /**
              * Validate UUID Format
-             * Specs taken from https://tools.ietf.org/html/rfc4122 and breeze repo 
+             * Specs taken from https://tools.ietf.org/html/rfc4122 and breeze repo
              */
             function _validateInstrumentationKey(config: IConfiguration & IConfig) :boolean {
                 const disableIKeyValidationFlag = isNullOrUndefined(config.disableInstrumentationKeyValidation) ? false : config.disableInstrumentationKeyValidation;
@@ -989,7 +989,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 const UUID_Regex = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
                 const regexp = new RegExp(UUID_Regex);
                 return regexp.test(config.instrumentationKey);
-            }            
+            }
         
         });
     }

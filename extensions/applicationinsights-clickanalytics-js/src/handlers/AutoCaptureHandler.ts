@@ -39,7 +39,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
     }
 
     /**
-     * API to create and send a populated PageAction event 
+     * API to create and send a populated PageAction event
      * @param element - DOM element
      * @param overrideValues - PageAction overrides
      * @param customProperties - Custom properties(Part C)
@@ -63,7 +63,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         if(clickEvent) {
             let element = clickEvent.srcElement || clickEvent.target;
 
-            // populate overrideValues 
+            // populate overrideValues
             var overrideValues: IPageActionOverrideValues = {
                 clickCoordinateX: clickEvent.pageX,
                 clickCoordinateY: clickEvent.pageY
@@ -84,7 +84,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
             }
     
             while (element && element.tagName) {
-                // control property will be available for <label> elements with 'for' attribute, only use it when is a 
+                // control property will be available for <label> elements with 'for' attribute, only use it when is a
                 // valid JSLL capture element to avoid infinite loops
                 if (element.control && clickCaptureElements[element.control.tagName.toUpperCase()]) {
                     element = element.control;

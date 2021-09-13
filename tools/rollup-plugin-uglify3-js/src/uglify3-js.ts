@@ -9,7 +9,7 @@ function isSourceMapEnabled(options) {
     }
 
     return false;
-} 
+}
 
 function _doMinify(code, filename, options, chunkOptions) {
     var theCode = {};

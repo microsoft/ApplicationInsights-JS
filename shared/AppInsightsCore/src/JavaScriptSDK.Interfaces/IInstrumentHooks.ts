@@ -62,9 +62,9 @@ export interface IInstrumentCallDetails {
 
     /**
      * This returns an object that the hook function can use to store hook specific
-     * context, it it not shared with any other hook instances and is unique for the 
+     * context, it it not shared with any other hook instances and is unique for the
      * current call.
-     * A hook implementation can use this to pass / share context between different 
+     * A hook implementation can use this to pass / share context between different
      * hook callbacks eg. request/response requst/hookErrors etc.
      */
     ctx: () => any;

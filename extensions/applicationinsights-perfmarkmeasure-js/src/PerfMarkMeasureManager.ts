@@ -14,7 +14,7 @@ const strCtxMeasureName = "prf-measure";
 
 export class PerfMarkMeasureManager extends PerfManager {
 
-    constructor(config?: IPerfMarkMeasureConfiguration, manager?: INotificationManager, ) {
+    constructor(config?: IPerfMarkMeasureConfiguration, manager?: INotificationManager ) {
         super(manager);
 
         let _config: IPerfMarkMeasureConfiguration = config || {};
@@ -121,9 +121,9 @@ export class PerfMarkMeasureManager extends PerfManager {
     }
 
     /**
-     * Create a new event and start timing, the manager may return null/undefined to indicate that it does not 
+     * Create a new event and start timing, the manager may return null/undefined to indicate that it does not
      * want to monitor this source event.
-     * @param src The source name of the event 
+     * @param src The source name of the event
      * @param payloadDetails - An optional callback function to fetch the payload details for the event.
      * @param isAsync - Is the event occurring from a async event
      */

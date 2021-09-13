@@ -53,7 +53,7 @@ export interface TestCaseAsync {
      */
     timeOut?: number;
 
-    /** 
+    /**
      * Flag which specifies that once all of the steps are completed the test case is completed.
      * True by default
      */

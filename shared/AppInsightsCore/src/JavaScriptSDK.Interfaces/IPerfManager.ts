@@ -25,9 +25,9 @@ export interface IPerfManagerProvider {
  */
 export interface IPerfManager {
     /**
-     * Create a new event and start timing, the manager may return null/undefined to indicate that it does not 
+     * Create a new event and start timing, the manager may return null/undefined to indicate that it does not
      * want to monitor this source event.
-     * @param src The source name of the event 
+     * @param src The source name of the event
      * @param payloadDetails - An optional callback function to fetch the payload details for the event.
      * @param isAsync - Is the event occurring from a async event
      */

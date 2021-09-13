@@ -11,9 +11,9 @@ export class TraceValidator implements ITypeValidator {
         }
 
         // verify item has ver, message, and properties fields
-        if (!item.data.baseData || 
-            !item.data.baseData.ver || 
-            !item.data.baseData.message || 
+        if (!item.data.baseData ||
+            !item.data.baseData.ver ||
+            !item.data.baseData.message ||
             !item.data.baseData.properties) {
             return false;
         }

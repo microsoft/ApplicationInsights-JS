@@ -5,10 +5,10 @@ import {
     IPageViewPerformanceTelemetry, CtxTagKeys,
     HttpMethod, IPageViewTelemetryInternal, IWeb,
     IExceptionInternal,
-    SampleRate,
+    SampleRate
 } from '@microsoft/applicationinsights-common';
 import {
-    ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, 
+    ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey,
     isNullOrUndefined, isNumber, isString, toISOString, setValue, isTruthy, optimizeObject
 } from '@microsoft/applicationinsights-core-js';
 

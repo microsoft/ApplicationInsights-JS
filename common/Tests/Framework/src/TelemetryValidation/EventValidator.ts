@@ -12,10 +12,10 @@ export class EventValidator implements ITypeValidator {
         }
 
         // verify item has ver, name, properties, and measurement fields
-        if (!item.data.baseData || 
-            !item.data.baseData.ver || 
-            !item.data.baseData.name || 
-            !item.data.baseData.properties || 
+        if (!item.data.baseData ||
+            !item.data.baseData.ver ||
+            !item.data.baseData.name ||
+            !item.data.baseData.properties ||
             !item.data.baseData.measurements) {
             return false;
         }

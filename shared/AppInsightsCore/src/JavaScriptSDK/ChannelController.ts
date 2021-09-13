@@ -6,7 +6,7 @@ import dynamicProto from '@microsoft/dynamicproto-js';
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
-import { IPlugin, ITelemetryPlugin,  } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
+import { IPlugin, ITelemetryPlugin  } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
@@ -42,7 +42,7 @@ export class ChannelController extends BaseTelemetryPlugin {
                         if (queues.length > 0) {
                             // Copying the item context as we could have mutiple chains that are executing asynchronously
                             // and calling _getDefTelCtx as it's possible that the caller doesn't pass any context
-                            let chainCtx = this._getTelCtx(itemCtx).createNew(queues); 
+                            let chainCtx = this._getTelCtx(itemCtx).createNew(queues);
                             chainCtx.processNext(item);
                         }
                     });
@@ -111,7 +111,7 @@ export class ChannelController extends BaseTelemetryPlugin {
 
     public processTelemetry(item: ITelemetryItem, itemCtx: IProcessTelemetryContext) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    };
+    }
 
     public getChannelControls(): IChannelControls[][] {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

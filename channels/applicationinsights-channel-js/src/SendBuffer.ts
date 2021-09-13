@@ -222,7 +222,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
             };
         
             _self.markAsSent = (payload: string[]) => {
-                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, 
+                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY,
                     _self._set(_removePayloadsFromBuffer(payload, _self._get())));
         
                 let sentElements = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);

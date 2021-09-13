@@ -29,7 +29,7 @@ export class DomContentHandler implements IContentHandler {
         
         let metaTags = {};
         if (hasDocument) {
-            metaTags = isValueAssigned(this._config.dataTags.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,this._config.dataTags.metaDataPrefix, false) : 
+            metaTags = isValueAssigned(this._config.dataTags.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,this._config.dataTags.metaDataPrefix, false) :
             this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,'', false);
         }
         return metaTags;
@@ -74,7 +74,7 @@ export class DomContentHandler implements IContentHandler {
                 elementContent = extend(elementContent, this._populateElementContent(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));
             }
         } else {
-            elementContent = extend(elementContent, this._populateElementContentwithDataTag(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));   
+            elementContent = extend(elementContent, this._populateElementContentwithDataTag(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));
         }
         removeInvalidElements(elementContent);
         if (parentDataTagPrefix) {
@@ -155,12 +155,12 @@ export class DomContentHandler implements IContentHandler {
             contentName: htmlContent.contentName || ''
         };
         
-        if(isValueAssigned(parentDataTagPrefix)) { 
+        if(isValueAssigned(parentDataTagPrefix)) {
             this._walkUpDomChainCaptureData(element, elementContent, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag);
         }
 
-        // Validate to ensure the minimum required field 'id' or 'contentName' is present.  
-        // The content schema defines id, aN and sN as required fields.  However, 
+        // Validate to ensure the minimum required field 'id' or 'contentName' is present.
+        // The content schema defines id, aN and sN as required fields.  However,
         // requiring these fields would result in majority of adopter's content from being collected.
         // Just throw a warning and continue collection.
         if (!elementContent.id && !elementContent.contentName) {
@@ -189,7 +189,7 @@ export class DomContentHandler implements IContentHandler {
             this._walkUpDomChainCaptureData(element, elementContent, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag);
         } else {
             this._captureElementContentWithDataTag(element, elementContent, dataTagPrefix);
-        } 
+        }
             
         
         if (this._config.dataTags.useDefaultContentNameOrId) {
@@ -199,8 +199,8 @@ export class DomContentHandler implements IContentHandler {
             elementContent.contentName = htmlContent.contentName || '';
         }
         
-        // Validate to ensure the minimum required field 'id' or 'contentName' is present.  
-        // The content schema defines id, aN and sN as required fields.  However, 
+        // Validate to ensure the minimum required field 'id' or 'contentName' is present.
+        // The content schema defines id, aN and sN as required fields.  However,
         // requiring these fields would result in majority of adopter's content from being collected.
         // Just throw a warning and continue collection.
         if (!elementContent.id && !elementContent.contentName) {
@@ -272,7 +272,7 @@ export class DomContentHandler implements IContentHandler {
     /**
      * Check if the user wants to track the element, which means if the element has any tags with data-* or customDataPrefix
      * @param element - An html element
-     * @returns true if any data-* exist, otherwise return false 
+     * @returns true if any data-* exist, otherwise return false
      */
     private _isTracked(element: Element, dataTag: string, aiBlobAttributeTag: string): boolean {
         const attrs = element.attributes;
@@ -282,12 +282,12 @@ export class DomContentHandler implements IContentHandler {
             if(attributeName === aiBlobAttributeTag) {
                 // ignore if the attribute name is equal to aiBlobAttributeTag
                 return false;
-            } else if (attributeName.indexOf(dataTag) === 0) { 
+            } else if (attributeName.indexOf(dataTag) === 0) {
                 dataTagFound = true;
             }
         }
         return dataTagFound;
-    }  
+    }
 
     private _getHtmlIdAndContentName(element:Element) {
         let htmlContent: any = {};
@@ -299,7 +299,7 @@ export class DomContentHandler implements IContentHandler {
 
             htmlContent = {
                 id: element.id,
-                contentName: customizedContentName || defaultContentName || element.getAttribute('alt'),
+                contentName: customizedContentName || defaultContentName || element.getAttribute('alt')
             };
         }
 
@@ -341,7 +341,7 @@ export class DomContentHandler implements IContentHandler {
                 } catch (e) {
                     this._traceLogger.throwInternal(
                         LoggingSeverity.CRITICAL,
-                        _ExtendedInternalMessageId.CannotParseAiBlobValue, "Can not parse " + dataAttr,
+                        _ExtendedInternalMessageId.CannotParseAiBlobValue, "Can not parse " + dataAttr
                     );
                 }
                 if (telemetryObject) {
@@ -351,7 +351,7 @@ export class DomContentHandler implements IContentHandler {
                 parentId = closestParentElement.getAttribute(dataTagPrefix+"id");
             }
         }
-        if (parentId) { 
+        if (parentId) {
             parentInfo['parentid'] = parentId;
         }
         else {

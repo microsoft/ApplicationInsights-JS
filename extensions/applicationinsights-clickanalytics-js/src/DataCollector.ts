@@ -34,7 +34,7 @@ export function getImageHref(element: HTMLImageElement): string {
 }
 
 
-/** 
+/**
  * Get click target
  * @returns Click target URI
  */
@@ -121,7 +121,7 @@ export function getPageName(config: IClickAnalyticsConfiguration, overrideValues
 }
 
 /**
- * Sanitize URL values 
+ * Sanitize URL values
  * @param config - Configuration
  * @param location - window.location or document.location
  * @returns Flag indicating if an element is market PII.

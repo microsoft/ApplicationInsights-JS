@@ -363,5 +363,5 @@ export class ajaxRecord {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
-};
+}
 

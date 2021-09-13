@@ -16,12 +16,12 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
             { name: "args", idx: 3}
         ],
         replace:"(function(obj, prop, descriptor) { " +
-            "/* ai_es3_polyfil %function% */ " + 
-            "var func = %class%[\"%function%\"]; " + 
-            "if (func) { try { return func(obj, prop, descriptor); } catch(e) { /* IE8 defines defineProperty, but will throw */ } } " + 
+            "/* ai_es3_polyfil %function% */ " +
+            "var func = %class%[\"%function%\"]; " +
+            "if (func) { try { return func(obj, prop, descriptor); } catch(e) { /* IE8 defines defineProperty, but will throw */ } } " +
             "if (descriptor && typeof descriptor.value !== undefined) { obj[prop] = descriptor.value; } " +
-            "return obj; " + 
-            "})(%args%)%semi%" 
+            "return obj; " +
+            "})(%args%)%semi%"
     },
     {
         funcNames: [/Object\.getOwnPropertyDescriptor[\s]*\(/g ],
@@ -35,12 +35,12 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
             { name: "semi", idx: 4},
             { name: "args", idx: 3}
         ],
-        replace:"(function(obj, prop) { " + 
+        replace:"(function(obj, prop) { " +
             "/* ai_es3_polyfil %function% */" +
             "var func = %class%[\"%function%\"]; " +
             "if (func) { return func(obj, prop); } " +
             "return undefined; " +
-            "})(%args%)%semi%" 
+            "})(%args%)%semi%"
     },
     {
         funcNames: [/Object\.create[\s]*\(/g ],
@@ -60,11 +60,11 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
                 "var func = %class%[\"%function%\"]; " +
                 // Use build in Object.create
                 "if (func) { return func(obj); } " +
-                "if (obj == null) { return {}; }; " + 
+                "if (obj == null) { return {}; }; " +
                 "var type = typeof obj; " +
                 "if (type !== 'object' && type !== 'function') { throw new TypeError('Object prototype may only be an Object:' + obj); } " +
                 "function tmpFunc() {}; tmpFunc.prototype = obj; return new tmpFunc(); " +
-                "})(%args%)%semi%" 
+                "})(%args%)%semi%"
     },
     {
         funcNames: [/Object\.(freeze|seal)[\s]*\(/g ],
@@ -95,7 +95,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
             { name: "src", idx: 0 },
             { name: "prefix", idx: 1 },
             { name: "name", idx: 2 },
-            { name: "value", idx: 3 },
+            { name: "value", idx: 3 }
         ],
         replace:"%prefix%%name%: (function(obj) { " +
             "/* ai_es3polyfil get %name% */ " +
@@ -117,7 +117,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /Object\.(defineProperties)\(/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment, use a helper function or add explicit check for existence",
-        ignoreIds: [ 
+        ignoreIds: [
             "applicationinsights-react-js", // Don't break build if these exist in the final react extension
             "react.production.min.js",      // Don't break build if these exist in the react prod source code
             "react.development.js"          // Don't break build if these exist in the react dev source code
@@ -126,7 +126,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /Object\.(assign|getOwnPropertyNames)\(/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment, use a helper function or add explicit check for existence",
-        ignoreIds: [ 
+        ignoreIds: [
             "applicationinsights-react-js",  // Don't break build if these exist in the final react extension
             "object-assign\\index.js",          // object-assign node module contains a pre existence check before usage
             "object-assign/index.js"            // object-assign node module contains a pre existence check before usage
@@ -135,7 +135,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /Object\.(keys)\(/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment, use a helper function or add explicit check for existence",
-        ignoreIds: [ 
+        ignoreIds: [
             "react.production.min.js",      // Don't break build if these exist in the react prod source code
             "react.development.js",         // Don't break build if these exist in the react dev source code
             "applicationinsights-react-js",  // Don't break build if these exist in the final react extension
@@ -146,11 +146,11 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /Object\.(getOwnPropertySymbols)\(/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment, use a helper function or add explicit check for existence",
-        ignoreIds: [ 
+        ignoreIds: [
             "tslib.es6",                    // tslib.es6 library has a pre existence check before usage
             "object-assign\\index.js",      // object-assign node module contains a pre existence check before usage
             "object-assign/index.js"        // object-assign node module contains a pre existence check before usage
-        ]  
+        ]
     },
     {
         funcNames: [ /([\w0-9$]*)\.toISOString[\s]*\(/g ],
@@ -168,7 +168,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /\.(map)[\s]*\(/g ],
         errorMsg: "[%funcName%] is not a supported array method in an ES3 environment.",
-        ignoreIds: [ 
+        ignoreIds: [
             "react.production.min.js",          // Don't break build if these exist in the react prod source code
             "react.development.js",             // Don't break build if these exist in the react dev source code
             "applicationinsights-react-js",     // Don't break build if these exist in the final react extension
@@ -179,7 +179,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /([\w0-9]*)\.(forEach)[\s]*\(/g ],
         errorMsg: "[%funcName%] is not a supported array method in an ES3 environment, use arrForEach().",
-        ignoreFuncMatch: [ 
+        ignoreFuncMatch: [
             "headers.forEach"               // Ignore patterns that look like the response headers processing
         ],
         ignoreIds: [
@@ -195,7 +195,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /([\w0-9]*)\.(trim)[\s]*\(/g ],
         errorMsg: "[%funcName%] is not a supported string method in an ES3 environment, use strTrim().",
-        ignoreFuncMatch: [ 
+        ignoreFuncMatch: [
             "Util.trim",                            // Make sure this isn't a reference to Util.trim()
             "DataSanitizer.trim"                    // Make sure this isn't a reference to Util.trim()
         ]
@@ -203,13 +203,13 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /([\w0-9]*)\.(startsWith)[\s]*\(/g ],
         errorMsg: "[%funcName%] is not a supported string method in an ES3 environment, use strStartsWith().",
-        ignoreFuncMatch: [ 
+        ignoreFuncMatch: [
         ]
     },
     {
         funcNames: [ /([\w0-9]*)\.(endsWith)[\s]*\(/g ],
         errorMsg: "[%funcName%] is not a supported string method in an ES3 environment, use strEndsWith().",
-        ignoreFuncMatch: [ 
+        ignoreFuncMatch: [
         ]
     },
     {

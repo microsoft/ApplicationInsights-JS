@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the
-export { 
+export {
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper,
     IDateTimeUtils, DateTimeUtils, dateTimeUtilsNow, dateTimeUtilsDuration,
     IUrlHelper, UrlHelper, isInternalApplicationInsightsEndpoint
@@ -36,7 +36,7 @@ export { IChannelControlsAI } from './Interfaces/IChannelControlsAI';
 export { IContextTagKeys, ContextTagKeys } from './Interfaces/Contracts/Generated/ContextTagKeys';
 export {
     DataSanitizerValues, IDataSanitizer, DataSanitizer,
-    dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage, 
+    dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage,
     dataSanitizeException, dataSanitizeProperties, dataSanitizeMeasurements, dataSanitizeId, dataSanitizeInput,
     dsPadNumber
 } from './Telemetry/Common/DataSanitizer';
@@ -61,8 +61,8 @@ export { DistributedTracingModes } from './Enums';
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from './HelperFuncs';
 export { isBeaconsSupported as isBeaconApiSupported } from "@microsoft/applicationinsights-core-js"
 export { createDomEvent } from './DomHelperFuncs';
-export { 
-    utlDisableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage, 
+export {
+    utlDisableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage,
     utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage
 } from './StorageHelperFuncs';
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from './UrlHelperFuncs';

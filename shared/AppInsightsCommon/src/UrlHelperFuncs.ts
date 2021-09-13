@@ -18,7 +18,7 @@ export function urlParseUrl(url: string): HTMLAnchorElement {
         // Always create the temp instance if createElement is not available
         tempAnchor = { host: urlParseHost(url, true) } as HTMLAnchorElement;
     } else if (!anchorCache[anchorIdx]) {
-        // Create and cache the unattached anchor instance 
+        // Create and cache the unattached anchor instance
         tempAnchor = anchorCache[anchorIdx] = _document.createElement('a');
     }
 
@@ -58,7 +58,7 @@ export function urlGetPathName(url: string): string {
 export function urlGetCompleteUrl(method: string, absoluteUrl: string) {
     if (method) {
         return method.toUpperCase() + " " + absoluteUrl;
-    } 
+    }
 
     return absoluteUrl;
 }

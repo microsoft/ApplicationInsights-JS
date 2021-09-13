@@ -137,7 +137,7 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
     let details = null;
     if (errorObj) {
         try {
-            /* Using bracket notation is support older browsers (IE 7/8 -- dont remember the version) that throw when using dot 
+            /* Using bracket notation is support older browsers (IE 7/8 -- dont remember the version) that throw when using dot
             notation for undefined objects and we don't want to loose the error from being reported */
             if (errorObj[strStack]) {
                 // Chrome/Firefox
@@ -172,7 +172,7 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
                 }
             }
         } catch (e) {
-            // something unexpected happened so to avoid failing to report any error lets swallow the exception 
+            // something unexpected happened so to avoid failing to report any error lets swallow the exception
             // and fallback to the callee/caller method
             details = _convertStackObj(e);
         }
@@ -421,7 +421,7 @@ export class Exception extends ExceptionData implements ISerializable {
                     hasFullStack: true,
                     message,
                     stack: details,
-                    typeName,
+                    typeName
                 } as ExceptionDetails
             ]
         } as Exception;
@@ -512,7 +512,7 @@ export class _StackFrame extends StackFrame implements ISerializable {
         method: FieldType.Required,
         assembly: FieldType.Default,
         fileName: FieldType.Default,
-        line: FieldType.Default,
+        line: FieldType.Default
     };
 
     constructor(sourceFrame: string | IExceptionStackFrameInternal, level: number) {
