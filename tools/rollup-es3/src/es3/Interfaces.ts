@@ -7,7 +7,7 @@
 export interface INamedGroups {
     name: string,
     idx: number
-};
+}
 
 /**
  * Identifies the checks to apply as part of the es3Check() rollup plugin
@@ -41,14 +41,14 @@ export interface IEs3CheckKeyword {
      * The prefix added to any reported error, defaults to "Invalid ES3 function"
      */
     errorTitle?:string
-};
+}
  
 /**
  * Identifies the checks and replacement values to apply as part of the es3Poly() rollup plugin
  */
 export interface IEs3Keyword extends IEs3CheckKeyword {
     /**
-     * The RegEx used to match and extract the function details, don't use named groups (?&lt;name&gt;....); the "s" flag or 
+     * The RegEx used to match and extract the function details, don't use named groups (?&lt;name&gt;....); the "s" flag or
      * positive or negative lookbehind (?&lt;=....); (?<!....) unless you build environment supports them. The application insights
      * infrastructure (PhantomJS) does not.
      */
@@ -60,7 +60,7 @@ export interface IEs3Keyword extends IEs3CheckKeyword {
      */
     checkGroups?: number[],
 
-    /** 
+    /**
      * We need to simulate named regex groups due to infrastructure issues, so this provides a mapping from the RegEx group
      * number to a name, where any matching name in the replace string %name% will be replaced with the matching RegEx group value
      */
@@ -76,7 +76,7 @@ export interface IEs3Keyword extends IEs3CheckKeyword {
      * The prefix added to any reported error, defaults to "Invalid ES3 function"
      */
     errorTitle?:string
-};
+}
 
 /**
  * Identifies the optional options to be passed to the es3Poly() rollup plugin
@@ -104,7 +104,7 @@ export interface IEs3RollupOptions {
      * false these are appended after the default values, and when true these are the only values used
      */
     keywords?:IEs3Keyword[]        // Optional extra keywords
-};
+}
 
 /**
  * Identifies the optional options to be passed to the es3Check() rollup plugin
@@ -121,7 +121,7 @@ export interface IEs3CheckRollupOptions {
      * false these are appended after the default values, and when true these are the only values used
      */
     keywords?:IEs3CheckKeyword[]
-};
+}
 
 /**
  * Identifies the optional options to be passed to the es3Check() rollup plugin
@@ -131,4 +131,4 @@ export interface IImportCheckRollupOptions {
      * Identify the module names that you want to ban importing from
      */
     exclude?:string[]
-};
+}

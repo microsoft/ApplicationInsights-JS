@@ -28,7 +28,7 @@ let _internalSdkSrc: string;
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names
 const _ignoreUpdateSnippetProperties = [
-    "snippet", "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults",
+    "snippet", "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults"
 ];
 
 /**
@@ -50,7 +50,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
     getSender: () => Sender;
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
     clearAuthenticatedUserContext(): void;
-};
+}
 
 // Re-exposing the Common classes as Telemetry, the list was taken by reviewing the generated code for the build while using
 // the previous configuration :-
@@ -157,7 +157,7 @@ export class Initialization implements IApplicationInsights {
      */
     public getCookieMgr(): ICookieMgr {
         return this.appInsights.getCookieMgr();
-    };
+    }
 
     /**
      * Log a user action or other occurrence.

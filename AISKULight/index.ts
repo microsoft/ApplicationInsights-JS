@@ -95,7 +95,7 @@ export class ApplicationInsights {
     }
 
     private getSKUDefaults() {
-        this.config.diagnosticLogInterval = 
+        this.config.diagnosticLogInterval =
             this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
     }
 }

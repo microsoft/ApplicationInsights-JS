@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export { 
-    strShimFunction, 
-    strShimObject, 
-    strShimUndefined, 
-    strShimPrototype, 
+export {
+    strShimFunction,
+    strShimObject,
+    strShimUndefined,
+    strShimPrototype,
     strShimHasOwnProperty,
     strDefault,
     ObjClass,
@@ -17,7 +17,7 @@ export {
 } from "./Constants"
 
 export {
-    throwTypeError, 
+    throwTypeError,
     objCreateFn,
     getGlobal
 } from "./Helpers"
@@ -37,7 +37,7 @@ export {
     __makeTemplateObjectFn,
     __importDefaultFn,
     __importStarFn,
-    __exportStarFn,
+    __exportStarFn
 } from "./TsLibShims"
 
 export {

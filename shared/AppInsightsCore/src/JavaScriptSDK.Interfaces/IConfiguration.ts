@@ -83,7 +83,7 @@ export interface IConfiguration {
      * Channel queues that is setup by caller in desired order.
      * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
-    channels?: IChannelControls[][];  
+    channels?: IChannelControls[][];
     /**
      * @type {boolean}
      * @memberof IConfiguration
@@ -102,8 +102,8 @@ export interface IConfiguration {
     enablePerfMgr?: boolean;
 
     /**
-     * [Optional] Callback function that will be called to create a the IPerfManager instance when required and ```enablePerfMgr``` 
-     * is enabled, this enables you to override the default creation of a PerfManager() without needing to ```setPerfMgr()``` 
+     * [Optional] Callback function that will be called to create a the IPerfManager instance when required and ```enablePerfMgr```
+     * is enabled, this enables you to override the default creation of a PerfManager() without needing to ```setPerfMgr()```
      * after initialization.
      */
     createPerfMgr?: (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager;
@@ -120,7 +120,7 @@ export interface IConfiguration {
     idLength?: number;
 
     /**
-     * @description Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. It 
+     * @description Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. It
      * can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
      * @type {string}
      * @memberof IConfig
@@ -129,7 +129,7 @@ export interface IConfiguration {
     cookieDomain?: string;
 
     /**
-     * @description Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application 
+     * @description Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application
      * gateway. It can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
      * @type {string}
      * @memberof IConfig
@@ -144,7 +144,7 @@ export interface IConfiguration {
     disableCookiesUsage?: boolean;
 
     /**
-     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie 
+     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie
      * operations. If this configuration is specified any specified enabled and domain properties will take precedence over the
      * cookieDomain and disableCookiesUsage values.
      */

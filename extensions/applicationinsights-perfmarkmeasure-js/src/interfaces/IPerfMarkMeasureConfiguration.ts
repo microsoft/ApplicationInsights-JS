@@ -10,7 +10,7 @@
     /**
      * Should the Performance manager create and use window.performance.mark(), defaults to true
      */
-    useMarks?: boolean; 
+    useMarks?: boolean;
 
     /**
      * Identifies the prefix for the mark, defaults to "ai.prfmrk.", the event name is appended for the mark
@@ -26,7 +26,7 @@
     /**
      * Provides a mapping between the internal perf names and the value used to create the mark,
      * when a map is provided but no mapping is present that event will be ignored.
-     * 
+     *
      */
     markNameMap?: { [key: string]: string };
 
@@ -43,7 +43,7 @@
     /**
      * Should the Performance manager create and use window.performance.measure(), defaults to true
      */
-    useMeasures?: boolean; 
+    useMeasures?: boolean;
 
     /**
      * Identifies the prefix for the mark, defaults to "ai.prfmsr.", the event name is appended for the measure name

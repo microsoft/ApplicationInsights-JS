@@ -92,7 +92,7 @@ function _getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): stri
             !isNullOrUndefined(xhr[strAjaxData].requestUrl)) {
             result += "(url: '" + xhr[strAjaxData].requestUrl + "')";
         }
-    } catch (e) { 
+    } catch (e) {
         // eslint-disable-next-line no-empty
     }
 
@@ -175,7 +175,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             maxAjaxPerfLookupAttempts: 3,
             ajaxPerfLookupDelay: 25,
             ignoreHeaders:[
-                "Authorization", 
+                "Authorization",
                 "X-API-Key",
                 "WWW-Authenticate"],
             addRequestContext: undefined

@@ -5,4 +5,4 @@ import { ITelemetryContext } from './ITelemetryContext';
 
 export interface IPropertiesPlugin {
     readonly context: ITelemetryContext;
-};
+}

@@ -6,13 +6,13 @@ import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, isNullOrUndefined, ITelemetryItem,
     IProcessTelemetryContext, ITelemetryPluginChain,
-    _InternalMessageId, ICustomProperties, 
+    _InternalMessageId, ICustomProperties,
     LoggingSeverity, arrForEach, dumpObj, getExceptionName
 } from "@microsoft/applicationinsights-core-js";
 import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
-import { 
-    IClickAnalyticsConfiguration, IContentHandler, 
-    IAutoCaptureHandler, IPageActionTelemetry 
+import {
+    IClickAnalyticsConfiguration, IContentHandler,
+    IAutoCaptureHandler, IPageActionTelemetry
 } from './Interfaces/Datamodel';
 import {
     mergeConfig, BehaviorMapValidator,
@@ -59,7 +59,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
             }
         });
         // Append Click Analytics Plugin Version to SDK version.
-        if (_propertiesExtension && _propertiesExtension.context && 
+        if (_propertiesExtension && _propertiesExtension.context &&
             _propertiesExtension.context.internal && _propertiesExtension.context.internal.sdkVersion) {
                 _propertiesExtension.context.internal.sdkVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
         }

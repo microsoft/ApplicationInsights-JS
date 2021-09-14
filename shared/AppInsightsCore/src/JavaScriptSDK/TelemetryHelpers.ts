@@ -49,9 +49,9 @@ export function initializePlugins(processContext:ProcessTelemetryContext, extens
     // Now initiatilize the plugins
     arrForEach(initPlugins, thePlugin => {
         thePlugin.initialize(
-            processContext.getCfg(), 
-            processContext.core(), 
-            extensions, 
+            processContext.getCfg(),
+            processContext.core(),
+            extensions,
             processContext.getNext());
     });
 }
@@ -69,5 +69,5 @@ export function sortPlugins(plugins:IPlugin[]) {
 
         return result;
     });
-    // sort complete    
+    // sort complete
 }

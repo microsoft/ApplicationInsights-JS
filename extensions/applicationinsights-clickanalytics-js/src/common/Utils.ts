@@ -42,12 +42,12 @@ export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyti
 }
 
 /**
- * Finds attributes in object which are invalid 
+ * Finds attributes in object which are invalid
  * and deletes them. useful in override config
  * @param object Input object
  */
 export function removeInvalidElements(object: Object): void {
-    /// Because the config object 'callback' contains only functions, 
+    /// Because the config object 'callback' contains only functions,
     /// when it is stringified it returns the empty object. This explains
     /// the workaround regarding 'callback'
     for (var property in object) {
@@ -71,9 +71,9 @@ export function isValueAssigned(value: any) {
 }
 
 /**
- * Determines whether an event is a right click or not 
- * @param evt - Mouse event 
- * @returns true if the event is a right click 
+ * Determines whether an event is a right click or not
+ * @param evt - Mouse event
+ * @returns true if the event is a right click
  */
 export function isRightClick(evt: any): boolean {
     try {
@@ -88,9 +88,9 @@ export function isRightClick(evt: any): boolean {
 }
 
 /**
- * Determines whether an event is a left click or not 
- * @param evt - Mouse event 
- * @returns true if the event is a left click 
+ * Determines whether an event is a left click or not
+ * @param evt - Mouse event
+ * @returns true if the event is a left click
  */
 export function isLeftClick(evt: any): boolean {
     try {
@@ -105,9 +105,9 @@ export function isLeftClick(evt: any): boolean {
 }
 
 /**
- * Determines whether an event is a middle click or not 
- * @param evt - Mouse event 
- * @returns true if the event is a middle click 
+ * Determines whether an event is a middle click or not
+ * @param evt - Mouse event
+ * @returns true if the event is a middle click
  */
 export function isMiddleClick(evt: any): boolean {
     try {
@@ -123,7 +123,7 @@ export function isMiddleClick(evt: any): boolean {
 
 /**
  *  Determines whether an event is a keyboard enter or not
- * @param evt - Keyboard event 
+ * @param evt - Keyboard event
  * @returns true if the event is a keyboard enter
  */
 export function isKeyboardEnter(evt: KeyboardEvent): boolean {
@@ -138,7 +138,7 @@ export function isKeyboardEnter(evt: KeyboardEvent): boolean {
 
 /**
  *  Determines whether an event is a keyboard space or not
- * @param evt - Keyboard event 
+ * @param evt - Keyboard event
  * @returns true if the event is a space enter
  */
 export function isKeyboardSpace(evt: KeyboardEvent) {
@@ -166,9 +166,9 @@ export function isElementDnt(element: Element, doNotTrackFieldName: string): boo
 }
 
 /**
- * Walks up DOM tree to find element with attribute 
+ * Walks up DOM tree to find element with attribute
  * @param el - DOM element
- * @param attribute - Attribute name 
+ * @param attribute - Attribute name
  * @returns Dom element which contains attribute
  */
 export function findClosestByAttribute(el: Element, attribute: string): Element {
@@ -179,7 +179,7 @@ export function findClosestByAttribute(el: Element, attribute: string): Element 
  * checks if attribute is in element.
  * method checks for empty string, in case the attribute is set but no value is assigned to it
  * @param element - DOM element
- * @param attributeToLookFor - Attribute name 
+ * @param attributeToLookFor - Attribute name
  * @returns true if attribute is in element, even if empty string
  */
 export function isAttributeInElement(element: Element, attributeToLookFor: string): Boolean {
@@ -218,7 +218,7 @@ export function isElementAnAnchor(element: Element): boolean {
 }
 
 /**
- * Walks up DOM tree to find anchor element 
+ * Walks up DOM tree to find anchor element
  * @param element - DOM element
  * @returns Dom element which is an anchor
  */
@@ -319,7 +319,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
         // General library settings
         autoCapture: true,
         callback: {
-            pageActionPageTags: null,
+            pageActionPageTags: null
         },
         pageTags: {},
         // overrideValues to use instead of collecting automatically
@@ -334,7 +334,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
             aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
             customDataPrefix: DEFAULT_DATA_PREFIX,
             captureAllMetaDataContent: false,
-            dntDataTag: DEFAULT_DONOT_TRACK_TAG,
+            dntDataTag: DEFAULT_DONOT_TRACK_TAG
         },
         behaviorValidator: (key:string) => key || "",
         defaultRightClickBhvr: "",
@@ -349,7 +349,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
         }
 
     if (overrideConfig) {
-            // delete attributes that should be object and 
+            // delete attributes that should be object and
             // delete properties that are null, undefined, ''
          removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
         if(isValueAssigned(overrideConfig.dataTags)) {

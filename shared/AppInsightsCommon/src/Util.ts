@@ -6,7 +6,7 @@ import {
     _InternalMessageId, IDiagnosticLogger, IPlugin, getPerformance,
     getExceptionName as coreGetExceptionName, dumpObj,
     isNullOrUndefined, strTrim, random32, isArray, isError, isDate,
-    newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent, 
+    newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent,
     dateNow, uaDisallowsSameSiteNone, disableCookies as coreDisableCookies,
     canUseCookies as coreCanUseCookies, getCookie as coreGetCookie,
     setCookie as coreSetCookie, deleteCookie as coreDeleteCookie,
@@ -291,7 +291,7 @@ export interface IUrlHelper {
      * Get the full host from the url, optionally including the port
      */
     parseFullHost: (url: string, inclPort?: boolean) => string
-};
+}
 
 export const UrlHelper: IUrlHelper = {
     parseUrl: urlParseUrl,
@@ -350,7 +350,7 @@ export const CorrelationIdHelper: ICorrelationIdHelper = {
 
         let requestHost = urlParseUrl(requestUrl).host.toLowerCase();
         if (requestHost && (requestHost.indexOf(":443") !== -1 || requestHost.indexOf(":80") !== -1)) {
-            // [Bug #1260] IE can include the port even for http and https URLs so if present 
+            // [Bug #1260] IE can include the port even for http and https URLs so if present
             // try and parse it to remove if it matches the default protocol port
             requestHost = (urlParseFullHost(requestUrl, true) || "").toLowerCase();
         }

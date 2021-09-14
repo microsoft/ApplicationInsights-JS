@@ -6,7 +6,7 @@ import { INamedGroups, IEs3Keyword, IEs3RollupOptions } from "./Interfaces";
 import { checkResult } from "./Es3Check";
 import MagicString from 'magic-string';
 
-// Start the temp name from the recent milliseconds -- this is to try and ensure that multiple runs which 
+// Start the temp name from the recent milliseconds -- this is to try and ensure that multiple runs which
 // merge into the same resulting file *hopefully* avoid any temporary name clashes
 let tempIndex = ((new Date()).getTime() & 0xFFFFFF);
 
@@ -102,7 +102,7 @@ export function es3Poly(options:IEs3RollupOptions = {}) {
                         }
                     } catch (e) {
                         // This occurs when we try and transform a chunk that has already been transformed
-                        // So reassigning the values and attempt to replace again, this may cause any possible 
+                        // So reassigning the values and attempt to replace again, this may cause any possible
                         // map file to mismatch the source code, however, the wrapped code should still be mostly correct
                         code = theString.toString();
                         theString = new MagicString(code);

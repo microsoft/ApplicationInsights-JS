@@ -109,7 +109,7 @@ let selectedObject: object;
 
 export function copySelectedTree() {
     const toCopy: Object = selectedObject;
-    if (!toCopy) { 
+    if (!toCopy) {
         return;
     }
 
@@ -120,7 +120,7 @@ export function copySelectedTree() {
     textArea.select();
     document.execCommand("copy");
     textArea.parentElement.removeChild(textArea);
-};
+}
 
 export function focusHandler(evt: Event, target: Object, level: number, excludeKeys: string[], includeFunctions: boolean) {
     if (lastSelectedElement) {
@@ -231,7 +231,7 @@ export function getTargetKeys(target: any, excludedKeys: string[], includeFuncti
                 }
             }
         } catch (ex) {
-            // getOwnPropertyNames can fail in ES5, if the argument to this method is not an object (a primitive), 
+            // getOwnPropertyNames can fail in ES5, if the argument to this method is not an object (a primitive),
             // then it will cause a TypeError. In ES2015, a non-object argument will be coerced to an object.
         }
     }
@@ -255,7 +255,7 @@ export function getTargetKeys(target: any, excludedKeys: string[], includeFuncti
 export function formatLogElements(target: Object, tmLabel: string, key: string, level: number, textFilter: string, excludeKeys: string[], thingsReferenced?: any[], includeFunctions?:boolean): any {
     let openState = false;
     if (!level) {
-        level = 0; 
+        level = 0;
     }
 
     if (!thingsReferenced) {
@@ -418,7 +418,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
     if (childOpened) {
         // A child node matched so auto-expand
         _openNode(currentLine);
-    }    
+    }
     if (isObj) {
         if (isErr) { rootDiv.className = 'exception' }
         const openHandler = (evt: Event, forceState?: boolean) => {

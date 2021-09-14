@@ -27,7 +27,7 @@ export class WebEvent {
      * @param metaTags - Meta tags
      * @param traceLogger - Trace logger to log to console.
      */
-    constructor(protected _clickAnalyticsPlugin: ClickAnalyticsPlugin, protected _config: IClickAnalyticsConfiguration, protected _contentHandler: IContentHandler, 
+    constructor(protected _clickAnalyticsPlugin: ClickAnalyticsPlugin, protected _config: IClickAnalyticsConfiguration, protected _contentHandler: IContentHandler,
         protected _pageTagsCallback: any, protected _metaTags: { [name: string]: string },
         protected _traceLogger: IDiagnosticLogger) {
 
@@ -95,7 +95,7 @@ export class WebEvent {
 
     protected _getBehavior(overrideValues?: IOverrideValues): string | number {
         let behavior: string | number;
-        // If override specified 
+        // If override specified
         if (overrideValues && isValueAssigned(overrideValues.behavior)) {
             behavior = overrideValues.behavior;
         }

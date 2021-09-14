@@ -11,13 +11,13 @@ export class PageViewValidator implements ITypeValidator {
         }
 
         // verify item has ver, url, name, duration, id, properties, and measurements fields
-        if (!item.data.baseData || 
-            !item.data.baseData.ver ||  
-            !item.data.baseData.url || 
+        if (!item.data.baseData ||
+            !item.data.baseData.ver ||
+            !item.data.baseData.url ||
             !item.data.baseData.name ||
-            !item.data.baseData.duration || 
-            !item.data.baseData.id ||  
-            !item.data.baseData.properties || 
+            !item.data.baseData.duration ||
+            !item.data.baseData.id ||
+            !item.data.baseData.properties ||
             !item.data.baseData.measurements) {
             return false;
         }

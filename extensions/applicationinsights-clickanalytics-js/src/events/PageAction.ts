@@ -54,7 +54,7 @@ export class PageAction extends WebEvent {
     }
 
     /**
-     * API to create and send a populated PageAction event 
+     * API to create and send a populated PageAction event
      * @param element - DOM element
      * @param overrideValues - PageAction overrides
      * @param customProperties - Custom properties(Part C)
@@ -66,7 +66,7 @@ export class PageAction extends WebEvent {
         let pageActionProperties: ICustomProperties = isValueAssigned(customProperties) ? customProperties : {};
         this.setCommonProperties(pageActionEvent, overrideValues);
         pageActionEvent.behavior = this._getBehavior(overrideValues);
-        // element in scope is needed for below properties.  We cannot pass element into the plugin call chain.  
+        // element in scope is needed for below properties.  We cannot pass element into the plugin call chain.
         // process them here.
         let elementContent: any = {};
         
@@ -86,7 +86,7 @@ export class PageAction extends WebEvent {
                 pageActionEvent.behavior = this._getValidBehavior(currentBehavior);
             }
 
-            // Validate to ensure the minimum required field 'contentName' or 'id' is present. However, 
+            // Validate to ensure the minimum required field 'contentName' or 'id' is present. However,
             // requiring these fields would result in majority of adopter's content from being collected.
             // Just throw a warning and continue collection.
             if (!isValueAssigned(elementContent.id) && !isValueAssigned(elementContent.contentName)) {
@@ -149,9 +149,9 @@ export class PageAction extends WebEvent {
 
     private _isUndefinedEvent(pageActionEvent: IPageActionTelemetry) {
         if(this._config.dropInvalidEvents) {
-            if(pageActionEvent.name === strNotSpecified 
+            if(pageActionEvent.name === strNotSpecified
                 && pageActionEvent.parentId === strNotSpecified
-                && pageActionEvent.content === "[{}]") 
+                && pageActionEvent.content === "[{}]")
                 return true;
         }
         return false;

@@ -7,7 +7,7 @@ import {
     ITelemetryPlugin,
     ITelemetryItem,
     IPlugin,
-    IAppInsightsCore, 
+    IAppInsightsCore,
     LoggingSeverity,
     _InternalMessageId,
     BaseTelemetryPlugin,
@@ -29,7 +29,7 @@ import { getGlobal, strShimUndefined } from '@microsoft/applicationinsights-shim
 declare var global: Window;
 
 /**
- * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a 
+ * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a
  * performance optimization to avoid the creation of a new array for large objects
  * @param target The target object to find and process the keys
  * @param callbackfn The function to call with the details

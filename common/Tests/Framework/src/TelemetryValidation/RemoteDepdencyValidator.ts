@@ -11,16 +11,16 @@ export class RemoteDepdencyValidator implements ITypeValidator {
         }
 
         // verify item has ver, name, id, resultCode, duration, data, target, type, properties, and measurement fields
-        if (!item.data.baseData || 
-            !item.data.baseData.ver || 
-            !item.data.baseData.name || 
-            !item.data.baseData.id || 
-            !item.data.baseData.resultCode || 
+        if (!item.data.baseData ||
+            !item.data.baseData.ver ||
+            !item.data.baseData.name ||
+            !item.data.baseData.id ||
+            !item.data.baseData.resultCode ||
             !item.data.baseData.duration ||
-            !item.data.baseData.data || 
-            !item.data.baseData.target || 
-            !item.data.baseData.type || 
-            !item.data.baseData.properties || 
+            !item.data.baseData.data ||
+            !item.data.baseData.target ||
+            !item.data.baseData.type ||
+            !item.data.baseData.properties ||
             !item.data.baseData.measurements) {
             return false;
         }

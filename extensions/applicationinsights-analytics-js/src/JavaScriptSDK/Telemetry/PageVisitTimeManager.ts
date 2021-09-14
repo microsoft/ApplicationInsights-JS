@@ -16,7 +16,7 @@ export class PageVisitTimeManager {
     /**
      * Creates a new instance of PageVisitTimeManager
      * @param pageVisitTimeTrackingHandler Delegate that will be called to send telemetry data to AI (when trackPreviousPageVisit is called)
-     * @returns {} 
+     * @returns {}
      */
     constructor(logger: IDiagnosticLogger, pageVisitTimeTrackingHandler: (pageName: string, pageUrl: string, pageVisitTime: number) => void) {
         this.pageVisitTimeTrackingHandler = pageVisitTimeTrackingHandler;
@@ -46,7 +46,7 @@ export class PageVisitTimeManager {
     /**
      * Stops timing of current page (if exists) and starts timing for duration of visit to pageName
      * @param pageName Name of page to begin timing visit duration
-     * @returns {PageVisitData} Page visit data (including duration) of pageName from last call to start or restart, if exists. Null if not. 
+     * @returns {PageVisitData} Page visit data (including duration) of pageName from last call to start or restart, if exists. Null if not.
      */
     public restartPageVisitTimer(pageName: string, pageUrl: string) {
         try {
@@ -62,8 +62,8 @@ export class PageVisitTimeManager {
 
     /**
      * Starts timing visit duration of pageName
-     * @param pageName 
-     * @returns {} 
+     * @param pageName
+     * @returns {}
      */
     public startPageVisitTimer(pageName: string, pageUrl: string) {
         try {
@@ -84,7 +84,7 @@ export class PageVisitTimeManager {
 
     /**
      * Stops timing of current page, if exists.
-     * @returns {PageVisitData} Page visit data (including duration) of pageName from call to start, if exists. Null if not.  
+     * @returns {PageVisitData} Page visit data (including duration) of pageName from call to start, if exists. Null if not.
      */
     public stopPageVisitTimer() {
         try {

@@ -21,6 +21,9 @@
         "no-case-declarations": "off",
         "no-prototype-builtins": "off",
         "no-useless-escape": "off",                                 // Suppressing Error -- need to Review Later
+        "no-trailing-spaces": [ "warn", { "skipBlankLines": true }],// Enabled for auto fixing
+        "no-const-assign": "error",
+        "comma-dangle": [ "warn", "never" ],                        // Enabled for auto fixing
         "security/detect-object-injection": "off",                  // Suppress Warning -- need to Review Later
         "@typescript-eslint/ban-types": "off",
         "@typescript-eslint/no-unused-vars": "off",                 // Re-enable for auto fixing
@@ -31,7 +34,7 @@
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
-        "@typescript-eslint/no-extra-semi": "off",                  // Re-enable for auto fixing
+        "@typescript-eslint/no-extra-semi": "warn",                 // Enabled for auto fixing
         "@typescript-eslint/no-non-null-assertion": "error"
     }
 }

@@ -11,15 +11,15 @@ export class PageViewPerformanceValidator implements ITypeValidator {
         }
 
         // verify item has ver, url, perfTotal, name, duration, networkConnect, sentRequest, receivedResponse, and domProcessing fields
-        if (!item.data.baseData || 
-            !item.data.baseData.ver ||  
-            !item.data.baseData.url || 
+        if (!item.data.baseData ||
+            !item.data.baseData.ver ||
+            !item.data.baseData.url ||
             !item.data.baseData.perfTotal ||
             !item.data.baseData.name ||
-            !item.data.baseData.duration || 
-            !item.data.baseData.networkConnect ||  
-            !item.data.baseData.sentRequest ||  
-            !item.data.baseData.receivedResponse ||  
+            !item.data.baseData.duration ||
+            !item.data.baseData.networkConnect ||
+            !item.data.baseData.sentRequest ||
+            !item.data.baseData.receivedResponse ||
             !item.data.baseData.domProcessing) {
             return false;
         }

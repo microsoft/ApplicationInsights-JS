@@ -14,7 +14,7 @@ const enum CallbackType {
     Response = 1,
     HookError = 2,
     FunctionError = 3
-};
+}
 
 const cbNames = [
     "req", "rsp", "hkErr", "fnErr"

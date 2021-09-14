@@ -14,7 +14,7 @@ export interface ICookieMgr {
     isEnabled(): boolean;
 
     /**
-     * Set the named cookie with the value and optional domain and optional 
+     * Set the named cookie with the value and optional domain and optional
      * @param name - The name of the cookie
      * @param value - The value of the cookie (Must already be encoded)
      * @param maxAgeSec - [optional] The maximum number of SECONDS that this cookie should survive

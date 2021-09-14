@@ -48,4 +48,4 @@ export const enum SendRequestReason {
      * The Maximum number of events have already been queued
      */
     MaxQueuedEvents = 20
-};
+}

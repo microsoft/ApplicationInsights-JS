@@ -37,9 +37,9 @@ export class PageViewPerformanceManager {
          *  |             ||             |              |         |-loadEventEnd
          *  |---network---||---request---|---response---|---dom---|
          *  |--------------------------total----------------------|
-         * 
+         *
          *  total = The difference between the load event of the current document is completed and the first recorded timestamp of the performance entry : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#duration
-         *  network = Redirect time + App Cache + DNS lookup time + TCP connection time 
+         *  network = Redirect time + App Cache + DNS lookup time + TCP connection time
          *  request = Request time : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#request_time
          *  response = Response time
          *  dom = Document load time : https://html.spec.whatwg.org/multipage/dom.html#document-load-timing-info

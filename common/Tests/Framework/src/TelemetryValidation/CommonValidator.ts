@@ -8,7 +8,7 @@ export class CommonValidator implements ITypeValidator {
         // verify item has data, iKey, name, tags, and time fields
         if (!item.data || !item.iKey || !item.name || !item.tags || !item.time) {
             return false;
-        };
+        }
 
         if (item.data.baseData.ver !== 2) {
             return false;

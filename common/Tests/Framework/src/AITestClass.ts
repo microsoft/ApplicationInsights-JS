@@ -190,7 +190,7 @@ export class AITestClass {
 
                 const steps = testInfo.steps;
                 const trigger = () => {
-                    // The callback which activates the next test step. 
+                    // The callback which activates the next test step.
                     let nextTestStepTrigger = () => {
                         AITestClass.orgSetTimeout(() => {
                             trigger();
@@ -378,7 +378,7 @@ export class AITestClass {
 
     /**** end: Sinon methods and properties ***/
 
-    /** 
+    /**
      * Sends a JSON response to the provided request.
      * @param request The request to respond to.
      * @param data Data to respond with.

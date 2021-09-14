@@ -29,7 +29,7 @@ interface IDebugConfig {
 
     showFunctions: () => boolean;
 
-    logProcessTelemetry: () => boolean;    
+    logProcessTelemetry: () => boolean;
 }
 
 const getDefaultConfig = (): IDebugConfig => {
@@ -228,7 +228,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
 
                     // 4. Create the Dashboard
                     dashboard = new Dashboard({
-                        prefix, 
+                        prefix,
                         trackers: foundTrackers,
                         excludeKeys: _theConfig.excludeKeys(),
                         maxMessages: _theConfig.maxMessages(),
@@ -294,7 +294,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
             function _createInstrumentObject(funcArgs: IInstrumentCallDetails, orgArgs: any[]) {
                 let result: any = {
                     funcName: funcArgs.name,
-                    inst: funcArgs.inst, 
+                    inst: funcArgs.inst
                 };
                 if (orgArgs && orgArgs.length) {
                     result.args = orgArgs;

@@ -91,8 +91,8 @@ export enum Behavior {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Registration, Contact [160-179]
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    REGISTRATIONINITIATE = 161,  // Initiating a registration process 
-    REGISTRATIONCOMPLETE = 162,  // Completing a registration process 
+    REGISTRATIONINITIATE = 161,  // Initiating a registration process
+    REGISTRATIONCOMPLETE = 162,  // Completing a registration process
     CANCELSUBSCRIPTION = 163,    // Canceling a subscription
     RENEWSUBSCRIPTION = 164,     // Renewing a subscription
     CHANGESUBSCRIPTION = 165,     // Changing a subscription
@@ -134,7 +134,7 @@ export enum Behavior {
     VIDEOSTART = 240,			// Initiating a video
     VIDEOPAUSE = 241,			// Pausing a video
     VIDEOCONTINUE = 242,		    // Pausing or resuming a video.
-    VIDEOCHECKPOINT = 243,		// Capturing predetermined video percentage complete. 
+    VIDEOCHECKPOINT = 243,		// Capturing predetermined video percentage complete.
     VIDEOJUMP = 244,			    // Jumping to a new video location.
     VIDEOCOMPLETE = 245,		    // Completing a video (or % proxy)
     VIDEOBUFFERING = 246,		// Capturing a video buffer event
@@ -162,4 +162,4 @@ export enum Behavior {
     ADSKIP = 287,                // Ad skipped
     ADTIMEOUT = 288,             // Ad timed-out
     OTHER = 300					// Other
-};
+}

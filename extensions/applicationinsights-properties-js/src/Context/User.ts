@@ -106,7 +106,7 @@ export class User implements IUserContext {
             function _setUserCookie(cookie: string) {
                 // without expiration, cookies expire at the end of the session
                 // set it to 365 days from now
-                // 365 * 24 * 60 * 60 = 31536000 
+                // 365 * 24 * 60 * 60 = 31536000
                 const oneYear = 31536000;
                 _self.isUserCookieSet = _cookieManager.set(_storageNamePrefix(), cookie, oneYear);
             }
@@ -123,7 +123,7 @@ export class User implements IUserContext {
                 utlRemoveStorage(_logger, name);
             }
 
-            // We still take the account id from the ctor param for backward compatibility. 
+            // We still take the account id from the ctor param for backward compatibility.
             // But if the the customer set the accountId through the newer setAuthenticatedUserContext API, we will override it.
             _self.accountId = config.accountId ? config.accountId() : undefined;
 
@@ -173,7 +173,7 @@ export class User implements IUserContext {
 
             /**
              * Clears the authenticated user id and the account id from the user context.
-             * @returns {} 
+             * @returns {}
              */
             _self.clearAuthenticatedUserContext = () => {
                 _self.authenticatedId = null;
@@ -194,7 +194,7 @@ export class User implements IUserContext {
 
    /**
     * Sets the authenticated user id and the account id in this session.
-    *   
+    *
     * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
     * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
     */
@@ -204,7 +204,7 @@ export class User implements IUserContext {
 
     /**
      * Clears the authenticated user id and the account id from the user context.
-     * @returns {} 
+     * @returns {}
      */
     public clearAuthenticatedUserContext() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

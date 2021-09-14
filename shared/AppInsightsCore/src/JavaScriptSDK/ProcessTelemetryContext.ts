@@ -126,7 +126,7 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
     /**
      * Call back for telemetry processing before it it is sent
      * @param env - This is the current event being reported
-     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances 
+     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
      */

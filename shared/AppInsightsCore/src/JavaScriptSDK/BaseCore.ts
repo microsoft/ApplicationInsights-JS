@@ -30,8 +30,8 @@ const strNotificationManager = "_notificationManager";
 
 /**
  * Helper to create the default performance manager
- * @param core 
- * @param notificationMgr 
+ * @param core
+ * @param notificationMgr
  */
 function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
     return new PerfManager(notificationMgr);
@@ -105,7 +105,7 @@ export class BaseCore implements IAppInsightsCore {
                 let channelExtensions: any[] = [];
         
                 // Check if any two extensions have the same priority, then warn to console
-                // And extract the local extensions from the 
+                // And extract the local extensions from the
                 const extPriorities = {};
         
                 // Extension validation

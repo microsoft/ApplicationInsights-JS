@@ -9,7 +9,7 @@ export function isSourceMapEnabled(options:any) {
     }
   
     return false;
-}  
+}
 
 // Need to mock this rather than rely on JavaScript String.prototype.padEnd() as it doesn't always
 // exists in the build / test infrastructure

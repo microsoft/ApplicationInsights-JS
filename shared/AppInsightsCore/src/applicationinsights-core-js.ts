@@ -16,18 +16,18 @@ export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
 export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from './JavaScriptSDK/RandomHelper';
-export { 
+export {
     CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, newId, generateW3CId,
     disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr
 } from "./JavaScriptSDK/CoreUtils";
 export {
-    isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName, 
-    objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf, 
+    isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName,
+    objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf,
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
     setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, createClassFromInterface, optimizeObject, isNotUndefined, isNotNullOrUndefined,
     objFreeze, objSeal
 } from './JavaScriptSDK/HelperFuncs';
-export { 
+export {
     getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
     isReactNative, getConsole, dumpObj, isIE, getIEVersion, isSafari,
@@ -52,7 +52,7 @@ export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers
 export { _InternalMessageId, LoggingSeverity } from './JavaScriptSDK.Enums/LoggingEnums';
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from './JavaScriptSDK.Interfaces/ICookieMgr';
-export { 
+export {
     createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported
 } from './JavaScriptSDK/CookieMgr';
 export { strIKey, strExtensionConfig } from './JavaScriptSDK/Constants';

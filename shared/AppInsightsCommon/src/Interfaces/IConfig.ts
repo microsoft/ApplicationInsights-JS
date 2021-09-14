@@ -128,7 +128,7 @@ export interface IConfig {
     disableCorrelationHeaders?: boolean;
 
     /**
-     * Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. 
+     * Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests.
      * AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services
      * @defaultValue AI_AND_W3C
      */
@@ -157,7 +157,7 @@ export interface IConfig {
 
     /**
      * @deprecated Use either disableCookiesUsage or specify a cookieMgrCfg with the enabled value set.
-     * If true, the SDK will not store or read any data from cookies. Default is false. As this field is being deprecated, when both 
+     * If true, the SDK will not store or read any data from cookies. Default is false. As this field is being deprecated, when both
      * isCookieUseDisabled and disableCookiesUsage are used disableCookiesUsage will take precedent.
      * @defaultValue false
      */
@@ -183,13 +183,13 @@ export interface IConfig {
     cookiePath?: string;
 
     /**
-     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie 
+     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie
      * operations. If this configuration is specified any specified enabled and domain properties will take precedence over the
      * cookieDomain and disableCookiesUsage values.
      */
     cookieMgrCfg?: ICookieMgrConfig;
 
-    /** 
+    /**
      * Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected)
      * @description
      * @defaultValue false
@@ -287,14 +287,14 @@ export interface IConfig {
 
     /**
      * Flag to enable looking up and including additional browser window.performance timings
-     * in the reported ajax (XHR and fetch) reported metrics. 
+     * in the reported ajax (XHR and fetch) reported metrics.
      * Defaults to false.
      */
     enableAjaxPerfTracking?:boolean;
 
     /**
-     * The maximum number of times to look for the window.performance timings (if available), this 
-     * is required as not all browsers populate the window.performance before reporting the 
+     * The maximum number of times to look for the window.performance timings (if available), this
+     * is required as not all browsers populate the window.performance before reporting the
      * end of the XHR request and for fetch requests this is added after its complete
      * Defaults to 3
      */
@@ -322,7 +322,7 @@ export interface IConfig {
     autoExceptionInstrumented?: boolean;
 
     /**
-     * 
+     *
      */
     correlationHeaderDomains?: string[]
 
@@ -333,7 +333,7 @@ export interface IConfig {
     autoUnhandledPromiseInstrumented?: boolean;
 
     /**
-     * Default false. Define whether to track unhandled promise rejections and report as JS errors. 
+     * Default false. Define whether to track unhandled promise rejections and report as JS errors.
      * When disableExceptionTracking is enabled (dont track exceptions) this value will be false.
      * @defaultValue false
      */

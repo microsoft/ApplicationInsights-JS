@@ -38,7 +38,7 @@ export const enum DataSanitizerValues {
       * Max length allowed for exceptions.
       */
     MAX_EXCEPTION_LENGTH = 32768
-};
+}
 
 export function dataSanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key: any, map: any) {
     const origLength = key.length;
@@ -256,7 +256,7 @@ export interface IDataSanitizer {
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
     trim: (str: any) => string;
-};
+}
 
 /**
  * Provides the DataSanitizer functions within the previous namespace.

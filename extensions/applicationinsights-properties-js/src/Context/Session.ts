@@ -3,8 +3,8 @@
 
 import dynamicProto from '@microsoft/dynamicproto-js';
 import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from '@microsoft/applicationinsights-common';
-import { 
-    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction, 
+import {
+    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction,
     newId, dumpObj, getExceptionName, dateNow, safeGetLogger
 } from '@microsoft/applicationinsights-core-js';
 
@@ -75,7 +75,7 @@ export class _SessionManager {
     
             _self.config = config;
             // sessionCookiePostfix takes the preference if it is configured, otherwise takes namePrefix if configured.
-            const sessionCookiePostfix = (_self.config.sessionCookiePostfix && _self.config.sessionCookiePostfix()) ? 
+            const sessionCookiePostfix = (_self.config.sessionCookiePostfix && _self.config.sessionCookiePostfix()) ?
                                             _self.config.sessionCookiePostfix() :
                                             ((_self.config.namePrefix && _self.config.namePrefix()) ? _self.config.namePrefix() : "");
 
@@ -231,7 +231,7 @@ export class _SessionManager {
                 const cookieDomain = config.cookieDomain ? config.cookieDomain() : null;
 
                 // if sessionExpirationMs is set to 0, it means the expiry is set to 0 for this session cookie
-                // A cookie with 0 expiry in the session cookie will never expire for that browser session.  If the browser is closed the cookie expires.  
+                // A cookie with 0 expiry in the session cookie will never expire for that browser session.  If the browser is closed the cookie expires.
                 // Depending on the browser, another instance does not inherit this cookie, however, another tab will
                 _cookieManager.set(_storageNamePrefix(), cookie.join('|'), config.sessionExpirationMs() > 0 ? maxAgeSec : null, cookieDomain);
                 _cookieUpdatedTimestamp = nowMs;

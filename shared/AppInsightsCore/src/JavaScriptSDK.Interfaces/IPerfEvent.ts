@@ -28,7 +28,7 @@ export interface IPerfEvent {
     isAsync: boolean;
     
     /**
-     * Identifies the total inclusive time spent for this event, including the time spent for child events, 
+     * Identifies the total inclusive time spent for this event, including the time spent for child events,
      * this will be undefined until the event is completed
      */
     time?: number;
