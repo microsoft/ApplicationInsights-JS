@@ -206,12 +206,12 @@ module.exports = function (grunt) {
                     ],
                     out: 'AISKU/Tests/Unit/dist/aiskuunittests.tests.js'
                 },
-                aiskuperftests: {
+                aiskuperf: {
                     tsconfig: './AISKU/Tests/tsconfig.json',
                     src: [
                         './AISKU/Tests/Perf/src/**/*.ts',
                     ],
-                    out: 'AISKU/Tests/Perf/dist/aisku-perftests.js'
+                    out: 'AISKU/Tests/Perf/dist/aiskuperftests.tests.js'
                 },
                 clickanalyticstests: {
                     tsconfig: './extensions/applicationinsights-clickanalytics-js/Tests/tsconfig.json',
@@ -518,7 +518,7 @@ module.exports = function (grunt) {
         grunt.registerTask("aiskulite", tsBuildActions("aiskulite"));
         grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
         grunt.registerTask("aiskuunittests", ["connect", "ts:aiskuunittests", "qunit:aisku"]);
-        grunt.registerTask("aiskuperftests", ["connect", "ts:aiskuperftests", "qunit:aiskuperf"]);
+        grunt.registerTask("aiskuperf", ["connect", "ts:aiskuperf", "qunit:aiskuperf"]);
         grunt.registerTask("test", ["connect", "ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
         grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
         grunt.registerTask("coreunittest", ["connect", "ts:coreunittest", "qunit:core"]);
