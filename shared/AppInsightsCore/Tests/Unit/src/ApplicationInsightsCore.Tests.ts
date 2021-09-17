@@ -348,40 +348,6 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
 
-        // TODO: test pollInternalLogs with diagnosticLogInterval 0
-        this.testCase({
-            name: "DiagnosticLogger: Logs cannot be polled",
-            useFakeTimers: true,
-            test: () => {
-                // Setup
-                const channelPlugin = new ChannelPlugin();
-                const appInsightsCore = new AppInsightsCore();
-                appInsightsCore.initialize(
-                    {
-                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
-                        diagnosticLogInterval: 0
-                    }, [channelPlugin]);
-                const trackTraceSpy = this.sandbox.stub(appInsightsCore, "track");
-
-                Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
-
-                // Setup queue
-                const queue: _InternalLogMessage[] = appInsightsCore.logger.queue;
-                queue.push(new _InternalLogMessage(1, "Hello1"));
-                queue.push(new _InternalLogMessage(2, "Hello2"));
-                const poller = appInsightsCore.pollInternalLogs();
-
-                // Assert precondition
-                Assert.equal(2, appInsightsCore.logger.queue.length, "Queue contains 2 items");
-
-                // Act
-                this.clock.tick(1);
-
-                // Assert postcondition
-                Assert.equal(2, appInsightsCore.logger.queue.length, "Queue contains 2 items");
-            }
-        });
-
         // TODO: test logger crosscontamination
         this.testCase({
             name: "DiagnosticLogger: Logs in separate cores do not interfere",
