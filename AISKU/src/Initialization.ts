@@ -122,6 +122,7 @@ export class Initialization implements IApplicationInsights {
     private properties: PropertiesPlugin;
     private _sender: Sender;
     private _snippetVersion: string;
+    private _internalLogPoller: number;
 
     constructor(snippet: Snippet) {
         let _self = this;
@@ -463,7 +464,7 @@ export class Initialization implements IApplicationInsights {
     }
 
     public pollInternalLogs(): void {
-        this.core.pollInternalLogs();
+        this._internalLogPoller = this.core.pollInternalLogs();
     }
 
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
@@ -524,10 +525,14 @@ export class Initialization implements IApplicationInsights {
         return this._sender;
     }
 
+    public getInternalPollLogger(): number {
+        return this._internalLogPoller;
+    }
+
     private getSKUDefaults() {
         let _self = this;
         _self.config.diagnosticLogInterval =
-            _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
+            _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval >= 0 ? _self.config.diagnosticLogInterval : 10000;
     }
 }
 

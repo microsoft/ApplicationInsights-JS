@@ -134,6 +134,8 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.ok(this._ai.appInsights.core, 'Core exists');
                 Assert.equal(true, this._ai.appInsights.core.isInitialized(),
                     'Core is initialized');
+                Assert.ok(this._ai.getInternalPollLogger, 'getInternalPollLogger exists');
+                Assert.ok(this._ai.getInternalPollLogger() > 0, 'getInternalPollLogger returns numeric value');
             }
         });
     }

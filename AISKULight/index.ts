@@ -24,6 +24,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 export class ApplicationInsights {
     public config: IConfiguration & IConfig;
     private core: IAppInsightsCore;
+    private _internalLogPoller: number;
 
     /**
      * Creates an instance of ApplicationInsights.
@@ -91,12 +92,16 @@ export class ApplicationInsights {
     }
 
     private pollInternalLogs(): void {
-        this.core.pollInternalLogs()
+        this._internalLogPoller = this.core.pollInternalLogs()
     }
 
     private getSKUDefaults() {
         this.config.diagnosticLogInterval =
             this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
+    }
+
+    public getInternalPollLogger(): number {
+        return this._internalLogPoller;
     }
 }
 
