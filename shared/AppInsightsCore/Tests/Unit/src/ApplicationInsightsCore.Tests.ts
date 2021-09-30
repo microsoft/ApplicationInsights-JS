@@ -238,7 +238,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 // Test precondition
                 Assert.ok(logInternalSpy.notCalled, 'PRE: No internal logging performed yet');
-                Assert.equal(0, appInsightsCore.logger.queue.getSize(), 'PRE: No logging recorded');
+                Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No logging recorded');
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Test Error");
@@ -247,7 +247,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(logInternalSpy.calledOnce, 'POST: Logging success');
                 Assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
                 Assert.ok(logInternalSpy.args[0][1].message.indexOf('Test Error') !== -1, "Correct message logged");
-                Assert.equal(1, appInsightsCore.logger.queue.getSize(), "POST: Correct messageId logged");
+                Assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
                 Assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Test Error') !== -1, "Correct message logged");
                 Assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
             }
@@ -266,7 +266,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 // Verify precondition
                 Assert.ok(logInternalSpy.notCalled, 'PRE: No internal logging performed yet');
-                Assert.equal(0, appInsightsCore.logger.queue.getSize(), 'PRE: No internal logging performed yet');
+                Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No internal logging performed yet');
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Some message");
@@ -277,9 +277,9 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "POST: Correct messageId logged");
 
                 // Logging same error doesn't duplicate
-                Assert.equal(1, appInsightsCore.logger.queue.getSize(), "Pre: Only 1 logged message");
+                Assert.equal(1, appInsightsCore.logger.queue.length, "Pre: Only 1 logged message");
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Some message");
-                Assert.equal(1, appInsightsCore.logger.queue.getSize(), "Pre: Still only 1 logged message");
+                Assert.equal(1, appInsightsCore.logger.queue.length, "Pre: Still only 1 logged message");
             }
         });
 
@@ -320,7 +320,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     }, [channelPlugin]);
                 const trackTraceSpy = this.sandbox.stub(appInsightsCore, "track");
 
-                Assert.equal(0, appInsightsCore.logger.queue.getSize(), "Queue is empty");
+                Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
 
                 // Setup queue
                 const queue: _InternalLogMessage[] = appInsightsCore.logger.queue;
@@ -329,13 +329,13 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const poller = appInsightsCore.pollInternalLogs();
 
                 // Assert precondition
-                Assert.equal(2, appInsightsCore.logger.queue.getSize(), "Queue contains 2 items");
+                Assert.equal(2, appInsightsCore.logger.queue.length, "Queue contains 2 items");
 
                 // Act
                 this.clock.tick(1);
 
                 // Assert postcondition
-                Assert.equal(0, appInsightsCore.logger.queue.getSize(), "Queue is empty");
+                Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
 
                 const data1 = trackTraceSpy.args[0][0];
                 Assert.ok(data1.baseData.message.indexOf("Hello1") !== -1);
@@ -375,18 +375,18 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
 
                 // Test precondition
-                Assert.equal(0, appInsightsCore.logger.queue.getSize(), 'PRE: No internal logging performed yet');
+                Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No internal logging performed yet');
                 Assert.ok(aiSpy.notCalled, "PRE: messageId not yet logged");
-                Assert.equal(0, dummyCore.logger.queue.getSize(), 'PRE: No dummy logging');
+                Assert.equal(0, dummyCore.logger.queue.length, 'PRE: No dummy logging');
                 Assert.ok(dummySpy.notCalled, "PRE: No dummy messageId logged");
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Test Error");
 
                 // Test postcondition
-                Assert.equal(1, appInsightsCore.logger.queue.getSize(), 'POST: Logging success');
+                Assert.equal(1, appInsightsCore.logger.queue.length, 'POST: Logging success');
                 Assert.ok(aiSpy.called, "POST: Correct messageId logged");
-                Assert.equal(0, dummyCore.logger.queue.getSize(), 'POST: No dummy logging');
+                Assert.equal(0, dummyCore.logger.queue.length, 'POST: No dummy logging');
                 Assert.ok(dummySpy.notCalled, "POST: No dummy messageId logged");
             }
         });

@@ -11,10 +11,9 @@ import { NotificationManager } from "./NotificationManager";
 import { doPerf } from "./PerfManager";
 import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ILogMessageQueue } from "../JavaScriptSDK.Interfaces/ILogMessageQueue";
-import { _InternalLogMessage, DiagnosticLogger, LogMessageQueue } from "./DiagnosticLogger";
+import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
 import dynamicProto from '@microsoft/dynamicproto-js';
-import {  isNullOrUndefined, toISOString, throwError } from "./HelperFuncs";
+import { arrForEach, isNullOrUndefined, toISOString, throwError } from "./HelperFuncs";
 
 "use strict";
 
@@ -77,9 +76,8 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
                 }
         
                 return setInterval(() => {
-                    const queue: ILogMessageQueue = _self.logger ? _self.logger.queue : new LogMessageQueue();
-                    while(queue.getSize() > 0) {
-                        const logMessage:_InternalLogMessage = queue.pop();
+                    const queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
+                    arrForEach(queue, (logMessage: _InternalLogMessage) => {
                         const item: ITelemetryItem = {
                             name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
                             iKey: _self.config.instrumentationKey,
@@ -88,8 +86,7 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
                             baseData: { message: logMessage.message }
                         };
                         _self.track(item);
-                    }
-                    queue.resetQueue();
+                    });
                 }, interval) as any;
             }
 

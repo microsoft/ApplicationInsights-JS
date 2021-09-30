@@ -537,7 +537,7 @@ export class Initialization implements IApplicationInsights {
     private getSKUDefaults() {
         let _self = this;
         _self.config.diagnosticLogInterval =
-            _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval >= 0 ? _self.config.diagnosticLogInterval : 10000;
+            _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
     }
 }
 

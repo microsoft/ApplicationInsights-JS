@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../JavaScriptSDK/DiagnosticLogger";
-import { ILogMessageQueue } from "./ILogMessageQueue";
 
 "use strict"
 
@@ -34,7 +33,7 @@ export interface IDiagnosticLogger {
     /**
      * The internal logging queue
      */
-    queue:ILogMessageQueue;
+    queue:_InternalLogMessage[];
 
     /**
      * This method will throw exceptions in debug mode or attempt to log the error as a console warning.

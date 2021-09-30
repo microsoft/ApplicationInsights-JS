@@ -8,7 +8,6 @@ import { hasJSON, getJSON, getConsole } from "./EnvUtils";
 import dynamicProto from '@microsoft/dynamicproto-js';
 import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { ILogMessageQueue } from "../JavaScriptSDK.Interfaces/ILogMessageQueue";
 
 /**
  * For user non actionable traces use AI Internal prefix.
@@ -64,95 +63,14 @@ export class _InternalLogMessage{
 export function safeGetLogger(core: IAppInsightsCore, config?: IConfiguration): IDiagnosticLogger {
     return (core || {} as any).logger || new DiagnosticLogger(config);
 }
-
-export class LogMessageQueue implements ILogMessageQueue {
-    public identifier = 'LogMessageQueue';
-    // for backward compatibility
-    public length = 0;
-    constructor() {
-        /**
-         * Data structure to store internal log messages.
-         */
-        let _items: any = {};
-        /**
-         * Head Index of the queue.
-         */
-        let _headIndex: number = 0;
-        /**
-         * Tail Index of the queue.
-         */
-        let _tailIndex: number = 0;
-        /**
-         * Maximum size of queue.
-         */
-        let _maxSize: number = 1000;
-        dynamicProto(LogMessageQueue, this, (_self) => {
-            /**
-             * Push message to the queue.
-             * @param item {_InternalLogMessage} - The log message to add to the queue.
-             */
-            _self.push = (item: _InternalLogMessage) => {
-                if(_self.getSize() > _maxSize) {
-                    _self.pop();
-                }
-                _items[_tailIndex] = item;
-                _tailIndex++;
-                _self.length = _self.getSize();
-            }
-            /**
-             * Pop message from the queue.
-             */
-            _self.pop = (): _InternalLogMessage => {
-                const item = _items[_headIndex];
-                delete _items[_headIndex];
-                _headIndex++;
-                _self.length = _self.getSize();
-                return item;
-            }
-            /**
-             * get size of the queue.
-             */
-            _self.getSize = (): number => {
-                return _tailIndex - _headIndex;
-            }
-            /**
-             * Reset tail and head Index to zero.
-             */
-            _self.resetQueue = (): void => {
-                _headIndex = 0;
-                _tailIndex = 0;
-            }
-        });
-    }
-
-    public push(item: _InternalLogMessage) {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public pop(): _InternalLogMessage {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return {} as _InternalLogMessage;
-    }
-
-    public getSize(): number {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return 0;
-    }
-
-    public resetQueue(): void {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-    
-}
   
-
 export class DiagnosticLogger implements IDiagnosticLogger {
     public identifier = 'DiagnosticLogger';
     
     /**
      * The internal logging queue
      */
-    public queue:ILogMessageQueue = new LogMessageQueue();
+    public queue: _InternalLogMessage[] = [];
 
     constructor(config?: IConfiguration) {
         /**
@@ -164,6 +82,8 @@ export class DiagnosticLogger implements IDiagnosticLogger {
          * Holds information about what message types were already logged to console or sent to server.
          */
         let _messageLogged: { [msg: number]: boolean } = {};
+
+        const maxQueueLength = 1000;
 
         dynamicProto(DiagnosticLogger, this, (_self) => {
             if (isNullOrUndefined(config)) {
@@ -269,7 +189,9 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     if (_messageCount === _self.maxInternalMessageLimit()) {
                         const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                         const throttleMessage = new _InternalLogMessage(_InternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
-
+                        if(_self.queue.length > maxQueueLength) {
+                            _self.queue.shift();
+                        }
                         _self.queue.push(throttleMessage);
                         _self.warnToConsole(throttleLimitMessage);
                     }
