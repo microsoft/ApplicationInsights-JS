@@ -74,6 +74,8 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
 
     pollInternalLogs?(eventName?: string): number;
 
+    stopPollingInternalLogs?(internalLogPoller?: number): void;
+
     /**
      * Return a new instance of the IProcessTelemetryContext for processing events
      */

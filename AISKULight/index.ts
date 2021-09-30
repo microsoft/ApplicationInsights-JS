@@ -92,17 +92,23 @@ export class ApplicationInsights {
     }
 
     private pollInternalLogs(): void {
-        this._internalLogPoller = this.core.pollInternalLogs()
+        // If pollInternalLogs is called more than once, existing log poller should be stopped before starting another log poller.
+        if(this._internalLogPoller) {
+            this.stopPollingInternalLogs();
+        }
+        this._internalLogPoller = this.core.pollInternalLogs();
     }
+
+    public stopPollingInternalLogs(): void {
+        this.core.stopPollingInternalLogs(this._internalLogPoller);
+        this._internalLogPoller = 0;
+   }
 
     private getSKUDefaults() {
         this.config.diagnosticLogInterval =
             this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
     }
 
-    public getInternalPollLogger(): number {
-        return this._internalLogPoller;
-    }
 }
 
 export {
