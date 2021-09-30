@@ -33,7 +33,7 @@ export interface IDiagnosticLogger {
     /**
      * The internal logging queue
      */
-    queue:_InternalLogMessage[];
+    queue: _InternalLogMessage[];
 
     /**
      * This method will throw exceptions in debug mode or attempt to log the error as a console warning.

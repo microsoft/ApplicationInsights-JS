@@ -83,8 +83,6 @@ export class DiagnosticLogger implements IDiagnosticLogger {
          */
         let _messageLogged: { [msg: number]: boolean } = {};
 
-        const maxQueueLength = 1000;
-
         dynamicProto(DiagnosticLogger, this, (_self) => {
             if (isNullOrUndefined(config)) {
                 config = {};
@@ -189,9 +187,6 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     if (_messageCount === _self.maxInternalMessageLimit()) {
                         const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                         const throttleMessage = new _InternalLogMessage(_InternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
-                        if(_self.queue.length > maxQueueLength) {
-                            _self.queue.shift();
-                        }
                         _self.queue.push(throttleMessage);
                         _self.warnToConsole(throttleLimitMessage);
                     }

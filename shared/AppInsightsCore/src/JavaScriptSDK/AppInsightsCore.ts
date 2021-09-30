@@ -87,6 +87,7 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
                         };
                         _self.track(item);
                     });
+                    queue.length = 0;
                 }, interval) as any;
             }
 
