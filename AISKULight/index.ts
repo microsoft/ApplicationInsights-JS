@@ -24,7 +24,6 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 export class ApplicationInsights {
     public config: IConfiguration & IConfig;
     private core: IAppInsightsCore;
-    private _internalLogPoller: number;
 
     /**
      * Creates an instance of ApplicationInsights.
@@ -92,16 +91,11 @@ export class ApplicationInsights {
     }
 
     private pollInternalLogs(): void {
-        // If pollInternalLogs is called more than once, existing log poller should be stopped before starting another log poller.
-        if(this._internalLogPoller) {
-            this.stopPollingInternalLogs();
-        }
-        this._internalLogPoller = this.core.pollInternalLogs();
+        this.core.pollInternalLogs();
     }
 
     public stopPollingInternalLogs(): void {
-        this.core.stopPollingInternalLogs(this._internalLogPoller);
-        this._internalLogPoller = 0;
+        this.core.stopPollingInternalLogs();
    }
 
     private getSKUDefaults() {

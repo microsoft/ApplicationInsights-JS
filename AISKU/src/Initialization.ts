@@ -122,7 +122,6 @@ export class Initialization implements IApplicationInsights {
     private properties: PropertiesPlugin;
     private _sender: Sender;
     private _snippetVersion: string;
-    private _internalLogPoller: number;
 
     constructor(snippet: Snippet) {
         let _self = this;
@@ -464,16 +463,11 @@ export class Initialization implements IApplicationInsights {
     }
 
     public pollInternalLogs(): void {
-        // If pollInternalLogs is called more than once, existing log poller should be stopped before starting another log poller.
-        if(this._internalLogPoller) {
-            this.stopPollingInternalLogs();
-        }
-        this._internalLogPoller = this.core.pollInternalLogs();
+        this.core.pollInternalLogs();
     }
 
     public stopPollingInternalLogs(): void {
-         this.core.stopPollingInternalLogs(this._internalLogPoller);
-         this._internalLogPoller = 0;
+        this.core.stopPollingInternalLogs();
     }
 
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {

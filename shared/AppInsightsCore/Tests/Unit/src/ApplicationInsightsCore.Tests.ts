@@ -368,13 +368,13 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const queue: _InternalLogMessage[] = appInsightsCore.logger.queue;
                 queue.push(new _InternalLogMessage(1, "Hello1"));
                 queue.push(new _InternalLogMessage(2, "Hello2"));
-                const poller = appInsightsCore.pollInternalLogs();
+                appInsightsCore.pollInternalLogs();
 
                 // Assert precondition
                 Assert.equal(2, appInsightsCore.logger.queue.length, "Queue contains 2 items");
                 
                 // Act
-                appInsightsCore.stopPollingInternalLogs(poller);
+                appInsightsCore.stopPollingInternalLogs();
                 this.clock.tick(1);
 
                 // Assert postcondition
@@ -396,13 +396,13 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                         diagnosticLogInterval: 1
                     }, [channelPlugin]);
 
-                const poller = appInsightsCore.pollInternalLogs();
+                appInsightsCore.pollInternalLogs();
 
                 // Assert precondition
                 Assert.equal(0, appInsightsCore.logger.queue.length, "Queue contains 0 items");
                 
                 // Act
-                appInsightsCore.stopPollingInternalLogs(poller);
+                appInsightsCore.stopPollingInternalLogs();
                 let count = 1002;
                 while(count > 0) {
                     appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, count, "Test Error");
