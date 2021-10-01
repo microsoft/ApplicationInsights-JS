@@ -466,6 +466,10 @@ export class Initialization implements IApplicationInsights {
         this.core.pollInternalLogs();
     }
 
+    public stopPollingInternalLogs(): void {
+        this.core.stopPollingInternalLogs();
+    }
+
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 

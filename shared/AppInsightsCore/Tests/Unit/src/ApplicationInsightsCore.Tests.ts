@@ -348,6 +348,72 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
 
+        // TODO: test stopPollingInternalLogs
+        this.testCase({
+            name: "DiagnosticLogger: stop Polling InternalLogs",
+            useFakeTimers: true,
+            test: () => {
+                // Setup
+                const channelPlugin = new ChannelPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize(
+                    {
+                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
+                        diagnosticLogInterval: 1
+                    }, [channelPlugin]);
+
+                Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
+
+                // Setup queue
+                const queue: _InternalLogMessage[] = appInsightsCore.logger.queue;
+                queue.push(new _InternalLogMessage(1, "Hello1"));
+                queue.push(new _InternalLogMessage(2, "Hello2"));
+                appInsightsCore.pollInternalLogs();
+
+                // Assert precondition
+                Assert.equal(2, appInsightsCore.logger.queue.length, "Queue contains 2 items");
+                
+                // Act
+                appInsightsCore.stopPollingInternalLogs();
+                this.clock.tick(1);
+
+                // Assert postcondition
+                Assert.equal(2, appInsightsCore.logger.queue.length, "Queue is not empty");
+            }
+        });
+
+        // TODO: test stopPollingInternalLogs and check max size of the queue.
+        this.testCase({
+            name: "DiagnosticLogger: stop Polling InternalLogs",
+            useFakeTimers: true,
+            test: () => {
+                // Setup
+                const channelPlugin = new ChannelPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize(
+                    {
+                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
+                        diagnosticLogInterval: 1
+                    }, [channelPlugin]);
+
+                appInsightsCore.pollInternalLogs();
+
+                // Assert precondition
+                Assert.equal(0, appInsightsCore.logger.queue.length, "Queue contains 0 items");
+                
+                // Act
+                appInsightsCore.stopPollingInternalLogs();
+                let count = 1002;
+                while(count > 0) {
+                    appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, count, "Test Error");
+                    --count;
+                }
+              //  this.clock.tick(1000);
+                // Assert postcondition
+                Assert.equal(26, appInsightsCore.logger.queue.length, "Queue is not empty");
+            }
+        });
+
         // TODO: test logger crosscontamination
         this.testCase({
             name: "DiagnosticLogger: Logs in separate cores do not interfere",

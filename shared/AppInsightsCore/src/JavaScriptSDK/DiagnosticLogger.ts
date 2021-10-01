@@ -63,7 +63,7 @@ export class _InternalLogMessage{
 export function safeGetLogger(core: IAppInsightsCore, config?: IConfiguration): IDiagnosticLogger {
     return (core || {} as any).logger || new DiagnosticLogger(config);
 }
-
+  
 export class DiagnosticLogger implements IDiagnosticLogger {
     public identifier = 'DiagnosticLogger';
     
@@ -187,7 +187,6 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     if (_messageCount === _self.maxInternalMessageLimit()) {
                         const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                         const throttleMessage = new _InternalLogMessage(_InternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
-
                         _self.queue.push(throttleMessage);
                         _self.warnToConsole(throttleLimitMessage);
                     }

@@ -20,6 +20,10 @@ import { arrForEach, isNullOrUndefined, toISOString, throwError } from "./Helper
 export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
     constructor() {
         super();
+        /**
+         * Internal log poller
+         */
+         let _internalLogPoller: number = 0;
 
         dynamicProto(AppInsightsCore, this, (_self, _base) => {
 
@@ -67,17 +71,18 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
             }
         
             /**
-             * Periodically check logger.queue for
+             * Periodically check logger.queue for log messages to be flushed
              */
             _self.pollInternalLogs = (eventName?: string): number => {
                 let interval = _self.config.diagnosticLogInterval;
                 if (!interval || !(interval > 0)) {
                     interval = 10000;
                 }
-        
-                return setInterval(() => {
+                if(_internalLogPoller) {
+                    _self.stopPollingInternalLogs();
+                }
+                _internalLogPoller = setInterval(() => {
                     const queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
-        
                     arrForEach(queue, (logMessage: _InternalLogMessage) => {
                         const item: ITelemetryItem = {
                             name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
@@ -86,13 +91,22 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
                             baseType: _InternalLogMessage.dataType,
                             baseData: { message: logMessage.message }
                         };
-        
                         _self.track(item);
                     });
                     queue.length = 0;
                 }, interval) as any;
+                return _internalLogPoller;
             }
-        
+
+            /**
+             * Stop polling log messages from logger.queue
+             */
+            _self.stopPollingInternalLogs = (): void => {
+                if(!_internalLogPoller) return;
+                clearInterval(_internalLogPoller);
+                _internalLogPoller = 0;
+            }
+
             function _validateTelemetryItem(telemetryItem: ITelemetryItem) {
                 if (isNullOrUndefined(telemetryItem.name)) {
                     _notifyInvalidEvent(telemetryItem);
@@ -141,5 +155,12 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
     public pollInternalLogs(eventName?: string): number {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return 0;
+    }
+
+    /**
+     * Periodically check logger.queue for
+     */
+     public stopPollingInternalLogs(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
