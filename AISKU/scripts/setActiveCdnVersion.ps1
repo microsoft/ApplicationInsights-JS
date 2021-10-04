@@ -138,13 +138,13 @@ if ($container -eq "public") {
 Get-VersionFiles $files $storePath "ai." $activeVersion
 
 if ($files.ContainsKey($activeVersion) -ne $true) {
-    Log-Failure "Version [$activeVersion] does not appear to be deployed to [$container]"
+    Write-LogFailure "Version [$activeVersion] does not appear to be deployed to [$container]"
 } elseif ($files[$activeVersion].Count -ne 4 -and # Prior to 2.5.8
         $files[$activeVersion].Count -ne 8 -and   # Since 2.5.8
         $files[$activeVersion].Count -ne 9 -and   # Since 2.6.5
         $files[$activeVersion].Count -ne 12 -and  # Since 2.5.8
         $files[$activeVersion].Count -ne 13) {    # Since 2.6.5
-    Log-Failure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
+    Write-LogFailure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
 }
 
 # Don't try and publish anything if any errors have been logged
