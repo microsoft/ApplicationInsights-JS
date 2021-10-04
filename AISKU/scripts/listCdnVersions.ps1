@@ -47,7 +47,7 @@ Function Write-LogParams
 Function Validate-Params
 {
     # Validate parameters
-    if ([string]::IsNullOrWhiteSpace($container) -ne $true -and "beta","next","public" -NotContains $container) {
+    if ([string]::IsNullOrWhiteSpace($container) -ne $true -and "beta","next","public", "dev", "nightly" -NotContains $container) {
         Write-LogFailure "[$($container)] is not a valid value, must be beta, next or public"
     }
 }
