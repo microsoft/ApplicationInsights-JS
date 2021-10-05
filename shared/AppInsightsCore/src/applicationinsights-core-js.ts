@@ -18,7 +18,8 @@ export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
 export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from './JavaScriptSDK/RandomHelper';
 export {
     CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, newId, generateW3CId,
-    disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr
+    disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr, addEventListeners, addPageUnloadEventListener,
+    addPageHideEventListener, addPageShowEventListener
 } from "./JavaScriptSDK/CoreUtils";
 export {
     isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName,

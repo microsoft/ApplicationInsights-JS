@@ -4,7 +4,7 @@
 import {
     IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties,
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
-    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray, throwError, ICookieMgr, safeGetCookieMgr
+    arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener,  addPageHideEventListener
 } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -497,13 +497,16 @@ export class Initialization implements IApplicationInsights {
                 });
             };
 
+            let added = false;
+            let excludePageUnloadEvents = appInsightsInstance.appInsights.config.disablePageUnloadEvents;
+
             if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload) {
                 // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
-                // As just hooking the window does not always fire (on chrome) for page navigations.
-                let added = addEventHandler('beforeunload', performHousekeeping);
-                added = addEventHandler('unload', performHousekeeping) || added;
-                added = addEventHandler('pagehide', performHousekeeping) || added;
-                added = addEventHandler('visibilitychange', performHousekeeping) || added;
+                // As just hooking the window does not always fire (on chrome) for page navigation's.
+                added = addPageUnloadEventListener(performHousekeeping, excludePageUnloadEvents);
+
+                // We also need to hook the pagehide and visibilitychange events as not all versions of Safari support load/unload events.
+                added = addPageHideEventListener(performHousekeeping, excludePageUnloadEvents) || added;
 
                 // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
                 // log the failure in this case
@@ -515,11 +518,9 @@ export class Initialization implements IApplicationInsights {
                 }
             }
 
-            // We also need to hook the pagehide and visibilitychange events as not all versions of Safari support load/unload events.
-            if (!appInsightsInstance.appInsights.config.disableFlushOnUnload) {
-                // Not adding any telemetry as pagehide as it's not supported on all browsers
-                addEventHandler('pagehide', performHousekeeping);
-                addEventHandler('visibilitychange', performHousekeeping);
+            if (!added && !appInsightsInstance.appInsights.config.disableFlushOnUnload) {
+                // If we didn't add the normal set then attempt to add the pagehide and visibilitychange only
+                addPageHideEventListener(performHousekeeping, excludePageUnloadEvents);
             }
         }
     }
