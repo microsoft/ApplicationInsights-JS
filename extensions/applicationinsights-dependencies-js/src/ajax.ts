@@ -497,9 +497,14 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         req: (args:IInstrumentCallDetails, method:string, url:string, async?:boolean) => {
                             let xhr = args.inst as XMLHttpRequestInstrumented;
                             let ajaxData = xhr[strAjaxData];
-                            if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, true) &&
-                                    (!ajaxData || !ajaxData.xhrMonitoringState.openDone)) {
-                                _openHandler(xhr, method, url, async);
+                            if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, true)) {
+                                if (!ajaxData || !ajaxData.xhrMonitoringState.openDone) {
+                                    // Only create a single ajaxData (even when multiple AI instances are running)
+                                    _openHandler(xhr, method, url, async);
+                                }
+
+                                // always attach to the on ready state change (required for handling multiple instances)
+                                _attachToOnReadyStateChange(xhr);
                             }
                         },
                         hkErr: _createErrorCallbackFunc(_self, _InternalMessageId.FailedMonitorAjaxOpen,
@@ -643,8 +648,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ajaxData.async = async;
                 ajaxData.errorStatusText = _enableAjaxErrorStatusText;
                 xhr[strAjaxData] = ajaxData;
-
-                _attachToOnReadyStateChange(xhr);
             }
 
             function _attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
