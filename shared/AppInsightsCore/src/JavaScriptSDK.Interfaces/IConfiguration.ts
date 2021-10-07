@@ -149,4 +149,18 @@ export interface IConfiguration {
      * cookieDomain and disableCookiesUsage values.
      */
     cookieCfg?: ICookieMgrConfig;
+
+    /**
+     * [Optional] An array of the page unload events that you would like to be ignored, special note there must be at least one valid unload
+     * event hooked, if you list all or the runtime environment only supports a listed "disabled" event it will still be hooked, if required by the SDK.
+     * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide"
+     */
+    disablePageUnloadEvents?: string[];
+
+    /**
+     * [Optional] An array of page show events that you would like to be ignored, special note there must be at lease one valid show event
+     * hooked, if you list all or the runtime environment only supports a listed (disabled) event it will STILL be hooked, if required by the SDK.
+     * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state)
+     */
+    disablePageShowEvents?: string[];
 }
