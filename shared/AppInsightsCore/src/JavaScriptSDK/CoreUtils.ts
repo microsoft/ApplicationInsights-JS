@@ -14,6 +14,10 @@ import {
 } from "./HelperFuncs";
 import { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./RandomHelper";
 
+const strVisibilityChangeEvt: string = "visibilitychange";
+const strPageHide: string = "pagehide";
+const strPageShow: string = "pageshow";
+
 let _cookieMgrs: ICookieMgr[] = null;
 let _canUseCookies: boolean;    // legacy supported config
 
@@ -40,6 +44,118 @@ export function addEventHandler(eventName: string, callback: any): boolean {
     }
 
     return result;
+}
+
+/**
+ * Bind the listener to the array of events
+ * @param events An string array of event names to bind the listener to
+ * @param listener The event callback to call when the event is triggered
+ * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
+ * @returns true - when at least one of the events was registered otherwise false
+ */
+ export function addEventListeners(events: string[], listener: any, excludeEvents?: string[]): boolean {
+    let added = false;
+
+    if (listener && events && isArray(events)) {
+        let excluded: string[] = [];
+        arrForEach(events, (name) => {
+            if (isString(name)) {
+                if (!excludeEvents || arrIndexOf(excludeEvents, name) === -1) {
+                    added = addEventHandler(name, listener) || added;
+                } else {
+                    excluded.push(name);
+                }
+            }
+        });
+
+        if (!added && excluded.length > 0) {
+            // Failed to add any listeners and we excluded some, so just attempt to add the excluded events
+            added = addEventListeners(excluded, listener);
+        }
+    }
+
+    return added;
+}
+
+/**
+ * Listen to the 'beforeunload', 'unload' and 'pagehide' events which indicates a page unload is occurring,
+ * this does NOT listen to the 'visibilitychange' event as while it does indicate that the page is being hidden
+ * it does not *necessarily* mean that the page is being completely unloaded, it can mean that the user is
+ * just navigating to a different Tab and may come back (without unloading the page). As such you may also
+ * need to listen to the 'addPageHideEventListener' and 'addPageShowEventListener' events.
+ * @param listener - The event callback to call when a page unload event is triggered
+ * @param excludeEvents - [Optional] An array of events that should not be hooked, unless no other events can be.
+ * @returns true - when at least one of the events was registered otherwise false
+ */
+export function addPageUnloadEventListener(listener: any, excludeEvents?: string[]): boolean {
+    // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
+    // As just hooking the window does not always fire (on chrome) for page navigation's.
+    return addEventListeners(["beforeunload", "unload", "pagehide"], listener, excludeEvents);
+}
+
+/**
+ * Listen to the pagehide and visibility changing to 'hidden' events
+ * @param listener - The event callback to call when a page hide event is triggered
+ * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
+ * Suggestion: pass as true if you are also calling addPageUnloadEventListener as that also hooks pagehide
+ * @returns true - when at least one of the events was registered otherwise false
+ */
+ export function addPageHideEventListener(listener: any, excludeEvents?: string[]): boolean {
+
+    function _handlePageVisibility(evt: any) {
+        let doc = getDocument();
+        if (listener && doc && doc.visibilityState === 'hidden') {
+            listener(evt);
+        }
+    }
+
+    let pageUnloadAdded = false;
+    if (!excludeEvents || arrIndexOf(excludeEvents, strPageHide) === -1) {
+        pageUnloadAdded = addEventHandler(strPageHide, listener);
+    }
+
+    if (!excludeEvents || arrIndexOf(excludeEvents, strVisibilityChangeEvt) === -1) {
+        pageUnloadAdded = addEventHandler(strVisibilityChangeEvt, _handlePageVisibility) || pageUnloadAdded;
+    }
+
+    if (!pageUnloadAdded && excludeEvents) {
+        // Failed to add any listeners and we where requested to exclude some, so just call again without excluding anything
+        pageUnloadAdded = addPageHideEventListener(listener);
+    }
+
+    return pageUnloadAdded;
+}
+
+/**
+ * Listen to the pageshow and visibility changing to 'visible' events
+ * @param listener - The event callback to call when a page is show event is triggered
+ * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
+ * @returns true - when at least one of the events was registered otherwise false
+ */
+ export function addPageShowEventListener(listener: any, excludeEvents?: string[]): boolean {
+
+    function _handlePageVisibility(evt: any) {
+        let doc = getDocument();
+        if (listener && doc && doc.visibilityState === 'visible') {
+            listener(evt);
+        }
+    }
+
+    let pageShowAdded = false;
+    if (!excludeEvents || arrIndexOf(excludeEvents, strPageShow) === -1) {
+        pageShowAdded = addEventHandler(strPageShow, listener);
+    }
+
+    if (!excludeEvents || arrIndexOf(excludeEvents, strVisibilityChangeEvt) === -1) {
+        pageShowAdded = addEventHandler(strVisibilityChangeEvt, _handlePageVisibility) || pageShowAdded;
+    }
+
+    if (!pageShowAdded && excludeEvents) {
+        // Failed to add any listeners and we where requested to exclude some, so just call again without excluding anything
+        pageShowAdded = addPageShowEventListener(listener);
+    }
+
+    return pageShowAdded;
 }
 
 export function newGuid(): string {
