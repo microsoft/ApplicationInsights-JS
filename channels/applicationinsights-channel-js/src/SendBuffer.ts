@@ -51,8 +51,9 @@ abstract class BaseSendBuffer {
     protected _get: () => string[];
     protected _set: (buffer: string[]) => string[];
 
-    constructor(config: ISenderConfig) {
+    constructor(logger: IDiagnosticLogger, config: ISenderConfig) {
         let _buffer: string[] = [];
+        let _bufferFullMessageSent = false;
 
         this._get = () => {
             return _buffer;
@@ -66,6 +67,20 @@ abstract class BaseSendBuffer {
         dynamicProto(BaseSendBuffer, this, (_self) => {
 
             _self.enqueue = (payload: string) => {
+                if (_self.count() >= config.eventsLimitInMem()) {
+                    // sent internal log only once per page view
+                    if (!_bufferFullMessageSent) {
+                        logger.throwInternal(
+                            LoggingSeverity.WARNING,
+                            _InternalMessageId.InMemoryStorageBufferFull,
+                            "Maximum in-memory buffer size reached: " + _self.count(),
+                            true);
+                        _bufferFullMessageSent = true;
+                    }
+
+                    return;
+                }
+
                 _buffer.push(payload);
             };
 
@@ -88,6 +103,7 @@ abstract class BaseSendBuffer {
 
             _self.clear = () => {
                 _buffer = [];
+                _bufferFullMessageSent = false;
             };
 
             _self.getItems = (): string[] => {
@@ -142,8 +158,8 @@ abstract class BaseSendBuffer {
  */
 export class ArraySendBuffer extends BaseSendBuffer implements ISendBuffer {
 
-    constructor(config: ISenderConfig) {
-        super(config);
+    constructor(logger: IDiagnosticLogger, config: ISenderConfig) {
+        super(logger, config);
 
         dynamicProto(ArraySendBuffer, this, (_self, _base) => {
         
@@ -177,14 +193,14 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
     static MAX_BUFFER_SIZE = 2000;
 
     constructor(logger: IDiagnosticLogger, config: ISenderConfig) {
-        super(config);
+        super(logger, config);
         let _bufferFullMessageSent = false;
 
         dynamicProto(SessionStorageSendBuffer, this, (_self, _base) => {
             const bufferItems = _getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
             const notDeliveredItems = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
     
-            const buffer = _self._set(bufferItems.concat(notDeliveredItems));
+            let buffer = _self._set(bufferItems.concat(notDeliveredItems));
     
             // If the buffer has too many items, drop items from the end.
             if (buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
