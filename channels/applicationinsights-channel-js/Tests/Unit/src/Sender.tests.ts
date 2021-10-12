@@ -1395,5 +1395,140 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal("value2", baseData.properties["property2"]);
             }
         });
+
+        this.testCase({
+            name: "Channel Config: Validate pausing and resuming sending with manual flush",
+            useFakeTimers: true,
+            test: () => {
+                let sendNotifications = [];
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
+                        sendNotifications.push({
+                            sendReason,
+                            isAsync
+                        });
+                    }
+                });
+
+                let core = new AppInsightsCore();
+                this.sandbox.stub(core, "getNotifyMgr").returns(notificationManager);
+
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                        }
+
+                    }, core, []
+                );
+
+                const loggerSpy = this.sandbox.spy(this._sender, "triggerSend");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem, null);
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, loggerSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this._sender.pause();
+                this._sender.flush();
+                QUnit.assert.equal(false, loggerSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this._sender.resume();
+                this._sender.flush();
+                QUnit.assert.equal(true, loggerSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(1, sendNotifications.length);
+                QUnit.assert.equal(SendRequestReason.ManualFlush, sendNotifications[0].sendReason);
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Validate pausing and resuming sending when exceeding the batch size limits",
+            useFakeTimers: true,
+            test: () => {
+                let sendNotifications = [];
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
+                        sendNotifications.push({
+                            sendReason,
+                            isAsync
+                        });
+                    }
+                });
+
+                let core = new AppInsightsCore();
+                this.sandbox.stub(core, "getNotifyMgr").returns(notificationManager);
+
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        maxBatchSizeInBytes: 4096,
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                        }
+
+                    }, core, []
+                );
+
+                const triggerSendSpy = this.sandbox.spy(this._sender, "triggerSend");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                this._sender.pause();
+
+                // Keep sending events until the max payload size is reached
+                while (!triggerSendSpy.calledOnce) {
+                    try {
+                        this._sender.processTelemetry(telemetryItem, null);
+                    } catch(e) {
+                        QUnit.assert.ok(false);
+                    }
+                }
+
+                QUnit.assert.equal(true, triggerSendSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                QUnit.assert.equal(false, triggerSendSpy.calledTwice);
+                this._sender.resume();
+
+                QUnit.assert.equal(true, triggerSendSpy.calledTwice);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(1, sendNotifications.length);
+                QUnit.assert.equal(SendRequestReason.MaxBatchSize, sendNotifications[0].sendReason);
+            }
+        });
     }
 }

@@ -61,7 +61,8 @@ function _getDefaultAppInsightsChannelConfig(): ISenderConfig {
         namePrefix: () => undefined,
         samplingPercentage: () => 100,
         customHeaders: () => undefined,
-        convertUndefined: () => undefined
+        convertUndefined: () => undefined,
+        eventsLimitInMem: () => 10000
     }
 }
 
@@ -140,6 +141,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         let _lastSend: number;
 
         /**
+         * Flag indicating that the sending should be paused
+         */
+        let _paused = false;
+
+        /**
          * Handle to the timer for delayed sending of batches of data.
          */
         let _timeoutHandle: any;
@@ -171,33 +177,55 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 throwError("Method not implemented.");
             }
 
-            _self.pause = _notImplemented;
+            _self.pause = () => {
+                _clearScheduledTimer();
+                _paused = true;
+            };
         
-            _self.resume = _notImplemented;
+            _self.resume = () => {
+                if (_paused) {
+                    _paused = false;
+                    _retryAt = null;
+
+                    // flush if we have exceeded the max-size already
+                    if (_self._buffer.size() > _self._senderConfig.maxBatchSizeInBytes()) {
+                        _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                    }
+
+                    _setupTimer();
+                }
+            };
         
             _self.flush = () => {
-                try {
-                    _self.triggerSend(true, null, SendRequestReason.ManualFlush);
-                } catch (e) {
-                    _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
-                        _InternalMessageId.FlushFailed,
-                        "flush failed, telemetry will not be collected: " + getExceptionName(e),
-                        { exception: dumpObj(e) });
+                if (!_paused) {
+                    // Clear the normal schedule timer as we are going to try and flush ASAP
+                    _clearScheduledTimer();
+
+                    try {
+                        _self.triggerSend(true, null, SendRequestReason.ManualFlush);
+                    } catch (e) {
+                        _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                            _InternalMessageId.FlushFailed,
+                            "flush failed, telemetry will not be collected: " + getExceptionName(e),
+                            { exception: dumpObj(e) });
+                    }
                 }
             };
         
             _self.onunloadFlush = () => {
-                if ((_self._senderConfig.onunloadDisableBeacon() === false || _self._senderConfig.isBeaconApiDisabled() === false) && isBeaconsSupported()) {
-                    try {
-                        _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
-                    } catch (e) {
-                        _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
-                            _InternalMessageId.FailedToSendQueuedTelemetry,
-                            "failed to flush with beacon sender on page unload, telemetry will not be collected: " + getExceptionName(e),
-                            { exception: dumpObj(e) });
+                if (!_paused) {
+                    if ((_self._senderConfig.onunloadDisableBeacon() === false || _self._senderConfig.isBeaconApiDisabled() === false) && isBeaconsSupported()) {
+                        try {
+                            _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
+                        } catch (e) {
+                            _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                                _InternalMessageId.FailedToSendQueuedTelemetry,
+                                "failed to flush with beacon sender on page unload, telemetry will not be collected: " + getExceptionName(e),
+                                { exception: dumpObj(e) });
+                        }
+                    } else {
+                        _self.flush();
                     }
-                } else {
-                    _self.flush();
                 }
             };
 
@@ -217,6 +245,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _lastSend = 0;
                 _self._sender = null;
                 _stamp_specific_redirects = 0;
+                let diagLog = _self.diagLog();
 
                 const defaultConfig = _getDefaultAppInsightsChannelConfig();
                 objForEachKey(defaultConfig, (field, value) => {
@@ -224,11 +253,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 });
         
                 _self._buffer = (_self._senderConfig.enableSessionStorageBuffer() && utlCanUseSessionStorage())
-                    ? new SessionStorageSendBuffer(_self.diagLog(), _self._senderConfig) : new ArraySendBuffer(_self._senderConfig);
-                _self._sample = new Sample(_self._senderConfig.samplingPercentage(), _self.diagLog());
+                    ? new SessionStorageSendBuffer(diagLog, _self._senderConfig) : new ArraySendBuffer(diagLog, _self._senderConfig);
+                _self._sample = new Sample(_self._senderConfig.samplingPercentage(), diagLog);
                 
                 if(!_validateInstrumentationKey(config)) {
-                    _self.diagLog().throwInternal(
+                    diagLog.throwInternal(
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key "+config.instrumentationKey);
                 }
@@ -397,43 +426,43 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * @param forcedSender {SenderFunction} - Indicates the forcedSender, undefined if not passed
              */
             _self.triggerSend = (async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) => {
-                try {
-                    const buffer = _self._buffer;
-
-                    // Send data only if disableTelemetry is false
-                    if (!_self._senderConfig.disableTelemetry()) {
-        
-                        if (buffer.count() > 0) {
-                            const payload = buffer.getItems();
-        
-                            _notifySendRequest(sendReason||SendRequestReason.Undefined, async);
-        
-                            // invoke send
-                            if (forcedSender) {
-                                forcedSender.call(this, payload, async);
-                            } else {
-                                _self._sender(payload, async);
+                if (!_paused) {
+                    try {
+                        const buffer = _self._buffer;
+    
+                        // Send data only if disableTelemetry is false
+                        if (!_self._senderConfig.disableTelemetry()) {
+            
+                            if (buffer.count() > 0) {
+                                const payload = buffer.getItems();
+            
+                                _notifySendRequest(sendReason||SendRequestReason.Undefined, async);
+            
+                                // invoke send
+                                if (forcedSender) {
+                                    forcedSender.call(this, payload, async);
+                                } else {
+                                    _self._sender(payload, async);
+                                }
                             }
+            
+                            // update lastSend time to enable throttling
+                            _lastSend = +new Date;
+                        } else {
+                            buffer.clear();
                         }
-        
-                        // update lastSend time to enable throttling
-                        _lastSend = +new Date;
-                    } else {
-                        buffer.clear();
-                    }
-        
-                    clearTimeout(_timeoutHandle);
-                    _timeoutHandle = null;
-                    _retryAt = null;
-                } catch (e) {
-                    /* Ignore this error for IE under v10 */
-                    let ieVer = getIEVersion();
-                    if (!ieVer || ieVer > 9) {
-                        _self.diagLog().throwInternal(
-                            LoggingSeverity.CRITICAL,
-                            _InternalMessageId.TransmissionFailed,
-                            "Telemetry transmission failed, some telemetry will be lost: " + getExceptionName(e),
-                            { exception: dumpObj(e) });
+            
+                        _clearScheduledTimer();
+                    } catch (e) {
+                        /* Ignore this error for IE under v10 */
+                        let ieVer = getIEVersion();
+                        if (!ieVer || ieVer > 9) {
+                            _self.diagLog().throwInternal(
+                                LoggingSeverity.CRITICAL,
+                                _InternalMessageId.TransmissionFailed,
+                                "Telemetry transmission failed, some telemetry will be lost: " + getExceptionName(e),
+                                { exception: dumpObj(e) });
+                        }
                     }
                 }
             };
@@ -875,14 +904,21 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * Sets up the timer which triggers actually sending the data.
              */
             function _setupTimer() {
-                if (!_timeoutHandle) {
+                if (!_timeoutHandle && !_paused) {
                     const retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
                     const timerValue = Math.max(_self._senderConfig.maxBatchInterval(), retryInterval);
         
                     _timeoutHandle = setTimeout(() => {
+                        _timeoutHandle = null;
                         _self.triggerSend(true, null, SendRequestReason.NormalSchedule);
                     }, timerValue);
                 }
+            }
+
+            function _clearScheduledTimer() {
+                clearTimeout(_timeoutHandle);
+                _timeoutHandle = null;
+                _retryAt = null;
             }
         
             /**
@@ -994,18 +1030,36 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         });
     }
 
+    /**
+     * Pause the sending (transmission) of events, this will cause all events to be batched only until the maximum limits are
+     * hit at which point new events are dropped. Will also cause events to NOT be sent during page unload, so if Session storage
+     * is disabled events will be lost.
+     * SessionStorage Limit is 2000 events, In-Memory (Array) Storage is 10,000 events (can be configured via the eventsLimitInMem).
+     */
     public pause(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
+    /**
+     * Resume the sending (transmission) of events, this will restart the timer and any batched events will be sent using the normal
+     * send interval.
+     */
     public resume(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
+    /**
+     * Flush the batched events immediately (not synchronously).
+     * Will not flush if the Sender has been paused.
+     */
     public flush() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
+    /**
+     * Flush the batched events synchronously (if possible -- based on configuration).
+     * Will not flush if the Send has been paused.
+     */
     public onunloadFlush() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
