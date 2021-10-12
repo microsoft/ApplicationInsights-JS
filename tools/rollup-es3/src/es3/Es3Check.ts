@@ -63,7 +63,7 @@ export function es3Check(options:IEs3CheckRollupOptions = {}) {
     }
 
     return {
-        name: 'ai-rollup-es3check',
+        name: "ai-rollup-es3check",
         renderChunk(code:string, chunk:any) {
             return doCheck(code, chunk.filename || chunk.fileName || chunk.name, "renderChunk", false);
         },

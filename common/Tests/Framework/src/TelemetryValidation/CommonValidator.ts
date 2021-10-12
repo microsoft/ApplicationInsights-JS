@@ -1,10 +1,10 @@
-import { ITypeValidator } from './ITypeValidator';
+import { ITypeValidator } from "./ITypeValidator";
 
 export class CommonValidator implements ITypeValidator {
 
     static CommonValidator = new CommonValidator();
 
-    public Validate(item: any, baseType: string): boolean {
+    public Validate(item: any, _baseType: string): boolean {
         // verify item has data, iKey, name, tags, and time fields
         if (!item.data || !item.iKey || !item.name || !item.tags || !item.time) {
             return false;

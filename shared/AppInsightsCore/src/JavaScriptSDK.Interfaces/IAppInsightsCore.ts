@@ -6,8 +6,8 @@ import { IPlugin } from "./ITelemetryPlugin";
 import { IConfiguration } from "./IConfiguration";
 import { INotificationManager } from "./INotificationManager";
 import { INotificationListener } from "./INotificationListener";
-import { IDiagnosticLogger } from './IDiagnosticLogger';
-import { IProcessTelemetryContext } from './IProcessTelemetryContext';
+import { IDiagnosticLogger } from "./IDiagnosticLogger";
+import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { ICookieMgr } from "./ICookieMgr";
 

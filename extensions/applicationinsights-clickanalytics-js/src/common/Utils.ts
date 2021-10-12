@@ -6,13 +6,13 @@
 import { isNullOrUndefined, _InternalMessageId, hasDocument, hasOwnProperty, arrForEach } from "@microsoft/applicationinsights-core-js";
 import {
     IClickAnalyticsConfiguration
-} from '../Interfaces/Datamodel';
+} from "../Interfaces/Datamodel";
 
 
-const Prototype = 'prototype';
-const DEFAULT_DONOT_TRACK_TAG = 'ai-dnt';
-const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = 'ai-blob';
-const DEFAULT_DATA_PREFIX = 'data-';
+const Prototype = "prototype";
+const DEFAULT_DONOT_TRACK_TAG = "ai-dnt";
+const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = "ai-blob";
+const DEFAULT_DATA_PREFIX = "data-";
 
 export const _ExtendedInternalMessageId = {
     ..._InternalMessageId,
@@ -32,7 +32,7 @@ export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyti
     for (var i in attributeNamesExpectedObjects) {
         if (attributeNamesExpectedObjects.hasOwnProperty(i)) {
             var objectName = attributeNamesExpectedObjects[i];
-            if (typeof overrideConfig[objectName] === 'object') {
+            if (typeof overrideConfig[objectName] === "object") {
                 removeInvalidElements(overrideConfig[objectName]);
             } else {
                 delete overrideConfig[objectName];
@@ -52,7 +52,7 @@ export function removeInvalidElements(object: Object): void {
     /// the workaround regarding 'callback'
     for (var property in object) {
         if (!isValueAssigned(object[property]) ||
-            (JSON.stringify(object[property]) === '{}' && (property !== 'callback'))) {
+            (JSON.stringify(object[property]) === "{}" && (property !== "callback"))) {
             delete object[property];
         }
     }
@@ -67,7 +67,7 @@ export function isValueAssigned(value: any) {
     /// <summary> takes a value and checks for undefined, null and empty string </summary>
     /// <param type="any"> value to be tested </param>
     /// <returns> true if value is null undefined or emptyString </returns>
-    return !(isNullOrUndefined(value) || value === '');
+    return !(isNullOrUndefined(value) || value === "");
 }
 
 /**
@@ -77,9 +77,9 @@ export function isValueAssigned(value: any) {
  */
 export function isRightClick(evt: any): boolean {
     try {
-        if ('which' in evt) { // Chrome, FF, ...
+        if ("which" in evt) { // Chrome, FF, ...
             return (evt.which === 3);
-        } else if ('button' in evt) { // IE, ...
+        } else if ("button" in evt) { // IE, ...
             return (evt.button === 2);
         }
     } catch (e) {
@@ -94,9 +94,9 @@ export function isRightClick(evt: any): boolean {
  */
 export function isLeftClick(evt: any): boolean {
     try {
-        if ('which' in evt) { // Chrome, FF, ...
+        if ("which" in evt) { // Chrome, FF, ...
             return (evt.which === 1);
-        } else if ('button' in evt) { // IE, ...
+        } else if ("button" in evt) { // IE, ...
             return (evt.button === 1);
         }
     } catch (e) {
@@ -111,9 +111,9 @@ export function isLeftClick(evt: any): boolean {
  */
 export function isMiddleClick(evt: any): boolean {
     try {
-        if ('which' in evt) { // Chrome, FF, ...
+        if ("which" in evt) { // Chrome, FF, ...
             return (evt.which === 2);
-        } else if ('button' in evt) { // IE, ...
+        } else if ("button" in evt) { // IE, ...
             return (evt.button === 4);
         }
     } catch (e) {
@@ -128,7 +128,7 @@ export function isMiddleClick(evt: any): boolean {
  */
 export function isKeyboardEnter(evt: KeyboardEvent): boolean {
     try {
-        if ('keyCode' in evt) { // Chrome, FF, ...
+        if ("keyCode" in evt) { // Chrome, FF, ...
             return (evt.keyCode === 13);
         }
     } catch (e) {
@@ -143,7 +143,7 @@ export function isKeyboardEnter(evt: KeyboardEvent): boolean {
  */
 export function isKeyboardSpace(evt: KeyboardEvent) {
     try {
-        if ('keyCode' in evt) { // Chrome, FF, ...
+        if ("keyCode" in evt) { // Chrome, FF, ...
             return (evt.keyCode === 32);
         }
     } catch (e) {
@@ -214,7 +214,7 @@ export function walkUpDomChainWithElementValidation(el: Element, validationMetho
  * @returns Is element an anchor
  */
 export function isElementAnAnchor(element: Element): boolean {
-    return element.nodeName === 'A';
+    return element.nodeName === "A";
 }
 
 /**
@@ -255,7 +255,7 @@ export function bracketIt(str: string): string {
     /// <summary>
     ///  Adds surrounding square brackets to the passed in text
     /// </summary>
-    return '[' + str + ']';
+    return "[" + str + "]";
 }
 
 /**
@@ -277,7 +277,7 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
     var theArgs = arguments;
 
     // Check if a deep merge
-    if (objProto.toString.call(theArgs[0]) === '[object Boolean]') {
+    if (objProto.toString.call(theArgs[0]) === "[object Boolean]") {
         deep = theArgs[0];
         i++;
     }
@@ -287,7 +287,7 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
         for (var prop in obj) {
             if (hasOwnProperty(obj, prop)) {
                 // If deep merge and property is an object, merge properties
-                if (deep && objProto.toString.call(obj[prop]) === '[object Object]') {
+                if (deep && objProto.toString.call(obj[prop]) === "[object Object]") {
                     extended[prop] = extend(true, extended[prop], obj[prop]);
                 } else {
                     extended[prop] = obj[prop];
@@ -324,10 +324,10 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
         pageTags: {},
         // overrideValues to use instead of collecting automatically
         coreData: {
-            referrerUri: hasDocument ? document.referrer : '',
-            requestUri: '',
-            pageName: '',
-            pageType: ''
+            referrerUri: hasDocument ? document.referrer : "",
+            requestUri: "",
+            pageName: "",
+            pageType: ""
         },
         dataTags: {
             useDefaultContentNameOrId: false,
@@ -343,7 +343,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
 
     let attributesThatAreObjectsInConfig: any[] = [];
         for (const attribute in defaultConfig) {
-            if (typeof defaultConfig[attribute] === 'object') {
+            if (typeof defaultConfig[attribute] === "object") {
                 attributesThatAreObjectsInConfig.push(attribute);
             }
         }

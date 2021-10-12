@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
-import { IPerfEvent } from '../JavaScriptSDK.Interfaces/IPerfEvent';
-import { IPerfManager, IPerfManagerProvider } from '../JavaScriptSDK.Interfaces/IPerfManager';
+import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
+import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
+import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { dateNow, isArray, isFunction, objDefineAccessors } from './HelperFuncs';
+import { dateNow, isArray, isFunction, objDefineAccessors } from "./HelperFuncs";
 
 const strExecutionContextKey = "ctx";
 
@@ -70,7 +70,7 @@ export class PerfEvent implements IPerfEvent {
         if (isFunction(payloadDetails)) {
             // Create an accessor to minimize the potential performance impact of executing the payloadDetails callback
             let theDetails:any;
-            accessorDefined = objDefineAccessors(_self, 'payload', () => {
+            accessorDefined = objDefineAccessors(_self, "payload", () => {
                 // Delay the execution of the payloadDetails until needed
                 if (!theDetails && isFunction(payloadDetails)) {
                     theDetails = payloadDetails();

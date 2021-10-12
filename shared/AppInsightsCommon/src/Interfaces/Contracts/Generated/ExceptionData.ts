@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ExceptionDetails } from './ExceptionDetails';
-import { Domain } from './Domain';
-import { SeverityLevel } from './SeverityLevel';
+import { ExceptionDetails } from "./ExceptionDetails";
+import { Domain } from "./Domain";
+import { SeverityLevel } from "./SeverityLevel";
 
 /**
  * An instance of Exception represents a handled or unhandled exception that occurred during execution of the monitored application.

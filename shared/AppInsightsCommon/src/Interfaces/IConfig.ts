@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IConfiguration, ICookieMgrConfig, isNullOrUndefined, ICustomProperties } from '@microsoft/applicationinsights-core-js';
-import { DistributedTracingModes } from '../Enums';
-import { IRequestContext } from './IRequestContext';
+import { IConfiguration, ICookieMgrConfig, isNullOrUndefined, ICustomProperties } from "@microsoft/applicationinsights-core-js";
+import { DistributedTracingModes } from "../Enums";
+import { IRequestContext } from "./IRequestContext";
 
 /**
  * Configuration settings for how telemetry is sent

@@ -1,5 +1,5 @@
-import { ITypeValidator } from './ITypeValidator';
-import { CommonValidator } from './CommonValidator';
+import { ITypeValidator } from "./ITypeValidator";
+import { CommonValidator } from "./CommonValidator";
 
 export class PageViewValidator implements ITypeValidator {
     static PageViewValidator = new PageViewValidator();

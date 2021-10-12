@@ -3,11 +3,11 @@
 "use strict";
 
 import { IAppInsightsCore } from "./IAppInsightsCore";
-import { IDiagnosticLogger } from './IDiagnosticLogger';
-import { IConfiguration } from './IConfiguration';
-import { ITelemetryItem } from './ITelemetryItem';
-import { IPlugin } from './ITelemetryPlugin';
-import { ITelemetryPluginChain } from './ITelemetryPluginChain';
+import { IDiagnosticLogger } from "./IDiagnosticLogger";
+import { IConfiguration } from "./IConfiguration";
+import { ITelemetryItem } from "./ITelemetryItem";
+import { IPlugin } from "./ITelemetryPlugin";
+import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
 
 /**
  * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance

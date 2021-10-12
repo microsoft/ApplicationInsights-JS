@@ -15,7 +15,7 @@ import {
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
-import { createDomEvent } from './DomHelperFuncs';
+import { createDomEvent } from "./DomHelperFuncs";
 import { stringToBoolOrDefault, msToTimeSpan, isCrossOriginError, getExtensionByName } from "./HelperFuncs";
 import { strNotSpecified } from "./Constants";
 import { utlCanUseLocalStorage, utlCanUseSessionStorage, utlDisableStorage, utlGetSessionStorage, utlGetSessionStorageKeys, utlGetLocalStorage, utlRemoveSessionStorage, utlRemoveStorage, utlSetSessionStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
@@ -426,7 +426,7 @@ export function AjaxHelperParseDependencyPath(logger: IDiagnosticLogger, absolut
         if (!name) {
             if (parsedUrl.pathname != null) {
                 let pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
-                if (pathName.charAt(0) !== '/') {
+                if (pathName.charAt(0) !== "/") {
                     pathName = "/" + pathName;
                 }
                 data = parsedUrl.pathname;

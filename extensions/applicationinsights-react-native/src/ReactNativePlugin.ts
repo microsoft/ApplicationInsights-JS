@@ -18,13 +18,13 @@ import {
     isObject,
     hasOwnProperty,
     isUndefined
-} from '@microsoft/applicationinsights-core-js';
-import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from '@microsoft/applicationinsights-common';
-import DeviceInfo from 'react-native-device-info';
+} from "@microsoft/applicationinsights-core-js";
+import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from "@microsoft/applicationinsights-common";
+import DeviceInfo from "react-native-device-info";
 
-import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
-import dynamicProto from '@microsoft/dynamicproto-js';
-import { getGlobal, strShimUndefined } from '@microsoft/applicationinsights-shims';
+import { INativeDevice, IReactNativePluginConfig } from "./Interfaces";
+import dynamicProto from "@microsoft/dynamicproto-js";
+import { getGlobal, strShimUndefined } from "@microsoft/applicationinsights-shims";
 
 declare var global: Window;
 
@@ -46,7 +46,7 @@ declare var global: Window;
 
 export class ReactNativePlugin extends BaseTelemetryPlugin {
 
-    identifier: string = 'AppInsightsReactNativePlugin';
+    identifier: string = "AppInsightsReactNativePlugin";
     priority: number = 140;
     _nextPlugin?: ITelemetryPlugin;
 
@@ -134,13 +134,13 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                 if (_device) {
                     item.ext = item.ext || {};
                     item.ext.device = item.ext.device || ({} as IDevice);
-                    if (typeof _device.id === 'string') {
+                    if (typeof _device.id === "string") {
                         item.ext.device.localId = _device.id;
                     }
-                    if (typeof _device.model === 'string') {
+                    if (typeof _device.model === "string") {
                         item.ext.device.model = _device.model;
                     }
-                    if (typeof _device.deviceClass === 'string') {
+                    if (typeof _device.deviceClass === "string") {
                         item.ext.device.deviceClass = _device.deviceClass;
                     }
                 }
@@ -158,7 +158,7 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                 const _global = _getGlobal();
                 if (_global && _global.ErrorUtils) {
                     // intercept react-native error handling
-                    _defaultHandler = (typeof _global.ErrorUtils.getGlobalHandler === 'function' && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
+                    _defaultHandler = (typeof _global.ErrorUtils.getGlobalHandler === "function" && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
                     _global.ErrorUtils.setGlobalHandler(_trackException.bind(this));
                 }
             }

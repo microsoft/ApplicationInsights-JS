@@ -5,11 +5,11 @@
 
 import {
     isValueAssigned, extend
-} from '../common/Utils';
-import * as DataCollector from '../DataCollector';
-import { IDiagnosticLogger, getLocation, hasWindow } from '@microsoft/applicationinsights-core-js';
-import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler, ICoreData, IPageActionTelemetry } from '../Interfaces/Datamodel';
-import { ClickAnalyticsPlugin } from '../ClickAnalyticsPlugin';
+} from "../common/Utils";
+import * as DataCollector from "../DataCollector";
+import { IDiagnosticLogger, getLocation, hasWindow } from "@microsoft/applicationinsights-core-js";
+import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler, ICoreData, IPageActionTelemetry } from "../Interfaces/Datamodel";
+import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
 
 export class WebEvent {
 
@@ -53,8 +53,8 @@ export class WebEvent {
 
         // extract specific meta tags out of the pageTags.metaTags collection.  These will go into assigned first class fields in the event.
         // the rest will go into pageTags.metaTags collection as is.
-        this._pageTypeMetaTag = this._getMetaData(this._metaTags, this._config.coreData, 'pageType');
-        this._behaviorMetaTag = this._getMetaData(this._metaTags, this._config.coreData, 'behavior');
+        this._pageTypeMetaTag = this._getMetaData(this._metaTags, this._config.coreData, "pageType");
+        this._behaviorMetaTag = this._getMetaData(this._metaTags, this._config.coreData, "behavior");
 
         if (isValueAssigned(overrideValues.pageType)) {
             event.pageType = overrideValues.pageType;
@@ -83,14 +83,14 @@ export class WebEvent {
             this._pageTags.metaTags = {};
             // Remove not supported meta data in pageTags.metaTags
             for (var metaTag in this._metaTags) {
-                if (metaTag != 'behavior' && metaTag != 'market' && metaTag != 'pageType') {
+                if (metaTag != "behavior" && metaTag != "market" && metaTag != "pageType") {
                     this._pageTags.metaTags[metaTag] = this._metaTags[metaTag];
                 }
             }
         }
         // All metadata tags that must be saved as properties have been extracted at this point.  Assign pageTags as is.
         event.properties = event.properties || {};
-        event.properties['pageTags'] = this._pageTags;
+        event.properties["pageTags"] = this._pageTags;
     }
 
     protected _getBehavior(overrideValues?: IOverrideValues): string | number {

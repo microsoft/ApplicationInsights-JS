@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dataSanitizeUrl, dateTimeUtilsDuration, IDependencyTelemetry, urlGetAbsoluteUrl, urlGetCompleteUrl, msToTimeSpan } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, objKeys, arrForEach, isNumber, isString, normalizeJsName, objForEachKey } from '@microsoft/applicationinsights-core-js';
+import { dataSanitizeUrl, dateTimeUtilsDuration, IDependencyTelemetry, urlGetAbsoluteUrl, urlGetCompleteUrl, msToTimeSpan } from "@microsoft/applicationinsights-common";
+import { IDiagnosticLogger, objKeys, arrForEach, isNumber, isString, normalizeJsName, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 export interface IAjaxRecordResponse {

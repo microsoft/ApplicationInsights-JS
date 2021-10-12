@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IDiagnosticLogger } from '../JavaScriptSDK.Interfaces/IDiagnosticLogger';
-import { ICookieMgr, ICookieMgrConfig } from '../JavaScriptSDK.Interfaces/ICookieMgr';
-import { _InternalMessageId, LoggingSeverity } from '../JavaScriptSDK.Enums/LoggingEnums';
-import { dumpObj, getDocument, getLocation, getNavigator, isIE } from './EnvUtils';
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { dumpObj, getDocument, getLocation, getNavigator, isIE } from "./EnvUtils";
 import {
     arrForEach, dateNow, getExceptionName, isFunction, isNotNullOrUndefined, isNullOrUndefined, isString, isTruthy, isUndefined,
     objForEachKey, setValue, strContains, strEndsWith, strTrim
 } from "./HelperFuncs";
-import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
-import { IAppInsightsCore } from '../JavaScriptSDK.Interfaces/IAppInsightsCore';
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";

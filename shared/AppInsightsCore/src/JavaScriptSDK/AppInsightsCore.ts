@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
-import { BaseCore } from './BaseCore';
+import { BaseCore } from "./BaseCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
@@ -9,10 +9,10 @@ import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotification
 import { EventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { NotificationManager } from "./NotificationManager";
 import { doPerf } from "./PerfManager";
-import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
+import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
-import dynamicProto from '@microsoft/dynamicproto-js';
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { arrForEach, isNullOrUndefined, toISOString, throwError } from "./HelperFuncs";
 
 "use strict";

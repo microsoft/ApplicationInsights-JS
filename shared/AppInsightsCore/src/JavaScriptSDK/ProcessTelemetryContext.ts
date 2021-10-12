@@ -3,12 +3,12 @@
 "use strict";
 
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IDiagnosticLogger } from '../JavaScriptSDK.Interfaces/IDiagnosticLogger';
-import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
-import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
-import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryPluginChain } from '../JavaScriptSDK.Interfaces/ITelemetryPluginChain';
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { DiagnosticLogger, safeGetLogger } from "./DiagnosticLogger";
 import { TelemetryPluginChain } from "./TelemetryPluginChain";
 import { arrForEach, isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";

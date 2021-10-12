@@ -3,19 +3,19 @@
 "use strict";
 
 import { objCreateFn } from "@microsoft/applicationinsights-shims";
-import dynamicProto from '@microsoft/dynamicproto-js';
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
+import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ChannelController } from './ChannelController';
-import { IProcessTelemetryContext } from '../JavaScriptSDK.Interfaces/IProcessTelemetryContext';
-import { ProcessTelemetryContext } from './ProcessTelemetryContext';
-import { initializePlugins, sortPlugins } from './TelemetryHelpers';
+import { ChannelController } from "./ChannelController";
+import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { ProcessTelemetryContext } from "./ProcessTelemetryContext";
+import { initializePlugins, sortPlugins } from "./TelemetryHelpers";
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { getGblPerfMgr, PerfManager } from "./PerfManager";
