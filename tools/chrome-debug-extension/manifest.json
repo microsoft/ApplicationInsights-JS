@@ -1,0 +1,22 @@
+{
+  "name": "Stream Telemetry Browser Extension",
+  "short_name": "Stream Telemetry",
+  "description": "A browser extension for viewing Stream telemetry in real time",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "icons": {
+    "16": "images/icon-16.png",
+    "128": "images/icon-128.png"
+  },
+  "permissions": ["<all_urls>", "webRequest"],
+  "background": {
+    "scripts": ["scripts/background.js"]
+  },
+  "browser_action": {
+    "default_icon": {
+      "19": "images/icon-19.png",
+      "38": "images/icon-38.png"
+    },
+    "default_title": "View Stream Telemetry"
+  }
+}

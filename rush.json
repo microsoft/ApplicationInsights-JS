@@ -11,6 +11,11 @@
       "shouldPublish": false
     },
     {
+      "packageName": "@microsoft/chrome-debug-plugin",
+      "projectFolder": "tools/chrome-debug-extension",
+      "shouldPublish": false
+    },
+    {
       "packageName": "@microsoft/ai-test-framework",
       "projectFolder": "common/Tests/Framework",
       "shouldPublish": true

@@ -1,0 +1,1 @@
+Please see [these instructions](https://onedrive.visualstudio.com/ODSP-Web/_wiki/wikis/ODSP-Web.wiki/33298/Viewing-Telemetry-In-Real-Time)
