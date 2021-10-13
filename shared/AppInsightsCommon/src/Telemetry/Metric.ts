@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { MetricData } from '../Interfaces/Contracts/Generated/MetricData';
-import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString } from './Common/DataSanitizer';
-import { FieldType } from '../Enums';
-import { DataPoint } from './Common/DataPoint';
-import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
-import { strNotSpecified } from '../Constants';
+import { MetricData } from "../Interfaces/Contracts/Generated/MetricData";
+import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
+import { FieldType } from "../Enums";
+import { DataPoint } from "./Common/DataPoint";
+import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { strNotSpecified } from "../Constants";
 
 export class Metric extends MetricData implements ISerializable {
 

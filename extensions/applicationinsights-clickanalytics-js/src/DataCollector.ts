@@ -4,9 +4,9 @@
 
 import {
     getLocation, getDocument, getWindow, hasDocument, isFunction
-} from '@microsoft/applicationinsights-core-js';
-import { findClosestAnchor, isValueAssigned } from './common/Utils';
-import { IClickAnalyticsConfiguration, IOverrideValues } from './Interfaces/Datamodel';
+} from "@microsoft/applicationinsights-core-js";
+import { findClosestAnchor, isValueAssigned } from "./common/Utils";
+import { IClickAnalyticsConfiguration, IOverrideValues } from "./Interfaces/Datamodel";
 
 
 var clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };
@@ -30,7 +30,7 @@ export function getImageHref(element: HTMLImageElement): string {
             }
         }
     }
-    return '';
+    return "";
 }
 
 
@@ -39,16 +39,16 @@ export function getImageHref(element: HTMLImageElement): string {
  * @returns Click target URI
  */
 export function getClickTarget(element: any) {
-    var clickTarget = '';
+    var clickTarget = "";
     switch (element.tagName) {
-        case 'A':
-        case 'AREA':
-            clickTarget = element.href || '';
+        case "A":
+        case "AREA":
+            clickTarget = element.href || "";
             break;
-        case 'IMG':
+        case "IMG":
             clickTarget = getImageHref(element as HTMLImageElement);
             break;
-        case 'INPUT':
+        case "INPUT":
             var type = element.type;
             if (type && (clickCaptureInputTypes[type.toUpperCase()])) {
                 let loc = getLocation() || ({} as Location);
@@ -70,17 +70,17 @@ export function getClickTarget(element: any) {
  */
 export function onDomLoaded(callback: () => void) {
     onDomReadyDo(() => {
-        if (hasDocument && document.readyState === 'complete') {
+        if (hasDocument && document.readyState === "complete") {
             callback();
         } else {
             let win = getWindow();
             if (win) {
                 if (win.addEventListener) {
-                    win.addEventListener('load', () => {
+                    win.addEventListener("load", () => {
                         callback();
                     }); // NB **not** 'onload'
                 } else if ((win as any).attachEvent) {
-                    (win as any).attachEvent('onload', () => {
+                    (win as any).attachEvent("onload", () => {
                         callback();
                     }); // IE8
                 }
@@ -130,8 +130,8 @@ export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Loca
     if (!location) {
         return null;
     }
-    var url = location.protocol + '//' + (location.hostname || location.host) +         // location.hostname is not supported on Opera and Opera for Android
-        (isValueAssigned(location.port) ? ':' + location.port : '') +
+    var url = location.protocol + "//" + (location.hostname || location.host) +         // location.hostname is not supported on Opera and Opera for Android
+        (isValueAssigned(location.port) ? ":" + location.port : "") +
         location.pathname;
     return url;
 }
@@ -143,7 +143,7 @@ export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Loca
  * @returns Flag indicating if an element is market PII.
  */
 export function getUri(config: IClickAnalyticsConfiguration, location: any): string {
-    if (config.coreData && config.coreData.requestUri && config.coreData.requestUri !== '') {
+    if (config.coreData && config.coreData.requestUri && config.coreData.requestUri !== "") {
         return config.coreData.requestUri;
     }
     return sanitizeUrl(config, location);

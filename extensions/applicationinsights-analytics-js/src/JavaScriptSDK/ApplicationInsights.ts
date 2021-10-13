@@ -21,7 +21,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { PageViewPerformanceManager } from './Telemetry/PageViewPerformanceManager';
+import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -721,7 +721,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
 
             function _addDefaultTelemetryInitializers(configGetters: ITelemetryConfig) {
                 if (!configGetters.isBrowserLinkTrackingEnabled()) {
-                    const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
+                    const browserLinkPaths = ["/browserLinkSignalR/", "/__browserLink/"];
                     const dropBrowserLinkRequests = (envelope: ITelemetryItem) => {
                         if (envelope.baseType === RemoteDependencyData.dataType) {
                             const remoteData = envelope.baseData as IDependencyTelemetry;

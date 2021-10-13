@@ -5,8 +5,8 @@
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IConfiguration } from "./IConfiguration";
 import { IAppInsightsCore } from "./IAppInsightsCore";
-import { IProcessTelemetryContext } from './IProcessTelemetryContext';
-import { ITelemetryPluginChain } from './ITelemetryPluginChain';
+import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
+import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
 
 /**
  * Configuration provided to SDK core

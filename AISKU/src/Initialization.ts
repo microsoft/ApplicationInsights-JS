@@ -9,7 +9,7 @@ import {
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
+import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType,
     IRequestHeaders, RequestHeaders, DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, AIData, AIBase,
@@ -487,7 +487,7 @@ export class Initialization implements IApplicationInsights {
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                arrForEach(appInsightsInstance.appInsights.core['_extensions'], (ext: any) => {
+                arrForEach(appInsightsInstance.appInsights.core["_extensions"], (ext: any) => {
                     if (ext.identifier === PropertiesPluginIdentifier) {
                         if (ext && ext.context && ext.context._sessionManager) {
                             ext.context._sessionManager.backup();
@@ -514,7 +514,7 @@ export class Initialization implements IApplicationInsights {
                     appInsightsInstance.appInsights.core.logger.throwInternal(
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
-                        'Could not add handler for beforeunload and pagehide');
+                        "Could not add handler for beforeunload and pagehide");
                 }
             }
 

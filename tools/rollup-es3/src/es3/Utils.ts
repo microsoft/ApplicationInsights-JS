@@ -39,7 +39,7 @@ export function isNullOrWhitespace(value:string) {
     return true;
 }
 
-export function isIgnore(id:string, keyword:IEs3CheckKeyword, isTransform:boolean) {
+export function isIgnore(id:string, keyword:IEs3CheckKeyword, _isTransform:boolean) {
     let result = false;
     
     if (keyword.ignoreIds) {

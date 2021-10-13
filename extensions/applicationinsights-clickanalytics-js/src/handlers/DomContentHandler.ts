@@ -5,9 +5,9 @@ import {
     removeInvalidElements,
     walkUpDomChainWithElementValidation,
     extend, _ExtendedInternalMessageId, isValueAssigned
-} from '../common/Utils';
+} from "../common/Utils";
 import { IDiagnosticLogger, LoggingSeverity, getDocument, isNullOrUndefined, hasDocument} from "@microsoft/applicationinsights-core-js";
-import { IClickAnalyticsConfiguration, IContent, IContentHandler } from '../Interfaces/Datamodel';
+import { IClickAnalyticsConfiguration, IContent, IContentHandler } from "../Interfaces/Datamodel";
 
 const MAX_CONTENTNAME_LENGTH = 200;
 
@@ -30,7 +30,7 @@ export class DomContentHandler implements IContentHandler {
         let metaTags = {};
         if (hasDocument) {
             metaTags = isValueAssigned(this._config.dataTags.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,this._config.dataTags.metaDataPrefix, false) :
-            this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,'', false);
+            this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,"", false);
         }
         return metaTags;
     }
@@ -96,7 +96,7 @@ export class DomContentHandler implements IContentHandler {
                 continue;
             }
 
-            var attribName = attrib.name.replace(dataTagPrefix, '');
+            var attribName = attrib.name.replace(dataTagPrefix, "");
             elementContent[attribName] = attrib.value;
         }
     }
@@ -125,8 +125,8 @@ export class DomContentHandler implements IContentHandler {
                 if( attrib.name.indexOf(aiBlobAttributeTag) === 0) {
                     continue;
                 }
-                const attribName = attrib.name.replace(dataTagPrefix, '');
-                if(elementLevelFlag && attribName ==='id') continue; // skip capturing id if not at the first level.
+                const attribName = attrib.name.replace(dataTagPrefix, "");
+                if(elementLevelFlag && attribName ==="id") continue; // skip capturing id if not at the first level.
                 if(!isValueAssigned(elementContent[attribName])) {
                     elementContent[attribName] = attrib.value;
                 }
@@ -151,8 +151,8 @@ export class DomContentHandler implements IContentHandler {
 
         let htmlContent = this._getHtmlIdAndContentName(element);
         elementContent = {
-            id: htmlContent.id || '',
-            contentName: htmlContent.contentName || ''
+            id: htmlContent.id || "",
+            contentName: htmlContent.contentName || ""
         };
         
         if(isValueAssigned(parentDataTagPrefix)) {
@@ -166,8 +166,8 @@ export class DomContentHandler implements IContentHandler {
         if (!elementContent.id && !elementContent.contentName) {
             this._traceLogger.throwInternal(
                 LoggingSeverity.WARNING,
-                _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, contentName. ' +
-                ' Content information will still be collected!'
+                _ExtendedInternalMessageId.InvalidContentBlob, "Invalid content blob.  Missing required attributes (id, contentName. " +
+                " Content information will still be collected!"
             )
         }
 
@@ -194,9 +194,9 @@ export class DomContentHandler implements IContentHandler {
         
         if (this._config.dataTags.useDefaultContentNameOrId) {
             if(!isValueAssigned(elementContent.id)) {
-                elementContent.id = htmlContent.id || '';
+                elementContent.id = htmlContent.id || "";
             }
-            elementContent.contentName = htmlContent.contentName || '';
+            elementContent.contentName = htmlContent.contentName || "";
         }
         
         // Validate to ensure the minimum required field 'id' or 'contentName' is present.
@@ -206,8 +206,8 @@ export class DomContentHandler implements IContentHandler {
         if (!elementContent.id && !elementContent.contentName) {
             this._traceLogger.throwInternal(
                 LoggingSeverity.WARNING,
-                _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, contentName. ' +
-                ' Content information will still be collected!'
+                _ExtendedInternalMessageId.InvalidContentBlob, "Invalid content blob.  Missing required attributes (id, contentName. " +
+                " Content information will still be collected!"
             )
         }
 
@@ -226,12 +226,12 @@ export class DomContentHandler implements IContentHandler {
         var metaElements: any;
         var metaData = {};
         if (hasDocument) {
-            metaElements = document.querySelectorAll('meta');
+            metaElements = document.querySelectorAll("meta");
             for (var i = 0; i < metaElements.length; i++) {
                 var meta = metaElements[i];
                 if (meta.name) {
                     if(captureAllMetaDataContent || meta.name.indexOf(prefix) === 0) {
-                        const name = removePrefix ? meta.name.replace(prefix, '') : meta.name;
+                        const name = removePrefix ? meta.name.replace(prefix, "") : meta.name;
                         metaData[name] = meta.content;
                     }
                 }
@@ -249,17 +249,17 @@ export class DomContentHandler implements IContentHandler {
      */
     private _getDefaultContentName(element: any, useDefaultContentName: boolean) {
         if (useDefaultContentName === false || !element.tagName) {
-            return '';
+            return "";
         }
 
         var doc = getDocument() || ({} as Document);
         var contentName;
         switch (element.tagName) {
-            case 'A':
+            case "A":
                 contentName = doc.all ? element.innerText || element.innerHTML : element.text || element.innerHTML;
                 break;
-            case 'IMG':
-            case 'AREA':
+            case "IMG":
+            case "AREA":
                 contentName = element.alt;
                 break;
             default:
@@ -299,7 +299,7 @@ export class DomContentHandler implements IContentHandler {
 
             htmlContent = {
                 id: element.id,
-                contentName: customizedContentName || defaultContentName || element.getAttribute('alt')
+                contentName: customizedContentName || defaultContentName || element.getAttribute("alt")
             };
         }
 
@@ -312,8 +312,8 @@ export class DomContentHandler implements IContentHandler {
     * @returns An object containing the closest parentId , can be empty if nothing was found
     */
     private _getParentDetails(element: Element, elementContent: any, dataTagPrefix: string, aiBlobAttributeTag: string): IContent {
-        const parentId = elementContent['parentid'];
-        const parentName = elementContent['parentname'];
+        const parentId = elementContent["parentid"];
+        const parentName = elementContent["parentname"];
         let parentInfo = {};
 
         if (parentId || parentName || !element) {
@@ -352,12 +352,12 @@ export class DomContentHandler implements IContentHandler {
             }
         }
         if (parentId) {
-            parentInfo['parentid'] = parentId;
+            parentInfo["parentid"] = parentId;
         }
         else {
             let htmlContent= this._getHtmlIdAndContentName(element.parentElement);
-            parentInfo['parentid'] = htmlContent.id;
-            parentInfo['parentname'] = htmlContent.contentName;
+            parentInfo["parentid"] = htmlContent.id;
+            parentInfo["parentname"] = htmlContent.contentName;
         }
         return parentInfo;
     }

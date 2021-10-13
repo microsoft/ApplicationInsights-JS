@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from './Common/DataSanitizer';
-import { FieldType } from '../Enums';
-import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { AjaxHelperParseDependencyPath} from '../Util';
-import { RemoteDependencyData as GeneratedRemoteDependencyData } from '../Interfaces/Contracts/Generated/RemoteDependencyData';
-import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
-import { msToTimeSpan } from '../HelperFuncs';
+import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from "./Common/DataSanitizer";
+import { FieldType } from "../Enums";
+import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import { AjaxHelperParseDependencyPath} from "../Util";
+import { RemoteDependencyData as GeneratedRemoteDependencyData } from "../Interfaces/Contracts/Generated/RemoteDependencyData";
+import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { msToTimeSpan } from "../HelperFuncs";
 
 export class RemoteDependencyData extends GeneratedRemoteDependencyData implements ISerializable {
 

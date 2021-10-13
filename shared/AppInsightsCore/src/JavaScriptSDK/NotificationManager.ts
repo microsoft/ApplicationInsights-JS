@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
+import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { arrForEach, arrIndexOf } from './HelperFuncs';
+import { arrForEach, arrIndexOf } from "./HelperFuncs";
 
 /**
  * Class to manage sending notifications to all the listeners.

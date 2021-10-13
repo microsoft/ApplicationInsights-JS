@@ -3,7 +3,7 @@
 
 import PropertiesPlugin from "./PropertiesPlugin";
 import { TelemetryTrace } from "./Context/TelemetryTrace";
-import { TelemetryContext } from './TelemetryContext'
+import { TelemetryContext } from "./TelemetryContext"
 import { ISessionConfig, Session, _SessionManager } from "./Context/Session";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 

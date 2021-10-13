@@ -13,7 +13,7 @@ function _logWarn(aiName:string, message:string) {
     // TODO: Find better place to warn to console when SDK initialization fails
     var _console = typeof console !== Undefined ? console : null;
     if (_console && _console.warn) {
-        _console.warn('Failed to initialize AppInsights JS SDK for instance ' + (aiName || '<unknown>') + ' - ' + message);
+        _console.warn("Failed to initialize AppInsights JS SDK for instance " + (aiName || "<unknown>") + " - " + message);
     }
 }
 

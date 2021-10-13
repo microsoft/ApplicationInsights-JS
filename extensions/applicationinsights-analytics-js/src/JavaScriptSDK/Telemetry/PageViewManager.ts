@@ -3,12 +3,12 @@
 
 import {
     dateTimeUtilsDuration, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
-} from '@microsoft/applicationinsights-common';
+} from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
     _InternalMessageId, getDocument, getLocation, arrForEach, isNullOrUndefined, getExceptionName, dumpObj
-} from '@microsoft/applicationinsights-core-js';
-import { PageViewPerformanceManager } from './PageViewPerformanceManager';
+} from "@microsoft/applicationinsights-core-js";
+import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 /**

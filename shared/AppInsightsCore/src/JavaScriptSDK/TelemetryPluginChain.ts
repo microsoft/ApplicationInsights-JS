@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
+import { ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { _InternalLogMessage } from "./DiagnosticLogger";
 import { doPerf } from "./PerfManager";
-import { LoggingSeverity, _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
-import { isFunction } from './HelperFuncs';
-import { dumpObj } from './EnvUtils';
+import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { isFunction } from "./HelperFuncs";
+import { dumpObj } from "./EnvUtils";
 
 export class TelemetryPluginChain implements ITelemetryPluginChain {
 

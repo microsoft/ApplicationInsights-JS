@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, isObject, isString, strTrim } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, isObject, isString, strTrim } from "@microsoft/applicationinsights-core-js";
 
 export const enum DataSanitizerValues {
     /**

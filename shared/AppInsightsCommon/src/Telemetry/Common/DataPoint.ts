@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DataPoint as AIDataPoint } from '../../Interfaces/Contracts/Generated/DataPoint';
-import { ISerializable } from '../../Interfaces/Telemetry/ISerializable';
-import { FieldType } from '../../Enums';
+import { DataPoint as AIDataPoint } from "../../Interfaces/Contracts/Generated/DataPoint";
+import { ISerializable } from "../../Interfaces/Telemetry/ISerializable";
+import { FieldType } from "../../Enums";
 
 export class DataPoint extends AIDataPoint implements ISerializable {
 

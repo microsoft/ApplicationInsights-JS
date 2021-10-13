@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { utlCanUseSessionStorage, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, hasJSON, getJSON, dateNow, dumpObj, throwError } from '@microsoft/applicationinsights-core-js';
+import { utlCanUseSessionStorage, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
+import { IDiagnosticLogger, hasJSON, getJSON, dateNow, dumpObj, throwError } from "@microsoft/applicationinsights-core-js";
 
 /**
  * Used to track page visit durations

@@ -1,28 +1,28 @@
-import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from './Interfaces';
-import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from './SendBuffer';
+import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from "./Interfaces";
+import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from "./SendBuffer";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator,
     ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
-} from './EnvelopeCreator';
-import { Serializer } from './Serializer'; // todo move to channel
+} from "./EnvelopeCreator";
+import { Serializer } from "./Serializer"; // todo move to channel
 import {
     DisabledPropertyName, RequestHeaders, IEnvelope, PageView, Event,
     Trace, Exception, Metric, PageViewPerformance, RemoteDependencyData,
     IChannelControlsAI, IConfig, ProcessLegacy, BreezeChannelIdentifier,
     SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage,
     ISample
-} from '@microsoft/applicationinsights-common';
+} from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
     SendRequestReason, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, throwError, objKeys,
     isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported, isArray
-} from '@microsoft/applicationinsights-core-js';
-import { Offline } from './Offline';
-import { Sample } from './TelemetryProcessors/Sample'
-import dynamicProto from '@microsoft/dynamicproto-js';
+} from "@microsoft/applicationinsights-core-js";
+import { Offline } from "./Offline";
+import { Sample } from "./TelemetryProcessors/Sample"
+import dynamicProto from "@microsoft/dynamicproto-js";
 
 const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 
@@ -504,7 +504,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
         
                 if (failed.length > 0) {
-                    _self._onError(failed, _formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')));
+                    _self._onError(failed, _formatErrorMessageXhr(null, ["partial success", results.itemsAccepted, "of", results.itemsReceived].join(" ")));
                 }
         
                 if (retry.length > 0) {
@@ -619,7 +619,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                //  _stamp_specific_redirects = 0;
                     return false;
                 }
-                if(!isNullOrUndefined(responseUrl) && responseUrl !== '') {
+                if(!isNullOrUndefined(responseUrl) && responseUrl !== "") {
                     if(responseUrl !== _self._senderConfig.endpointUrl()) {
                         _self._senderConfig.endpointUrl = () => responseUrl;
                         ++_stamp_specific_redirects;
@@ -647,7 +647,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             
                 // Chrome only allows CORS-safelisted values for the sendBeacon data argument
                 // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
-                const plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
+                const plainTextBatch = new Blob([batch], { type: "text/plain;charset=UTF-8" });
         
                 // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
                 const queued = nav.sendBeacon(url, plainTextBatch);
@@ -762,7 +762,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              function _doFetchSender(payload: string[], isAsync: boolean) {
                 const endPointUrl = _self._senderConfig.endpointUrl();
                 const batch = _self._buffer.batchPayloads(payload);
-                const plainTextBatch = new Blob([batch], { type: 'application/json' });
+                const plainTextBatch = new Blob([batch], { type: "application/json" });
                 let requestHeaders = new Headers();
                 let batchLength = batch.length;
 
@@ -971,7 +971,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
         
                 const endpointUrl = _self._senderConfig.endpointUrl().replace(/^(https?:)/, "");
-                xdr.open('POST', endpointUrl);
+                xdr.open("POST", endpointUrl);
         
                 // compose an array of payloads
                 const batch = buffer.batchPayloads(payload);
@@ -990,13 +990,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
             // Using function lookups for backward compatibility as the getNotifyMgr() did not exist until after v2.5.6
             function _getNotifyMgr() : INotificationManager {
-                const func = 'getNotifyMgr';
+                const func = "getNotifyMgr";
                 if (_self.core[func]) {
                     return _self.core[func]();
                 }
 
                 // using _self.core['_notificationManager'] for backward compatibility
-                return _self.core['_notificationManager'];
+                return _self.core["_notificationManager"];
             }
 
             function _notifySendRequest(sendRequest: SendRequestReason, isAsync: boolean) {
@@ -1022,7 +1022,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if(disableIKeyValidationFlag) {
                     return true;
                 }
-                const UUID_Regex = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
+                const UUID_Regex = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
                 const regexp = new RegExp(UUID_Regex);
                 return regexp.test(config.instrumentationKey);
             }
