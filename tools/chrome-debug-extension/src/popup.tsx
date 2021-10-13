@@ -5,21 +5,7 @@
 // -----------------------------------------------------------------------
 
 import * as React from 'react';
-import { ExtensionPopupTelemetrySource } from './extensionPopupTelemetrySource';
-import { TelemetryViewer } from './telemetryViewer';
+import * as ReactDOM from 'react-dom';
+import { TelemetryViewerPopup } from './telemetryViewerPopup';
 
-export const PopupApp = (): React.ReactElement => {
-  const [telemetrySource] = React.useState<ExtensionPopupTelemetrySource>(
-    new ExtensionPopupTelemetrySource()
-  );
-
-  React.useEffect(() => {
-    telemetrySource.startListening();
-
-    return () => {
-      telemetrySource.stopListening();
-    };
-  }, []);
-
-  return <TelemetryViewer telemetrySource={telemetrySource} />;
-};
+ReactDOM.render(<TelemetryViewerPopup />, document.getElementById('root') as HTMLElement);

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // -----------------------------------------------------------------------
 // <copyright company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.

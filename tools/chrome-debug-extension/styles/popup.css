@@ -53,20 +53,20 @@ body {
   border: 1px solid #1a73e8;
 }
 
-button {
+.rootDiv button {
   background: transparent;
   border: none;
   outline: none;
   cursor: pointer;
 }
 
-button:hover {
+.rootDiv button:hover {
   background: #dbdbdb;
   border: none;
   outline: none;
 }
 
-button:active {
+.rootDiv button:active {
   background: #e0e0e0;
   border: none;
   outline: none;
@@ -210,4 +210,45 @@ table.eventTable tr.selected td {
 .dragTargetText {
   font-weight: 800;
   font-size: large;
+}
+
+.configurationSelection {
+  margin: 10px;
+}
+
+.configurationSelectionHeader {
+  font-size: 14pt;
+}
+
+.configurationSelectionDropdownDiv {
+  margin-top: 10px;
+  display: flex;
+}
+
+.configurationSelectionDropdown {
+  margin-left: 5px;
+}
+
+.configurationSelectionButtonsDiv {
+  margin: 10px;
+}
+
+.configurationSelectionButton {
+  margin: 5px;
+}
+
+.loadingConfiguration {
+  margin-top: 25px;
+  font-size: 14pt;
+  text-align: center;
+}
+
+.loadingConfigurationFailed {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.loadingConfigurationFailedHeader {
+  font-size: 14pt;
+  margin-bottom: 25px;
 }

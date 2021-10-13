@@ -5,11 +5,11 @@
 // -----------------------------------------------------------------------
 
 import React from 'react';
-import { EventType } from './dataHelpers';
+import { DataEventType } from '../dataSources/IDataEvent';
 import { EventTypeIcon } from './eventTypeIcon';
 
 interface IEventTypeCounterProps {
-  eventType: EventType | undefined;
+  eventType: DataEventType | undefined;
   count: number;
 }
 

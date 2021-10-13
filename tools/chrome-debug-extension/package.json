@@ -1,7 +1,7 @@
 {
   "name": "@microsoft/applicationinsights-web-chrome-debug-extension",
   "version": "0.0.1",
-  "description": "A Chrome browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
+  "description": "A browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
   "main": "index.ts",
   "module": "index.ts",
   "files": [

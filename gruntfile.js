@@ -159,7 +159,7 @@ module.exports = function (grunt) {
             "chrome-debug-extension": { path: "./tools/chrome-debug-extension",
                                         cfg: {
                                             src: [
-                                                "./tools/chrome-debug-extension/src/applicationinsights-chrome-debug-extension.tsx",
+                                                "./tools/chrome-debug-extension/src/popup.tsx",
                                                 "./tools/chrome-debug-extension/src/background.ts",
                                             ]
                                         }

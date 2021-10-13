@@ -1,7 +1,7 @@
 {
-  "name": "Stream Telemetry Browser Extension",
-  "short_name": "Stream Telemetry",
-  "description": "A browser extension for viewing Stream telemetry in real time",
+  "name": "Application Insights Debug Viewer",
+  "short_name": "Application Insights Debug Viewer",
+  "description": "A browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
   "version": "0.0.1",
   "manifest_version": 2,
   "icons": {
@@ -17,6 +17,6 @@
       "19": "images/icon-19.png",
       "38": "images/icon-38.png"
     },
-    "default_title": "View Stream Telemetry"
+    "default_title": "View Application Insights Telemetry"
   }
 }

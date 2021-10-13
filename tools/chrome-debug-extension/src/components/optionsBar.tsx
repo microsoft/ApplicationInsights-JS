@@ -5,41 +5,43 @@
 // -----------------------------------------------------------------------
 
 import React from 'react';
-import { EventType, ICounts } from './dataHelpers';
+import { ICounts } from '../dataSources/dataHelpers';
+import { DataEventType } from '../dataSources/IDataEvent';
 import { EventTypeFilter } from './eventTypeFilter';
-import { IConfiguration } from './IConfiguration';
+import { IFilterSettings } from './IFilterSettings';
 
 interface IOptionsBarProps {
-  configuration: IConfiguration;
-  onConfigChanged: (newConfig: IConfiguration) => void;
+  filterSettings: IFilterSettings;
+  onFilterSettingsChanged: (newFilterSettings: IFilterSettings) => void;
   counts: ICounts;
   onClear: () => void;
   onSave: () => void;
+  onShowConfigurationSelection: () => void;
 }
 
 export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptionsBarProps> => {
   function handleFilterTextOnChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const newConfiguration = {
-      ...props.configuration,
+      ...props.filterSettings,
       filterText: e.currentTarget.value
     };
-    props.onConfigChanged(newConfiguration);
+    props.onFilterSettingsChanged(newConfiguration);
   }
 
-  function onFilterChanged(newEventTypeFilter: EventType | undefined): void {
+  function onFilterChanged(newEventTypeFilter: DataEventType | undefined): void {
     const newConfiguration = {
-      ...props.configuration,
+      ...props.filterSettings,
       filterByType: newEventTypeFilter
     };
-    props.onConfigChanged(newConfiguration);
+    props.onFilterSettingsChanged(newConfiguration);
   }
 
   function onShowCondensedDetailsChanged(): void {
-    const newConfiguration = {
-      ...props.configuration,
-      showCondensedDetails: !props.configuration.showCondensedDetails
+    const newFilterSettings = {
+      ...props.filterSettings,
+      showCondensedDetails: !props.filterSettings.showCondensedDetails
     };
-    props.onConfigChanged(newConfiguration);
+    props.onFilterSettingsChanged(newFilterSettings);
   }
 
   return (
@@ -48,18 +50,18 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
         type='search'
         className='inputBox'
         placeholder='Filter...'
-        value={props.configuration.filterText}
+        value={props.filterSettings.filterText}
         onChange={handleFilterTextOnChange}
       />
       <EventTypeFilter
-        currentEventTypeFilter={props.configuration.filterByType}
+        currentEventTypeFilter={props.filterSettings.filterByType}
         onEventTypeFilterChanged={onFilterChanged}
         counts={props.counts}
       />
       <input
         type='checkbox'
         id='condenseDetailsButton'
-        checked={props.configuration.showCondensedDetails}
+        checked={props.filterSettings.showCondensedDetails}
         className='condenseDetailsButton verticallyCenteredFlexItem'
         onChange={onShowCondensedDetailsChanged}
       />
@@ -71,6 +73,13 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
       </button>
       <button onClick={props.onClear} title='Clear all' className='clearButton'>
         <img src='../images/clear.png' className='verticallyCenteredFlexItem' />
+      </button>
+      <button
+        onClick={props.onShowConfigurationSelection}
+        title='Configuration'
+        className='showConfigurationSelectionButton'
+      >
+        <img src='../images/settings.png' className='verticallyCenteredFlexItem' />
       </button>
     </div>
   );

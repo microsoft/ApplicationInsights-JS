@@ -4,8 +4,10 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-import * as React from "react";
-import * as ReactDOM from "react-dom";
-import { PopupApp } from "./popup";
+import { DataEventType } from '../dataSources/IDataEvent';
 
-ReactDOM.render(<PopupApp />, document.getElementById("root") as HTMLElement);
+export interface IFilterSettings {
+  filterText: string;
+  filterByType: DataEventType | undefined;
+  showCondensedDetails: boolean;
+}
