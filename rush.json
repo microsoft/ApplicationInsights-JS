@@ -11,7 +11,7 @@
       "shouldPublish": false
     },
     {
-      "packageName": "@microsoft/chrome-debug-plugin",
+      "packageName": "@microsoft/applicationinsights-web-chrome-debug-extension",
       "projectFolder": "tools/chrome-debug-extension",
       "shouldPublish": false
     },

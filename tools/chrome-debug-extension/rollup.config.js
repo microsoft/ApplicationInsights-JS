@@ -69,7 +69,7 @@ const generateBackground = isProduction => {
 
 const generatePopup = isProduction => {
   const browserRollupConfig = {
-    input: `dist-esm/popup.js`,
+    input: `dist-esm/applicationinsights-chrome-debug-extension.js`,
     output: {
       file: `browser/scripts/popup.js`,
       banner: banner,
