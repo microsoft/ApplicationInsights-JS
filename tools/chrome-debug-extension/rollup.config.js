@@ -1,14 +1,11 @@
 import nodeResolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import replace from "@rollup/plugin-replace";
-import cleanup from "rollup-plugin-cleanup";
-// import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import { uglify } from "../../tools/rollup-plugin-uglify3-js/dist/esm/rollup-plugin-uglify3-js";
-import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
+import copy from 'rollup-plugin-copy'
 
 const version = require("./package.json").version;
-const outputName = "applicationinsights-chrome-debug-extension";
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Chrome Debug Plugin, ${version}`,
@@ -18,24 +15,15 @@ const banner = [
 
 const replaceValues = {
   "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
-  "// Licensed under the MIT License.": ""
+  "// Licensed under the MIT License.": "",
+  "process.env.NODE_ENV": "JSON.stringify( 'production' )"
 };
 
-function doCleanup() {
-  return cleanup({
-    comments: [
-      'some', 
-      /^.\s*@DynamicProtoStub/i,
-      /^\*\*\s*@class\s*$/
-    ]
-  })
-}
-
-const browserRollupConfigFactory = isProduction => {
+const generateBackground = isProduction => {
   const browserRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
+    input: `dist-esm/background.js`,
     output: {
-      file: `browser/${outputName}.js`,
+      file: `browser/scripts/background.js`,
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights",
@@ -44,25 +32,22 @@ const browserRollupConfigFactory = isProduction => {
       sourcemap: true
     },
     plugins: [
-      dynamicRemove(),
-      replace({
-        preventAssignment: true,
-        delimiters: ["", ""],
-        values: replaceValues
-      }),
-      // peerDepsExternal(),
       nodeResolve({
         browser: true,
         preferBuiltins: true,
         dedupe: [ "react", "react-dom" ]
       }),
       commonjs(),
-      doCleanup(),
+      replace({
+        preventAssignment: true,
+        delimiters: ["", ""],
+        values: replaceValues
+      })
     ]
   };
 
    if (isProduction) {
-    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
+    browserRollupConfig.output.file = `browser/background.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         ie8: true,
@@ -82,11 +67,11 @@ const browserRollupConfigFactory = isProduction => {
   return browserRollupConfig;
 };
 
-const nodeUmdRollupConfigFactory = (isProduction) => {
-  const nodeRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
+const generatePopup = isProduction => {
+  const browserRollupConfig = {
+    input: `dist-esm/popup.js`,
     output: {
-      file: `dist/${outputName}.js`,
+      file: `browser/scripts/popup.js`,
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights",
@@ -95,79 +80,30 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       sourcemap: true
     },
     plugins: [
-      dynamicRemove(),
-      replace({
-        preventAssignment: true,
-        delimiters: ["", ""],
-        values: replaceValues
-      }),
-      // peerDepsExternal(),
       nodeResolve({
         browser: true,
         preferBuiltins: true,
         dedupe: [ "react", "react-dom" ]
       }),
+      copy({
+        targets: [
+          { src: './images/*', dest: 'browser/images' },
+          { src: './pages/*', dest: 'browser/pages' },
+          { src: './styles/*', dest: 'browser/styles' },
+          { src: './manifest.json', dest: 'browser/' }
+        ]
+      }),
       commonjs(),
-      doCleanup(),
-    ]
-  };
-
-  if (isProduction) {
-    nodeRollupConfig.output.file = `dist/${outputName}.min.js`;
-    nodeRollupConfig.plugins.push(
-      uglify({
-        ie8: true,
-        toplevel: true,
-        compress: {
-          passes:3,
-          unsafe: true
-        },
-        output: {
-          preamble: banner,
-          webkit:true
-        }
-      })
-    );
-  }
-
-  return nodeRollupConfig;
-};
-
-const generateScripts = (isProduction, inputName) => {
-  const browserRollupConfig = {
-    input: `dist-esm/${inputName}.js`,
-    output: {
-      file: `dist-esm/scripts/${inputName}.js`,
-      banner: banner,
-      format: "umd",
-      name: "Microsoft.ApplicationInsights",
-      extend: true,
-      freeze: false,
-      sourcemap: false
-    },
-    plugins: [
-      dynamicRemove(),
       replace({
         preventAssignment: true,
         delimiters: ["", ""],
         values: replaceValues
-      }),
-      // peerDepsExternal(),
-      nodeResolve({
-        browser: true,
-        preferBuiltins: true,
-        dedupe: [ "react", "react-dom" ]
-      }),
-      commonjs(),
-      doCleanup(),
-      replace({
-        'process.env.NODE_ENV': JSON.stringify( 'production' )
       })
     ]
   };
 
-  if (isProduction) {
-    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
+   if (isProduction) {
+    browserRollupConfig.output.file = `browser/popup.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         ie8: true,
@@ -190,10 +126,6 @@ const generateScripts = (isProduction, inputName) => {
 updateDistEsmFiles(replaceValues, banner);
 
 export default [
-  browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false),
-  nodeUmdRollupConfigFactory(true),
-  nodeUmdRollupConfigFactory(false),
-  generateScripts(false, "background"),
-  generateScripts(false, "popup")
+  generateBackground(false),
+  generatePopup(false)
 ];
