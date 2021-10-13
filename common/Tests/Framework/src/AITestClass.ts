@@ -1,12 +1,12 @@
 /// <reference path="../../External/qunit.d.ts" />
 
-import dynamicProto from '@microsoft/dynamicproto-js';
-import { SinonSandbox, SinonSpy, SinonStub, SinonMock, SinonFakeXMLHttpRequest } from 'sinon';
-import * as sinon from 'sinon';
+import dynamicProto from "@microsoft/dynamicproto-js";
+import { SinonSandbox, SinonSpy, SinonStub, SinonMock, SinonFakeXMLHttpRequest } from "sinon";
+import * as sinon from "sinon";
 import { Assert } from "./Assert";
-import { ITestContext, StepResult, TestCase, TestCaseAsync } from './TestCase';
+import { ITestContext, StepResult, TestCase, TestCaseAsync } from "./TestCase";
 
-const stepRetryCnt = 'retryCnt';
+const stepRetryCnt = "retryCnt";
 
 export interface FakeXMLHttpRequest extends XMLHttpRequest {
     url?: string;
@@ -215,7 +215,7 @@ export class AITestClass {
                                     let result = step.call(this, testContext);
                                     if (result === StepResult.Retry || result === false) {
                                         // The step requested itself to be retried
-                                        Assert.ok(false, 'Retrying Step - ' + stepIndex + ' - Attempt #' + testContext.retryCnt);
+                                        Assert.ok(false, "Retrying Step - " + stepIndex + " - Attempt #" + testContext.retryCnt);
                                         step[stepRetryCnt] = testContext.retryCnt + 1;
                                         steps.unshift(step);
                                         stepIndex--;
@@ -224,7 +224,7 @@ export class AITestClass {
                                         steps.unshift(step);
                                         stepIndex--;
                                     } else if (result === StepResult.Abort) {
-                                        Assert.ok(false, 'Step aborted!');
+                                        Assert.ok(false, "Step aborted!");
                                         testDone();
                                         return;
                                     }
@@ -363,7 +363,7 @@ export class AITestClass {
     public spy(funcToWrap: Function): SinonSpy;
     /** Creates a spy for object.methodName and replaces the original method with the spy. The spy acts exactly like the original method in all cases. The original method can be restored by calling object.methodName.restore(). The returned spy is the function object which replaced the original method. spy === object.method. */
     public spy(object: any, methodName: string, func?: Function): SinonSpy;
-    public spy(...args: any[]): SinonSpy { return null; }
+    public spy(..._args: any[]): SinonSpy { return null; }
 
     /** Creates an anonymous stub function. */
     public stub(): SinonStub;
@@ -371,10 +371,10 @@ export class AITestClass {
     public stub(object: any): SinonStub;
     /** Replaces object.methodName with a func, wrapped in a spy. As usual, object.methodName.restore(); can be used to restore the original method. */
     public stub(object: any, methodName: string, func?: Function): SinonStub;
-    public stub(...args: any[]): SinonStub { return null; }
+    public stub(..._args: any[]): SinonStub { return null; }
 
     /** Creates a mock for the provided object.Does not change the object, but returns a mock object to set expectations on the object's methods. */
-    public mock(object: any): SinonMock { return null; }
+    public mock(_object: any): SinonMock { return null; }
 
     /**** end: Sinon methods and properties ***/
 
@@ -429,7 +429,7 @@ export class AITestClass {
         this.hookSendBeacon(null);
 
         try {
-            AITestClass.orgObjectDefineProperty(window.navigator, 'userAgent',
+            AITestClass.orgObjectDefineProperty(window.navigator, "userAgent",
             {
                 configurable: true,
                 get () {
@@ -494,7 +494,7 @@ export class AITestClass {
 
     protected setNavigator(newNavigator: any) {
         try {
-            AITestClass.orgObjectDefineProperty(window, 'navigator',
+            AITestClass.orgObjectDefineProperty(window, "navigator",
             {
                 configurable: true,
                 get: function () {
@@ -508,7 +508,7 @@ export class AITestClass {
     }
 
     protected setCrypto(crypto: Crypto | null) {
-        AITestClass.orgObjectDefineProperty(window, 'crypto',
+        AITestClass.orgObjectDefineProperty(window, "crypto",
             {
                 configurable: true,
                 get () {
@@ -627,7 +627,7 @@ export class AITestClass {
     protected setLocation(newLocation: Location | null) {
         try {
             if (newLocation) {
-                AITestClass.orgObjectDefineProperty(window, '__mockLocation',
+                AITestClass.orgObjectDefineProperty(window, "__mockLocation",
                 {
                     configurable: true,
                     enumerable: true,
@@ -669,7 +669,7 @@ export class AITestClass {
     }
 
     protected _disableDynProtoBaseFuncs() {
-        let defOpts = dynamicProto['_dfOpts'];
+        let defOpts = dynamicProto["_dfOpts"];
         if (defOpts) {
             if (!this._dynProtoOpts) {
                 // Save the current settings so we can restore them

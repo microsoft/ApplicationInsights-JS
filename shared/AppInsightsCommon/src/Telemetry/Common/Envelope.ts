@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Envelope as AIEnvelope } from '../../Interfaces/Contracts/Generated/Envelope';
-import { Base } from '../../Interfaces/Contracts/Generated/Base';
-import { IEnvelope } from '../../Interfaces/Telemetry/IEnvelope';
-import { dataSanitizeString } from './DataSanitizer';
-import { FieldType } from '../../Enums';
-import { IDiagnosticLogger, toISOString } from '@microsoft/applicationinsights-core-js';
-import { strNotSpecified } from '../../Constants';
+import { Envelope as AIEnvelope } from "../../Interfaces/Contracts/Generated/Envelope";
+import { Base } from "../../Interfaces/Contracts/Generated/Base";
+import { IEnvelope } from "../../Interfaces/Telemetry/IEnvelope";
+import { dataSanitizeString } from "./DataSanitizer";
+import { FieldType } from "../../Enums";
+import { IDiagnosticLogger, toISOString } from "@microsoft/applicationinsights-core-js";
+import { strNotSpecified } from "../../Constants";
 
 export class Envelope extends AIEnvelope implements IEnvelope {
 

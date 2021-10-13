@@ -5,12 +5,12 @@
 
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from '../JavaScriptSDK.Interfaces/IDiagnosticLogger';
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ProcessTelemetryContext } from './ProcessTelemetryContext';
+import { ProcessTelemetryContext } from "./ProcessTelemetryContext";
 import { isFunction, isNullOrUndefined, setValue } from "./HelperFuncs";
 import { strExtensionConfig } from "./Constants";
 

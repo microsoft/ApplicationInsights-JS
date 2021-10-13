@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Domain } from './Domain';
+import { Domain } from "./Domain";
 
 /**
  * Instances of Event represent structured event records that can be grouped and searched by their properties. Event data item also creates a metric of event count by name.

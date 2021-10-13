@@ -7,11 +7,6 @@ function _escapeRegEx(str:string) {
     return str.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
 }
 
-function _replaceAll(str:string, value:string, newValue: string) {
-    // eslint-disable-next-line security/detect-non-literal-regexp
-    return str.replace(new RegExp(_escapeRegEx(value), "g"), newValue);
-}
-
 export function importCheck(options:IImportCheckRollupOptions = {}) {
     let checkOptions:IEs3CheckRollupOptions = {
         ignoreDefault: true,
@@ -28,7 +23,7 @@ export function importCheck(options:IImportCheckRollupOptions = {}) {
     }
 
     let plugin = es3Check(checkOptions);
-    plugin.name = 'ai-rollup-importcheck';
+    plugin.name = "ai-rollup-importcheck";
 
     return plugin
 }

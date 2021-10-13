@@ -13,9 +13,9 @@ export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks,
 export { EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
-export { BaseCore } from './JavaScriptSDK/BaseCore';
-export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
-export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from './JavaScriptSDK/RandomHelper';
+export { BaseCore } from "./JavaScriptSDK/BaseCore";
+export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
+export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./JavaScriptSDK/RandomHelper";
 export {
     CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, newId, generateW3CId,
     disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr, addEventListeners, addPageUnloadEventListener,
@@ -27,7 +27,7 @@ export {
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
     setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, createClassFromInterface, optimizeObject, isNotUndefined, isNotNullOrUndefined,
     objFreeze, objSeal
-} from './JavaScriptSDK/HelperFuncs';
+} from "./JavaScriptSDK/HelperFuncs";
 export {
     getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
@@ -41,19 +41,19 @@ export {
     strShimFunction as strFunction,
     strShimUndefined as strUndefined,
     strShimObject as strObject
-} from '@microsoft/applicationinsights-shims';
+} from "@microsoft/applicationinsights-shims";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";
-export { IPerfEvent } from './JavaScriptSDK.Interfaces/IPerfEvent';
-export { IPerfManager, IPerfManagerProvider } from './JavaScriptSDK.Interfaces/IPerfManager';
-export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from './JavaScriptSDK/PerfManager';
-export { safeGetLogger, DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';
-export { ProcessTelemetryContext } from './JavaScriptSDK/ProcessTelemetryContext';
+export { IPerfEvent } from "./JavaScriptSDK.Interfaces/IPerfEvent";
+export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/IPerfManager";
+export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
+export { safeGetLogger, DiagnosticLogger, _InternalLogMessage } from "./JavaScriptSDK/DiagnosticLogger";
+export { ProcessTelemetryContext } from "./JavaScriptSDK/ProcessTelemetryContext";
 export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
-export { _InternalMessageId, LoggingSeverity } from './JavaScriptSDK.Enums/LoggingEnums';
+export { _InternalMessageId, LoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
-export { ICookieMgr, ICookieMgrConfig } from './JavaScriptSDK.Interfaces/ICookieMgr';
+export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";
 export {
     createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported
-} from './JavaScriptSDK/CookieMgr';
-export { strIKey, strExtensionConfig } from './JavaScriptSDK/Constants';
+} from "./JavaScriptSDK/CookieMgr";
+export { strIKey, strExtensionConfig } from "./JavaScriptSDK/Constants";

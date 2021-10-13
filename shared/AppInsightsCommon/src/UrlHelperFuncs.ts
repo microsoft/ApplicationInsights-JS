@@ -19,7 +19,7 @@ export function urlParseUrl(url: string): HTMLAnchorElement {
         tempAnchor = { host: urlParseHost(url, true) } as HTMLAnchorElement;
     } else if (!anchorCache[anchorIdx]) {
         // Create and cache the unattached anchor instance
-        tempAnchor = anchorCache[anchorIdx] = _document.createElement('a');
+        tempAnchor = anchorCache[anchorIdx] = _document.createElement("a");
     }
 
     tempAnchor.href = url;

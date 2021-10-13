@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { SeverityLevel } from './Contracts/Generated/SeverityLevel'
-import { IPartC } from './IPartC';
+import { SeverityLevel } from "./Contracts/Generated/SeverityLevel"
+import { IPartC } from "./IPartC";
 
 /**
  * @export

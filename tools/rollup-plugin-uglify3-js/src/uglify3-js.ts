@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as UglifyJs from 'uglify-js';
+import * as UglifyJs from "uglify-js";
 
 function isSourceMapEnabled(options) {
     if (options) {
@@ -11,11 +11,11 @@ function isSourceMapEnabled(options) {
     return false;
 }
 
-function _doMinify(code, filename, options, chunkOptions) {
+function _doMinify(code, filename, options, _chunkOptions) {
     var theCode = {};
     theCode[filename] = code;
 
-    let assign = Object['assign'];
+    let assign = Object["assign"];
     let theOptions = assign({}, options);
     if (theOptions.hasOwnProperty("sourcemap")) {
         delete theOptions.sourcemap;
@@ -50,7 +50,7 @@ function _doMinify(code, filename, options, chunkOptions) {
 export function uglify(options = {}) {
 
     return {
-        name: 'ai-rollup-plugin-uglify3-js',
+        name: "ai-rollup-plugin-uglify3-js",
         renderChunk(code, chunk, chkOpt) {
             return _doMinify(code, chunk.filename, options, chkOpt);
         }

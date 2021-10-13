@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StackFrame } from '../Interfaces/Contracts/Generated/StackFrame';
-import { ExceptionData } from '../Interfaces/Contracts/Generated/ExceptionData';
-import { ExceptionDetails } from '../Interfaces/Contracts/Generated/ExceptionDetails';
-import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString } from './Common/DataSanitizer';
-import { FieldType } from '../Enums';
-import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
-import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction, getSetValue } from '@microsoft/applicationinsights-core-js';
+import { StackFrame } from "../Interfaces/Contracts/Generated/StackFrame";
+import { ExceptionData } from "../Interfaces/Contracts/Generated/ExceptionData";
+import { ExceptionDetails } from "../Interfaces/Contracts/Generated/ExceptionDetails";
+import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import { dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
+import { FieldType } from "../Enums";
+import { SeverityLevel } from "../Interfaces/Contracts/Generated/SeverityLevel";
+import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction, getSetValue } from "@microsoft/applicationinsights-core-js";
 import {
     IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal, IAutoExceptionTelemetry, IStackDetails
-} from '../Interfaces/IExceptionTelemetry';
-import { strNotSpecified } from '../Constants';
+} from "../Interfaces/IExceptionTelemetry";
+import { strNotSpecified } from "../Constants";
 
 const NoMethod = "<no_method>";
 const strError = "error";
@@ -145,13 +145,13 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
             } else if (errorObj[strError] && errorObj[strError][strStack]) {
                 // Edge error event provides the stack and error object
                 details = _convertStackObj(errorObj[strError][strStack]);
-            } else if (errorObj['exception'] && errorObj.exception[strStack]) {
+            } else if (errorObj["exception"] && errorObj.exception[strStack]) {
                 details = _convertStackObj(errorObj.exception[strStack]);
             } else if (_isStackDetails(errorObj)) {
                 details = errorObj;
             } else if (_isStackDetails(errorObj[strStackDetails])) {
                 details = errorObj[strStackDetails];
-            } else if (window['opera'] && errorObj[strMessage]) {
+            } else if (window["opera"] && errorObj[strMessage]) {
                 // Opera
                 details = _getOperaStack(errorObj.message);
             } else if (isString(errorObj)) {

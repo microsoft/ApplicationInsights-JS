@@ -5,7 +5,7 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { hasJSON, getJSON, getConsole } from "./EnvUtils";
-import dynamicProto from '@microsoft/dynamicproto-js';
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 
@@ -65,7 +65,7 @@ export function safeGetLogger(core: IAppInsightsCore, config?: IConfiguration): 
 }
   
 export class DiagnosticLogger implements IDiagnosticLogger {
-    public identifier = 'DiagnosticLogger';
+    public identifier = "DiagnosticLogger";
     
     /**
      * The internal logging queue
@@ -88,13 +88,13 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 config = {};
             }
 
-            _self.consoleLoggingLevel = () => _getConfigValue('loggingLevelConsole', 0);
+            _self.consoleLoggingLevel = () => _getConfigValue("loggingLevelConsole", 0);
             
-            _self.telemetryLoggingLevel = () => _getConfigValue('loggingLevelTelemetry', 1);
+            _self.telemetryLoggingLevel = () => _getConfigValue("loggingLevelTelemetry", 1);
 
-            _self.maxInternalMessageLimit = () => _getConfigValue('maxMessageLimit', 25);
+            _self.maxInternalMessageLimit = () => _getConfigValue("maxMessageLimit", 25);
 
-            _self.enableDebugExceptions = () => _getConfigValue('enableDebugExceptions', false);
+            _self.enableDebugExceptions = () => _getConfigValue("enableDebugExceptions", false);
             
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
@@ -136,9 +136,9 @@ export class DiagnosticLogger implements IDiagnosticLogger {
             _self.warnToConsole = (message: string) => {
                 let theConsole = getConsole();
                 if (!!theConsole) {
-                    let logFunc = 'log';
+                    let logFunc = "log";
                     if (theConsole.warn) {
-                        logFunc = 'warn';
+                        logFunc = "warn";
                     }
 
                     if (isFunction(theConsole[logFunc])) {

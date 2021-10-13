@@ -104,7 +104,7 @@ export function addPageUnloadEventListener(listener: any, excludeEvents?: string
 
     function _handlePageVisibility(evt: any) {
         let doc = getDocument();
-        if (listener && doc && doc.visibilityState === 'hidden') {
+        if (listener && doc && doc.visibilityState === "hidden") {
             listener(evt);
         }
     }
@@ -136,7 +136,7 @@ export function addPageUnloadEventListener(listener: any, excludeEvents?: string
 
     function _handlePageVisibility(evt: any) {
         let doc = getDocument();
-        if (listener && doc && doc.visibilityState === 'visible') {
+        if (listener && doc && doc.visibilityState === "visible") {
             listener(evt);
         }
     }
@@ -163,8 +163,8 @@ export function newGuid(): string {
         return randomValue(15); // Get a random value from 0..15
     }
 
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(GuidRegex, (c) => {
-        const r = (randomHexDigit() | 0), v = (c === 'x' ? r : r & 0x3 | 0x8);
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(GuidRegex, (c) => {
+        const r = (randomHexDigit() | 0), v = (c === "x" ? r : r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
@@ -188,7 +188,7 @@ export function perfNow(): number {
  * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
  */
 export function newId(maxLength = 22): string {
-    const base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     // Start with an initial random number, consuming the value in reverse byte order
     let number = random32() >>> 0;  // Make sure it's a +ve number

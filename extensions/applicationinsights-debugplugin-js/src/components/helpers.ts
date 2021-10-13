@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, arrIndexOf, hasOwnProperty, isFunction, isObject, isString, isSymbol, objKeys } from '@microsoft/applicationinsights-core-js';
-import { Util } from '@microsoft/applicationinsights-common';
-import { strShimPrototype } from '@microsoft/applicationinsights-shims';
+import { arrForEach, arrIndexOf, hasOwnProperty, isFunction, isObject, isString, isSymbol, objKeys } from "@microsoft/applicationinsights-core-js";
+import { Util } from "@microsoft/applicationinsights-common";
+import { strShimPrototype } from "@microsoft/applicationinsights-shims";
 
 const strConstructor = "constructor";
 const strGetOwnPropertyNames = "getOwnPropertyNames";
@@ -12,11 +12,11 @@ export const MAX_DEPTH = 16;
 
 export function makeRegex(value: string) {
     if (value && value.length > 0) {
-        value = value.replace(/\\/g, '\\\\');
+        value = value.replace(/\\/g, "\\\\");
         // eslint-disable-next-line security/detect-non-literal-regexp
-        value = value.replace(/([\+\?\|\{\[\(\)\^\$\#\.]}])/g, '\\$1');
-        value = value.replace(/\*/g, '.*');
-        return new RegExp('(' + value + ')');
+        value = value.replace(/([\+\?\|\{\[\(\)\^\$\#\.]}])/g, "\\$1");
+        value = value.replace(/\*/g, ".*");
+        return new RegExp("(" + value + ")");
     }
 
     return null;
@@ -49,7 +49,7 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
             }
             else if (targetValue !== null && isObject(targetValue)) {
                 if (currentDepth >= maxDepth) {
-                    out[key] = '<max allowed depth reached>';
+                    out[key] = "<max allowed depth reached>";
                 } else {
                     thingsReferenced.push(target);
                     out[key] = traverseAndReplace(targetValue, maxDepth, currentDepth + 1, thingsReferenced, excludedKeys, includeFunctions);
@@ -67,9 +67,9 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
 
 function _sanitizeText(value: string) {
     if (value) {
-        value = value.replace(/&/g, '&amp;');
-        value = value.replace(/>/g, '&gt;');
-        value = value.replace(/</g, '&lt;');
+        value = value.replace(/&/g, "&amp;");
+        value = value.replace(/>/g, "&gt;");
+        value = value.replace(/</g, "&lt;");
     }
 
     return value;
@@ -91,9 +91,9 @@ function _setInnerText(elm: HTMLElement, theText: string, textFilter: string): b
     if (matchPos !== -1) {
         let innerHtml =
             _sanitizeText(theText.substring(0, matchPos)) +
-            '<span class="matched-text-filter">' +
+            "<span class=\"matched-text-filter\">" +
             _sanitizeText(theText.substring(matchPos, matchPos + matchLen)) +
-            '</span>' +
+            "</span>" +
             theText.substring(matchPos + matchLen);
 
         elm.innerHTML = innerHtml;
@@ -115,7 +115,7 @@ export function copySelectedTree() {
 
     const textArea = document.createElement("textarea");
     textArea.innerText = JSON.stringify(toCopy);
-    textArea.style.opacity = '0';
+    textArea.style.opacity = "0";
     document.body.appendChild(textArea);
     textArea.select();
     document.execCommand("copy");
@@ -124,14 +124,14 @@ export function copySelectedTree() {
 
 export function focusHandler(evt: Event, target: Object, level: number, excludeKeys: string[], includeFunctions: boolean) {
     if (lastSelectedElement) {
-        toggleClassName(lastSelectedElement, ' last-selected-element');
+        toggleClassName(lastSelectedElement, " last-selected-element");
     }
     lastSelectedElement = (evt.target as HTMLElement);
     for (let i = 0; i < 10; i++) {
         if (lastSelectedElement.tagName === "DIV") { break; }
         lastSelectedElement = lastSelectedElement.parentElement;
     }
-    lastSelectedElement.className += ' last-selected-element';
+    lastSelectedElement.className += " last-selected-element";
     selectedObject = traverseAndReplace(target, MAX_DEPTH, level, null, excludeKeys, includeFunctions);
 }
 
@@ -144,7 +144,7 @@ function _navHandler(evt: KeyboardEvent, openHandler?: (evt: Event, forceState?:
         case 38:
             evt.preventDefault();
             const prev = el.previousElementSibling as HTMLElement;
-            if (prev && prev.tagName !== 'BUTTON') { prev.focus(); }
+            if (prev && prev.tagName !== "BUTTON") { prev.focus(); }
             break;
         // ArrowDown
         case 40:
@@ -263,7 +263,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
     }
 
     let isObj = isObject(target) || Util.isError(target);
-    let isErr = target['baseType'] === 'ExceptionData' || Util.isError(target);
+    let isErr = target["baseType"] === "ExceptionData" || Util.isError(target);
 
     const children: HTMLElement[] = [];
 
@@ -273,7 +273,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             rootDiv.appendChild(child);
         });
 
-        currentLine.className = 'obj-key expandable open'
+        currentLine.className = "obj-key expandable open"
     }
 
     function _collapseNode(currentLine: HTMLElement) {
@@ -283,14 +283,14 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         });
         // rootDiv.appendChild(currentLine);
         openState = false;
-        currentLine.className = 'obj-key expandable closed'
+        currentLine.className = "obj-key expandable closed"
     }
 
     let matched = false;
     let childOpened = false;
     const keys = getTargetKeys(target, excludeKeys, includeFunctions);
-    if (keys.length === 0) { keys.push('<empty>'); }
-    if (level >= MAX_DEPTH) { keys.unshift('<maxdepth>'); }
+    if (keys.length === 0) { keys.push("<empty>"); }
+    if (level >= MAX_DEPTH) { keys.unshift("<maxdepth>"); }
     for (const key of keys) {
         if (excludeKeys.indexOf(key) !== -1) {
             continue;
@@ -301,22 +301,22 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             targetValue = targetValue.toString();
         }
 
-        if (key === '<maxdepth>') {
+        if (key === "<maxdepth>") {
             const builder = document.createElement("div");
-            builder.className = 'empty';
-            builder.innerText = '<max allowed depth reached>';
+            builder.className = "empty";
+            builder.innerText = "<max allowed depth reached>";
             children.push(builder);
             break;
         }
-        else if (key === '<empty>') {
+        else if (key === "<empty>") {
             const builder = document.createElement("div");
-            builder.className = 'empty';
-            builder.innerText = '<empty>';
+            builder.className = "empty";
+            builder.innerText = "<empty>";
             children.push(builder);
         }
         else if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
             const builder = document.createElement("div");
-            builder.className = 'empty';
+            builder.className = "empty";
             builder.innerText = `<circular (${key}) - "${getTargetName(targetValue)}">`;
             children.push(builder);
         }
@@ -351,7 +351,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
 
             const outerSpan = document.createElement("span");
             const keySpan = document.createElement("span");
-            keySpan.className = 'key';
+            keySpan.className = "key";
             if (_setInnerText(keySpan, `${key}: `, textFilter)) {
                 childOpened = true;
             }
@@ -377,10 +377,10 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
 
     const rootDiv = document.createElement("div");
 
-    let innerText = '';
-    let currentLine = document.createElement('span');
+    let innerText = "";
+    let currentLine = document.createElement("span");
     if (isObj || children.length) {
-        innerText = `${key ? key : 'obj'}: `;
+        innerText = `${key ? key : "obj"}: `;
         if (Util.isArray(target)) {
             innerText += `[${getTargetKeys(target, excludeKeys, includeFunctions).length}]`;
         } else {
@@ -394,9 +394,9 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         matched = _setInnerText(currentLine, innerText, textFilter);
 
         if (tmLabel) {
-            const tmWrapper = document.createElement('span');
-            const tmDetails = document.createElement('span');
-            tmDetails.className = 'obj-time';
+            const tmWrapper = document.createElement("span");
+            const tmDetails = document.createElement("span");
+            tmDetails.className = "obj-time";
             tmDetails.innerText = tmLabel;
             tmWrapper.appendChild(tmDetails);
             tmWrapper.appendChild(currentLine);
@@ -404,12 +404,12 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             currentLine = tmWrapper;
         }
 
-        currentLine.className = 'obj-key expandable closed'
+        currentLine.className = "obj-key expandable closed"
     } else {
-        innerText = `${key ? key : 'obj'}: ${target.toString()}`;
+        innerText = `${key ? key : "obj"}: ${target.toString()}`;
         matched = _setInnerText(currentLine, innerText, textFilter);
 
-        currentLine.className = 'obj-key';
+        currentLine.className = "obj-key";
     }
 
     rootDiv.appendChild(currentLine);
@@ -420,7 +420,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         _openNode(currentLine);
     }
     if (isObj) {
-        if (isErr) { rootDiv.className = 'exception' }
+        if (isErr) { rootDiv.className = "exception" }
         const openHandler = (evt: Event, forceState?: boolean) => {
             evt.stopPropagation();
             if (Util.getIEVersion()) {

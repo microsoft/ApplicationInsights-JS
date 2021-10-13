@@ -12,7 +12,7 @@
         "plugin:security/recommended"
     ],
     "rules": {
-        "quotes": ["off", "double"],                                // Re-enable for auto fixing
+        "quotes": ["warn", "double"],                               // Enabled for auto fixing
         "prefer-const": "off",
         "prefer-spread": "off",
         "no-var": "off",
@@ -23,10 +23,10 @@
         "no-useless-escape": "off",                                 // Suppressing Error -- need to Review Later
         "no-trailing-spaces": [ "warn", { "skipBlankLines": true }],// Enabled for auto fixing
         "no-const-assign": "error",
-        "comma-dangle": [ "warn", "never" ],                        // Enabled for auto fixing
+        "comma-dangle": [ "error", "never" ],                       // Enabled for auto fixing
         "security/detect-object-injection": "off",                  // Suppress Warning -- need to Review Later
         "@typescript-eslint/ban-types": "off",
-        "@typescript-eslint/no-unused-vars": "off",                 // Re-enable for auto fixing
+        "@typescript-eslint/no-unused-vars": [ "warn", { "vars": "all", "args": "none", "argsIgnorePattern": "^_", "ignoreRestSiblings": true } ],
         "@typescript-eslint/triple-slash-reference": "off",
         "@typescript-eslint/no-inferrable-types": "off",
         "@typescript-eslint/no-this-alias": "off",
@@ -34,7 +34,7 @@
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
-        "@typescript-eslint/no-extra-semi": "warn",                 // Enabled for auto fixing
+        "@typescript-eslint/no-extra-semi": "error",                // Enabled for auto fixing
         "@typescript-eslint/no-non-null-assertion": "error"
     }
 }

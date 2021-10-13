@@ -15,14 +15,14 @@ export class DebugBinParent {
     ) {
         const _self = this;
 
-        _self.el = document.createElement('div');
-        _self.el.setAttribute('tabindex', '0');
+        _self.el = document.createElement("div");
+        _self.el.setAttribute("tabindex", "0");
         _self.el.className = `${prefix}-debug-bin-parent`;
         _self.el.style.bottom = `${20 + bottomDistance}px`;
 
-        _self.elSpan = document.createElement('span');
+        _self.elSpan = document.createElement("span");
         _self.elSpan.innerText = `${_self.value}`;
-        _self.elSpan.setAttribute('data-name', 'AppInsights');
+        _self.elSpan.setAttribute("data-name", "AppInsights");
         _self.el.appendChild(_self.elSpan);
 
         _self.el.onclick = () => {
@@ -53,7 +53,7 @@ export class DebugBinParent {
     }
 
     addButton(handler: (evt: MouseEvent) => void, label: string) {
-        const btn = document.createElement('button');
+        const btn = document.createElement("button");
         btn.innerText = label;
         btn.onclick = handler;
         this.addChild(btn);
@@ -101,16 +101,16 @@ export class DebugBin {
         const _self = this;
         parent.addChild(_self);
 
-        _self.el = document.createElement('div');
+        _self.el = document.createElement("div");
 
-        _self.elName = document.createElement('span');
+        _self.elName = document.createElement("span");
         _self.elName.innerText = `${name}: `;
-        _self.elName.className = 'el-name';
+        _self.elName.className = "el-name";
         _self.el.appendChild(_self.elName);
 
-        _self.elValue = document.createElement('span');
+        _self.elValue = document.createElement("span");
         _self.elValue.innerText = `${value}`;
-        _self.elValue.className = 'el-value';
+        _self.elValue.className = "el-value";
         _self.el.appendChild(_self.elValue);
     }
 
@@ -118,7 +118,7 @@ export class DebugBin {
         const _self = this;
         _self.elValue.innerText = `${++_self.value}`;
         _self.parent.increment();
-        _self.elValue.className = 'el-value incremented';
-        setTimeout(() => _self.elValue.className = 'el-value', 1);
+        _self.elValue.className = "el-value incremented";
+        setTimeout(() => _self.elValue.className = "el-value", 1);
     }
 }

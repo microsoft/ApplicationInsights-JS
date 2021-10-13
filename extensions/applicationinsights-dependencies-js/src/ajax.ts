@@ -5,15 +5,15 @@ import {
     RequestHeaders, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
     IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint
-} from '@microsoft/applicationinsights-common';
+} from "@microsoft/applicationinsights-common";
 import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
     IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys, ICustomProperties, isXhrSupported, attachEvent
-} from '@microsoft/applicationinsights-core-js';
-import { ajaxRecord, IAjaxRecordResponse } from './ajaxRecord';
-import { Traceparent } from './TraceParent';
+} from "@microsoft/applicationinsights-core-js";
+import { ajaxRecord, IAjaxRecordResponse } from "./ajaxRecord";
+import { Traceparent } from "./TraceParent";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
@@ -596,7 +596,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     isDisabled = xhr[DisabledPropertyName] === true || theUrl[DisabledPropertyName] === true;
                 } else if (!isNullOrUndefined(request)) { // fetch
                     // Look for DisabledPropertyName in either Request or RequestInit
-                    isDisabled = (typeof request === 'object' ? request[DisabledPropertyName] === true : false) ||
+                    isDisabled = (typeof request === "object" ? request[DisabledPropertyName] === true : false) ||
                             (init ? init[DisabledPropertyName] === true : false);
                 }
 
@@ -726,9 +726,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                     const arr = strTrim(headers).split(/[\r\n]+/);
                                     const responseHeaderMap = {};
                                     arrForEach(arr, (line) => {
-                                        const parts = line.split(': ');
+                                        const parts = line.split(": ");
                                         const header = parts.shift();
-                                        const value = parts.join(': ');
+                                        const value = parts.join(": ");
                                         if(_canIncludeHeaders(header)) { responseHeaderMap[header] = value; }
                                     });
 

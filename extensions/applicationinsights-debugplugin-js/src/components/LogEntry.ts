@@ -1,6 +1,6 @@
-import { isBoolean, isNumber, isObject, isString } from '@microsoft/applicationinsights-core-js';
-import { makeRegex, traverseAndReplace, toggleClassName, MAX_DEPTH, formatLogElements, getTargetName, getTargetKeys } from './helpers';
-import { Util } from '@microsoft/applicationinsights-common';
+import { isBoolean, isNumber, isObject, isString } from "@microsoft/applicationinsights-core-js";
+import { makeRegex, traverseAndReplace, toggleClassName, MAX_DEPTH, formatLogElements, getTargetName, getTargetKeys } from "./helpers";
+import { Util } from "@microsoft/applicationinsights-common";
 
 export class LogEntry {
     isKeep: () => boolean;
@@ -28,7 +28,7 @@ export class LogEntry {
         }
 
         function _testObj(rg: RegExp, value: any, excludedKeys: string[], includeFunctions: boolean): boolean {
-            if (value !== null && value !== undefined && value !== '') {
+            if (value !== null && value !== undefined && value !== "") {
                 if (Util.isArray(value)) {
                     for (let lp = 0; lp < value.length; lp++) {
                         if (_testObj(rg, value[lp], excludedKeys, includeFunctions)) {
@@ -76,17 +76,17 @@ export class LogEntry {
         _self.render = (textFilter: string, excludeKeys: string[], includeFunctions: boolean): HTMLElement => {
             if (!theEl || lastTextFilter !== textFilter) {
                 lastTextFilter = textFilter;
-                let ms: string = '' + tm;
+                let ms: string = "" + tm;
                 while (ms.length < 4) {
                     ms = "0" + ms;
                 }
 
-                ms = ms.replace(/(.)(\d{3}){1}$/g, '$1.$2s')
+                ms = ms.replace(/(.)(\d{3}){1}$/g, "$1.$2s")
                 while (ms.length <= 9) {
-                    ms = ' ' + ms;
+                    ms = " " + ms;
                 }
                 theEl = formatLogElements(target, `[${ms}]`, key, level, textFilter, excludeKeys, [], includeFunctions).root;
-                toggleClassName(theEl, ' tree-root');
+                toggleClassName(theEl, " tree-root");
             }
 
             return theEl;

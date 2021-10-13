@@ -22,12 +22,12 @@ export class FilterList {
         _self.el.className = "filterlist";
 
         const inputEl = document.createElement("div");
-        inputEl.className = 'filterlist-input';
+        inputEl.className = "filterlist-input";
         inputEl.innerText = "filter nodes...";
         _self.el.appendChild(inputEl);
 
         const dropdownMenuEl = document.createElement("div");
-        dropdownMenuEl.className = 'filterlist-dropdown';
+        dropdownMenuEl.className = "filterlist-dropdown";
         _self.el.appendChild(dropdownMenuEl)
 
         dropdownMenuEl.onkeyup = (evt) => {
@@ -41,7 +41,7 @@ export class FilterList {
             const chEl = document.createElement("div");
             chEl.setAttribute("tabindex", "0");
             chEl.setAttribute("filter-type", t);
-            chEl.className = 'filterlist-toggle';
+            chEl.className = "filterlist-toggle";
 
             const checkbox = document.createElement("div");
             checkbox.className = "checkbox on"
@@ -63,11 +63,11 @@ export class FilterList {
             chEl.onclick = (evt) => {
                 evt.stopPropagation();
                 chEl.focus();
-                if (checkbox.className === 'checkbox off') {
+                if (checkbox.className === "checkbox off") {
                     if (evt.shiftKey) {
                         _self.filterList = trackers.concat();
                         for (const ch of _self.children) {
-                            (ch.childNodes[0] as HTMLElement).className = 'checkbox off';
+                            (ch.childNodes[0] as HTMLElement).className = "checkbox off";
                         }
                     }
                     _self.filterList.splice(_self.filterList.indexOf(t), 1);
@@ -76,7 +76,7 @@ export class FilterList {
                     if (evt.shiftKey) {
                         _self.filterList = [];
                         for (const ch of _self.children) {
-                            (ch.childNodes[0] as HTMLElement).className = 'checkbox on';
+                            (ch.childNodes[0] as HTMLElement).className = "checkbox on";
                         }
                     }
                     _self.filterList.push(t);

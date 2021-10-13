@@ -1,7 +1,7 @@
-﻿import { utlGetSessionStorage, utlSetSessionStorage } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, arrForEach, isFunction, arrIndexOf, isString, dumpObj, isArray, getExceptionName } from '@microsoft/applicationinsights-core-js';
-import { ISenderConfig } from './Interfaces';
-import dynamicProto from '@microsoft/dynamicproto-js';
+﻿import { utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, arrForEach, isFunction, arrIndexOf, isString, dumpObj, isArray, getExceptionName } from "@microsoft/applicationinsights-core-js";
+import { ISenderConfig } from "./Interfaces";
+import dynamicProto from "@microsoft/dynamicproto-js";
 
 export interface ISendBuffer {
     /**
