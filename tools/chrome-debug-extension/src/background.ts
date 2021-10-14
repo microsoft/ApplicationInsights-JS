@@ -12,8 +12,8 @@ function registerEventHandlers(): void {
     chrome.windows.update(windowId, { focused: true }, () => {
       if (chrome.runtime.lastError) {
         chrome.windows.create({
-          url: 'pages/popup.html',
-          type: 'popup',
+          url: "pages/popup.html",
+          type: "popup",
           focused: true,
           width: 750,
           height: screen.height

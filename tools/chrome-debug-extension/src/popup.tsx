@@ -4,8 +4,8 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { TelemetryViewerPopup } from './telemetryViewerPopup';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { TelemetryViewerPopup } from "./telemetryViewerPopup";
 
-ReactDOM.render(<TelemetryViewerPopup />, document.getElementById('root') as HTMLElement);
+ReactDOM.render(<TelemetryViewerPopup />, document.getElementById("root") as HTMLElement);
