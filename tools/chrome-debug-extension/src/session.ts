@@ -10,6 +10,7 @@ import { IFilterSettings } from './components/IFilterSettings';
 import { IConfiguration } from './configuration/IConfiguration';
 import {
   getCondensedDetails,
+  getDynamicFieldValue,
   getEventType,
   getFieldValueAsString,
   getSessionId,
@@ -188,11 +189,14 @@ export class Session {
     if (!filterText) {
       return true;
     }
-    return (
-      singleDataEvent.name.toLowerCase().includes(filterText) ||
-      (singleDataEvent.dynamicValue && singleDataEvent.dynamicValue.toLowerCase().includes(filterText)) ||
-      (singleDataEvent.data.name && singleDataEvent.data.name.toLowerCase().includes(filterText))
-    );
+
+    for (const columnToDisplay of this.configuration.columnsToDisplay) {
+      const value = getDynamicFieldValue(singleDataEvent, columnToDisplay.prioritizedFieldNames);
+      if (value && value.toLowerCase().includes(filterText)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private onNewDataEvent = (newDataEvent: IDataEvent): void => {
