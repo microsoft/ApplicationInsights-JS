@@ -20,43 +20,59 @@ type AppPhase =
   | 'ConfigurationLoadFailed';
 
 const configurationTypeStorageKey = 'configurationType';
+export const customConfigurationStorageKey = 'customConfiguration';
 
 export const TelemetryViewerPopup = (): React.ReactElement => {
   const [appPhase, setAppPhase] = React.useState<AppPhase>('Startup');
   const [session, setSession] = React.useState<Session | undefined>(undefined);
   const [configurationType, setConfigurationType] = React.useState<ConfigurationType>(undefined);
 
-  function handleNewConfigurationType(newConfigurationType: ConfigurationType): void {
+  function applyConfigurationType(newConfigurationType: ConfigurationType): void {
     if (newConfigurationType) {
       localStorage.setItem(configurationTypeStorageKey, newConfigurationType);
     }
     setConfigurationType(newConfigurationType);
+
+    if (newConfigurationType) {
+      loadConfiguration(newConfigurationType);
+    } else {
+      setAppPhase('ShowConfigurationSelection');
+    }
   }
 
-  function loadConfiguration(): void {
+  function loadConfiguration(configurationTypeToLoad: ConfigurationType): void {
     setAppPhase('LoadingConfiguration');
-    getConfiguration(configurationType)
-      .then((newConfiguration: IConfiguration) => {
-        if (newConfiguration) {
+
+    if (configurationTypeToLoad === 'Custom') {
+      try {
+        const savedValue = localStorage.getItem(customConfigurationStorageKey);
+        if (savedValue) {
+          const newConfiguration = JSON.parse(savedValue) as IConfiguration;
           session && session.dispose();
           setSession(new Session(newConfiguration));
           setAppPhase('ConfigurationLoaded');
         } else {
           setAppPhase('ConfigurationLoadFailed');
         }
-      })
-      .catch(() => {
+      } catch {
         setAppPhase('ConfigurationLoadFailed');
-      });
-  }
-
-  React.useEffect(() => {
-    if (configurationType) {
-      loadConfiguration();
+      }
     } else {
-      setAppPhase('ShowConfigurationSelection');
+      getConfiguration(configurationTypeToLoad)
+        .then((newConfiguration: IConfiguration) => {
+          if (newConfiguration) {
+            session && session.dispose();
+            setSession(new Session(newConfiguration));
+            setAppPhase('ConfigurationLoaded');
+          } else {
+            setAppPhase('ConfigurationLoadFailed');
+          }
+        })
+        .catch(() => {
+          setAppPhase('ConfigurationLoadFailed');
+        });
     }
-  }, [configurationType]);
+  }
 
   React.useEffect(() => {
     let configurationTypeToSet = undefined;
@@ -69,13 +85,14 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
       // That's OK
     }
     setConfigurationType(configurationTypeToSet);
+    applyConfigurationType(configurationTypeToSet);
+
     return () => {
       session && session.dispose();
     };
   }, []);
 
   function reset(): void {
-    setConfigurationType(undefined);
     setAppPhase('ShowConfigurationSelection');
   }
 
@@ -96,7 +113,7 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
       return (
         <ConfigurationSelection
           configurationType={configurationType}
-          onConfigurationTypeChanged={handleNewConfigurationType}
+          onConfigurationSaved={applyConfigurationType}
           onCancel={handleConfigurationSelectionCancel}
         />
       );
@@ -107,7 +124,7 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
         <div className='loadingConfigurationFailed'>
           <div className='loadingConfigurationFailedHeader'>The configuration could not be loaded</div>
           <div>
-            <a href='#' onClick={loadConfiguration}>
+            <a href='#' onClick={() => loadConfiguration(configurationType)}>
               Retry
             </a>
           </div>

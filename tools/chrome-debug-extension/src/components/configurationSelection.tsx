@@ -5,11 +5,14 @@
 // -----------------------------------------------------------------------
 
 import React from 'react';
+import { getConfiguration } from '../configuration/configuration';
 import { ConfigurationType, ConfigurationURLs } from '../configuration/Configuration.types';
+import { IConfiguration } from '../configuration/IConfiguration';
+import { customConfigurationStorageKey } from '../telemetryViewerPopup';
 
 export interface IConfigurationSelectionProps {
   configurationType: ConfigurationType;
-  onConfigurationTypeChanged: (newConfigurationType: ConfigurationType) => void;
+  onConfigurationSaved: (newConfigurationType: ConfigurationType) => void;
   onCancel: () => void;
 }
 
@@ -22,6 +25,8 @@ export const ConfigurationSelection = (
   const [unsavedConfigurationType, setUnsavedConfigurationType] = React.useState<ConfigurationType>(
     props.configurationType
   );
+  const [customConfiguration, setCustomConfiguration] = React.useState<string>('');
+  const [customConfigurationDirty, setCustomConfigurationDirty] = React.useState<boolean>(false);
 
   function onConfigurationTypeSelectionChanged(event: React.FormEvent<HTMLSelectElement>): void {
     if (Object.keys(ConfigurationURLs).includes(event.currentTarget.value)) {
@@ -32,31 +37,62 @@ export const ConfigurationSelection = (
   }
 
   function save(): void {
-    props.onConfigurationTypeChanged(unsavedConfigurationType);
+    props.onConfigurationSaved(unsavedConfigurationType);
   }
 
   function cancel(): void {
     props.onCancel();
   }
 
+  function updateCustomConfiguration(newCustomConfiguration: string): void {
+    setCustomConfigurationDirty(true);
+    setCustomConfiguration(newCustomConfiguration);
+    localStorage.setItem(customConfigurationStorageKey, newCustomConfiguration);
+  }
+
+  function onCopyToCustomConfiguration(): void {
+    getConfiguration(unsavedConfigurationType).then((configuration: IConfiguration | undefined) => {
+      if (configuration) {
+        updateCustomConfiguration(JSON.stringify(configuration, undefined, 2));
+      }
+    });
+  }
+
+  function onCustomConfigurationChanged(event: React.FormEvent<HTMLTextAreaElement>): void {
+    const newCustomConfiguration = event.currentTarget.value;
+    updateCustomConfiguration(newCustomConfiguration);
+  }
+
+  React.useEffect(() => {
+    try {
+      const savedValue = localStorage.getItem(customConfigurationStorageKey);
+      if (savedValue) {
+        setCustomConfiguration(savedValue);
+      }
+    } catch {
+      // That's OK
+    }
+  }, []);
+
+  const isCustomConfigurationTextareaReadonly = unsavedConfigurationType !== 'Custom';
+  const customConfigurationTextareaClassname = isCustomConfigurationTextareaReadonly
+    ? 'customConfigurationTextarea disabled'
+    : 'customConfigurationTextarea';
+
   return (
     <div className='configurationSelection'>
       <div className='configurationSelectionHeader'>Configuration Selection</div>
       <div className='configurationSelectionDescription'>
+        <p>The configuration of this tool affects how the captured data is displayed and filtered.</p>
         <p>
-          This tool has different configurations to choose from which affect how the captured data is
-          displayed and filtered.
+          Select a preset configuration for your web application. If one doesn't exist yet, you can start with
+          an existing preset and customize it right here for the schema of your web application's telemetry.
         </p>
-        <p>
-          Select the configuration for your project, or you can use the General configuration if your project
-          doesn't have a custom configuration yet.
-        </p>
-
-        <p>To create a custom configuration for your project, see the instructions here (ADD LINK TO MD)</p>
+        <p>To create a preset configuration for your project, see the instructions here (ADD LINK TO MD)</p>
       </div>
 
       <div className='configurationSelectionDropdownDiv'>
-        <div className='configurationSelectionDropdownLabel'>Configuration:</div>
+        <div className='configurationSelectionDropdownLabel'>Preset Configuration:</div>
         <select
           onChange={onConfigurationTypeSelectionChanged}
           className='configurationSelectionDropdown'
@@ -66,12 +102,21 @@ export const ConfigurationSelection = (
             return <option key={value || ''}>{value}</option>;
           })}
         </select>
+        <button
+          disabled={unsavedConfigurationType === undefined || unsavedConfigurationType === 'Custom'}
+          className='configurationSelectionCopyToCustom'
+          onClick={onCopyToCustomConfiguration}
+        >
+          Copy To Custom Configuration
+        </button>
       </div>
 
       <div className='configurationSelectionButtonsDiv'>
         <button
           disabled={
-            unsavedConfigurationType === undefined || unsavedConfigurationType === props.configurationType
+            unsavedConfigurationType === undefined ||
+            (unsavedConfigurationType !== 'Custom' && unsavedConfigurationType === props.configurationType) ||
+            (unsavedConfigurationType === 'Custom' && !customConfigurationDirty)
           }
           onClick={save}
           className='configurationSelectionButton'
@@ -83,6 +128,16 @@ export const ConfigurationSelection = (
             Cancel
           </button>
         ) : undefined}
+      </div>
+
+      <div className='customConfigurationDiv'>
+        <div className='customConfigurationLabel'>Custom configuration:</div>
+        <textarea
+          className={customConfigurationTextareaClassname}
+          value={customConfiguration}
+          readOnly={isCustomConfigurationTextareaReadonly}
+          onChange={onCustomConfigurationChanged}
+        ></textarea>
       </div>
     </div>
   );

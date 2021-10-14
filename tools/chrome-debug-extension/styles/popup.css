@@ -214,6 +214,9 @@ table.eventTable tr.selected td {
 
 .configurationSelection {
   margin: 10px;
+  height: 95vh;
+  display: flex;
+  flex-flow: column;
 }
 
 .configurationSelectionHeader {
@@ -251,4 +254,25 @@ table.eventTable tr.selected td {
 .loadingConfigurationFailedHeader {
   font-size: 14pt;
   margin-bottom: 25px;
+}
+
+.customConfigurationDiv {
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column;
+}
+
+.customConfigurationTextarea {
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column;
+  resize: none;
+}
+
+.disabled {
+  background-color: lightgray;
+}
+
+.configurationSelectionCopyToCustom {
+  margin-left: 10px;
 }
