@@ -1,6 +1,6 @@
 {
-  "name": "Application Insights Debug Viewer",
-  "short_name": "Application Insights Debug Viewer",
+  "name": "Telemetry Viewer",
+  "short_name": "Telemetry Viewer",
   "description": "A browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
   "version": "0.0.1",
   "manifest_version": 2,
@@ -17,6 +17,6 @@
       "19": "images/icon-19.png",
       "38": "images/icon-38.png"
     },
-    "default_title": "View Application Insights Telemetry"
+    "default_title": "Telemetry Viewer"
   }
 }
