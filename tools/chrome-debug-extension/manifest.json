@@ -1,22 +1,28 @@
 {
-  "name": "Telemetry Viewer",
-  "short_name": "Telemetry Viewer",
-  "description": "A browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
-  "version": "0.0.1",
-  "manifest_version": 2,
-  "icons": {
-    "16": "images/icon-16.png",
-    "128": "images/icon-128.png"
-  },
-  "permissions": ["<all_urls>", "webRequest"],
-  "background": {
-    "scripts": ["scripts/background.js"]
-  },
-  "browser_action": {
-    "default_icon": {
-      "19": "images/icon-19.png",
-      "38": "images/icon-38.png"
+    "name": "Telemetry Viewer",
+    "short_name": "Telemetry Viewer",
+    "description": "A browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
+    "version": "0.1.0",
+    "version_name": "0.1.0",
+    "manifest_version": 2,
+    "icons": {
+        "16": "images/icon-16.png",
+        "128": "images/icon-128.png"
     },
-    "default_title": "Telemetry Viewer"
-  }
+    "permissions": [
+        "<all_urls>",
+        "webRequest"
+    ],
+    "background": {
+        "scripts": [
+            "scripts/background.js"
+        ]
+    },
+    "browser_action": {
+        "default_icon": {
+            "19": "images/icon-19.png",
+            "38": "images/icon-38.png"
+        },
+        "default_title": "Telemetry Viewer"
+    }
 }

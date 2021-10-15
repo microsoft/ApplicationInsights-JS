@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/applicationinsights-chrome-debug-extension",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A chrome based browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
   "main": "index.ts",
   "module": "index.ts",
@@ -12,13 +12,14 @@
   "scripts": {
     "build": "npm run build:esm && npm run build:browser && npm run pack",
     "build:esm": "grunt chromedebugextension",
-    "build:browser": "npx rollup -c",
+    "build:browser": "npm run update_manifest && npx rollup -c",
     "rebuild": "npm run build",
     "test": "",
     "perftest": "",
     "publishPackage": "npm publish",
     "copy": "cp ./images ./dist-esm",
-    "pack": "zipack browser/manifest.json"
+    "update_manifest": "node ../../tools/release-tools/updatemanifest.js",
+    "pack": "node ../../tools/release-tools/zipbrowser.js ai.chrome-ext dist"
   },
   "dependencies": {
     "@microsoft/dynamicproto-js": "^1.1.4",
@@ -48,7 +49,6 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "@nevware21/grunt-ts-plugin": "^0.4.3",
     "@nevware21/grunt-eslint-ts": "^0.2.2",
-    "typescript": "^4.3.4",
-    "zipack": "^1.0.2"
+    "typescript": "^4.3.4"
   }
 }
