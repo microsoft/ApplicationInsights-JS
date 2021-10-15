@@ -58,6 +58,7 @@
         "typedoc": "^0.16.9",
         "connect": "^3.7.0",
         "puppeteer": "^10.1.0",
-        "chromium": "^3.0.2"
+        "chromium": "^3.0.2",
+        "zipack": "^1.0.2"
     }
 }
