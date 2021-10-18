@@ -74,7 +74,7 @@ function normalizeName(filename) {
 function packFolder() {
     const thePackage = require(packageJson);
     const packageVersion = thePackage.version;
-    if (destFolder) {
+    if (destFolder && !fs.existsSync(packageRoot + "/" + destFolder)) {
         fs.mkdirSync(packageRoot + "/" + destFolder);
     }
 

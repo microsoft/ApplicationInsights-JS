@@ -14,6 +14,7 @@ $contentTypeMap = @{
     "js" = $jsContentType;
     "map" = "application/json";
     "json" = "application/json";
+    "zip" = "application/zip";
 };
 
 ##  Function: InstallRequiredModules
