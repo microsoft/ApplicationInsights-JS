@@ -9,7 +9,7 @@ import {
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
     dateTimeUtilsDuration, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault, createDomEvent,
-    strNotSpecified, isCrossOriginError, utlDisableStorage
+    strNotSpecified, isCrossOriginError, utlDisableStorage, dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -684,7 +684,8 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                                     traceLocationName = _location.pathname + (_location.hash || "");
                                 }
 
-                                _properties.context.telemetryTrace.name = traceLocationName;
+                                // This populates the ai.operation.name which has a maximum size of 1024 so we need to sanitize it
+                                _properties.context.telemetryTrace.name = dataSanitizeString(_self.diagLog(), traceLocationName);
                             }
                             if (_currUri) {
                                 _prevUri = _currUri;
