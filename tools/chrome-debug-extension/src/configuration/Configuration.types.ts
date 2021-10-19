@@ -15,7 +15,7 @@ export interface IConfigurationURLs {
 
 export const ConfigurationURLs: IConfigurationURLs = {
   Stream:
-    'https://microsoft-my.sharepoint-df.com/personal/kevbrown_microsoft_com/_layouts/15/download.aspx?SourceUrl=%2Fpersonal%2Fkevbrown%5Fmicrosoft%5Fcom%2FDocuments%2FtelemetryViewerConfig%5Fstream%2Ejson',
+    'https://microsoft.sharepoint.com/teams/OfficeMediaGroup/_layouts/15/download.aspx?SourceUrl=%2Fteams%2FOfficeMediaGroup%2FShared%20Documents%2FEngineering%2FTelemetry%20Viewer%2FtelemetryViewerConfig%5Fstream%2Ejson',
   MSN: 'MIKE_INSERT_DOWNLOAD.ASPX_URL_HERE',
   ForTestingErrors:
     'https://microsoft-my.sharepoint-df.com/personal/kevbrown_microsoft_com/_layouts/15/download.aspx?SourceUrl=BOGUS_DATA',
