@@ -28,7 +28,6 @@
         "@types/sinon": "4.3.3",
         "grunt": "^1.4.1",
         "grunt-cli": "^1.4.3",
-        "grunt-run": "^0.8.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "globby": "^11.0.0",
