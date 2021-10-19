@@ -8,8 +8,8 @@ import React from 'react';
 import { getConfiguration } from '../configuration/configuration';
 import { ConfigurationType, ConfigurationURLs } from '../configuration/Configuration.types';
 import { IConfiguration } from '../configuration/IConfiguration';
-import { customConfigurationStorageKey } from '../telemetryViewerPopup';
 
+export const customConfigurationStorageKey = 'customConfiguration';
 export interface IConfigurationSelectionProps {
   configurationType: ConfigurationType;
   onConfigurationSaved: (newConfigurationType: ConfigurationType) => void;

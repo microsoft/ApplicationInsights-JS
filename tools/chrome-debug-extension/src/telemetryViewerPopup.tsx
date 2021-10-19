@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------
 
 import * as React from 'react';
-import { ConfigurationSelection } from './components/configurationSelection';
+import { ConfigurationSelection, customConfigurationStorageKey } from './components/configurationSelection';
 import { TelemetryViewer } from './components/telemetryViewer';
 import { getConfiguration } from './configuration/configuration';
 import { ConfigurationType, ConfigurationURLs } from './configuration/Configuration.types';
@@ -20,7 +20,6 @@ type AppPhase =
   | 'ConfigurationLoadFailed';
 
 const configurationTypeStorageKey = 'configurationType';
-export const customConfigurationStorageKey = 'customConfiguration';
 
 export const TelemetryViewerPopup = (): React.ReactElement => {
   const [appPhase, setAppPhase] = React.useState<AppPhase>('Startup');
