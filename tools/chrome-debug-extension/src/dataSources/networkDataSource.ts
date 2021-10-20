@@ -45,7 +45,13 @@ export class NetworkDataSource implements IDataSource {
         for (let i = events.length - 1; i >= 0; i--) {
           const event = JSON.parse(events[i]);
           if (event !== undefined) {
-            this.handleMessage({ event });
+            if (Array.isArray(event)) {
+              for(const subEvent of event) {
+                this.handleMessage(subEvent);
+              }
+            } else {
+              this.handleMessage(event);
+            }
           }
         }
       }
@@ -54,9 +60,8 @@ export class NetworkDataSource implements IDataSource {
 
   // tslint:disable-next-line:no-any
   private handleMessage = (message: any): void => {
-    // tslint:disable-next-line:no-any
-    this.listeners.forEach((listener: (newEvent: any) => void) => {
-      listener(unpackMessage(message));
+    this.listeners.forEach((listener: (newEvent: IDataEvent) => void) => {
+      listener(message as IDataEvent);
     });
   };
 
@@ -72,11 +77,3 @@ export class NetworkDataSource implements IDataSource {
   }
 }
 
-// tslint:disable-next-line:no-any
-export function unpackMessage(message: any): IDataEvent {
-  return {
-    name: message.event.name,
-    time: message.event.time,
-    data: message.event.data
-  };
-}
