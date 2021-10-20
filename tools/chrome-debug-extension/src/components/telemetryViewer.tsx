@@ -5,6 +5,7 @@
 // -----------------------------------------------------------------------
 
 import * as React from "react";
+import { getDetails } from "../dataSources/dataHelpers";
 import { IDataEvent } from "../dataSources/IDataEvent";
 import { Session } from "../session";
 import { EventDetails } from "./eventDetails";
@@ -141,11 +142,7 @@ export const TelemetryViewer = (
     selectedIndex < filteredEventData.length
       ? filterSettings.showCondensedDetails
         ? filteredEventData[selectedIndex].condensedDetails
-        : {
-            name: filteredEventData[selectedIndex].name,
-            time: filteredEventData[selectedIndex].time,
-            data: filteredEventData[selectedIndex].data,
-          }
+        : getDetails(filteredEventData[selectedIndex])
       : undefined;
 
   return (

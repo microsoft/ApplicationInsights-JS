@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------
 
 import React from 'react';
-import { IColumn, IConfiguration } from '../configuration/IConfiguration';
+import { DynamicValueConverter, IColumn, IConfiguration } from '../configuration/IConfiguration';
 import { applyConverter, getDynamicFieldValue } from '../dataSources/dataHelpers';
 import { IDataEvent } from '../dataSources/IDataEvent';
 import { EventTypeIcon } from './eventTypeIcon';
@@ -22,6 +22,24 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
   // Not state because we want these to be per-render
   const deltaColumnsPreviousValues = new Map<number, number | undefined>();
   let lastSessionNumber: string | undefined = undefined;
+
+  const getCellForDeltaColumn = (rowIndex: number, columnIndex: number, currentValue: number | undefined, converter: DynamicValueConverter): JSX.Element => {
+    const previousValue = deltaColumnsPreviousValues.get(columnIndex);
+    let numberToDisplay: number | undefined = undefined;
+
+    if (previousValue && currentValue) {
+      numberToDisplay = currentValue - previousValue;
+    }
+    deltaColumnsPreviousValues.set(columnIndex, currentValue);
+
+    return (
+      <td key={`Row_${rowIndex}_Td_${columnIndex}`}>
+        {applyConverter(
+          numberToDisplay ? numberToDisplay.toString() : undefined,
+          converter
+        )}
+      </td>);
+  }
 
   return (
     <div className='eventTableDiv'>
@@ -58,7 +76,6 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
                   break;
                 case 'NumberDelta':
                   {
-                    const previousValue = deltaColumnsPreviousValues.get(columnIndex);
                     const currentStringValue = getDynamicFieldValue(
                       dataEvent,
                       columnToDisplay.prioritizedFieldNames
@@ -66,22 +83,21 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
                     const currentValue = currentStringValue
                       ? Number.parseInt(currentStringValue, 10)
                       : undefined;
-
-                    let numberToDisplay: number | undefined = undefined;
-
-                    if (previousValue && currentValue) {
-                      numberToDisplay = currentValue - previousValue;
-                    }
-                    deltaColumnsPreviousValues.set(columnIndex, currentValue);
-
-                    cells.push(
-                      <td key={`Row_${rowIndex}_Td_${columnIndex}`}>
-                        {applyConverter(
-                          numberToDisplay ? numberToDisplay.toString() : undefined,
-                          'TruncateWithDigitGrouping'
-                        )}
-                      </td>
+                    
+                      cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'TruncateWithDigitGrouping'));
+                  }
+                  break;
+                case 'TimeDelta': 
+                  {
+                    const currentStringValue = getDynamicFieldValue(
+                      dataEvent,
+                      columnToDisplay.prioritizedFieldNames
                     );
+                    const currentValue = currentStringValue
+                      ? Date.parse(currentStringValue)
+                      : undefined;
+                    
+                      cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'NumberToWholeMilliseconds'));
                   }
                   break;
                 case 'NormalData':

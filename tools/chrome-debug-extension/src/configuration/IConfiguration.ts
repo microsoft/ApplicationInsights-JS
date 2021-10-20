@@ -72,7 +72,10 @@ export type ColumnType =
   | 'SessionNumber'
 
   // Displays the change in a number from one entry to the next
-  | 'NumberDelta';
+  | 'NumberDelta'
+
+  // Displays the change in a timestamp from one entry to the next (in milliseconds)
+  | 'TimeDelta';
 
 // If your data contains these fields, you can enable special column types with handy features,
 // such as displaying an incrementing session number instead of a session's GUID to make it easier

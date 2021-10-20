@@ -41,11 +41,12 @@ export function getDynamicFieldValue(dataEvent: IDataEvent, dynamicFields?: IDyn
 }
 
 export function getCondensedDetails(dataEvent: IDataEvent, configuration: IConfiguration): string {
-  const condensedDetails = JSON.parse(JSON.stringify(dataEvent.data));
+  const condensedDetails = JSON.parse(JSON.stringify(dataEvent));
 
   for (const toExclude of configuration.dataValuesToExcludeFromCondensedList) {
-    delete condensedDetails[toExclude];
+    _.set(condensedDetails, toExclude, undefined);
   }
+  
   return condensedDetails;
 }
 
@@ -96,3 +97,16 @@ export function getFieldValueAsString(dataEvent: IDataEvent, fieldName?: string)
       return undefined;
   }
 }
+
+// tslint:disable-next-line:no-any
+export function getDetails(dataEvent: IDataEvent): any {
+  const details = JSON.parse(JSON.stringify(dataEvent));
+
+  // Filter out calculated fields
+  delete details['sessionNumber'];
+  delete details['type'];
+  delete details['condensedDetails'];
+
+  return details;
+}
+
