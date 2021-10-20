@@ -23,6 +23,7 @@ import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
 import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
+import { DiagnosticLogger } from "./DiagnosticLogger";
 
 const validationError = "Extensions must provide callback to initialize";
 
@@ -56,11 +57,8 @@ export class BaseCore implements IAppInsightsCore {
         dynamicProto(BaseCore, this, (_self) => {
             _self._extensions = new Array<IPlugin>();
             _channelController = new ChannelController();
-            _self.logger = objCreateFn({
-                throwInternal: (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => { },
-                warnToConsole: (message: string) => { },
-                resetInternalMessageCount: () => { }
-            });
+            // Use a default logger so initialization errors are not dropped on the floor with full logging
+            _self.logger = new DiagnosticLogger({ loggingLevelConsole: LoggingSeverity.CRITICAL });
             
             _eventQueue = [];
             _self.isInitialized = () => _isInitialized;
@@ -74,7 +72,7 @@ export class BaseCore implements IAppInsightsCore {
                 if (!config || isNullOrUndefined(config.instrumentationKey)) {
                     throwError("Please provide instrumentation key");
                 }
-        
+
                 _notificationManager = notificationManager;
 
                 // For backward compatibility only
@@ -95,7 +93,7 @@ export class BaseCore implements IAppInsightsCore {
                 if (logger) {
                     _self.logger = logger;
                 }
-        
+
                 // Concat all available extensions
                 let allExtensions = [];
                 allExtensions.push(...extensions, ...config.extensions);
