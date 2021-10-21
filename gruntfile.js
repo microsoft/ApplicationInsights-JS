@@ -498,7 +498,6 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-qunit');
         grunt.loadNpmTasks('grunt-contrib-connect');
-        grunt.loadNpmTasks('grunt-run');
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
         grunt.registerTask("core", tsBuildActions("core"));
         grunt.registerTask("common", tsBuildActions("common"));

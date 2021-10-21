@@ -49,6 +49,14 @@ export interface IDiagnosticLogger {
     warnToConsole(message: string): void;
 
     /**
+     * This will write an error to the console if possible.
+     * Provided by the default DiagnosticLogger instance, and internally the SDK will fall back to warnToConsole, however,
+     * direct callers MUST check for its existence on the logger as you can provide your own IDiagnosticLogger instance.
+     * @param message {string} - The error message
+     */
+    errorToConsole?(message: string): void;
+
+    /**
      * Resets the internal message count
      */
     resetInternalMessageCount(): void;
