@@ -127,7 +127,7 @@ export class AISKUPerf extends AITestClass {
                        appInsightsInitPerftest.loadScriptOnInit();
                       },
                     cfg: { 
-                        instrumentationKey: "ce11f034-0cdf-4251-a564-bc57a2211d66",
+                        instrumentationKey: "key",
                         enablePerfMgr: true,
                         maxBatchSizeInBytes: 1000000,
                         maxBatchInterval: 30000000,
