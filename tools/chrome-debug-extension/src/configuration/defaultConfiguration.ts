@@ -17,8 +17,8 @@ export const defaultConfiguration: IConfiguration = {
     },
     {
       dataEventType: "fatalError",
-      fieldName: "data.eventType",
-      fieldValue: "FatalError",
+      fieldName: "data.baseType",
+      fieldValue: "ExceptionData",
     },
     {
       dataEventType: "appLogic",
@@ -27,8 +27,13 @@ export const defaultConfiguration: IConfiguration = {
     },
     {
       dataEventType: "performance",
-      fieldName: "data.eventType",
-      fieldValue: "Performance",
+      fieldName: "data.baseType",
+      fieldValue: "PageviewPerformanceData",
+    },
+    {
+      dataEventType: "performance",
+      fieldName: "data.baseType",
+      fieldValue: "PageviewPerformanceData",
     },
   ],
   columnsToDisplay: [
@@ -68,8 +73,20 @@ export const defaultConfiguration: IConfiguration = {
       type: "NormalData",
       prioritizedFieldNames: [
         {
-          name: "data.baseData.message",
+          name: "data.baseData.message"
         },
+        {
+          name: "data.baseData.exceptions[0].message"
+        },
+        {
+          name: "data.baseData.name"
+        },
+        {
+          name: "data.baseData.id"
+        },
+        {
+          name: "data.baseData.metrics[0].name"
+        }
       ],
     },
   ],
@@ -77,6 +94,7 @@ export const defaultConfiguration: IConfiguration = {
     "tags['ai.user.id']",
     "tags['ai.session.id']",
     "tags['ai.device.id']",
+    "tags['ai.device.type']",
     "tags['ai.operation.name']",
     "tags['ai.operation.id']",
     "tags['ai.internal.sdkVersion']",
