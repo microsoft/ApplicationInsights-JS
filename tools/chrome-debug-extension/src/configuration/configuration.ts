@@ -4,6 +4,7 @@
 // </copyright>
 // -----------------------------------------------------------------------
 import { ConfigurationType, ConfigurationURLs } from './Configuration.types';
+import { defaultConfiguration } from './defaultConfiguration';
 import { IConfiguration } from './IConfiguration';
 
 export function getConfiguration(
@@ -11,6 +12,10 @@ export function getConfiguration(
 ): Promise<IConfiguration | undefined> {
   if (configurationType === undefined) {
     return Promise.resolve(undefined);
+  }
+
+  if (configurationType === 'Default') {
+    return Promise.resolve(defaultConfiguration);
   }
 
   const url = ConfigurationURLs[configurationType];

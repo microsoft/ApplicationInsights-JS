@@ -23,7 +23,7 @@ export const ConfigurationSelection = (
   props: IConfigurationSelectionProps
 ): React.ReactElement<IConfigurationSelectionProps> => {
   const [unsavedConfigurationType, setUnsavedConfigurationType] = React.useState<ConfigurationType>(
-    props.configurationType
+    props.configurationType || 'Default'
   );
   const [customConfiguration, setCustomConfiguration] = React.useState<string>('');
   const [customConfigurationDirty, setCustomConfigurationDirty] = React.useState<boolean>(false);
@@ -54,6 +54,7 @@ export const ConfigurationSelection = (
     getConfiguration(unsavedConfigurationType).then((configuration: IConfiguration | undefined) => {
       if (configuration) {
         updateCustomConfiguration(JSON.stringify(configuration, undefined, 2));
+        setUnsavedConfigurationType('Custom');
       }
     });
   }
@@ -79,24 +80,27 @@ export const ConfigurationSelection = (
     ? 'customConfigurationTextarea disabled'
     : 'customConfigurationTextarea';
 
+  const configTypeChanged = unsavedConfigurationType && unsavedConfigurationType !== props.configurationType;
+  const isSaveEnabled = configTypeChanged || (unsavedConfigurationType === 'Custom' && customConfigurationDirty);
+
   return (
     <div className='configurationSelection'>
       <div className='configurationSelectionHeader'>Configuration Selection</div>
       <div className='configurationSelectionDescription'>
-        <p>The configuration of this tool affects how the captured data is displayed and filtered.</p>
-        <p>
-          Select a preset configuration for your web application. If one doesn't exist yet, you can start with
-          an existing preset and customize it right here for the schema of your web application's telemetry.
-        </p>
+        <p>The configuration of this tool defines how the captured data is displayed and filtered.</p>
+        <p>If your team has a preset already build, select it from configuration list below and you're ready to go!</p>
+        <p>If your team doesn't have a preset yet, you can use the Default configuration as a starting point.</p>
+        <p>To customize a configuration, you can copy it into the Custom Configuration box below
+           then modify and save it directly in this tool and it will immediately take effect. Your custom configuraiton is saved in local storage in this web browser instance.</p>
         <p>To create a preset configuration for your project, see the instructions here (ADD LINK TO MD)</p>
       </div>
 
       <div className='configurationSelectionDropdownDiv'>
-        <div className='configurationSelectionDropdownLabel'>Preset Configuration:</div>
+        <div className='configurationSelectionDropdownLabel'>Configuration To Use:</div>
         <select
           onChange={onConfigurationTypeSelectionChanged}
           className='configurationSelectionDropdown'
-          defaultValue={unsavedConfigurationType}
+          value={unsavedConfigurationType}
         >
           {optionValues.map((value: string | undefined, index: number) => {
             return <option key={value || ''}>{value}</option>;
@@ -113,15 +117,11 @@ export const ConfigurationSelection = (
 
       <div className='configurationSelectionButtonsDiv'>
         <button
-          disabled={
-            unsavedConfigurationType === undefined ||
-            (unsavedConfigurationType !== 'Custom' && unsavedConfigurationType === props.configurationType) ||
-            (unsavedConfigurationType === 'Custom' && !customConfigurationDirty)
-          }
+          disabled={!isSaveEnabled}
           onClick={save}
           className='configurationSelectionButton'
         >
-          Save
+          OK
         </button>
         {props.configurationType !== undefined ? (
           <button className='configurationSelectionButton' onClick={cancel}>
