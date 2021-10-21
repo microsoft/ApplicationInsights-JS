@@ -441,6 +441,7 @@ module.exports = function (grunt) {
                         timeout: 5 * 60 * 1000, // 5 min
                         console: true,
                         summaryOnly: false,
+                        puppeteer: { headless: true, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
                         '--web-security': 'false'
                     }
                 },
