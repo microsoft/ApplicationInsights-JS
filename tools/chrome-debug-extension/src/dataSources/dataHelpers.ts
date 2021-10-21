@@ -88,14 +88,10 @@ export function getFieldValueAsString(dataEvent: IDataEvent, fieldName?: string)
   }
 
   const value = _.get(dataEvent, fieldName);
-  switch (typeof value) {
-    case 'number':
-      return value.toString();
-    case 'string':
-      return value;
-    default:
-      return undefined;
+  if (value !== undefined && value['toString'] !== undefined) {
+    return value.toString();
   }
+  return undefined;
 }
 
 // tslint:disable-next-line:no-any
