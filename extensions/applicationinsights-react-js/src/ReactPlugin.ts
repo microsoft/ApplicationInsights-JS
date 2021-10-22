@@ -51,9 +51,9 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
     }
 
     /**
-     * Get the current analytics plugin instance.
+     * Get application insights instance.
      */
-    getAnalyticsPlugin(): IAppInsights {
+    getAppInsights(): IAppInsights {
         return this._analyticsPlugin;
     }
 
