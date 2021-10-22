@@ -83,6 +83,10 @@ export type ColumnType =
 export interface ISpecialFieldNames {
   // A unique ID for each session
   sessionId?: string;
+
+  // If specified, a regular expression to use on the data in the sessionId field - 
+  // the first capture group is used as the sessionId
+  sessionIdRegex?: string;
 }
 
 export interface IDataEventTypeCondition {

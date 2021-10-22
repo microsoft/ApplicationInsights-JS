@@ -79,7 +79,18 @@ export function getSessionId(dataEvent: IDataEvent, configuration: IConfiguratio
     return undefined;
   }
 
-  return getFieldValueAsString(dataEvent, configuration.specialFieldNames.sessionId);
+  const value = getFieldValueAsString(dataEvent, configuration.specialFieldNames.sessionId);
+
+  if (value && configuration.specialFieldNames.sessionIdRegex) {
+    const matches = value.match(new RegExp(configuration.specialFieldNames.sessionIdRegex));
+    if (matches && matches.length > 1) {
+      return matches[1]
+    } else {
+      return undefined;
+    }
+  } else {
+    return value;
+  }
 }
 
 export function getFieldValueAsString(dataEvent: IDataEvent, fieldName?: string): string | undefined {
