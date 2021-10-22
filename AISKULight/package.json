@@ -18,6 +18,11 @@
         "dtsgen": "api-extractor run --local && node ../scripts/dtsgen.js 'Microsoft.ApplicationInsights'",
         "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS.git",
+        "directory":"AISKULight"
+    },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es3": "1.1.3",
