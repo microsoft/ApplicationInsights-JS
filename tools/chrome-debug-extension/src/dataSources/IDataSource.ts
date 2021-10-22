@@ -4,9 +4,9 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-import { IDataEvent } from './IDataEvent';
+import { IDataEvent } from "./IDataEvent";
 
-export type DataSourceType = 'Network' | 'DiagnosticInjection';
+export type DataSourceType = "Network" | "DiagnosticInjection" | "OneDSDataSource";
 
 export interface IDataSource {
   addListener: (callback: (newDataEvent: IDataEvent) => void) => number;
