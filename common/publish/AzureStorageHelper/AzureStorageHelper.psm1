@@ -845,7 +845,8 @@ Function ListVersions(
 Function SetActiveVersion(
    [system.collections.generic.list[hashtable]] $fileList,
    [string] $storePath,
-   [boolean] $minorOnly
+   [boolean] $minorOnly,
+   [boolean] $setUnversioned = $false
 ) {
 
     $destContext = GetContainerContext $global:connectDetails $storePath
@@ -890,6 +891,11 @@ Function SetActiveVersion(
             if ($minorOnly -eq $false) {
                 $majorName = "$($version.path)$($version.prefix)$($verParts[0])$($preRel)$($version.ext)"
                 CopyBlob $blobContext $stagedBlob $destContext $majorName
+            }
+
+            if ($setUnversioned -eq $true) {
+                $unVerName = "$($version.path)$($version.prefix)$($preRel)$($version.ext)" -Replace "\.\.", "."
+                CopyBlob $blobContext $stagedBlob $destContext $unVerName
             }
 
             # Remove the staged files
