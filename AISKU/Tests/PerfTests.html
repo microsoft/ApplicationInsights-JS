@@ -42,6 +42,39 @@
 
         modules.run();
     </script>
+
+    <script>
+        function loadSdkUsingRequire(snippetCfg) {
+            // We need to duplicate what the snippet initialization does
+            var appInsights = {
+                initialize: true,   // initialize sdk on download
+                queue: [],
+                sv: "rq",           // Track the actual snippet version for reporting.
+                version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
+                config: snippetCfg.cfg
+            };
+
+            if (snippetCfg.onInit) {
+                appInsights.queue.push(snippetCfg.onInit);
+            }
+
+            window["appInsights"] = appInsights;
+            // End of basic snippet configuration
+
+            // Cause Require to load the script
+            require([snippetCfg.src], function (theModule) {
+                try {
+                    define("appInsights", function() {
+                        return theModule 
+                    });
+
+                    console && console.log("Loaded Sdk - from " + snippetCfg.src);
+                } catch(err) {
+                    console && console.error("Failed to load and initialize Sdk from [" + snippetCfg.src + "]\n - Require ERROR: " + err.toString());
+                }
+            });
+        }
+    </script>
 </head>
 
 <body>
