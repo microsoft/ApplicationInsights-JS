@@ -14,8 +14,7 @@ interface IEventTableProps {
   dataEvents: IDataEvent[];
   configuration: IConfiguration;
   selectedIndex: number | undefined;
-  // tslint:disable-next-line:no-any
-  onRowClickHandler: any;
+  onRowClickHandler: (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => void;
 }
 
 export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTableProps> => {
@@ -23,7 +22,12 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
   const deltaColumnsPreviousValues = new Map<number, number | undefined>();
   let lastSessionNumber: string | undefined = undefined;
 
-  const getCellForDeltaColumn = (rowIndex: number, columnIndex: number, currentValue: number | undefined, converter: DynamicValueConverter): JSX.Element => {
+  const getCellForDeltaColumn = (
+    rowIndex: number,
+    columnIndex: number,
+    currentValue: number | undefined,
+    converter: DynamicValueConverter
+  ): JSX.Element => {
     const previousValue = deltaColumnsPreviousValues.get(columnIndex);
     let numberToDisplay: number | undefined = undefined;
 
@@ -34,12 +38,10 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
 
     return (
       <td key={`Row_${rowIndex}_Td_${columnIndex}`}>
-        {applyConverter(
-          numberToDisplay ? numberToDisplay.toString() : undefined,
-          converter
-        )}
-      </td>);
-  }
+        {applyConverter(numberToDisplay ? numberToDisplay.toString() : undefined, converter)}
+      </td>
+    );
+  };
 
   return (
     <div className='eventTableDiv'>
@@ -83,21 +85,23 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
                     const currentValue = currentStringValue
                       ? Number.parseInt(currentStringValue, 10)
                       : undefined;
-                    
-                      cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'TruncateWithDigitGrouping'));
+
+                    cells.push(
+                      getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'TruncateWithDigitGrouping')
+                    );
                   }
                   break;
-                case 'TimeDelta': 
+                case 'TimeDelta':
                   {
                     const currentStringValue = getDynamicFieldValue(
                       dataEvent,
                       columnToDisplay.prioritizedFieldNames
                     );
-                    const currentValue = currentStringValue
-                      ? Date.parse(currentStringValue)
-                      : undefined;
-                    
-                      cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'NumberToWholeMilliseconds'));
+                    const currentValue = currentStringValue ? Date.parse(currentStringValue) : undefined;
+
+                    cells.push(
+                      getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'NumberToWholeMilliseconds')
+                    );
                   }
                   break;
                 case 'NormalData':

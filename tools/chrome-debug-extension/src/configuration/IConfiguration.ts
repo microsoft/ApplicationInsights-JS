@@ -12,12 +12,11 @@ export interface IConfiguration {
   // Which data source to use to gather the events
   dataSourceType: DataSourceType;
 
-  // Optional URLs filter pattern that some data sources use
+  // Optional URL filter pattern that some data sources use
   dataSourceUrls?: string;
 
-  // A list of fields of the IDataEvent.data to exclude from the details view when "Consolidate details" is checked
-  // Note: to exclude data.foo, put "foo" in the list, not "data.foo"
-  dataValuesToExcludeFromCondensedList: string[];
+  // A list of fields of the fields to exclude from the details view when "Consolidate details" is checked
+  fieldsToExcludeFromCondensedList: string[];
 
   // A list of the columns to display
   columnsToDisplay: IColumn[];
@@ -26,8 +25,7 @@ export interface IConfiguration {
   specialFieldNames: ISpecialFieldNames;
 
   // If supplied, any events without this field will be ignored
-  // Note: to require data.foo, supply "foo", not "data.foo"
-  ignoreEventsWithoutThisValue?: string;
+  ignoreEventsWithoutThisField?: string;
 
   // The prioritized list of conditions that will be evaluated to determine the DataEventType of a DataEvent
   // The first match will determine the DataEventType, the default if there are no matches is DataEventType.other
@@ -45,7 +43,11 @@ export type DynamicValueConverter =
   | 'TruncateWithDigitGrouping';
 
 export interface IDynamicField {
-  // The name of the field to display (e.g. "data.foo" will return the IEventData.data.foo value)
+  // The name of the field to display 
+  // Examples: 
+  //  "data.foo" will return "abc" for this event { "data" : { "foo": "abc" } }
+  //  "data['foo.bar']" will return "abc" for this event: { "data": { "foo.bar": "abc"} }
+  //  "data['foo[0]']" will return "abc" for this event: { "data": { "foo": [ "abc" ] } }
   name: string;
 
   // An optional converter to run on the data before displaying it
@@ -56,7 +58,7 @@ export interface IColumn {
   // The text to display in the header of the column
   header: string;
 
-  // Defaults to 'NormalData' - see definitions above
+  // Defaults to 'NormalData' - see ColumnType for details
   type: ColumnType;
 
   // A priority list of the IDataEvent fields to display - the first one found is the one displayed
@@ -94,7 +96,12 @@ export interface ISpecialFieldNames {
 }
 
 export interface IDataEventTypeCondition {
+  // The DataEventType that will be assigned to this event if the conditions are met
   dataEventType: DataEventType;
+
+  // The name of the field to test (see IDynamicField.name for a description of valid values)
   fieldName: string;
+
+  // The value to test for
   fieldValue: string;
 }

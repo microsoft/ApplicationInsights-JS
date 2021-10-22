@@ -202,10 +202,10 @@ export class Session {
 
   private onNewDataEvent = (newDataEvent: IDataEvent): void => {
     // If the configuration specifies a required field, check to see if it is present
-    if (this.configuration.ignoreEventsWithoutThisValue) {
+    if (this.configuration.ignoreEventsWithoutThisField) {
       const requiredValue = getFieldValueAsString(
         newDataEvent,
-        this.configuration.ignoreEventsWithoutThisValue
+        this.configuration.ignoreEventsWithoutThisField
       );
       if (requiredValue === undefined) {
         return;

@@ -3,7 +3,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
-// tslint:disable:jsx-ban-props
 
 import React from 'react';
 
@@ -36,5 +35,3 @@ export const SplitPanel = (props: ISplitPanelProps): React.ReactElement<ISplitPa
     </div>
   );
 };
-
-// tslint:enable:jsx-ban-props

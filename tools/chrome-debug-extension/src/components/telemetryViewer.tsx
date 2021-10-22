@@ -4,47 +4,36 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-import * as React from "react";
-import { getDetails } from "../dataSources/dataHelpers";
-import { IDataEvent } from "../dataSources/IDataEvent";
-import { Session } from "../session";
-import { EventDetails } from "./eventDetails";
-import { EventTable } from "./eventTable";
-import { IFilterSettings } from "./IFilterSettings";
-import { OptionsBar } from "./optionsBar";
-import { SplitPanel } from "./splitPanel";
+import * as React from 'react';
+import { getDetails } from '../dataSources/dataHelpers';
+import { IDataEvent } from '../dataSources/IDataEvent';
+import { Session } from '../session';
+import { EventDetails } from './eventDetails';
+import { EventTable } from './eventTable';
+import { IFilterSettings } from './IFilterSettings';
+import { OptionsBar } from './optionsBar';
+import { SplitPanel } from './splitPanel';
 
 interface ITelemetryViewerProps {
   session: Session;
   onShowConfigurationSelection: () => void;
 }
 
-const filterSettingsCacheKey = "filterSettings";
+const filterSettingsCacheKey = 'filterSettings';
 
-export const TelemetryViewer = (
-  props: ITelemetryViewerProps
-): React.ReactElement<ITelemetryViewerProps> => {
-  const [filteredEventData, setFilteredEventData] = React.useState<
-    IDataEvent[]
-  >([]);
+export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElement<ITelemetryViewerProps> => {
+  const [filteredEventData, setFilteredEventData] = React.useState<IDataEvent[]>([]);
   const [filterSettings, setFilterSettings] = React.useState<IFilterSettings>({
-    filterText: "",
+    filterText: '',
     filterByType: undefined,
-    showCondensedDetails: false,
+    showCondensedDetails: false
   });
-  const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(
-    undefined
-  );
+  const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(undefined);
   const [isDraggingOver, setIsDraggingOver] = React.useState<boolean>(false);
 
-  const handleNewFilterSettings = (
-    newFilterSettings: IFilterSettings
-  ): void => {
+  const handleNewFilterSettings = (newFilterSettings: IFilterSettings): void => {
     try {
-      localStorage.setItem(
-        filterSettingsCacheKey,
-        JSON.stringify(newFilterSettings)
-      );
+      localStorage.setItem(filterSettingsCacheKey, JSON.stringify(newFilterSettings));
     } catch {
       // Default is OK
     }
@@ -52,13 +41,9 @@ export const TelemetryViewer = (
     setFilterSettings(newFilterSettings);
   };
 
-  const handleOnRowClickFromEventTable = (
-    e: React.MouseEvent<HTMLTableRowElement, MouseEvent>
-  ): void => {
-    const itemData = e.currentTarget.getAttribute("item-data");
-    const newSelectedIndex: number | undefined = itemData
-      ? parseInt(itemData, 10)
-      : undefined;
+  const handleOnRowClickFromEventTable = (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>): void => {
+    const itemData = e.currentTarget.getAttribute('item-data');
+    const newSelectedIndex: number | undefined = itemData ? parseInt(itemData, 10) : undefined;
 
     setSelectedIndex(newSelectedIndex);
   };
@@ -82,9 +67,9 @@ export const TelemetryViewer = (
     if (event.dataTransfer.items) {
       // tslint:disable-next-line:prefer-for-of
       for (let i = 0; i < event.dataTransfer.items.length; i++) {
-        if (event.dataTransfer.items[i].kind === "file") {
+        if (event.dataTransfer.items[i].kind === 'file') {
           const file = event.dataTransfer.items[i].getAsFile();
-          if (file && file.type === "application/json") {
+          if (file && file.type === 'application/json') {
             handleImport(file);
             return;
           }
@@ -137,17 +122,15 @@ export const TelemetryViewer = (
   }, [filterSettings]);
 
   const detailsData =
-    selectedIndex !== undefined &&
-    filteredEventData !== undefined &&
-    selectedIndex < filteredEventData.length
+    selectedIndex !== undefined && filteredEventData !== undefined && selectedIndex < filteredEventData.length
       ? filterSettings.showCondensedDetails
         ? filteredEventData[selectedIndex].condensedDetails
         : getDetails(filteredEventData[selectedIndex])
       : undefined;
 
   return (
-    <div className="rootDiv">
-      <div className="headerDiv">
+    <div className='rootDiv'>
+      <div className='headerDiv'>
         <OptionsBar
           filterSettings={filterSettings}
           onFilterSettingsChanged={handleNewFilterSettings}
@@ -158,7 +141,7 @@ export const TelemetryViewer = (
         />
       </div>
       <div
-        className="contentDiv"
+        className='contentDiv'
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -169,18 +152,14 @@ export const TelemetryViewer = (
               configuration={props.session.configuration}
               dataEvents={filteredEventData}
               selectedIndex={selectedIndex}
-              onRowClickHandler={
-                // tslint:disable-next-line:jsx-no-lambda
-                (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) =>
-                  handleOnRowClickFromEventTable(e)
-              }
+              onRowClickHandler={handleOnRowClickFromEventTable}
             />
           }
           bottom={<EventDetails data={detailsData} />}
         />
         {isDraggingOver ? (
-          <div className="dragTarget">
-            <div className="dragTargetText">Drop telemetry recordings here</div>
+          <div className='dragTarget'>
+            <div className='dragTargetText'>Drop telemetry recordings here</div>
           </div>
         ) : null}
       </div>

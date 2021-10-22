@@ -10,11 +10,9 @@ import { NetworkDataSource } from './networkDataSource';
 
 export function createDataSource(configuration: IConfiguration): IDataSource {
   switch (configuration.dataSourceType) {
-    case 'Network':
-      {
-        return new NetworkDataSource(configuration.dataSourceUrls);
-      }
-      break;
+    case 'Network': {
+      return new NetworkDataSource(configuration.dataSourceUrls);
+    }
     default: {
       throw new Error(
         `Unrecognized data source supplied in the configuration: ${configuration.dataSourceType}`

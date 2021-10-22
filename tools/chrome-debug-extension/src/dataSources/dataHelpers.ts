@@ -43,10 +43,10 @@ export function getDynamicFieldValue(dataEvent: IDataEvent, dynamicFields?: IDyn
 export function getCondensedDetails(dataEvent: IDataEvent, configuration: IConfiguration): string {
   const condensedDetails = JSON.parse(JSON.stringify(dataEvent));
 
-  for (const toExclude of configuration.dataValuesToExcludeFromCondensedList) {
+  for (const toExclude of configuration.fieldsToExcludeFromCondensedList) {
     _.set(condensedDetails, toExclude, undefined);
   }
-  
+
   return condensedDetails;
 }
 
@@ -84,7 +84,7 @@ export function getSessionId(dataEvent: IDataEvent, configuration: IConfiguratio
   if (value && configuration.specialFieldNames.sessionIdRegex) {
     const matches = value.match(new RegExp(configuration.specialFieldNames.sessionIdRegex));
     if (matches && matches.length > 1) {
-      return matches[1]
+      return matches[1];
     } else {
       return undefined;
     }
@@ -116,4 +116,3 @@ export function getDetails(dataEvent: IDataEvent): any {
 
   return details;
 }
-

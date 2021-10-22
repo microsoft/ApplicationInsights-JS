@@ -14,7 +14,7 @@ export interface IConfigurationSelectionProps {
   configurationType: ConfigurationType;
   onConfigurationSaved: (newConfigurationType: ConfigurationType) => void;
   onCancel: () => void;
-}
+}``
 
 const optionValues: Array<string | undefined> = Object.keys(ConfigurationURLs);
 optionValues.unshift(undefined);
@@ -81,17 +81,26 @@ export const ConfigurationSelection = (
     : 'customConfigurationTextarea';
 
   const configTypeChanged = unsavedConfigurationType && unsavedConfigurationType !== props.configurationType;
-  const isSaveEnabled = configTypeChanged || (unsavedConfigurationType === 'Custom' && customConfigurationDirty);
+  const isSaveEnabled =
+    configTypeChanged || (unsavedConfigurationType === 'Custom' && customConfigurationDirty);
 
   return (
     <div className='configurationSelection'>
       <div className='configurationSelectionHeader'>Configuration Selection</div>
       <div className='configurationSelectionDescription'>
         <p>The configuration of this tool defines how the captured data is displayed and filtered.</p>
-        <p>If your team has a preset already build, select it from configuration list below and you're ready to go!</p>
-        <p>If your team doesn't have a preset yet, you can use the Default configuration as a starting point.</p>
-        <p>To customize a configuration, you can copy it into the Custom Configuration box below
-           then modify and save it directly in this tool and it will immediately take effect. Your custom configuraiton is saved in local storage in this web browser instance.</p>
+        <p>
+          If your team has a preset already build, select it from configuration list below and you're ready to
+          go!
+        </p>
+        <p>
+          If your team doesn't have a preset yet, you can use the Default configuration as a starting point.
+        </p>
+        <p>
+          To customize a configuration, you can copy it into the Custom Configuration box below then modify
+          and save it directly in this tool and it will immediately take effect. Your custom configuraiton is
+          saved in local storage in this web browser instance.
+        </p>
         <p>To create a preset configuration for your project, see the instructions here (ADD LINK TO MD)</p>
       </div>
 
@@ -116,11 +125,7 @@ export const ConfigurationSelection = (
       </div>
 
       <div className='configurationSelectionButtonsDiv'>
-        <button
-          disabled={!isSaveEnabled}
-          onClick={save}
-          className='configurationSelectionButton'
-        >
+        <button disabled={!isSaveEnabled} onClick={save} className='configurationSelectionButton'>
           OK
         </button>
         {props.configurationType !== undefined ? (
