@@ -149,6 +149,6 @@ if (Get-HasErrors -eq $true) {
     exit 2
 }
 
-SetActiveVersion $files[$activeVersion] $storePath $minorOnly
+SetActiveVersion $files[$activeVersion] $storePath $minorOnly $true
 
 Write-Log "======================================================================"
