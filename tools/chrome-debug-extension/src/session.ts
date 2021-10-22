@@ -5,6 +5,7 @@
 // -----------------------------------------------------------------------
 
 import FileSaver from 'file-saver';
+import _ from 'lodash';
 
 import { IFilterSettings } from './components/IFilterSettings';
 import { IConfiguration } from './configuration/IConfiguration';
@@ -215,6 +216,21 @@ export class Session {
     newDataEvent.condensedDetails = getCondensedDetails(newDataEvent, this.configuration);
     newDataEvent.sessionNumber = this.getSessionNumber(newDataEvent);
     newDataEvent.type = getEventType(newDataEvent, this.configuration);
+
+    // Parse any JSON fields and replace them with the parsed object
+    if (this.configuration.specialFieldNames.jsonFieldNames) {
+      for (const jsonFieldName of this.configuration.specialFieldNames.jsonFieldNames) {
+        const stringValue = getFieldValueAsString(newDataEvent, jsonFieldName);
+        if (stringValue !== undefined) {
+          try {
+            const objectValue = JSON.parse(stringValue);
+            _.set(newDataEvent, jsonFieldName, objectValue);
+          } catch {
+            // That's OK, best effort
+          }
+        }
+      }
+    }
 
     // Add it to the raw list in time order
     this._rawData.push(newDataEvent);

@@ -87,6 +87,10 @@ export interface ISpecialFieldNames {
   // If specified, a regular expression to use on the data in the sessionId field - 
   // the first capture group is used as the sessionId
   sessionIdRegex?: string;
+
+  // The names of fields which contain JSON data, so that they can be parsed and then referenced
+  // in this configuration
+  jsonFieldNames?: string;
 }
 
 export interface IDataEventTypeCondition {
