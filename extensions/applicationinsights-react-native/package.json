@@ -27,7 +27,6 @@
         "grunt-cli": "^1.4.3",
         "grunt-contrib-qunit": "^5.0.1",
         "grunt-contrib-uglify": "^5.0.1",
-        "grunt-run": "^0.8.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@typescript-eslint/eslint-plugin": "^4.28.0",
