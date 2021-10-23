@@ -40,7 +40,7 @@ function _logToConsole(func: string, message: string) {
     if (!!theConsole) {
         let logFunc = "log";
         if (theConsole[func]) {
-            logFunc = "func";
+            logFunc = func;
         }
 
         if (isFunction(theConsole[logFunc])) {
