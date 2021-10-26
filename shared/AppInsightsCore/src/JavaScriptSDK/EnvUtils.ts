@@ -345,7 +345,7 @@ export function isSafari(userAgentStr ?: string) {
     }
 
     var ua = (userAgentStr || "").toLowerCase();
-    return (ua.indexOf('safari') >= 0);
+    return (ua.indexOf("safari") >= 0);
 }
 
 /**

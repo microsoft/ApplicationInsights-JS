@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IInternal } from '@microsoft/applicationinsights-common';
-import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
+import { IInternal } from "@microsoft/applicationinsights-common";
+import { ITelemetryConfig } from "../Interfaces/ITelemetryConfig";
 
 const Version = "2.7.0";
 

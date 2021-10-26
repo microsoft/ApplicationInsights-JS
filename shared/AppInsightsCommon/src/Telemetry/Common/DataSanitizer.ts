@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, isObject, isString, strTrim } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, isObject, isString, strTrim } from "@microsoft/applicationinsights-core-js";
 
 export const enum DataSanitizerValues {
     /**
@@ -60,13 +60,13 @@ export function dataSanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key: 
 export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
     let nameTrunc: String;
     if (name) {
-        // Remove any leading or trailing whitepace
+        // Remove any leading or trailing whitespace
         name = strTrim(name.toString());
 
         // truncate the string to 150 chars
         if (name.length > DataSanitizerValues.MAX_NAME_LENGTH) {
             nameTrunc = name.substring(0, DataSanitizerValues.MAX_NAME_LENGTH);
-            logger.throwInternal(
+            logger && logger.throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.NameTooLong,
                 "name is too long.  It has been truncated to " + DataSanitizerValues.MAX_NAME_LENGTH + " characters.",
@@ -84,7 +84,7 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
         value = strTrim(value);
         if (value.toString().length > maxLength) {
             valueTrunc = value.toString().substring(0, maxLength);
-            logger.throwInternal(
+            logger && logger.throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.StringValueTooLong,
                 "string value is too long. It has been truncated to " + maxLength + " characters.",
@@ -104,7 +104,7 @@ export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
     if (message) {
         if (message.length > DataSanitizerValues.MAX_MESSAGE_LENGTH) {
             messageTrunc = message.substring(0, DataSanitizerValues.MAX_MESSAGE_LENGTH);
-            logger.throwInternal(
+            logger && logger.throwInternal(
                 LoggingSeverity.WARNING, _InternalMessageId.MessageTruncated,
                 "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
                 { message },
@@ -122,7 +122,7 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
         let value:string = "" + exception;
         if (value.length > DataSanitizerValues.MAX_EXCEPTION_LENGTH) {
             exceptionTrunc = value.substring(0, DataSanitizerValues.MAX_EXCEPTION_LENGTH);
-            logger.throwInternal(
+            logger && logger.throwInternal(
                 LoggingSeverity.WARNING, _InternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
                 { exception }, true);
         }
@@ -140,7 +140,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
                 try {
                     value = getJSON().stringify(value);
                 } catch (e) {
-                    logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
+                    logger && logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
                 }
             }
             value = dataSanitizeString(logger, value, DataSanitizerValues.MAX_PROPERTY_LENGTH);
@@ -177,7 +177,7 @@ export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLeng
         input = strTrim(input);
         if (input.length > maxLength) {
             inputTrunc = input.substring(0, maxLength);
-            logger.throwInternal(
+            logger && logger.throwInternal(
                 LoggingSeverity.WARNING,
                 _msgId,
                 "input is too long, it has been truncated to " + maxLength + " characters.",

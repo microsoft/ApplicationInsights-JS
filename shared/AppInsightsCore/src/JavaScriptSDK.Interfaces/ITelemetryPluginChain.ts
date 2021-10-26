@@ -3,8 +3,8 @@
 "use strict";
 
 import { ITelemetryItem } from "./ITelemetryItem";
-import { IProcessTelemetryContext } from './IProcessTelemetryContext';
-import { ITelemetryPlugin } from './ITelemetryPlugin';
+import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
+import { ITelemetryPlugin } from "./ITelemetryPlugin";
 
 /**
  * Configuration provided to SDK core

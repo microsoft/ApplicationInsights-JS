@@ -3,11 +3,11 @@
 
 import {
     IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeSpan
-} from '@microsoft/applicationinsights-common';
+} from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
     _InternalMessageId, getNavigator, getPerformance, isNotNullOrUndefined
-} from '@microsoft/applicationinsights-core-js';
+} from "@microsoft/applicationinsights-core-js";
 
 /**
  * Class encapsulates sending page view performance telemetry.
@@ -166,7 +166,7 @@ export class PageViewPerformanceManager {
     public shouldCollectDuration(...durations: number[]): boolean {
         var _navigator = getNavigator() || {} as any;
         // a full list of Google crawlers user agent strings - https://support.google.com/webmasters/answer/1061943?hl=en
-        const botAgentNames = ['googlebot', 'adsbot-google', 'apis-google', 'mediapartners-google'];
+        const botAgentNames = ["googlebot", "adsbot-google", "apis-google", "mediapartners-google"];
         const userAgent = _navigator.userAgent;
         let isGoogleBot = false;
 

@@ -1,9 +1,9 @@
-import { arrForEach } from '@microsoft/applicationinsights-core-js';
+import { arrForEach } from "@microsoft/applicationinsights-core-js";
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { tempStyle } from './styleNodeSrc';
-import { FilterList } from './filterList';
-import { LogEntry } from './LogEntry';
-import { copySelectedTree } from './helpers';
+import { tempStyle } from "./styleNodeSrc";
+import { FilterList } from "./filterList";
+import { LogEntry } from "./LogEntry";
+import { copySelectedTree } from "./helpers";
 
 export interface IDashboardConfig {
     prefix: string;
@@ -17,7 +17,7 @@ export class Dashboard {
     constructor(config: IDashboardConfig) {
         let msgTracker: LogEntry[] = [];
 
-        let textFilter: string ='';
+        let textFilter: string ="";
 
         /**
          * the root element of the logger
@@ -43,19 +43,19 @@ export class Dashboard {
             tempStyleEl.innerHTML = tempStyle(prefix);
 
             // TODO: research more accessibility (aria)
-            rootEl.style.position = 'fixed';
-            rootEl.style.width = '100vw';
-            rootEl.style.height = '100vh';
-            rootEl.style.backgroundColor = '#ffffff';
-            rootEl.style.opacity = '1';
-            rootEl.style.pointerEvents = 'auto';
-            rootEl.style.top = '-100%';
-            rootEl.style.transition = '.2s top cubic-bezier(0.87, 0, 0.13, 1)';
+            rootEl.style.position = "fixed";
+            rootEl.style.width = "100vw";
+            rootEl.style.height = "100vh";
+            rootEl.style.backgroundColor = "#ffffff";
+            rootEl.style.opacity = "1";
+            rootEl.style.pointerEvents = "auto";
+            rootEl.style.top = "-100%";
+            rootEl.style.transition = ".2s top cubic-bezier(0.87, 0, 0.13, 1)";
 
             const logHeading = document.createElement("h1");
-            logHeading.textContent = 'dashboard';
+            logHeading.textContent = "dashboard";
             logHeading.style.fontFamily = "monospace";
-            logHeading.style.textAlign = 'center';
+            logHeading.style.textAlign = "center";
             rootEl.appendChild(logHeading);
 
             _createLogger(rootEl, prefix, trackers);
@@ -109,16 +109,16 @@ export class Dashboard {
                 if (!this.isDisplayed()) {
                     document.body.appendChild(rootEl);
                     document.head.appendChild(tempStyleEl);
-                    rootEl.style.top = '0%';
-                    rootEl.style.pointerEvents = 'auto';
+                    rootEl.style.top = "0%";
+                    rootEl.style.pointerEvents = "auto";
                     _self.render();
                 }
             };
 
             _self.hide = () => {
                 if (_self.isDisplayed()) {
-                    rootEl.style.top = '-100%';
-                    rootEl.style.pointerEvents = 'none';
+                    rootEl.style.top = "-100%";
+                    rootEl.style.pointerEvents = "none";
                     document.head.removeChild(tempStyleEl);
                     document.body.removeChild(rootEl);
                 }
@@ -138,7 +138,7 @@ export class Dashboard {
                         }
 
                         let type = entry.getKind();
-                        let allowOther = excludedTypes.indexOf('other') === -1;     // Other types are not excluded
+                        let allowOther = excludedTypes.indexOf("other") === -1;     // Other types are not excluded
                         if (trackers.indexOf(type) === -1 && !allowOther) {
                             // Not a tracked type and we are not allowing other types
                             return;
@@ -181,10 +181,10 @@ export class Dashboard {
                 loggerEl.className = `${prefix}-dbg-lgr`;
         
                 const controlDiv = document.createElement("div");
-                controlDiv.className = `controls`;
+                controlDiv.className = "controls";
 
                 const textFilterInput = document.createElement("input");
-                textFilterInput.className = 'text-filter-input';
+                textFilterInput.className = "text-filter-input";
                 textFilterInput.setAttribute("placeholder", "filter text");
                 textFilterInput.onchange = (evt: Event) => {
                     _self.setTextFilter(textFilterInput.value)

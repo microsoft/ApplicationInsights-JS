@@ -8,11 +8,11 @@ import {
     BaseTelemetryPlugin, IConfiguration, isNullOrUndefined,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, LoggingSeverity, _InternalMessageId, getNavigator,
     ITelemetryPluginChain, objForEachKey, getSetValue
-} from '@microsoft/applicationinsights-core-js';
-import { TelemetryContext } from './TelemetryContext';
-import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName } from '@microsoft/applicationinsights-common';
-import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
-import { IPropTelemetryContext } from './Interfaces/IPropTelemetryContext';
+} from "@microsoft/applicationinsights-core-js";
+import { TelemetryContext } from "./TelemetryContext";
+import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName } from "@microsoft/applicationinsights-common";
+import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
+import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 
 export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPropertiesPlugin {
 

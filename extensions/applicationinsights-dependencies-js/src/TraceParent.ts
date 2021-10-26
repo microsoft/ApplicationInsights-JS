@@ -1,4 +1,4 @@
-import { generateW3CId } from '@microsoft/applicationinsights-core-js';
+import { generateW3CId } from "@microsoft/applicationinsights-core-js";
 
 export class Traceparent {
 

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IConfiguration, ICookieMgrConfig, isNullOrUndefined, ICustomProperties } from '@microsoft/applicationinsights-core-js';
-import { DistributedTracingModes } from '../Enums';
-import { IRequestContext } from './IRequestContext';
+import { IConfiguration, ICookieMgrConfig, isNullOrUndefined, ICustomProperties } from "@microsoft/applicationinsights-core-js";
+import { DistributedTracingModes } from "../Enums";
+import { IRequestContext } from "./IRequestContext";
 
 /**
  * Configuration settings for how telemetry is sent
@@ -101,7 +101,7 @@ export interface IConfig {
      * Provide a way to enrich dependencies logs with context at the beginning of api call.
      * Default is undefined.
      */
-     addRequestContext?: (requestContext?: IRequestContext) => ICustomProperties;
+    addRequestContext?: (requestContext?: IRequestContext) => ICustomProperties;
 
     /**
      * If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false
@@ -367,7 +367,12 @@ export interface IConfig {
     /**
      * Provide user an option to convert undefined field to user defined value.
      */
-     convertUndefined?: any
+     convertUndefined?: any,
+
+    /**
+     * [Optional] The number of events that can be kept in memory before the SDK starts to drop events. By default, this is 10,000.
+     */
+    eventsLimitInMem?: number;
 }
 
 export class ConfigurationManager {

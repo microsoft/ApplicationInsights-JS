@@ -410,15 +410,15 @@ export function strTrim(str: any): string {
     return str.replace(/^\s+|\s+$/g, "");
 }
 
-let _objKeysHasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
+let _objKeysHasDontEnumBug = !({ toString: null }).propertyIsEnumerable("toString");
 let _objKeysDontEnums = [
-    'toString',
-    'toLocaleString',
-    'valueOf',
-    'hasOwnProperty',
-    'isPrototypeOf',
-    'propertyIsEnumerable',
-    'constructor'
+    "toString",
+    "toLocaleString",
+    "valueOf",
+    "hasOwnProperty",
+    "isPrototypeOf",
+    "propertyIsEnumerable",
+    "constructor"
 ];
 
 /**
@@ -431,7 +431,7 @@ export function objKeys(obj: {}): string[] {
     var objType = typeof obj;
 
     if (objType !== strShimFunction && (objType !== strShimObject || obj === null)) {
-        throwTypeError('objKeys called on non-object');
+        throwTypeError("objKeys called on non-object");
     }
 
     let result: string[] = [];

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import dynamicProto from '@microsoft/dynamicproto-js';
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
@@ -11,9 +11,9 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { _InternalLogMessage } from "./DiagnosticLogger";
-import { BaseTelemetryPlugin } from './BaseTelemetryPlugin';
-import { ProcessTelemetryContext } from './ProcessTelemetryContext';
-import { initializePlugins } from './TelemetryHelpers';
+import { BaseTelemetryPlugin } from "./BaseTelemetryPlugin";
+import { ProcessTelemetryContext } from "./ProcessTelemetryContext";
+import { initializePlugins } from "./TelemetryHelpers";
 import { arrForEach, objDefineAccessors, throwError } from "./HelperFuncs";
 
 const ChannelControllerPriority = 500;

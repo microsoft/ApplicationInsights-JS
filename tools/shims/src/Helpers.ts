@@ -60,7 +60,7 @@ export function objCreateFn(obj: any): any {
     }
     var type = typeof obj;
     if (type !== strShimObject && type !== strShimFunction) {
-        throwTypeError('Object prototype may only be an Object:' + obj);
+        throwTypeError("Object prototype may only be an Object:" + obj);
     }
 
     function tmpFunc() {}

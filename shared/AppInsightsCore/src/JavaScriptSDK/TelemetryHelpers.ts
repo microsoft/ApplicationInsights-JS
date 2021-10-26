@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { _InternalLogMessage } from "./DiagnosticLogger";
-import { _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
-import { ProcessTelemetryContext } from './ProcessTelemetryContext';
-import { ITelemetryPluginChain } from '../JavaScriptSDK.Interfaces/ITelemetryPluginChain';
-import { arrForEach, isFunction } from './HelperFuncs';
+import { _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { ProcessTelemetryContext } from "./ProcessTelemetryContext";
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
+import { arrForEach, isFunction } from "./HelperFuncs";
 
 let processTelemetry = "processTelemetry";
 let priority = "priority";
