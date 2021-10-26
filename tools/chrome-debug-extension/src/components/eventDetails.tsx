@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------
 
 import React from "react";
-import { LogEntry } from "@microsoft/applicationinsights-debugplugin-js";
+import { LogEntry } from "../LogEntry";
 
 interface IEventDetailsProps {
   // tslint:disable-next-line:no-any
@@ -13,7 +13,7 @@ interface IEventDetailsProps {
 }
 
 export const EventDetails = (props: IEventDetailsProps): React.ReactElement<IEventDetailsProps> => {
-  let logEntry = new LogEntry(props.data || {}, 0);
+  let logEntry = new LogEntry(props.data || {}, 0, "", 0);
   let element = logEntry.render("", [], true);
   console.log(logEntry);
   console.log(element);
