@@ -288,8 +288,8 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         currentLine.className = "obj-key expandable closed"
     }
 
-    let matched = false;
-    let childOpened = false;
+    let matched = true;
+    let childOpened = true;
     const keys = getTargetKeys(target, excludeKeys, includeFunctions as boolean);
     if (keys.length === 0) { keys.push("<empty>"); }
     if (level >= MAX_DEPTH) { keys.unshift("<maxdepth>"); }

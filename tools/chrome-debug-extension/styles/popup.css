@@ -57,7 +57,7 @@ body {
   background: transparent;
   border: none;
   outline: none;
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .rootDiv button:hover {
@@ -84,7 +84,7 @@ body {
 }
 
 .eventTypeCounterDiv {
-  cursor: pointer;
+  /* cursor: pointer; */
   margin: 0px 5px;
   padding: 2px 1px 3px 6px;
 }
@@ -126,7 +126,7 @@ table.eventTable thead th {
 
 table.eventTable tr:hover td {
   background-color: #f1f6fd;
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 table.eventTable tr.selected td {
@@ -138,7 +138,7 @@ table.eventTable tr.selected td {
 }
 
 .sortable tr {
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .eventDetailsDiv {
@@ -167,7 +167,7 @@ table.eventTable tr.selected td {
   height: 100%;
   width: 100%;
   margin: 0;
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .eventTypeFilterInput:checked + .eventTypeCounterDiv {
@@ -189,7 +189,7 @@ table.eventTable tr.selected td {
 }
 
 .checkBoxLabel {
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .dragTarget {
@@ -309,7 +309,7 @@ table.eventTable tr.selected td {
 }
 
 .dbg-lgr .expandable {
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .dbg-lgr > .tree-root div > span {
@@ -327,7 +327,7 @@ table.eventTable tr.selected td {
 }
 
 .dbg-lgr .expandable.open::before {
-  content: '[-] ';
+  content: '- ';
   font-weight: bold;
 }
 

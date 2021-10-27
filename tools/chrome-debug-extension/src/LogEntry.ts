@@ -76,16 +76,7 @@ export class LogEntry {
         _self.render = (textFilter: string, excludeKeys: string[], includeFunctions: boolean): HTMLElement => {
             if (!theEl || lastTextFilter !== textFilter) {
                 lastTextFilter = textFilter;
-                let ms: string = "" + tm;
-                while (ms.length < 4) {
-                    ms = "0" + ms;
-                }
-
-                ms = ms.replace(/(.)(\d{3}){1}$/g, "$1.$2s")
-                while (ms.length <= 9) {
-                    ms = " " + ms;
-                }
-                theEl = formatLogElements(target, `[${ms}]`, key as string, level as number, textFilter, excludeKeys, [], includeFunctions).root;
+                theEl = formatLogElements(target, "", key || "", level || 0, textFilter, excludeKeys, [], includeFunctions).root;
                 toggleClassName(theEl, " tree-root");
             }
 
