@@ -426,11 +426,26 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     console.log("* calling trackMetric " + new Date().toISOString());
                     for (let i = 0; i < 100; i++) {
-                        this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()) });
+                        this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()), min: 1, max: i+1, stdDev: 10.0 * Math.random() });
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
                 }
             ].concat(this.asserts(100))
+        });
+
+        this.testCaseAsync({
+            name: "TelemetryContext: track custom metric",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    console.log("* calling trackMetric " + new Date().toISOString());
+                    this._ai.trackMetric({ name: "my_custom_metric_0", average: 2 });
+                    this._ai.trackMetric({ name: "my_custom_metric_1", average: 1.1, sampleCount: 1, min: 1, max: 1, stdDev: 1.12 });
+                    this._ai.trackMetric({ name: "my_custom_metric_2", average: 1.2, sampleCount: 2, min: 1, max: 2, stdDev: 1.23 });
+                    this._ai.trackMetric({ name: "my_custom_metric_3", average: 1.3, sampleCount: 3, min: 1, max: 2.5, stdDev: 1.35 });
+                    console.log("* done calling trackMetric " + new Date().toISOString());
+                }
+            ].concat(this.asserts(4))
         });
 
         this.testCaseAsync({
