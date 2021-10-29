@@ -18,15 +18,15 @@ export const EventTypeIcon = (props: IEventTypeIconProps): React.ReactElement<IE
   }
   switch (props.eventType) {
     case undefined:
-      return <img src='../images/all.png' className='typeIcon' />;
+      return <img src='../images/all.png' alt='All events' className='typeIcon' />;
     case 'appLogic':
-      return <img src='../images/appLogic.png' className='typeIcon' />;
+      return <img src='../images/appLogic.png' alt='App logic events' className='typeIcon' />;
     case 'warning':
-      return <img src='../images/warning.png' className='typeIcon' />;
+      return <img src='../images/warning.png' alt='Warning events' className='typeIcon' />;
     case 'fatalError':
-      return <img src='../images/error.png' className='typeIcon' />;
+      return <img src='../images/error.png' alt='Error events' className='typeIcon' />;
     case 'performance':
-      return <img src='../images/performance.png' className='typeIcon' />;
+      return <img src='../images/performance.png' alt='Performance events' className='typeIcon' />;
     default:
       return <div />;
   }

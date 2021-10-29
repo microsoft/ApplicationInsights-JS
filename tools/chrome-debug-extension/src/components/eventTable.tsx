@@ -14,13 +14,19 @@ interface IEventTableProps {
   dataEvents: IDataEvent[];
   configuration: IConfiguration;
   selectedIndex: number | undefined;
-  onRowClickHandler: (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => void;
+  onRowClickHandler: (target: EventTarget & HTMLTableRowElement) => void;
 }
 
 export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTableProps> => {
   // Not state because we want these to be per-render
   const deltaColumnsPreviousValues = new Map<number, number | undefined>();
   let lastSessionNumber: string | undefined = undefined;
+
+  const onKeyPress = (event: React.KeyboardEvent<HTMLTableRowElement>): void => {
+    if (event.key === 'Enter') {
+      props.onRowClickHandler(event.currentTarget);
+    }
+  }
 
   const getCellForDeltaColumn = (
     rowIndex: number,
@@ -128,7 +134,9 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
                 key={`Row_${rowIndex}`}
                 item-data={rowIndex}
                 className={className}
-                onClick={props.onRowClickHandler}
+                onClick={(event: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => props.onRowClickHandler(event.currentTarget)}
+                onKeyPress={onKeyPress}
+                tabIndex={0}
               >
                 <td key={`Row_${rowIndex}_Td_-1`}>
                   <EventTypeIcon eventType={dataEvent.type} suppress={['appLogic']} />

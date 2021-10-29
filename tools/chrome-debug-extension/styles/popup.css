@@ -1,4 +1,6 @@
 body {
+  font-family: system-ui, sans-serif;
+  font-size: 75%;
   margin: 0px;
 }
 
@@ -359,7 +361,7 @@ table.eventTable tr.selected td {
 .dbg-lgr .number {color: #1C00CF;}
 .dbg-lgr .key {color: #881391; font-weight: bold;}
 .dbg-lgr .function {color: #881391;}
-.dbg-lgr .empty {color: #AAAAAA; font-style: italic;}
+.dbg-lgr .empty {color: #555555; font-style: italic;}
 
 .dbg-lgr {
   width: 100%;
