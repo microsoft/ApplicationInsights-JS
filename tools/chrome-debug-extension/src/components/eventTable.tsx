@@ -32,7 +32,8 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
     rowIndex: number,
     columnIndex: number,
     currentValue: number | undefined,
-    converter: DynamicValueConverter
+    converter: DynamicValueConverter,
+    className: string
   ): JSX.Element => {
     const previousValue = deltaColumnsPreviousValues.get(columnIndex);
     let numberToDisplay: number | undefined = undefined;
@@ -43,7 +44,7 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
     deltaColumnsPreviousValues.set(columnIndex, currentValue);
 
     return (
-      <td key={`Row_${rowIndex}_Td_${columnIndex}`}>
+      <td key={`Row_${rowIndex}_Td_${columnIndex}`} className={className}>
         {applyConverter(numberToDisplay ? numberToDisplay.toString() : undefined, converter)}
       </td>
     );
@@ -67,6 +68,7 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
           {props.dataEvents.map((dataEvent: IDataEvent, rowIndex: number) => {
             const isNewSession =
               lastSessionNumber !== undefined && dataEvent.sessionNumber !== lastSessionNumber;
+            const tdClassName = isNewSession ? 'newSessionRow' : '';
 
             // Don't remember any column previous values between sessions
             if (isNewSession) {
@@ -79,7 +81,7 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
               switch (columnToDisplay.type) {
                 case 'SessionNumber':
                   {
-                    cells.push(<td key={`Row_${rowIndex}_Td_${columnIndex}`}>{dataEvent.sessionNumber}</td>);
+                    cells.push(<td key={`Row_${rowIndex}_Td_${columnIndex}`} className={tdClassName}>{dataEvent.sessionNumber}</td>);
                   }
                   break;
                 case 'NumberDelta':
@@ -92,28 +94,23 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
                       ? Number.parseInt(currentStringValue, 10)
                       : undefined;
 
-                    cells.push(
-                      getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'TruncateWithDigitGrouping')
-                    );
+                    cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'TruncateWithDigitGrouping', tdClassName));
                   }
                   break;
                 case 'TimeDelta':
                   {
                     const currentStringValue = getDynamicFieldValue(
                       dataEvent,
-                      columnToDisplay.prioritizedFieldNames
-                    );
+                      columnToDisplay.prioritizedFieldNames);
                     const currentValue = currentStringValue ? Date.parse(currentStringValue) : undefined;
 
-                    cells.push(
-                      getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'NumberToWholeMilliseconds')
-                    );
+                    cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, 'NumberToWholeMilliseconds', tdClassName));
                   }
                   break;
                 case 'NormalData':
                 default: {
                   cells.push(
-                    <td key={`Row_${rowIndex}_Td_${columnIndex}`}>
+                    <td key={`Row_${rowIndex}_Td_${columnIndex}`} className={tdClassName}>
                       {getDynamicFieldValue(dataEvent, columnToDisplay.prioritizedFieldNames)}
                     </td>
                   );
@@ -122,10 +119,7 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
             });
 
             // Determine the CSS classname to use for the row
-            let className = rowIndex === props.selectedIndex ? 'selected' : '';
-            if (isNewSession) {
-              className += ' newSessionRow';
-            }
+            const rowClassName = rowIndex === props.selectedIndex ? 'selected' : '';
             lastSessionNumber = dataEvent.sessionNumber;
 
             // Render the row
@@ -133,12 +127,12 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
               <tr
                 key={`Row_${rowIndex}`}
                 item-data={rowIndex}
-                className={className}
+                className={rowClassName}
                 onClick={(event: React.MouseEvent<HTMLTableRowElement, MouseEvent>) => props.onRowClickHandler(event.currentTarget)}
                 onKeyPress={onKeyPress}
                 tabIndex={0}
               >
-                <td key={`Row_${rowIndex}_Td_-1`}>
+                <td key={`Row_${rowIndex}_Td_-1`} className={tdClassName}>
                   <EventTypeIcon eventType={dataEvent.type} suppress={['appLogic']} />
                 </td>
                 {cells}
