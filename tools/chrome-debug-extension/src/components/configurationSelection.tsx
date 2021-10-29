@@ -27,6 +27,7 @@ export const ConfigurationSelection = (
   );
   const [customConfiguration, setCustomConfiguration] = React.useState<string>('');
   const [customConfigurationDirty, setCustomConfigurationDirty] = React.useState<boolean>(false);
+  const textAreaRef = React.useRef<HTMLTextAreaElement>(null);
 
   function onConfigurationTypeSelectionChanged(event: React.FormEvent<HTMLSelectElement>): void {
     if (Object.keys(ConfigurationURLs).includes(event.currentTarget.value)) {
@@ -73,6 +74,9 @@ export const ConfigurationSelection = (
     } catch {
       // That's OK
     }
+    if (textAreaRef.current) {
+      textAreaRef.current.setAttribute('aria-labelledby', 'customConfigurationLabel');
+    }
   }, []);
 
   const isCustomConfigurationTextareaReadonly = unsavedConfigurationType !== 'Custom';
@@ -105,8 +109,9 @@ export const ConfigurationSelection = (
       </div>
 
       <div className='configurationSelectionDropdownDiv'>
-        <div className='configurationSelectionDropdownLabel'>Configuration To Use:</div>
+        <div className='configurationSelectionDropdownLabel' id='configurationToUseLabel'>Configuration To Use:</div>
         <select
+          aria-labelledby='configurationToUseLabel'
           onChange={onConfigurationTypeSelectionChanged}
           className='configurationSelectionDropdown'
           value={unsavedConfigurationType}
@@ -135,13 +140,14 @@ export const ConfigurationSelection = (
         ) : undefined}
       </div>
 
-      <div className='customConfigurationDiv'>
-        <div className='customConfigurationLabel'>Custom configuration:</div>
+      <div className='customConfigurationDiv' >
+        <div className='customConfigurationLabel' id='customConfigurationLabel'>Custom configuration:</div>
         <textarea
           className={customConfigurationTextareaClassname}
           value={customConfiguration}
           readOnly={isCustomConfigurationTextareaReadonly}
           onChange={onCustomConfigurationChanged}
+          ref={textAreaRef}
         ></textarea>
       </div>
     </div>

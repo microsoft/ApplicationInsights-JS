@@ -59,7 +59,7 @@ body {
   background: transparent;
   border: none;
   outline: none;
-  /* cursor: pointer; */
+  cursor: pointer;
 }
 
 .rootDiv button:hover {
@@ -86,7 +86,7 @@ body {
 }
 
 .eventTypeCounterDiv {
-  /* cursor: pointer; */
+  cursor: pointer;
   margin: 0px 5px;
   padding: 2px 1px 3px 6px;
 }
@@ -137,7 +137,7 @@ table.eventTable tr {
 
 table.eventTable tr:hover td {
   background-color: #f1f6fd;
-  /* cursor: pointer; */
+  cursor: pointer;
 }
 
 table.eventTable tr.selected td {
@@ -146,10 +146,6 @@ table.eventTable tr.selected td {
 
 .newSessionRow {
   border-top: 1px solid red;
-}
-
-.sortable tr {
-  /* cursor: pointer; */
 }
 
 .eventDetailsDiv {
@@ -178,7 +174,7 @@ table.eventTable tr.selected td {
   height: 100%;
   width: 100%;
   margin: 0;
-  /* cursor: pointer; */
+  cursor: pointer;
 }
 
 .eventTypeFilterInput:checked + .eventTypeCounterDiv {
@@ -200,7 +196,7 @@ table.eventTable tr.selected td {
 }
 
 .checkBoxLabel {
-  /* cursor: pointer; */
+  cursor: pointer;
 }
 
 .dragTarget {
