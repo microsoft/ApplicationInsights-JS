@@ -23,7 +23,7 @@ export class Metric extends MetricData implements ISerializable {
     /**
      * Constructs a new instance of the MetricTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, value: number, count?: number, min?: number, max?: number, properties?: any, measurements?: { [key: string]: number }) {
+    constructor(logger: IDiagnosticLogger, name: string, value: number, count?: number, min?: number, max?: number, stdDev?: number, properties?: any, measurements?: { [key: string]: number }) {
         super();
 
         const dataPoint = new DataPoint();
@@ -32,6 +32,7 @@ export class Metric extends MetricData implements ISerializable {
         dataPoint.min = isNaN(min) || min === null ? undefined : min;
         dataPoint.name = dataSanitizeString(logger, name) || strNotSpecified;
         dataPoint.value = value;
+        dataPoint.stdDev = isNaN(stdDev) || stdDev === null ? undefined : stdDev;
 
         this.metrics = [dataPoint];
         this.properties = dataSanitizeProperties(logger, properties);
