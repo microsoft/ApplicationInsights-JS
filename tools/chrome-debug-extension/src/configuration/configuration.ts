@@ -7,9 +7,7 @@ import { ConfigurationType, ConfigurationURLs } from './Configuration.types';
 import { defaultConfiguration } from './defaultConfiguration';
 import { IConfiguration } from './IConfiguration';
 
-export function getConfiguration(
-  configurationType: ConfigurationType
-): Promise<IConfiguration | undefined> {
+export function getConfiguration(configurationType: ConfigurationType): Promise<IConfiguration | undefined> {
   if (configurationType === undefined) {
     return Promise.resolve(undefined);
   }

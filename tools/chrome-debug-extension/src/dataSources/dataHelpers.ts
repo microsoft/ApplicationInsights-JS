@@ -43,10 +43,10 @@ export function getDynamicFieldValue(dataEvent: IDataEvent, dynamicFields?: IDyn
 export function getCondensedDetails(dataEvent: IDataEvent, configuration: IConfiguration): string {
   const condensedDetails = JSON.parse(JSON.stringify(dataEvent));
 
-  for (const toExclude of configuration.dataValuesToExcludeFromCondensedList) {
+  for (const toExclude of configuration.fieldsToExcludeFromCondensedList) {
     _.set(condensedDetails, toExclude, undefined);
   }
-  
+
   return condensedDetails;
 }
 
@@ -79,7 +79,18 @@ export function getSessionId(dataEvent: IDataEvent, configuration: IConfiguratio
     return undefined;
   }
 
-  return getFieldValueAsString(dataEvent, configuration.specialFieldNames.sessionId);
+  const value = getFieldValueAsString(dataEvent, configuration.specialFieldNames.sessionId);
+
+  if (value && configuration.specialFieldNames.sessionIdRegex) {
+    const matches = value.match(new RegExp(configuration.specialFieldNames.sessionIdRegex));
+    if (matches && matches.length > 1) {
+      return matches[1];
+    } else {
+      return undefined;
+    }
+  } else {
+    return value;
+  }
 }
 
 export function getFieldValueAsString(dataEvent: IDataEvent, fieldName?: string): string | undefined {
@@ -88,14 +99,10 @@ export function getFieldValueAsString(dataEvent: IDataEvent, fieldName?: string)
   }
 
   const value = _.get(dataEvent, fieldName);
-  switch (typeof value) {
-    case 'number':
-      return value.toString();
-    case 'string':
-      return value;
-    default:
-      return undefined;
+  if (value !== undefined && value['toString'] !== undefined) {
+    return value.toString();
   }
+  return undefined;
 }
 
 // tslint:disable-next-line:no-any
@@ -109,4 +116,3 @@ export function getDetails(dataEvent: IDataEvent): any {
 
   return details;
 }
-

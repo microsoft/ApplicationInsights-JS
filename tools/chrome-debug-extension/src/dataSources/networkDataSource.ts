@@ -46,7 +46,7 @@ export class NetworkDataSource implements IDataSource {
           const event = JSON.parse(events[i]);
           if (event !== undefined) {
             if (Array.isArray(event)) {
-              for(const subEvent of event) {
+              for (const subEvent of event) {
                 this.handleMessage(subEvent);
               }
             } else {
@@ -76,4 +76,3 @@ export class NetworkDataSource implements IDataSource {
     return [''];
   }
 }
-

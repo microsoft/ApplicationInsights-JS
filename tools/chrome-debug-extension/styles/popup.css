@@ -98,7 +98,8 @@ body {
 table.eventTable {
   width: 100%;
   text-align: left;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0px;
 }
 
 table.eventTable td,
@@ -112,16 +113,24 @@ table.eventTable tr:nth-child(even) {
 }
 table.eventTable thead {
   background: #f7f7f7;
+  position: sticky;
+  top: 0px;
 }
 
 table.eventTable thead th {
   color: #000000;
   border-style: solid;
   border-color: #cdcdcd;
-  border-width: 0px 1px 1px 1px;
+  border-width: 0px 0px 1px 1px;
   text-align: left;
   padding: 5px;
   font-weight: normal;
+}
+
+table.eventTable tr {
+  border-style: solid;
+  border-color: #cdcdcd;
+  border-width: 0px 1px 1px 1px;
 }
 
 table.eventTable tr:hover td {
