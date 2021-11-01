@@ -293,8 +293,6 @@ table.eventTable tr.selected td {
   margin: auto;
   left: 0;
   right: 0;
-  font-family: monospace;
-  font-size: 16px;
   border: "1px solid #605E5C";
   border-radius: 2px;
 }

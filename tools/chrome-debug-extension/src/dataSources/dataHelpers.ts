@@ -43,8 +43,10 @@ export function getDynamicFieldValue(dataEvent: IDataEvent, dynamicFields?: IDyn
 export function getCondensedDetails(dataEvent: IDataEvent, configuration: IConfiguration): string {
   const condensedDetails = JSON.parse(JSON.stringify(dataEvent));
 
-  for (const toExclude of configuration.fieldsToExcludeFromCondensedList) {
-    _.set(condensedDetails, toExclude, undefined);
+  if (configuration && configuration.fieldsToExcludeFromCondensedList) {
+    for (const toExclude of configuration.fieldsToExcludeFromCondensedList) {
+      _.set(condensedDetails, toExclude, undefined);
+    }
   }
 
   return condensedDetails;
