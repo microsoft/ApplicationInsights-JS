@@ -220,14 +220,24 @@ table.eventTable tr.selected td {
   font-size: large;
 }
 
-.configurationSelection {
-  margin: 10px;
-  height: 95vh;
+.configurationContainer {
   display: flex;
   flex-flow: column;
+  height: 100vh;
 }
 
-.configurationSelectionHeader {
+.configurationSelectionSection {
+  margin: 10px;
+  display: flex;
+  flex-flow: column;
+  flex: 1;
+}
+
+.updatesSection {
+  margin: 10px;
+}
+
+.configurationHeader {
   font-size: 14pt;
 }
 
