@@ -149,7 +149,7 @@ export class Session {
     };
 
     const filterText: string | undefined =
-      this._filterSettings.filterText && this._filterSettings.filterText.length > 0
+      this._filterSettings && this._filterSettings.filterText && this._filterSettings.filterText.length > 0
         ? this._filterSettings.filterText.toLowerCase()
         : undefined;
     const resultsFiltered: boolean =

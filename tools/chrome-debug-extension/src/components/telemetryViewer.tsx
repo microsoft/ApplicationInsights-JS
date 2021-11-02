@@ -41,8 +41,8 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
     setFilterSettings(newFilterSettings);
   };
 
-  const handleOnRowClickFromEventTable = (e: React.MouseEvent<HTMLTableRowElement, MouseEvent>): void => {
-    const itemData = e.currentTarget.getAttribute('item-data');
+  const handleOnRowClickFromEventTable = (target: EventTarget & HTMLTableRowElement): void => {
+    const itemData = target.getAttribute('item-data');
     const newSelectedIndex: number | undefined = itemData ? parseInt(itemData, 10) : undefined;
 
     setSelectedIndex(newSelectedIndex);

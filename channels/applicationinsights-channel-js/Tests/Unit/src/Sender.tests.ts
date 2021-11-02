@@ -1530,5 +1530,49 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(SendRequestReason.MaxBatchSize, sendNotifications[0].sendReason);
             }
         });
+
+        this.testCase({
+            name: 'Envelope: operation.name is correctly truncated if required',
+            test: () => {
+                const excessiveName = new Array(1234).join("a"); // exceeds max of 1024
+
+                const bd = new Exception(
+                    null,
+                    new Error(),
+                    {"property1": "val1", "property2": "val2" },
+                    {"measurement1": 50.0, "measurement2": 1.3 }
+                );
+                const inputEnvelope: ITelemetryItem = {
+                    name: "test",
+                    time: new Date("2018-06-12").toISOString(),
+                    iKey: "iKey",
+                    baseType: Exception.dataType,
+                    baseData: bd,
+                    data: {
+                        "property3": "val3",
+                        "measurement3": 3.0
+                    },
+                    ext: {
+                        "trace": {
+                            "traceID": "1528B5FF-6455-4657-BE77-E6664CAC72DC",
+                            "parentID": "1528B5FF-6455-4657-BE77-E6664CACEEEE",
+                            "name": excessiveName
+                        }
+                    },
+                    tags: [
+                        {"user.accountId": "TestAccountId"},
+                    ],
+                };
+
+                // Act
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const baseData = appInsightsEnvelope.data.baseData; 
+
+                QUnit.assert.equal("val3", baseData.properties["property3"], "ExceptionData: customProperties (item.data) are added to the properties of the envelope and not included in the item.data")
+                QUnit.assert.equal("val1", baseData.properties["property1"], "ExceptionData: properties (item.baseData.properties) are added to telemetry envelope");
+                QUnit.assert.equal(50.0, baseData.measurements["measurement1"], "ExceptionData: measurements (item.baseData.measurements) are added to telemetry envelope");
+                QUnit.assert.equal(1024, appInsightsEnvelope.tags["ai.operation.name"].length, "The ai.operation.name should have been truncated to the maximum");
+            }
+        });
     }
 }

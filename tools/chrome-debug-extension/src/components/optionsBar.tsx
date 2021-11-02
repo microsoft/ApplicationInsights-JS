@@ -69,17 +69,17 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
         Condense details
       </label>
       <button onClick={props.onSave} title='Save' className='saveButton'>
-        <img src='../images/save.png' className='verticallyCenteredFlexItem' />
+        <img src='../images/save.png' alt='Save' className='verticallyCenteredFlexItem' />
       </button>
       <button onClick={props.onClear} title='Clear all' className='clearButton'>
-        <img src='../images/clear.png' className='verticallyCenteredFlexItem' />
+        <img src='../images/clear.png' alt='Clear all' className='verticallyCenteredFlexItem' />
       </button>
       <button
         onClick={props.onShowConfigurationSelection}
         title='Configuration'
         className='showConfigurationSelectionButton'
       >
-        <img src='../images/settings.png' className='verticallyCenteredFlexItem' />
+        <img src='../images/settings.png' alt='Settings' className='verticallyCenteredFlexItem' />
       </button>
     </div>
   );

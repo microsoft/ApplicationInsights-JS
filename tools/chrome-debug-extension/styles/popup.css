@@ -1,4 +1,6 @@
 body {
+  font-family: system-ui, sans-serif;
+  font-size: 75%;
   margin: 0px;
 }
 
@@ -146,12 +148,9 @@ table.eventTable tr.selected td {
   border-top: 1px solid red;
 }
 
-.sortable tr {
-  cursor: pointer;
-}
-
 .eventDetailsDiv {
   font-size: 10pt;
+  overflow-x: "scroll";
 }
 
 .typeIcon {
@@ -221,14 +220,24 @@ table.eventTable tr.selected td {
   font-size: large;
 }
 
-.configurationSelection {
-  margin: 10px;
-  height: 95vh;
+.configurationContainer {
   display: flex;
   flex-flow: column;
+  height: 100vh;
 }
 
-.configurationSelectionHeader {
+.configurationSelectionSection {
+  margin: 10px;
+  display: flex;
+  flex-flow: column;
+  flex: 1;
+}
+
+.updatesSection {
+  margin: 10px;
+}
+
+.configurationHeader {
   font-size: 14pt;
 }
 
@@ -284,4 +293,81 @@ table.eventTable tr.selected td {
 
 .configurationSelectionCopyToCustom {
   margin-left: 10px;
+}
+
+/* Popup window bottom section css - integrate debug plugin dashboard UI */
+.dbg-lgr {
+  width: 90%;
+  min-width: 600px;
+  position: relative;
+  margin: auto;
+  left: 0;
+  right: 0;
+  border: "1px solid #605E5C";
+  border-radius: 2px;
+}
+
+.dbg-lgr div:focus {
+  outline: 2px solid black;
+}
+
+.dbg-lgr > div {
+  display: block;
+  position: relative;
+}
+
+.dbg-lgr > div:not(.controls) div {
+  display: block;
+  position: relative;
+  margin-left: 2em;
+  width: 100%;
+}
+
+.dbg-lgr .expandable {
+  /* cursor: pointer; */
+}
+
+.dbg-lgr > .tree-root div > span {
+  width: 100%;
+  display: block;
+}
+
+.dbg-lgr .exception {
+  background-color: "#FEF0F1";
+  color: "#323130";
+}
+
+.dbg-lgr .matched-text-filter {
+  background-color: "yellow";
+}
+
+.dbg-lgr .expandable.open::before {
+  content: '- ';
+  font-weight: bold;
+}
+
+.dbg-lgr .expandable.closed::before {
+  content: '[+] ';
+  font-weight: bold;
+}
+
+.dbg-lgr div:hover > .obj-key {
+  text-decoration: underline;
+}
+
+.dbg-lgr .obj-time {
+  padding-right: 15px;
+  color: #605E5C;
+}
+
+.dbg-lgr .object {pointer-events: auto;}
+.dbg-lgr .string {color: #CB3632;}
+.dbg-lgr .number {color: #1C00CF;}
+.dbg-lgr .key {color: #881391; font-weight: bold;}
+.dbg-lgr .function {color: #881391;}
+.dbg-lgr .empty {color: #555555; font-style: italic;}
+
+.dbg-lgr {
+  width: 100%;
+  min-width: 200px;
 }

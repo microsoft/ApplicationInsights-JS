@@ -5,7 +5,8 @@ import {
     IPageViewPerformanceTelemetry, CtxTagKeys,
     HttpMethod, IPageViewTelemetryInternal, IWeb,
     IExceptionInternal,
-    SampleRate
+    SampleRate,
+    dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey,
@@ -25,7 +26,7 @@ function _setValueIf<T>(target:T, field:keyof T, value:any) {
 /*
  * Maps Part A data from CS 4.0
  */
-function _extractPartAExtensions(item: ITelemetryItem, env: IEnvelope) {
+function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem, env: IEnvelope) {
     // todo: switch to keys from common in this method
     let envTags = env.tags = env.tags || {};
     let itmExt = item.ext = item.ext || {};
@@ -77,7 +78,7 @@ function _extractPartAExtensions(item: ITelemetryItem, env: IEnvelope) {
     let extTrace = itmExt.trace;
     if (extTrace) {
         _setValueIf(envTags, CtxTagKeys.operationParentId, extTrace.parentID);
-        _setValueIf(envTags, CtxTagKeys.operationName, extTrace.name);
+        _setValueIf(envTags, CtxTagKeys.operationName, dataSanitizeString(logger, extTrace.name));
         _setValueIf(envTags, CtxTagKeys.operationId, extTrace.traceID);
     }
 
@@ -157,7 +158,7 @@ function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, tel
     envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
 
     // extract all extensions from ctx
-    _extractPartAExtensions(telemetryItem, envelope);
+    _extractPartAExtensions(logger, telemetryItem, envelope);
 
     // loop through the envelope tags (extension of Part A) and pick out the ones that should go in outgoing envelope tags
     telemetryItem.tags = telemetryItem.tags || [];
