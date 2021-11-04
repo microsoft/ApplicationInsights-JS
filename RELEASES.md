@@ -1,5 +1,28 @@
 # Releases
 
+## 2.7.1 (Nov 4th, 2021)
+
+## Changelog
+
+- #1667 Allow properly disposing AI
+  - expose internal log poller #1674
+- #1683 Add support to optionally configure the events used for detecting and handling when page unload and flushing occurs
+- #1655 [BUG] When using Multiple instances of AI only the first instance is correctly reporting ajax events
+- #1093 "Pause" sending of messages
+- #1692 [BUG] Field 'ai.operation.name' on type 'ContextTagKeys' is too long. Expected: 1024 characters"
+- #1691 [BUG] Multiple errors are getting thrown and swallowed during initialization when no instrumentation Key is provided
+  - DiagnosticLogger: Fix typo in defining the console function #1699
+- #1676 React Plugin trackTrace method
+  - add trackTrace and expose analytics extension to react plugin #1697
+- #1680 [BUG] trackMetric does not track stdDev nor sum #1701
+- fix readme traceID generate method #1687
+- Update package.json to include the repository #1696
+- Governance Updates -- update used dependencies #1694
+- Refactor publishing script to combine shared content and support separate nightly container. #1677
+- Enable EsLint auto fixing rules for extra-semicolons, dangling commas and tailing spaces #1669
+- Update Perf Mark and Measure documentation and some exports #1666
+- Update Release script to provide better automated creation of nightly builds #1664
+
 ## 2.7.0 (Sept 7th, 2021)
 
 ___Major change___: Upgrades build environment to TypeScript __4.x__
