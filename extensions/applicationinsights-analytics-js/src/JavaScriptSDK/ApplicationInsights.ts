@@ -9,7 +9,7 @@ import {
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
     dateTimeUtilsDuration, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault, createDomEvent,
-    strNotSpecified, isCrossOriginError, utlDisableStorage
+    strNotSpecified, isCrossOriginError, utlDisableStorage, dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -21,7 +21,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { PageViewPerformanceManager } from './Telemetry/PageViewPerformanceManager';
+import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -54,7 +54,7 @@ function _getReason(error: any) {
 }
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.7.0-beta.1"; // Not currently used anywhere
+    public static Version = "2.7.0"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {
@@ -684,7 +684,8 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                                     traceLocationName = _location.pathname + (_location.hash || "");
                                 }
 
-                                _properties.context.telemetryTrace.name = traceLocationName;
+                                // This populates the ai.operation.name which has a maximum size of 1024 so we need to sanitize it
+                                _properties.context.telemetryTrace.name = dataSanitizeString(_self.diagLog(), traceLocationName);
                             }
                             if (_currUri) {
                                 _prevUri = _currUri;
@@ -721,7 +722,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
 
             function _addDefaultTelemetryInitializers(configGetters: ITelemetryConfig) {
                 if (!configGetters.isBrowserLinkTrackingEnabled()) {
-                    const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
+                    const browserLinkPaths = ["/browserLinkSignalR/", "/__browserLink/"];
                     const dropBrowserLinkRequests = (envelope: ITelemetryItem) => {
                         if (envelope.baseType === RemoteDependencyData.dataType) {
                             const remoteData = envelope.baseData as IDependencyTelemetry;

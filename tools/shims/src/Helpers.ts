@@ -8,7 +8,7 @@ declare var global: Window;
 
 /**
  * Returns the current global scope object, for a normal web page this will be the current
- * window, for a Web Worker this will be current worker global scope via "self". The internal 
+ * window, for a Web Worker this will be current worker global scope via "self". The internal
  * implementation returns the first available instance object in the following order
  * - globalThis (New standard)
  * - self (Will return the current window instance for supported browsers)
@@ -39,7 +39,7 @@ declare var global: Window;
 }
 
 export function throwTypeError(message: string): never {
-    throw new TypeError(message); 
+    throw new TypeError(message);
 }
 
 /**
@@ -53,19 +53,19 @@ export function objCreateFn(obj: any): any {
     // Use build in Object.create
     if (func) {
         // Use Object create method if it exists
-        return func(obj); 
+        return func(obj);
     }
-    if (obj == null) { 
-        return {}; 
+    if (obj == null) {
+        return {};
     }
     var type = typeof obj;
-    if (type !== strShimObject && type !== strShimFunction) { 
-        throwTypeError('Object prototype may only be an Object:' + obj); 
+    if (type !== strShimObject && type !== strShimFunction) {
+        throwTypeError("Object prototype may only be an Object:" + obj);
     }
 
     function tmpFunc() {}
     tmpFunc[strShimPrototype] = obj;
 
-    return new (tmpFunc as any)();    
+    return new (tmpFunc as any)();
 }
 

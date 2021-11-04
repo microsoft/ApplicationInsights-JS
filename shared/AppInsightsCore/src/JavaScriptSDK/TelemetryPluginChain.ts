@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
+import { ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { _InternalLogMessage } from "./DiagnosticLogger";
 import { doPerf } from "./PerfManager";
-import { LoggingSeverity, _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
-import { isFunction } from './HelperFuncs';
-import { dumpObj } from './EnvUtils';
+import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { isFunction } from "./HelperFuncs";
+import { dumpObj } from "./EnvUtils";
 
 export class TelemetryPluginChain implements ITelemetryPluginChain {
 
@@ -33,7 +33,7 @@ export class TelemetryPluginChain implements ITelemetryPluginChain {
     /**
      * Call back for telemetry processing before it it is sent
      * @param env - This is the current event being reported
-     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances 
+     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
      */
@@ -78,7 +78,7 @@ export class TelemetryPluginChain implements ITelemetryPluginChain {
                     try {
     
                         // Ensure that we keep the context in sync (for processNext()), just in case a plugin
-                        // doesn't calls processTelemetry() instead of itemContext.processNext() or some 
+                        // doesn't calls processTelemetry() instead of itemContext.processNext() or some
                         // other form of error occurred
                         itemCtx.setNext(_nextProxy);
                         if (_hasSetNext) {

@@ -2,12 +2,12 @@
  * @copyright Microsoft 2020
  */
 
-import { WebEvent } from './WebEvent';
-import * as DataCollector from '../DataCollector';
+import { WebEvent } from "./WebEvent";
+import * as DataCollector from "../DataCollector";
 import { ITelemetryItem, getPerformance, ICustomProperties, LoggingSeverity, objForEachKey } from "@microsoft/applicationinsights-core-js"
-import { IPageActionOverrideValues, IPageActionTelemetry } from '../Interfaces/Datamodel';
-import { extractFieldFromObject, bracketIt, isValueAssigned, extend, _ExtendedInternalMessageId } from '../common/Utils';
-import { strNotSpecified } from '@microsoft/applicationinsights-common';
+import { IPageActionOverrideValues, IPageActionTelemetry } from "../Interfaces/Datamodel";
+import { extractFieldFromObject, bracketIt, isValueAssigned, extend, _ExtendedInternalMessageId } from "../common/Utils";
+import { strNotSpecified } from "@microsoft/applicationinsights-common";
 
 export class PageAction extends WebEvent {
     
@@ -19,29 +19,29 @@ export class PageAction extends WebEvent {
     public trackPageAction(pageActionEvent: IPageActionTelemetry, properties?: ICustomProperties): void {
         // Get part A properties
         var ext = {};
-        ext['web'] = {};
+        ext["web"] = {};
         let event: ITelemetryItem = {
             name: "Microsoft.ApplicationInsights.{0}.Event",
-            baseType: 'EventData',
+            baseType: "EventData",
             ext,
             data: {},
             baseData: {}
         };
 
-        this._populateEventDataIfPresent(event.baseData, 'name', pageActionEvent.name);
-        this._populateEventDataIfPresent(event.data, 'baseTypeSource', 'ClickEvent');
-        this._populateEventDataIfPresent(event.data, 'uri', pageActionEvent.uri);
-        this._populateEventDataIfPresent(event.data, 'pageType', pageActionEvent.pageType);
-        this._populateEventDataIfPresent(event.data, 'properties', pageActionEvent.properties);
-        this._populateEventDataIfPresent(event.data, 'actionType', pageActionEvent.actionType);
-        this._populateEventDataIfPresent(event.data, 'behavior', pageActionEvent.behavior);
-        this._populateEventDataIfPresent(event.data, 'clickCoordinates', pageActionEvent.clickCoordinates);
-        this._populateEventDataIfPresent(event.data, 'content', pageActionEvent.content);
-        this._populateEventDataIfPresent(event.data, 'targetUri', pageActionEvent.targetUri);
-        this._populateEventDataIfPresent(event.data, 'timeToAction', pageActionEvent.timeToAction);
-        this._populateEventDataIfPresent(event.data, 'refUri', pageActionEvent.refUri);
-        this._populateEventDataIfPresent(event.data, 'pageName', pageActionEvent.pageName);
-        this._populateEventDataIfPresent(event.data, 'parentId', pageActionEvent.parentId);
+        this._populateEventDataIfPresent(event.baseData, "name", pageActionEvent.name);
+        this._populateEventDataIfPresent(event.data, "baseTypeSource", "ClickEvent");
+        this._populateEventDataIfPresent(event.data, "uri", pageActionEvent.uri);
+        this._populateEventDataIfPresent(event.data, "pageType", pageActionEvent.pageType);
+        this._populateEventDataIfPresent(event.data, "properties", pageActionEvent.properties);
+        this._populateEventDataIfPresent(event.data, "actionType", pageActionEvent.actionType);
+        this._populateEventDataIfPresent(event.data, "behavior", pageActionEvent.behavior);
+        this._populateEventDataIfPresent(event.data, "clickCoordinates", pageActionEvent.clickCoordinates);
+        this._populateEventDataIfPresent(event.data, "content", pageActionEvent.content);
+        this._populateEventDataIfPresent(event.data, "targetUri", pageActionEvent.targetUri);
+        this._populateEventDataIfPresent(event.data, "timeToAction", pageActionEvent.timeToAction);
+        this._populateEventDataIfPresent(event.data, "refUri", pageActionEvent.refUri);
+        this._populateEventDataIfPresent(event.data, "pageName", pageActionEvent.pageName);
+        this._populateEventDataIfPresent(event.data, "parentId", pageActionEvent.parentId);
 
         if (properties) {
             objForEachKey(properties, (property, value) => {
@@ -54,7 +54,7 @@ export class PageAction extends WebEvent {
     }
 
     /**
-     * API to create and send a populated PageAction event 
+     * API to create and send a populated PageAction event
      * @param element - DOM element
      * @param overrideValues - PageAction overrides
      * @param customProperties - Custom properties(Part C)
@@ -62,11 +62,11 @@ export class PageAction extends WebEvent {
      */
     public capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
         overrideValues = !isValueAssigned(overrideValues) ? {} : overrideValues;
-        let pageActionEvent: IPageActionTelemetry = { name : ''};
+        let pageActionEvent: IPageActionTelemetry = { name : ""};
         let pageActionProperties: ICustomProperties = isValueAssigned(customProperties) ? customProperties : {};
         this.setCommonProperties(pageActionEvent, overrideValues);
         pageActionEvent.behavior = this._getBehavior(overrideValues);
-        // element in scope is needed for below properties.  We cannot pass element into the plugin call chain.  
+        // element in scope is needed for below properties.  We cannot pass element into the plugin call chain.
         // process them here.
         let elementContent: any = {};
         
@@ -82,17 +82,17 @@ export class PageAction extends WebEvent {
 
             // if the element has a data-*-bhvr attrib defined, use it.
             if (elementContent.bhvr && !isValueAssigned(overrideValues.behavior)) {
-                let currentBehavior: string = extractFieldFromObject(elementContent, 'bhvr');
+                let currentBehavior: string = extractFieldFromObject(elementContent, "bhvr");
                 pageActionEvent.behavior = this._getValidBehavior(currentBehavior);
             }
 
-            // Validate to ensure the minimum required field 'contentName' or 'id' is present. However, 
+            // Validate to ensure the minimum required field 'contentName' or 'id' is present. However,
             // requiring these fields would result in majority of adopter's content from being collected.
             // Just throw a warning and continue collection.
             if (!isValueAssigned(elementContent.id) && !isValueAssigned(elementContent.contentName)) {
                 this._traceLogger.throwInternal(
                     LoggingSeverity.WARNING,
-                    _ExtendedInternalMessageId.InvalidContentBlob, `Missing attributes id or contentName in click event. Click event information will still be collected!`
+                    _ExtendedInternalMessageId.InvalidContentBlob, "Missing attributes id or contentName in click event. Click event information will still be collected!"
                 )
             }
         }
@@ -103,7 +103,7 @@ export class PageAction extends WebEvent {
             pageActionEvent.actionType = overrideValues.actionType;
         }
         if (isValueAssigned(overrideValues.clickCoordinateX) && isValueAssigned(overrideValues.clickCoordinateY)) {
-            pageActionEvent.clickCoordinates = overrideValues.clickCoordinateX + 'X' + overrideValues.clickCoordinateY;
+            pageActionEvent.clickCoordinates = overrideValues.clickCoordinateX + "X" + overrideValues.clickCoordinateY;
         }
 
         this._sanitizePageActionEventContent(elementContent);
@@ -149,9 +149,9 @@ export class PageAction extends WebEvent {
 
     private _isUndefinedEvent(pageActionEvent: IPageActionTelemetry) {
         if(this._config.dropInvalidEvents) {
-            if(pageActionEvent.name === strNotSpecified 
+            if(pageActionEvent.name === strNotSpecified
                 && pageActionEvent.parentId === strNotSpecified
-                && pageActionEvent.content === "[{}]") 
+                && pageActionEvent.content === "[{}]")
                 return true;
         }
         return false;

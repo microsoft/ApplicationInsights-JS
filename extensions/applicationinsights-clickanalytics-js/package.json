@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-clickanalytics-js",
-    "version": "2.7.0-beta.1",
+    "version": "2.7.0",
     "description": "Microsoft Application Insights Click Analytics extension",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -35,9 +35,8 @@
         "grunt": "^1.4.1",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-qunit": "^5.0.1",
-        "grunt-run": "^0.8.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
-        "@nevware21/grunt-eslint-ts": "^0.2.1"
+        "@nevware21/grunt-eslint-ts": "^0.2.2"
     },
     "peerDependencies": {
         "tslib": "*"
@@ -45,16 +44,13 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.4",
         "@microsoft/applicationinsights-shims": "2.0.0",
-        "@microsoft/applicationinsights-core-js": "2.7.0-beta.1",
-        "@microsoft/applicationinsights-common": "2.7.0-beta.1",
-        "@microsoft/applicationinsights-properties-js": "2.7.0-beta.1"
+        "@microsoft/applicationinsights-core-js": "2.7.0",
+        "@microsoft/applicationinsights-common": "2.7.0",
+        "@microsoft/applicationinsights-properties-js": "2.7.0"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-clickanalytics-js"
     },
-    "license": "MIT",
-    "publishConfig": {
-        "tag": "beta"
-    }
+    "license": "MIT"
 }

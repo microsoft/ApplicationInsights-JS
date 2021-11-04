@@ -6,28 +6,28 @@ import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, isNullOrUndefined, ITelemetryItem,
     IProcessTelemetryContext, ITelemetryPluginChain,
-    _InternalMessageId, ICustomProperties, 
+    _InternalMessageId, ICustomProperties,
     LoggingSeverity, arrForEach, dumpObj, getExceptionName
 } from "@microsoft/applicationinsights-core-js";
 import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
-import { 
-    IClickAnalyticsConfiguration, IContentHandler, 
-    IAutoCaptureHandler, IPageActionTelemetry 
-} from './Interfaces/Datamodel';
+import {
+    IClickAnalyticsConfiguration, IContentHandler,
+    IAutoCaptureHandler, IPageActionTelemetry
+} from "./Interfaces/Datamodel";
 import {
     mergeConfig, BehaviorMapValidator,
     BehaviorValueValidator, BehaviorEnumValidator, _ExtendedInternalMessageId
-    } from './common/Utils';
-import { PageAction } from './events/PageAction';
+    } from "./common/Utils";
+import { PageAction } from "./events/PageAction";
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 export { BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
 
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
-    public identifier: string = 'ClickAnalyticsPlugin';
+    public identifier: string = "ClickAnalyticsPlugin";
     public priority: number = 181;
-    public static Version = "2.7.0-beta.1";
+    public static Version = "2.7.0";
     private _config: IClickAnalyticsConfiguration;
     private pageAction: PageAction;
     private _autoCaptureHandler: IAutoCaptureHandler;
@@ -59,7 +59,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
             }
         });
         // Append Click Analytics Plugin Version to SDK version.
-        if (_propertiesExtension && _propertiesExtension.context && 
+        if (_propertiesExtension && _propertiesExtension.context &&
             _propertiesExtension.context.internal && _propertiesExtension.context.internal.sdkVersion) {
                 _propertiesExtension.context.internal.sdkVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
         }

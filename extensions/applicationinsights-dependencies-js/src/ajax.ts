@@ -5,15 +5,15 @@ import {
     RequestHeaders, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
     IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint
-} from '@microsoft/applicationinsights-common';
+} from "@microsoft/applicationinsights-common";
 import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
     IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys, ICustomProperties, isXhrSupported, attachEvent
-} from '@microsoft/applicationinsights-core-js';
-import { ajaxRecord, IAjaxRecordResponse } from './ajaxRecord';
-import { Traceparent } from './TraceParent';
+} from "@microsoft/applicationinsights-core-js";
+import { ajaxRecord, IAjaxRecordResponse } from "./ajaxRecord";
+import { Traceparent } from "./TraceParent";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
@@ -92,7 +92,7 @@ function _getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): stri
             !isNullOrUndefined(xhr[strAjaxData].requestUrl)) {
             result += "(url: '" + xhr[strAjaxData].requestUrl + "')";
         }
-    } catch (e) { 
+    } catch (e) {
         // eslint-disable-next-line no-empty
     }
 
@@ -175,7 +175,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             maxAjaxPerfLookupAttempts: 3,
             ajaxPerfLookupDelay: 25,
             ignoreHeaders:[
-                "Authorization", 
+                "Authorization",
                 "X-API-Key",
                 "WWW-Authenticate"],
             addRequestContext: undefined
@@ -497,9 +497,14 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         req: (args:IInstrumentCallDetails, method:string, url:string, async?:boolean) => {
                             let xhr = args.inst as XMLHttpRequestInstrumented;
                             let ajaxData = xhr[strAjaxData];
-                            if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, true) &&
-                                    (!ajaxData || !ajaxData.xhrMonitoringState.openDone)) {
-                                _openHandler(xhr, method, url, async);
+                            if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, true)) {
+                                if (!ajaxData || !ajaxData.xhrMonitoringState.openDone) {
+                                    // Only create a single ajaxData (even when multiple AI instances are running)
+                                    _openHandler(xhr, method, url, async);
+                                }
+
+                                // always attach to the on ready state change (required for handling multiple instances)
+                                _attachToOnReadyStateChange(xhr);
                             }
                         },
                         hkErr: _createErrorCallbackFunc(_self, _InternalMessageId.FailedMonitorAjaxOpen,
@@ -591,7 +596,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     isDisabled = xhr[DisabledPropertyName] === true || theUrl[DisabledPropertyName] === true;
                 } else if (!isNullOrUndefined(request)) { // fetch
                     // Look for DisabledPropertyName in either Request or RequestInit
-                    isDisabled = (typeof request === 'object' ? request[DisabledPropertyName] === true : false) ||
+                    isDisabled = (typeof request === "object" ? request[DisabledPropertyName] === true : false) ||
                             (init ? init[DisabledPropertyName] === true : false);
                 }
 
@@ -643,8 +648,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ajaxData.async = async;
                 ajaxData.errorStatusText = _enableAjaxErrorStatusText;
                 xhr[strAjaxData] = ajaxData;
-
-                _attachToOnReadyStateChange(xhr);
             }
 
             function _attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
@@ -723,9 +726,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                     const arr = strTrim(headers).split(/[\r\n]+/);
                                     const responseHeaderMap = {};
                                     arrForEach(arr, (line) => {
-                                        const parts = line.split(': ');
+                                        const parts = line.split(": ");
                                         const header = parts.shift();
-                                        const value = parts.join(': ');
+                                        const value = parts.join(": ");
                                         if(_canIncludeHeaders(header)) { responseHeaderMap[header] = value; }
                                     });
 

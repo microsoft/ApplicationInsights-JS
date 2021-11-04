@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ObjAssign, strShimUndefined } from "./Constants";
+import { ObjAssign } from "./Constants";
 import { getGlobal } from "./Helpers";
 import { __assignFn, __createBindingFn, __extendsFn } from "./TsLibShims";
 

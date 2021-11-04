@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
+import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { arrForEach, arrIndexOf } from './HelperFuncs';
+import { arrForEach, arrIndexOf } from "./HelperFuncs";
 
 /**
  * Class to manage sending notifications to all the listeners.
@@ -151,7 +151,7 @@ export class NotificationManager implements INotificationManager {
     /**
      * [Optional] This event is sent if you have enabled perf events, they are primarily used to track internal performance testing and debugging
      * the event can be displayed via the debug plugin extension.
-     * @param perfEvent 
+     * @param perfEvent
      */
     perfEvent?(perfEvent: IPerfEvent): void;
 }

@@ -3,11 +3,11 @@
 
 import {
     IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeSpan
-} from '@microsoft/applicationinsights-common';
+} from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
     _InternalMessageId, getNavigator, getPerformance, isNotNullOrUndefined
-} from '@microsoft/applicationinsights-core-js';
+} from "@microsoft/applicationinsights-core-js";
 
 /**
  * Class encapsulates sending page view performance telemetry.
@@ -37,9 +37,9 @@ export class PageViewPerformanceManager {
          *  |             ||             |              |         |-loadEventEnd
          *  |---network---||---request---|---response---|---dom---|
          *  |--------------------------total----------------------|
-         * 
+         *
          *  total = The difference between the load event of the current document is completed and the first recorded timestamp of the performance entry : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#duration
-         *  network = Redirect time + App Cache + DNS lookup time + TCP connection time 
+         *  network = Redirect time + App Cache + DNS lookup time + TCP connection time
          *  request = Request time : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#request_time
          *  response = Response time
          *  dom = Document load time : https://html.spec.whatwg.org/multipage/dom.html#document-load-timing-info
@@ -166,7 +166,7 @@ export class PageViewPerformanceManager {
     public shouldCollectDuration(...durations: number[]): boolean {
         var _navigator = getNavigator() || {} as any;
         // a full list of Google crawlers user agent strings - https://support.google.com/webmasters/answer/1061943?hl=en
-        const botAgentNames = ['googlebot', 'adsbot-google', 'apis-google', 'mediapartners-google'];
+        const botAgentNames = ["googlebot", "adsbot-google", "apis-google", "mediapartners-google"];
         const userAgent = _navigator.userAgent;
         let isGoogleBot = false;
 

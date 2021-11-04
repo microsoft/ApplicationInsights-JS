@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import {  
+import {
     strShimUndefined, strShimObject, strShimFunction, throwTypeError,
     ObjClass, ObjProto, ObjAssign, ObjHasOwnProperty, ObjDefineProperty
 } from "@microsoft/applicationinsights-shims";
@@ -24,11 +24,11 @@ export function objToString(obj: any) {
 
 export function isTypeof(value: any, theType: string): boolean {
     return typeof value === theType;
-};
+}
 
 export function isUndefined(value: any): boolean {
     return value === undefined || typeof value === strShimUndefined;
-};
+}
 
 export function isNotUndefined(value: any): boolean {
     return !isUndefined(value);
@@ -44,17 +44,17 @@ export function isNotNullOrUndefined(value: any): boolean {
 
 export function hasOwnProperty(obj: any, prop: string): boolean {
     return obj && ObjHasOwnProperty.call(obj, prop);
-};
+}
 
 export function isObject(value: any): boolean {
     // Changing to inline for performance
     return typeof value === strShimObject;
-};
+}
 
 export function isFunction(value: any): value is Function {
     // Changing to inline for performance
     return typeof value === strShimFunction;
-};
+}
 
 /**
  * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
@@ -73,7 +73,7 @@ export function attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
                 obj[strAddEventHelper](eventNameWithoutOn, handlerRef, useCapture);
                 result = true;
             } else if (!isNullOrUndefined(obj[strAttachEvent])) {
-                // IE before version 9                    
+                // IE before version 9
                 obj[strAttachEvent](strOnPrefix + eventNameWithoutOn, handlerRef);
                 result = true;
             }
@@ -124,7 +124,7 @@ export function normalizeJsName(name: string): string {
 }
 
 /**
- * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a 
+ * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a
  * performance optimization to avoid the creation of a new array for large objects
  * @param target The target object to find and process the keys
  * @param callbackfn The function to call with the details
@@ -165,7 +165,7 @@ export function strEndsWith(value: string, search: string) {
     }
 
     return false;
-}    
+}
 
 /**
  * The strStartsWith() method determines whether a string starts with the characters of the specified string, returning true or false as appropriate.
@@ -340,9 +340,9 @@ export function arrIndexOf<T>(arr: T[], searchElement: T, fromIndex?: number): n
 }
 
 /**
- * Calls a defined callback function on each element of an array, and returns an array that contains the results. This helper exists 
- * to avoid adding a polyfil for older browsers that do not define Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page 
- * checks for presence/absence of the prototype implementation. Note: For consistency this will not use the Array.prototype.xxxx 
+ * Calls a defined callback function on each element of an array, and returns an array that contains the results. This helper exists
+ * to avoid adding a polyfil for older browsers that do not define Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page
+ * checks for presence/absence of the prototype implementation. Note: For consistency this will not use the Array.prototype.xxxx
  * implementation if it exists as this would cause a testing requirement to test with and without the implementations
  * @param callbackfn A function that accepts up to three arguments. The map method calls the callbackfn function one time for each element in the array.
  * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
@@ -368,7 +368,7 @@ export function arrMap<T, R>(arr: T[], callbackfn: (value: T, index?: number, ar
 /**
  * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is
  * provided as an argument in the next call to the callback function. This helper exists to avoid adding a polyfil for older browsers that do not define
- * Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page checks for presence/absence of the prototype implementation. Note: For consistency 
+ * Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page checks for presence/absence of the prototype implementation. Note: For consistency
  * this will not use the Array.prototype.xxxx implementation if it exists as this would cause a testing requirement to test with and without the implementations
  * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
  * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
@@ -410,19 +410,19 @@ export function strTrim(str: any): string {
     return str.replace(/^\s+|\s+$/g, "");
 }
 
-let _objKeysHasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
+let _objKeysHasDontEnumBug = !({ toString: null }).propertyIsEnumerable("toString");
 let _objKeysDontEnums = [
-    'toString',
-    'toLocaleString',
-    'valueOf',
-    'hasOwnProperty',
-    'isPrototypeOf',
-    'propertyIsEnumerable',
-    'constructor'
+    "toString",
+    "toLocaleString",
+    "valueOf",
+    "hasOwnProperty",
+    "isPrototypeOf",
+    "propertyIsEnumerable",
+    "constructor"
 ];
 
 /**
- * Returns the names of the enumerable string properties and methods of an object. This helper exists to avoid adding a polyfil for older browsers 
+ * Returns the names of the enumerable string properties and methods of an object. This helper exists to avoid adding a polyfil for older browsers
  * that do not define Object.keys eg. ES3 only, IE8 just in case any page checks for presence/absence of the prototype implementation.
  * Note: For consistency this will not use the Object.keys implementation if it exists as this would cause a testing requirement to test with and without the implementations
  * @param obj Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
@@ -431,7 +431,7 @@ export function objKeys(obj: {}): string[] {
     var objType = typeof obj;
 
     if (objType !== strShimFunction && (objType !== strShimObject || obj === null)) {
-        throwTypeError('objKeys called on non-object');
+        throwTypeError("objKeys called on non-object");
     }
 
     let result: string[] = [];
@@ -590,14 +590,14 @@ export function throwError(message: string): never {
 }
 
 /**
- * Effectively assigns all enumerable properties (not just own properties) and functions (including inherited prototype) from 
+ * Effectively assigns all enumerable properties (not just own properties) and functions (including inherited prototype) from
  * the source object to the target, it attempts to use proxy getters / setters (if possible) and proxy functions to avoid potential
  * implementation issues by assigning prototype functions as instance ones
- * 
+ *
  * This method is the primary method used to "update" the snippet proxy with the ultimate implementations.
- * 
+ *
  * Special ES3 Notes:
- * Updates (setting) of direct property values on the target or indirectly on the source object WILL NOT WORK PROPERLY, updates to the 
+ * Updates (setting) of direct property values on the target or indirectly on the source object WILL NOT WORK PROPERLY, updates to the
  * properties of "referenced" object will work (target.context.newValue = 10 => will be reflected in the source.context as it's the
  * same object). ES3 Failures: assigning target.myProp = 3 -> Won't change source.myProp = 3, likewise the reverse would also fail.
  * @param target - The target object to be assigned with the source properties and functions
@@ -649,7 +649,7 @@ export function proxyAssign(target: any, source: any, chkSet?: (name: string, is
 /**
  * Simpler helper to create a dynamic class that implements the interface and populates the values with the defaults.
  * Only instance properties (hasOwnProperty) values are copied from the defaults to the new instance
- * @param defaults Simple helper 
+ * @param defaults Simple helper
  */
 export function createClassFromInterface<T>(defaults?: T) {
     return class {

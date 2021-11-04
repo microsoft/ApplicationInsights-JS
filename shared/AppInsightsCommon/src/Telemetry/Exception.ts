@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StackFrame } from '../Interfaces/Contracts/Generated/StackFrame';
-import { ExceptionData } from '../Interfaces/Contracts/Generated/ExceptionData';
-import { ExceptionDetails } from '../Interfaces/Contracts/Generated/ExceptionDetails';
-import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString } from './Common/DataSanitizer';
-import { FieldType } from '../Enums';
-import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
-import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction, getSetValue } from '@microsoft/applicationinsights-core-js';
+import { StackFrame } from "../Interfaces/Contracts/Generated/StackFrame";
+import { ExceptionData } from "../Interfaces/Contracts/Generated/ExceptionData";
+import { ExceptionDetails } from "../Interfaces/Contracts/Generated/ExceptionDetails";
+import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import { dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
+import { FieldType } from "../Enums";
+import { SeverityLevel } from "../Interfaces/Contracts/Generated/SeverityLevel";
+import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction, getSetValue } from "@microsoft/applicationinsights-core-js";
 import {
     IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal, IAutoExceptionTelemetry, IStackDetails
-} from '../Interfaces/IExceptionTelemetry';
-import { strNotSpecified } from '../Constants';
+} from "../Interfaces/IExceptionTelemetry";
+import { strNotSpecified } from "../Constants";
 
 const NoMethod = "<no_method>";
 const strError = "error";
@@ -137,7 +137,7 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
     let details = null;
     if (errorObj) {
         try {
-            /* Using bracket notation is support older browsers (IE 7/8 -- dont remember the version) that throw when using dot 
+            /* Using bracket notation is support older browsers (IE 7/8 -- dont remember the version) that throw when using dot
             notation for undefined objects and we don't want to loose the error from being reported */
             if (errorObj[strStack]) {
                 // Chrome/Firefox
@@ -145,13 +145,13 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
             } else if (errorObj[strError] && errorObj[strError][strStack]) {
                 // Edge error event provides the stack and error object
                 details = _convertStackObj(errorObj[strError][strStack]);
-            } else if (errorObj['exception'] && errorObj.exception[strStack]) {
+            } else if (errorObj["exception"] && errorObj.exception[strStack]) {
                 details = _convertStackObj(errorObj.exception[strStack]);
             } else if (_isStackDetails(errorObj)) {
                 details = errorObj;
             } else if (_isStackDetails(errorObj[strStackDetails])) {
                 details = errorObj[strStackDetails];
-            } else if (window['opera'] && errorObj[strMessage]) {
+            } else if (window["opera"] && errorObj[strMessage]) {
                 // Opera
                 details = _getOperaStack(errorObj.message);
             } else if (isString(errorObj)) {
@@ -172,7 +172,7 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
                 }
             }
         } catch (e) {
-            // something unexpected happened so to avoid failing to report any error lets swallow the exception 
+            // something unexpected happened so to avoid failing to report any error lets swallow the exception
             // and fallback to the callee/caller method
             details = _convertStackObj(e);
         }
@@ -421,7 +421,7 @@ export class Exception extends ExceptionData implements ISerializable {
                     hasFullStack: true,
                     message,
                     stack: details,
-                    typeName,
+                    typeName
                 } as ExceptionDetails
             ]
         } as Exception;
@@ -512,7 +512,7 @@ export class _StackFrame extends StackFrame implements ISerializable {
         method: FieldType.Required,
         assembly: FieldType.Default,
         fileName: FieldType.Default,
-        line: FieldType.Default,
+        line: FieldType.Default
     };
 
     constructor(sourceFrame: string | IExceptionStackFrameInternal, level: number) {

@@ -4,12 +4,12 @@
 import {
     IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties,
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
-    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray, throwError, ICookieMgr, safeGetCookieMgr
+    arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener,  addPageHideEventListener
 } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
+import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType,
     IRequestHeaders, RequestHeaders, DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, AIData, AIBase,
@@ -28,7 +28,7 @@ let _internalSdkSrc: string;
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names
 const _ignoreUpdateSnippetProperties = [
-    "snippet", "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults",
+    "snippet", "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults"
 ];
 
 /**
@@ -50,7 +50,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
     getSender: () => Sender;
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
     clearAuthenticatedUserContext(): void;
-};
+}
 
 // Re-exposing the Common classes as Telemetry, the list was taken by reviewing the generated code for the build while using
 // the previous configuration :-
@@ -157,7 +157,7 @@ export class Initialization implements IApplicationInsights {
      */
     public getCookieMgr(): ICookieMgr {
         return this.appInsights.getCookieMgr();
-    };
+    }
 
     /**
      * Log a user action or other occurrence.
@@ -466,6 +466,10 @@ export class Initialization implements IApplicationInsights {
         this.core.pollInternalLogs();
     }
 
+    public stopPollingInternalLogs(): void {
+        this.core.stopPollingInternalLogs();
+    }
+
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 
@@ -483,7 +487,7 @@ export class Initialization implements IApplicationInsights {
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                arrForEach(appInsightsInstance.appInsights.core['_extensions'], (ext: any) => {
+                arrForEach(appInsightsInstance.appInsights.core["_extensions"], (ext: any) => {
                     if (ext.identifier === PropertiesPluginIdentifier) {
                         if (ext && ext.context && ext.context._sessionManager) {
                             ext.context._sessionManager.backup();
@@ -493,13 +497,16 @@ export class Initialization implements IApplicationInsights {
                 });
             };
 
+            let added = false;
+            let excludePageUnloadEvents = appInsightsInstance.appInsights.config.disablePageUnloadEvents;
+
             if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload) {
                 // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
-                // As just hooking the window does not always fire (on chrome) for page navigations.
-                let added = addEventHandler('beforeunload', performHousekeeping);
-                added = addEventHandler('unload', performHousekeeping) || added;
-                added = addEventHandler('pagehide', performHousekeeping) || added;
-                added = addEventHandler('visibilitychange', performHousekeeping) || added;
+                // As just hooking the window does not always fire (on chrome) for page navigation's.
+                added = addPageUnloadEventListener(performHousekeeping, excludePageUnloadEvents);
+
+                // We also need to hook the pagehide and visibilitychange events as not all versions of Safari support load/unload events.
+                added = addPageHideEventListener(performHousekeeping, excludePageUnloadEvents) || added;
 
                 // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
                 // log the failure in this case
@@ -507,15 +514,13 @@ export class Initialization implements IApplicationInsights {
                     appInsightsInstance.appInsights.core.logger.throwInternal(
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
-                        'Could not add handler for beforeunload and pagehide');
+                        "Could not add handler for beforeunload and pagehide");
                 }
             }
 
-            // We also need to hook the pagehide and visibilitychange events as not all versions of Safari support load/unload events.
-            if (!appInsightsInstance.appInsights.config.disableFlushOnUnload) {
-                // Not adding any telemetry as pagehide as it's not supported on all browsers
-                addEventHandler('pagehide', performHousekeeping);
-                addEventHandler('visibilitychange', performHousekeeping);
+            if (!added && !appInsightsInstance.appInsights.config.disableFlushOnUnload) {
+                // If we didn't add the normal set then attempt to add the pagehide and visibilitychange only
+                addPageHideEventListener(performHousekeeping, excludePageUnloadEvents);
             }
         }
     }

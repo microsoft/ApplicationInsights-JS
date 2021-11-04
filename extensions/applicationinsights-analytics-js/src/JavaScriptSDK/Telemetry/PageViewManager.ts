@@ -3,16 +3,16 @@
 
 import {
     dateTimeUtilsDuration, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
-} from '@microsoft/applicationinsights-common';
+} from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
     _InternalMessageId, getDocument, getLocation, arrForEach, isNullOrUndefined, getExceptionName, dumpObj
-} from '@microsoft/applicationinsights-core-js';
-import { PageViewPerformanceManager } from './PageViewPerformanceManager';
+} from "@microsoft/applicationinsights-core-js";
+import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 /**
- * Internal interface to pass appInsights object to subcomponents without coupling 
+ * Internal interface to pass appInsights object to subcomponents without coupling
  */
 export interface IAppInsightsInternal {
     sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object, systemProperties?: Object): void;
@@ -26,8 +26,8 @@ export class PageViewManager {
 
     constructor(
             appInsights: IAppInsightsInternal,
-            overridePageViewDuration: boolean, 
-            core: IAppInsightsCore, 
+            overridePageViewDuration: boolean,
+            core: IAppInsightsCore,
             pageViewPerformanceManager: PageViewPerformanceManager) {
 
         dynamicProto(PageViewManager, this, (_self) => {
@@ -42,8 +42,8 @@ export class PageViewManager {
     
             function _flushChannels() {
                 if (core) {
-                    arrForEach(core.getTransmissionControls(), queues => { 
-                        arrForEach(queues, q => q.flush(true)) 
+                    arrForEach(core.getTransmissionControls(), queues => {
+                        arrForEach(queues, q => q.flush(true))
                     });
                 }
             }
@@ -216,8 +216,8 @@ export class PageViewManager {
      * 1) (default case) track page view called with default parameters, overridePageViewDuration = false. Page view is sent with page view performance when navigation timing data is available.
      *    a. If navigation timing is not supported then page view is sent right away with undefined duration. Page view performance is not sent.
      * 2) overridePageViewDuration = true, custom duration provided. Custom duration is used, page view sends right away.
-     * 3) overridePageViewDuration = true, custom duration NOT provided. Page view is sent right away, duration is time spent from page load till now (or undefined if navigation timing is not supported). 
-     * 4) overridePageViewDuration = false, custom duration is provided. Page view is sent right away with custom duration. 
+     * 3) overridePageViewDuration = true, custom duration NOT provided. Page view is sent right away, duration is time spent from page load till now (or undefined if navigation timing is not supported).
+     * 4) overridePageViewDuration = false, custom duration is provided. Page view is sent right away with custom duration.
      *
      * In all cases page view performance is sent once (only for the 1st call of trackPageView), or not sent if navigation timing is not supported.
      */

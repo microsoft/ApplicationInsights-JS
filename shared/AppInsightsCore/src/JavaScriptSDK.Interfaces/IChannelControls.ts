@@ -11,7 +11,7 @@ export interface IChannelControls extends ITelemetryPlugin {
 
     /**
      * Pause sending data
-     */        
+     */
     pause(): void;
 
     /**
@@ -27,7 +27,7 @@ export interface IChannelControls extends ITelemetryPlugin {
     /**
      * Flush to send data immediately; channel should default to sending data asynchronously
      * @param async: send data asynchronously when true
-     * @param callBack: if specified, notify caller when send is complete 
+     * @param callBack: if specified, notify caller when send is complete
      */
     flush(async: boolean, callBack?: () => void): void;
 }

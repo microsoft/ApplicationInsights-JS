@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { _InternalLogMessage } from "./DiagnosticLogger";
-import { _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
-import { ProcessTelemetryContext } from './ProcessTelemetryContext';
-import { ITelemetryPluginChain } from '../JavaScriptSDK.Interfaces/ITelemetryPluginChain';
-import { arrForEach, isFunction } from './HelperFuncs';
+import { _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { ProcessTelemetryContext } from "./ProcessTelemetryContext";
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
+import { arrForEach, isFunction } from "./HelperFuncs";
 
 let processTelemetry = "processTelemetry";
 let priority = "priority";
@@ -49,9 +49,9 @@ export function initializePlugins(processContext:ProcessTelemetryContext, extens
     // Now initiatilize the plugins
     arrForEach(initPlugins, thePlugin => {
         thePlugin.initialize(
-            processContext.getCfg(), 
-            processContext.core(), 
-            extensions, 
+            processContext.getCfg(),
+            processContext.core(),
+            extensions,
             processContext.getNext());
     });
 }
@@ -69,5 +69,5 @@ export function sortPlugins(plugins:IPlugin[]) {
 
         return result;
     });
-    // sort complete    
+    // sort complete
 }

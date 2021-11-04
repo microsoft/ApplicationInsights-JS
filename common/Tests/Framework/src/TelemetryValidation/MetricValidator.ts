@@ -1,5 +1,5 @@
-import { ITypeValidator } from './ITypeValidator';
-import { CommonValidator } from './CommonValidator';
+import { ITypeValidator } from "./ITypeValidator";
+import { CommonValidator } from "./CommonValidator";
 
 export class MetricValidator implements ITypeValidator {
     static MetricValidator = new MetricValidator();
@@ -11,9 +11,9 @@ export class MetricValidator implements ITypeValidator {
         }
 
         // verify item has ver, metrics, and properties fields
-        if (!item.data.baseData || 
-            !item.data.baseData.ver || 
-            !item.data.baseData.metrics || 
+        if (!item.data.baseData ||
+            !item.data.baseData.ver ||
+            !item.data.baseData.metrics ||
             !item.data.baseData.properties) {
             return false;
         }

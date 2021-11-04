@@ -1,0 +1,51 @@
+<html>
+<head>
+<script src="https://js.monitor.azure.com/next/ext/ai.prfmm-mgr.2.js"></script>
+<script type="application/javascript">
+    const perfManager = new Microsoft.ApplicationInsights.PerfMarkMeasureManager();
+
+    Microsoft.ApplicationInsights.doPerf(perfManager, () => "code", (perfEvent) => {
+        // Code to run that will have a mark and measure
+    });
+
+    Microsoft.ApplicationInsights.doPerf(perfManager, () => "test2", (perfEvent) => {
+        // Code to run that will have a mark and measure
+        var value = 0;
+        for (var lp = 0; lp < 1000000; lp++) {
+            value++;
+        }
+    });
+
+
+    // window.performance will now contain 
+    // - a mark called 'ai.prfmrk.code'
+    // - a measure called 'ai.prf.msr.code'
+
+    // Just a simple example of accessing the entries
+    setTimeout(function() {
+        var entries = window.performance.getEntries();
+
+        // We need to wait until the DOM is processed and this 'id' actually exists
+        var list = document.getElementById('entries');
+        for (var lp = 0; lp < entries.length; lp++) {
+            var entry = document.createElement('li');
+            var perfEntry = entries[lp];
+            var details = lp + ": " + JSON.stringify(entries[lp]);
+            if (perfEntry.entryType === "mark" || perfEntry.entryType === "measure") {
+                details = "<h2>" + details + "</h2>";
+            }
+            entry.innerHTML = details;
+            list.appendChild(entry);
+        }
+    }, 200);
+</script>
+</head>
+<body>
+<h1>Perf Entries</h1>
+<div>
+    <ul id="entries">
+
+    </ul>
+</div>
+</body>
+</html>

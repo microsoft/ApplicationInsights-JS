@@ -7,12 +7,16 @@ import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _gblCookieMgr } from "./CookieMgr";
 import { getWindow, getDocument, getPerformance, isIE }  from "./EnvUtils";
-import { 
-    arrForEach, arrIndexOf, arrMap, arrReduce, attachEvent, dateNow, detachEvent, hasOwnProperty, 
-    isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof, 
+import {
+    arrForEach, arrIndexOf, arrMap, arrReduce, attachEvent, dateNow, detachEvent, hasOwnProperty,
+    isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof,
     isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
 } from "./HelperFuncs";
 import { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./RandomHelper";
+
+const strVisibilityChangeEvt: string = "visibilitychange";
+const strPageHide: string = "pagehide";
+const strPageShow: string = "pageshow";
 
 let _cookieMgrs: ICookieMgr[] = null;
 let _canUseCookies: boolean;    // legacy supported config
@@ -42,13 +46,125 @@ export function addEventHandler(eventName: string, callback: any): boolean {
     return result;
 }
 
+/**
+ * Bind the listener to the array of events
+ * @param events An string array of event names to bind the listener to
+ * @param listener The event callback to call when the event is triggered
+ * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
+ * @returns true - when at least one of the events was registered otherwise false
+ */
+ export function addEventListeners(events: string[], listener: any, excludeEvents?: string[]): boolean {
+    let added = false;
+
+    if (listener && events && isArray(events)) {
+        let excluded: string[] = [];
+        arrForEach(events, (name) => {
+            if (isString(name)) {
+                if (!excludeEvents || arrIndexOf(excludeEvents, name) === -1) {
+                    added = addEventHandler(name, listener) || added;
+                } else {
+                    excluded.push(name);
+                }
+            }
+        });
+
+        if (!added && excluded.length > 0) {
+            // Failed to add any listeners and we excluded some, so just attempt to add the excluded events
+            added = addEventListeners(excluded, listener);
+        }
+    }
+
+    return added;
+}
+
+/**
+ * Listen to the 'beforeunload', 'unload' and 'pagehide' events which indicates a page unload is occurring,
+ * this does NOT listen to the 'visibilitychange' event as while it does indicate that the page is being hidden
+ * it does not *necessarily* mean that the page is being completely unloaded, it can mean that the user is
+ * just navigating to a different Tab and may come back (without unloading the page). As such you may also
+ * need to listen to the 'addPageHideEventListener' and 'addPageShowEventListener' events.
+ * @param listener - The event callback to call when a page unload event is triggered
+ * @param excludeEvents - [Optional] An array of events that should not be hooked, unless no other events can be.
+ * @returns true - when at least one of the events was registered otherwise false
+ */
+export function addPageUnloadEventListener(listener: any, excludeEvents?: string[]): boolean {
+    // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
+    // As just hooking the window does not always fire (on chrome) for page navigation's.
+    return addEventListeners(["beforeunload", "unload", "pagehide"], listener, excludeEvents);
+}
+
+/**
+ * Listen to the pagehide and visibility changing to 'hidden' events
+ * @param listener - The event callback to call when a page hide event is triggered
+ * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
+ * Suggestion: pass as true if you are also calling addPageUnloadEventListener as that also hooks pagehide
+ * @returns true - when at least one of the events was registered otherwise false
+ */
+ export function addPageHideEventListener(listener: any, excludeEvents?: string[]): boolean {
+
+    function _handlePageVisibility(evt: any) {
+        let doc = getDocument();
+        if (listener && doc && doc.visibilityState === "hidden") {
+            listener(evt);
+        }
+    }
+
+    let pageUnloadAdded = false;
+    if (!excludeEvents || arrIndexOf(excludeEvents, strPageHide) === -1) {
+        pageUnloadAdded = addEventHandler(strPageHide, listener);
+    }
+
+    if (!excludeEvents || arrIndexOf(excludeEvents, strVisibilityChangeEvt) === -1) {
+        pageUnloadAdded = addEventHandler(strVisibilityChangeEvt, _handlePageVisibility) || pageUnloadAdded;
+    }
+
+    if (!pageUnloadAdded && excludeEvents) {
+        // Failed to add any listeners and we where requested to exclude some, so just call again without excluding anything
+        pageUnloadAdded = addPageHideEventListener(listener);
+    }
+
+    return pageUnloadAdded;
+}
+
+/**
+ * Listen to the pageshow and visibility changing to 'visible' events
+ * @param listener - The event callback to call when a page is show event is triggered
+ * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
+ * @returns true - when at least one of the events was registered otherwise false
+ */
+ export function addPageShowEventListener(listener: any, excludeEvents?: string[]): boolean {
+
+    function _handlePageVisibility(evt: any) {
+        let doc = getDocument();
+        if (listener && doc && doc.visibilityState === "visible") {
+            listener(evt);
+        }
+    }
+
+    let pageShowAdded = false;
+    if (!excludeEvents || arrIndexOf(excludeEvents, strPageShow) === -1) {
+        pageShowAdded = addEventHandler(strPageShow, listener);
+    }
+
+    if (!excludeEvents || arrIndexOf(excludeEvents, strVisibilityChangeEvt) === -1) {
+        pageShowAdded = addEventHandler(strVisibilityChangeEvt, _handlePageVisibility) || pageShowAdded;
+    }
+
+    if (!pageShowAdded && excludeEvents) {
+        // Failed to add any listeners and we where requested to exclude some, so just call again without excluding anything
+        pageShowAdded = addPageShowEventListener(listener);
+    }
+
+    return pageShowAdded;
+}
+
 export function newGuid(): string {
     function randomHexDigit() {
         return randomValue(15); // Get a random value from 0..15
     }
 
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(GuidRegex, (c) => {
-        const r = (randomHexDigit() | 0), v = (c === 'x' ? r : r & 0x3 | 0x8);
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(GuidRegex, (c) => {
+        const r = (randomHexDigit() | 0), v = (c === "x" ? r : r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
@@ -67,12 +183,12 @@ export function perfNow(): number {
 }
 
 /**
- * Generate random base64 id string. 
+ * Generate random base64 id string.
  * The default length is 22 which is 132-bits so almost the same as a GUID but as base64 (the previous default was 5)
  * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
  */
 export function newId(maxLength = 22): string {
-    const base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     // Start with an initial random number, consuming the value in reverse byte order
     let number = random32() >>> 0;  // Make sure it's a +ve number
@@ -107,7 +223,7 @@ export function strEndsWith(value: string, search: string) {
     }
 
     return false;
-}    
+}
 
 /**
  * generate W3C trace id
@@ -138,7 +254,7 @@ export function generateW3CId(): string {
 /**
  * Provides a collection of utility functions, included for backward compatibility with previous releases.
  * @deprecated Marking this interface and instance as deprecated in favor of direct usage of the helper functions
- * as direct usage provides better tree-shaking and minification by avoiding the inclusion of the unused items 
+ * as direct usage provides better tree-shaking and minification by avoiding the inclusion of the unused items
  * in your resulting code.
  */
 export interface ICoreUtils {
@@ -232,9 +348,9 @@ export interface ICoreUtils {
     arrIndexOf: <T>(arr: T[], searchElement: T, fromIndex?: number) => number;
 
     /**
-     * Calls a defined callback function on each element of an array, and returns an array that contains the results. This helper exists 
-     * to avoid adding a polyfil for older browsers that do not define Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page 
-     * checks for presence/absence of the prototype implementation. Note: For consistency this will not use the Array.prototype.xxxx 
+     * Calls a defined callback function on each element of an array, and returns an array that contains the results. This helper exists
+     * to avoid adding a polyfil for older browsers that do not define Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page
+     * checks for presence/absence of the prototype implementation. Note: For consistency this will not use the Array.prototype.xxxx
      * implementation if it exists as this would cause a testing requirement to test with and without the implementations
      * @param callbackfn A function that accepts up to three arguments. The map method calls the callbackfn function one time for each element in the array.
      * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
@@ -244,7 +360,7 @@ export interface ICoreUtils {
     /**
      * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is
      * provided as an argument in the next call to the callback function. This helper exists to avoid adding a polyfil for older browsers that do not define
-     * Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page checks for presence/absence of the prototype implementation. Note: For consistency 
+     * Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page checks for presence/absence of the prototype implementation. Note: For consistency
      * this will not use the Array.prototype.xxxx implementation if it exists as this would cause a testing requirement to test with and without the implementations
      * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
      * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
@@ -266,7 +382,7 @@ export interface ICoreUtils {
     objCreate:(obj: object) => any;
 
     /**
-     * Returns the names of the enumerable string properties and methods of an object. This helper exists to avoid adding a polyfil for older browsers 
+     * Returns the names of the enumerable string properties and methods of an object. This helper exists to avoid adding a polyfil for older browsers
      * that do not define Object.keys eg. ES3 only, IE8 just in case any page checks for presence/absence of the prototype implementation.
      * Note: For consistency this will not use the Object.keys implementation if it exists as this would cause a testing requirement to test with and without the implementations
      * @param obj Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
@@ -319,7 +435,7 @@ export interface ICoreUtils {
     perfNow: () => number;
 
     /**
-     * Generate random base64 id string. 
+     * Generate random base64 id string.
      * The default length is 22 which is 132-bits so almost the same as a GUID but as base64 (the previous default was 5)
      * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
      */
@@ -454,9 +570,9 @@ export const EventHelper: IEventHelper = {
  * Note: This has the following deliberate side-effects
  * - Creates the global (legacy) cookie manager if it does not already exist
  * - Attempts to add "listeners" to the CoreUtils._canUseCookies property to support the legacy usage
- * @param config 
- * @param logger 
- * @returns 
+ * @param config
+ * @param logger
+ * @returns
  */
  export function _legacyCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
     let cookieMgr = _gblCookieMgr(config, logger);
@@ -468,16 +584,16 @@ export const EventHelper: IEventHelper = {
 
         // Dynamically create get/set property accessors for backward compatibility for enabling / disabling cookies
         // this WILL NOT work for ES3 browsers (< IE8)
-        objDefineAccessors<boolean>(CoreUtils, "_canUseCookies", 
+        objDefineAccessors<boolean>(CoreUtils, "_canUseCookies",
             () => {
                 return _canUseCookies;
-            }, 
+            },
             (value) => {
                 _canUseCookies = value;
                 arrForEach(_cookieMgrs, (mgr) => {
                     mgr.setEnabled(value);
                 });
-            });   
+            });
     }
 
     if (arrIndexOf(_cookieMgrs, cookieMgr) === -1) {

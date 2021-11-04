@@ -3,12 +3,12 @@
 "use strict";
 
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IDiagnosticLogger } from '../JavaScriptSDK.Interfaces/IDiagnosticLogger';
-import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
-import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
-import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryPluginChain } from '../JavaScriptSDK.Interfaces/ITelemetryPluginChain';
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { DiagnosticLogger, safeGetLogger } from "./DiagnosticLogger";
 import { TelemetryPluginChain } from "./TelemetryPluginChain";
 import { arrForEach, isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
@@ -126,7 +126,7 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
     /**
      * Call back for telemetry processing before it it is sent
      * @param env - This is the current event being reported
-     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances 
+     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
      */

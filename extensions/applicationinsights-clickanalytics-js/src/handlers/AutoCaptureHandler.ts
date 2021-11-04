@@ -3,11 +3,11 @@
  */
 
 import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument, isNullOrUndefined, attachEvent } from "@microsoft/applicationinsights-core-js";
-import { IAutoCaptureHandler, IPageActionOverrideValues, IClickAnalyticsConfiguration } from '../Interfaces/Datamodel'
-import { isRightClick, isLeftClick, isKeyboardEnter, isKeyboardSpace, isMiddleClick, isElementDnt } from '../common/Utils';
-import { ActionType } from '../Enums';
+import { IAutoCaptureHandler, IPageActionOverrideValues, IClickAnalyticsConfiguration } from "../Interfaces/Datamodel"
+import { isRightClick, isLeftClick, isKeyboardEnter, isKeyboardSpace, isMiddleClick, isElementDnt } from "../common/Utils";
+import { ActionType } from "../Enums";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
-import { PageAction } from '../events/PageAction';
+import { PageAction } from "../events/PageAction";
 
 const clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };
 
@@ -27,19 +27,19 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         let doc = getDocument();
         if (win) {
             // IE9 onwards addEventListener is available, 'click' event captures mouse click. mousedown works on other browsers
-            const event = (navigator.appVersion.indexOf('MSIE') !== -1) ? 'click' : 'mousedown';
+            const event = (navigator.appVersion.indexOf("MSIE") !== -1) ? "click" : "mousedown";
             attachEvent(win, event , (evt:any) => { this._processClick(evt); });
-            attachEvent(win, 'keyup' , (evt:any) => { this._processClick(evt); });
+            attachEvent(win, "keyup" , (evt:any) => { this._processClick(evt); });
         } else if (doc) {
             // IE8 and below doesn't have addEventListener so it will use attachEvent
             // attaching to window does not work in IE8
-            attachEvent(doc, 'click' , (evt:any) => { this._processClick(evt); });
-            attachEvent(doc, 'keyup' , (evt:any) => { this._processClick(evt); });
+            attachEvent(doc, "click" , (evt:any) => { this._processClick(evt); });
+            attachEvent(doc, "keyup" , (evt:any) => { this._processClick(evt); });
         }
     }
 
     /**
-     * API to create and send a populated PageAction event 
+     * API to create and send a populated PageAction event
      * @param element - DOM element
      * @param overrideValues - PageAction overrides
      * @param customProperties - Custom properties(Part C)
@@ -63,7 +63,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         if(clickEvent) {
             let element = clickEvent.srcElement || clickEvent.target;
 
-            // populate overrideValues 
+            // populate overrideValues
             var overrideValues: IPageActionOverrideValues = {
                 clickCoordinateX: clickEvent.pageX,
                 clickCoordinateY: clickEvent.pageY
@@ -84,7 +84,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
             }
     
             while (element && element.tagName) {
-                // control property will be available for <label> elements with 'for' attribute, only use it when is a 
+                // control property will be available for <label> elements with 'for' attribute, only use it when is a
                 // valid JSLL capture element to avoid infinite loops
                 if (element.control && clickCaptureElements[element.control.tagName.toUpperCase()]) {
                     element = element.control;
@@ -95,7 +95,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                     continue;
                 } else {
                     // Check allowed INPUT types
-                    var sendEvent = tagNameUpperCased === 'INPUT' ? clickCaptureInputTypes[element.type.toUpperCase()] : true;
+                    var sendEvent = tagNameUpperCased === "INPUT" ? clickCaptureInputTypes[element.type.toUpperCase()] : true;
                     if (sendEvent) {
                         this.capturePageAction(element, overrideValues, {}, isRightClickObj);
                     }

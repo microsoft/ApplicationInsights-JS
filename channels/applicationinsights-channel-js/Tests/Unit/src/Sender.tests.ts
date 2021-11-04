@@ -665,7 +665,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(baseData.ver);
                 QUnit.assert.equal(2, baseData.ver);
 
-                QUnit.assert.equal("javascript:2.7.0-beta.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                QUnit.assert.equal("javascript:2.7.0", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
             }
         })
 
@@ -1393,6 +1393,185 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(baseData.properties);
                 QUnit.assert.equal("test", baseData.properties["property1"]);
                 QUnit.assert.equal("value2", baseData.properties["property2"]);
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Validate pausing and resuming sending with manual flush",
+            useFakeTimers: true,
+            test: () => {
+                let sendNotifications = [];
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
+                        sendNotifications.push({
+                            sendReason,
+                            isAsync
+                        });
+                    }
+                });
+
+                let core = new AppInsightsCore();
+                this.sandbox.stub(core, "getNotifyMgr").returns(notificationManager);
+
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                        }
+
+                    }, core, []
+                );
+
+                const loggerSpy = this.sandbox.spy(this._sender, "triggerSend");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem, null);
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, loggerSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this._sender.pause();
+                this._sender.flush();
+                QUnit.assert.equal(false, loggerSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this._sender.resume();
+                this._sender.flush();
+                QUnit.assert.equal(true, loggerSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(1, sendNotifications.length);
+                QUnit.assert.equal(SendRequestReason.ManualFlush, sendNotifications[0].sendReason);
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Validate pausing and resuming sending when exceeding the batch size limits",
+            useFakeTimers: true,
+            test: () => {
+                let sendNotifications = [];
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
+                        sendNotifications.push({
+                            sendReason,
+                            isAsync
+                        });
+                    }
+                });
+
+                let core = new AppInsightsCore();
+                this.sandbox.stub(core, "getNotifyMgr").returns(notificationManager);
+
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        maxBatchSizeInBytes: 4096,
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                        }
+
+                    }, core, []
+                );
+
+                const triggerSendSpy = this.sandbox.spy(this._sender, "triggerSend");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                this._sender.pause();
+
+                // Keep sending events until the max payload size is reached
+                while (!triggerSendSpy.calledOnce) {
+                    try {
+                        this._sender.processTelemetry(telemetryItem, null);
+                    } catch(e) {
+                        QUnit.assert.ok(false);
+                    }
+                }
+
+                QUnit.assert.equal(true, triggerSendSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                QUnit.assert.equal(false, triggerSendSpy.calledTwice);
+                this._sender.resume();
+
+                QUnit.assert.equal(true, triggerSendSpy.calledTwice);
+                QUnit.assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(1, sendNotifications.length);
+                QUnit.assert.equal(SendRequestReason.MaxBatchSize, sendNotifications[0].sendReason);
+            }
+        });
+
+        this.testCase({
+            name: 'Envelope: operation.name is correctly truncated if required',
+            test: () => {
+                const excessiveName = new Array(1234).join("a"); // exceeds max of 1024
+
+                const bd = new Exception(
+                    null,
+                    new Error(),
+                    {"property1": "val1", "property2": "val2" },
+                    {"measurement1": 50.0, "measurement2": 1.3 }
+                );
+                const inputEnvelope: ITelemetryItem = {
+                    name: "test",
+                    time: new Date("2018-06-12").toISOString(),
+                    iKey: "iKey",
+                    baseType: Exception.dataType,
+                    baseData: bd,
+                    data: {
+                        "property3": "val3",
+                        "measurement3": 3.0
+                    },
+                    ext: {
+                        "trace": {
+                            "traceID": "1528B5FF-6455-4657-BE77-E6664CAC72DC",
+                            "parentID": "1528B5FF-6455-4657-BE77-E6664CACEEEE",
+                            "name": excessiveName
+                        }
+                    },
+                    tags: [
+                        {"user.accountId": "TestAccountId"},
+                    ],
+                };
+
+                // Act
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const baseData = appInsightsEnvelope.data.baseData; 
+
+                QUnit.assert.equal("val3", baseData.properties["property3"], "ExceptionData: customProperties (item.data) are added to the properties of the envelope and not included in the item.data")
+                QUnit.assert.equal("val1", baseData.properties["property1"], "ExceptionData: properties (item.baseData.properties) are added to telemetry envelope");
+                QUnit.assert.equal(50.0, baseData.measurements["measurement1"], "ExceptionData: measurements (item.baseData.measurements) are added to telemetry envelope");
+                QUnit.assert.equal(1024, appInsightsEnvelope.tags["ai.operation.name"].length, "The ai.operation.name should have been truncated to the maximum");
             }
         });
     }

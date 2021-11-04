@@ -5,12 +5,12 @@
 
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from '../JavaScriptSDK.Interfaces/IDiagnosticLogger';
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ProcessTelemetryContext } from './ProcessTelemetryContext';
+import { ProcessTelemetryContext } from "./ProcessTelemetryContext";
 import { isFunction, isNullOrUndefined, setValue } from "./HelperFuncs";
 import { strExtensionConfig } from "./Constants";
 
@@ -26,7 +26,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
     /**
      * Call back for telemetry processing before it it is sent
      * @param env - This is the current event being reported
-     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances 
+     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
      */
@@ -54,7 +54,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
     /**
      * Holds the core instance that was used during initialization
      */
-    public core: IAppInsightsCore;              
+    public core: IAppInsightsCore;
 
     priority: number;
 
@@ -110,7 +110,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                 // Normal core execution sequence
                 itemCtx.processNext(env);
             } else if (_nextPlugin && isFunction(_nextPlugin.processTelemetry)) {
-                // Looks like backward compatibility or out of band processing. And as it looks 
+                // Looks like backward compatibility or out of band processing. And as it looks
                 // like a ITelemetryPlugin or ITelemetryPluginChain, just call processTelemetry
                 _nextPlugin.processTelemetry(env, null);
             }
@@ -132,7 +132,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             return itemCtx;
         }
 
-        _self._baseTelInit = (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => { 
+        _self._baseTelInit = (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
             if (config) {
                 // Make sure the extensionConfig exists
                 setValue(config, strExtensionConfig, [], null, isNullOrUndefined);

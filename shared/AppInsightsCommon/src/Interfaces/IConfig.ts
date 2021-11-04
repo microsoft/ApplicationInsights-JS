@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IConfiguration, ICookieMgrConfig, isNullOrUndefined, ICustomProperties } from '@microsoft/applicationinsights-core-js';
-import { DistributedTracingModes } from '../Enums';
-import { IRequestContext } from './IRequestContext';
+import { IConfiguration, ICookieMgrConfig, isNullOrUndefined, ICustomProperties } from "@microsoft/applicationinsights-core-js";
+import { DistributedTracingModes } from "../Enums";
+import { IRequestContext } from "./IRequestContext";
 
 /**
  * Configuration settings for how telemetry is sent
@@ -101,7 +101,7 @@ export interface IConfig {
      * Provide a way to enrich dependencies logs with context at the beginning of api call.
      * Default is undefined.
      */
-     addRequestContext?: (requestContext?: IRequestContext) => ICustomProperties;
+    addRequestContext?: (requestContext?: IRequestContext) => ICustomProperties;
 
     /**
      * If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false
@@ -128,7 +128,7 @@ export interface IConfig {
     disableCorrelationHeaders?: boolean;
 
     /**
-     * Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. 
+     * Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests.
      * AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services
      * @defaultValue AI_AND_W3C
      */
@@ -140,15 +140,30 @@ export interface IConfig {
     correlationHeaderExcludedDomains?: string[];
 
     /**
-     * Default false. If true, flush method will not be called when onBeforeUnload event triggers.
+     * Default false. If true, flush method will not be called when onBeforeUnload, onUnload, onPageHide or onVisibilityChange (hidden state) event(s) trigger.
      */
     disableFlushOnBeforeUnload?: boolean;
 
     /**
-     * Default value of {@link #disableFlushOnBeforeUnload}. If true, flush method will not be called when onUnload event triggers.
+     * Default value of {@link #disableFlushOnBeforeUnload}. If true, flush method will not be called when onPageHide or onVisibilityChange (hidden state) event(s) trigger.
      */
     disableFlushOnUnload?: boolean;
 
+    /**
+     * [Optional] An array of the page unload events that you would like to be ignored, special note there must be at least one valid unload
+     * event hooked, if you list all or the runtime environment only supports a listed "disabled" event it will still be hooked if required by the SDK.
+     * (Some page unload functionality may be disabled via disableFlushOnBeforeUnload or disableFlushOnUnload config entries)
+     * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide"
+     */
+    disablePageUnloadEvents?: string[];
+
+    /**
+     * [Optional] An array of page show events that you would like to be ignored, special note there must be at lease one valid show event
+     * hooked, if you list all or the runtime environment only supports a listed (disabled) event it will STILL be hooked if required by the SDK.
+     * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state)
+     */
+    disablePageShowEvents?: string[];
+ 
     /**
      * If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load. Default is true.
      * @defaultValue true
@@ -157,7 +172,7 @@ export interface IConfig {
 
     /**
      * @deprecated Use either disableCookiesUsage or specify a cookieMgrCfg with the enabled value set.
-     * If true, the SDK will not store or read any data from cookies. Default is false. As this field is being deprecated, when both 
+     * If true, the SDK will not store or read any data from cookies. Default is false. As this field is being deprecated, when both
      * isCookieUseDisabled and disableCookiesUsage are used disableCookiesUsage will take precedent.
      * @defaultValue false
      */
@@ -183,13 +198,13 @@ export interface IConfig {
     cookiePath?: string;
 
     /**
-     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie 
+     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie
      * operations. If this configuration is specified any specified enabled and domain properties will take precedence over the
      * cookieDomain and disableCookiesUsage values.
      */
     cookieMgrCfg?: ICookieMgrConfig;
 
-    /** 
+    /**
      * Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected)
      * @description
      * @defaultValue false
@@ -287,14 +302,14 @@ export interface IConfig {
 
     /**
      * Flag to enable looking up and including additional browser window.performance timings
-     * in the reported ajax (XHR and fetch) reported metrics. 
+     * in the reported ajax (XHR and fetch) reported metrics.
      * Defaults to false.
      */
     enableAjaxPerfTracking?:boolean;
 
     /**
-     * The maximum number of times to look for the window.performance timings (if available), this 
-     * is required as not all browsers populate the window.performance before reporting the 
+     * The maximum number of times to look for the window.performance timings (if available), this
+     * is required as not all browsers populate the window.performance before reporting the
      * end of the XHR request and for fetch requests this is added after its complete
      * Defaults to 3
      */
@@ -322,7 +337,7 @@ export interface IConfig {
     autoExceptionInstrumented?: boolean;
 
     /**
-     * 
+     *
      */
     correlationHeaderDomains?: string[]
 
@@ -333,7 +348,7 @@ export interface IConfig {
     autoUnhandledPromiseInstrumented?: boolean;
 
     /**
-     * Default false. Define whether to track unhandled promise rejections and report as JS errors. 
+     * Default false. Define whether to track unhandled promise rejections and report as JS errors.
      * When disableExceptionTracking is enabled (dont track exceptions) this value will be false.
      * @defaultValue false
      */
@@ -352,7 +367,12 @@ export interface IConfig {
     /**
      * Provide user an option to convert undefined field to user defined value.
      */
-     convertUndefined?: any
+     convertUndefined?: any,
+
+    /**
+     * [Optional] The number of events that can be kept in memory before the SDK starts to drop events. By default, this is 10,000.
+     */
+    eventsLimitInMem?: number;
 }
 
 export class ConfigurationManager {

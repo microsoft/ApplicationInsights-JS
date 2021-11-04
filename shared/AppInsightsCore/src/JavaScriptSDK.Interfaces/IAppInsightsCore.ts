@@ -6,8 +6,8 @@ import { IPlugin } from "./ITelemetryPlugin";
 import { IConfiguration } from "./IConfiguration";
 import { INotificationManager } from "./INotificationManager";
 import { INotificationListener } from "./INotificationListener";
-import { IDiagnosticLogger } from './IDiagnosticLogger';
-import { IProcessTelemetryContext } from './IProcessTelemetryContext';
+import { IDiagnosticLogger } from "./IDiagnosticLogger";
+import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { ICookieMgr } from "./ICookieMgr";
 
@@ -29,7 +29,7 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
 
     /*
     * Initialization queue. Contains functions to run when appInsights initializes
-    */        
+    */
     initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void;
 
     /*
@@ -73,6 +73,8 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     removeNotificationListener?(listener: INotificationListener): void;
 
     pollInternalLogs?(eventName?: string): number;
+
+    stopPollingInternalLogs?(): void;
 
     /**
      * Return a new instance of the IProcessTelemetryContext for processing events

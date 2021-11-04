@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IDiagnosticLogger } from '../JavaScriptSDK.Interfaces/IDiagnosticLogger';
-import { ICookieMgr, ICookieMgrConfig } from '../JavaScriptSDK.Interfaces/ICookieMgr';
-import { _InternalMessageId, LoggingSeverity } from '../JavaScriptSDK.Enums/LoggingEnums';
-import { dumpObj, getDocument, getLocation, getNavigator, isIE } from './EnvUtils';
-import { 
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { dumpObj, getDocument, getLocation, getNavigator, isIE } from "./EnvUtils";
+import {
     arrForEach, dateNow, getExceptionName, isFunction, isNotNullOrUndefined, isNullOrUndefined, isString, isTruthy, isUndefined,
     objForEachKey, setValue, strContains, strEndsWith, strTrim
 } from "./HelperFuncs";
-import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
-import { IAppInsightsCore } from '../JavaScriptSDK.Interfaces/IAppInsightsCore';
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
@@ -82,10 +82,10 @@ function _createCookieMgrConfig(rootConfig: IConfiguration): ICookieMgrConfig {
 
 /**
  * Helper to return the ICookieMgr from the core (if not null/undefined) or a default implementation
- * associated with the configuration or a legacy default. 
- * @param core 
- * @param config 
- * @returns 
+ * associated with the configuration or a legacy default.
+ * @param core
+ * @param config
+ * @returns
  */
 export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration) {
     let cookieMgr: ICookieMgr;
@@ -160,7 +160,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                         if (expireMs > 0) {
                             let expiry = new Date();
                             expiry.setTime(expireMs);
-                            setValue(values, strExpires, 
+                            setValue(values, strExpires,
                                 _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || strEmpty,
                                 isTruthy);
                         }

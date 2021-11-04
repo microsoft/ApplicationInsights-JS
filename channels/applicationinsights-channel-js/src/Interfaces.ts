@@ -64,14 +64,19 @@ export interface ISenderConfig {
     samplingPercentage: () => number;
 
     /**
-     * (Opetional) The ability for the user to provide extra headers
+     * (Optional) The ability for the user to provide extra headers
      */
     customHeaders: () => [{header: string, value: string}]
 
     /**
-     * (Opetional) Provide user an option to convert undefined field to user defined value.
+     * (Optional) Provide user an option to convert undefined field to user defined value.
      */
      convertUndefined: () => any
+
+    /**
+     * (Optional) The number of events that can be kept in memory before the SDK starts to drop events. By default, this is 10,000.
+     */
+    eventsLimitInMem: () => number;
 }
 
 export interface IBackendResponse {

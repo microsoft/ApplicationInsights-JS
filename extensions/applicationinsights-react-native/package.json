@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-native",
-    "version": "2.4.0-beta.1",
+    "version": "2.4.0",
     "description": "Microsoft Application Insights React Native Plugin",
     "main": "dist-esm/index.js",
     "types": "types/index.d.ts",
@@ -27,9 +27,8 @@
         "grunt-cli": "^1.4.3",
         "grunt-contrib-qunit": "^5.0.1",
         "grunt-contrib-uglify": "^5.0.1",
-        "grunt-run": "^0.8.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
-        "@nevware21/grunt-eslint-ts": "^0.2.1",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@typescript-eslint/eslint-plugin": "^4.28.0",
         "@typescript-eslint/parser": "^4.28.0",
         "eslint": "^7.29.0",
@@ -54,8 +53,8 @@
         "uglify-js": "^3.11.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-common": "2.7.0-beta.1",
-        "@microsoft/applicationinsights-core-js": "2.7.0-beta.1",
+        "@microsoft/applicationinsights-common": "2.7.0",
+        "@microsoft/applicationinsights-core-js": "2.7.0",
         "@microsoft/applicationinsights-shims": "2.0.0",
         "@microsoft/dynamicproto-js": "^1.1.4"
     },
@@ -64,8 +63,5 @@
         "react-native": "*",
         "react-native-device-info": "^5.2.1"
     },
-    "license": "MIT",
-    "publishConfig": {
-        "tag": "beta"
-    }
+    "license": "MIT"
 }

@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
-import { IPerfEvent } from '../JavaScriptSDK.Interfaces/IPerfEvent';
-import { IPerfManager, IPerfManagerProvider } from '../JavaScriptSDK.Interfaces/IPerfManager';
+import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
+import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
+import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { dateNow, isArray, isFunction, objDefineAccessors } from './HelperFuncs';
+import { dateNow, isArray, isFunction, objDefineAccessors } from "./HelperFuncs";
 
 const strExecutionContextKey = "ctx";
 
@@ -37,7 +37,7 @@ export class PerfEvent implements IPerfEvent {
     isAsync: boolean;
     
     /**
-     * Identifies the total inclusive time spent for this event, including the time spent for child events, 
+     * Identifies the total inclusive time spent for this event, including the time spent for child events,
      * this will be undefined until the event is completed
      */
     time?: number;
@@ -57,7 +57,7 @@ export class PerfEvent implements IPerfEvent {
 
     setCtx?: (key: string, value: any) => void;
 
-    complete: () => void;    
+    complete: () => void;
 
     constructor(name: string, payloadDetails: () => any, isAsync: boolean) {
         let _self = this;
@@ -70,7 +70,7 @@ export class PerfEvent implements IPerfEvent {
         if (isFunction(payloadDetails)) {
             // Create an accessor to minimize the potential performance impact of executing the payloadDetails callback
             let theDetails:any;
-            accessorDefined = objDefineAccessors(_self, 'payload', () => {
+            accessorDefined = objDefineAccessors(_self, "payload", () => {
                 // Delay the execution of the payloadDetails until needed
                 if (!theDetails && isFunction(payloadDetails)) {
                     theDetails = payloadDetails();
@@ -104,11 +104,11 @@ export class PerfEvent implements IPerfEvent {
                         _self.isChildEvt = (): boolean => true;
                     }
                     _self[key] = value;
-                } 
+                }
                 else if (key === PerfEvent.ChildrenContextKey) {
                     _self[key] = value;
-                } 
-                else 
+                }
+                else
                 {
                     let ctx = _self[strExecutionContextKey] = _self[strExecutionContextKey] || {};
                     ctx[key] = value;
@@ -180,9 +180,9 @@ export class PerfManager implements IPerfManager  {
     }
 
     /**
-     * Create a new event and start timing, the manager may return null/undefined to indicate that it does not 
+     * Create a new event and start timing, the manager may return null/undefined to indicate that it does not
      * want to monitor this source event.
-     * @param src The source name of the event 
+     * @param src The source name of the event
      * @param payloadDetails - An optional callback function to fetch the payload details for the event.
      * @param isAsync - Is the event occurring from a async event
      */
@@ -225,7 +225,7 @@ const doPerfActiveKey = "CoreUtils.doPerf";
  * @param getSource - The callback to create the source name for the event (if perf monitoring is enabled)
  * @param func - The function to call and measure
  * @param details - A function to return the payload details
- * @param isAsync - Is the event / function being call asynchronously or synchronously 
+ * @param isAsync - Is the event / function being call asynchronously or synchronously
  */
 export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSource: () => string, func: (perfEvt?: IPerfEvent) => T, details?: () => any, isAsync?: boolean) {
     if (mgrSource) {

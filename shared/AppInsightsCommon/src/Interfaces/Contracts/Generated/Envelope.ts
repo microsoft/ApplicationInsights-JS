@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Base } from './Base';
+import { Base } from "./Base";
 
 /**
  * System variables for a telemetry item.

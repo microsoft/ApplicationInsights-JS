@@ -9,7 +9,7 @@ export function isSourceMapEnabled(options:any) {
     }
   
     return false;
-}  
+}
 
 // Need to mock this rather than rely on JavaScript String.prototype.padEnd() as it doesn't always
 // exists in the build / test infrastructure
@@ -39,7 +39,7 @@ export function isNullOrWhitespace(value:string) {
     return true;
 }
 
-export function isIgnore(id:string, keyword:IEs3CheckKeyword, isTransform:boolean) {
+export function isIgnore(id:string, keyword:IEs3CheckKeyword, _isTransform:boolean) {
     let result = false;
     
     if (keyword.ignoreIds) {

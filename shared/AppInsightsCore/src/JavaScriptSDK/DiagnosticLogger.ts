@@ -5,7 +5,7 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { hasJSON, getJSON, getConsole } from "./EnvUtils";
-import dynamicProto from '@microsoft/dynamicproto-js';
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 
@@ -24,6 +24,8 @@ const AiUserActionablePrefix = "AI: ";
  */
 const AIInternalMessagePrefix = "AITR_";
 
+const strErrorToConsole = "errorToConsole";
+const strWarnToConsole = "warnToConsole";
 
 function _sanitizeDiagnosticText(text: string) {
     if (text) {
@@ -31,6 +33,20 @@ function _sanitizeDiagnosticText(text: string) {
     }
 
     return "";
+}
+
+function _logToConsole(func: string, message: string) {
+    let theConsole = getConsole();
+    if (!!theConsole) {
+        let logFunc = "log";
+        if (theConsole[func]) {
+            logFunc = func;
+        }
+
+        if (isFunction(theConsole[logFunc])) {
+            theConsole[logFunc](message);
+        }
+    }
 }
 
 export class _InternalLogMessage{
@@ -63,9 +79,9 @@ export class _InternalLogMessage{
 export function safeGetLogger(core: IAppInsightsCore, config?: IConfiguration): IDiagnosticLogger {
     return (core || {} as any).logger || new DiagnosticLogger(config);
 }
-
+  
 export class DiagnosticLogger implements IDiagnosticLogger {
-    public identifier = 'DiagnosticLogger';
+    public identifier = "DiagnosticLogger";
     
     /**
      * The internal logging queue
@@ -88,13 +104,13 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 config = {};
             }
 
-            _self.consoleLoggingLevel = () => _getConfigValue('loggingLevelConsole', 0);
+            _self.consoleLoggingLevel = () => _getConfigValue("loggingLevelConsole", 0);
             
-            _self.telemetryLoggingLevel = () => _getConfigValue('loggingLevelTelemetry', 1);
+            _self.telemetryLoggingLevel = () => _getConfigValue("loggingLevelTelemetry", 1);
 
-            _self.maxInternalMessageLimit = () => _getConfigValue('maxMessageLimit', 25);
+            _self.maxInternalMessageLimit = () => _getConfigValue("maxMessageLimit", 25);
 
-            _self.enableDebugExceptions = () => _getConfigValue('enableDebugExceptions', false);
+            _self.enableDebugExceptions = () => _getConfigValue("enableDebugExceptions", false);
             
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
@@ -107,20 +123,23 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 if (_self.enableDebugExceptions()) {
                     throw message;
                 } else {
+                    // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
+                    let logFunc = severity === LoggingSeverity.CRITICAL ? strErrorToConsole : strWarnToConsole;
+
                     if (!isUndefined(message.message)) {
                         const logLevel = _self.consoleLoggingLevel();
                         if (isUserAct) {
                             // check if this message type was already logged to console for this page view and if so, don't log it again
                             const messageKey: number = +message.messageId;
 
-                            if (!_messageLogged[messageKey] && logLevel >= LoggingSeverity.WARNING) {
-                                _self.warnToConsole(message.message);
+                            if (!_messageLogged[messageKey] && logLevel >= severity) {
+                                _self[logFunc](message.message);
                                 _messageLogged[messageKey] = true;
                             }
                         } else {
-                            // don't log internal AI traces in the console, unless the verbose logging is enabled
-                            if (logLevel >= LoggingSeverity.WARNING) {
-                                _self.warnToConsole(message.message);
+                            // Only log traces if the console Logging Level is >= the throwInternal severity level
+                            if (logLevel >= severity) {
+                                _self[logFunc](message.message);
                             }
                         }
 
@@ -134,17 +153,15 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              * @param message {string} - The warning message
              */
             _self.warnToConsole = (message: string) => {
-                let theConsole = getConsole();
-                if (!!theConsole) {
-                    let logFunc = 'log';
-                    if (theConsole.warn) {
-                        logFunc = 'warn';
-                    }
+                _logToConsole("warn", message);
+            }
 
-                    if (isFunction(theConsole[logFunc])) {
-                        theConsole[logFunc](message);
-                    }
-                }
+            /**
+             * This will write an error to the console if possible
+             * @param message {string} - The error message
+             */
+             _self.errorToConsole = (message: string) => {
+                _logToConsole("error", message);
             }
 
             /**
@@ -187,7 +204,6 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     if (_messageCount === _self.maxInternalMessageLimit()) {
                         const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                         const throttleMessage = new _InternalLogMessage(_InternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
-
                         _self.queue.push(throttleMessage);
                         _self.warnToConsole(throttleLimitMessage);
                     }
@@ -259,6 +275,14 @@ export class DiagnosticLogger implements IDiagnosticLogger {
      * @param message {string} - The warning message
      */
     public warnToConsole(message: string) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * This will write an error to the console if possible
+     * @param message {string} - The warning message
+     */
+    public errorToConsole(message: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

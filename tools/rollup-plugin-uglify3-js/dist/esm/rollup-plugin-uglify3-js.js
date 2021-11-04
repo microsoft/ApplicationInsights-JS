@@ -10,10 +10,10 @@ function isSourceMapEnabled(options) {
     }
     return false;
 }
-function _doMinify(code, filename, options, chunkOptions) {
+function _doMinify(code, filename, options, _chunkOptions) {
     var theCode = {};
     theCode[filename] = code;
-    var assign = Object['assign'];
+    var assign = Object["assign"];
     var theOptions = assign({}, options);
     if (theOptions.hasOwnProperty("sourcemap")) {
         delete theOptions.sourcemap;
@@ -41,7 +41,7 @@ function _doMinify(code, filename, options, chunkOptions) {
 function uglify(options) {
     if (options === void 0) { options = {}; }
     return {
-        name: 'ai-rollup-plugin-uglify3-js',
+        name: "ai-rollup-plugin-uglify3-js",
         renderChunk: function (code, chunk, chkOpt) {
             return _doMinify(code, chunk.filename, options);
         }

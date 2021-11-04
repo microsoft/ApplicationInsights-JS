@@ -3,4 +3,4 @@ export interface IRequestContext {
     xhr?: XMLHttpRequest;
     request?: Request; // fetch request
     response?: Response | string; // fetch response
-};
+}

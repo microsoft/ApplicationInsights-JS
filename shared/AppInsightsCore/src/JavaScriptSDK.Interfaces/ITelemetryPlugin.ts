@@ -5,8 +5,8 @@
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IConfiguration } from "./IConfiguration";
 import { IAppInsightsCore } from "./IAppInsightsCore";
-import { IProcessTelemetryContext } from './IProcessTelemetryContext';
-import { ITelemetryPluginChain } from './ITelemetryPluginChain';
+import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
+import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
 
 /**
  * Configuration provided to SDK core
@@ -15,15 +15,15 @@ export interface ITelemetryPlugin extends IPlugin {
     /**
      * Call back for telemetry processing before it it is sent
      * @param env - This is the current event being reported
-     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances 
+     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
      */
     processTelemetry: (env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => void;
     
     /**
-     * Set next extension for telemetry processing, this is not optional as plugins should use the 
-     * processNext() function of the passed IProcessTelemetryContext instead. It is being kept for 
+     * Set next extension for telemetry processing, this is not optional as plugins should use the
+     * processNext() function of the passed IProcessTelemetryContext instead. It is being kept for
      * now for backward compatibility only.
      */
     setNextPlugin?: (next: ITelemetryPlugin | ITelemetryPluginChain) => void;
@@ -40,7 +40,7 @@ export interface IPlugin {
      * @param config - The config for the plugin to use
      * @param core - The current App Insights core to use for initializing this plugin instance
      * @param extensions - The complete set of extensions to be used for initializing the plugin
-     * @param pluginChain - [Optional] specifies the current plugin chain which identifies the 
+     * @param pluginChain - [Optional] specifies the current plugin chain which identifies the
      * set of plugins and the order they should be executed for the current request.
      */
     initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => void;

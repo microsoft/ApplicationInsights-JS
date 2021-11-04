@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IInternal } from '@microsoft/applicationinsights-common';
-import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
+import { IInternal } from "@microsoft/applicationinsights-common";
+import { ITelemetryConfig } from "../Interfaces/ITelemetryConfig";
 
-const Version = "2.7.0-beta.1";
+const Version = "2.7.0";
 
 export class Internal implements IInternal {
 

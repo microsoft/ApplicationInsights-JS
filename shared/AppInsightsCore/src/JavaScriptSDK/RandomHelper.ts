@@ -15,7 +15,7 @@ var _mwcZ = 987654321;
 function _mwcSeed(seedValue: number) {
     if (seedValue < 0) {
         // Make sure we end up with a positive number and not -ve one.
-        seedValue >>>= 0;    
+        seedValue >>>= 0;
     }
 
     _mwcW = (123456789 + seedValue) & MaxUInt32;

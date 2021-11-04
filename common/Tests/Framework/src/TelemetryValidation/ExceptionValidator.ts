@@ -1,5 +1,5 @@
-import { ITypeValidator } from './ITypeValidator';
-import { CommonValidator } from './CommonValidator';
+import { ITypeValidator } from "./ITypeValidator";
+import { CommonValidator } from "./CommonValidator";
 
 export class ExceptionValidator implements ITypeValidator {
     static ExceptionValidator = new ExceptionValidator();

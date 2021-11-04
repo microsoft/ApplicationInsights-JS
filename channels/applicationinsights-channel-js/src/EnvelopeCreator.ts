@@ -6,17 +6,18 @@ import {
     HttpMethod, IPageViewTelemetryInternal, IWeb,
     IExceptionInternal,
     SampleRate,
-} from '@microsoft/applicationinsights-common';
+    dataSanitizeString
+} from "@microsoft/applicationinsights-common";
 import {
-    ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, 
+    ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey,
     isNullOrUndefined, isNumber, isString, toISOString, setValue, isTruthy, optimizeObject
-} from '@microsoft/applicationinsights-core-js';
+} from "@microsoft/applicationinsights-core-js";
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
-const strBaseType = 'baseType';
-const strBaseData = 'baseData';
-const strProperties = 'properties';
-const strTrue = 'true';
+const strBaseType = "baseType";
+const strBaseData = "baseData";
+const strProperties = "properties";
+const strTrue = "true";
 
 function _setValueIf<T>(target:T, field:keyof T, value:any) {
     return setValue(target, field, value, isTruthy);
@@ -25,7 +26,7 @@ function _setValueIf<T>(target:T, field:keyof T, value:any) {
 /*
  * Maps Part A data from CS 4.0
  */
-function _extractPartAExtensions(item: ITelemetryItem, env: IEnvelope) {
+function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem, env: IEnvelope) {
     // todo: switch to keys from common in this method
     let envTags = env.tags = env.tags || {};
     let itmExt = item.ext = item.ext || {};
@@ -61,10 +62,10 @@ function _extractPartAExtensions(item: ITelemetryItem, env: IEnvelope) {
         let envBaseData = envData[strBaseData] = envData[strBaseData] || {};
         let envProps = envBaseData[strProperties] = envBaseData[strProperties] || {};
 
-        _setValueIf(envProps, 'domain', web.domain);
-        _setValueIf(envProps, 'isManual', web.isManual ? strTrue : null);
-        _setValueIf(envProps, 'screenRes', web.screenRes);
-        _setValueIf(envProps, 'userConsent', web.userConsent ? strTrue : null);
+        _setValueIf(envProps, "domain", web.domain);
+        _setValueIf(envProps, "isManual", web.isManual ? strTrue : null);
+        _setValueIf(envProps, "screenRes", web.screenRes);
+        _setValueIf(envProps, "userConsent", web.userConsent ? strTrue : null);
     }
 
     let extOs = itmExt.os;
@@ -77,7 +78,7 @@ function _extractPartAExtensions(item: ITelemetryItem, env: IEnvelope) {
     let extTrace = itmExt.trace;
     if (extTrace) {
         _setValueIf(envTags, CtxTagKeys.operationParentId, extTrace.parentID);
-        _setValueIf(envTags, CtxTagKeys.operationName, extTrace.name);
+        _setValueIf(envTags, CtxTagKeys.operationName, dataSanitizeString(logger, extTrace.name));
         _setValueIf(envTags, CtxTagKeys.operationId, extTrace.traceID);
     }
 
@@ -148,7 +149,7 @@ function _convertPropsUndefinedToCustomDefinedValue(properties: { [key: string]:
 function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
     const envelope = new Envelope(logger, data, envelopeType);
 
-    _setValueIf(envelope, 'sampleRate', telemetryItem[SampleRate]);
+    _setValueIf(envelope, "sampleRate", telemetryItem[SampleRate]);
     if ((telemetryItem[strBaseData] || {}).startTime) {
         envelope.time = toISOString(telemetryItem[strBaseData].startTime);
     }
@@ -157,7 +158,7 @@ function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, tel
     envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
 
     // extract all extensions from ctx
-    _extractPartAExtensions(telemetryItem, envelope);
+    _extractPartAExtensions(logger, telemetryItem, envelope);
 
     // loop through the envelope tags (extension of Part A) and pick out the ones that should go in outgoing envelope tags
     telemetryItem.tags = telemetryItem.tags || [];
@@ -174,7 +175,7 @@ function EnvelopeCreatorInit(logger: IDiagnosticLogger, telemetryItem: ITelemetr
 }
 
 export const EnvelopeCreator = {
-    Version: "2.7.0-beta.1"
+    Version: "2.7.0"
 };
 
 export function DependencyEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
@@ -204,7 +205,7 @@ export function EventEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: I
     let customProperties = {};
     let customMeasurements = {};
     if (telemetryItem[strBaseType] !== Event.dataType) {
-        customProperties['baseTypeSource'] = telemetryItem[strBaseType]; // save the passed in base type as a property
+        customProperties["baseTypeSource"] = telemetryItem[strBaseType]; // save the passed in base type as a property
     }
 
     if (telemetryItem[strBaseType] === Event.dataType) { // take collection

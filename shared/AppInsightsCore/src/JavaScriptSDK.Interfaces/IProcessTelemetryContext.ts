@@ -3,11 +3,11 @@
 "use strict";
 
 import { IAppInsightsCore } from "./IAppInsightsCore";
-import { IDiagnosticLogger } from './IDiagnosticLogger';
-import { IConfiguration } from './IConfiguration';
-import { ITelemetryItem } from './ITelemetryItem';
-import { IPlugin } from './ITelemetryPlugin';
-import { ITelemetryPluginChain } from './ITelemetryPluginChain';
+import { IDiagnosticLogger } from "./IDiagnosticLogger";
+import { IConfiguration } from "./IConfiguration";
+import { ITelemetryItem } from "./ITelemetryItem";
+import { IPlugin } from "./ITelemetryPlugin";
+import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
 
 /**
  * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance
@@ -69,7 +69,7 @@ export interface IProcessTelemetryContext {
      * Create a new context using the core and config from the current instance
      * @param plugins - The execution order to process the plugins, if null or not supplied
      *                  then the current execution order will be copied.
-     * @param startAt - The plugin to start processing from, if missing from the execution 
+     * @param startAt - The plugin to start processing from, if missing from the execution
      *                  order then the next plugin will be NOT set.
      */
     createNew: (plugins?:IPlugin[]|ITelemetryPluginChain, startAt?:IPlugin) => IProcessTelemetryContext;

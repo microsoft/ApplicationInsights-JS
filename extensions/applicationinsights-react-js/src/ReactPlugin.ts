@@ -4,7 +4,7 @@
  */
 
 import {
-    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry, IExceptionTelemetry
+    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry, IExceptionTelemetry, ITraceTelemetry
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore, IDiagnosticLogger,
@@ -51,6 +51,13 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
     }
 
     /**
+     * Get application insights instance.
+     */
+    getAppInsights(): IAppInsights {
+        return this._analyticsPlugin;
+    }
+
+    /**
      * Add Part A fields to the event
      * @param event The event that needs to be processed
      */
@@ -94,7 +101,18 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
             this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
         }
-    };
+    }
+
+    trackTrace(trace: ITraceTelemetry, customProperties?: {
+        [key: string]: any;
+    }) {
+        if (this._analyticsPlugin) {
+            this._analyticsPlugin.trackTrace(trace, customProperties);
+        } else {
+            this.diagLog().throwInternal(
+                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
+        }
+    }
 
 
     private addHistoryListener(history: History): void {

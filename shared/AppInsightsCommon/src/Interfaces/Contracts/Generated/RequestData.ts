@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Domain } from './Domain';
+import { Domain } from "./Domain";
 
 /**
  * An instance of Request represents completion of an external request to the application to do work and contains a summary of that request execution and the results.

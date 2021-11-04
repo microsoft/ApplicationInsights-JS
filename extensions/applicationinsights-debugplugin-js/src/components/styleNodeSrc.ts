@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Util } from '@microsoft/applicationinsights-common';
+import { Util } from "@microsoft/applicationinsights-common";
 
-const BG_INFO = '#F0F6FF',
-      BG_ERROR = '#FEF0F1',
-      ICON_ERROR = '#E00B1C',
-      BTN_PRIMARY = '#0078d4',
-      BTN_HOVER = '#106EBE',
-      BTN_ACTIVE = '#005A9E',
-      TEXT_PRIMARY = '#323130',
-      TEXT_MATCHED = 'yellow',
-      BORDER_GREY_160 = '1px solid #605E5C',
-      BORDER_GREY_60 = '1px solid #B3B0AD';
+const BG_INFO = "#F0F6FF",
+      BG_ERROR = "#FEF0F1",
+      ICON_ERROR = "#E00B1C",
+      BTN_PRIMARY = "#0078d4",
+      BTN_HOVER = "#106EBE",
+      BTN_ACTIVE = "#005A9E",
+      TEXT_PRIMARY = "#323130",
+      TEXT_MATCHED = "yellow",
+      BORDER_GREY_160 = "1px solid #605E5C",
+      BORDER_GREY_60 = "1px solid #B3B0AD";
 
 console.log(Util.getIEVersion());
 
@@ -56,7 +56,7 @@ export const tempStyle = (prefix: string) => `
     font-family: monospace;
     font-size: 16px;
     overflow-y: scroll;
-    overflow-x: ${(Util.getIEVersion()) ? 'scroll' : 'hidden'};
+    overflow-x: ${(Util.getIEVersion()) ? "scroll" : "hidden"};
     border: ${BORDER_GREY_160};
     border-radius: 2px;
   }
@@ -66,7 +66,7 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ''
+    ? ""
     : `.${prefix}-dbg-lgr .tree-root div::before {
       content: '';
       position: absolute;
@@ -111,7 +111,7 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ''
+    ? ""
     : `.${prefix}-dbg-lgr .expandable.open::before {
       content: '[-] ';
       font-weight: bold;
@@ -218,7 +218,7 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ''
+    ? ""
     : `.${prefix}-dbg-lgr-dashboard .filterlist-input::after {
       content: '';
       width: 8px;
@@ -253,7 +253,7 @@ export const tempStyle = (prefix: string) => `
     padding: 3px 8px;
     height: 32px;
     width: 100%;
-    ${(Util.getIEVersion()) ? '' : 'box-sizing: border-box;'}
+    ${(Util.getIEVersion()) ? "" : "box-sizing: border-box;"}
   }
 
   .${prefix}-dbg-lgr-dashboard .filterlist-toggle:focus {
@@ -288,7 +288,7 @@ export const tempStyle = (prefix: string) => `
     border-radius: 2px;
     vertical-align: middle;
     margin-right: 8px;
-    ${(Util.getIEVersion()) ? '' : 'box-sizing: border-box;'}
+    ${(Util.getIEVersion()) ? "" : "box-sizing: border-box;"}
   }
 
   .${prefix}-dbg-lgr-dashboard .checkbox.on {
@@ -296,7 +296,7 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ''
+    ? ""
     : `.${prefix}-dbg-lgr-dashboard .checkbox.on::after {
       content: '';
       width: 5px;
@@ -317,7 +317,7 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ''
+    ? ""
     : `@media only screen and (max-width: 600px) {
       .${prefix}-dbg-lgr {
         width: 100%;
@@ -361,7 +361,7 @@ export const permStyle = (prefix: string) => `
     transition: 2s color linear;
     cursor: pointer;
     transition: .2s width ease-in-out, .2s height ease-in-out;
-    ${(Util.getIEVersion()) ? '' : 'box-sizing: border-box;'}
+    ${(Util.getIEVersion()) ? "" : "box-sizing: border-box;"}
   }
 
   .${prefix}-debug-bin-parent.active {
@@ -411,7 +411,7 @@ export const permStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ''
+    ? ""
     : `.${prefix}-debug-bin-parent.notify::after {
       content: " (!)";
     }`
@@ -424,7 +424,7 @@ export const permStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ''
+    ? ""
     : `.${prefix}-debug-bin-parent:focus > span::before,
     .${prefix}-debug-bin-parent:hover > span::before,
     .${prefix}-debug-bin-parent.active > span::before {

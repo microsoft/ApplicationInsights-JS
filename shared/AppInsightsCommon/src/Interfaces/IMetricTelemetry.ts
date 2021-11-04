@@ -1,4 +1,4 @@
-import { IPartC } from './IPartC';
+import { IPartC } from "./IPartC";
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -41,6 +41,11 @@ export interface IMetricTelemetry extends IPartC {
      * @default max=average
      */
     max?: number;
+
+    /**
+     * (optional) The standard deviation measurement in the sample, Defaults to undefined which results in zero.
+     */
+    stdDev?: number;
 
      /**
      * @description custom defined iKey

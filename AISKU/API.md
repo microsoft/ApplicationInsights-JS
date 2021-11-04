@@ -61,6 +61,11 @@ Parameter | Type | Description
 `sampleCount?` | number | **Optional**<br>Count of measurements represented by the average. Defaults to 1. Should be >=1.
 `min?` | number | **Optional**<br>The smallest measurement in the sample. Defaults to the average. Should be >= 0.
 `max?` | number | **Optional**<br>The largest measurement in the sample. Defaults to the average. Should be >= 0.
+`stdDev?` | number | **Optional**<br>The standard deviation for the sample. Defaults to undefined which is reported as zero (0).
+
+```typescript
+appInsights.trackMetric({ name: "my_custom_metric", average: 1.5, sampleCount: 2, min: 1, max: 2, stdDev: 1.0 });
+```
 
 ### trackException
 

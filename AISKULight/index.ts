@@ -91,13 +91,18 @@ export class ApplicationInsights {
     }
 
     private pollInternalLogs(): void {
-        this.core.pollInternalLogs()
+        this.core.pollInternalLogs();
     }
 
+    public stopPollingInternalLogs(): void {
+        this.core.stopPollingInternalLogs();
+   }
+
     private getSKUDefaults() {
-        this.config.diagnosticLogInterval = 
+        this.config.diagnosticLogInterval =
             this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
     }
+
 }
 
 export {

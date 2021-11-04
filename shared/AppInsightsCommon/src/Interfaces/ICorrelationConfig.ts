@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ICustomProperties } from '@microsoft/applicationinsights-core-js';
-import { DistributedTracingModes } from '../Enums';
-import { IRequestContext } from './IRequestContext';
+import { ICustomProperties } from "@microsoft/applicationinsights-core-js";
+import { DistributedTracingModes } from "../Enums";
+import { IRequestContext } from "./IRequestContext";
 
 export interface ICorrelationConfig {
     enableCorsCorrelation: boolean;
@@ -21,14 +21,14 @@ export interface ICorrelationConfig {
 
     /**
      * Flag to enable looking up and including additional browser window.performance timings
-     * in the reported ajax (XHR and fetch) reported metrics. 
+     * in the reported ajax (XHR and fetch) reported metrics.
      * Defaults to false.
      */
     enableAjaxPerfTracking?: boolean;
 
     /**
-     * The maximum number of times to look for the window.performance timings (if available), this 
-     * is required as not all browsers populate the window.performance before reporting the 
+     * The maximum number of times to look for the window.performance timings (if available), this
+     * is required as not all browsers populate the window.performance before reporting the
      * end of the XHR request and for fetch requests this is added after its complete
      * Defaults to 3
      */

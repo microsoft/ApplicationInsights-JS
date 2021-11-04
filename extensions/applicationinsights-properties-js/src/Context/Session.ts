@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import dynamicProto from '@microsoft/dynamicproto-js';
-import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from '@microsoft/applicationinsights-common';
-import { 
-    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction, 
+import dynamicProto from "@microsoft/dynamicproto-js";
+import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "@microsoft/applicationinsights-common";
+import {
+    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction,
     newId, dumpObj, getExceptionName, dateNow, safeGetLogger
-} from '@microsoft/applicationinsights-core-js';
+} from "@microsoft/applicationinsights-core-js";
 
-const cookieNameConst = 'ai_session';
+const cookieNameConst = "ai_session";
 
 export interface ISessionConfig {
     sessionRenewalMs?: () => number;
@@ -75,7 +75,7 @@ export class _SessionManager {
     
             _self.config = config;
             // sessionCookiePostfix takes the preference if it is configured, otherwise takes namePrefix if configured.
-            const sessionCookiePostfix = (_self.config.sessionCookiePostfix && _self.config.sessionCookiePostfix()) ? 
+            const sessionCookiePostfix = (_self.config.sessionCookiePostfix && _self.config.sessionCookiePostfix()) ?
                                             _self.config.sessionCookiePostfix() :
                                             ((_self.config.namePrefix && _self.config.namePrefix()) ? _self.config.namePrefix() : "");
 
@@ -231,9 +231,9 @@ export class _SessionManager {
                 const cookieDomain = config.cookieDomain ? config.cookieDomain() : null;
 
                 // if sessionExpirationMs is set to 0, it means the expiry is set to 0 for this session cookie
-                // A cookie with 0 expiry in the session cookie will never expire for that browser session.  If the browser is closed the cookie expires.  
+                // A cookie with 0 expiry in the session cookie will never expire for that browser session.  If the browser is closed the cookie expires.
                 // Depending on the browser, another instance does not inherit this cookie, however, another tab will
-                _cookieManager.set(_storageNamePrefix(), cookie.join('|'), config.sessionExpirationMs() > 0 ? maxAgeSec : null, cookieDomain);
+                _cookieManager.set(_storageNamePrefix(), cookie.join("|"), config.sessionExpirationMs() > 0 ? maxAgeSec : null, cookieDomain);
                 _cookieUpdatedTimestamp = nowMs;
             }
         
@@ -241,7 +241,7 @@ export class _SessionManager {
                 // Keep data in local storage to retain the last session id, allowing us to cleanly end the session when it expires
                 // Browsers that don't support local storage won't be able to end sessions cleanly from the client
                 // The server will notice this and end the sessions itself, with loss of accurate session duration
-                utlSetLocalStorage(_logger, _storageNamePrefix(), [guid, acq, renewal].join('|'));
+                utlSetLocalStorage(_logger, _storageNamePrefix(), [guid, acq, renewal].join("|"));
             }
         });
     }
