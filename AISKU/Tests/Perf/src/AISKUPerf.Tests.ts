@@ -15,20 +15,15 @@ export class AISKUPerf extends AITestClass {
     public testInitialize() {
         try {
            this.AISKUPerfTest = new AppInsightsInitPerfTestClass();
-           this.AISKUPerfTest.loadScriptOnInit = () => {return this._loadScriptOnInit()}
+           this.AISKUPerfTest.loadScriptOnInit = () => {return this._loadScriptOnInit();}
            Assert.ok(window["oneDS"], "oneDS exists");
            Assert.ok(window["Microsoft"]?.ApplicationInsights?.PerfMarkMeasureManager, "perfMgr exists");
            Assert.ok(window["Microsoft"]?.ApplicationInsights?.doPerf, "doPerf exists");
            this.perfMgr = window["Microsoft"].ApplicationInsights.PerfMarkMeasureManager;
            this.doPerf = window["Microsoft"].ApplicationInsights.doPerf;
            window["appInsightsInitPerftest"] = this.AISKUPerfTest;
-           this.initialMemoryUsage = performance["memory"]?.usedJSHeapSize;
            this.memoryUsageMarks = {};
            this.batchStartTimeMarks = {};
-           if (!this.AISKUPerfTest.hasPerfMgr) {
-               this.perfMgrSrc = new this.perfMgr();
-               Assert.ok(true, "perfMgrSrc initialized");
-           }
 
         } catch (e) {
             console.error("Failed to initialize AISKUPerf Tests", e);
@@ -50,15 +45,30 @@ export class AISKUPerf extends AITestClass {
        
         this.testCaseAsync({
             name: "AppInsights AISKU perf Test",
-            stepDelay: 15000,
+            stepDelay: 10000,
             steps: [() => {
 
                 Assert.ok(window["appInsightsInitPerftest"], "global appInsightsInitPerftest exists");
                 Assert.ok(window["oneDS"], "oneDS exists");
                 Assert.ok(this.perfMgr, "perfMgr exists");
                 Assert.ok(this.doPerf, "doPerf exists");
+                console.log(this.AISKUPerfTest.version);
 
                 try {
+                    this.initialMemoryUsage = performance["memory"]?.usedJSHeapSize;
+
+                    if (!this.AISKUPerfTest.hasPerfMgr) {
+                        this.perfMgrSrc = new this.perfMgr({
+                         useMarks: true,
+                         useEndMarks: true,
+                         uniqueNames: true
+                     },
+                     {
+                         perfEvent: (perfEvent) => {
+                             this._parseAppInsightsPerfEvent(perfEvent,this.AISKUPerfTest);
+                         }
+                     });
+                    }
                     this._loadSnippet();
                 } catch (e) {
                     Assert.ok(false, "load snippet error: " + e);
@@ -78,7 +88,6 @@ export class AISKUPerf extends AITestClass {
         collectorUrlScript.src=generatedUrl;
         document.head.appendChild(collectorUrlScript);
         collectorUrlScript.onload=collectorUrlScript["onreadystatechange"] = function() {
-            console.log("telemetry sent");
             Assert.ok(true,"telemetry sent");
         }
     }
@@ -93,12 +102,16 @@ export class AISKUPerf extends AITestClass {
         
         let appInsights = window["appInsights"];
         this.appInsights = appInsights;
+
         try {
-            let notificationManager = this.appInsights.core.getNotifyMgr() || this.appInsights.core["_notificationManager"];
-            notificationManager.addNotificationListener({
-                perfEvent: (perfEvent: any) => {
-                    this._parseAppInsightsPerfEvent(perfEvent,this.AISKUPerfTest);
-            }});
+            let notificationManager = this.appInsights.core["_notificationManager"] ||this.appInsights.core?.getNotifyMgr();
+            if (notificationManager) {
+                notificationManager.addNotificationListener({
+                    perfEvent: (perfEvent: any) => {
+                        this._parseAppInsightsPerfEvent(perfEvent,this.AISKUPerfTest);
+                }});
+            }
+            
         } catch (e) {
             console.error(e);
         }
@@ -107,7 +120,7 @@ export class AISKUPerf extends AITestClass {
 
         setTimeout(() => {
             this.flush();
-        }, 10000);
+        }, 6000);
     }
 
     protected _loadSnippet():void {
@@ -141,27 +154,28 @@ export class AISKUPerf extends AITestClass {
 
         setTimeout(() =>{
             this._trackBatchEvents(10);
-        },500)
+        },1000);
 
         setTimeout(() =>{
             this._trackBatchEvents(30);
-        },1000)
+        },2000);
 
         setTimeout(() =>{
             this._trackBatchEvents(50);
-        },2000)
+        },2000);
 
         setTimeout(() =>{
             this._trackBatchEvents(80);
-        },3000)
+        },4000);
 
         setTimeout(() =>{
             this._trackBatchEvents(100);
-        },4000)
+        },5000);
     }
 
     public flush(): void {
         this.AISKUPerfTest.doFlush = true;
+        console.log("flush " +  this.AISKUPerfTest.perfEventsBuffer.length +" events");
         this.AISKUPerfTest.perfEventsBuffer.forEach((event) => {
             if (event.baseData) {this._sendEventWithCollectorUrl(event);}
         })
@@ -190,21 +204,10 @@ export class AISKUPerf extends AITestClass {
     protected _parseBatchSendEvent(perfEvent: any, AISKUInitPerf: any): void {
         let curMemory = performance["memory"]?.usedJSHeapSize;
         let memoryMarks = Object.keys(this.memoryUsageMarks);
-        var index = ""
+        var index = "";
         
-        if (memoryMarks && memoryMarks.length && curMemory) {
+        if (memoryMarks && memoryMarks.length && curMemory !== undefined) {
             index = memoryMarks[memoryMarks.length-1];
-            /**
-             * *******************************************************************
-             * TODO:should calculate batch send memory usage before flush or after flush
-             * currently is calculated before flush
-             * ********************************************************************
-             */
-            // let preMemory = this.memoryUsageMarks[index];
-            // let value = Math.round((curMemory-preMemory)/1000);
-            // value = value <0? 0:value;
-            // let msg = `${index} MemoryUse ${value}KB addded`
-            //this._createPerfEvent(AISKUInitPerf, index, value, false, msg);
             this._createPerfEvent(AISKUInitPerf, perfEvent.name+index, perfEvent?.exTime, true);
         }
     }
@@ -231,7 +234,7 @@ export class AISKUPerf extends AITestClass {
 
     protected _createPerfEvent(AISKUInitPerf: any, name: string, value: number, isProcessTime: boolean, msg?: string): void {
         let initPerf = AISKUInitPerf || this.AISKUPerfTest;
-        if (this._isNullOrUndefined(value) || this._isNullOrUndefined(initPerf)) return; 
+        if (this._isNullOrUndefined(value) || value < 0 || this._isNullOrUndefined(initPerf)) return; 
         let metricVal = isProcessTime? "ProcessTime":"UsedJSHeapSize";
         let unit = isProcessTime?  "ms":"KB";
         let event =  {
@@ -275,7 +278,7 @@ export class AISKUPerf extends AITestClass {
         
        
         if (!this._isNullOrUndefined(curMemory)) {
-            let metricName = metric? metric:"SDKInit"
+            let metricName = metric? metric:"SDKInit";
             var memoryUsed =  Math.round((curMemory - initialMemoryUsage) / 1000);
             this._createPerfEvent(this.AISKUPerfTest, metricName, memoryUsed, false, `AppInsightsInit-Init: ${metricName} UsedJSHeapSize ${memoryUsed} KB added`);
         }
@@ -288,50 +291,39 @@ export class AISKUPerf extends AITestClass {
             let index = memoryMarks[memoryMarks.length-1];
             let preMemory = this.memoryUsageMarks[index];
             let value = Math.round((curMemory-preMemory)/1000);
-            let msg = `${index} MemoryUse ${value}KB addded`
+            let msg = `${index} MemoryUse ${value}KB addded`;
             this._createPerfEvent(this.AISKUPerfTest, index, value, false, msg);
         }
     }
 
-    protected _createTrackEvent(eventName: string, fieldNum?: number) {
+    protected _createTrackEvent(eventName: string, type: string = "EventData", fieldNum?: number) {
         let number = fieldNum? fieldNum: Math.random() * 10 + 10;
-        let fields = {}
+        let fields = {};
         for (let i=1; i <= number; i++) {
             let field = "field" + i;
             fields[field] = "value" + i;
         }
-        return {name: eventName, properties: fields};
+        return {name: eventName, properties: fields, baseType: type };
     }
 
     protected _trackSingleEvent() {
+        if (this._isNullOrUndefined(this.appInsights)) return;
+
+        var event =  this._createTrackEvent("Track","EventData",20);
         var curMemeory = performance["memory"]?.usedJSHeapSize;
-        //this.appInsights.trackEvent({name:'appInsights-perf-event'});
-        //this.appInsights.trackMetric({name: 'appInsights-perf-metric', average: 42});
-        
         if (! this._isNullOrUndefined(curMemeory)) {
             this.memoryUsageMarks["Track"] = curMemeory;
         }
 
         try {
-            let event =  this._createTrackEvent("Track",20);
-            this.appInsights.trackEvent(event);
-
-            /**
-             * *******************************************************
-             * TODO: add doPerf() for version <= 2.5.6
-             * ******************************************************
-             */
-
-            // if (this.AISKUPerfTest.hasPerfMgr) {
-            //     this.appInsights.trackEvent(event);
-            // } else {
-            //     this.doPerf(this.perfMgrSrc, () => "AISKU:Track", (perfEvent) => {
-            //         console.log("test"+ JSON.stringify(perfEvent));
-            //         this.appInsights.trackEvent(event);
-            //         // A mark has been added to window.performance called 'tst.mark.AISKU:Track'
-            //     });
-            // }
-           
+            if (this.AISKUPerfTest.hasPerfMgr) {
+                this.appInsights.trackEvent(event);
+            } else {
+                this.doPerf(this.perfMgrSrc, () => "AppInsightsCore:track", (perfEvent) => {
+                    this.appInsights.trackEvent(event);
+                    // A mark has been added to window.performance called 'tst.mark.AppInsightsCore:track'
+                },()=> ({item: event}));
+            }
             this.appInsights.flush(false);
         } catch (e) {
             console.error(e);
@@ -340,28 +332,35 @@ export class AISKUPerf extends AITestClass {
 
     protected _trackBatchEvents(number?: number) {
         var curTime = performance.now();
-        var curMemory = performance["memory"]?.usedJSHeapSize;
+        if (this._isNullOrUndefined(this.appInsights)) return;
+       
         var eventNumber = number && number > 0? number:100;
         var eventName = "BatchSend" + number;
         this.batchStartTimeMarks[eventName] = curTime;
+        var event = this. _createTrackEvent("batch","Message",20);
         
+        var curMemory = performance["memory"]?.usedJSHeapSize;
         if (!this._isNullOrUndefined(curMemory)) {
             this.memoryUsageMarks[eventName] = curMemory;
         }
 
         try {
-            for (let i = 0; i < eventNumber-1; i++) {
-                let event = this. _createTrackEvent("batch",20);
+            for (let i = 0; i < eventNumber; i++) {
                 this.appInsights.trackTrace(event);
             }
-            let event = this. _createTrackEvent(eventName,20);
-            this.appInsights.trackTrace(event);
             let afterMemoUage = performance["memory"]?.usedJSHeapSize;
             let val = Math.round((afterMemoUage-curMemory)/1000);
-            val = val<0?0:val;
-            let msg = `${eventName} Memory Usage: ${val}KB`
+            val = val < 0? 0:val;
+            let msg = `${eventName} Memory Usage: ${val}KB`;
             this._createPerfEvent(this.AISKUPerfTest,eventName,val,false,msg);
-            this.appInsights.flush(false);
+            if (this.AISKUPerfTest.hasPerfMgr) {
+                this.appInsights.flush(false);
+            } else {
+                this.doPerf(this.perfMgrSrc, () => "AISKU.flush", (perfEvent) => {
+                    this.appInsights.flush(false);
+                    // A mark has been added to window.performance called 'tst.mark.AISKU.flush'
+                },()=> ({item: event}));
+            }
         } catch (e) {
             console.error(e);
         }

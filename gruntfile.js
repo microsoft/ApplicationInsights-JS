@@ -91,6 +91,10 @@ module.exports = function (grunt) {
         return buildCmds;
     }
 
+    const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
+    "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
+    "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
+
     try {
         var theBuildConfig = deepMerge(buildConfig({
             // Shared
@@ -435,9 +439,10 @@ module.exports = function (grunt) {
                 },
                 aiskuperf: {
                     options: {
-                        urls: [
-                            'http://localhost:9001/AISKU/Tests/PerfTests.html'
-                        ],
+                        urls: perfTestVersions.map((version) => {
+                            return `http://localhost:9001/AISKU/Tests/PerfTests.html?version=${version}`
+
+                        }),
                         timeout: 5 * 60 * 1000, // 5 min
                         console: true,
                         summaryOnly: false,

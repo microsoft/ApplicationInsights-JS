@@ -20,10 +20,8 @@ export class AppInsightsInitPerfTestClass {
          * Default current version is 2.7.0
          * should update version after new release
          * version with doperf(): after 2.5.6
-         * version with gbl: starts from 2.5.8
          * */
         var defaultVer = "2.7.0";
-        //var defaultVer = "2.5.8";
         this.version = ver? ver:this._getQueryParameterVersion(defaultVer); 
         this.perfEventsBuffer = [];
         this.perfEventWaitBuffer = [];
