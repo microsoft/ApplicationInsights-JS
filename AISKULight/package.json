@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "2.7.0",
+    "version": "2.7.1",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -21,7 +21,7 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/microsoft/ApplicationInsights-JS.git",
-        "directory":"AISKULight"
+        "directory": "AISKULight"
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
@@ -49,9 +49,9 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.4",
         "@microsoft/applicationinsights-shims": "2.0.0",
-        "@microsoft/applicationinsights-common": "2.7.0",
-        "@microsoft/applicationinsights-channel-js": "2.7.0",
-        "@microsoft/applicationinsights-core-js": "2.7.0"
+        "@microsoft/applicationinsights-common": "2.7.1",
+        "@microsoft/applicationinsights-channel-js": "2.7.1",
+        "@microsoft/applicationinsights-core-js": "2.7.1"
     },
     "license": "MIT"
 }
