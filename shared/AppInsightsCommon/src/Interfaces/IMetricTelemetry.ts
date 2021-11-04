@@ -42,6 +42,11 @@ export interface IMetricTelemetry extends IPartC {
      */
     max?: number;
 
+    /**
+     * (optional) The standard deviation measurement in the sample, Defaults to undefined which results in zero.
+     */
+    stdDev?: number;
+
      /**
      * @description custom defined iKey
      * @type {string}
