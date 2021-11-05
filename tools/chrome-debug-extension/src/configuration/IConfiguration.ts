@@ -4,104 +4,118 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-import { DataEventType } from '../dataSources/IDataEvent';
-import { DataSourceType } from '../dataSources/IDataSource';
+import { DataEventType } from "../dataSources/IDataEvent";
+import { DataSourceType } from "../dataSources/IDataSource";
 
 // This is the expected format of the JSON file loaded for a given configuration
 export interface IConfiguration {
-  // Which data source to use to gather the events
-  dataSourceType: DataSourceType;
+    // Which data source to use to gather the events
+    dataSourceType: DataSourceType;
 
-  // Optional URL filter pattern that some data sources use
-  dataSourceUrls?: string;
+    // Optional URL filter pattern that some data sources use
+    dataSourceUrls?: string;
 
-  // A list of fields of the fields to exclude from the details view when "Consolidate details" is checked
-  fieldsToExcludeFromCondensedList: string[];
+    // A list of fields of the fields to exclude from the details view when "Consolidate details" is checked
+    fieldsToExcludeFromCondensedList: string[];
 
-  // A list of the columns to display
-  columnsToDisplay: IColumn[];
+    // A list of the columns to display
+    columnsToDisplay: IColumn[];
 
-  // The names of optional special fields that enable handy features
-  specialFieldNames: ISpecialFieldNames;
+    // The names of optional special fields that enable handy features
+    specialFieldNames: ISpecialFieldNames;
 
-  // If supplied, any events without this field will be ignored
-  ignoreEventsWithoutThisField?: string;
+    // If supplied, any events without this field will be ignored
+    ignoreEventsWithoutThisField?: string;
 
-  // The prioritized list of conditions that will be evaluated to determine the DataEventType of a DataEvent
-  // The first match will determine the DataEventType, the default if there are no matches is DataEventType.other
-  prioritizedDataEventTypeTests: IDataEventTypeCondition[];
+    // The prioritized list of conditions that will be evaluated to determine the DataEventType of a DataEvent
+    // The first match will determine the DataEventType, the default if there are no matches is DataEventType.other
+    prioritizedDataEventTypeTests: IDataEventTypeCondition[];
 }
 
 export type DynamicValueConverter =
-  // Remove the strings <safe> and </safe> from the beginning and end of the string
-  | 'RemoveSafeTags'
+    // Remove the strings <safe> and </safe> from the beginning and end of the string
+    | "RemoveSafeTags"
 
-  // Truncates the value and appends " ms"
-  | 'NumberToWholeMilliseconds'
+    // Truncates the value and appends " ms"
+    | "NumberToWholeMilliseconds"
 
-  // Truncates the value and adds locale specific digit grouping
-  | 'TruncateWithDigitGrouping';
+    // Truncates the value and adds locale specific digit grouping
+    | "TruncateWithDigitGrouping";
 
 export interface IDynamicField {
-  // The name of the field to display 
-  // Examples: 
-  //  "data.foo" will return "abc" for this event { "data" : { "foo": "abc" } }
-  //  "data['foo.bar']" will return "abc" for this event: { "data": { "foo.bar": "abc"} }
-  //  "data['foo[0]']" will return "abc" for this event: { "data": { "foo": [ "abc" ] } }
-  name: string;
+    // The name of the field to display
+    // Examples:
+    //  "data.foo" will return "abc" for this event { "data" : { "foo": "abc" } }
+    //  "data['foo.bar']" will return "abc" for this event: { "data": { "foo.bar": "abc"} }
+    //  "data['foo[0]']" will return "abc" for this event: { "data": { "foo": [ "abc" ] } }
+    name: string;
 
-  // An optional converter to run on the data before displaying it
-  converter?: DynamicValueConverter;
+    // An optional converter to run on the data before displaying it
+    converter?: DynamicValueConverter;
 }
 
 export interface IColumn {
-  // The text to display in the header of the column
-  header: string;
+    // The text to display in the header of the column
+    header: string;
 
-  // Defaults to 'NormalData' - see ColumnType for details
-  type: ColumnType;
+    // Defaults to 'NormalData' - see ColumnType for details
+    type: ColumnType;
 
-  // A priority list of the IDataEvent fields to display - the first one found is the one displayed
-  // Note: some field types are calculated and don't need a fieldName
-  prioritizedFieldNames?: IDynamicField[];
+    // A priority list of the IDataEvent fields to display - the first one found is the one displayed
+    // Note: some field types are calculated and don't need a fieldName
+    prioritizedFieldNames?: IDynamicField[];
 }
 
 export type ColumnType =
-  // Just displays the data without manipulation
-  | 'NormalData'
+    // Just displays the data without manipulation
+    | "NormalData"
 
-  // Displays an incrementing session number, based on specialFieldName.sessionId
-  | 'SessionNumber'
+    // Displays an incrementing session number, based on specialFieldName.sessionId
+    | "SessionNumber"
 
-  // Displays the change in a number from one entry to the next
-  | 'NumberDelta'
+    // Displays the change in a number from one entry to the next
+    | "NumberDelta"
 
-  // Displays the change in a timestamp from one entry to the next (in milliseconds)
-  | 'TimeDelta';
+    // Displays the change in a timestamp from one entry to the next (in milliseconds)
+    | "TimeDelta";
 
 // If your data contains these fields, you can enable special column types with handy features,
 // such as displaying an incrementing session number instead of a session's GUID to make it easier
-// to scan the events visually.
+/**
+ *  to scan the events visually.
+ */
 export interface ISpecialFieldNames {
-  // A unique ID for each session
-  sessionId?: string;
+    /**
+     * A unique ID for each session
+     */
+    sessionId?: string;
 
-  // If specified, a regular expression to use on the data in the sessionId field - 
-  // the first capture group is used as the sessionId
-  sessionIdRegex?: string;
+    /**
+     * If specified, a regular expression to use on the data in the sessionId field -
+     * the first capture group is used as the sessionId
+     */
+    sessionIdRegex?: string;
 
-  // The names of fields which contain JSON data, so that they can be parsed and then referenced
-  // in this configuration
-  jsonFieldNames?: string;
+    /**
+     * The names of fields which contain JSON data, so that they can be parsed and then referenced
+     * in this configuration
+     */
+    jsonFieldNames?: string;
 }
 
 export interface IDataEventTypeCondition {
-  // The DataEventType that will be assigned to this event if the conditions are met
-  dataEventType: DataEventType;
+    /**
+     * The DataEventType that will be assigned to this event if the conditions are met
+     */
+    dataEventType: DataEventType;
 
-  // The name of the field to test (see IDynamicField.name for a description of valid values)
-  fieldName: string;
+    /**
+     * The name of the field to test (see IDynamicField.name for a description of valid values)
+     */
+    fieldName: string;
 
-  // The value to test for
-  fieldValue: string;
+    /**
+     * The value to test for
+     */
+    fieldValue: string;
 }

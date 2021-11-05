@@ -4,34 +4,40 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-import React from 'react';
+import React from "react";
 
 interface ISplitPanelProps {
-  top: JSX.Element;
-  bottom: JSX.Element;
+    top: JSX.Element;
+    bottom: JSX.Element;
 }
 
 export const SplitPanel = (props: ISplitPanelProps): React.ReactElement<ISplitPanelProps> => {
-  React.useEffect(() => {
-    const observer = new MutationObserver(updateBottomHeight);
-    observer.observe(document.getElementById('splitPanelTopContainer')!, { attributes: true });
-    updateBottomHeight();
-  }, []);
+    React.useEffect(() => {
+        const observer = new MutationObserver(updateBottomHeight);
+        let container = document.getElementById("splitPanelTopContainer");
+        if (container) {
+            observer.observe(container, { attributes: true });
+        }
+        updateBottomHeight();
+    }, []);
 
-  const updateBottomHeight = (): void => {
-    const currentTopHeight = document.getElementById('splitPanelTopContainer')!.style.height;
-    const newBottomHeight = `calc(100% - ${currentTopHeight})`;
-    document.getElementById('splitPanelBottomContainer')!.style.height = newBottomHeight;
-  };
+    const updateBottomHeight = (): void => {
+        let container = document.getElementById("splitPanelTopContainer");
+        if (container) {
+            const currentTopHeight = container.style.height;
+            const newBottomHeight = `calc(100% - ${currentTopHeight})`;
+            container.style.height = newBottomHeight;
+        }
+    };
 
-  return (
-    <div className='splitPanelRootContainer'>
-      <div className='splitPanelTopContainer' id='splitPanelTopContainer' style={{ height: '60%' }}>
-        <div className='scrollable'>{props.top}</div>
-      </div>
-      <div className='splitPanelBottomContainer' id='splitPanelBottomContainer'>
-        <div className='scrollable'>{props.bottom}</div>
-      </div>
-    </div>
-  );
+    return (
+        <div className='splitPanelRootContainer'>
+            <div className='splitPanelTopContainer' id='splitPanelTopContainer' style={{ height: "60%" }}>
+                <div className='scrollable'>{props.top}</div>
+            </div>
+            <div className='splitPanelBottomContainer' id='splitPanelBottomContainer'>
+                <div className='scrollable'>{props.bottom}</div>
+            </div>
+        </div>
+    );
 };

@@ -2,7 +2,7 @@ const fs = require("fs");
 const globby = require("globby");
 const crypto = require("crypto");
 const isVersioned = /^(.*\d)(\..*js)$/;
-const extractFilename = /^([^\d]*(\.\d{1,3}\.\d{1,3}\.\d{1,3}))(\..*js)$/;
+const extractFilename = /^([^\d]*(\.\d{1,3}\.\d{1,3}\.\d{1,3}))(\..*(js|zip))$/;
 
 function calculateHash(source, algorithm) {
     return crypto.createHash(algorithm).update(source).digest().toString('base64');
@@ -151,6 +151,7 @@ function processPath(integrityCache, path, version) {
     var package = JSON.parse(fs.readFileSync("./package.json", "utf8"));
     processPath(integrityCache, "./browser/**/*.js", package.version);
     processPath(integrityCache, "./snippet/**/*.js", package.version);
+    processPath(integrityCache, "./dist/**/*.zip", package.version);
 
     Object.keys(integrityCache).forEach((name) => {
         console.log("Writing - " + name);

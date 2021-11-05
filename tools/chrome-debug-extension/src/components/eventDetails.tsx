@@ -8,19 +8,19 @@ import React from "react";
 import { LogEntry } from "../LogEntry";
 
 interface IEventDetailsProps {
-  // tslint:disable-next-line:no-any
-  data: any;
+    // tslint:disable-next-line:no-any
+    data: any;
 }
 
 export const EventDetails = (props: IEventDetailsProps): React.ReactElement<IEventDetailsProps> => {
-  let logEntry = new LogEntry(props.data || {}, 0, "", 0);
-  let element = logEntry.render("", [], true);
-  console.log(logEntry);
-  console.log(element);
-  // <pre>{JSON.stringify(props.data, undefined, 2)}</pre>
-  return (
-    <div className='eventDetailsDiv dbg-lgr'>
-      <div dangerouslySetInnerHTML={{__html: element.outerHTML}}></div>
-    </div>
-  );
+    let logEntry = new LogEntry(props.data || {}, 0, "", 0);
+    let element = logEntry.render("", [], true);
+    console.log(logEntry);
+    console.log(element);
+    // <pre>{JSON.stringify(props.data, undefined, 2)}</pre>
+    return (
+        <div className='eventDetailsDiv dbg-lgr'>
+            <div dangerouslySetInnerHTML={{ __html: element.outerHTML }}></div>
+        </div>
+    );
 };

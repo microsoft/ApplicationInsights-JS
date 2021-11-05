@@ -3,7 +3,10 @@
         "outDir": "dist-esm",
         "module": "esnext",
         "target": "es2016",
-        "lib": ["es2017", "dom"],
+        "lib": [
+            "es2017",
+            "dom"
+        ],
         "sourceMap": true,
         "jsx": "react",
         "moduleResolution": "node",
@@ -18,17 +21,17 @@
         "noUnusedLocals": true,
         "allowSyntheticDefaultImports": true,
         "resolveJsonModule": true,
-        "types": ["@types/chrome"],
+        "types": [
+            "@types/chrome"
+        ],
         "noEmit": false,
         "declaration": true,
         "declarationMap": true,
         "inlineSourceMap": false,
         "inlineSources": true,
         "allowJs": false
-    
     },
     "exclude": [
-      "node_modules"
+        "node_modules"
     ]
-  }
-  
+}

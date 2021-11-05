@@ -1,373 +1,387 @@
 body {
-  font-family: system-ui, sans-serif;
-  font-size: 75%;
-  margin: 0px;
+    font-family: system-ui, sans-serif;
+    font-size: 75%;
+    margin: 0px;
 }
 
 .rootDiv {
-  height: 100vh;
-  display: flex;
-  flex-flow: column;
-  overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-flow: column;
+    overflow: hidden;
 }
 
 .headerDiv {
-  flex: 0 1 auto;
+    flex: 0 1 auto;
 }
 
 .contentDiv {
-  flex: 1 1 auto;
-  overflow: hidden;
+    flex: 1 1 auto;
+    overflow: hidden;
 }
 
 .splitPanelRootContainer {
-  height: 100%;
+    height: 100%;
 }
 
 .splitPanelTopContainer {
-  resize: vertical;
-  overflow: hidden;
-  border-bottom: 1px solid #cccccc;
+    resize: vertical;
+    overflow: hidden;
+    border-bottom: 1px solid #cccccc;
 }
 
 .splitPanelBottomContainer {
-  overflow: hidden;
+    overflow: hidden;
 }
 
 .scrollable {
-  overflow: auto;
-  height: 100%;
+    overflow: auto;
+    height: 100%;
 }
 
 .inputBox {
-  border: 1px solid transparent;
-  margin: 3px;
-  padding: 2px;
+    border: 1px solid transparent;
+    margin: 3px;
+    padding: 2px;
 }
 
 .inputBox:hover {
-  border: 1px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
 }
 
 .inputBox:active,
 .inputBox:focus {
-  outline: none;
-  border: 1px solid #1a73e8;
+    outline: none;
+    border: 1px solid #1a73e8;
 }
 
 .rootDiv button {
-  background: transparent;
-  border: none;
-  outline: none;
-  cursor: pointer;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
 }
 
 .rootDiv button:hover {
-  background: #dbdbdb;
-  border: none;
-  outline: none;
+    background: #dbdbdb;
+    border: none;
+    outline: none;
 }
 
 .rootDiv button:active {
-  background: #e0e0e0;
-  border: none;
-  outline: none;
+    background: #e0e0e0;
+    border: none;
+    outline: none;
 }
 
 .optionsBarDiv {
-  background: #f7f7f7;
-  display: flex;
-  flex-wrap: wrap;
+    background: #f7f7f7;
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .verticallyCenteredFlexItem {
-  display: flex;
-  align-self: center;
+    display: flex;
+    align-self: center;
 }
 
 .eventTypeCounterDiv {
-  cursor: pointer;
-  margin: 0px 5px;
-  padding: 2px 1px 3px 6px;
+    cursor: pointer;
+    margin: 0px 5px;
+    padding: 2px 1px 3px 6px;
 }
 
 .eventTypeCounterCountDiv {
-  margin: 0px 5px 0px 5px;
-  align-items: center;
-  display: flex;
+    margin: 0px 5px 0px 5px;
+    align-items: center;
+    display: flex;
 }
 
 table.eventTable {
-  width: 100%;
-  text-align: left;
-  border-collapse: separate;
-  border-spacing: 0px;
+    width: 100%;
+    text-align: left;
+    border-collapse: separate;
+    border-spacing: 0px;
 }
 
 table.eventTable td,
 table.eventTable th {
-  padding: 2px 5px;
-  white-space: nowrap;
+    padding: 2px 5px;
+    white-space: nowrap;
 }
 
 table.eventTable tr:nth-child(even) {
-  background: #f5f5f5;
+    background: #f5f5f5;
 }
 table.eventTable thead {
-  background: #f7f7f7;
-  position: sticky;
-  top: 0px;
+    background: #f7f7f7;
+    position: sticky;
+    top: 0px;
 }
 
 table.eventTable thead th {
-  color: #000000;
-  border-style: solid;
-  border-color: #cdcdcd;
-  border-width: 0px 0px 1px 1px;
-  text-align: left;
-  padding: 5px;
-  font-weight: normal;
+    color: #000000;
+    border-style: solid;
+    border-color: #cdcdcd;
+    border-width: 0px 0px 1px 1px;
+    text-align: left;
+    padding: 5px;
+    font-weight: normal;
 }
 
 table.eventTable tr {
-  border-style: solid;
-  border-color: #cdcdcd;
-  border-width: 0px 1px 1px 1px;
+    border-style: solid;
+    border-color: #cdcdcd;
+    border-width: 0px 1px 1px 1px;
 }
 
 table.eventTable tr:hover td {
-  background-color: #f1f6fd;
-  cursor: pointer;
+    background-color: #f1f6fd;
+    cursor: pointer;
 }
 
 table.eventTable tr.selected td {
-  background-color: #d6d6d6;
+    background-color: #d6d6d6;
 }
 
 .newSessionRow {
-  border-top: 1px solid red;
+    border-top: 1px solid red;
 }
 
 .eventDetailsDiv {
-  font-size: 10pt;
-  overflow-x: "scroll";
+    font-size: 10pt;
+    overflow-x: "scroll";
 }
 
 .typeIcon {
-  vertical-align: middle;
+    vertical-align: middle;
 }
 
 .eventTypeFilterContainer {
-  display: flex;
+    display: flex;
 }
 
 .eventTypeFilterInputContainer {
-  display: flex;
-  position: relative;
+    display: flex;
+    position: relative;
 }
 
 .eventTypeFilterInput {
-  opacity: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  cursor: pointer;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    cursor: pointer;
 }
 
 .eventTypeFilterInput:checked + .eventTypeCounterDiv {
-  background: #d6d6d6;
-  border-radius: 7px;
-  border-width: 1px;
+    background: #d6d6d6;
+    border-radius: 7px;
+    border-width: 1px;
 }
 
 .clearButton {
-  margin-left: 20px;
+    margin-left: 20px;
 }
 
 .saveButton {
-  margin-left: 20px;
+    margin-left: 20px;
 }
 
 .condenseDetailsButton {
-  margin-left: 20px;
+    margin-left: 20px;
 }
 
 .checkBoxLabel {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .dragTarget {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  pointer-events: none;
-  background: lightblue;
-  opacity: 0.7;
-  outline: 4px dashed black;
-  outline-offset: -15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+    background: lightblue;
+    opacity: 0.7;
+    outline: 4px dashed black;
+    outline-offset: -15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .dragTargetText {
-  font-weight: 800;
-  font-size: large;
+    font-weight: 800;
+    font-size: large;
 }
 
 .configurationContainer {
-  display: flex;
-  flex-flow: column;
-  height: 100vh;
+    display: flex;
+    flex-flow: column;
+    height: 100vh;
 }
 
 .configurationSelectionSection {
-  margin: 10px;
-  display: flex;
-  flex-flow: column;
-  flex: 1;
+    margin: 10px;
+    display: flex;
+    flex-flow: column;
+    flex: 1;
 }
 
 .updatesSection {
-  margin: 10px;
+    margin: 10px;
 }
 
 .configurationHeader {
-  font-size: 14pt;
+    font-size: 14pt;
 }
 
 .configurationSelectionDropdownDiv {
-  margin-top: 10px;
-  display: flex;
+    margin-top: 10px;
+    display: flex;
 }
 
 .configurationSelectionDropdown {
-  margin-left: 5px;
+    margin-left: 5px;
 }
 
 .configurationSelectionButtonsDiv {
-  margin: 10px;
+    margin: 10px;
 }
 
 .configurationSelectionButton {
-  margin: 5px;
+    margin: 5px;
 }
 
 .loadingConfiguration {
-  margin-top: 25px;
-  font-size: 14pt;
-  text-align: center;
+    margin-top: 25px;
+    font-size: 14pt;
+    text-align: center;
 }
 
 .loadingConfigurationFailed {
-  margin-top: 25px;
-  text-align: center;
+    margin-top: 25px;
+    text-align: center;
 }
 
 .loadingConfigurationFailedHeader {
-  font-size: 14pt;
-  margin-bottom: 25px;
+    font-size: 14pt;
+    margin-bottom: 25px;
 }
 
 .customConfigurationDiv {
-  flex: 1 1 auto;
-  display: flex;
-  flex-flow: column;
+    flex: 1 1 auto;
+    display: flex;
+    flex-flow: column;
 }
 
 .customConfigurationTextarea {
-  flex: 1 1 auto;
-  display: flex;
-  flex-flow: column;
-  resize: none;
+    flex: 1 1 auto;
+    display: flex;
+    flex-flow: column;
+    resize: none;
 }
 
 .disabled {
-  background-color: lightgray;
+    background-color: lightgray;
 }
 
 .configurationSelectionCopyToCustom {
-  margin-left: 10px;
+    margin-left: 10px;
 }
 
 /* Popup window bottom section css - integrate debug plugin dashboard UI */
 .dbg-lgr {
-  width: 90%;
-  min-width: 600px;
-  position: relative;
-  margin: auto;
-  left: 0;
-  right: 0;
-  border: "1px solid #605E5C";
-  border-radius: 2px;
+    width: 90%;
+    min-width: 600px;
+    position: relative;
+    margin: auto;
+    left: 0;
+    right: 0;
+    border: "1px solid #605E5C";
+    border-radius: 2px;
 }
 
 .dbg-lgr div:focus {
-  outline: 2px solid black;
+    outline: 2px solid black;
 }
 
 .dbg-lgr > div {
-  display: block;
-  position: relative;
+    display: block;
+    position: relative;
 }
 
 .dbg-lgr > div:not(.controls) div {
-  display: block;
-  position: relative;
-  margin-left: 2em;
-  width: 100%;
+    display: block;
+    position: relative;
+    margin-left: 2em;
+    width: 100%;
 }
 
 .dbg-lgr .expandable {
-  /* cursor: pointer; */
+    /* cursor: pointer; */
 }
 
 .dbg-lgr > .tree-root div > span {
-  width: 100%;
-  display: block;
+    width: 100%;
+    display: block;
 }
 
 .dbg-lgr .exception {
-  background-color: "#FEF0F1";
-  color: "#323130";
+    background-color: "#FEF0F1";
+    color: "#323130";
 }
 
 .dbg-lgr .matched-text-filter {
-  background-color: "yellow";
+    background-color: "yellow";
 }
 
 .dbg-lgr .expandable.open::before {
-  content: '- ';
-  font-weight: bold;
+    content: "- ";
+    font-weight: bold;
 }
 
 .dbg-lgr .expandable.closed::before {
-  content: '[+] ';
-  font-weight: bold;
+    content: "[+] ";
+    font-weight: bold;
 }
 
 .dbg-lgr div:hover > .obj-key {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 .dbg-lgr .obj-time {
-  padding-right: 15px;
-  color: #605E5C;
+    padding-right: 15px;
+    color: #605e5c;
 }
 
-.dbg-lgr .object {pointer-events: auto;}
-.dbg-lgr .string {color: #CB3632;}
-.dbg-lgr .number {color: #1C00CF;}
-.dbg-lgr .key {color: #881391; font-weight: bold;}
-.dbg-lgr .function {color: #881391;}
-.dbg-lgr .empty {color: #555555; font-style: italic;}
+.dbg-lgr .object {
+    pointer-events: auto;
+}
+.dbg-lgr .string {
+    color: #cb3632;
+}
+.dbg-lgr .number {
+    color: #1c00cf;
+}
+.dbg-lgr .key {
+    color: #881391;
+    font-weight: bold;
+}
+.dbg-lgr .function {
+    color: #881391;
+}
+.dbg-lgr .empty {
+    color: #555555;
+    font-style: italic;
+}
 
 .dbg-lgr {
-  width: 100%;
-  min-width: 200px;
+    width: 100%;
+    min-width: 200px;
 }

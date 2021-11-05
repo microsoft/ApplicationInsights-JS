@@ -1,56 +1,74 @@
 {
-  "name": "@microsoft/applicationinsights-chrome-debug-extension",
-  "version": "0.1.2",
-  "description": "A chrome based browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
-  "main": "index.ts",
-  "module": "index.ts",
-  "files": [
-    "dist"
-  ],
-  "private": false,
-  "license": "UNLICENSED",
-  "scripts": {
-    "build": "npm run build:esm && npm run build:browser && npm run pack",
-    "build:esm": "grunt chromedebugextension",
-    "build:browser": "npm run update_manifest && npx rollup -c",
-    "rebuild": "npm run build",
-    "test": "",
-    "perftest": "",
-    "publishPackage": "npm publish",
-    "copy": "cp ./images ./dist-esm",
-    "update_manifest": "node ../../tools/release-tools/updatemanifest.js",
-    "pack": "node ../../tools/release-tools/zipbrowser.js ai.chrome-ext dist"
-  },
-  "dependencies": {
-    "@microsoft/applicationinsights-core-js": "2.7.0",
-    "@microsoft/applicationinsights-common": "2.7.0",
-    "@microsoft/applicationinsights-shims": "2.0.0",
-    "@microsoft/dynamicproto-js": "^1.1.4",
-    "file-saver": "^2.0.0",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
-    "react-is": "16.13.1",
-    "scheduler": "~0.11.2"
-  },
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^18.0.0",
-    "@rollup/plugin-node-resolve": "^11.2.1",
-    "@rollup/plugin-replace": "^2.3.3",
-    "@types/chrome": "0.0.148",
-    "@types/file-saver": "~2.0.1",
-    "@types/node": "11.13.2",
-    "@types/react": "^16.9.11",
-    "@types/react-dom": "^16.9.4",
-    "ansi-regex": "4.1.0",
-    "autoprefixer": "9.4.5",
-    "grunt": "^1.4.1",
-    "rollup": "^2.32.0",
-    "rollup-plugin-cleanup": "3.2.1",
-    "rollup-plugin-copy": "^3.4.0",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "@nevware21/grunt-ts-plugin": "^0.4.3",
-    "@nevware21/grunt-eslint-ts": "^0.2.2",
-    "typescript": "^4.3.4",
-    "archiver": "^5.3.0"
-  }
+    "name": "@microsoft/applicationinsights-chrome-debug-extension",
+    "version": "0.1.2",
+    "description": "A chrome based browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/tools/chrome-debug-extension#readme",
+    "keywords": [
+        "azure",
+        "cloud",
+        "script errors",
+        "microsoft",
+        "application insights",
+        "browser performance monitoring",
+        "web analytics",
+        "chrome",
+        "chrome extension"
+    ],
+    "main": "index.ts",
+    "module": "index.ts",
+    "files": [
+        "dist"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/tools/chrome-debug-extension"
+    },
+    "scripts": {
+        "build": "npm run build:esm && npm run build:browser && npm run pack && npm run sri",
+        "build:esm": "grunt chromedebugextension",
+        "build:browser": "npm run update_manifest && npx rollup -c",
+        "rebuild": "npm run build",
+        "test": "",
+        "perftest": "",
+        "publishPackage": "npm publish",
+        "copy": "cp ./images ./dist-esm",
+        "update_manifest": "node ../../tools/release-tools/updatemanifest.js",
+        "pack": "node ../../tools/release-tools/zipbrowser.js ai.chrome-ext dist",
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
+    },
+    "private": false,
+    "license": "MIT",
+    "sideEffects": false,
+    "dependencies": {
+        "@microsoft/applicationinsights-core-js": "2.7.0",
+        "@microsoft/applicationinsights-common": "2.7.0",
+        "@microsoft/applicationinsights-shims": "2.0.0",
+        "@microsoft/dynamicproto-js": "^1.1.4",
+        "file-saver": "^2.0.0",
+        "react": "^17.0.1",
+        "react-dom": "^17.0.1",
+        "react-is": "16.13.1",
+        "scheduler": "~0.11.2"
+    },
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^18.0.0",
+        "@rollup/plugin-node-resolve": "^11.2.1",
+        "@rollup/plugin-replace": "^2.3.3",
+        "@types/chrome": "0.0.148",
+        "@types/file-saver": "~2.0.1",
+        "@types/node": "11.13.2",
+        "@types/react": "^16.9.11",
+        "@types/react-dom": "^16.9.4",
+        "ansi-regex": "4.1.0",
+        "autoprefixer": "9.4.5",
+        "grunt": "^1.4.1",
+        "rollup": "^2.32.0",
+        "rollup-plugin-cleanup": "3.2.1",
+        "rollup-plugin-copy": "^3.4.0",
+        "rollup-plugin-peer-deps-external": "^2.2.4",
+        "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
+        "typescript": "^4.3.4",
+        "archiver": "^5.3.0"
+    }
 }

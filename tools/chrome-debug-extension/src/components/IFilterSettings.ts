@@ -4,10 +4,10 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-import { DataEventType } from '../dataSources/IDataEvent';
+import { DataEventType } from "../dataSources/IDataEvent";
 
 export interface IFilterSettings {
-  filterText: string;
-  filterByType: DataEventType | undefined;
-  showCondensedDetails: boolean;
+    filterText: string;
+    filterByType: DataEventType | undefined;
+    showCondensedDetails: boolean;
 }

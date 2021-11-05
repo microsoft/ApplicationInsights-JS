@@ -37,6 +37,7 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
     if (!thingsReferenced) {
         thingsReferenced = [];
     }
+    
     if (isObject(target)) {
         for (const key of getTargetKeys(target, excludedKeys, includeFunctions)) {
             let targetValue = target[key];
@@ -140,41 +141,41 @@ export function focusHandler(evt: Event, target: Object, level: number, excludeK
 function _navHandler(evt: KeyboardEvent, openHandler?: (evt: Event, forceState?: boolean) => void, currentState?: boolean) {
     const el = evt.target as HTMLElement;
     switch (evt.which) {
-        // Enter
-        case 13: (openHandler) ? openHandler(evt) : void 0; break;
+    // Enter
+    case 13: (openHandler) ? openHandler(evt) : void 0; break;
         // ArrowUp
-        case 38:
-            evt.preventDefault();
-            const prev = el.previousElementSibling as HTMLElement;
-            if (prev && prev.tagName !== "BUTTON") { prev.focus(); }
-            break;
+    case 38:
+        evt.preventDefault();
+        const prev = el.previousElementSibling as HTMLElement;
+        if (prev && prev.tagName !== "BUTTON") { prev.focus(); }
+        break;
         // ArrowDown
-        case 40:
-            evt.preventDefault();
-            const next = el.nextElementSibling as HTMLElement;
-            if (next) { next.focus(); }
-            break;
+    case 40:
+        evt.preventDefault();
+        const next = el.nextElementSibling as HTMLElement;
+        if (next) { next.focus(); }
+        break;
         // ArrowRight
-        case 39:
-            if (openHandler) {
-                openHandler(evt, true);
-                if (currentState) {
-                    ((el.firstElementChild && el.firstElementChild.nextSibling) as HTMLElement).focus();
-                }
+    case 39:
+        if (openHandler) {
+            openHandler(evt, true);
+            if (currentState) {
+                ((el.firstElementChild && el.firstElementChild.nextSibling) as HTMLElement).focus();
             }
-            break;
+        }
+        break;
         // ArrowLeft
-        case 37:
-            if (openHandler) { openHandler(evt, false); }
-            if (!currentState) { (el.parentElement as HTMLElement).focus(); }
-            break;
+    case 37:
+        if (openHandler) { openHandler(evt, false); }
+        if (!currentState) { (el.parentElement as HTMLElement).focus(); }
+        break;
         // c
-        case 67:
-            if (evt.ctrlKey) {
-                copySelectedTree();
-                (evt.target as HTMLElement).focus();
-            }
-            break;
+    case 67:
+        if (evt.ctrlKey) {
+            copySelectedTree();
+            (evt.target as HTMLElement).focus();
+        }
+        break;
     }
 }
 
@@ -327,7 +328,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             let formatted = formatLogElements(targetValue, "", key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
             thingsReferenced.pop();
             // if (formatted.matched) {
-                childOpened = true;
+            childOpened = true;
             // }
             if (formatted.isErr) {
                 isErr = true;

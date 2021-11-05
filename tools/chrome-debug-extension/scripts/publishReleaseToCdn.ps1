@@ -65,6 +65,7 @@ Function GetReleaseFiles (
     $files = New-Object 'system.collections.generic.dictionary[string,string]'
 
     Write-Log "Adding files";
+    AddReleaseFile $files $jsSdkSrcDir "ai.chrome-ext.$version.integrity.json" $true
     AddReleaseFile $files $jsSdkSrcDir "ai.chrome-ext.$version.zip"
 
     return $files
