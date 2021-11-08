@@ -5,7 +5,6 @@ export class AppInsightsInitPerfTestClass {
     public perfEventsBuffer: any[];
     public perfEventWaitBuffer: any[];
     public testPostfix: string;
-    public TENANT_KEY: string = "TENANT_KEY";
     public INTERNAL_TENANT_KEY: string = "INTERNAL_TENANT_KEY";
     public doFlush: boolean;
     public snippetStartTime: number;

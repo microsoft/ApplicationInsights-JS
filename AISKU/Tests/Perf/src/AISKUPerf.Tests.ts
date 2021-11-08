@@ -126,7 +126,6 @@ function addSnippetLoadingTimeEvent(AISKUPerfTest: any, endtime: number): void {
 
 export class AISKUPerf extends AITestClass {
     public AISKUPerfTest: AppInsightsInitPerfTestClass;
-    protected TENANT_KEY: string = "2252db2e5e344635a36c5f1c04b3902c-eaced1c8-a046-4e8d-8fa8-c1ecf2077a5d-7256";
     public perfMgr: any;
     public doPerf: any;
     public appInsights: any;
@@ -193,7 +192,7 @@ export class AISKUPerf extends AITestClass {
                 } catch (e) {
                     Assert.ok(false, "load snippet error: " + e);
                 }
-                
+
             }].concat(() => {
                Assert.ok(true, "test version: " + this.AISKUPerfTest.version);
             })
