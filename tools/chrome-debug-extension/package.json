@@ -40,8 +40,8 @@
     "license": "MIT",
     "sideEffects": false,
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "2.7.0",
-        "@microsoft/applicationinsights-common": "2.7.0",
+        "@microsoft/applicationinsights-core-js": "2.7.1",
+        "@microsoft/applicationinsights-common": "2.7.1",
         "@microsoft/applicationinsights-shims": "2.0.0",
         "@microsoft/dynamicproto-js": "^1.1.4",
         "file-saver": "^2.0.0",
