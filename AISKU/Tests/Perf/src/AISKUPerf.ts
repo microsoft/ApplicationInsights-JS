@@ -17,11 +17,11 @@ export class AppInsightsInitPerfTestClass {
 
     constructor(ver?: string) {
         /**
-         * Default current version is 2.7.0
+         * Default current version is 2.7.1
          * should update version after new release
          * version with doperf(): after 2.5.6
          * */
-        var defaultVer = "2.7.0";
+        var defaultVer = "2.7.1";
         this.version = ver? ver:this._getQueryParameterVersion(defaultVer); 
         this.perfEventsBuffer = [];
         this.perfEventWaitBuffer = [];
@@ -37,7 +37,7 @@ export class AppInsightsInitPerfTestClass {
         var queryParameter = new URLSearchParams(location);
         let queryVer = queryParameter.get("version");
         if (queryVer && queryVer.length > 0) { version = queryVer;}
-        return version;    
+        return version;
     }
 }
 
