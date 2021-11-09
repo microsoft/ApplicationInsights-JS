@@ -17,8 +17,8 @@ export const SplitPanel = (props: ISplitPanelProps): React.ReactElement<ISplitPa
         let container = document.getElementById("splitPanelTopContainer");
         if (container) {
             observer.observe(container, { attributes: true });
+            updateBottomHeight();
         }
-        updateBottomHeight();
     }, []);
 
     const updateBottomHeight = (): void => {
@@ -26,7 +26,10 @@ export const SplitPanel = (props: ISplitPanelProps): React.ReactElement<ISplitPa
         if (container) {
             const currentTopHeight = container.style.height;
             const newBottomHeight = `calc(100% - ${currentTopHeight})`;
-            container.style.height = newBottomHeight;
+            let bottomContainer = document.getElementById("splitPanelBottomContainer");
+            if (bottomContainer) {
+                bottomContainer.style.height = newBottomHeight;
+            }
         }
     };
 
