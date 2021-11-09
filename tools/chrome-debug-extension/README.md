@@ -22,7 +22,7 @@ Your browser will load the latest version of the tool each time you restart the 
 
 ## How to run the tool
 
-Click the `INSERT_ICON_HERE` icon next to the address bar to launch the tool.
+Click the `small puzzle piece` icon next to the address bar and select `Telemetry Viewer`![Telemetry-Viewer-icon](images/icon-19.png) from the extension dropdown to launch the tool.
 
 ## Configuring the tool
 
@@ -32,7 +32,7 @@ Since each web application logs telemetry in a different schema, you'll first be
 
 You can draft a configuration directly in the tool on the `Configuration Selection` page. You can always get back to that page by clicking the "gear" icon.
 
-To add your configuration to the dropdown list, you'll need to check in a change to `INSERT_PATH_TO_FILE` to add your configuration's URL to the list. Follow the instructions in that file.
+To add your configuration to the dropdown list, you'll need to check in a change to [`src/configuration/Configuration.types.ts`](src/configuration/Configuration.types.ts#L16) to add your configuration's URL to the list. Follow the instructions in that file.
 
 ## Updating your configuration
 
@@ -44,4 +44,4 @@ When you load a configuration, the contents of the configuration will be shown o
 
 ## Contributing to the tool
 
-This tool is internally open sourced - if you would like to make a contribution, `INSERT_PROCESS_HERE`
+This tool is internally open sourced - if you would like to make a contribution, please follow the process [here](https://github.com/microsoft/ApplicationInsights-JS/tree/master#contributing)
