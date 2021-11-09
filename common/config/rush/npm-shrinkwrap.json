@@ -3846,7 +3846,7 @@
     "node_modules/@rush-temp/applicationinsights-web": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web.tgz",
-      "integrity": "sha512-JmWVytZEIOwCCNFrBzMm38/yXmgeFltUl6WB0gPE9SbuGPix2GFq7jkKmgGbVP4rYH2PTpkvu0CF7PDU8oFOlQ==",
+      "integrity": "sha512-X14k+mPyz5fM3Z/cDzYqkhJHCpX0b1gcwMiEX4gYRxgbTcr3Ym+F52dIJ9Dspou/Lug0S+115XI0Qk9mtMxuUA==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.18.1",
         "@microsoft/dynamicproto-js": "^1.1.4",
@@ -6653,9 +6653,9 @@
       "integrity": "sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.3.888",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.888.tgz",
-      "integrity": "sha512-5iD1zgyPpFER4kJ716VsA4MxQ6x405dxdFNCEK2mITL075VHO5ResjY0xzQUZguCww/KlBxCA6JmBA9sDt1PRw=="
+      "version": "1.3.889",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.889.tgz",
+      "integrity": "sha512-suEUoPTD1mExjL9TdmH7cvEiWJVM2oEiAi+Y1p0QKxI2HcRlT44qDTP2c1aZmVwRemIPYOpxmV7CxQCOWcm4XQ=="
     },
     "node_modules/emoji-regex": {
       "version": "8.0.0",
@@ -20950,7 +20950,7 @@
     },
     "@rush-temp/applicationinsights-web": {
       "version": "file:projects\\applicationinsights-web.tgz",
-      "integrity": "sha512-JmWVytZEIOwCCNFrBzMm38/yXmgeFltUl6WB0gPE9SbuGPix2GFq7jkKmgGbVP4rYH2PTpkvu0CF7PDU8oFOlQ==",
+      "integrity": "sha512-X14k+mPyz5fM3Z/cDzYqkhJHCpX0b1gcwMiEX4gYRxgbTcr3Ym+F52dIJ9Dspou/Lug0S+115XI0Qk9mtMxuUA==",
       "requires": {
         "@microsoft/api-extractor": "^7.18.1",
         "@microsoft/dynamicproto-js": "^1.1.4",
@@ -23163,9 +23163,9 @@
       "integrity": "sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0="
     },
     "electron-to-chromium": {
-      "version": "1.3.888",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.888.tgz",
-      "integrity": "sha512-5iD1zgyPpFER4kJ716VsA4MxQ6x405dxdFNCEK2mITL075VHO5ResjY0xzQUZguCww/KlBxCA6JmBA9sDt1PRw=="
+      "version": "1.3.889",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.889.tgz",
+      "integrity": "sha512-suEUoPTD1mExjL9TdmH7cvEiWJVM2oEiAi+Y1p0QKxI2HcRlT44qDTP2c1aZmVwRemIPYOpxmV7CxQCOWcm4XQ=="
     },
     "emoji-regex": {
       "version": "8.0.0",

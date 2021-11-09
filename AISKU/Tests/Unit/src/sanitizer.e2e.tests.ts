@@ -1,11 +1,9 @@
-import { ApplicationInsights, IApplicationInsights, Util, LoggingSeverity, _InternalMessageId } from '../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights, Util, LoggingSeverity, _InternalMessageId } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { TestClass } from './TestFramework/TestClass';
+import { AITestClass, Assert, PollingAssert } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
-import { Assert } from './TestFramework/Assert';
-import { PollingAssert } from './TestFramework/PollingAssert';
 
-export class SanitizerE2ETests extends TestClass {
+export class SanitizerE2ETests extends AITestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
     private _ai: IApplicationInsights;

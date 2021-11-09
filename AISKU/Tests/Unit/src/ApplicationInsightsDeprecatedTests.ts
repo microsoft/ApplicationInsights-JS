@@ -1,13 +1,11 @@
-import { IAppInsightsDeprecated } from "../src/ApplicationInsightsDeprecated";
-import { ApplicationInsightsContainer } from "../src/ApplicationInsightsContainer";
-import { Snippet } from "../src/Initialization";
+import { IAppInsightsDeprecated } from "../../../src/ApplicationInsightsDeprecated";
+import { ApplicationInsightsContainer } from "../../../src/ApplicationInsightsContainer";
+import { Snippet } from "../../../src/Initialization";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { SinonSpy } from "sinon";
-import { Assert } from "./TestFramework/Assert";
-import { PollingAssert } from "./TestFramework/PollingAssert";
-import { TestClass } from "./TestFramework/TestClass";
+import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 
-export class ApplicationInsightsDeprecatedTests extends TestClass {
+export class ApplicationInsightsDeprecatedTests extends AITestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
     private _aiDeprecated: IAppInsightsDeprecated;
     private _snippet: Snippet;

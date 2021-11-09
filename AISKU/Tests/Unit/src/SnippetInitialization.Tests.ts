@@ -1,11 +1,9 @@
-import { IAppInsightsDeprecated } from "../src/ApplicationInsightsDeprecated";
-import { ApplicationInsightsContainer } from "../src/ApplicationInsightsContainer";
-import { IApplicationInsights, Snippet } from "../src/Initialization";
+import { IAppInsightsDeprecated } from "../../../src/ApplicationInsightsDeprecated";
+import { ApplicationInsightsContainer } from "../../../src/ApplicationInsightsContainer";
+import { IApplicationInsights, Snippet } from "../../../src/Initialization";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { SinonSpy } from "sinon";
-import { Assert } from "./TestFramework/Assert";
-import { PollingAssert } from "./TestFramework/PollingAssert";
-import { TestClass } from "./TestFramework/TestClass";
+import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { createSnippetV5 } from "./testSnippet";
 import { hasOwnProperty, isNotNullOrUndefined, ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders, Util } from "@microsoft/applicationinsights-common";
@@ -64,7 +62,7 @@ function getSnippetConfig(sessionPrefix: string) {
     };
 };
 
-export class SnippetInitializationTests extends TestClass {
+export class SnippetInitializationTests extends AITestClass {
 
     // Context 
     private tagKeys = new ContextTagKeys();
@@ -183,7 +181,7 @@ export class SnippetInitializationTests extends TestClass {
                     } catch (e) {
                         Assert.ok(false, "Exception:" + e);
                     }
-                }, "waiting for sender success", 30, 1000)]
+                }, "waiting for sender success", 30, 1000) as any]
             });
 
             this.testCase({
@@ -843,8 +841,8 @@ export class SnippetInitializationTests extends TestClass {
         });
 
         this.testCase({
-            name: 'Sampling: sampleRate is generated as a field in the envelope when it is less than 100',
-            test: () => {
+            name: 'Sampling: sampleRate is generated as a field in the envelope when it is less than 100',
+            test:() => {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 theSnippet.trackEvent({ name: 'event' });
                 Assert.ok(this.envelopeConstructorSpy.called);
