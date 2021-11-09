@@ -1,10 +1,6 @@
-// -----------------------------------------------------------------------
-// <copyright company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// </copyright>
-// -----------------------------------------------------------------------
+// Licensed under the MIT License.
 
-// import { IPerfEvent } from '@microsoft/applicationinsights-core-js';
 import { IDataEvent } from "./IDataEvent";
 import { IDataSource } from "./IDataSource";
 import { isString, hasOwnProperty } from "@microsoft/applicationinsights-core-js";

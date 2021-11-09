@@ -1,8 +1,5 @@
-// -----------------------------------------------------------------------
-// <copyright company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// </copyright>
-// -----------------------------------------------------------------------
+// Licensed under the MIT License.
 
 function registerEventHandlers(): void {
     const windowId: number = -1;

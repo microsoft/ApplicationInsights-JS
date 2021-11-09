@@ -1,8 +1,6 @@
-// -----------------------------------------------------------------------
-// <copyright company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// </copyright>
-// -----------------------------------------------------------------------
+// Licensed under the MIT License.
+
 import { ConfigurationType, ConfigurationURLs } from "./Configuration.types";
 import { defaultConfiguration } from "./defaultConfiguration";
 import { IConfiguration } from "./IConfiguration";

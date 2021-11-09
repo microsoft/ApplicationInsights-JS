@@ -1,8 +1,5 @@
-// -----------------------------------------------------------------------
-// <copyright company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// </copyright>
-// -----------------------------------------------------------------------
+// Licensed under the MIT License.
 
 import _ from "lodash";
 import { DynamicValueConverter, IConfiguration, IDynamicField } from "../configuration/IConfiguration";
