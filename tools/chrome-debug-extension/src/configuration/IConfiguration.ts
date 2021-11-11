@@ -6,27 +6,46 @@ import { DataSourceType } from "../dataSources/IDataSource";
 
 // This is the expected format of the JSON file loaded for a given configuration
 export interface IConfiguration {
-    // Which data source to use to gather the events
-    dataSourceType: DataSourceType;
+    /**
+     * Which data source to use to gather the events, defaults to Network
+     */
+    dataSourceType?: DataSourceType;
 
-    // Optional URL filter pattern that some data sources use
-    dataSourceUrls?: string;
+    /**
+     * Optional URL filter pattern that some data sources use
+     */
+    dataSourceUrls?: string | string[];
 
-    // A list of fields of the fields to exclude from the details view when "Consolidate details" is checked
+    /**
+     * A list of fields of the fields to exclude from the details view when "Consolidate details" is checked
+     */
     fieldsToExcludeFromCondensedList: string[];
 
-    // A list of the columns to display
+    /**
+     * A list of the columns to display
+     */
     columnsToDisplay: IColumn[];
 
-    // The names of optional special fields that enable handy features
-    specialFieldNames: ISpecialFieldNames;
+    /**
+     * The names of optional special fields that enable handy features
+     */
+    specialFieldNames?: ISpecialFieldNames;
 
-    // If supplied, any events without this field will be ignored
+    /**
+     * If supplied, any events without this field will be ignored
+     */
     ignoreEventsWithoutThisField?: string;
 
-    // The prioritized list of conditions that will be evaluated to determine the DataEventType of a DataEvent
-    // The first match will determine the DataEventType, the default if there are no matches is DataEventType.other
-    prioritizedDataEventTypeTests: IDataEventTypeCondition[];
+    /**
+     * The prioritized list of conditions that will be evaluated to determine the DataEventType of a DataEvent
+     * The first match will determine the DataEventType, the default if there are no matches is DataEventType.other
+     */
+    prioritizedDataEventTypeTests?: IDataEventTypeCondition[];
+
+    /**
+     * [Optional] Ignore notification messages
+     */
+    ignoreNotifications?: boolean;
 }
 
 export type DynamicValueConverter =
@@ -85,7 +104,7 @@ export interface ISpecialFieldNames {
     /**
      * A unique ID for each session
      */
-    sessionId?: string;
+    sessionId?: string|string[];
 
     /**
      * If specified, a regular expression to use on the data in the sessionId field -

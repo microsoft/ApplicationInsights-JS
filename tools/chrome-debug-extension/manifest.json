@@ -11,6 +11,7 @@
     },
     "permissions": [
         "<all_urls>",
+        "activeTab",
         "webRequest"
     ],
     "background": {
@@ -24,5 +25,20 @@
             "38": "images/icon-38.png"
         },
         "default_title": "Telemetry Viewer"
-    }
+    },
+    "web_accessible_resources": [
+        "scripts/pageHelper.js",
+        "scripts/pageHelper.min.js",
+        "scripts/pageHelper.min.js.map"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "scripts/contentLoad.min.js"
+            ]
+        }
+    ]
 }

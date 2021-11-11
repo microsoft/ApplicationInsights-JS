@@ -4,7 +4,8 @@
 import {
     BaseTelemetryPlugin, IConfiguration, arrForEach, objKeys,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, _InternalMessageId,
-    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls, objForEachKey, isFunction, dateNow, isArray, isUndefined
+    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls,
+    objForEachKey, isFunction, dateNow, isArray, isUndefined, getDebugExt
 } from "@microsoft/applicationinsights-core-js";
 import { Dashboard } from "./components/Dashboard";
 import { getTargetName } from "./components/helpers";
@@ -138,11 +139,9 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                         if (notifyMgr) {
                             notifyMgr.addNotificationListener({
                                 eventsSent: (events: ITelemetryItem[]) => {
-                                    // window.postMessage(events, "*");
                                     dashboard.newLogEntry(events, dateNow() - startTime, "Notification:eventsSent", 0, "eventsSent");
                                 },
                                 eventsDiscarded: (events: ITelemetryItem[], reason: number) => {
-                                    // window.postMessage(events, "*");
                                     dashboard.newLogEntry({
                                         events,
                                         reason
@@ -150,15 +149,12 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
     
                                 },
                                 eventsSendRequest: (sendReason: number, isAsync: boolean): void => {
-                                    // window.postMessage({ sendReason: sendReason }, "*");
                                     dashboard.newLogEntry({
                                         sendReason,
                                         isAsync
                                     }, dateNow() - startTime, "Notification:eventsSendRequest", 0, "eventsSendRequest");
                                 },
                                 perfEvent: (perfEvent: IPerfEvent): void => {
-                                    const obj = _cleanStringify(perfEvent);
-                                    window.postMessage(obj, "*");
                                     let evtName = `Notification:perfEvent[${perfEvent.name}]`;
                                     dashboard.newLogEntry(
                                         perfEvent,
@@ -274,32 +270,6 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 }
             }
 
-            function _cleanStringify(object: any) {
-                if (object && typeof object === "object") {
-                    object = copyWithoutCircularReferences([object], object);
-                }
-                return JSON.stringify(object);
-            
-                function copyWithoutCircularReferences(references: any, object: any) {
-                    var cleanObject = {};
-                    arrForEach(objKeys(object), (key) => {
-                        var value = object[key];
-                        if (value && typeof value === "object") {
-                            if (references.indexOf(value) < 0) {
-                                references.push(value);
-                                cleanObject[key] = copyWithoutCircularReferences(references, value);
-                                references.pop();
-                            } else {
-                                cleanObject[key] = "###_Circular_###";
-                            }
-                        } else if (typeof value !== "function") {
-                            cleanObject[key] = value;
-                        }
-                    });
-                    return cleanObject;
-                }
-            }
-
             function _addTarget(targetObjects: any[], ext:any) {
                 if (ext && targetObjects.indexOf(ext) === -1) {
                     targetObjects.push(ext);
@@ -359,8 +329,13 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
 
                     let evtPrefix = _getEvtPrefix(funcArgs);
                     let obj = _createInstrumentObject(funcArgs, orgArgs);
-                    dashboard.newLogEntry(obj, dateNow() - startTime, `${evtPrefix}`, 0, funcArgs.name);
-                    window.postMessage(_cleanStringify(obj), "*");
+                    dashboard.newLogEntry(obj, dateNow() - startTime, evtPrefix, 0, funcArgs.name);
+
+                    let dbgExt = getDebugExt(_self.core.config);
+                    if (dbgExt && dbgExt.debugMsg) {
+                        dbgExt.debugMsg(evtPrefix, obj);
+                    }
+
                     if (_theConfig.dumpToConsole() && console && console.log) {
                         console.log(`[${evtPrefix}] preProcess - funcArgs: `, funcArgs);
                         console.log(`[${evtPrefix}] preProcess - orgArgs: `, orgArgs);
@@ -379,8 +354,12 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
     
                         // The called function threw an exception
                         let obj = _createInstrumentObject(funcArgs, orgArgs);
-                        dashboard.newLogEntry(obj, dateNow() - startTime, `${evtPrefix}`, 0, funcArgs.name);
-                        window.postMessage(_cleanStringify(obj), "*");
+                        dashboard.newLogEntry(obj, dateNow() - startTime, evtPrefix, 0, funcArgs.name);
+                        let dbgExt = getDebugExt(_self.core.config);
+                        if (dbgExt && dbgExt.debugMsg) {
+                            dbgExt.debugMsg(evtPrefix, obj);
+                        }
+
                         if (_theConfig.dumpToConsole() && console && console.log) {
                             console.log(`[${evtPrefix}] complete`);
                         }
@@ -394,9 +373,14 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 }
 
                 if (!debugBins["processTelemetry"] && _theConfig.logProcessTelemetry() === true) {
-                    dashboard.newLogEntry(event, dateNow() - startTime, `[${_self.identifier}:processTelemetry[${event.baseType}]`, 0, "processTelemetry");
-                    window.postMessage(JSON.stringify(event), "*");
+                    let evtName = `[${_self.identifier}:processTelemetry[${event.baseType}]`;
+                    dashboard.newLogEntry(event, dateNow() - startTime, evtName, 0, "processTelemetry");
+                    let dbgExt = getDebugExt(_self.core.config);
+                    if (dbgExt && dbgExt.debugMsg) {
+                        dbgExt.debugMsg(evtName, event);
+                    }
                 }
+
                 _self.processNext(event, itemCtx);
             }
         });

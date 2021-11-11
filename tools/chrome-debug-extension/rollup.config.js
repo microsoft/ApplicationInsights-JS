@@ -8,7 +8,7 @@ import copy from "rollup-plugin-copy";
 const version = require("./package.json").version;
 const banner = [
     "/*!",
-    ` * Application Insights JavaScript SDK - Chrome Debug Plugin, ${version}`,
+    ` * Application Insights JavaScript SDK - Chrome Debug Extension, ${version}`,
     " * Copyright (c) Microsoft and contributors. All rights reserved.",
     " */"
 ].join("\n");
@@ -16,7 +16,7 @@ const banner = [
 const replaceValues = {
     "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
     "// Licensed under the MIT License.": "",
-    "process.env.NODE_ENV": "JSON.stringify( 'production' )"
+    "process.env.NODE_ENV": "'production'"
 };
 
 const generateBackground = (isProduction) => {
@@ -47,7 +47,7 @@ const generateBackground = (isProduction) => {
     };
 
     if (isProduction) {
-        browserRollupConfig.output.file = `browser/background.min.js`;
+        browserRollupConfig.output.file = `browser/scripts/background.min.js`;
         browserRollupConfig.plugins.push(
             uglify({
                 ie8: true,
@@ -103,7 +103,7 @@ const generatePopup = (isProduction) => {
     };
 
     if (isProduction) {
-        browserRollupConfig.output.file = `browser/popup.min.js`;
+        browserRollupConfig.output.file = `browser/scripts/popup.min.js`;
         browserRollupConfig.plugins.push(
             uglify({
                 ie8: true,
@@ -123,6 +123,93 @@ const generatePopup = (isProduction) => {
     return browserRollupConfig;
 };
 
+const generateContentLoad = () => {
+    const browserRollupConfig = {
+        input: `dist-esm/contentLoad.js`,
+        output: {
+            file: `browser/scripts/contentLoad.min.js`,
+            banner: banner,
+            format: "iife",
+            extend: true,
+            freeze: false,
+            sourcemap: true
+        },
+        plugins: [
+            nodeResolve({
+                browser: true,
+                preferBuiltins: true
+            }),
+            commonjs(),
+            replace({
+                preventAssignment: true,
+                delimiters: ["", ""],
+                values: replaceValues
+            // }),
+            // uglify({
+            //     ie8: true,
+            //     toplevel: true,
+            //     compress: {
+            //         passes: 3,
+            //         unsafe: true
+            //     },
+            //     output: {
+            //         preamble: banner,
+            //         webkit: true
+            //     }
+            })
+        ]
+    }
+
+    return browserRollupConfig;
+};
+
+const generatePageHelper = () => {
+    const browserRollupConfig = {
+        input: `dist-esm/pageHelper.js`,
+        output: {
+            file: `browser/scripts/pageHelper.min.js`,
+            banner: banner,
+            format: "iife",
+            name: "Microsoft.ApplicationInsights",
+            extend: true,
+            freeze: false,
+            sourcemap: true
+        },
+        plugins: [
+            nodeResolve({
+                browser: true,
+                preferBuiltins: true,
+                dedupe: ["react", "react-dom"]
+            }),
+            commonjs(),
+            replace({
+                preventAssignment: true,
+                delimiters: ["", ""],
+                values: replaceValues
+            // }),
+            // uglify({
+            //     ie8: true,
+            //     toplevel: true,
+            //     compress: {
+            //         passes: 3,
+            //         unsafe: true
+            //     },
+            //     output: {
+            //         preamble: banner,
+            //         webkit: true
+            //     }
+            })
+        ]
+    };
+
+    return browserRollupConfig;
+};
+
 updateDistEsmFiles(replaceValues, banner);
 
-export default [generateBackground(false), generatePopup(false)];
+export default [
+    generateBackground(false),
+    generatePopup(false),
+    generateContentLoad(),
+    generatePageHelper()
+];

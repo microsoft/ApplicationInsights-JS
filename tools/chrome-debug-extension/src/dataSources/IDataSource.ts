@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDataEvent } from "./IDataEvent";
+import { IMessage } from "../interfaces/IMessage";
 
 export type DataSourceType = "Network" | "DiagnosticInjection" | "OneDSDataSource";
 
 export interface IDataSource {
-    addListener: (callback: (newDataEvent: IDataEvent) => void) => number;
+    addListener: (callback: (newMessage: IMessage) => void) => number;
     removeListener: (id: number) => boolean;
 
-    startListening(): void;
-    stopListening(): void;
+    startListening: () => void;
+    stopListening: () => void;
 }

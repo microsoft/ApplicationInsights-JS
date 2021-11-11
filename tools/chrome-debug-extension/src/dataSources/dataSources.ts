@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { dumpObj, isArray, isString } from "@microsoft/applicationinsights-core-js";
 import { IConfiguration } from "../configuration/IConfiguration";
 import { IDataSource } from "./IDataSource";
 import { NetworkDataSource } from "./networkDataSource";
 import { NoOpDataSource } from "./noOpDataSource";
-import { OneDSDataSource } from "./oneDSDataSource";
 
 export function createDataSource(configuration: IConfiguration): IDataSource {
     // If on localhost, assume we are doing local testing (e.g. for accessibility issues) and use the NoOpDataSource
@@ -13,17 +13,46 @@ export function createDataSource(configuration: IConfiguration): IDataSource {
         return new NoOpDataSource();
     }
 
-    switch (configuration.dataSourceType) {
-        case "Network": {
-            return new NetworkDataSource(configuration.dataSourceUrls);
+    let tabId: number = 0;
+    try {
+        let params = new URLSearchParams(window.location.search);
+        if (params.has("tabId")) {
+            tabId = parseInt(params.get("tabId") || "");
         }
-        case "OneDSDataSource": {
-            return new OneDSDataSource();
+        
+        if (!tabId) {
+            return new NoOpDataSource();
         }
-        default: {
-            throw new Error(
-                `Unrecognized data source supplied in the configuration: ${configuration.dataSourceType}`
-            );
+    
+    } catch (e) {
+        console.log("Error getting URL Params: " + dumpObj(e));
+    }
+
+    let urls: string[] = [];
+    if (configuration.dataSourceUrls) {
+        if (isArray(configuration.dataSourceUrls)) {
+            urls = configuration.dataSourceUrls as string[];
+        } else if (isString(configuration.dataSourceUrls)) {
+            urls = [configuration.dataSourceUrls];
         }
+
+        if (!urls || urls.length === 0) {
+            urls = ["*://*.microsoft.com/OneCollector/*", "*://*.visualstudio.com/v2/track*"];
+        }
+    }
+
+    let dataSourceType = configuration.dataSourceType;
+    if (!dataSourceType) {
+        dataSourceType = "Network";
+    }
+
+    switch (dataSourceType) {
+        case "OneDSDataSource":
+        case "Network":
+            return new NetworkDataSource(tabId, urls, configuration.ignoreNotifications);
+
+        default:
+            console.log(`Unrecognized data source supplied in the configuration: ${configuration.dataSourceType}`);
+            return new NoOpDataSource();
     }
 }

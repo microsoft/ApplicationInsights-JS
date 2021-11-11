@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDataEvent } from "./IDataEvent";
+import { IMessage } from "../interfaces/IMessage";
 import { IDataSource } from "./IDataSource";
 
 export class NoOpDataSource implements IDataSource {
@@ -13,7 +13,7 @@ export class NoOpDataSource implements IDataSource {
     public stopListening = (): void => {
     };
 
-    public addListener = (callback: (newDataEvent: IDataEvent) => void): number => {
+    public addListener = (callback: (newMessage: IMessage) => void): number => {
         return this.nextListenerId++;
     };
 

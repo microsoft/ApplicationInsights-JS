@@ -1,38 +1,70 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IConfiguration } from "./IConfiguration";
+import { IConfiguration, IDataEventTypeCondition } from "./IConfiguration";
+
+export const defaultSessionId: string[] = ["tags['ai.session.id']", "ext.app.sesId"];
+
+export const defaultDataEventTypes: IDataEventTypeCondition[] = [
+    {
+        dataEventType: "performance",
+        fieldName: "name",
+        fieldValue: "Notification:perfEvent*"
+    },
+    {
+        dataEventType: "warning",
+        fieldName: "name",
+        fieldValue: "Notification:eventsDiscarded*"
+    },
+    {
+        dataEventType: "appLogic",
+        fieldName: "name",
+        fieldValue: "Notification:events*"
+    },
+    {
+        dataEventType: "fatalError",
+        fieldName: "name",
+        fieldValue: "diagLog:throw*"
+    },
+    {
+        dataEventType: "warning",
+        fieldName: "name",
+        fieldValue: "diagLog:warn*"
+    },
+    {
+        dataEventType: "fatalError",
+        fieldName: "name",
+        fieldValue: "diagLog:error*"
+    },
+    {
+        dataEventType: "warning",
+        fieldName: "data.eventType",
+        fieldValue: "Warning"
+    },
+    {
+        dataEventType: "fatalError",
+        fieldName: "data.baseType",
+        fieldValue: "ExceptionData"
+    },
+    {
+        dataEventType: "appLogic",
+        fieldName: "data.eventType",
+        fieldValue: "ApplicationLogic"
+    },
+    {
+        dataEventType: "performance",
+        fieldName: "data.baseType",
+        fieldValue: "PageviewPerformanceData"
+    },
+    {
+        dataEventType: "performance",
+        fieldName: "data.baseType",
+        fieldValue: "PageviewPerformanceData"
+    }
+];
 
 export const defaultConfiguration: IConfiguration = {
-    dataSourceType: "Network",
-    dataSourceUrls: "https://dc.services.visualstudio.com/v2/track*",
-    prioritizedDataEventTypeTests: [
-        {
-            dataEventType: "warning",
-            fieldName: "data.eventType",
-            fieldValue: "Warning"
-        },
-        {
-            dataEventType: "fatalError",
-            fieldName: "data.baseType",
-            fieldValue: "ExceptionData"
-        },
-        {
-            dataEventType: "appLogic",
-            fieldName: "data.eventType",
-            fieldValue: "ApplicationLogic"
-        },
-        {
-            dataEventType: "performance",
-            fieldName: "data.baseType",
-            fieldValue: "PageviewPerformanceData"
-        },
-        {
-            dataEventType: "performance",
-            fieldName: "data.baseType",
-            fieldValue: "PageviewPerformanceData"
-        }
-    ],
+    prioritizedDataEventTypeTests: defaultDataEventTypes,
     columnsToDisplay: [
         {
             header: "Session",
@@ -98,6 +130,6 @@ export const defaultConfiguration: IConfiguration = {
         "tags['ai.internal.snippet']"
     ],
     specialFieldNames: {
-        sessionId: "tags['ai.session.id']"
+        sessionId: ""
     }
 };

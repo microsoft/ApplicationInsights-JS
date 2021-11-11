@@ -1,75 +1,125 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDataEvent } from "./IDataEvent";
+import { MessageSource, MessageType } from "../Enums";
+import { IMessage } from "../interfaces/IMessage";
 import { IDataSource } from "./IDataSource";
 
 export class NetworkDataSource implements IDataSource {
-    private readonly listeners: Map<number, (newDataEvent: IDataEvent) => void> = new Map();
-    private nextListenerId: number = 0;
 
-    constructor(private urls?: string) { }
+    public addListener: (callback: (newMessage: IMessage) => void) => number;
+    public removeListener: (id: number) => boolean;
+    public startListening: () => void;
+    public stopListening: () => void;
 
-    public startListening = (): void => {
-        // Monitor network traffic for telemetry
-        chrome.webRequest.onBeforeRequest.addListener(
-            this.processWebRequest,
-            // filters
-            {
-                urls: [this.urls || "*://*.microsoft.com/OneCollector/*"]
-            },
-            ["requestBody"]
-        );
-    };
+    constructor(_tabId: number, urls: string[], ignoreNotifications?: boolean) {
+        let _self = this;
+        let listeners: Map<number, (newMessage: IMessage) => void> = new Map();
+        let nextListenerId: number = 0;
 
-    public stopListening = (): void => {
-        chrome.webRequest.onBeforeRequest.removeListener(this.processWebRequest);
-    };
+        if (!urls || urls.length === 0) {
+            urls = ["*://*.microsoft.com/OneCollector/*", "*://*.visualstudio.com/v2/track*"]
+        }
 
-    public addListener = (callback: (newDataEvent: IDataEvent) => void): number => {
-        this.listeners.set(this.nextListenerId, callback);
-        return this.nextListenerId++;
-    };
+        _self.startListening = (): void => {
+            // Monitor network traffic for telemetry
+            chrome.webRequest.onBeforeRequest.addListener(
+                _processWebRequest,
+                // filters
+                {
+                    urls
+                },
+                ["requestBody"]
+            );
 
-    public removeListener = (id: number): boolean => {
-        return this.listeners.delete(id);
-    };
-
-    private processWebRequest = (details: chrome.webRequest.WebRequestBodyDetails): void => {
-        if (details.type === "xmlhttprequest") {
-            const events = details.requestBody && this.convertToStringArray(details.requestBody.raw);
-            if (events) {
-                for (let i = events.length - 1; i >= 0; i--) {
-                    const event = JSON.parse(events[i]);
-                    if (event !== undefined) {
-                        if (Array.isArray(event)) {
-                            for (const subEvent of event) {
-                                this.handleMessage(subEvent);
+            chrome.runtime.onMessage.addListener(_onMessageReceived);
+        };
+    
+        _self.stopListening = (): void => {
+            chrome.webRequest.onBeforeRequest.removeListener(_processWebRequest);
+            chrome.runtime.onMessage.removeListener(_onMessageReceived);
+        };
+    
+        _self.addListener = (callback: (newMessage: IMessage) => void): number => {
+            listeners.set(nextListenerId, callback);
+            return nextListenerId++;
+        };
+    
+        _self.removeListener = (id: number): boolean => {
+            return listeners.delete(id);
+        };
+    
+        function _processWebRequest(details: chrome.webRequest.WebRequestBodyDetails): void {
+            if (details && details.type === "xmlhttprequest") {
+                const events = details.requestBody && _convertToStringArray(details.requestBody.raw);
+                if (events) {
+                    for (let i = events.length - 1; i >= 0; i--) {
+                        const event = JSON.parse(events[i]);
+                        if (event !== undefined) {
+                            if (Array.isArray(event)) {
+                                for (const subEvent of event) {
+                                    _handleMessage(subEvent, details);
+                                }
+                            } else {
+                                _handleMessage(event, details);
                             }
-                        } else {
-                            this.handleMessage(event);
                         }
                     }
                 }
             }
         }
-    };
-
-    // tslint:disable-next-line:no-any
-    private handleMessage = (message: any): void => {
-        this.listeners.forEach((listener: (newEvent: IDataEvent) => void) => {
-            listener(message as IDataEvent);
-        });
-    };
-
-    private convertToStringArray(buf: chrome.webRequest.UploadData[] | undefined): string[] {
-        if (buf !== undefined) {
-            const data = buf[0].bytes;
-            if (data) {
-                const decoder = new TextDecoder();
-                return decoder.decode(new Uint8Array(data)).split("\n");
+    
+        function _handleMessage(message: any, details: chrome.webRequest.WebRequestBodyDetails): void {
+            if (message) {
+                let msg: IMessage = {
+                    id: MessageType.Network,
+                    src: MessageSource.WebRequest,
+                    tabId: details.tabId,
+                    details: {
+                        name: message.name,
+                        time: message.time,
+                        data: message
+                    }
+                };
+                listeners.forEach((listener: (message: IMessage) => void) => {
+                    listener(msg);
+                });
             }
         }
-        return [""];
+    
+        function _convertToStringArray(buf: chrome.webRequest.UploadData[] | undefined): string[] {
+            if (buf !== undefined) {
+                const data = buf[0].bytes;
+                if (data) {
+                    const decoder = new TextDecoder();
+                    return decoder.decode(new Uint8Array(data)).split("\n");
+                }
+            }
+
+            return [""];
+        }
+
+        function _onMessageReceived(message: any, sender: any, sendResponse: any): void {
+            let msg = message as IMessage;
+    
+            if (ignoreNotifications === true && msg.id === MessageType.Notification) {
+                return;
+            }
+            
+            // Only handle notifications and
+            if (msg.id === MessageType.Notification || msg.id === MessageType.DiagnosticLog || msg.id === MessageType.GenericEvent) {
+                if (sender && sender.tab && msg.details) {
+                    msg.tabId = msg.tabId || sender.tab.id;
+
+                    try {
+                        listeners.forEach((listener: (message: IMessage) => void) => {
+                            listener(msg);
+                        });
+                    } catch (e) {
+                        console.error("Unexpected Message: " + JSON.stringify(e));
+                    }
+                }
+            }
+        }
     }
 }

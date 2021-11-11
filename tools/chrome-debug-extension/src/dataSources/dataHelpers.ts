@@ -2,8 +2,27 @@
 // Licensed under the MIT License.
 
 import _ from "lodash";
-import { DynamicValueConverter, IConfiguration, IDynamicField } from "../configuration/IConfiguration";
+import { isArray, isString } from "@microsoft/applicationinsights-core-js";
+import { defaultDataEventTypes, defaultSessionId } from "../configuration/defaultConfiguration";
+import { DynamicValueConverter, IConfiguration, IDataEventTypeCondition, IDynamicField, ISpecialFieldNames } from "../configuration/IConfiguration";
 import { DataEventType, IDataEvent } from "./IDataEvent";
+
+let _regExpMap: { [key: string]: RegExp } = {};
+
+function _createRegEx(str: string) {
+    // eslint-disable-next-line security/detect-non-literal-regexp
+    return new RegExp("^" + str.replace(/([.+?^=!:${}()|\[\]\/\\])/g, "\\$1").replace("*", ".*") + "$");
+}
+
+function _isMatch(source: string, value: string) {
+    if (source.indexOf("*") !== -1) {
+        // Looks like it contains a wildcard match
+        let regEx = _regExpMap[source] || (_regExpMap[source] = _createRegEx(source));
+        return regEx.test(value);
+    }
+
+    return source === value;
+}
 
 export interface ICounts {
     all: number;
@@ -14,12 +33,23 @@ export interface ICounts {
 }
 
 export function getEventType(dataEvent: IDataEvent, configuration: IConfiguration): DataEventType {
-    for (const dataEventTypeTest of configuration.prioritizedDataEventTypeTests) {
+    let prioritizedDataEventTypeTests: IDataEventTypeCondition[] = configuration.prioritizedDataEventTypeTests || [];
+    
+    for (const dataEventTypeTest of prioritizedDataEventTypeTests) {
         const fieldValue = getFieldValueAsString(dataEvent, dataEventTypeTest.fieldName);
-        if (fieldValue && fieldValue === dataEventTypeTest.fieldValue) {
+        if (fieldValue && _isMatch(dataEventTypeTest.fieldValue, fieldValue)) {
             return dataEventTypeTest.dataEventType;
         }
     }
+    
+    // Default to using the default set if the configuration found nothing
+    for (const dataEventTypeTest of defaultDataEventTypes) {
+        const fieldValue = getFieldValueAsString(dataEvent, dataEventTypeTest.fieldName);
+        if (fieldValue && _isMatch(dataEventTypeTest.fieldValue, fieldValue)) {
+            return dataEventTypeTest.dataEventType;
+        }
+    }
+
     return "other";
 }
 
@@ -38,11 +68,11 @@ export function getDynamicFieldValue(dataEvent: IDataEvent, dynamicFields?: IDyn
 }
 
 export function getCondensedDetails(dataEvent: IDataEvent, configuration: IConfiguration): string {
-    const condensedDetails = JSON.parse(JSON.stringify(dataEvent));
+    const condensedDetails = JSON.parse(JSON.stringify((dataEvent||{}).data || {}));
 
     if (configuration && configuration.fieldsToExcludeFromCondensedList) {
         for (const toExclude of configuration.fieldsToExcludeFromCondensedList) {
-            _.set(condensedDetails, toExclude, undefined);
+            _.unset(condensedDetails, toExclude);
         }
     }
 
@@ -74,14 +104,11 @@ export function applyConverter(
 }
 
 export function getSessionId(dataEvent: IDataEvent, configuration: IConfiguration): string | undefined {
-    if (!configuration.specialFieldNames.sessionId) {
-        return undefined;
-    }
+    let specialFieldNames: ISpecialFieldNames = (configuration.specialFieldNames || {});
+    const value = getFieldValueAsString(dataEvent, specialFieldNames.sessionId) || getFieldValueAsString(dataEvent, defaultSessionId);
 
-    const value = getFieldValueAsString(dataEvent, configuration.specialFieldNames.sessionId);
-
-    if (value && configuration.specialFieldNames.sessionIdRegex) {
-        const matches = value.match(new RegExp(configuration.specialFieldNames.sessionIdRegex));
+    if (value && specialFieldNames.sessionIdRegex) {
+        const matches = value.match(new RegExp(specialFieldNames.sessionIdRegex));
         if (matches && matches.length > 1) {
             return matches[1];
         } else {
@@ -92,15 +119,23 @@ export function getSessionId(dataEvent: IDataEvent, configuration: IConfiguratio
     }
 }
 
-export function getFieldValueAsString(dataEvent: IDataEvent, fieldName?: string): string | undefined {
-    if (fieldName === undefined) {
-        return undefined;
+export function getFieldValueAsString(dataEvent: IDataEvent, fieldNames?: string|string[]): string | undefined {
+    if (dataEvent && fieldNames) {
+        let names: string[] = [];
+        if (isArray(fieldNames)) {
+            names = fieldNames as string[];
+        } else if (isString(fieldNames)) {
+            names = [fieldNames];
+        }
+    
+        for (let lp = 0; lp < names.length; lp++) {
+            const value = _.get(dataEvent, names[lp]) || _.get(dataEvent.data, names[lp]);
+            if (value !== undefined && value["toString"] !== undefined) {
+                return value.toString();
+            }
+        }
     }
 
-    const value = _.get(dataEvent, fieldName);
-    if (value !== undefined && value["toString"] !== undefined) {
-        return value.toString();
-    }
     return undefined;
 }
 

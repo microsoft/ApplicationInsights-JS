@@ -8,6 +8,7 @@ import { hasJSON, getJSON, getConsole } from "./EnvUtils";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { getDebugExt } from "./DbgExtensionUtils";
 
 /**
  * For user non actionable traces use AI Internal prefix.
@@ -144,6 +145,8 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                         }
 
                         _self.logInternalMessage(severity, message);
+                    } else {
+                        _debugExtMsg("throw" + (severity === LoggingSeverity.CRITICAL ? "Critical" : "Warning"), message);
                     }
                 }
             }
@@ -154,6 +157,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              */
             _self.warnToConsole = (message: string) => {
                 _logToConsole("warn", message);
+                _debugExtMsg("warning", message);
             }
 
             /**
@@ -162,6 +166,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              */
              _self.errorToConsole = (message: string) => {
                 _logToConsole("error", message);
+                _debugExtMsg("error", message);
             }
 
             /**
@@ -198,6 +203,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     if (severity <= _self.telemetryLoggingLevel()) {
                         _self.queue.push(message);
                         _messageCount++;
+                        _debugExtMsg((severity === LoggingSeverity.CRITICAL ? "error" : "warn"), message);
                     }
 
                     // When throttle limit reached, send a special event
@@ -205,7 +211,11 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                         const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                         const throttleMessage = new _InternalLogMessage(_InternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
                         _self.queue.push(throttleMessage);
-                        _self.warnToConsole(throttleLimitMessage);
+                        if (severity === LoggingSeverity.CRITICAL) {
+                            _self.errorToConsole(throttleLimitMessage);
+                        } else {
+                            _self.warnToConsole(throttleLimitMessage);
+                        }
                     }
                 }
             };
@@ -221,6 +231,13 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
             function _areInternalMessagesThrottled(): boolean {
                 return _messageCount >= _self.maxInternalMessageLimit();
+            }
+
+            function _debugExtMsg(name: string, data: any) {
+                let dbgExt = getDebugExt(config);
+                if (dbgExt && dbgExt.diagLog) {
+                    dbgExt.diagLog(name, data);
+                }
             }
         });
     }

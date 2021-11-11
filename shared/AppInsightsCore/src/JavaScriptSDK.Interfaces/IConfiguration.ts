@@ -163,4 +163,10 @@ export interface IConfiguration {
      * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state)
      */
     disablePageShowEvents?: string[];
+
+    /**
+     * [Optional] A flag for performance optimization to disable attempting to use the Chrome Debug Extension, if disabled and the extension is installed
+     * this will not send any notifications.
+     */
+    disableDbgExt?: boolean;
 }

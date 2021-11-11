@@ -64,7 +64,7 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
                 <tbody>
                     {props.dataEvents.map((dataEvent: IDataEvent, rowIndex: number) => {
                         const isNewSession =
-                            lastSessionNumber !== undefined && dataEvent.sessionNumber !== lastSessionNumber;
+                            lastSessionNumber !== undefined && dataEvent.sessionNumber !== "?" && dataEvent.sessionNumber !== lastSessionNumber;
                         const tdClassName = isNewSession ? "newSessionRow" : "";
 
                         // Don't remember any column previous values between sessions

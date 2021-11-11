@@ -5,7 +5,7 @@ import FileSaver from "file-saver";
 import _ from "lodash";
 
 import { IFilterSettings } from "./components/IFilterSettings";
-import { IConfiguration } from "./configuration/IConfiguration";
+import { IConfiguration, ISpecialFieldNames } from "./configuration/IConfiguration";
 import {
     getCondensedDetails,
     getDynamicFieldValue,
@@ -17,6 +17,7 @@ import {
 import { createDataSource } from "./dataSources/dataSources";
 import { DataEventType, IDataEvent } from "./dataSources/IDataEvent";
 import { IDataSource } from "./dataSources/IDataSource";
+import { IMessage } from "./interfaces/IMessage";
 
 export class Session {
     public onFilteredDataChanged: undefined | (() => void);
@@ -197,11 +198,13 @@ export class Session {
         return false;
     }
 
-    private onNewDataEvent = (newDataEvent: IDataEvent): void => {
+    private onNewDataEvent = (message: IMessage): void => {
+        let dataEvent = message.details;
+
         // If the configuration specifies a required field, check to see if it is present
         if (this.configuration.ignoreEventsWithoutThisField) {
             const requiredValue = getFieldValueAsString(
-                newDataEvent,
+                dataEvent.data,
                 this.configuration.ignoreEventsWithoutThisField
             );
             if (requiredValue === undefined) {
@@ -210,18 +213,21 @@ export class Session {
         }
 
         // Annotate the new event
-        newDataEvent.condensedDetails = getCondensedDetails(newDataEvent, this.configuration);
-        newDataEvent.sessionNumber = this.getSessionNumber(newDataEvent);
-        newDataEvent.type = getEventType(newDataEvent, this.configuration);
+        dataEvent.condensedDetails = dataEvent.condensedDetails || getCondensedDetails(dataEvent, this.configuration);
+        dataEvent.sessionNumber = dataEvent.sessionNumber || this.getSessionNumber(dataEvent);
+        dataEvent.type = dataEvent.type || getEventType(dataEvent, this.configuration);
+        dataEvent.tabId = dataEvent.tabId || message.tabId;
+
+        let specialFieldNames: ISpecialFieldNames = (this.configuration.specialFieldNames || {});
 
         // Parse any JSON fields and replace them with the parsed object
-        if (this.configuration.specialFieldNames.jsonFieldNames) {
-            for (const jsonFieldName of this.configuration.specialFieldNames.jsonFieldNames) {
-                const stringValue = getFieldValueAsString(newDataEvent, jsonFieldName);
+        if (specialFieldNames.jsonFieldNames) {
+            for (const jsonFieldName of specialFieldNames.jsonFieldNames) {
+                const stringValue = getFieldValueAsString(dataEvent.data, jsonFieldName);
                 if (stringValue !== undefined) {
                     try {
                         const objectValue = JSON.parse(stringValue);
-                        _.set(newDataEvent, jsonFieldName, objectValue);
+                        _.set(dataEvent, jsonFieldName, objectValue);
                     } catch {
                         // That's OK, best effort
                     }
@@ -230,7 +236,7 @@ export class Session {
         }
 
         // Add it to the raw list in time order
-        this._rawData.push(newDataEvent);
+        this._rawData.push(dataEvent);
         this._rawData.sort((a: IDataEvent, b: IDataEvent) => Date.parse(a.time) - Date.parse(b.time));
 
         // Reapply filter (if any)

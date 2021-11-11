@@ -3,11 +3,19 @@
 
 export type DataEventType = "other" | "appLogic" | "warning" | "fatalError" | "performance";
 
+/**
+ * Basic Event abstraction used to display the details in the table
+ */
 export interface IDataEvent {
+    /**
+     * The raw data of the event, this is displayed in the details section of the extension
+     */
+    data: any;
+
     name: string;
     time: string;
-    // tslint:disable-next-line:no-any
-    data: any;
+
+    tabId?: number;
     type?: DataEventType;
     dynamicValue?: string;
     condensedDetails?: string;
