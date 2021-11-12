@@ -336,7 +336,7 @@ table.eventTable tr.selected td {
     display: block;
     position: relative;
     margin-left: 2em;
-    width: 100%;
+/*    width: 100%;*/
 }
 
 .dbg-lgr .expandable {

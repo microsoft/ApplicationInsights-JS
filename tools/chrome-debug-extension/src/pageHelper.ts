@@ -112,7 +112,7 @@ function _sendEvent(name: string, data: any) {
 }
 
 function _debugMsg(name: string, data: any) {
-    _sendMessage(MessageType.GenericEvent, MessageSource.DebugEvent, "debug:" + name, data);
+    _sendMessage(MessageType.DebugEvent, MessageSource.DebugEvent, "debug:" + name, data);
 }
 
 function _diagLog(name: string, data: any) {

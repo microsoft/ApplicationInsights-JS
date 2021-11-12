@@ -2,22 +2,27 @@
 // Licensed under the MIT License.
 
 import _ from "lodash";
-import { isArray, isString } from "@microsoft/applicationinsights-core-js";
+import { isArray, isString, normalizeJsName } from "@microsoft/applicationinsights-core-js";
 import { defaultDataEventTypes, defaultExcludeFromCondensedList, defaultSessionId } from "../configuration/defaultConfiguration";
 import { DynamicValueConverter, IConfiguration, IDataEventTypeCondition, IDynamicField, ISpecialFieldNames } from "../configuration/IConfiguration";
 import { DataEventType, IDataEvent } from "./IDataEvent";
 
 let _regExpMap: { [key: string]: RegExp } = {};
 
-function _createRegEx(str: string) {
+function _createRegEx(value: string) {
+    // Escape any slashes first!
+    value = value.replace(/\\/g, "\\\\");
     // eslint-disable-next-line security/detect-non-literal-regexp
-    return new RegExp("^" + str.replace(/([.+?^=!:${}()|\[\]\/\\])/g, "\\$1").replace("*", ".*") + "$");
+    value = value.replace(/([\+\?\|\{\}\[\]\(\)\^\$\#\.\=\!\:\/\$])/g, "\\$1");
+    value = value.replace(/\*/g, ".*");
+    return new RegExp("(" + value + ")");
 }
 
 function _isMatch(source: string, value: string) {
     if (source.indexOf("*") !== -1) {
+        const name = normalizeJsName(source);
         // Looks like it contains a wildcard match
-        let regEx = _regExpMap[source] || (_regExpMap[source] = _createRegEx(source));
+        let regEx = _regExpMap[name] || (_regExpMap[name] = _createRegEx(source));
         return regEx.test(value);
     }
 

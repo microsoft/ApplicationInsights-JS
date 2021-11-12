@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { LogEntry } from "../LogEntry";
 import { IFilterSettings } from "./IFilterSettings";
 
@@ -12,15 +12,24 @@ interface IEventDetailsProps {
 }
 
 export const EventDetails = (props: IEventDetailsProps): React.ReactElement<IEventDetailsProps> => {
-    let logEntry = new LogEntry(props.data || {}, 0, "", 0);
-    let element = logEntry.render(props.filterSettings.filterText, [], true);
-    console.log(logEntry);
-    console.log(element);
+    const targetRef = useRef<any>();
 
-    // <pre>{JSON.stringify(props.data, undefined, 2)}</pre>
+    useEffect(() => {
+        let logEntry = new LogEntry(props.data || {}, 0, "", 0);
+        let element = logEntry.render(props.filterSettings.filterText, [], true);
+
+        // Remove any children
+        if (targetRef.current) {
+            while (targetRef.current.firstChild) {
+                targetRef.current.removeChild(targetRef.current.firstChild);
+            }
+    
+            targetRef.current.appendChild(element);
+        }
+    }, [props]);
+
     return (
-        <div className='eventDetailsDiv dbg-lgr'>
-            <div dangerouslySetInnerHTML={{ __html: element.outerHTML }}></div>
+        <div className='eventDetailsDiv dbg-lgr' ref={targetRef}>
         </div>
     );
 };

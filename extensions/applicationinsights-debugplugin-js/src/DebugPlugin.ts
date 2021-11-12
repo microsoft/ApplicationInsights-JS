@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import {
-    BaseTelemetryPlugin, IConfiguration, arrForEach, objKeys,
+    BaseTelemetryPlugin, IConfiguration, arrForEach,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, _InternalMessageId,
     ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls,
     objForEachKey, isFunction, dateNow, isArray, isUndefined, getDebugExt

@@ -78,7 +78,7 @@ function packFolder() {
         fs.mkdirSync(packageRoot + "/" + destFolder);
     }
 
-    const outputName = packageRoot + "/" + (destFolder ? destFolder + "/" : "") + destPrefix + "." + packageVersion + ".zip"
+    const outputName = packageRoot + "/" + (destFolder ? destFolder + "/" : "") + destPrefix + "." + packageVersion + ".zip";
     const stream = fs.createWriteStream(outputName);
     stream.on("open", () => console.info(`Creating Zip [${normalizeName(outputName)}] from [${normalizeName(sourceDir)}]`));
     stream.on("close", () => console.info("Complete!", "\n"));

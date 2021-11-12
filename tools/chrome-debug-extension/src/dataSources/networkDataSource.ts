@@ -54,15 +54,19 @@ export class NetworkDataSource implements IDataSource {
                 const events = details.requestBody && _convertToStringArray(details.requestBody.raw);
                 if (events) {
                     for (let i = events.length - 1; i >= 0; i--) {
-                        const event = JSON.parse(events[i]);
-                        if (event !== undefined) {
-                            if (Array.isArray(event)) {
-                                for (const subEvent of event) {
-                                    _handleMessage(subEvent, details);
+                        try {
+                            const event = JSON.parse(events[i]);
+                            if (event !== undefined) {
+                                if (Array.isArray(event)) {
+                                    for (const subEvent of event) {
+                                        _handleMessage(subEvent, details);
+                                    }
+                                } else {
+                                    _handleMessage(event, details);
                                 }
-                            } else {
-                                _handleMessage(event, details);
                             }
+                        } catch (e) {
+                            // Ignore
                         }
                     }
                 }
@@ -89,14 +93,18 @@ export class NetworkDataSource implements IDataSource {
     
         function _convertToStringArray(buf: chrome.webRequest.UploadData[] | undefined): string[] {
             if (buf !== undefined) {
-                const data = buf[0].bytes;
-                if (data) {
-                    const decoder = new TextDecoder();
-                    return decoder.decode(new Uint8Array(data)).split("\n");
+                try {
+                    const data = buf[0].bytes;
+                    if (data) {
+                        const decoder = new TextDecoder();
+                        return decoder.decode(new Uint8Array(data)).split("\n");
+                    }
+                } catch (e) {
+                    // Ignore
                 }
             }
 
-            return [""];
+            return [];
         }
 
         function _onMessageReceived(message: any, sender: any, sendResponse: any): void {
@@ -107,7 +115,7 @@ export class NetworkDataSource implements IDataSource {
             }
             
             // Only handle notifications and
-            if (msg.id === MessageType.Notification || msg.id === MessageType.DiagnosticLog || msg.id === MessageType.GenericEvent) {
+            if (msg.id === MessageType.Notification || msg.id === MessageType.DebugEvent || msg.id === MessageType.DiagnosticLog || msg.id === MessageType.GenericEvent) {
                 if (sender && sender.tab && msg.details) {
                     msg.tabId = msg.tabId || sender.tab.id;
 

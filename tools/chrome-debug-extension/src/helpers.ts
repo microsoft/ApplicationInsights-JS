@@ -290,7 +290,8 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
     }
 
     let matched = true;
-    let childOpened = true;
+    // Always displayed opened if there is no filter
+    let childOpened = textFilter ? false : true;
     const keys = getTargetKeys(target, excludeKeys, includeFunctions as boolean);
     if (keys.length === 0) { keys.push("<empty>"); }
     if (level >= MAX_DEPTH) { keys.unshift("<maxdepth>"); }
@@ -327,9 +328,12 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             thingsReferenced.push(target);
             let formatted = formatLogElements(targetValue, "", key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
             thingsReferenced.pop();
-            // if (formatted.matched) {
-            childOpened = true;
-            // }
+
+            // Always displayed opened if there is no filter
+            if (!textFilter || formatted.matched) {
+                childOpened = true;
+            }
+
             if (formatted.isErr) {
                 isErr = true;
             }

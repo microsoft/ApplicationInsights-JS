@@ -144,18 +144,18 @@ const generateContentLoad = () => {
                 preventAssignment: true,
                 delimiters: ["", ""],
                 values: replaceValues
-            // }),
-            // uglify({
-            //     ie8: true,
-            //     toplevel: true,
-            //     compress: {
-            //         passes: 3,
-            //         unsafe: true
-            //     },
-            //     output: {
-            //         preamble: banner,
-            //         webkit: true
-            //     }
+            }),
+            uglify({
+                ie8: true,
+                toplevel: true,
+                compress: {
+                    passes: 3,
+                    unsafe: true
+                },
+                output: {
+                    preamble: banner,
+                    webkit: true
+                }
             })
         ]
     }
@@ -186,18 +186,18 @@ const generatePageHelper = () => {
                 preventAssignment: true,
                 delimiters: ["", ""],
                 values: replaceValues
-            // }),
-            // uglify({
-            //     ie8: true,
-            //     toplevel: true,
-            //     compress: {
-            //         passes: 3,
-            //         unsafe: true
-            //     },
-            //     output: {
-            //         preamble: banner,
-            //         webkit: true
-            //     }
+            }),
+            uglify({
+                ie8: true,
+                toplevel: true,
+                compress: {
+                    passes: 3,
+                    unsafe: true
+                },
+                output: {
+                    preamble: banner,
+                    webkit: true
+                }
             })
         ]
     };
