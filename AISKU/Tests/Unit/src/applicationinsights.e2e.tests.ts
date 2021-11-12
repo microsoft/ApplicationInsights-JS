@@ -1,21 +1,13 @@
-import { TestClass } from './TestFramework/TestClass';
+import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
-import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry } from '@microsoft/applicationinsights-common';
 import { AppInsightsCore, ITelemetryItem, getGlobal } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
-import { EventValidator } from './TelemetryValidation/EventValidator';
-import { TraceValidator } from './TelemetryValidation/TraceValidator';
-import { ExceptionValidator } from './TelemetryValidation/ExceptionValidator';
-import { MetricValidator } from './TelemetryValidation/MetricValidator';
-import { PageViewPerformanceValidator } from './TelemetryValidation/PageViewPerformanceValidator';
-import { PageViewValidator } from './TelemetryValidation/PageViewValidator';
-import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyValidator';
-import { Assert } from './TestFramework/Assert';
-import { PollingAssert } from './TestFramework/PollingAssert';
 
-export class ApplicationInsightsTests extends TestClass {
+
+export class ApplicationInsightsTests extends AITestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
     private static readonly _connectionString = `InstrumentationKey=${ApplicationInsightsTests._instrumentationKey}`;
     private static readonly _expectedTrackMethods = [
@@ -108,7 +100,7 @@ export class ApplicationInsightsTests extends TestClass {
             this._ai["dependencies"].teardown();
         }
 
-        console.log("* testCleanup(" + (TestClass.currentTestInfo ? TestClass.currentTestInfo.name : "<null>") + ")");
+        console.log("* testCleanup(" + (AITestClass.currentTestInfo ? AITestClass.currentTestInfo.name : "<null>") + ")");
     }
 
     public registerTests() {

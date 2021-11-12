@@ -1,13 +1,11 @@
-import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { Util } from '@microsoft/applicationinsights-common';
 import { getJSON } from '@microsoft/applicationinsights-core-js';
 import { SinonSpy } from 'sinon';
-import { Assert } from './TestFramework/Assert';
-import { PollingAssert } from './TestFramework/PollingAssert';
-import { TestClass } from './TestFramework/TestClass';
+import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
 
-export class SenderE2ETests extends TestClass {
+export class SenderE2ETests extends AITestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
     private readonly _bufferName = 'AI_buffer';
     private readonly _sentBufferName = 'AI_sentBuffer';
@@ -196,6 +194,7 @@ export class SenderE2ETests extends TestClass {
                 }
             }
         } catch (e) {
+            console.error("_getBuffer" + e);
         }
 
         return [];

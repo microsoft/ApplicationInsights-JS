@@ -1,12 +1,10 @@
-import { IAppInsightsDeprecated } from "../src/ApplicationInsightsDeprecated";
-import { ApplicationInsightsContainer } from "../src/ApplicationInsightsContainer";
-import { IApplicationInsights, Snippet } from "../src/Initialization";
+import { IAppInsightsDeprecated } from "../../../src/ApplicationInsightsDeprecated";
+import { ApplicationInsightsContainer } from "../../../src/ApplicationInsightsContainer";
+import { IApplicationInsights, Snippet } from "../../../src/Initialization";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { createLegacySnippet } from "./testLegacySnippet";
 import { SinonSpy } from "sinon";
-import { Assert } from "./TestFramework/Assert";
-import { PollingAssert } from "./TestFramework/PollingAssert";
-import { TestClass } from "./TestFramework/TestClass";
+import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { hasOwnProperty, isNotNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 
 function getBasicLegacySnippetConfig() {
@@ -47,7 +45,7 @@ const _expectedMethodsAfterInitialization = [
     "getCookieMgr"
 ];
 
-export class SnippetLegacyInitializationTests extends TestClass {
+export class SnippetLegacyInitializationTests extends AITestClass {
 
     // Sinon
     private errorSpy: SinonSpy;
@@ -153,7 +151,7 @@ export class SnippetLegacyInitializationTests extends TestClass {
                 } catch (e) {
                     Assert.ok(false, "Exception:" + e);
                 }
-            }, "waiting for sender success", 30, 1000)]
+            }, "waiting for sender success", 30, 1000) as any]
         });
 
         this.testCase({

@@ -91,6 +91,11 @@ module.exports = function (grunt) {
         return buildCmds;
     }
 
+    // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
+    // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
+    // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
+    const perfTestVersions=["2.7.1"]
+
     try {
         var theBuildConfig = deepMerge(buildConfig({
             // Shared
@@ -206,13 +211,19 @@ module.exports = function (grunt) {
                     ],
                     out: 'extensions/applicationinsights-analytics-js/Tests/Unit/dist/appinsights-analytics.tests.js'
                 },
-                aiskutests: {
+                aiskuunittests: {
                     tsconfig: './AISKU/Tests/tsconfig.json',
                     src: [
-                        'AISKU/Tests/Selenium/*.ts',
-                        'AISKU/Tests/*.ts'
+                        './AISKU/Tests/Unit/src/**/*.ts',
                     ],
-                    out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
+                    out: 'AISKU/Tests/Unit/dist/aiskuunittests.tests.js'
+                },
+                aiskuperf: {
+                    tsconfig: './AISKU/Tests/tsconfig.json',
+                    src: [
+                        './AISKU/Tests/Perf/src/**/*.ts',
+                    ],
+                    out: 'AISKU/Tests/Perf/dist/aiskuperftests.tests.js'
                 },
                 clickanalyticstests: {
                     tsconfig: './extensions/applicationinsights-clickanalytics-js/Tests/tsconfig.json',
@@ -426,11 +437,24 @@ module.exports = function (grunt) {
                 aisku: {
                     options: {
                         urls: [
-                            'http://localhost:9001/AISKU/Tests/Selenium/Tests.html'
+                            'http://localhost:9001/AISKU/Tests/UnitTests.html'
                         ],
                         timeout: 5 * 60 * 1000, // 5 min
                         console: true,
                         summaryOnly: false,
+                        '--web-security': 'false'
+                    }
+                },
+                aiskuperf: {
+                    options: {
+                        urls: perfTestVersions.map((version) => {
+                            return `http://localhost:9001/AISKU/Tests/PerfTests.html?version=${version}`
+
+                        }),
+                        timeout: 5 * 60 * 1000, // 5 min
+                        console: true,
+                        summaryOnly: false,
+                        puppeteer: { headless: true, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
                         '--web-security': 'false'
                     }
                 },
@@ -506,7 +530,8 @@ module.exports = function (grunt) {
         grunt.registerTask("aisku", tsBuildActions("aisku"));
         grunt.registerTask("aiskulite", tsBuildActions("aiskulite"));
         grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
-        grunt.registerTask("aiskutests", ["connect", "ts:aiskutests", "qunit:aisku"]);
+        grunt.registerTask("aiskuunittests", ["connect", "ts:aiskuunittests", "qunit:aisku"]);
+        grunt.registerTask("aiskuperf", ["connect", "ts:aiskuperf", "qunit:aiskuperf"]);
         grunt.registerTask("test", ["connect", "ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
         grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
         grunt.registerTask("coreunittest", ["connect", "ts:coreunittest", "qunit:core"]);
