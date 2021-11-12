@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { LogEntry } from "../LogEntry";
+
 export type DataEventType = "other" | "appLogic" | "warning" | "fatalError" | "performance";
 
 /**
@@ -18,6 +20,7 @@ export interface IDataEvent {
     tabId?: number;
     type?: DataEventType;
     dynamicValue?: string;
-    condensedDetails?: string;
+    condensedDetails?: any;
     sessionNumber?: string;
+    logEntry?: LogEntry;
 }

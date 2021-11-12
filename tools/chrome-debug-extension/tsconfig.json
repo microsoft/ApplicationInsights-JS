@@ -26,6 +26,8 @@
         ],
         "noEmit": false,
         "declaration": true,
+        "declarationDir": "tools/chrome-debug-extension/types",
+        "rootDir": "tools/chrome-debug-extension/src",
         "declarationMap": true,
         "inlineSourceMap": false,
         "inlineSources": true,

@@ -195,6 +195,22 @@ table.eventTable tr.selected td {
     margin-left: 20px;
 }
 
+.listenNetworkButton {
+    margin-left: 10px;
+}
+
+.listenSdkButton {
+    margin-left: 10px;
+}
+
+.filterContentButton {
+    margin-left: 5px;
+}
+
+.captureTypes {
+    margin-left: 10px;
+}
+
 .checkBoxLabel {
     cursor: pointer;
 }
@@ -385,3 +401,8 @@ table.eventTable tr.selected td {
     width: 100%;
     min-width: 200px;
 }
+
+.dbg-lgr .matched-text-filter {
+    background-color: yellow;
+}
+

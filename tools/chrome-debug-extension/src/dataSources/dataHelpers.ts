@@ -3,7 +3,7 @@
 
 import _ from "lodash";
 import { isArray, isString } from "@microsoft/applicationinsights-core-js";
-import { defaultDataEventTypes, defaultSessionId } from "../configuration/defaultConfiguration";
+import { defaultDataEventTypes, defaultExcludeFromCondensedList, defaultSessionId } from "../configuration/defaultConfiguration";
 import { DynamicValueConverter, IConfiguration, IDataEventTypeCondition, IDynamicField, ISpecialFieldNames } from "../configuration/IConfiguration";
 import { DataEventType, IDataEvent } from "./IDataEvent";
 
@@ -67,16 +67,23 @@ export function getDynamicFieldValue(dataEvent: IDataEvent, dynamicFields?: IDyn
     return "";
 }
 
-export function getCondensedDetails(dataEvent: IDataEvent, configuration: IConfiguration): string {
-    const condensedDetails = JSON.parse(JSON.stringify((dataEvent||{}).data || {}));
+export function getCondensedDetails(dataEvent: IDataEvent, configuration: IConfiguration): any {
+    if (!dataEvent.condensedDetails) {
+        // Construct
+        dataEvent.condensedDetails = JSON.parse(JSON.stringify((dataEvent||{}).data || {}));
 
-    if (configuration && configuration.fieldsToExcludeFromCondensedList) {
-        for (const toExclude of configuration.fieldsToExcludeFromCondensedList) {
-            _.unset(condensedDetails, toExclude);
+        if (configuration && configuration.fieldsToExcludeFromCondensedList) {
+            for (const toExclude of configuration.fieldsToExcludeFromCondensedList) {
+                _.unset(dataEvent.condensedDetails, toExclude);
+            }
+        } else {
+            for (const toExclude of defaultExcludeFromCondensedList) {
+                _.unset(dataEvent.condensedDetails, toExclude);
+            }
         }
     }
 
-    return condensedDetails;
+    return dataEvent.condensedDetails;
 }
 
 export function applyConverter(
@@ -137,16 +144,4 @@ export function getFieldValueAsString(dataEvent: IDataEvent, fieldNames?: string
     }
 
     return undefined;
-}
-
-// tslint:disable-next-line:no-any
-export function getDetails(dataEvent: IDataEvent): any {
-    const details = JSON.parse(JSON.stringify(dataEvent));
-
-    // Filter out calculated fields
-    delete details["sessionNumber"];
-    delete details["type"];
-    delete details["condensedDetails"];
-
-    return details;
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as React from "react";
-import { getDetails } from "../dataSources/dataHelpers";
+import { getCondensedDetails } from "../dataSources/dataHelpers";
 import { IDataEvent } from "../dataSources/IDataEvent";
 import { Session } from "../session";
 import { EventDetails } from "./eventDetails";
@@ -18,13 +18,18 @@ interface ITelemetryViewerProps {
 
 const filterSettingsCacheKey = "filterSettings";
 
+const defaultFilterSettings: IFilterSettings = {
+    filterText: "",
+    filterContent: true,
+    filterByType: undefined,
+    showCondensedDetails: false,
+    listenNetwork: true,
+    listenSdk: true
+};
+
 export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElement<ITelemetryViewerProps> => {
     const [filteredEventData, setFilteredEventData] = React.useState<IDataEvent[]>([]);
-    const [filterSettings, setFilterSettings] = React.useState<IFilterSettings>({
-        filterText: "",
-        filterByType: undefined,
-        showCondensedDetails: false
-    });
+    const [filterSettings, setFilterSettings] = React.useState<IFilterSettings>(defaultFilterSettings);
     const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(undefined);
     const [isDraggingOver, setIsDraggingOver] = React.useState<boolean>(false);
 
@@ -100,7 +105,13 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
         try {
             const json = localStorage.getItem(filterSettingsCacheKey);
             if (json) {
-                setFilterSettings(JSON.parse(json));
+                // Make sure we have any defaults set
+                let settings: IFilterSettings = {
+                    ...defaultFilterSettings,
+                    ...(JSON.parse(json))
+                };
+
+                setFilterSettings(settings);
             }
         } catch {
             // Default is OK
@@ -121,8 +132,8 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
     const detailsData =
         selectedIndex !== undefined && filteredEventData !== undefined && selectedIndex < filteredEventData.length
             ? filterSettings.showCondensedDetails
-                ? filteredEventData[selectedIndex].condensedDetails
-                : getDetails(filteredEventData[selectedIndex])
+                ? getCondensedDetails(filteredEventData[selectedIndex], props.session.configuration)
+                : filteredEventData[selectedIndex].data                 // The raw event data
             : undefined;
 
     return (
@@ -152,7 +163,7 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
                             onRowClickHandler={handleOnRowClickFromEventTable}
                         />
                     }
-                    bottom={<EventDetails data={detailsData} />}
+                    bottom={<EventDetails data={detailsData} filterSettings={filterSettings} />}
                 />
                 {isDraggingOver ? (
                     <div className='dragTarget'>

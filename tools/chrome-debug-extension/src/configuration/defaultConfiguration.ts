@@ -63,6 +63,27 @@ export const defaultDataEventTypes: IDataEventTypeCondition[] = [
     }
 ];
 
+export const defaultExcludeFromCondensedList = [
+    "tags['ai.user.id']",
+    "tags['ai.session.id']",
+    "tags['ai.device.id']",
+    "tags['ai.device.type']",
+    "tags['ai.operation.name']",
+    "tags['ai.operation.id']",
+    "tags['ai.internal.sdkVersion']",
+    "tags['ai.internal.snippet']",
+    "ext.app",
+    "ext.user",
+    "ext.web",
+    "ext.intweb",
+    "ext.loc",
+    "ext.metadata",
+    "ext.mscv",
+    "ext.utc",
+    "ext.device",
+    "ext.dt"
+];
+
 export const defaultConfiguration: IConfiguration = {
     prioritizedDataEventTypeTests: defaultDataEventTypes,
     columnsToDisplay: [
@@ -119,16 +140,7 @@ export const defaultConfiguration: IConfiguration = {
             ]
         }
     ],
-    fieldsToExcludeFromCondensedList: [
-        "tags['ai.user.id']",
-        "tags['ai.session.id']",
-        "tags['ai.device.id']",
-        "tags['ai.device.type']",
-        "tags['ai.operation.name']",
-        "tags['ai.operation.id']",
-        "tags['ai.internal.sdkVersion']",
-        "tags['ai.internal.snippet']"
-    ],
+    fieldsToExcludeFromCondensedList: defaultExcludeFromCondensedList,
     specialFieldNames: {
         sessionId: ""
     }

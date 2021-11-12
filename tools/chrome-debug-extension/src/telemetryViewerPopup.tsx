@@ -44,8 +44,9 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
                 const savedValue = localStorage.getItem(customConfigurationStorageKey);
                 if (savedValue) {
                     const newConfiguration = JSON.parse(savedValue) as IConfiguration;
+                    let newSession = new Session(newConfiguration, session);
                     session && session.dispose();
-                    setSession(new Session(newConfiguration));
+                    setSession(newSession);
                     setAppPhase("ConfigurationLoaded");
                 } else {
                     setAppPhase("ConfigurationLoadFailed");
@@ -57,8 +58,9 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
             getConfiguration(configurationTypeToLoad)
                 .then((newConfiguration: IConfiguration) => {
                     if (newConfiguration) {
+                        let newSession = new Session(newConfiguration, session);
                         session && session.dispose();
-                        setSession(new Session(newConfiguration));
+                        setSession(newSession);
                         setAppPhase("ConfigurationLoaded");
                     } else {
                         setAppPhase("ConfigurationLoadFailed");

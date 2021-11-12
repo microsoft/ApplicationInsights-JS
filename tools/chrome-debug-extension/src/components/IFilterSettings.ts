@@ -4,7 +4,10 @@
 import { DataEventType } from "../dataSources/IDataEvent";
 
 export interface IFilterSettings {
+    filterContent: boolean;
     filterText: string;
     filterByType: DataEventType | undefined;
     showCondensedDetails: boolean;
+    listenNetwork: boolean;
+    listenSdk: boolean;
 }

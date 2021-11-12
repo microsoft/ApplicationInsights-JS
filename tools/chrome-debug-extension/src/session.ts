@@ -17,7 +17,9 @@ import {
 import { createDataSource } from "./dataSources/dataSources";
 import { DataEventType, IDataEvent } from "./dataSources/IDataEvent";
 import { IDataSource } from "./dataSources/IDataSource";
+import { MessageSource } from "./Enums";
 import { IMessage } from "./interfaces/IMessage";
+import { LogEntry } from "./LogEntry";
 
 export class Session {
     public onFilteredDataChanged: undefined | (() => void);
@@ -50,8 +52,12 @@ export class Session {
         return this._counts;
     }
 
-    constructor(public configuration: IConfiguration) {
+    constructor(public configuration: IConfiguration, prevSession?: Session) {
         this._dataSource = createDataSource(this.configuration);
+        if (prevSession) {
+            this._rawData = this._getSaveRawData(prevSession._rawData) || [];
+            this.recalculateFilteredData();
+        }
 
         this._dataSource.startListening();
         this._listenerSubscriptionId = this._dataSource.addListener(this.onNewDataEvent);
@@ -65,7 +71,7 @@ export class Session {
     }
 
     public save(): void {
-        const blob = new Blob([JSON.stringify(this._rawData)], { type: "application/json;charset=utf-8" });
+        const blob = new Blob([JSON.stringify(this._getSaveRawData(this._rawData))], { type: "application/json;charset=utf-8" });
         const now = new Date();
         const dateString = `${now.getFullYear().toString()}-${now.getMonth().toString().padStart(2, "0")}-${now
             .getDay()
@@ -91,6 +97,8 @@ export class Session {
 
                 // Repopulate sessionMap with the sessionNumbers already calculated in the stored data
                 for (const singleEvent of this._rawData) {
+                    // Remove any previous saved / cached condensedDetails
+                    delete singleEvent.condensedDetails;
                     if (singleEvent.sessionNumber) {
                         const sessionNumber = Number.parseInt(singleEvent.sessionNumber, 10);
                         const sessionId = getSessionId(singleEvent, this.configuration);
@@ -117,6 +125,29 @@ export class Session {
     public dispose(): void {
         this._dataSource.removeListener(this._listenerSubscriptionId);
         this._dataSource.stopListening();
+    }
+
+    private _getSaveRawData(prevData: IDataEvent[]) {
+        try {
+            let saveData = JSON.parse(JSON.stringify(prevData));
+
+            if (Array.isArray(saveData)) {
+
+                // Repopulate sessionMap with the sessionNumbers already calculated in the stored data
+                for (const singleEvent of saveData) {
+                    // Remove content we don't want to save
+                    delete singleEvent.condensedDetails;
+                }
+            } else if (saveData) {
+                delete saveData.condensedDetails;
+            }
+
+            return saveData;
+        } catch(e) {
+            // ignore
+        }
+
+        return prevData || [];
     }
 
     private recalculateFilteredData(): void {
@@ -148,8 +179,9 @@ export class Session {
 
         const filterText: string | undefined =
             this._filterSettings && this._filterSettings.filterText && this._filterSettings.filterText.length > 0
-                ? this._filterSettings.filterText.toLowerCase()
+                ? this._filterSettings.filterText
                 : undefined;
+        const lowerFilterText = filterText ? filterText.toLowerCase() : undefined;
         const resultsFiltered: boolean =
             filterText !== undefined || this._filterSettings.filterByType !== undefined;
         const newFilteredData: IDataEvent[] = resultsFiltered ? [] : this._rawData.slice();
@@ -157,7 +189,7 @@ export class Session {
         // tslint:disable-next-line:no-any
         this._rawData.forEach((singleDataEvent: IDataEvent): void => {
             if (resultsFiltered) {
-                const filterByTextAllowsIt = this.filterTextAllowsIt(singleDataEvent, filterText);
+                const filterByTextAllowsIt = this.filterTextAllowsIt(singleDataEvent, lowerFilterText, filterText);
                 const filterByTypeAllowsIt: boolean = this._filterSettings.filterByType
                     ? singleDataEvent.type === this._filterSettings.filterByType
                     : true;
@@ -184,22 +216,52 @@ export class Session {
         this.onFilteredDataChanged && this.onFilteredDataChanged();
     }
 
-    private filterTextAllowsIt(singleDataEvent: IDataEvent, filterText: string | undefined): boolean {
-        if (!filterText) {
+    private filterTextAllowsIt(singleDataEvent: IDataEvent, lowerFilterText: string | undefined, filterText: string | undefined): boolean {
+        if (!lowerFilterText) {
             return true;
         }
 
         for (const columnToDisplay of this.configuration.columnsToDisplay) {
             const value = getDynamicFieldValue(singleDataEvent, columnToDisplay.prioritizedFieldNames);
-            if (value && value.toLowerCase().includes(filterText)) {
+            if (value && value.toLowerCase().includes(lowerFilterText)) {
                 return true;
             }
         }
+
+        if (filterText && this._filterSettings.filterContent) {
+            let excludeKeys: string[] = [];
+            let logEntry = singleDataEvent.logEntry = singleDataEvent.logEntry || new LogEntry(singleDataEvent.data, 0);
+            if (logEntry.isMatch(filterText, excludeKeys, true)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     private onNewDataEvent = (message: IMessage): void => {
         let dataEvent = message.details;
+
+        switch (message.src) {
+            case MessageSource.WebRequest:
+                if (!this._filterSettings.listenNetwork) {
+                    // Stop logging web requests
+                    return;
+                }
+                break;
+            
+            case MessageSource.DebugEvent:
+            case MessageSource.EventSentNotification:
+            case MessageSource.EventsDiscardedNotification:
+            case MessageSource.EventsSendNotification:
+            case MessageSource.DiagnosticLog:
+            case MessageSource.PerfEvent:
+                if (!this._filterSettings.listenSdk) {
+                    // Stop logging SDK requests
+                    return ;
+                }
+                break;
+        }
 
         // If the configuration specifies a required field, check to see if it is present
         if (this.configuration.ignoreEventsWithoutThisField) {
@@ -213,7 +275,7 @@ export class Session {
         }
 
         // Annotate the new event
-        dataEvent.condensedDetails = dataEvent.condensedDetails || getCondensedDetails(dataEvent, this.configuration);
+        dataEvent.condensedDetails = getCondensedDetails(dataEvent, this.configuration);
         dataEvent.sessionNumber = dataEvent.sessionNumber || this.getSessionNumber(dataEvent);
         dataEvent.type = dataEvent.type || getEventType(dataEvent, this.configuration);
         dataEvent.tabId = dataEvent.tabId || message.tabId;

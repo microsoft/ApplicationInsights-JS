@@ -19,7 +19,7 @@ export interface IConfiguration {
     /**
      * A list of fields of the fields to exclude from the details view when "Consolidate details" is checked
      */
-    fieldsToExcludeFromCondensedList: string[];
+    fieldsToExcludeFromCondensedList?: string[];
 
     /**
      * A list of the columns to display
