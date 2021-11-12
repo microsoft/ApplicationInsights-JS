@@ -15,7 +15,7 @@ export function makeRegex(value: string) {
         // Escape any slashes first!
         value = value.replace(/\\/g, "\\\\");
         // eslint-disable-next-line security/detect-non-literal-regexp
-        value = value.replace(/([\+\?\|\{\}\[\]\(\)\^\$\#\.\=\!\:\/\$])/g, "\\$1");
+        value = value.replace(/([\+\?\|\{\}\[\]\(\)\^\$\#\.\=\!\:\/])/g, "\\$1");
         value = value.replace(/\*/g, ".*");
         return new RegExp("(" + value + ")");
     }
