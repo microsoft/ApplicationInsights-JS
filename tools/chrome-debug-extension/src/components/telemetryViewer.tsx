@@ -97,8 +97,12 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
         });
     };
 
-    const onFilteredDataChanged = (): void => {
+    const onFilteredDataChanged = (filterSettings: IFilterSettings): void => {
         setFilteredEventData(props.session.filteredData);
+        if (filterSettings.filterText && props.session.filteredData.length > 0) {
+            // Reselect the first element
+            setSelectedIndex(0);
+        }
     };
 
     React.useEffect(() => {
@@ -118,7 +122,7 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
         }
 
         props.session.onFilteredDataChanged = onFilteredDataChanged;
-        onFilteredDataChanged();
+        onFilteredDataChanged(filterSettings);
 
         return () => {
             props.session.onFilteredDataChanged = undefined;
@@ -158,6 +162,7 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
                     top={
                         <EventTable
                             configuration={props.session.configuration}
+                            filterSettings={filterSettings}
                             dataEvents={filteredEventData}
                             selectedIndex={selectedIndex}
                             onRowClickHandler={handleOnRowClickFromEventTable}

@@ -10,13 +10,17 @@ const strGetOwnPropertyNames = "getOwnPropertyNames";
 
 export const MAX_DEPTH = 16;
 
-export function makeRegex(value: string) {
+export function makeRegex(value: string, caseSensitive = true) {
     if (value && value.length > 0) {
         value = value.replace(/\\/g, "\\\\");
         // eslint-disable-next-line security/detect-non-literal-regexp
         value = value.replace(/([\+\?\|\{\[\(\)\^\$\#\.\]\}])/g, "\\$1");
         value = value.replace(/\*/g, ".*");
-        return new RegExp("(" + value + ")");
+        if (caseSensitive) {
+            return new RegExp("(" + value + ")");
+        }
+
+        return new RegExp("(" + value + ")", "i");
     }
 
     return null;

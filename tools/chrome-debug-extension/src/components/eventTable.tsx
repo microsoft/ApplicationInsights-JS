@@ -5,13 +5,43 @@ import React from "react";
 import { DynamicValueConverter, IColumn, IConfiguration } from "../configuration/IConfiguration";
 import { applyConverter, getDynamicFieldValue } from "../dataSources/dataHelpers";
 import { IDataEvent } from "../dataSources/IDataEvent";
+import { makeRegex } from "../helpers";
 import { EventTypeIcon } from "./eventTypeIcon";
+import { IFilterSettings } from "./IFilterSettings";
 
 interface IEventTableProps {
     dataEvents: IDataEvent[];
     configuration: IConfiguration;
+    filterSettings: IFilterSettings;
     selectedIndex: number | undefined;
     onRowClickHandler: (target: EventTarget & HTMLTableRowElement) => void;
+}
+
+function _getFilteredText(theText: string, textFilter: string): JSX.Element {
+    let innerText = theText;
+    let matchPos = -1;
+    let matchLen = 0;
+    let rg = makeRegex(textFilter, false);
+    if (rg) {
+        let matchTxt = rg.exec(innerText);
+        if (matchTxt && matchTxt[1]) {
+            matchPos = theText.indexOf(matchTxt[1]);
+            matchLen = matchTxt[1].length;
+        }
+    }
+
+    if (matchPos !== -1) {
+        if (matchPos === 0 && matchLen === theText.length) {
+            return <span className="matched-text-filter">{theText}</span>;
+        } else {
+            return <span>{theText.substring(0, matchPos)}
+                    <span className="matched-text-filter">{theText.substring(matchPos, matchPos + matchLen)}</span>
+                    {theText.substring(matchPos + matchLen)}
+                </span>;
+        }
+    }
+
+    return <span>{theText}</span>;
 }
 
 export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTableProps> => {
@@ -106,9 +136,10 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
                                     break;
                                 case "NormalData":
                                 default: {
+                                    let value = getDynamicFieldValue(dataEvent, columnToDisplay.prioritizedFieldNames);
                                     cells.push(
                                         <td key={`Row_${rowIndex}_Td_${columnIndex}`} className={tdClassName}>
-                                            {getDynamicFieldValue(dataEvent, columnToDisplay.prioritizedFieldNames)}
+                                            {_getFilteredText(value, props.filterSettings.filterText)}
                                         </td>
                                     );
                                 }

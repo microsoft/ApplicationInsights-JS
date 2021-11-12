@@ -144,6 +144,10 @@ table.eventTable tr.selected td {
     background-color: #d6d6d6;
 }
 
+table.eventTable tr td span.matched-text-filter {
+    background-color: yellow;
+}
+
 .newSessionRow {
     border-top: 1px solid red;
 }

@@ -18,11 +18,12 @@ import { createDataSource } from "./dataSources/dataSources";
 import { DataEventType, IDataEvent } from "./dataSources/IDataEvent";
 import { IDataSource } from "./dataSources/IDataSource";
 import { MessageSource } from "./Enums";
+import { makeRegex } from "./helpers";
 import { IMessage } from "./interfaces/IMessage";
 import { LogEntry } from "./LogEntry";
 
 export class Session {
-    public onFilteredDataChanged: undefined | (() => void);
+    public onFilteredDataChanged: undefined | ((filterSettings: IFilterSettings) => void);
 
     private _dataSource: IDataSource;
     private _filteredData: IDataEvent[];
@@ -181,7 +182,6 @@ export class Session {
             this._filterSettings && this._filterSettings.filterText && this._filterSettings.filterText.length > 0
                 ? this._filterSettings.filterText
                 : undefined;
-        const lowerFilterText = filterText ? filterText.toLowerCase() : undefined;
         const resultsFiltered: boolean =
             filterText !== undefined || this._filterSettings.filterByType !== undefined;
         const newFilteredData: IDataEvent[] = resultsFiltered ? [] : this._rawData.slice();
@@ -189,7 +189,7 @@ export class Session {
         // tslint:disable-next-line:no-any
         this._rawData.forEach((singleDataEvent: IDataEvent): void => {
             if (resultsFiltered) {
-                const filterByTextAllowsIt = this.filterTextAllowsIt(singleDataEvent, lowerFilterText, filterText);
+                const filterByTextAllowsIt = this.filterTextAllowsIt(singleDataEvent, filterText);
                 const filterByTypeAllowsIt: boolean = this._filterSettings.filterByType
                     ? singleDataEvent.type === this._filterSettings.filterByType
                     : true;
@@ -213,18 +213,37 @@ export class Session {
         this._filteredData = newFilteredData;
 
         // Notify the listener if there is one
-        this.onFilteredDataChanged && this.onFilteredDataChanged();
+        this.onFilteredDataChanged && this.onFilteredDataChanged(this._filterSettings);
     }
 
-    private filterTextAllowsIt(singleDataEvent: IDataEvent, lowerFilterText: string | undefined, filterText: string | undefined): boolean {
-        if (!lowerFilterText) {
+    private filterTextAllowsIt(singleDataEvent: IDataEvent, filterText: string | undefined): boolean {
+        if (!filterText) {
             return true;
+        }
+
+        let lowerFilterText = filterText.toLowerCase();
+        let regEx: RegExp|null = null;
+        if (filterText?.indexOf("*") !== -1) {
+            regEx = makeRegex(filterText, false);
         }
 
         for (const columnToDisplay of this.configuration.columnsToDisplay) {
             const value = getDynamicFieldValue(singleDataEvent, columnToDisplay.prioritizedFieldNames);
-            if (value && value.toLowerCase().includes(lowerFilterText)) {
-                return true;
+            if (value) {
+                switch (columnToDisplay.type) {
+                    case "SessionNumber":
+                    case "NumberDelta":
+                    case "TimeDelta":
+                        break;
+                    default:
+                        if (regEx) {
+                            if (regEx.exec(value) != null) {
+                                return true;
+                            }
+                        } else if (value.toLowerCase().includes(lowerFilterText)) {
+                            return true;
+                        }
+                    }
             }
         }
 
