@@ -31,7 +31,7 @@ export const EventTypeFilter = (props: IEventTypeFilterProps): React.ReactElemen
                     type='radio'
                     name='eventTypeFilter'
                     className='eventTypeFilterInput'
-                    title='All'
+                    title='Show all'
                     value={undefined}
                     checked={props.currentEventTypeFilter === undefined}
                     onChange={selectionChanged}
@@ -43,7 +43,7 @@ export const EventTypeFilter = (props: IEventTypeFilterProps): React.ReactElemen
                     name='eventTypeFilter'
                     type='radio'
                     className='eventTypeFilterInput'
-                    title='Just app logic'
+                    title='Show just app logic'
                     value={appLogic}
                     checked={props.currentEventTypeFilter === appLogic}
                     onChange={selectionChanged}
@@ -55,7 +55,7 @@ export const EventTypeFilter = (props: IEventTypeFilterProps): React.ReactElemen
                     name='eventTypeFilter'
                     type='radio'
                     className='eventTypeFilterInput'
-                    title='Just performance'
+                    title='Show just performance'
                     value={performance}
                     checked={props.currentEventTypeFilter === performance}
                     onChange={selectionChanged}
@@ -67,7 +67,7 @@ export const EventTypeFilter = (props: IEventTypeFilterProps): React.ReactElemen
                     name='eventTypeFilter'
                     type='radio'
                     className='eventTypeFilterInput'
-                    title='Just warnings'
+                    title='Show just warnings'
                     checked={props.currentEventTypeFilter === warning}
                     value={warning}
                     onChange={selectionChanged}
@@ -79,7 +79,7 @@ export const EventTypeFilter = (props: IEventTypeFilterProps): React.ReactElemen
                     name='eventTypeFilter'
                     type='radio'
                     className='eventTypeFilterInput'
-                    title='Just fatal errors'
+                    title='Show just fatal errors'
                     checked={props.currentEventTypeFilter === fatalError}
                     value={fatalError}
                     onChange={selectionChanged}

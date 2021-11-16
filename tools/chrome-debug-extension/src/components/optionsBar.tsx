@@ -76,7 +76,7 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
                     onChange={handleFilterTextOnChange}
                 />
             </span>
-            <span className='verticallyCenteredFlexItem'>
+            <span className='verticallyCenteredFlexItem' title="Include Content when filtering">
                 <input
                     type='checkbox'
                     id='filterContentButton'
@@ -96,7 +96,7 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
                     counts={props.counts}
                 />
             </span>
-            <span className='verticallyCenteredFlexItem'>
+            <span className='verticallyCenteredFlexItem' title="Exclude common fields in the details pane">
                 <input
                     type='checkbox'
                     id='condenseDetailsButton'
@@ -109,13 +109,10 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
                 </label>
             </span>
             <span className='verticallyCenteredFlexItem captureTypes'>
-                <span aria-hidden="true">
-                    Capture:
-                </span>
-                <span className='verticallyCenteredFlexItem' aria-label="Capture Network requests">
+                <span className='verticallyCenteredFlexItem' aria-label="Capture network requests" title="Capture network requests">
                     <input
                         type='checkbox'
-                        id='listenNetwork'
+                        id='listenNetworkButton'
                         checked={props.filterSettings.listenNetwork}
                         className='listenNetworkButton'
                         onChange={onListenNetworkChanged}
@@ -124,10 +121,10 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
                         Network
                     </label>
                 </span>
-                <span className='verticallyCenteredFlexItem' aria-label="Capture Sdk Events">
+                <span className='verticallyCenteredFlexItem' aria-label="Capture SDK Events" title="Capture SDK Events">
                     <input
                         type='checkbox'
-                        id='listenSdk'
+                        id='listenSdkButton'
                         checked={props.filterSettings.listenSdk}
                         className='listenSdkButton'
                         onChange={onListenSdkChanged}
