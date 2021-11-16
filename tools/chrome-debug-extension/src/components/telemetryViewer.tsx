@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as React from "react";
+import { IConfiguration } from "../configuration/IConfiguration";
 import { getCondensedDetails } from "../dataSources/dataHelpers";
 import { IDataEvent } from "../dataSources/IDataEvent";
 import { Session } from "../session";
@@ -18,18 +19,20 @@ interface ITelemetryViewerProps {
 
 const filterSettingsCacheKey = "filterSettings";
 
-const defaultFilterSettings: IFilterSettings = {
-    filterText: "",
-    filterContent: true,
-    filterByType: undefined,
-    showCondensedDetails: false,
-    listenNetwork: true,
-    listenSdk: true
-};
+function getDefaultFilterSettings(configuration: IConfiguration): IFilterSettings {
+    return {
+        filterText: "",
+        filterContent: true,
+        filterByType: undefined,
+        showCondensedDetails: false,
+        listenNetwork: configuration.defaultNetworkCaptureValue !== undefined ? configuration.defaultNetworkCaptureValue : true,
+        listenSdk: configuration.defaultSDKCaptureValue !== undefined ? configuration.defaultSDKCaptureValue : true
+    };
+}
 
 export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElement<ITelemetryViewerProps> => {
     const [filteredEventData, setFilteredEventData] = React.useState<IDataEvent[]>([]);
-    const [filterSettings, setFilterSettings] = React.useState<IFilterSettings>(defaultFilterSettings);
+    const [filterSettings, setFilterSettings] = React.useState<IFilterSettings>(getDefaultFilterSettings(props.session.configuration));
     const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(undefined);
     const [isDraggingOver, setIsDraggingOver] = React.useState<boolean>(false);
 
@@ -111,7 +114,7 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
             if (json) {
                 // Make sure we have any defaults set
                 let settings: IFilterSettings = {
-                    ...defaultFilterSettings,
+                    ...getDefaultFilterSettings(props.session.configuration),
                     ...(JSON.parse(json))
                 };
 

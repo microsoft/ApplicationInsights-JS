@@ -17,6 +17,16 @@ export interface IConfiguration {
     dataSourceUrls?: string | string[];
 
     /**
+     * Optional default value for the network capture setting in the UI
+     */
+    defaultNetworkCaptureValue?: boolean;
+
+    /**
+     * Optional default value for the SDK capture setting in the UI
+     */
+    defaultSDKCaptureValue?: boolean;
+
+     /**
      * A list of fields of the fields to exclude from the details view when "Consolidate details" is checked
      */
     fieldsToExcludeFromCondensedList?: string[];
