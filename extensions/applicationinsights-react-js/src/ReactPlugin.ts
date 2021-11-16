@@ -12,7 +12,7 @@ import {
     ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties, safeGetCookieMgr, ICookieMgr, arrForEach
 } from "@microsoft/applicationinsights-core-js";
 import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
-import { History, LocationListener, Location, Action } from "history";
+import { History, Location, Action, Update } from "history";
 
 export default class ReactPlugin extends BaseTelemetryPlugin {
     public priority = 185;
@@ -116,10 +116,19 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
 
 
     private addHistoryListener(history: History): void {
-        const locationListener: LocationListener = (location: Location, action: Action): void => {
+        const locationListener = (arg: Location | Update): void => {
+            // v4 of the history API passes "location" as the first argument, while v5 passes an object that contains location and action 
+            let locn: Location = null;
+            if ("location" in arg) {
+                // Looks like v5
+                locn = arg["location"];
+            } else {
+                locn = arg as Location;
+            }
+
             // Timeout to ensure any changes to the DOM made by route changes get included in pageView telemetry
             setTimeout(() => {
-                const pageViewTelemetry: IPageViewTelemetry = { uri: location.pathname };
+                const pageViewTelemetry: IPageViewTelemetry = { uri: locn.pathname };
                 this.trackPageView(pageViewTelemetry);
             }, 500);
         };

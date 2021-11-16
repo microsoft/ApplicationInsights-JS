@@ -30,8 +30,8 @@
         "@testing-library/react": "^11.2.5",
         "@testing-library/user-event": "^12.8.1",
         "@types/cheerio": "0.22.13",
-        "@types/history": "4.7.2",
-        "@types/jest": "^24.0.11",
+        "@types/history": "^4.7.9",
+        "@types/jest": "^27.0.2",
         "@types/node": "11.13.2",
         "@types/prop-types": "^15.7.3",
         "@types/react": "^16.9.11",
@@ -39,9 +39,9 @@
         "csstype": "~2.6.7",
         "grunt": "^1.4.1",
         "grunt-cli": "^1.4.3",
-        "jest": "^24.7.1",
-        "react": "^17.0.1",
-        "react-dom": "^17.0.1",
+        "jest": "^27.3.1",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
         "@rollup/plugin-commonjs": "^18.0.0",
@@ -50,21 +50,22 @@
         "rollup-plugin-cleanup": "3.2.1",
         "rollup-plugin-peer-deps-external": "^2.2.4",
         "rollup": "^2.32.0",
-        "ts-jest": "^24.0.2",
+        "ts-jest": "^27.0.7",
         "typescript": "^4.3.4",
         "tslib": "^2.0.0",
-        "uglify-js": "^3.11.0"
+        "uglify-js": "^3.11.0",
+        "history": "^5.1.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "2.0.0",
         "@microsoft/applicationinsights-core-js": "2.7.1",
         "@microsoft/applicationinsights-common": "2.7.1",
-        "@microsoft/dynamicproto-js": "^1.1.4",
-        "history": "^4.10.1"
+        "@microsoft/dynamicproto-js": "^1.1.4"
     },
     "peerDependencies": {
         "tslib": "*",
-        "react": "^17.0.1"
+        "react": "^17.0.1",
+        "history": ">= 4.10.1"
     },
     "license": "MIT"
 }

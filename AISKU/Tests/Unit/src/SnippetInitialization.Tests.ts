@@ -116,7 +116,7 @@ export class SnippetInitializationTests extends AITestClass {
 
             this.testCaseAsync({
                 name: "[" + snippetName + "] : Public Members exist",
-                stepDelay: 1,
+                stepDelay: 100,
                 steps: [() => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
                     _expectedTrackMethods.forEach(method => {
@@ -277,7 +277,7 @@ export class SnippetInitializationTests extends AITestClass {
     public addAsyncTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackEvent sends to backend',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [() => {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 theSnippet.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
@@ -295,7 +295,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackTrace sends to backend',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [() => {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 theSnippet.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
@@ -312,7 +312,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackException sends to backend',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [() => {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 let exception: Error = null;
@@ -329,7 +329,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'E2E.GenericTests: legacy trackException sends to backend',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [() => {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 let exception: Error = null;
@@ -346,7 +346,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: "TelemetryContext: track metric",
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -387,7 +387,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: "TelemetryContext: track page view performance",
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -398,7 +398,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: "TelemetryContext: track all types in batch",
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -423,7 +423,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: "TelemetryContext: track all types in a large batch",
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -447,7 +447,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: "TelemetryInitializer: E2E override envelope data",
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -488,7 +488,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: "TelemetryContext: trackDependencyData",
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -507,7 +507,7 @@ export class SnippetInitializationTests extends AITestClass {
             // If we are emulating ES3 then XHR is not hooked
             this.testCaseAsync({
                 name: "TelemetryContext: auto collection of ajax requests",
-                stepDelay: 1,
+                stepDelay: 100,
                 steps: [
                     () => {
                         let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -588,7 +588,7 @@ export class SnippetInitializationTests extends AITestClass {
     public addPropertiesPluginTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
         this.testCaseAsync({
             name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -619,7 +619,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer & shimmed addTelemetryInitializer',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -650,7 +650,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'Custom Tags: allowed to send custom properties via shimmed addTelemetryInitializer',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -696,7 +696,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -728,7 +728,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId and accountId',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -759,7 +759,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext non-ascii authId and accountId',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -790,7 +790,7 @@ export class SnippetInitializationTests extends AITestClass {
 
         this.testCaseAsync({
             name: 'AuthenticatedUserContext: clearAuthenticatedUserContext',
-            stepDelay: 1,
+            stepDelay: 100,
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
