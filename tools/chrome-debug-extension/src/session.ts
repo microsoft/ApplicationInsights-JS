@@ -182,8 +182,8 @@ export class Session {
             this._filterSettings && this._filterSettings.filterText && this._filterSettings.filterText.length > 0
                 ? this._filterSettings.filterText
                 : undefined;
-        const resultsFiltered: boolean =
-            filterText !== undefined || this._filterSettings.filterByType !== undefined;
+        const resultsFiltered: boolean = this._filterSettings &&
+            (filterText !== undefined || this._filterSettings.filterByType !== undefined);
         const newFilteredData: IDataEvent[] = resultsFiltered ? [] : this._rawData.slice();
 
         // tslint:disable-next-line:no-any
