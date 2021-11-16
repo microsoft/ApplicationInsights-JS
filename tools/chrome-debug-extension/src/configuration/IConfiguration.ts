@@ -7,7 +7,7 @@ import { DataSourceType } from "../dataSources/IDataSource";
 // This is the expected format of the JSON file loaded for a given configuration
 export interface IConfiguration {
     /**
-     * Which data source to use to gather the events, defaults to Network
+     * Which data source to use to gather the events, defaults to Default
      */
     dataSourceType?: DataSourceType;
 

@@ -3,7 +3,7 @@
 
 import { IMessage } from "../interfaces/IMessage";
 
-export type DataSourceType = "Network" | "DiagnosticInjection" | "OneDSDataSource";
+export type DataSourceType = "Default";
 
 export interface IDataSource {
     addListener: (callback: (newMessage: IMessage) => void) => number;

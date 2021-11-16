@@ -5,7 +5,10 @@ import { MessageSource, MessageType } from "../Enums";
 import { IMessage } from "../interfaces/IMessage";
 import { IDataSource } from "./IDataSource";
 
-export class NetworkDataSource implements IDataSource {
+/**
+ * This data source listens to both the network and the SDK for events
+ */
+export class DefaultDataSource implements IDataSource {
 
     public addListener: (callback: (newMessage: IMessage) => void) => number;
     public removeListener: (id: number) => boolean;

@@ -121,7 +121,7 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
                         Network
                     </label>
                 </span>
-                <span className='verticallyCenteredFlexItem' aria-label="Capture SDK Events" title="Capture SDK Events">
+                <span className='verticallyCenteredFlexItem' aria-label="Capture SDK events" title="Capture SDK events">
                     <input
                         type='checkbox'
                         id='listenSdkButton'

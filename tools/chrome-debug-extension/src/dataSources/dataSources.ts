@@ -4,7 +4,7 @@
 import { dumpObj, isArray, isString } from "@microsoft/applicationinsights-core-js";
 import { IConfiguration } from "../configuration/IConfiguration";
 import { IDataSource } from "./IDataSource";
-import { NetworkDataSource } from "./networkDataSource";
+import { DefaultDataSource } from "./defaultDataSource";
 import { NoOpDataSource } from "./noOpDataSource";
 
 export function createDataSource(configuration: IConfiguration): IDataSource {
@@ -41,18 +41,13 @@ export function createDataSource(configuration: IConfiguration): IDataSource {
         }
     }
 
-    let dataSourceType = configuration.dataSourceType;
-    if (!dataSourceType) {
-        dataSourceType = "Network";
-    }
-
-    switch (dataSourceType) {
-        case "OneDSDataSource":
-        case "Network":
-            return new NetworkDataSource(tabId, urls, configuration.ignoreNotifications);
+    switch (configuration.dataSourceType) {
+        case undefined:
+        case "Default":
+            return new DefaultDataSource(tabId, urls, configuration.ignoreNotifications);
 
         default:
-            console.log(`Unrecognized data source supplied in the configuration: ${configuration.dataSourceType}`);
+            console.error(`Unrecognized data source supplied in the configuration: ${configuration.dataSourceType}`);
             return new NoOpDataSource();
     }
 }
