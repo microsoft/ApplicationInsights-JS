@@ -55,7 +55,7 @@ export class LogEntry {
         }
 
         _self.isMatch = (textFilter: string, excludedKeys: string[], includeFunctions: boolean) => {
-            let rg = makeRegex(textFilter);
+            let rg = makeRegex(textFilter, false);
             if (rg) {
                 if (key && _testValue(rg, key)) {
                     return true;

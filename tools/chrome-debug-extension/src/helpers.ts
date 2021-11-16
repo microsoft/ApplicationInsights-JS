@@ -84,7 +84,7 @@ function _setInnerText(elm: HTMLElement, theText: string, textFilter: string): b
     let innerText = theText;
     let matchPos = -1;
     let matchLen = 0;
-    let rg = makeRegex(textFilter);
+    let rg = makeRegex(textFilter, false);
     if (rg) {
         let matchTxt = rg.exec(innerText);
         if (matchTxt && matchTxt[1]) {
