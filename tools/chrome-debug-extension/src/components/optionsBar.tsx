@@ -130,7 +130,7 @@ export const OptionsBar = (props: IOptionsBarProps): React.ReactElement<IOptions
                         onChange={onListenSdkChanged}
                     />
                     <label htmlFor='listenSdkButton' className='checkBoxLabel' aria-hidden="true">
-                        Sdk
+                        SDK
                     </label>
                 </span>
             </span>

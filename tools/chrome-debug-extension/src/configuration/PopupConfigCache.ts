@@ -9,8 +9,8 @@ const popupWindowSettingsCacheKey = "popupWindowSettings";
 
 export function getPopupSettings() : IPopupSettings {
     let settings = {
-        width: 750,
-        height: -1
+        width: 680,
+        height: 860
     };
 
     let popupSettings = localStorage.getItem(popupWindowSettingsCacheKey);
