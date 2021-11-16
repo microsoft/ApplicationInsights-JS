@@ -72,6 +72,7 @@
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "qunit": "^2.11.2",
+        "react-dom": "^17.0.2",
         "react-is": "16.13.1",
         "rollup": "^2.32.0",
         "rollup-plugin-cleanup": "3.2.1",
@@ -3292,7 +3293,7 @@
     "node_modules/@rush-temp/applicationinsights-chrome-debug-extension": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-chrome-debug-extension.tgz",
-      "integrity": "sha512-YkYqBbEfO7ZOTkUk9Q0zUoioYdq/tjYPd4jINd7UoxE46zPkZg5EY2QeOgotDmkSbM1i8K11OkI/CpZNWhTQmQ==",
+      "integrity": "sha512-PI944t3Byuc5UGkOjPCaGL3tGTTY0Pi7R/U8g0AudjgmkfUx4AsSD57oKoBxO85k4qt5c+CMtFa4/Rqxrx50dA==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.4",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -3310,8 +3311,8 @@
         "autoprefixer": "9.4.5",
         "file-saver": "^2.0.0",
         "grunt": "^1.4.1",
-        "react": "^17.0.1",
-        "react-dom": "^17.0.1",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
         "react-is": "16.13.1",
         "rollup": "^2.32.0",
         "rollup-plugin-cleanup": "3.2.1",
@@ -18700,7 +18701,7 @@
     },
     "@rush-temp/applicationinsights-chrome-debug-extension": {
       "version": "file:projects\\applicationinsights-chrome-debug-extension.tgz",
-      "integrity": "sha512-YkYqBbEfO7ZOTkUk9Q0zUoioYdq/tjYPd4jINd7UoxE46zPkZg5EY2QeOgotDmkSbM1i8K11OkI/CpZNWhTQmQ==",
+      "integrity": "sha512-PI944t3Byuc5UGkOjPCaGL3tGTTY0Pi7R/U8g0AudjgmkfUx4AsSD57oKoBxO85k4qt5c+CMtFa4/Rqxrx50dA==",
       "requires": {
         "@microsoft/dynamicproto-js": "^1.1.4",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -18718,8 +18719,8 @@
         "autoprefixer": "9.4.5",
         "file-saver": "^2.0.0",
         "grunt": "^1.4.1",
-        "react": "^17.0.1",
-        "react-dom": "^17.0.1",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
         "react-is": "16.13.1",
         "rollup": "^2.32.0",
         "rollup-plugin-cleanup": "3.2.1",
