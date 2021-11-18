@@ -53,7 +53,7 @@ export class DefaultDataSource implements IDataSource {
         };
     
         function _processWebRequest(details: chrome.webRequest.WebRequestBodyDetails): void {
-            if (details && details.type === "xmlhttprequest") {
+            if (details && (details.type === "xmlhttprequest" || details.type === "ping")) {
                 const events = details.requestBody && _convertToStringArray(details.requestBody.raw);
                 if (events) {
                     for (let i = events.length - 1; i >= 0; i--) {
