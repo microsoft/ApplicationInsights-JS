@@ -320,6 +320,13 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 return evtPrefix;
             }
 
+            function _debugExtMsg(evtPrefix: string, obj: any) {
+                let dbgExt = getDebugExt(_self.core.config);
+                if (dbgExt && dbgExt.debugMsg) {
+                    dbgExt.debugMsg(evtPrefix, obj);
+                }
+            }
+
             function _handleInstPreHook() {
                 return (funcArgs: IInstrumentCallDetails, ...orgArgs: any[]) => {
                     (debugBins[funcArgs.name] || debugBins.default).increment();
@@ -331,10 +338,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                     let obj = _createInstrumentObject(funcArgs, orgArgs);
                     dashboard.newLogEntry(obj, dateNow() - startTime, evtPrefix, 0, funcArgs.name);
 
-                    let dbgExt = getDebugExt(_self.core.config);
-                    if (dbgExt && dbgExt.debugMsg) {
-                        dbgExt.debugMsg(evtPrefix, obj);
-                    }
+                    _debugExtMsg(evtPrefix, obj);
 
                     if (_theConfig.dumpToConsole() && console && console.log) {
                         console.log(`[${evtPrefix}] preProcess - funcArgs: `, funcArgs);
@@ -355,10 +359,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                         // The called function threw an exception
                         let obj = _createInstrumentObject(funcArgs, orgArgs);
                         dashboard.newLogEntry(obj, dateNow() - startTime, evtPrefix, 0, funcArgs.name);
-                        let dbgExt = getDebugExt(_self.core.config);
-                        if (dbgExt && dbgExt.debugMsg) {
-                            dbgExt.debugMsg(evtPrefix, obj);
-                        }
+                        _debugExtMsg(evtPrefix, obj);
 
                         if (_theConfig.dumpToConsole() && console && console.log) {
                             console.log(`[${evtPrefix}] complete`);
@@ -375,10 +376,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 if (!debugBins["processTelemetry"] && _theConfig.logProcessTelemetry() === true) {
                     let evtName = `[${_self.identifier}:processTelemetry[${event.baseType}]`;
                     dashboard.newLogEntry(event, dateNow() - startTime, evtName, 0, "processTelemetry");
-                    let dbgExt = getDebugExt(_self.core.config);
-                    if (dbgExt && dbgExt.debugMsg) {
-                        dbgExt.debugMsg(evtName, event);
-                    }
+                    _debugExtMsg(evtName, event);
                 }
 
                 _self.processNext(event, itemCtx);
