@@ -320,10 +320,12 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 return evtPrefix;
             }
 
-            function _debugExtMsg(evtPrefix: string, obj: any) {
+            function _logEntry(theEvent: any, evtName: string, kind: string) {
+                dashboard.newLogEntry(theEvent, dateNow() - startTime, evtName, 0, kind);
+
                 let dbgExt = getDebugExt(_self.core.config);
                 if (dbgExt && dbgExt.debugMsg) {
-                    dbgExt.debugMsg(evtPrefix, obj);
+                    dbgExt.debugMsg(evtName, theEvent);
                 }
             }
 
@@ -335,10 +337,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                     }
 
                     let evtPrefix = _getEvtPrefix(funcArgs);
-                    let obj = _createInstrumentObject(funcArgs, orgArgs);
-                    dashboard.newLogEntry(obj, dateNow() - startTime, evtPrefix, 0, funcArgs.name);
-
-                    _debugExtMsg(evtPrefix, obj);
+                    _logEntry(_createInstrumentObject(funcArgs, orgArgs), evtPrefix, funcArgs.name);
 
                     if (_theConfig.dumpToConsole() && console && console.log) {
                         console.log(`[${evtPrefix}] preProcess - funcArgs: `, funcArgs);
@@ -357,9 +356,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                         }
     
                         // The called function threw an exception
-                        let obj = _createInstrumentObject(funcArgs, orgArgs);
-                        dashboard.newLogEntry(obj, dateNow() - startTime, evtPrefix, 0, funcArgs.name);
-                        _debugExtMsg(evtPrefix, obj);
+                        _logEntry(_createInstrumentObject(funcArgs, orgArgs), evtPrefix, funcArgs.name);
 
                         if (_theConfig.dumpToConsole() && console && console.log) {
                             console.log(`[${evtPrefix}] complete`);
@@ -374,9 +371,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 }
 
                 if (!debugBins["processTelemetry"] && _theConfig.logProcessTelemetry() === true) {
-                    let evtName = `[${_self.identifier}:processTelemetry[${event.baseType}]`;
-                    dashboard.newLogEntry(event, dateNow() - startTime, evtName, 0, "processTelemetry");
-                    _debugExtMsg(evtName, event);
+                    _logEntry(event, `[${_self.identifier}:processTelemetry[${event.baseType}]`, "processTelemetry");
                 }
 
                 _self.processNext(event, itemCtx);
