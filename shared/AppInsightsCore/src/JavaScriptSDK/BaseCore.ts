@@ -24,6 +24,7 @@ import { createCookieMgr } from "./CookieMgr";
 import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
 import { DiagnosticLogger } from "./DiagnosticLogger";
+import { getDebugListener } from "./DbgExtensionUtils";
 
 const validationError = "Extensions must provide callback to initialize";
 
@@ -78,6 +79,10 @@ export class BaseCore implements IAppInsightsCore {
                 // For backward compatibility only
                 _self[strNotificationManager] = notificationManager;
                 _self.config = config || {};
+
+                if (notificationManager && _self.config.disableDbgExt !== true) {
+                    notificationManager.addNotificationListener(getDebugListener(config));
+                }
 
                 if (_self.config.enablePerfMgr) {
                     // Set the performance manager creation function if not defined

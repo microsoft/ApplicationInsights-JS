@@ -161,7 +161,14 @@ module.exports = function (grunt) {
                                             ]
                                         }
                                     },
-    
+            "chrome-debug-extension": { path: "./tools/chrome-debug-extension",
+                                        cfg: {
+                                            src: [
+                                                "./tools/chrome-debug-extension/src/**/*.tsx",
+                                                "./tools/chrome-debug-extension/src/**/*.ts",
+                                            ]
+                                        }
+                                    },
             // Common
             "tst-framework":        { path: "./common/Tests/Framework",
                                         cfg: {
@@ -548,6 +555,7 @@ module.exports = function (grunt) {
         grunt.registerTask("rollupes3test", ["ts:rollupes3test", "qunit:rollupes3"]);
         grunt.registerTask("shims", tsBuildActions("shims").concat(["ts:shimstest", "qunit:shims"]));
         grunt.registerTask("shimstest", ["ts:shimstest", "qunit:shims"]);
+        grunt.registerTask("chromedebugextension", tsBuildActions("chrome-debug-extension"));
         grunt.registerTask("clickanalytics", tsBuildActions("clickanalytics"));
         grunt.registerTask("clickanalyticstests", ["connect", "ts:clickanalyticstests", "qunit:clickanalytics"]);
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));

@@ -1,0 +1,39 @@
+{
+    "compilerOptions": {
+        "outDir": "dist-esm",
+        "module": "esnext",
+        "target": "es2016",
+        "lib": [
+            "es2017",
+            "dom"
+        ],
+        "sourceMap": true,
+        "jsx": "react",
+        "moduleResolution": "node",
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "importHelpers": true,
+        "skipLibCheck": true,
+        "strictNullChecks": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "noUnusedLocals": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "types": [
+            "@types/chrome"
+        ],
+        "noEmit": false,
+        "declaration": true,
+        "declarationDir": "tools/chrome-debug-extension/types",
+        "rootDir": "tools/chrome-debug-extension/src",
+        "declarationMap": true,
+        "inlineSourceMap": false,
+        "inlineSources": true,
+        "allowJs": false
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}

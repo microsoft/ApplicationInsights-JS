@@ -11,6 +11,11 @@
       "shouldPublish": false
     },
     {
+      "packageName": "@microsoft/applicationinsights-chrome-debug-extension",
+      "projectFolder": "tools/chrome-debug-extension",
+      "shouldPublish": false
+    },
+    {
       "packageName": "@microsoft/ai-test-framework",
       "projectFolder": "common/Tests/Framework",
       "shouldPublish": true

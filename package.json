@@ -57,6 +57,7 @@
         "typedoc": "^0.22.8",
         "connect": "^3.7.0",
         "puppeteer": "^10.1.0",
-        "chromium": "^3.0.2"
+        "chromium": "^3.0.2",
+        "archiver": "^5.3.0"
     }
 }

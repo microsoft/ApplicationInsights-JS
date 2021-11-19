@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 
 /**
  * This interface identifies the details of an internal performance event - it does not represent an outgoing reported event

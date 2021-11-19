@@ -4,7 +4,8 @@
 import {
     BaseTelemetryPlugin, IConfiguration, arrForEach,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, _InternalMessageId,
-    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls, objForEachKey, isFunction, dateNow, isArray, isUndefined
+    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls,
+    objForEachKey, isFunction, dateNow, isArray, isUndefined, getDebugExt
 } from "@microsoft/applicationinsights-core-js";
 import { Dashboard } from "./components/Dashboard";
 import { getTargetName } from "./components/helpers";
@@ -319,6 +320,15 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 return evtPrefix;
             }
 
+            function _logEntry(theEvent: any, evtName: string, kind: string) {
+                dashboard.newLogEntry(theEvent, dateNow() - startTime, evtName, 0, kind);
+
+                let dbgExt = getDebugExt(_self.core.config);
+                if (dbgExt && dbgExt.debugMsg) {
+                    dbgExt.debugMsg(evtName, theEvent);
+                }
+            }
+
             function _handleInstPreHook() {
                 return (funcArgs: IInstrumentCallDetails, ...orgArgs: any[]) => {
                     (debugBins[funcArgs.name] || debugBins.default).increment();
@@ -327,7 +337,8 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                     }
 
                     let evtPrefix = _getEvtPrefix(funcArgs);
-                    dashboard.newLogEntry(_createInstrumentObject(funcArgs, orgArgs), dateNow() - startTime, `${evtPrefix}`, 0, funcArgs.name);
+                    _logEntry(_createInstrumentObject(funcArgs, orgArgs), evtPrefix, funcArgs.name);
+
                     if (_theConfig.dumpToConsole() && console && console.log) {
                         console.log(`[${evtPrefix}] preProcess - funcArgs: `, funcArgs);
                         console.log(`[${evtPrefix}] preProcess - orgArgs: `, orgArgs);
@@ -345,7 +356,8 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                         }
     
                         // The called function threw an exception
-                        dashboard.newLogEntry(_createInstrumentObject(funcArgs, orgArgs), dateNow() - startTime, `${evtPrefix}`, 0, funcArgs.name)
+                        _logEntry(_createInstrumentObject(funcArgs, orgArgs), evtPrefix, funcArgs.name);
+
                         if (_theConfig.dumpToConsole() && console && console.log) {
                             console.log(`[${evtPrefix}] complete`);
                         }
@@ -359,8 +371,9 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 }
 
                 if (!debugBins["processTelemetry"] && _theConfig.logProcessTelemetry() === true) {
-                    dashboard.newLogEntry(event, dateNow() - startTime, `[${_self.identifier}:processTelemetry[${event.baseType}]`, 0, "processTelemetry");
+                    _logEntry(event, `[${_self.identifier}:processTelemetry[${event.baseType}]`, "processTelemetry");
                 }
+
                 _self.processNext(event, itemCtx);
             }
         });

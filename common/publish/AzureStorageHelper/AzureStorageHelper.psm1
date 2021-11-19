@@ -14,6 +14,7 @@ $contentTypeMap = @{
     "js" = $jsContentType;
     "map" = "application/json";
     "json" = "application/json";
+    "zip" = "application/zip";
 };
 
 ##  Function: InstallRequiredModules
@@ -396,7 +397,7 @@ Function Get-VersionDetails (
 Function Get-FileVersion (
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[\w\d\-\+]+\.?[\d\-\+]*)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[\w\d\-\+]+\.?[\d\-\+]*)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json|zip)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
     $contentType = $jsContentType
 
@@ -844,7 +845,8 @@ Function ListVersions(
 Function SetActiveVersion(
    [system.collections.generic.list[hashtable]] $fileList,
    [string] $storePath,
-   [boolean] $minorOnly
+   [boolean] $minorOnly,
+   [boolean] $setUnversioned = $false
 ) {
 
     $destContext = GetContainerContext $global:connectDetails $storePath
@@ -889,6 +891,11 @@ Function SetActiveVersion(
             if ($minorOnly -eq $false) {
                 $majorName = "$($version.path)$($version.prefix)$($verParts[0])$($preRel)$($version.ext)"
                 CopyBlob $blobContext $stagedBlob $destContext $majorName
+            }
+
+            if ($setUnversioned -eq $true) {
+                $unVerName = "$($version.path)$($version.prefix)$($preRel)$($version.ext)" -Replace "\.\.", "."
+                CopyBlob $blobContext $stagedBlob $destContext $unVerName
             }
 
             # Remove the staged files
