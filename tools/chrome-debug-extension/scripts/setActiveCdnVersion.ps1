@@ -140,7 +140,7 @@ Get-VersionFiles $files $storePath "ai.chrome-ext." $activeVersion
 
 if ($files.ContainsKey($activeVersion) -ne $true) {
     Write-LogFailure "Version [$activeVersion] does not appear to be deployed to [$container]"
-} elseif ($files[$activeVersion].Count -ne 1) {
+} elseif ($files[$activeVersion].Count -ne 2) {
     Write-LogFailure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
 }
 
