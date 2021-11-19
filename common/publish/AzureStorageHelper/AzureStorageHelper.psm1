@@ -894,7 +894,7 @@ Function SetActiveVersion(
             }
 
             if ($setUnversioned -eq $true) {
-                $unVerName = "$($version.path)$($version.prefix)$($preRel)$($version.ext)" -Replace "\.\.", "."
+                $unVerName = "$($version.path)$($version.prefix)$($preRel)$($version.ext)" -Replace "\.\.", "." -Replace "\.-", "."
                 CopyBlob $blobContext $stagedBlob $destContext $unVerName
             }
 
