@@ -8,6 +8,7 @@ import { getConfiguration } from "./configuration/configuration";
 import { ConfigurationType, ConfigurationURLs } from "./configuration/Configuration.types";
 import { IConfiguration } from "./configuration/IConfiguration";
 import { Session } from "./session";
+import { checkForUpdate } from "./UpdateCheck";
 
 type AppPhase =
     | "Startup"
@@ -17,11 +18,14 @@ type AppPhase =
     | "ConfigurationLoadFailed";
 
 const configurationTypeStorageKey = "configurationType";
+const defaultVersion = "#version#";
 
 export const TelemetryViewerPopup = (): React.ReactElement => {
     const [appPhase, setAppPhase] = React.useState<AppPhase>("Startup");
     const [session, setSession] = React.useState<Session | undefined>(undefined);
     const [configurationType, setConfigurationType] = React.useState<ConfigurationType>(undefined);
+    let newAvailableVersion: string;
+    // let newVersionDownload: string;
 
     function applyConfigurationType(newConfigurationType: ConfigurationType): void {
         if (newConfigurationType) {
@@ -72,7 +76,43 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
         }
     }
 
+    function highlightNewVersion() {
+        let orgTitle = document.title;
+        let count = 0;
+        let interval = setInterval(() => {
+            count ++;
+            if ((count % 2) == 0) {
+                document.title = orgTitle;
+            } else {
+                document.title = orgTitle + " *** v" + encodeURIComponent(newAvailableVersion) + " Available ***"
+            }
+            if (count > 10) {
+                clearInterval(interval);
+            }
+        }, 1500);
+    }
+
+    function versionCheck() {
+        let manifestVersion = defaultVersion;
+        if (chrome && chrome.runtime) {
+            let manifest = chrome.runtime.getManifest();
+            manifestVersion = manifest.version_name || manifest.version || "";
+        }
+
+        if (manifestVersion) {
+            let newTitle = "Telemetry Viewer - v" + encodeURIComponent(manifestVersion);
+            document.title = newTitle;
+            checkForUpdate((newVersion, details) => {
+                newAvailableVersion = newVersion;
+                // newVersionDownload = details;
+                highlightNewVersion();
+            }, manifestVersion);
+        }
+    }
+
     React.useEffect(() => {
+        versionCheck();
+
         let configurationTypeToSet = undefined;
         try {
             const savedValue = localStorage.getItem(configurationTypeStorageKey);

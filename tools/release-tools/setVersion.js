@@ -462,7 +462,7 @@ const setPackageJsonRelease = () => {
                 }
 
                 if (theFilename.indexOf("/package.json") !== -1) {
-                    let srcFolder = theFilename.replace("/package.json", "/**/*.ts");
+                    let srcFolder = theFilename.replace("/package.json", "/**/*.ts", "/**/*.tsx", "/**/*.html");
                     console.log("        - Checking source files: " + srcFolder);
                     const tsFiles = globby.sync(srcFolder);
                     tsFiles.map(sourceFile => {
