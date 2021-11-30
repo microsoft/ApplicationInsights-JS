@@ -154,7 +154,7 @@ export const ConfigurationSelection = (
                 <div className='configurationDescription'>
                     <p>Currently updates must be done manually.</p>
                     <p>
-                        To update the tool, download either the <a href="https://js.monitor.azure.com/release/tools/ai.chrome-ext.zip" target="_blank">official</a> or <a href="https://js.monitor.azure.com/nightly/tools/ai.chrome-ext.zip" target="_blank">nightly</a> build and unzip it into the folder where you originally installed the tool.
+                        To update the tool, download either the <a href="https://js.monitor.azure.com/release/tools/ai.chrome-ext.zip" target="_blank">official</a> or <a href="https://js.monitor.azure.com/nightly/tools/ai.chrome-ext.nightly.zip" target="_blank">nightly</a> build and unzip it into the folder where you originally installed the tool.
                     </p>
                     <p>
                         For more information, see the instructions <a href="https://github.com/microsoft/ApplicationInsights-JS/blob/master/tools/chrome-debug-extension/README.md" target="_blank">here</a>.
