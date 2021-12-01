@@ -14,6 +14,7 @@ export const ConfigurationURLs: IConfigurationURLs = {
     // Default doesn't load from a URL
     Default: "",
     Stream: "https://aka.ms/telemetryViewerConfig/Stream",
+    AMC: "https://aka.ms/telemetryViewerConfig/AMC",
     MSN: "TODO",
     // Custom doesn't load from a URL, but from local storage instead
     Custom: ""
