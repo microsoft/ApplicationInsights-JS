@@ -311,13 +311,14 @@ export function getIEVersion(userAgentStr: string = null): number {
     }
 
     var ua = (userAgentStr || "").toLowerCase();
-    if (strContains(ua, strMsie)) {
-        return parseInt(ua.split(strMsie)[1]);
-    } else if (strContains(ua, strTrident)) {
+    // Checking for Trident first since embedded IE browser control includes higher version than MSIE.
+    if (strContains(ua, strTrident)) {
         let tridentVer = parseInt(ua.split(strTrident)[1]);
         if (tridentVer) {
             return tridentVer + 4;
         }
+    } else if (strContains(ua, strMsie)) {
+        return parseInt(ua.split(strMsie)[1]);
     }
 
     return null;
