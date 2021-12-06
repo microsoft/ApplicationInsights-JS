@@ -8,7 +8,7 @@ We recommend building a configuration file to represent the schema of the teleme
 
 ## Installing the tool
 
-1. Download either the [official](https://js.monitor.azure.com/release/tools/ai.chrome-ext.zip) or [nightly](https://js.monitor.azure.com/nightly/tools/ai.chrome-ext.nightly.zip) build and unzip it into a folder on your PR
+1. Download either the [official](https://js.monitor.azure.com/release/tools/ai.chrome-ext.zip) or [nightly](https://js.monitor.azure.com/nightly/tools/ai.chrome-ext.nightly.zip) build and unzip it into a folder
 1. Open the Manage Extensions page in either Chrome or Edge
    - Browse to either edge://extensions or chrome://extensions/ respectively
    - Or choose Extensions from the ... menu
