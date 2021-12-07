@@ -54,7 +54,7 @@ function _getReason(error: any) {
 }
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.7.1"; // Not currently used anywhere
+    public static Version = "2.7.2"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {

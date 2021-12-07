@@ -1,4 +1,3 @@
-
 export class AppInsightsInitPerfTestClass {
 
     public version: string;
@@ -20,7 +19,7 @@ export class AppInsightsInitPerfTestClass {
          * should update version after new release
          * version with doperf(): after 2.5.6
          * */
-        var defaultVer = "2.7.1";
+        var defaultVer = "2.7.2";
         this.version = ver? ver:this._getQueryParameterVersion(defaultVer); 
         this.perfEventsBuffer = [];
         this.perfEventWaitBuffer = [];
@@ -39,5 +38,3 @@ export class AppInsightsInitPerfTestClass {
         return version;
     }
 }
-
-
