@@ -151,7 +151,7 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
                 details = errorObj;
             } else if (_isStackDetails(errorObj[strStackDetails])) {
                 details = errorObj[strStackDetails];
-            } else if (window["opera"] && errorObj[strMessage]) {
+            } else if (window && window["opera"] && errorObj[strMessage]) {
                 // Opera
                 details = _getOperaStack(errorObj.message);
             } else if (isString(errorObj)) {
