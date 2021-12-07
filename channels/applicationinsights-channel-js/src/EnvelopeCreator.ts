@@ -254,7 +254,7 @@ export function MetricEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: 
     if (!isNullOrUndefined(customUndefinedValue)) {
         _convertPropsUndefinedToCustomDefinedValue(props, customUndefinedValue);
     }
-    const baseMetricData = new Metric(logger, baseData.name, baseData.average, baseData.sampleCount, baseData.min, baseData.max, props, measurements);
+    const baseMetricData = new Metric(logger, baseData.name, baseData.average, baseData.sampleCount, baseData.min, baseData.max, baseData.stdDev, props, measurements);
     const data = new Data<Metric>(Metric.dataType, baseMetricData);
     return _createEnvelope<Metric>(logger, Metric.envelopeType, telemetryItem, data);
 }
