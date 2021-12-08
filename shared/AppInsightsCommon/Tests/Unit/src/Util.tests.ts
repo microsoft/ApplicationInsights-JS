@@ -536,6 +536,7 @@ export class UtilTests extends AITestClass {
                 Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)"));
                 Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)"));
                 Assert.equal(8, Util.getIEVersion("Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)"));
+                Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (Compatible; MSIE 8.0; Windows NT 5.2; Trident/6.0)"));
                 Assert.equal(9, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.0)"));
                 Assert.equal(9, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)"));
                 Assert.equal(10, Util.getIEVersion("Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"));
@@ -548,7 +549,7 @@ export class UtilTests extends AITestClass {
 
                 const origDocMode = document['documentMode'];
                 document['documentMode'] = 11;
-
+ 
                 Assert.equal(11, Util.getIEVersion("Mozilla/4.0 (Compatible; MSIE 8.0; Windows NT 5.2; Trident/6.0)"));
                 Assert.equal(11, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.2; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E)"));
 
