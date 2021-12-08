@@ -175,7 +175,7 @@ function EnvelopeCreatorInit(logger: IDiagnosticLogger, telemetryItem: ITelemetr
 }
 
 export const EnvelopeCreator = {
-    Version: "2.7.1"
+    Version: "2.7.2"
 };
 
 export function DependencyEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
@@ -254,7 +254,7 @@ export function MetricEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: 
     if (!isNullOrUndefined(customUndefinedValue)) {
         _convertPropsUndefinedToCustomDefinedValue(props, customUndefinedValue);
     }
-    const baseMetricData = new Metric(logger, baseData.name, baseData.average, baseData.sampleCount, baseData.min, baseData.max, props, measurements);
+    const baseMetricData = new Metric(logger, baseData.name, baseData.average, baseData.sampleCount, baseData.min, baseData.max, baseData.stdDev, props, measurements);
     const data = new Data<Metric>(Metric.dataType, baseMetricData);
     return _createEnvelope<Metric>(logger, Metric.envelopeType, telemetryItem, data);
 }

@@ -1,8 +1,16 @@
 # Releases
 
+## 2.7.2 (Dec 7th, 2021)
+
+### Changelog
+
+- #1729 [BUG] Addition of stdDev metric support has broken custom metric reporting from #1680
+- #1727 [BUG] Cannot track exception from service worker
+- #1731 Component Governance - Upgrade to npm v8.1.4
+
 ## 2.7.1 (Nov 4th, 2021)
 
-## Changelog
+### Changelog
 
 - #1667 Allow properly disposing AI
   - expose internal log poller #1674
@@ -28,7 +36,7 @@
 ___Major change___: Upgrades build environment to TypeScript __4.x__
 - No known breaking, configuration or definition changes
 
-## Changelog
+### Changelog
 
 - #1640 [BUG] enableAjaxErrorStatusText: false (which is the default setting) does not turn off logging error response body
 - #1642 trackEvent() doesn't allow replacing the iKey
