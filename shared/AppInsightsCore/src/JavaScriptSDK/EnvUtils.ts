@@ -19,6 +19,7 @@ declare var XDomainRequest: any;
 
 const strWindow = "window";
 const strDocument = "document";
+const strDocumentMode = "documentMode";
 const strNavigator = "navigator";
 const strHistory = "history";
 const strLocation = "location";
@@ -311,8 +312,10 @@ export function getIEVersion(userAgentStr: string = null): number {
     }
 
     var ua = (userAgentStr || "").toLowerCase();
+    // Also check for documentMode in case X-UA-Compatible meta tag was included in HTML.
     if (strContains(ua, strMsie)) {
-        return parseInt(ua.split(strMsie)[1]);
+        let doc = getDocument() || {} as Document;
+        return Math.max(parseInt(ua.split(strMsie)[1]), (doc[strDocumentMode] || 0));
     } else if (strContains(ua, strTrident)) {
         let tridentVer = parseInt(ua.split(strTrident)[1]);
         if (tridentVer) {
