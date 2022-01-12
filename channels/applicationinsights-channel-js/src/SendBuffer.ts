@@ -266,7 +266,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 sentElements = _removePayloadsFromBuffer(payload, sentElements);
         
                 _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
-            }
+            };
         
             function _removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
                 const remaining: string[] = [];

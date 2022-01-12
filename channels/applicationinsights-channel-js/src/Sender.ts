@@ -233,7 +233,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
             _self.addHeader = (name: string, value: string) => {
                 _headers[name] = value;
-            }
+            };
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
                 _base.initialize(config, core, extensions, pluginChain);
@@ -780,7 +780,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     headers: requestHeaders,
                     body: plainTextBatch,
                     [DisabledPropertyName]: true            // Mark so we don't attempt to track this request
-                }
+                };
 
                 if (!isAsync) {
                     init.keepalive = true;

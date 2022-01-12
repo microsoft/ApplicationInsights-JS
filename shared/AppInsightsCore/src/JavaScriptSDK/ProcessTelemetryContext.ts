@@ -9,7 +9,7 @@ import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { DiagnosticLogger, safeGetLogger } from "./DiagnosticLogger";
+import { safeGetLogger } from "./DiagnosticLogger";
 import { TelemetryPluginChain } from "./TelemetryPluginChain";
 import { arrForEach, isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 

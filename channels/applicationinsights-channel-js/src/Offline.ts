@@ -1,4 +1,4 @@
-import { EventHelper, getWindow, getDocument, getNavigator, isUndefined, isNullOrUndefined, attachEvent } from "@microsoft/applicationinsights-core-js";
+import { getWindow, getDocument, getNavigator, isUndefined, isNullOrUndefined, attachEvent } from "@microsoft/applicationinsights-core-js";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 /**

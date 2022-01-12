@@ -95,10 +95,9 @@ function getFilename(inputFile, packageVersion) {
         }
     }
 
-
     return {
         name: filename
-    }
+    };
 }
 
 function processPath(integrityCache, path, version) {

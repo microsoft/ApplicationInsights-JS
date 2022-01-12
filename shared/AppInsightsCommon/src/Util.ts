@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StorageType } from "./Enums";
 import {
     _InternalMessageId, IDiagnosticLogger, IPlugin, getPerformance,
     getExceptionName as coreGetExceptionName, dumpObj,
@@ -421,7 +420,7 @@ export function AjaxHelperParseDependencyPath(logger: IDiagnosticLogger, absolut
     let target, name = commandName, data = commandName;
 
     if (absoluteUrl && absoluteUrl.length > 0) {
-        const parsedUrl: HTMLAnchorElement = urlParseUrl(absoluteUrl)
+        const parsedUrl: HTMLAnchorElement = urlParseUrl(absoluteUrl);
         target = parsedUrl.host;
         if (!name) {
             if (parsedUrl.pathname != null) {

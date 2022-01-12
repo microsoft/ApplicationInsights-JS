@@ -24,7 +24,8 @@ function _doMinify(code, filename, options, _chunkOptions) {
     if (isSourceMapEnabled(options)) {
         theOptions.sourceMap = {
             filename: filename
-        }
+        };
+        
         if (filename) {
             theOptions.sourceMap.url = filename + ".map";
         }

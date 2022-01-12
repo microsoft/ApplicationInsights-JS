@@ -135,7 +135,7 @@ export class PerfEvent implements IPerfEvent {
                 // If we couldn't define the property set during complete -- to minimize the perf impact until after the time
                 _self.payload = payloadDetails();
             }
-        }
+        };
     }
 }
 
@@ -232,7 +232,7 @@ export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSou
         let perfMgr: IPerfManager = mgrSource as IPerfManager;
         if (isFunction(perfMgr["getPerfMgr"])) {
             // Looks like a perf manager provider object
-            perfMgr = perfMgr["getPerfMgr"]()
+            perfMgr = perfMgr["getPerfMgr"]();
         }
         
         if (perfMgr) {

@@ -247,7 +247,7 @@ export class Session {
             }
         }
 
-        if (filterText && this._filterSettings.filterContent) {
+        if (this._filterSettings.filterContent) {
             let excludeKeys: string[] = [];
             let logEntry = singleDataEvent.logEntry = singleDataEvent.logEntry || new LogEntry(singleDataEvent.data, 0);
             if (logEntry.isMatch(filterText, excludeKeys, true)) {

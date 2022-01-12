@@ -140,7 +140,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (_isMgrEnabled(cookieMgr)) {
                 let values: any = {};
                 let theValue = strTrim(value || strEmpty);
-                let idx = theValue.indexOf(";")
+                let idx = theValue.indexOf(";");
                 if (idx !== -1) {
                     theValue = strTrim(value.substring(0, idx));
                     values = _extractParts(value.substring(idx + 1));

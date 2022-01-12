@@ -5,7 +5,7 @@ import { PageViewPerfData } from "../Interfaces/Contracts/Generated/PageViewPerf
 import { FieldType } from "../Enums";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from "./Common/DataSanitizer";
-import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, _InternalMessageId } from "@microsoft/applicationinsights-core-js";
 import { IPageViewPerformanceTelemetry } from "../Interfaces/IPageViewPerformanceTelemetry";
 import { strNotSpecified } from "../Constants";
 
@@ -42,7 +42,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
 
         if (cs4BaseData) {
             this.domProcessing = cs4BaseData.domProcessing;
-            this.duration = cs4BaseData.duration
+            this.duration = cs4BaseData.duration;
             this.networkConnect = cs4BaseData.networkConnect;
             this.perfTotal = cs4BaseData.perfTotal;
             this.receivedResponse = cs4BaseData.receivedResponse;

@@ -36,7 +36,7 @@ export var __objAssignFnImpl: ObjAssignFunc = function(t: any): any {
         }
     }
     return t;
-}
+};
 
 export var __assignFn: ObjAssignFunc = ObjAssign || __objAssignFnImpl;
 

@@ -386,7 +386,7 @@ export function isFetchSupported(withKeepAlive?: boolean): boolean {
 
 export function useXDomainRequest(): boolean | undefined {
     if (_useXDomainRequest === null) {
-        _useXDomainRequest = (typeof XDomainRequest !== undefined);
+        _useXDomainRequest = (typeof XDomainRequest !== "undefined");
         if (_useXDomainRequest && isXhrSupported()) {
             _useXDomainRequest = _useXDomainRequest && !_hasProperty(getGlobalInst("XMLHttpRequest"), "withCredentials");
         }

@@ -7,12 +7,12 @@ import {
     IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry, IExceptionTelemetry, ITraceTelemetry
 } from "@microsoft/applicationinsights-common";
 import {
-    IPlugin, IConfiguration, IAppInsightsCore, IDiagnosticLogger,
+    IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext,
     ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties, safeGetCookieMgr, ICookieMgr, arrForEach
 } from "@microsoft/applicationinsights-core-js";
 import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
-import { History, Location, Action, Update } from "history";
+import { History, Location, Update } from "history";
 
 export default class ReactPlugin extends BaseTelemetryPlugin {
     public priority = 185;

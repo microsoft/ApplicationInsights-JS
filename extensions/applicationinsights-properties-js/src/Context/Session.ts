@@ -4,7 +4,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction,
+    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction,
     newId, dumpObj, getExceptionName, dateNow, safeGetLogger
 } from "@microsoft/applicationinsights-core-js";
 
@@ -211,7 +211,7 @@ export class _SessionManager {
         
             function _setCookie(session: ISession, nowMs: number) {
                 let acq = session.acquisitionDate;
-                session.renewalDate = nowMs
+                session.renewalDate = nowMs;
 
                 let config = _self.config;
                 let renewalPeriodMs = config.sessionRenewalMs();

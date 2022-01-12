@@ -21,6 +21,8 @@ import {
     ITelemetryContext as Common_ITelemetryContext, parseConnectionString
 } from "@microsoft/applicationinsights-common"
 
+export { IUtil, ICorrelationIdHelper, IUrlHelper, IDateTimeUtils, IRequestHeaders };
+
 "use strict";
 
 let _internalSdkSrc: string;

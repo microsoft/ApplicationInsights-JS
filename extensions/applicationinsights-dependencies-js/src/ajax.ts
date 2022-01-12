@@ -9,8 +9,8 @@ import {
 import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
-    getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys, ICustomProperties, isXhrSupported, attachEvent
+    getLocation, getGlobal, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
+    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj, ICustomProperties, isXhrSupported, attachEvent
 } from "@microsoft/applicationinsights-core-js";
 import { ajaxRecord, IAjaxRecordResponse } from "./ajaxRecord";
 import { Traceparent } from "./TraceParent";
@@ -259,10 +259,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         let propExt: any, extIx = 0;
                         while (!propExt && extIx < extensions.length) {
                             if (extensions[extIx] && extensions[extIx].identifier === PropertiesPluginIdentifier) {
-                                propExt = extensions[extIx]
+                                propExt = extensions[extIx];
                             }
+
                             extIx++;
                         }
+                        
                         if (propExt) {
                             _context = propExt.context; // we could move IPropertiesPlugin to common as well
                         }

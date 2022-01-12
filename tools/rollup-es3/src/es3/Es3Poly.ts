@@ -62,7 +62,7 @@ function _replaceToken(keyword:IEs3Keyword, code:string, theString:MagicString, 
             if (!nameUsed) {
                 let tempName = "aies3_" + tempIndex;
                 tempIndex++;
-                newValue = newValue.replace("%tempName%", tempName)
+                newValue = newValue.replace("%tempName%", tempName);
             }
 
             theString.overwrite(start, start + match[0].length, newValue);

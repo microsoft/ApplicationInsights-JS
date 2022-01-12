@@ -187,12 +187,12 @@ export class Dashboard {
                 textFilterInput.className = "text-filter-input";
                 textFilterInput.setAttribute("placeholder", "filter text");
                 textFilterInput.onchange = (evt: Event) => {
-                    _self.setTextFilter(textFilterInput.value)
-                }
+                    _self.setTextFilter(textFilterInput.value);
+                };
         
                 textFilterInput.onblur = (evt: Event) => {
-                    _self.setTextFilter(textFilterInput.value)
-                }
+                    _self.setTextFilter(textFilterInput.value);
+                };
         
                 textFilterInput.onkeyup = (evt: Event) => {
                     if (keyupTimer != null) {
@@ -203,10 +203,10 @@ export class Dashboard {
                     if (newValue !== _self.getTextFilter()) {
                         keyupTimer = setTimeout(() => {
                             keyupTimer = null;
-                            _self.setTextFilter(textFilterInput.value)
+                            _self.setTextFilter(textFilterInput.value);
                         }, 200);
                     }
-                }
+                };
 
                 controlDiv.appendChild(textFilterInput);
 
