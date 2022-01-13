@@ -129,7 +129,7 @@ cfg: { // Application Insights Configuration
 </script>
 ```
 
-#### Active CDN endpoints
+#### Active Public CDN endpoints
 
 To help with global resiliency, we have added and updated our primary CDN endpoint (source URL) so that if required we can address any outages without the need for everyone to update the URL used by the Application Insights snippet within their application.
 
@@ -444,7 +444,7 @@ Test in internal environment to verify monitoring telemetry is working as expect
 
 ## Build a new extension for the SDK
 
-The beta SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
+The SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
 
 [ITelemetryPlugin](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts)
 
@@ -517,6 +517,110 @@ While the script downloads from the CDN, all tracking of your page is queued. On
 > - ![gzip compressed size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip)
 > - **~15 ms** overall initialization time
 > - **Zero** tracking missed during life cycle of page
+
+## Module Formats
+
+As part of packaging we produce [umd (Universal Module Definition)](https://github.com/umdjs/umd) modules using [rollupjs](https://www.rollupjs.org/guide/en/) which creates a wrapper that works for most users as it supports module loading and initialization with or without [RequireJS](https://requirejs.org/).
+
+However, there are some cases where your code doesn't directly use [RequireJS](https://requirejs.org/) but it is loaded into the runtime environment before your code and the 1DS SDK, in these cases the [rollupjs](https://www.rollupjs.org/guide/en/) wrapper registers (defines) but does not initialize (execute) the SDK and instead waits for the first to call "require()" before the module is executed 
+
+eg. ```var aiSdk = require("@microsoft/applicationinsights-web");```
+
+This situation can also occur when the scripts are loaded lazily, late or dynamically (__and__ RequireJs is present) as this can cause a race condition between the SDK and RequireJS, which will cause the same issue if RequireJS is loaded first.
+
+To support this usage pattern we also produce and publish to the CDN endpoints an [iife (Immediately Invoked Function Expression)](https://www.codeproject.com/Articles/5265230/Understanding-all-JavaScript-Module-Formats-and-To#iife-module-javascript-module-pattern) module so that the SDK is always executed and initialized.
+
+To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name.
+
+These modules are also included in the NPM packages within the ```bundle``` folder.
+
+Example (not complete) CDN paths for the current major version.
+
+| Module | Default Module | IIFE Module
+|--------|----------------|--------------
+| [AISku<br/>(Main Sdk)](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU) | http://js.monitor.azure.com/scripts/b/ai.2.min.js | http://js.monitor.azure.com/scripts/b/ai.2.gbl.min.js
+| [Click Analytics Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-clickanalytics-js) | http://js.monitor.azure.com/scripts/b/ext/ai.clck.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.clck.2.gbl.min.js
+| [Debug Plugin Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-debugplugin-js) | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.gbl.min.js
+| [Perf Mark/Measure Manager Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-perfmarkmeasure-js) | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.2.gbl.min.js
+
+
+As part of the CDN deployment and promoting new versions as the default we also provide both minor and explicit versions of all modules, so each published module will also include the following versions and formats. The example names are assuming version 3 as the current major version and 3.1 and the current minor.
+
+| Major | Minor | Patch (Explicit) | Description
+|------|--------|------------------|-----------------
+| ```ai.2.min.js``` | ```ai.2.7.min.js``` | ```ai.2.7.2.min.js``` | Minified UMD version
+| ```ai.2.gbl.min.js``` | ```ai.2.7.gbl.min.js``` | ```ai.2.7.2.gbl.min.js``` | Minified IIFE version
+
+And the process of Promoting (or rolling back) a deployed version is simply a case of replacing the major and minor version of the script with the current explicit version
+
+### CDN Debugging support
+
+We support 2 basic approaches for debugging the SDK via the CDN hosted scripts
+
+- Every Module includes a ```//# sourceMappingURL=xxxx``` at the end of the file and has the referenced map file uploaded to the CDN.
+- We also publish unminified versions of every module, just drop the ```.min``` from the script name (eg. ```https://js.monitor.azure.com/scripts/b/ai.2.js```)
+
+| Major | Minor | Patch (Explicit) | Description
+|------|--------|------------------|-----------------
+| ```ai.2.min.js.map``` | ```ai.2.7.min.js.map``` | ```ai.2.7.2.min.js.map``` | Map file for the UMD versions
+| ```ai.2.gbl.min.js.map``` | ```ai.2.7.gbl.min.js.map``` | ```ai.2.7.2.gbl.min.js.map``` | Map file for the IIFE versions
+| ```ai.2.js``` | ```ai.2.7.js``` | ```ai.2.7.2.js``` | Unminified UMD versions
+| ```ai.2.gbl.js``` | ```ai.2.7.gbl.js``` | ```ai.2.7.2.gbl.js``` | Unminified IIFE versions
+
+## Nightly Builds
+
+To aid with testing and validation we also produce and publish nightly builds whenever there is a change from the previous build. These builds are published to the [NpmJs registry](https://www.npmjs.com/package/@microsoft/applicationinsights-web) and to the CDN automatically on a successful build / test pass.
+
+This process also [tags the source code](https://github.com/microsoft/ApplicationInsights-JS/tags) so that we can track the specific changes included using a nightly build specific version number which is the format "nightly-yymm-##" eg. ```nightly-2112-08```
+
+These nightly builds will not be retained indefinitely and should only be used for __pre-production__ testing and/or validation of any changes that have not yet been released.
+
+### NPM
+
+The NPM builds are tagged as "nightly" and can by downloaded using this as the version number ```npm install @microsoft/applicationinsights-web@nightly``` or using the nightly specific version number which is "nightly.yyyymm-###" (```npm install @microsoft/applicationinsights-web@2.7.3-nightly.2112-08```) where ## is the specific build number for the month (Note, slightly different version from the source code tag due to compatibility issues between the different systems).
+
+### CDN
+
+These nightly builds are also uploaded to a different path on the CDN  and explicitly have the ```-nightly``` added to the module name eg. ```/nightly/ai.2-nightly.min.js```, each nightly build is re-numbered assuming the next release will be a patch release. So if the last release was 2.7.2, then all nightly builds will be numbered 2.7.3-nightly.
+
+So to access simply update the URL used when downloading the required module.
+
+| Module | Nightly Build
+|--------|----------------
+| [AISku (Main Sdk)](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU) | http://js.monitor.azure.com/nightly/ai.2-nightly.min.js
+| [Click Analytics Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-clickanalytics-js) | http://js.monitor.azure.com/nightly/ext/ai.clck.2-nightly.min.js
+| [Debug Plugin Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-debugplugin-js) | http://js.monitor.azure.com/nightly/ext/ai.dbg.2-nightly.min.js
+| [Perf Mark/Measure Manager Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-perfmarkmeasure-js) | http://js.monitor.azure.com/nightly/ext/ai.prfmm-mgr.2-nightly.min.js
+
+As with the normal release process the nightly builds also include major, minor, explicit, IIFE (```.gbl```), *.map and unminified versions, these are primarily available for validating changes between builds.
+
+| Module | CDN Path
+|--------|----------------
+| Major | http://js.monitor.azure.com/nightly/ai.2-nightly.min.js<br />http://js.monitor.azure.com/nightly/ai.2-nightly.gbl.min.js<br />http://js.monitor.azure.com/nightly/ai.2-nightly.js<br />http://js.monitor.azure.com/nightly/ai.2-nightly.gbl.js
+| Minor | http://js.monitor.azure.com/nightly/ai.2.7-nightly.min.js<br />http://js.monitor.azure.com/nightly/ai.2.7-nightly.gbl.min.js<br />http://js.monitor.azure.com/nightly/ai.2.7-nightly.js<br />http://js.monitor.azure.com/nightly/ai.2.7-nightly.gbl.js
+| Explicit | http://js.monitor.azure.com/nightly/ai.2.7.3-nightly.2112-08.min.js<br />http://js.monitor.azure.com/nightly/ai.2.7.3-nightly.2112-08.gbl.min.js<br />http://js.monitor.azure.com/nightly/ai.2.7.3-nightly.2112-08.js<br />http://js.monitor.azure.com/nightly/ai.2.7.3-nightly.2112-08.gbl.js
+
+### Deployment process and alternate CDN endpoints
+
+When a new release is deployed the following occurs as part of the release
+
+- NPM packages are created and published to [NpmJs](https://www.npmjs.com/package/@microsoft/applicationinsights-web)
+- The new explicit versioned files (eg. `ai.2.7.2.js`; `ai.2.7.2.min.js`; `ai.2.7.2.gbl.min.js`; `ai.2.7.2.min.js.map`; etc) are uploaded to all cdn endpoints URL's (public, next and beta - details below)
+- We then go through a deployment process of "promoting" the new version to the "Major" (`ai.2.min.js`) and "Minor" (`ai.2.x.min.js`) release URL's to upgrade everyone to the newly released version based on the schedule listed below
+
+| Endpoint | Url | Schedule
+|----------|-------------|--------
+| Beta | https://js.monitor.azure.com/beta/ai.2.min.js | Same day as the NPM release
+| Next | https://js.monitor.azure.com/next/ai.2.min.js | One additional work day after the `beta` URL promotion.
+| Public | https://js.monitor.azure.com/scripts/b/ai.2.min.js | Another One additional work day after the `next` URL promotion, (so 2 work days after initial release) unless this falls on the last work day of the week (eg. Friday) in which case it will be delayed until the first work day of the next work week.
+
+The milestones for each release should include both the deployment plan (as it's about to be released) or the final release times as with [v2.7.2](https://github.com/microsoft/ApplicationInsights-JS/milestone/58)
+
+It is expected that most users will be using the `Public` URL, however, it is also recommended that if you have a test or canary environment that you should use either the `beta` or `next` URL's so that you would be alerted first before any production users are impacted. If any issues are detected with the `beta` or `next` URL's as a new release is being deployed please raise a new [Issue](https://github.com/microsoft/ApplicationInsights-JS/issues) as soon as this is confirmed.
+
+## Release Notes
+
+[Changelist](./CHANGELIST.md)
 
 ## Browser Support
 
@@ -614,7 +718,7 @@ All plugins take an options which allows you to add additional checks and polyfi
 It should be noted at this point that the both react and react-native extensions will NOT work in an ES3/IE8 environment out of the box, primarily because of the react code and their dependencies.
 You *may* be able to workaround this limitation by providing and your own polyfill implementations for the unsupported methods.
 
-### ES3/IE8 Features, Solutions, Workarounds and Polyfil style helper functions
+### ES3/IE8 Features, Solutions, Workarounds and Polyfill style helper functions
 
 As part of contributing to the project the following table highlights all of the currently known issues and the available solution/workaround. During PR and reviewing please ensure that you do not use the unsupported feature directly and instead use (or provide) the helper, soultion or workaround.
 
