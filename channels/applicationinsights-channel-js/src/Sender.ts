@@ -757,7 +757,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             /**
              * Send fetch API request
              * @param payload {string} - The data payload to be sent.
-             * @param isAsync {boolean} - not used
+             * @param isAsync {boolean} - For fetch this identifies whether we are "unloading" (false) or a normal request
              */
              function _doFetchSender(payload: string[], isAsync: boolean) {
                 const endPointUrl = _self._senderConfig.endpointUrl();
@@ -765,6 +765,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 const plainTextBatch = new Blob([batch], { type: "application/json" });
                 let requestHeaders = new Headers();
                 let batchLength = batch.length;
+                let ignoreResponse = false;
+                let responseHandled = false;
 
                 // append Sdk-Context request header only in case of breeze endpoint
                 if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
@@ -784,6 +786,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
                 if (!isAsync) {
                     init.keepalive = true;
+                    // As a sync request (during unload), it is unlikely that we will get a chance to process the response so
+                    // just like beacon send assume that the events have been accepted and processed
+                    ignoreResponse = true;
                     _syncFetchPayload += batchLength;
                 }
 
@@ -796,34 +801,53 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     // cause the request to fail and we no telemetry would be sent
                 }
 
-                fetch(request).then(response => {
-                    if (!isAsync) {
-                        _syncFetchPayload -= batchLength;
-                        batchLength = 0;
-                    }
-
-                    /**
-                     * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500.
-                     * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure
-                     * or if anything prevented the request from completing.
-                     */
-                    if (!response.ok) {
-                        _self._onError(payload, response.statusText)
-                    } else {
-                        response.text().then(text => {
-                            _checkResponsStatus(response.status, payload, response.url, payload.length, response.statusText, text);
-                        });
-                    }
-                }).catch((error: Error) => {
-                    if (!isAsync) {
-                        _syncFetchPayload -= batchLength;
-                        batchLength = 0;
-                    }
-
-                    _self._onError(payload, error.message)
-                });
-
                 _self._buffer.markAsSent(payload);
+
+                try {
+                    fetch(request).then(response => {
+                        if (!isAsync) {
+                            _syncFetchPayload -= batchLength;
+                            batchLength = 0;
+                        }
+    
+                        if (!responseHandled) {
+                            responseHandled = true;
+
+                            /**
+                             * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500.
+                             * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure
+                             * or if anything prevented the request from completing.
+                             */
+                            if (!response.ok) {
+                                _self._onError(payload, response.statusText)
+                            } else {
+                                response.text().then(text => {
+                                    _checkResponsStatus(response.status, payload, response.url, payload.length, response.statusText, text);
+                                });
+                            }
+                        }
+                    }).catch((error: Error) => {
+                        if (!isAsync) {
+                            _syncFetchPayload -= batchLength;
+                            batchLength = 0;
+                        }
+    
+                        if (!responseHandled) {
+                            responseHandled = true;
+                            _self._onError(payload, error.message)
+                        }
+                    });
+                } catch (e) {
+                    if (!responseHandled) {
+                        _self._onError(payload, dumpObj(e));
+                    }
+                }
+
+                if (ignoreResponse && !responseHandled) {
+                    // Assume success during unload processing as we most likely won't get the response
+                    responseHandled = true;
+                    _self._onSuccess(payload, payload.length);
+                }
             }
         
             /**
