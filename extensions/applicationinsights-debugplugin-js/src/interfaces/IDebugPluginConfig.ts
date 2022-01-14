@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ITelemetryPlugin, IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 export interface IDebugPluginConfig extends IConfiguration{
   

@@ -102,7 +102,7 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
     let strTransferSize = "transferSize";
     let strEncodedBodySize = "encodedBodySize";
     let strDecodedBodySize = "decodedBodySize";
-    let strServerTiming = "serverTiming"
+    let strServerTiming = "serverTiming";
     
     if (resourceEntry) {
         // redirect
@@ -157,9 +157,9 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
             propsSet |= _setPerfValue(props, strServerTiming, server);
         }
 
-        propsSet |= _setPerfValue(props, strTransferSize, resourceEntry[strTransferSize])
-        propsSet |= _setPerfValue(props, strEncodedBodySize, resourceEntry[strEncodedBodySize])
-        propsSet |= _setPerfValue(props, strDecodedBodySize, resourceEntry[strDecodedBodySize])
+        propsSet |= _setPerfValue(props, strTransferSize, resourceEntry[strTransferSize]);
+        propsSet |= _setPerfValue(props, strEncodedBodySize, resourceEntry[strEncodedBodySize]);
+        propsSet |= _setPerfValue(props, strDecodedBodySize, resourceEntry[strDecodedBodySize]);
     } else {
         if (ajaxData.perfMark) {
             propsSet |= _setPerfValue(props, "missing", ajaxData.perfAttempts);

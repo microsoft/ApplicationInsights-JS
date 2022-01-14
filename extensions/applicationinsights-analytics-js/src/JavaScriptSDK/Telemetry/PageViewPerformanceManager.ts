@@ -6,7 +6,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, getNavigator, getPerformance, isNotNullOrUndefined
+    _InternalMessageId, getNavigator, getPerformance
 } from "@microsoft/applicationinsights-core-js";
 
 /**

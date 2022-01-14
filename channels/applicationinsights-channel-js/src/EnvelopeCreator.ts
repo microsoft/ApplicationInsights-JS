@@ -284,7 +284,7 @@ export function PageViewEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem
     if (((telemetryItem.ext || {}).trace || {}).traceID) {
         currentContextId = telemetryItem.ext.trace.traceID;
     }
-    const id = bd.id || currentContextId
+    const id = bd.id || currentContextId;
     const name = bd.name;
     const url = bd.uri;
     const properties = bd[strProperties] || {};

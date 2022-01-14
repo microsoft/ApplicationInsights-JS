@@ -8,7 +8,7 @@ import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
 import { FieldType } from "../Enums";
 import { SeverityLevel } from "../Interfaces/Contracts/Generated/SeverityLevel";
-import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction, getSetValue } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction } from "@microsoft/applicationinsights-core-js";
 import {
     IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal, IAutoExceptionTelemetry, IStackDetails
 } from "../Interfaces/IExceptionTelemetry";
@@ -391,7 +391,7 @@ export class Exception extends ExceptionData implements ISerializable {
     }
 
     public toInterface(): IExceptionInternal {
-        const { exceptions, properties, measurements, severityLevel, ver, problemGroup, id, isManual } = this;
+        const { exceptions, properties, measurements, severityLevel, problemGroup, id, isManual } = this;
 
         const exceptionDetailsInterface = exceptions instanceof Array
             && arrMap(exceptions, (exception: _ExceptionDetails) => exception.toInterface())

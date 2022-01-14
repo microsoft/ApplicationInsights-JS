@@ -17,7 +17,7 @@ import {
     BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
     getWindow, getDocument, getHistory, getLocation, doPerf, objForEachKey,
-    isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, isError, ICookieMgr, safeGetCookieMgr
+    isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, ICookieMgr, safeGetCookieMgr
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";

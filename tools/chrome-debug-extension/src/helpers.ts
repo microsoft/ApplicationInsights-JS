@@ -293,7 +293,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         currentLine.className = "obj-key expandable closed"
     }
 
-    let matched = true;
+    let matched: boolean;
     // Always displayed opened if there is no filter
     let childOpened = textFilter ? false : true;
     const keys = getTargetKeys(target, excludeKeys, includeFunctions as boolean);

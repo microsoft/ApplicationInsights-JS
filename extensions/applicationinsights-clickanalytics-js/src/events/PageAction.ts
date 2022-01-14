@@ -93,7 +93,7 @@ export class PageAction extends WebEvent {
                 this._traceLogger.throwInternal(
                     LoggingSeverity.WARNING,
                     _ExtendedInternalMessageId.InvalidContentBlob, "Missing attributes id or contentName in click event. Click event information will still be collected!"
-                )
+                );
             }
         }
         pageActionEvent.name = elementContent.id || elementContent.contentName || strNotSpecified;

@@ -233,7 +233,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
             _self.addHeader = (name: string, value: string) => {
                 _headers[name] = value;
-            }
+            };
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
                 _base.initialize(config, core, extensions, pluginChain);

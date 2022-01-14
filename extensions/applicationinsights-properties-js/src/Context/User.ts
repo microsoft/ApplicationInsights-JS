@@ -3,7 +3,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ITelemetryConfig } from "../Interfaces/ITelemetryConfig";
-import { utlRemoveStorage, IUserContext, CtxTagKeys } from "@microsoft/applicationinsights-common";
+import { utlRemoveStorage, IUserContext } from "@microsoft/applicationinsights-common";
 import { _InternalMessageId, LoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, safeGetLogger, newId, toISOString } from "@microsoft/applicationinsights-core-js";
 
 

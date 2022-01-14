@@ -64,7 +64,7 @@ function myFunc() {
     'trackTrace',
     'throwInternal',
     'logInternalMessage'
-  ]
+  ];
 
   var debugPlugin = Microsoft.ApplicationInsights.DebugPlugin;
   var debugPluginInstance = new debugPlugin();
@@ -85,7 +85,7 @@ function myFunc() {
   };
 
   configObj.extensionConfig[debugPlugin.identifier] = {
-    //trackers: toTrack,
+    trackers: toTrack,
     //logProcessTelemetry: true,
     maxMessages: 50
   };
@@ -114,7 +114,7 @@ function myFunc() {
       var idx = appInsights.core._extensions.findIndex(function(v) { return v.identifier === 'ChannelControllerPlugin' });
       appInsights.core._extensions[idx].getChannelControls()[0][0].triggerSend();
     }
-  }
+  };
 
   var container = document.createElement('div');
   container.style.position = 'absolute';

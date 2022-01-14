@@ -59,7 +59,7 @@
         "@types/node": "11.13.2",
         "@types/react": "^16.9.11",
         "@types/react-dom": "^16.9.4",
-        "ansi-regex": "4.1.0",
+        "ansi-regex": ">=5.0.1",
         "autoprefixer": "9.4.5",
         "grunt": "^1.4.1",
         "rollup": "^2.32.0",

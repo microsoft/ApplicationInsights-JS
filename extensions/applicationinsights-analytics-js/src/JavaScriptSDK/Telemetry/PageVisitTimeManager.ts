@@ -114,7 +114,7 @@ export class PageVisitTimeManager {
             return null;
         } catch (e) {
             this._logger.warnToConsole("Stop page visit timer failed: " + dumpObj(e));
-            return null
+            return null;
         }
     }
 }

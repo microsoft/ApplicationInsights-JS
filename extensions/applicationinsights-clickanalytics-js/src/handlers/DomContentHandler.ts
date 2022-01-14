@@ -66,7 +66,7 @@ export class DomContentHandler implements IContentHandler {
                     this._traceLogger.throwInternal(
                         LoggingSeverity.CRITICAL,
                         _ExtendedInternalMessageId.CannotParseAiBlobValue, "Can not parse " + biBlobValue
-                    )
+                    );
                 }
             } else {
                 // traverse up the DOM to find the closest parent with data-* tag defined

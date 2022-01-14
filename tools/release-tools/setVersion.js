@@ -38,8 +38,8 @@ function showHelp() {
     console.log(" -release     - Remove any existing pre-release tags (x.y.z-prerel => x.y.z)");
     console.log(" -bld ######  - Append the provided build number to the version (x.y.z => x.y.z-[prerel].######) [prerel] defaults to dev if not defined");
     console.log(" -pre ######  - Set the pre-release to the provided value (x.y.z => x.y.z-[prerel])");
-    console.log(" -react       - Update only the react packages")
-    console.log(" -reactNative - Update only the react native packages")
+    console.log(" -react       - Update only the react packages");
+    console.log(" -reactNative - Update only the react native packages");
     console.log(" -test        - Scan all of the package.json files and log the changes, but DON'T update the files");
 }
 
@@ -71,7 +71,7 @@ function setPreRelVer(name) {
 
 function parseArgs() {
     if (process.argv.length < 2) {
-        console.error("!!! Invalid number of arguments -- " + process.argv.length)
+        console.error("!!! Invalid number of arguments -- " + process.argv.length);
         return false;
     }
 
