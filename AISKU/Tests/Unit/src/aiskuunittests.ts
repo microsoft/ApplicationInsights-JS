@@ -1,4 +1,5 @@
 import { AISKUSizeCheck } from "./AISKUSize.Tests";
+import { ApiSurfaceTests } from "./ApiSurface.Tests";
 import { ApplicationInsightsTests } from './applicationinsights.e2e.tests';
 import { ApplicationInsightsFetchTests } from './applicationinsights.e2e.fetch.tests';
 import { CdnPackagingChecks } from './CdnPackaging.tests';
@@ -11,6 +12,7 @@ import { SnippetInitializationTests } from './SnippetInitialization.Tests';
 
 export function runTests() {
     new AISKUSizeCheck().registerTests();
+    new ApiSurfaceTests().registerTests();
     new ApplicationInsightsTests().registerTests();
     new ApplicationInsightsFetchTests().registerTests();
     new ApplicationInsightsDeprecatedTests().registerTests();
