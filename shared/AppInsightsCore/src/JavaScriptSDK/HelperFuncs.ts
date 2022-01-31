@@ -13,6 +13,7 @@ const strAttachEvent = "attachEvent";
 const strAddEventHelper = "addEventListener";
 const strDetachEvent = "detachEvent";
 const strRemoveEventListener = "removeEventListener";
+const strToISOString = "toISOString";
 
 const _objDefineProperty = ObjDefineProperty;
 const _objFreeze = ObjClass["freeze"];
@@ -271,24 +272,31 @@ export function isSymbol(value: any): boolean {
  * Convert a date to I.S.O. format in IE8
  */
 export function toISOString(date: Date) {
-    if (isDate(date)) {
-        const pad = (num: number) => {
-            let r = String(num);
-            if (r.length === 1) {
-                r = "0" + r;
+    if (date) {
+        if (date[strToISOString]) {
+            // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+            return date[strToISOString]();
+        }
+        
+        if (isDate(date)) {
+            const pad = (num: number) => {
+                let r = String(num);
+                if (r.length === 1) {
+                    r = "0" + r;
+                }
+
+                return r;
             }
 
-            return r;
+            return date.getUTCFullYear()
+                + "-" + pad(date.getUTCMonth() + 1)
+                + "-" + pad(date.getUTCDate())
+                + "T" + pad(date.getUTCHours())
+                + ":" + pad(date.getUTCMinutes())
+                + ":" + pad(date.getUTCSeconds())
+                + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5)
+                + "Z";
         }
-
-        return date.getUTCFullYear()
-            + "-" + pad(date.getUTCMonth() + 1)
-            + "-" + pad(date.getUTCDate())
-            + "T" + pad(date.getUTCHours())
-            + ":" + pad(date.getUTCMinutes())
-            + ":" + pad(date.getUTCSeconds())
-            + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5)
-            + "Z";
     }
 }
 
