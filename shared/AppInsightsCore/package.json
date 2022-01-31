@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-core-js",
     "author": "Microsoft Application Insights Team",
-    "version": "2.7.2",
+    "version": "2.7.3",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [
@@ -61,7 +61,7 @@
         "tslib": "*"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims": "2.0.0",
+        "@microsoft/applicationinsights-shims": "2.0.1",
         "@microsoft/dynamicproto-js": "^1.1.4"
     }
 }

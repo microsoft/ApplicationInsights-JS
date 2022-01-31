@@ -1,5 +1,23 @@
 # Releases
 
+## 2.7.3 (Jan 31st, 2022)
+
+- Updates the @microsoft/applicationinsights-shims module to 2.0.1
+- Updates React Plugin to v3.2.3 (with v2.7.3 as dependency)
+- Updates React Native Plugin to 2.4.3 (with v2.7.3 as dependency)
+- Updates Chrome Debug Extension to 0.2.3
+
+### Changelog
+
+- #1735 [BUG] Dependency tracking is disabled when using an Embedded IE browser control
+- #1736 [BUG] New Fetch keepAlive support can cause duplicate events to be sent during unload processing
+- #1745 [Documentation] Document the deployed Module formats and release process
+- #1746 [Documentation] Update AISku Size tracking
+- #1744 Address CodeQL issues from https://github.com/microsoft/ApplicationInights-JS/security/code-scanning 
+- Update to Rush 5.61.3 and NPM 8.4.0
+- #1750 [Performance] Use the Date.toISOString() native function if it exists
+- #1753 [Performance] Cache the result of the getGlobal() to reduce the number of typeof expressions
+
 ## 2.7.2 (Dec 7th, 2021)
 
 ### Changelog

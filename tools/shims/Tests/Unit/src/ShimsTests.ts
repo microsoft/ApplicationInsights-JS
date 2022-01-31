@@ -13,7 +13,7 @@ export class ShimsTests extends AITestClass {
     private _global: any = null;
 
     public testInitialize() {
-        this._global = getGlobal();
+        this._global = getGlobal(false);
         try {
             delete this._global.__assign;
             delete this._global.__extends;

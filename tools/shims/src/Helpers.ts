@@ -6,6 +6,8 @@ import {  ObjCreate, strShimFunction, strShimObject, strShimPrototype, strShimUn
 declare var globalThis: Window;
 declare var global: Window;
 
+let _cachedGlobal: Window = null;
+
 /**
  * Returns the current global scope object, for a normal web page this will be the current
  * window, for a Web Worker this will be current worker global scope via "self". The internal
@@ -18,24 +20,27 @@ declare var global: Window;
  * While the return type is a Window for the normal case, not all environments will support all
  * of the properties or functions.
  */
- export function getGlobal(): Window {
-    if (typeof globalThis !== strShimUndefined && globalThis) {
-        return globalThis;
+ export function getGlobal(useCached: boolean = true): Window {
+    if (!_cachedGlobal || !useCached) {
+
+        if (typeof globalThis !== strShimUndefined && globalThis) {
+            _cachedGlobal = globalThis;
+        }
+
+        if (typeof self !== strShimUndefined && self) {
+            _cachedGlobal = self;
+        }
+
+        if (typeof window !== strShimUndefined && window) {
+            _cachedGlobal = window;
+        }
+
+        if (typeof global !== strShimUndefined && global) {
+            _cachedGlobal = global;
+        }
     }
 
-    if (typeof self !== strShimUndefined && self) {
-        return self;
-    }
-
-    if (typeof window !== strShimUndefined && window) {
-        return window;
-    }
-
-    if (typeof global !== strShimUndefined && global) {
-        return global;
-    }
-
-    return null;
+    return _cachedGlobal;
 }
 
 export function throwTypeError(message: string): never {
