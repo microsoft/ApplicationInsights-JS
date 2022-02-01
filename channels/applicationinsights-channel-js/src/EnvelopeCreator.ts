@@ -175,7 +175,7 @@ function EnvelopeCreatorInit(logger: IDiagnosticLogger, telemetryItem: ITelemetr
 }
 
 export const EnvelopeCreator = {
-    Version: "2.7.2"
+    Version: "2.7.3"
 };
 
 export function DependencyEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
