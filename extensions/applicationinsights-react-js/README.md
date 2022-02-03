@@ -48,6 +48,22 @@ class MyComponent extends React.Component {
 
 export default withAITracking(reactPlugin, MyComponent);
 ```
+For `react-router v6` or other scenarios where router history is not exposed, appInsights config `enableAutoRouteTracking` can be used to auto track router changes.
+
+```js
+var reactPlugin = new ReactPlugin();
+var appInsights = new ApplicationInsights({
+    config: {
+        instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+        enableAutoRouteTracking: true,
+        extensions: [reactPlugin]
+        }
+    }
+});
+appInsights.loadAppInsights();
+```
+
+
 
 ## Configuration
 
