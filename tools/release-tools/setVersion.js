@@ -26,7 +26,7 @@ function showHelp() {
     }
 
     console.log("");
-    console.log(scriptName + " [<newVersion>|-patch|-minor|-major] [-dev|-alpha|-beta|-release] [-bld ######] [-test]");
+    console.log(scriptName + " [<newVersion>|-patch|-minor|-major|-next] [-dev|-alpha|-beta|-release] [-bld ######] [-test]");
     console.log("--------------------------");
     console.log(" <newVersion> - Identifies the version to set for all packages, must start with x.y.z");
     console.log(" -patch       - Increment the current version to the next patch number (x.y.z => x.y.[z+1]");
@@ -87,16 +87,25 @@ function parseArgs() {
         } else if (!newVer && theArg === "-major") {
             console.log("Increment major existing version");
             autoInc = "major";
+        } else if (!newVer && theArg === "-next") {
+            console.log("Increment existing version based on autoInc");
+            autoInc = "next";
         } else if (!isRelease && !preRel && theArg === "-dev") {
             if (!setPreRelVer("dev")) {
                 return false;
             }
         } else if (!isRelease && !preRel && theArg === "-alpha") {
-            if (!setPreRelVer("alpha")) {
+            preRel = "alpha";
+            if (!autoInc && !newVer) {
+                autoInc = "next";
+            } else if (!setPreRelVer("alpha")) {
                 return false;
             }
         } else if (!isRelease && !preRel && theArg === "-beta") {
-            if (!setPreRelVer("beta")) {
+            preRel = "beta";
+            if (!autoInc && !newVer) {
+                autoInc = "next";
+            } else if (!setPreRelVer("beta")) {
                 return false;
             }
         } else if (!isRelease && !preRel && theArg === "-release") {
@@ -156,8 +165,10 @@ function parseArgs() {
 }
 
 function updateVersions() {
+    // Get the configured next release, default to "patch"
+    const verNext = theVersion.next || "patch";
     const rootVersion = require(process.cwd() + "/package.json");
-    let newVersion = calculateVersion(rootVersion.version);
+    let newVersion = calculateVersion(rootVersion.version, verNext);
     if (newVersion) {
         console.log("New version [" + theVersion.release + "] => [" + newVersion + "]");
         if (updateAll || (!isReact && !isReactNative)) {
@@ -178,7 +189,8 @@ function updateVersions() {
                 const orgVersion = thePackage.version;
                 if (shouldUpdatePackage(value)) {
                     orgPkgVersions[value] = orgVersion;
-                    packageDef.release = calculateVersion(orgVersion);
+                    let pkgNext = packageDef.next || verNext;
+                    packageDef.release = calculateVersion(orgVersion, pkgNext);
                     console.log("  - " + value + ":[" + orgVersion + "] => [" + packages[value].release + "]");
                 } else {
                     console.log("  - " + value + ":[" + orgVersion + "] => Skipping");
@@ -205,7 +217,7 @@ function getNewPackageVersion(package, packageFilename) {
 
             // We are not currently tracking this package so calculate based on the current package.version value
             if (shouldUpdatePackage(package.name)) {
-                packageDef.release = calculateVersion(package.version);
+                packageDef.release = calculateVersion(package.version, theVersion.next);
             } else {
                 packageDef.release = package.version;
             }
@@ -217,7 +229,7 @@ function getNewPackageVersion(package, packageFilename) {
     return packages[packageName].release;
 }
 
-function calculateVersion(rootVersion) {
+function calculateVersion(rootVersion, pkgAutoInc) {
 
     let preRelParts = (rootVersion || "0.0.0").split("-");
     let postfix = preRelParts.length > 1 && preRelParts[1] ? ("-" + preRelParts[1]) : "";
@@ -234,12 +246,16 @@ function calculateVersion(rootVersion) {
         newVersion = newVer;
         postfix = "";
     } else {
-        if (autoInc == "patch") {
+        if (autoInc !== "next") {
+            pkgAutoInc = autoInc;
+        }
+
+        if (pkgAutoInc == "patch") {
             parts[2]++;
-        } else if (autoInc == "minor") {
+        } else if (pkgAutoInc == "minor") {
             parts[1]++;
             parts[2] = 0;
-        } else if (autoInc == "major") {
+        } else if (pkgAutoInc == "major") {
             parts[0]++;
             parts[1] = 0;
             parts[2] = 0;
@@ -505,6 +521,10 @@ if (parseArgs()) {
 
         if (!testOnly && changed) {
             console.log("Updating version file");
+            if (autoInc) {
+                // We did an automatic update so reset to patch for the next one.
+                theVersion.next = "patch";
+            }
             // Rewrite the file
             const newContent = JSON.stringify(theVersion, null, 4) + "\n";
             fs.writeFileSync(process.cwd() + "/version.json", newContent);
