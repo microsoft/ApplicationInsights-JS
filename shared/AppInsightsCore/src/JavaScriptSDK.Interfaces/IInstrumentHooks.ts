@@ -85,4 +85,9 @@ export interface IInstrumentCallDetails {
      * The error (exception) which occurred while executing the original method
      */
     err?: Error;
+
+    /**
+     * The Event object from (window.event) at the start of the original call
+     */
+    evt?: Event;
 }

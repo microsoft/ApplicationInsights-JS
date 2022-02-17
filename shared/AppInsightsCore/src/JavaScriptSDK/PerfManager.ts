@@ -119,7 +119,7 @@ export class PerfEvent implements IPerfEvent {
         _self.complete = () => {
             let childTime = 0;
             let childEvts = _self.getCtx(PerfEvent.ChildrenContextKey);
-            if (isArray(childEvts)) {
+            if (isArray<IPerfEvent>(childEvts)) {
                 for (let lp = 0; lp < childEvts.length; lp++) {
                     let childEvt: IPerfEvent = childEvts[lp];
                     if (childEvt) {

@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore, normalizeJsName, random32, mwcRandom32, mwcRandomSeed } from "../../../src/applicationinsights-core-js"
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed } from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
 import { _InternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";

@@ -52,12 +52,14 @@ export function randomValue(maxValue: number) {
  * @param signed - True to return a signed 32-bit number (-0x80000000..0x7FFFFFFF) otherwise an unsigned one (0x000000..0xFFFFFFFF)
  */
 export function random32(signed?: boolean) {
-    let value;
+    let value = 0;
     let c = getCrypto() || getMsCrypto();
     if (c && c.getRandomValues) {
         // Make sure the number is converted into the specified range (-0x80000000..0x7FFFFFFF)
         value = c.getRandomValues(new Uint32Array(1))[0] & MaxUInt32;
-    } else if (isIE()) {
+    }
+    
+    if (value === 0 && isIE()) {
         // For IE 6, 7, 8 (especially on XP) Math.random is not very random
         if (!_mwcSeeded) {
             // Set the seed for the Mwc algorithm
@@ -67,7 +69,9 @@ export function random32(signed?: boolean) {
         // Don't use Math.random for IE
         // Make sure the number is converted into the specified range (-0x80000000..0x7FFFFFFF)
         value = mwcRandom32() & MaxUInt32;
-    } else {
+    }
+
+    if (value === 0) {
         // Make sure the number is converted into the specified range (-0x80000000..0x7FFFFFFF)
         value = Math.floor((UInt32Mask * Math.random()) | 0);
     }
@@ -110,5 +114,32 @@ export function mwcRandom32(signed?: boolean) {
     }
 
     return value;
+}
+
+/**
+ * Generate random base64 id string.
+ * The default length is 22 which is 132-bits so almost the same as a GUID but as base64 (the previous default was 5)
+ * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
+ */
+ export function newId(maxLength = 22): string {
+    const base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // Start with an initial random number, consuming the value in reverse byte order
+    let number = random32() >>> 0;  // Make sure it's a +ve number
+    let chars = 0;
+    let result = "";
+    while (result.length < maxLength) {
+        chars ++;
+        result += base64chars.charAt(number & 0x3F);
+        number >>>= 6;              // Zero fill with right shift
+        if (chars === 5) {
+            // 5 base64 characters === 30 bits so we don't have enough bits for another base64 char
+            // So add on another 30 bits and make sure it's +ve
+            number = (((random32() << 2) & 0xFFFFFFFF) | (number & 0x03)) >>> 0;
+            chars = 0;      // We need to reset the number every 5 chars (30 bits)
+        }
+    }
+
+    return result;
 }
 

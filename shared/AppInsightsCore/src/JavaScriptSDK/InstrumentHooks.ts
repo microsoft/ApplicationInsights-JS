@@ -5,7 +5,8 @@ import {
     IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails, InstrumentorHooksCallback
 } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
 import { strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
-import { hasOwnProperty } from "./HelperFuncs";
+import { hasOwnProperty, _getObjProto } from "./HelperFuncs";
+import { getGlobalInst } from "./EnvUtils";
 
 const aiInstrumentHooks = "_aiHooks";
 
@@ -19,19 +20,6 @@ const enum CallbackType {
 const cbNames = [
     "req", "rsp", "hkErr", "fnErr"
 ];
-
-
-/**
- * Constant string defined to support minimization
- * @ignore
- */
-const str__Proto = "__proto__";
-
-/**
- * Constant string defined to support minimization
- * @ignore
- */
-const strConstructor = "constructor";
 
 /** @ignore */
 function _arrLoop<T>(arr:T[], fn:(value:T, idx:number) => boolean|number|void) {
@@ -91,7 +79,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
         let orgArgs = arguments as any;
         let hooks = aiHook.h;
 
-        let funcArgs:IInstrumentCallDetails = {
+        let funcArgs: IInstrumentCallDetails = {
             name: aiHook.n,
             inst: funcThis,
             ctx: null,
@@ -100,6 +88,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 
         let hookCtx: any[] = [];
         let cbArgs = _createArgs([funcArgs], orgArgs);
+        funcArgs.evt = getGlobalInst("event");
 
         function _createArgs(target:any[], theArgs:any[]): any[] {
             _arrLoop((theArgs as any), (arg) => {
@@ -138,33 +127,6 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
     };
 }
 
-
-/**
- * Pre-lookup to check if we are running on a modern browser (i.e. not IE8)
- * @ignore
- */
-let _objGetPrototypeOf = Object["getPrototypeOf"];
-
-/**
- * Helper used to get the prototype of the target object as getPrototypeOf is not available in an ES3 environment.
- * @ignore
- */
-function _getObjProto(target:any) {
-    if (target) {
-        // This method doesn't existing in older browsers (e.g. IE8)
-        if (_objGetPrototypeOf) {
-            return _objGetPrototypeOf(target);
-        }
-
-        // target[Constructor] May break if the constructor has been changed or removed
-        let newProto = target[str__Proto] || target[strShimPrototype] || target[strConstructor];
-        if(newProto) {
-            return newProto;
-        }
-    }
-
-    return null;
-}
 
 /** @ignore */
 function _getOwner(target:any, name:string, checkPrototype:boolean): any {
