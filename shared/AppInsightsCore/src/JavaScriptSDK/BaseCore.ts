@@ -94,6 +94,7 @@ export class BaseCore implements IAppInsightsCore {
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager;
         let _perfManager: IPerfManager;
+        let _cfgPerfManager: IPerfManager;
         let _cookieManager: ICookieMgr;
         let _pluginChain: ITelemetryPluginChain;
         let _configExtensions: IPlugin[];
@@ -122,7 +123,7 @@ export class BaseCore implements IAppInsightsCore {
                 if (_self.isInitialized()) {
                     throwError("Core should not be initialized more than once");
                 }
-        
+
                 if (!config || isNullOrUndefined(config.instrumentationKey)) {
                     throwError("Please provide instrumentation key");
                 }
@@ -246,13 +247,13 @@ export class BaseCore implements IAppInsightsCore {
             };
 
             _self.getPerfMgr = (): IPerfManager => {
-                if (!_perfManager) {
+                if (!_perfManager && !_cfgPerfManager) {
                     if (_self.config && _self.config.enablePerfMgr && isFunction(_self.config.createPerfMgr)) {
-                        _perfManager = _self.config.createPerfMgr(_self, _self.getNotifyMgr());
+                        _cfgPerfManager = _self.config.createPerfMgr(_self, _self.getNotifyMgr());
                     }
                 }
 
-                return _perfManager || getGblPerfMgr();
+                return _perfManager || _cfgPerfManager || getGblPerfMgr();
             };
 
             _self.setPerfMgr = (perfMgr: IPerfManager) => {
@@ -322,6 +323,7 @@ export class BaseCore implements IAppInsightsCore {
                 _eventQueue = [];
                 _notificationManager = null;
                 _perfManager = null;
+                _cfgPerfManager = null;
                 _cookieManager = null;
                 _pluginChain = null;
                 _coreExtensions = null;
@@ -429,10 +431,11 @@ export class BaseCore implements IAppInsightsCore {
             }
 
             function _initPerfManager(config: IConfiguration) {
-                if (!config.enablePerfMgr && _perfManager) {
-                    // Remove any existing performance manager
-                    _perfManager = null;
+                if (!config.enablePerfMgr && _cfgPerfManager) {
+                    // Remove any existing config based performance manager
+                    _cfgPerfManager = null;
                 }
+
                 if (config.enablePerfMgr) {
                     // Set the performance manager creation function if not defined
                     setValue(_self.config, "createPerfMgr", _createPerfManager);
