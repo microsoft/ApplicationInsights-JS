@@ -8,6 +8,27 @@ import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { arrForEach, arrIndexOf } from "./HelperFuncs";
 
+const strEventsSent = "eventsSent";
+const strEventsDiscarded = "eventsDiscarded";
+const strEventsSendRequest = "eventsSendRequest";
+const strPerfEvent = "perfEvent";
+
+function _runListeners(listeners: INotificationListener[], name: string, isAsync: boolean, callback: (listener: INotificationListener) => void) {
+    arrForEach(listeners, (listener) => {
+        if (listener && listener[name]) {
+            if (isAsync) {
+                setTimeout(() => callback(listener), 0);
+            } else {
+                try {
+                    callback(listener);
+                } catch (e) {
+                    // Catch errors to ensure we don't block sending the requests
+                }
+            }
+        }
+    });
+}
+
 /**
  * Class to manage sending notifications to all the listeners.
  */
@@ -39,10 +60,8 @@ export class NotificationManager implements INotificationManager {
              * @param {ITelemetryItem[]} events - The array of events that have been sent.
              */
             _self.eventsSent = (events: ITelemetryItem[]): void => {
-                arrForEach(_self.listeners, (listener) => {
-                    if (listener && listener.eventsSent) {
-                        setTimeout(() => listener.eventsSent(events), 0);
-                    }
+                _runListeners(_self.listeners, strEventsSent, true, (listener) => {
+                    listener[strEventsSent](events);
                 });
             };
 
@@ -53,10 +72,8 @@ export class NotificationManager implements INotificationManager {
              * constant should be used to check the different values.
              */
             _self.eventsDiscarded = (events: ITelemetryItem[], reason: number): void => {
-                arrForEach(_self.listeners, (listener) => {
-                    if (listener && listener.eventsDiscarded) {
-                        setTimeout(() => listener.eventsDiscarded(events, reason), 0);
-                    }
+                _runListeners(_self.listeners, strEventsDiscarded, true, (listener) => {
+                    listener[strEventsDiscarded](events, reason);
                 });
             };
 
@@ -66,18 +83,8 @@ export class NotificationManager implements INotificationManager {
              * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
              */
             _self.eventsSendRequest = (sendReason: number, isAsync: boolean): void => {
-                arrForEach(_self.listeners, (listener) => {
-                    if (listener && listener.eventsSendRequest) {
-                        if (isAsync) {
-                            setTimeout(() => listener.eventsSendRequest(sendReason, isAsync), 0);
-                        } else {
-                            try {
-                                listener.eventsSendRequest(sendReason, isAsync);
-                            } catch (e) {
-                                // Catch errors to ensure we don't block sending the requests
-                            }
-                        }
-                    }
+                _runListeners(_self.listeners, strEventsSendRequest, isAsync, (listener) => {
+                    listener[strEventsSendRequest](sendReason, isAsync);
                 });
             };
 
@@ -86,17 +93,11 @@ export class NotificationManager implements INotificationManager {
 
                     // Send all events or only parent events
                     if (perfEvtsSendAll || !perfEvent.isChildEvt()) {
-                        arrForEach(_self.listeners, (listener) => {
-                            if (listener && listener.perfEvent) {
-                                if (perfEvent.isAsync) {
-                                    setTimeout(() => listener.perfEvent(perfEvent), 0);
-                                } else {
-                                    try {
-                                        listener.perfEvent(perfEvent);
-                                    } catch (e) {
-                                        // Catch errors to ensure we don't block sending the requests
-                                    }
-                                }
+                        _runListeners(_self.listeners, strPerfEvent, false, (listener) => {
+                            if (perfEvent.isAsync) {
+                                setTimeout(() => listener[strPerfEvent](perfEvent), 0);
+                            } else {
+                                listener[strPerfEvent](perfEvent);
                             }
                         });
                     }

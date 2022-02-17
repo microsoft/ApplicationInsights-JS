@@ -43,7 +43,7 @@ export class PageViewManager {
             function _flushChannels() {
                 if (core) {
                     arrForEach(core.getTransmissionControls(), queues => {
-                        arrForEach(queues, q => q.flush(true))
+                        arrForEach(queues, (q) => { q.flush(true); })
                     });
                 }
             }

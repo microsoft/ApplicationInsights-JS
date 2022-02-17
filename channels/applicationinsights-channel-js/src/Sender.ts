@@ -196,13 +196,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
             };
         
-            _self.flush = () => {
+            _self.flush = (isAsync: boolean = true, callBack?: () => void, sendReason?: SendRequestReason) => {
                 if (!_paused) {
                     // Clear the normal schedule timer as we are going to try and flush ASAP
                     _clearScheduledTimer();
 
                     try {
-                        _self.triggerSend(true, null, SendRequestReason.ManualFlush);
+                        _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                     } catch (e) {
                         _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                             _InternalMessageId.FlushFailed,

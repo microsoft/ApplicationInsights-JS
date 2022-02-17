@@ -3,9 +3,7 @@
 "use strict";
 
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { _InternalLogMessage } from "./DiagnosticLogger";
-import { _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { ProcessTelemetryContext } from "./ProcessTelemetryContext";
+import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { arrForEach, isFunction } from "./HelperFuncs";
 
@@ -21,7 +19,7 @@ let isInitialized = "isInitialized";
  * @param core THe current core instance
  * @param extensions The extensions
  */
-export function initializePlugins(processContext:ProcessTelemetryContext, extensions: IPlugin[]) {
+export function initializePlugins(processContext: IProcessTelemetryContext, extensions: IPlugin[]) {
 
     // Set the next plugin and identified the uninitialized plugins
     let initPlugins:ITelemetryPlugin[] = [];
@@ -46,7 +44,7 @@ export function initializePlugins(processContext:ProcessTelemetryContext, extens
         }
     }
 
-    // Now initiatilize the plugins
+    // Now initialize the plugins
     arrForEach(initPlugins, thePlugin => {
         thePlugin.initialize(
             processContext.getCfg(),
@@ -56,7 +54,7 @@ export function initializePlugins(processContext:ProcessTelemetryContext, extens
     });
 }
 
-export function sortPlugins(plugins:IPlugin[]) {
+export function sortPlugins<T = IPlugin>(plugins:T[]) {
     // Sort by priority
     return plugins.sort((extA, extB) => {
         let result = 0;

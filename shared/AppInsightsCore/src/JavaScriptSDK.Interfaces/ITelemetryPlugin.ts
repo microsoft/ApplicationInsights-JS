@@ -43,7 +43,7 @@ export interface IPlugin {
      * @param pluginChain - [Optional] specifies the current plugin chain which identifies the
      * set of plugins and the order they should be executed for the current request.
      */
-    initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => void;
+    initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) => void;
     
     /**
      * Returns a value that indicates whether the plugin has already been previously initialized.

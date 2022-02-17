@@ -4,7 +4,7 @@
 
 import { objCreateFn } from "@microsoft/applicationinsights-shims";
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
+import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
@@ -12,22 +12,24 @@ import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ChannelController } from "./ChannelController";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ProcessTelemetryContext } from "./ProcessTelemetryContext";
+import { createProcessTelemetryContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
 import { initializePlugins, sortPlugins } from "./TelemetryHelpers";
-import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { getGblPerfMgr, PerfManager } from "./PerfManager";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
-import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction } from "./HelperFuncs";
+import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction, objFreeze, proxyFunctions } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
-import { DiagnosticLogger } from "./DiagnosticLogger";
+import { DiagnosticLogger, _InternalLogMessage } from "./DiagnosticLogger";
 import { getDebugListener } from "./DbgExtensionUtils";
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
+import { ChannelControllerPriority, createChannelControllerPlugin, createChannelQueues, IChannelController, _IInternalChannels } from "./ChannelController";
+import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
+import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 
-const validationError = "Extensions must provide callback to initialize";
-
+const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 
 /**
@@ -39,6 +41,45 @@ function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificat
     return new PerfManager(notificationMgr);
 }
 
+function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number, allExtensions: IPlugin[]): { all: IPlugin[]; core: ITelemetryPlugin[] } {
+    // Concat all available extensions
+    let coreExtensions: ITelemetryPlugin[] = [];
+
+    // Check if any two extensions have the same priority, then warn to console
+    // And extract the local extensions from the
+    let extPriorities = {};
+
+    // Extension validation
+    arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
+        if (isNullOrUndefined(ext) || isNullOrUndefined(ext.initialize)) {
+            throwError(strValidationError);
+        }
+
+        const extPriority = ext.priority;
+        const identifier = ext.identifier;
+
+        if (ext && extPriority) {
+            if (!isNullOrUndefined(extPriorities[extPriority])) {
+                logger.warnToConsole("Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
+            } else {
+                // set a value
+                extPriorities[extPriority] = identifier;
+            }
+        }
+
+        // Split extensions to core and channelController
+        if (!extPriority || extPriority < channelPriority) {
+            // Add to core extension that will be managed by BaseCore
+            coreExtensions.push(ext);
+        }
+    });
+
+    return {
+        all: allExtensions,
+        core: coreExtensions
+    };
+}
+
 export class BaseCore implements IAppInsightsCore {
     public static defaultConfig: IConfiguration;
     public config: IConfiguration;
@@ -48,20 +89,33 @@ export class BaseCore implements IAppInsightsCore {
     public isInitialized: () => boolean;
 
     constructor() {
-        let _isInitialized = false;
+        // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
+        let _isInitialized: boolean;
         let _eventQueue: ITelemetryItem[];
-        let _channelController: ChannelController;
         let _notificationManager: INotificationManager;
         let _perfManager: IPerfManager;
+        let _cfgPerfManager: IPerfManager;
         let _cookieManager: ICookieMgr;
-    
+        let _pluginChain: ITelemetryPluginChain;
+        let _configExtensions: IPlugin[];
+        let _coreExtensions: ITelemetryPlugin[];
+        let _channelControl: IChannelController;
+        let _channelConfig: IChannelControls[][];
+        let _channelQueue: _IInternalChannels[];
+        let _telemetryInitializerPlugin: TelemetryInitializerPlugin;
+        let _internalLogsEventName: string;
+        let _debugListener: INotificationListener;
+
+        /**
+         * Internal log poller
+         */
+        let _internalLogPoller: number = 0;
+
         dynamicProto(BaseCore, this, (_self) => {
-            _self._extensions = new Array<IPlugin>();
-            _channelController = new ChannelController();
-            // Use a default logger so initialization errors are not dropped on the floor with full logging
-            _self.logger = new DiagnosticLogger({ loggingLevelConsole: LoggingSeverity.CRITICAL });
-            
-            _eventQueue = [];
+
+            // Set the default values (also called during teardown)
+            _initDefaults();
+
             _self.isInitialized = () => _isInitialized;
 
             _self.initialize = (config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
@@ -69,7 +123,7 @@ export class BaseCore implements IAppInsightsCore {
                 if (_self.isInitialized()) {
                     throwError("Core should not be initialized more than once");
                 }
-        
+
                 if (!config || isNullOrUndefined(config.instrumentationKey)) {
                     throwError("Please provide instrumentation key");
                 }
@@ -80,14 +134,8 @@ export class BaseCore implements IAppInsightsCore {
                 _self[strNotificationManager] = notificationManager;
                 _self.config = config || {};
 
-                if (notificationManager && _self.config.disableDbgExt !== true) {
-                    notificationManager.addNotificationListener(getDebugListener(config));
-                }
-
-                if (_self.config.enablePerfMgr) {
-                    // Set the performance manager creation function if not defined
-                    setValue(_self.config, "createPerfMgr", _createPerfManager);
-                }
+                _initDebugListener(config);
+                _initPerfManager(config);
 
                 config.extensions = isNullOrUndefined(config.extensions) ? [] : config.extensions;
         
@@ -99,63 +147,13 @@ export class BaseCore implements IAppInsightsCore {
                     _self.logger = logger;
                 }
 
-                // Concat all available extensions
-                let allExtensions = [];
-                allExtensions.push(...extensions, ...config.extensions);
-                allExtensions = sortPlugins(allExtensions);
-        
-                let coreExtensions: any[] = [];
-                let channelExtensions: any[] = [];
-        
-                // Check if any two extensions have the same priority, then warn to console
-                // And extract the local extensions from the
-                const extPriorities = {};
-        
                 // Extension validation
-                arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
-                    if (isNullOrUndefined(ext) || isNullOrUndefined(ext.initialize)) {
-                        throwError(validationError);
-                    }
-        
-                    const extPriority = ext.priority;
-                    const identifier = ext.identifier;
-        
-                    if (ext && extPriority) {
-                        if (!isNullOrUndefined(extPriorities[extPriority])) {
-                            logger.warnToConsole("Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
-                        } else {
-                            // set a value
-                            extPriorities[extPriority] = identifier;
-                        }
-                    }
-        
-                    // Split extensions to core and channelController
-                    if (!extPriority || extPriority < _channelController.priority) {
-                        // Add to core extension that will be managed by BaseCore
-                        coreExtensions.push(ext);
-                    } else {
-                        // Add all other extensions to be managed by the channel controller
-                        channelExtensions.push(ext);
-                    }
-                });
-                // Validation complete
-        
-                // Add the channelController to the complete extension collection and
-                // to the end of the core extensions
-                allExtensions.push(_channelController);
-                coreExtensions.push(_channelController);
-        
-                // Sort the complete set of extensions by priority
-                allExtensions = sortPlugins(allExtensions);
-                _self._extensions = allExtensions;
-        
-                // initialize channel controller first, this will initialize all channel plugins
-                initializePlugins(new ProcessTelemetryContext([_channelController], config, _self), allExtensions);
-                initializePlugins(new ProcessTelemetryContext(coreExtensions, config, _self), allExtensions);
-        
-                // Now reset the extensions to just those being managed by Basecore
-                _self._extensions = coreExtensions;
-        
+                _configExtensions = [];
+                _configExtensions.push(...extensions, ...config.extensions);
+                _channelConfig = (config||{}).channels;
+
+                _initPluginChain(config);
+
                 if (_self.getTransmissionControls().length === 0) {
                     throwError("No channels available");
                 }
@@ -165,7 +163,12 @@ export class BaseCore implements IAppInsightsCore {
             };
         
             _self.getTransmissionControls = (): IChannelControls[][] => {
-                return _channelController.getChannelControls();
+                let controls: IChannelControls[][] = [];
+                arrForEach(_channelQueue, (channels) => {
+                    controls.push(channels.queue);
+                });
+
+                return objFreeze(controls);
             };
         
             _self.track = (telemetryItem: ITelemetryItem) => {
@@ -188,16 +191,7 @@ export class BaseCore implements IAppInsightsCore {
             };
         
             _self.getProcessTelContext = (): IProcessTelemetryContext => {
-                let extensions = _self._extensions;
-                let thePlugins: IPlugin[] = extensions;
-        
-                // invoke any common telemetry processors before sending through pipeline
-                if (!extensions || extensions.length === 0) {
-                    // Pass to Channel controller so data is sent to correct channel queues
-                    thePlugins = [_channelController];
-                }
-        
-                return new ProcessTelemetryContext(thePlugins, _self.config, _self);
+                return createProcessTelemetryContext(_getPluginChain(), _self.config, _self);
             };
 
             _self.getNotifyMgr = (): INotificationManager => {
@@ -217,6 +211,28 @@ export class BaseCore implements IAppInsightsCore {
 
                 return _notificationManager;
             };
+
+            /**
+             * Adds a notification listener. The SDK calls methods on the listener when an appropriate notification is raised.
+             * The added plugins must raise notifications. If the plugins do not implement the notifications, then no methods will be
+             * called.
+             * @param {INotificationListener} listener - An INotificationListener object.
+             */
+             _self.addNotificationListener = (listener: INotificationListener): void => {
+                 if (_notificationManager) {
+                     _notificationManager.addNotificationListener(listener);
+                 }
+            };
+        
+            /**
+             * Removes all instances of the listener.
+             * @param {INotificationListener} listener - INotificationListener to remove.
+             */
+            _self.removeNotificationListener = (listener: INotificationListener): void => {
+                if (_notificationManager) {
+                    _notificationManager.removeNotificationListener(listener);
+                }
+            }
         
             _self.getCookieMgr = (): ICookieMgr => {
                 if (!_cookieManager) {
@@ -231,13 +247,13 @@ export class BaseCore implements IAppInsightsCore {
             };
 
             _self.getPerfMgr = (): IPerfManager => {
-                if (!_perfManager) {
+                if (!_perfManager && !_cfgPerfManager) {
                     if (_self.config && _self.config.enablePerfMgr && isFunction(_self.config.createPerfMgr)) {
-                        _perfManager = _self.config.createPerfMgr(_self, _self.getNotifyMgr());
+                        _cfgPerfManager = _self.config.createPerfMgr(_self, _self.getNotifyMgr());
                     }
                 }
 
-                return _perfManager || getGblPerfMgr();
+                return _perfManager || _cfgPerfManager || getGblPerfMgr();
             };
 
             _self.setPerfMgr = (perfMgr: IPerfManager) => {
@@ -249,14 +265,182 @@ export class BaseCore implements IAppInsightsCore {
             };
 
             _self.releaseQueue = () => {
-                if (_eventQueue.length > 0) {
-                    arrForEach(_eventQueue, (event: ITelemetryItem) => {
+                if (_isInitialized && _eventQueue.length > 0) {
+                    let eventQueue = _eventQueue;
+                    _eventQueue = [];
+
+                    arrForEach(eventQueue, (event: ITelemetryItem) => {
                         _self.getProcessTelContext().processNext(event);
                     });
-
-                    _eventQueue = [];
                 }
             };
+
+            /**
+             * Periodically check logger.queue for log messages to be flushed
+             */
+             _self.pollInternalLogs = (eventName?: string): number => {
+                 _internalLogsEventName = eventName;
+
+                let interval = _self.config.diagnosticLogInterval;
+                if (!interval || !(interval > 0)) {
+                    interval = 10000;
+                }
+                if(_internalLogPoller) {
+                    clearInterval(_internalLogPoller);
+                }
+                _internalLogPoller = setInterval(() => {
+                    _flushInternalLogs();
+                }, interval) as any;
+
+                return _internalLogPoller;
+            }
+
+            /**
+             * Stop polling log messages from logger.queue
+             */
+            _self.stopPollingInternalLogs = (): void => {
+                if(_internalLogPoller) {
+                    clearInterval(_internalLogPoller);
+                    _internalLogPoller = 0;
+                    _flushInternalLogs();
+                }
+            }
+
+            // Add addTelemetryInitializer
+            proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
+
+            _self.getPlugin = _getPlugin;
+
+            function _initDefaults() {
+                _isInitialized = false;
+
+                // Use a default logger so initialization errors are not dropped on the floor with full logging
+                _self.logger = new DiagnosticLogger({ loggingLevelConsole: LoggingSeverity.CRITICAL });
+                _self.config = null;
+                _self._extensions = [];
+
+                _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
+                _eventQueue = [];
+                _notificationManager = null;
+                _perfManager = null;
+                _cfgPerfManager = null;
+                _cookieManager = null;
+                _pluginChain = null;
+                _coreExtensions = null;
+                _configExtensions = null;
+                _channelControl = null;
+                _channelConfig = null;
+                _channelQueue = null;
+                _internalLogsEventName = null;
+            }
+
+            // Initialize or Re-initialize the plugins
+            function _initPluginChain(config: IConfiguration) {
+                // Extension validation
+                let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
+            
+                _coreExtensions = theExtensions.core;
+                _pluginChain = null;
+            
+                // Sort the complete set of extensions by priority
+                let allExtensions = theExtensions.all;
+
+                // Initialize the Channel Queues and the channel plugins first
+                _channelQueue = objFreeze(createChannelQueues(_channelConfig, allExtensions, config, _self));
+                _channelControl = createChannelControllerPlugin(_channelQueue, _self);
+
+                // Add on "channelController" as the last "plugin"
+                allExtensions.push(_channelControl);
+                _coreExtensions.push(_channelControl);
+
+                // Required to allow plugins to call core.getPlugin() during their own initialization
+                _self._extensions = sortPlugins(allExtensions);
+
+                // Initialize the controls
+                _channelControl.initialize(config, _self, allExtensions);
+                
+                initializePlugins(_self.getProcessTelContext(), allExtensions);
+
+                // Now reset the extensions to just those being managed by Basecore
+                _self._extensions = objFreeze(sortPlugins(_coreExtensions || [])).slice();
+            }
+
+            function _getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
+                let theExt: ILoadedPlugin<T> = null;
+                let thePlugin: IPlugin = null;
+
+                arrForEach(_self._extensions, (ext: any) => {
+                    if (ext.identifier === pluginIdentifier) {
+                        thePlugin = ext;
+                        return -1;
+                    }
+                });
+
+                if (thePlugin) {
+                    theExt = {
+                        plugin: thePlugin as T
+                    }
+                }
+
+                return theExt;
+            }
+
+            function _getPluginChain() {
+                if (!_pluginChain) {
+                    // copy the collection of extensions
+                    let extensions = (_coreExtensions || []).slice();
+            
+                    extensions.push(_telemetryInitializerPlugin);
+
+                    _pluginChain = createTelemetryProxyChain(sortPlugins(extensions), _self.config, _self);
+                }
+
+                return _pluginChain;
+            }
+
+            function _flushInternalLogs() {
+                let queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
+                if (queue) {
+                    arrForEach(queue, (logMessage: _InternalLogMessage) => {
+                        const item: ITelemetryItem = {
+                            name: _internalLogsEventName ? _internalLogsEventName : "InternalMessageId: " + logMessage.messageId,
+                            iKey: _self.config.instrumentationKey,
+                            time: toISOString(new Date()),
+                            baseType: _InternalLogMessage.dataType,
+                            baseData: { message: logMessage.message }
+                        };
+                        _self.track(item);
+                    });
+
+                    queue.length = 0;
+                }
+            }
+
+            function _initDebugListener(config: IConfiguration) {
+
+                if (config.disableDbgExt === true && _debugListener) {
+                    // Remove any previously loaded debug listener
+                    _notificationManager.removeNotificationListener(_debugListener);
+                    _debugListener = null;
+                }
+
+                if (_notificationManager && !_debugListener && config.disableDbgExt !== true) {
+                    _debugListener = getDebugListener(config);
+                    _notificationManager.addNotificationListener(_debugListener);
+                }
+            }
+
+            function _initPerfManager(config: IConfiguration) {
+                if (!config.enablePerfMgr && _cfgPerfManager) {
+                    // Remove any existing config based performance manager
+                    _cfgPerfManager = null;
+                }
+
+                if (config.enablePerfMgr) {
+                    // Set the performance manager creation function if not defined
+                    setValue(_self.config, "createPerfMgr", _createPerfManager);
+                }
+            }
         });
     }
 
@@ -281,6 +465,24 @@ export class BaseCore implements IAppInsightsCore {
     public getNotifyMgr(): INotificationManager {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    /**
+     * Adds a notification listener. The SDK calls methods on the listener when an appropriate notification is raised.
+     * The added plugins must raise notifications. If the plugins do not implement the notifications, then no methods will be
+     * called.
+     * @param {INotificationListener} listener - An INotificationListener object.
+     */
+    public addNotificationListener(listener: INotificationListener): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Removes all instances of the listener.
+     * @param {INotificationListener} listener - INotificationListener to remove.
+     */
+    public removeNotificationListener(listener: INotificationListener): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
@@ -313,6 +515,34 @@ export class BaseCore implements IAppInsightsCore {
         return 0;
     }
 
+    /**
+     * Periodically check logger.queue for
+     */
+    public pollInternalLogs(eventName?: string): number {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return 0;
+    }
+
+    /**
+     * Periodically check logger.queue for
+     */
+    public stopPollingInternalLogs(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Add a telemetry processor to decorate or drop telemetry events.
+     * @param telemetryInitializer - The Telemetry Initializer function
+     * @returns - A ITelemetryInitializerHandler to enable the initializer to be removed
+     */
+    public addTelemetryInitializer(telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler | void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
     protected releaseQueue() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
