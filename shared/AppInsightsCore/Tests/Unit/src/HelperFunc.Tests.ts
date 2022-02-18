@@ -134,7 +134,7 @@ export class HelperFuncTests extends AITestClass {
             test: () => {
                 let newObject = objExtend();
                 Assert.ok(isObject(newObject), "The returned object is an object");
-                Assert.equal(0, objKeys(newObject), "The object should have no values");
+                Assert.equal(0, objKeys(newObject).length, "The object should have no values");
             }
         });
 
@@ -143,7 +143,7 @@ export class HelperFuncTests extends AITestClass {
             test: () => {
                 let newObject = objExtend(undefined, null);
                 Assert.ok(isObject(newObject), "The returned object is an object");
-                Assert.equal(0, objKeys(newObject), "The object should have no values");
+                Assert.equal(0, objKeys(newObject).length, "The object should have no values");
             }
         });
 
@@ -355,6 +355,22 @@ export class HelperFuncTests extends AITestClass {
                 Assert.equal(Boolean.prototype, _getObjProto(new Boolean(true)), "new Boolean(true)");
                 Assert.equal(Number.prototype, _getObjProto(new Number(1)), "new Number(1)");
                 Assert.equal(String.prototype, _getObjProto(new String("true")), "new String('true')");
+            }
+        });
+
+        this.testCase({
+            name: "objKeys",
+            test: () => {
+                let testObj = {
+                    a: 1,
+                    b: 2
+                };
+
+                let keys = objKeys(testObj);
+                Assert.equal(2, keys.length);
+                Assert.ok(keys[0] === "a" || keys[0] === "b");
+                Assert.ok(keys[1] === "a" || keys[1] === "b");
+                Assert.ok(keys[0] !== keys[1]);
             }
         });
     }
