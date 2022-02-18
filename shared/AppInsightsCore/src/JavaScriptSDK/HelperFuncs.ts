@@ -406,21 +406,20 @@ export function isPlainObject(value: any): boolean {
     if (value && typeof value === "object") {
         let proto = _getObjProto(value);
         if (!proto) {
-            // No prototype found so this is a plain Object eg. `Object.create(null)`
+            // No prototype found so this is a plain Object eg. 'Object.create(null)'
             result = true;
         } else {
-            // If the prototype has a constructor then it's not a plain object
-            if (hasOwnProperty(proto, strConstructor)) {
+            // Objects that have a prototype are plain only if they were created using the Object global (native) function
+            if (proto[strConstructor] && ObjHasOwnProperty.call(proto, strConstructor)) {
                 proto = proto[strConstructor];
             }
 
-            result = isFunction(proto) && _fnToString.call(proto) === _objFunctionString;
+            result = typeof proto === strShimFunction && _fnToString.call(proto) === _objFunctionString;
         }
     }
 
     return result;
 }
-
 
 /**
  * Convert a date to I.S.O. format in IE8
