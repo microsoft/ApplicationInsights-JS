@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import {
     strShimUndefined, strShimObject, strShimFunction, throwTypeError,
-    ObjClass, ObjProto, ObjAssign, ObjHasOwnProperty, ObjDefineProperty
+    ObjClass, ObjProto, ObjAssign, ObjHasOwnProperty, ObjDefineProperty, strShimPrototype
 } from "@microsoft/applicationinsights-shims";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
@@ -14,13 +14,79 @@ const strAddEventHelper = "addEventListener";
 const strDetachEvent = "detachEvent";
 const strRemoveEventListener = "removeEventListener";
 const strToISOString = "toISOString";
+const cStrEndsWith = "endsWith";
+const cStrStartsWith = "startsWith";
+const strIndexOf = "indexOf";
+const strMap = "map";
+const strReduce = "reduce";
+const cStrTrim = "trim";
+const strKeys = "keys";
+const strToString = "toString";
 
+/**
+ * Constant string defined to support minimization
+ * @ignore
+ */
+ const str__Proto = "__proto__";
+
+ /**
+  * Constant string defined to support minimization
+  * @ignore
+  */
+const strConstructor = "constructor";
+ 
 const _objDefineProperty = ObjDefineProperty;
 const _objFreeze = ObjClass["freeze"];
 const _objSeal = ObjClass["seal"];
 
+const StringProto = String[strShimPrototype];
+const _strTrim = StringProto[cStrTrim];
+const _strEndsWith = StringProto[cStrEndsWith];
+const _strStartsWith = StringProto[cStrStartsWith];
+
+const DateProto = Date[strShimPrototype];
+const _dataToISOString = DateProto[strToISOString];
+const _isArray = Array.isArray;
+const _objToString = ObjProto[strToString];
+
+const _fnToString = ObjHasOwnProperty[strToString];
+// Cache what this browser reports as the object function constructor (as a string)
+const _objFunctionString = _fnToString.call(ObjClass);
+
+const rCamelCase = /-([a-z])/g;
+const rNormalizeInvalid = /([^\w\d_$])/g;
+const rLeadingNumeric = /^(\d+[\w\d_$])/;
+
+
+/**
+ * Pre-lookup to check if we are running on a modern browser (i.e. not IE8)
+ * @ignore
+ */
+ let _objGetPrototypeOf = Object["getPrototypeOf"];
+
+ /**
+  * Helper used to get the prototype of the target object as getPrototypeOf is not available in an ES3 environment.
+  * @ignore
+  */
+ export function _getObjProto(target:any) {
+     if (target) {
+         // This method doesn't existing in older browsers (e.g. IE8)
+         if (_objGetPrototypeOf) {
+             return _objGetPrototypeOf(target);
+         }
+ 
+         // target[Constructor] May break if the constructor has been changed or removed
+         let newProto = target[str__Proto] || target[strShimPrototype] || target[strConstructor];
+         if(newProto) {
+             return newProto;
+         }
+     }
+ 
+     return null;
+}
+
 export function objToString(obj: any) {
-    return ObjProto.toString.call(obj);
+    return _objToString.call(obj);
 }
 
 export function isTypeof(value: any, theType: string): boolean {
@@ -44,17 +110,17 @@ export function isNotNullOrUndefined(value: any): boolean {
 }
 
 export function hasOwnProperty(obj: any, prop: string): boolean {
-    return obj && ObjHasOwnProperty.call(obj, prop);
+    return !!(obj && ObjHasOwnProperty.call(obj, prop));
 }
 
 export function isObject(value: any): boolean {
     // Changing to inline for performance
-    return typeof value === strShimObject;
+    return !!(value && typeof value === strShimObject);
 }
 
 export function isFunction(value: any): value is Function {
     // Changing to inline for performance
-    return typeof value === strShimFunction;
+    return !!(value && typeof value === strShimFunction);
 }
 
 /**
@@ -116,9 +182,17 @@ export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
  */
 export function normalizeJsName(name: string): string {
     let value = name;
-    let match = /([^\w\d_$])/g;
-    if (match.test(name)) {
-        value = name.replace(match, "_");
+
+    if (value && isString(value)) {
+        // CamelCase everything after the "-" and remove the dash
+        value = value.replace(rCamelCase, function (_all, letter) {
+            return letter.toUpperCase();
+        });
+
+        value = value.replace(rNormalizeInvalid, "_");
+        value = value.replace(rLeadingNumeric, function(_all, match) {
+            return "_" + match;
+        });
     }
 
     return value;
@@ -147,25 +221,38 @@ export function objForEachKey(target: any, callbackfn: (name: string, value: any
  * @returns true if the given search value is found at the end of the string, otherwise false.
  */
 export function strEndsWith(value: string, search: string) {
-    if (value && search) {
-        let searchLen = search.length;
-        let valLen = value.length;
-        if (value === search) {
-            return true;
-        } else if (valLen >= searchLen) {
-            let pos = valLen - 1;
-            for (let lp = searchLen - 1; lp >= 0; lp--) {
-                if (value[pos] != search[lp]) {
-                    return false;
-                }
-                pos--;
-            }
-
-            return true;
-        }
+    let result = false;
+    if (value && search && !(result = value === search)) {
+        // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+        result = _strEndsWith ? value[cStrEndsWith](search) : _strEndsWithPoly(value, search);
     }
 
-    return false;
+    return result;
+}
+
+/**
+ * The _strEndsWith() method determines whether a string ends with the characters of a specified string, returning true or false as appropriate.
+ * @param value - The value to check whether it ends with the search value.
+ * @param search - The characters to be searched for at the end of the value.
+ * @returns true if the given search value is found at the end of the string, otherwise false.
+ */
+ export function _strEndsWithPoly(value: string, search: string) {
+    let result = false;
+    let searchLen = search ? search.length : 0;
+    let valLen = value ? value.length : 0;
+    if (searchLen && valLen && valLen >= searchLen && !(result = value === search)) {
+        let pos = valLen - 1;
+        for (let lp = searchLen - 1; lp >= 0; lp--) {
+            if (value[pos] != search[lp]) {
+                return false;
+            }
+            pos--;
+        }
+
+        result = true;
+    }
+
+    return result;
 }
 
 /**
@@ -175,20 +262,33 @@ export function strEndsWith(value: string, search: string) {
  * @returns true if the given search value is found at the start of the string, otherwise false.
  */
 export function strStartsWith(value: string, checkValue: string) {
+    let result = false;
+    if (value && checkValue && !(result = value === checkValue)) {
+       // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+        result = _strStartsWith ? value[cStrStartsWith](checkValue) : _strStartsWithPoly(value, checkValue);
+    }
+
+    return result;
+}
+
+/**
+ * The strStartsWith() method determines whether a string starts with the characters of the specified string, returning true or false as appropriate.
+ * @param value - The value to check whether it ends with the search value.
+ * @param checkValue - The characters to be searched for at the start of the value.
+ * @returns true if the given search value is found at the start of the string, otherwise false.
+ */
+ export function _strStartsWithPoly(value: string, checkValue: string) {
     // Using helper for performance and because string startsWith() is not available on IE
     let result = false;
-    if (value && checkValue) {
-        let chkLen = checkValue.length;
-        if (value === checkValue) {
-            return true;
-        } else if (value.length >= chkLen) {
-            for (let lp = 0; lp < chkLen; lp++) {
-                if (value[lp] !== checkValue[lp]) {
-                    return false;
-                }
+    let chkLen = checkValue ? checkValue.length : 0;
+    if (value && chkLen && value.length >= chkLen && !(result = value === checkValue)) {
+        for (let lp = 0; lp < chkLen; lp++) {
+            if (value[lp] !== checkValue[lp]) {
+                return false;
             }
-            result = true;
         }
+
+        result = true;
     }
 
     return result;
@@ -211,21 +311,22 @@ export function strContains(value: string, search: string) {
  * Check if an object is of type Date
  */
 export function isDate(obj: any): obj is Date {
-    return objToString(obj) === "[object Date]";
+    return !!(obj && _objToString.call(obj) === "[object Date]");
 }
 
 /**
  * Check if an object is of type Array
  */
-export function isArray(obj: any): boolean {
-    return objToString(obj) === "[object Array]";
+export let isArray: <T = any>(obj: any) => obj is Array<T> = _isArray || _isArrayPoly;
+function _isArrayPoly<T = any>(obj: any): obj is Array<T> {
+    return !!(obj && _objToString.call(obj) === "[object Array]");
 }
 
 /**
  * Check if an object is of type Error
  */
 export function isError(obj: any): obj is Error {
-    return objToString(obj) === "[object Error]";
+    return !!(obj && _objToString.call(obj) === "[object Error]");
 }
 
 /**
@@ -269,34 +370,63 @@ export function isSymbol(value: any): boolean {
 }
 
 /**
+ * Checks if the type of the value is a normal plain object (not a null or data)
+ * @param value
+ */
+export function isPlainObject(value: any): boolean {
+    let result: boolean = false;
+
+    if (value && typeof value === "object") {
+            // Inlining _objGetPrototypeOf for performance to avoid an additional function call
+        let proto = _objGetPrototypeOf ? _objGetPrototypeOf(value) : _getObjProto(value);
+        if (!proto) {
+            // No prototype found so this is a plain Object eg. 'Object.create(null)'
+            result = true;
+        } else {
+            // Objects that have a prototype are plain only if they were created using the Object global (native) function
+            if (proto[strConstructor] && ObjHasOwnProperty.call(proto, strConstructor)) {
+                proto = proto[strConstructor];
+            }
+
+            result = typeof proto === strShimFunction && _fnToString.call(proto) === _objFunctionString;
+        }
+    }
+
+    return result;
+}
+
+/**
  * Convert a date to I.S.O. format in IE8
  */
 export function toISOString(date: Date) {
     if (date) {
-        if (date[strToISOString]) {
-            // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
-            return date[strToISOString]();
-        }
-        
-        if (isDate(date)) {
-            const pad = (num: number) => {
-                let r = String(num);
-                if (r.length === 1) {
-                    r = "0" + r;
-                }
+        // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+        return _dataToISOString ? date[strToISOString]() : _toISOStringPoly(date);
+    }
+}
 
-                return r;
+/**
+ * Convert a date to I.S.O. format in IE8
+ */
+export function _toISOStringPoly(date: Date) {
+    if (date && date.getUTCFullYear) {
+        const pad = (num: number) => {
+            let r = String(num);
+            if (r.length === 1) {
+                r = "0" + r;
             }
 
-            return date.getUTCFullYear()
-                + "-" + pad(date.getUTCMonth() + 1)
-                + "-" + pad(date.getUTCDate())
-                + "T" + pad(date.getUTCHours())
-                + ":" + pad(date.getUTCMinutes())
-                + ":" + pad(date.getUTCSeconds())
-                + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5)
-                + "Z";
+            return r;
         }
+
+        return date.getUTCFullYear()
+            + "-" + pad(date.getUTCMonth() + 1)
+            + "-" + pad(date.getUTCDate())
+            + "T" + pad(date.getUTCHours())
+            + ":" + pad(date.getUTCMinutes())
+            + ":" + pad(date.getUTCSeconds())
+            + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5)
+            + "Z";
     }
 }
 
@@ -332,16 +462,23 @@ export function arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, a
  * @param fromIndex The array index at which to begin the search. If fromIndex is omitted, the search starts at index 0.
  */
 export function arrIndexOf<T>(arr: T[], searchElement: T, fromIndex?: number): number {
-    let len = arr.length;
-    let from = fromIndex || 0;
-    try {
-        for (let lp = Math.max(from >= 0 ? from : len - Math.abs(from), 0); lp < len; lp++) {
-            if (lp in arr && arr[lp] === searchElement) {
-                return lp;
-            }
+    if (arr) {
+        // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+        if (arr[strIndexOf]) {
+            return arr[strIndexOf](searchElement, fromIndex);
         }
-    } catch (e) {
-        // This can happen with some native browser objects, but should not happen for the type we are checking for
+
+        let len = arr.length;
+        let from = fromIndex || 0;
+        try {
+            for (let lp = Math.max(from >= 0 ? from : len - Math.abs(from), 0); lp < len; lp++) {
+                if (lp in arr && arr[lp] === searchElement) {
+                    return lp;
+                }
+            }
+        } catch (e) {
+            // This can happen with some native browser objects, but should not happen for the type we are checking for
+        }
     }
 
     return -1;
@@ -356,18 +493,28 @@ export function arrIndexOf<T>(arr: T[], searchElement: T, fromIndex?: number): n
  * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
  */
 export function arrMap<T, R>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => R, thisArg?: any): R[] {
-    let len = arr.length;
-    let _this = thisArg || arr;
-    let results = new Array(len);
+    let results: R[];
 
-    try {
-        for (let lp = 0; lp < len; lp++) {
-            if (lp in arr) {
-                results[lp] = callbackfn.call(_this, arr[lp], arr);
-            }
+    if (arr) {
+        // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+        if (arr[strMap]) {
+            return arr[strMap](callbackfn, thisArg);
         }
-    } catch (e) {
-        // This can happen with some native browser objects, but should not happen for the type we are checking for
+
+        let len = arr.length;
+        let _this = thisArg || arr;
+        results = new Array(len);
+    
+        try {
+            for (let lp = 0; lp < len; lp++) {
+                if (lp in arr) {
+                    results[lp] = callbackfn.call(_this, arr[lp], arr);
+                }
+            }
+        } catch (e) {
+            // This can happen with some native browser objects, but should not happen for the type we are checking for
+        }
+    
     }
 
     return results;
@@ -382,26 +529,34 @@ export function arrMap<T, R>(arr: T[], callbackfn: (value: T, index?: number, ar
  * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
  */
 export function arrReduce<T, R>(arr: T[], callbackfn: (previousValue: T | R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R): R {
-    let len = arr.length;
-    let lp = 0;
     let value;
 
-    // Specifically checking the number of passed arguments as the value could be anything
-    if (arguments.length >= 3) {
-        value = arguments[2];
-    } else {
-        while (lp < len && !(lp in arr)) {
+    if (arr) {
+        // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+        if (arr[strReduce]) {
+            return arr[strReduce]<R>(callbackfn, initialValue);
+        }
+
+        let len = arr.length;
+        let lp = 0;
+    
+        // Specifically checking the number of passed arguments as the value could be anything
+        if (arguments.length >= 3) {
+            value = arguments[2];
+        } else {
+            while (lp < len && !(lp in arr)) {
+                lp++;
+            }
+    
+            value = arr[lp++];
+        }
+    
+        while (lp < len) {
+            if (lp in arr) {
+                value = callbackfn(value, arr[lp], lp, arr);
+            }
             lp++;
         }
-
-        value = arr[lp++];
-    }
-
-    while (lp < len) {
-        if (lp in arr) {
-            value = callbackfn(value, arr[lp], lp, arr);
-        }
-        lp++;
     }
 
     return value;
@@ -411,11 +566,12 @@ export function arrReduce<T, R>(arr: T[], callbackfn: (previousValue: T | R, cur
  * helper method to trim strings (IE8 does not implement String.prototype.trim)
  */
 export function strTrim(str: any): string {
-    if (typeof str !== "string") {
-        return str;
+    if (str) {
+        // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+        str = (_strTrim && str[cStrTrim]) ? str[cStrTrim]() : (str.replace ? str.replace(/^\s+|\s+$/g, "") : str);
     }
-
-    return str.replace(/^\s+|\s+$/g, "");
+    
+    return str;
 }
 
 let _objKeysHasDontEnumBug = !({ toString: null }).propertyIsEnumerable("toString");
@@ -440,6 +596,11 @@ export function objKeys(obj: {}): string[] {
 
     if (objType !== strShimFunction && (objType !== strShimObject || obj === null)) {
         throwTypeError("objKeys called on non-object");
+    }
+
+    // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+    if (!_objKeysHasDontEnumBug && obj[strKeys]) {
+        return obj[strKeys]();
     }
 
     let result: string[] = [];
@@ -499,21 +660,12 @@ export function objDefineAccessors<T>(target: any, prop: string, getProp?: () =>
     return false;
 }
 
-export function objFreeze<T>(value: T): T {
-    if (_objFreeze) {
-        value = _objFreeze(value) as T;
-    }
-
+function _doNothing<T>(value: T): T {
     return value;
 }
 
-export function objSeal<T>(value: T): T {
-    if (_objSeal) {
-        value = _objSeal(value) as T;
-    }
-
-    return value;
-}
+export const objFreeze: <T>(value: T) => T = _objFreeze || _doNothing;
+export const objSeal: <T>(value: T) => T = _objSeal || _doNothing;
 
 /**
  * Return the current time via the Date now() function (if available) and falls back to (new Date()).getTime() if now() is unavailable (IE8 or less)
@@ -521,11 +673,8 @@ export function objSeal<T>(value: T): T {
  */
 export function dateNow() {
     let dt = Date;
-    if (dt.now) {
-        return dt.now();
-    }
-
-    return new dt().getTime();
+    
+    return dt.now ? dt.now() : new dt().getTime();
 }
 
 /**
@@ -686,4 +835,77 @@ export function optimizeObject<T>(theObject: T): T {
     }
 
     return theObject;
+}
+
+/**
+ * Pass in the objects to merge as arguments, this will only "merge" (extend) properties that are owned by the object.
+ * It will NOT merge inherited or non-enumerable properties.
+ * @param obj1 - object to merge.  Set this argument to 'true' for a deep extend.
+ * @param obj2 - object to merge.
+ * @param obj3 - object to merge.
+ * @param obj4 - object to merge.
+ * @param obj5 - object to merge.
+ * @returns The extended first object.
+ */
+ export function objExtend<T1, T2, T3, T4, T5, T6>(obj?: boolean | T1, obj2?: T2, obj3?: T3, obj4?: T4, obj5?: T5, obj6?: T6): T1 & T2 & T3 & T4 & T5 & T6 {
+    // Variables
+    let theArgs = arguments as any;
+    let extended: T1 & T2 & T3 & T4 & T5 & T6 = theArgs[0] || {};
+    let argLen = theArgs.length;
+    let deep = false;
+    let idx = 1;
+
+    // Check for "Deep" flag
+    if (argLen > 0 && isBoolean(extended)) {
+        deep = extended;
+        extended = theArgs[idx] || {};
+        idx++;
+    }
+
+	// Handle case when target is a string or something (possible in deep copy)
+    if (!isObject(extended)) {
+        extended = {} as T1 & T2 & T3 & T4 & T5 & T6;
+    }
+
+    // Loop through each remaining object and conduct a merge
+    for (; idx < argLen; idx++ ) {
+        let arg = theArgs[idx];
+        let isArgArray = isArray(arg);
+        let isArgObj = isObject(arg);
+        for (let prop in arg) {
+            let propOk = (isArgArray && (prop in arg)) || (isArgObj && (ObjHasOwnProperty.call(arg, prop)));
+            if (!propOk) {
+                continue;
+            }
+
+            let newValue = arg[prop];
+            let isNewArray: boolean;
+
+            // If deep merge and property is an object, merge properties
+            if (deep && newValue && ((isNewArray = isArray(newValue)) || isPlainObject(newValue))) {
+                // Grab the current value of the extended object
+                let clone = extended[prop];
+
+                if (isNewArray) {
+                    if (!isArray(clone)) {
+                        // We can't "merge" an array with a non-array so overwrite the original
+                        clone = [];
+                    }
+                } else if (!isPlainObject(clone)) {
+                    // We can't "merge" an object with a non-object
+                    clone = {};
+                }
+
+                // Never move the original objects always clone them
+                newValue = objExtend(deep, clone, newValue);
+            }
+
+            // Assign the new (or previous) value (unless undefined)
+            if (newValue !== undefined) {
+                extended[prop] = newValue;
+            }
+        }
+    }
+
+    return extended;
 }
