@@ -47,6 +47,7 @@ const _strStartsWith = StringProto[cStrStartsWith];
 const DateProto = Date[strShimPrototype];
 const _dataToISOString = DateProto[strToISOString];
 const _isArray = Array.isArray;
+const _objToString = ObjProto[strToString];
 
 const _fnToString = ObjHasOwnProperty[strToString];
 // Cache what this browser reports as the object function constructor (as a string)
@@ -85,7 +86,7 @@ const rLeadingNumeric = /^(\d+[\w\d_$])/;
 }
 
 export function objToString(obj: any) {
-    return ObjProto[strToString].call(obj);
+    return _objToString.call(obj);
 }
 
 export function isTypeof(value: any, theType: string): boolean {
@@ -310,21 +311,22 @@ export function strContains(value: string, search: string) {
  * Check if an object is of type Date
  */
 export function isDate(obj: any): obj is Date {
-    return !!(obj && objToString(obj) === "[object Date]");
+    return !!(obj && _objToString.call(obj) === "[object Date]");
 }
 
 /**
  * Check if an object is of type Array
  */
-export function isArray<T = any>(obj: any): obj is Array<T> {
-    return _isArray ? _isArray(obj) : !!(obj && objToString(obj) === "[object Array]");
+export let isArray: <T = any>(obj: any) => obj is Array<T> = _isArray || _isArrayPoly;
+function _isArrayPoly<T = any>(obj: any): obj is Array<T> {
+    return !!(obj && _objToString.call(obj) === "[object Array]");
 }
 
 /**
  * Check if an object is of type Error
  */
 export function isError(obj: any): obj is Error {
-    return !!(obj && objToString(obj) === "[object Error]");
+    return !!(obj && _objToString.call(obj) === "[object Error]");
 }
 
 /**
@@ -375,23 +377,23 @@ export function isPlainObject(value: any): boolean {
     let result: boolean = false;
 
     if (value && typeof value === "object") {
-        let proto = _getObjProto(value);
+            // Inlining _objGetPrototypeOf for performance to avoid an additional function call
+        let proto = _objGetPrototypeOf ? _objGetPrototypeOf(value) : _getObjProto(value);
         if (!proto) {
-            // No prototype found so this is a plain Object eg. `Object.create(null)`
+            // No prototype found so this is a plain Object eg. 'Object.create(null)'
             result = true;
         } else {
-            // If the prototype has a constructor then it's not a plain object
-            if (hasOwnProperty(proto, strConstructor)) {
+            // Objects that have a prototype are plain only if they were created using the Object global (native) function
+            if (proto[strConstructor] && ObjHasOwnProperty.call(proto, strConstructor)) {
                 proto = proto[strConstructor];
             }
 
-            result = isFunction(proto) && _fnToString.call(proto) === _objFunctionString;
+            result = typeof proto === strShimFunction && _fnToString.call(proto) === _objFunctionString;
         }
     }
 
     return result;
 }
-
 
 /**
  * Convert a date to I.S.O. format in IE8
@@ -598,7 +600,7 @@ export function objKeys(obj: {}): string[] {
 
     // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
     if (!_objKeysHasDontEnumBug && obj[strKeys]) {
-        return obj[strKeys];
+        return obj[strKeys]();
     }
 
     let result: string[] = [];
@@ -658,13 +660,12 @@ export function objDefineAccessors<T>(target: any, prop: string, getProp?: () =>
     return false;
 }
 
-export function objFreeze<T>(value: T): T {
-    return _objFreeze ? _objFreeze(value) as T : value;
+function _doNothing<T>(value: T): T {
+    return value;
 }
 
-export function objSeal<T>(value: T): T {
-    return _objSeal ? _objSeal(value) as T : value;
-}
+export const objFreeze: <T>(value: T) => T = _objFreeze || _doNothing;
+export const objSeal: <T>(value: T) => T = _objSeal || _doNothing;
 
 /**
  * Return the current time via the Date now() function (if available) and falls back to (new Date()).getTime() if now() is unavailable (IE8 or less)
