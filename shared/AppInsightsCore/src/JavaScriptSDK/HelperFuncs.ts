@@ -20,7 +20,6 @@ const strIndexOf = "indexOf";
 const strMap = "map";
 const strReduce = "reduce";
 const cStrTrim = "trim";
-const strKeys = "keys";
 const strToString = "toString";
 
 /**
@@ -36,8 +35,9 @@ const strToString = "toString";
 const strConstructor = "constructor";
  
 const _objDefineProperty = ObjDefineProperty;
-const _objFreeze = ObjClass["freeze"];
-const _objSeal = ObjClass["seal"];
+const _objFreeze = ObjClass.freeze;
+const _objSeal = ObjClass.seal;
+const _objKeys = ObjClass.keys;
 
 const StringProto = String[strShimPrototype];
 const _strTrim = StringProto[cStrTrim];
@@ -599,8 +599,8 @@ export function objKeys(obj: {}): string[] {
     }
 
     // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
-    if (!_objKeysHasDontEnumBug && obj[strKeys]) {
-        return obj[strKeys]();
+    if (!_objKeysHasDontEnumBug && _objKeys) {
+        return _objKeys(obj);
     }
 
     let result: string[] = [];
@@ -830,8 +830,8 @@ export function createClassFromInterface<T>(defaults?: T) {
 export function optimizeObject<T>(theObject: T): T {
     // V8 Optimization to cause the JIT compiler to create a new optimized object for looking up the own properties
     // primarily for object with <= 19 properties for >= 20 the effect is reduced or non-existent
-    if (theObject) {
-        theObject = ObjClass(ObjAssign ? ObjAssign({}, theObject) : theObject);
+    if (theObject && ObjAssign) {
+        theObject = ObjClass(ObjAssign({}, theObject));
     }
 
     return theObject;

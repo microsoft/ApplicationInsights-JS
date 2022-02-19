@@ -1,7 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { _InternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { normalizeJsName, objExtend, strEndsWith, _strEndsWithPoly, strStartsWith, _strStartsWithPoly, isObject, objKeys, _getObjProto, isPlainObject, dateNow, isTypeof } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { normalizeJsName, objExtend, strEndsWith, _strEndsWithPoly, strStartsWith, _strStartsWithPoly, isObject, objKeys, _getObjProto, isPlainObject, dateNow, isTypeof, isArray } from "../../../src/JavaScriptSDK/HelperFuncs";
 import { BaseCore } from "../../../src/JavaScriptSDK/BaseCore";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 
@@ -371,6 +371,10 @@ export class HelperFuncTests extends AITestClass {
                 Assert.ok(keys[0] === "a" || keys[0] === "b");
                 Assert.ok(keys[1] === "a" || keys[1] === "b");
                 Assert.ok(keys[0] !== keys[1]);
+
+                Assert.equal(0, objKeys([]).length, "An array should return an empty of keys");
+                Assert.ok(isArray(objKeys([])), "Array Result should be an array");
+                Assert.ok(isArray(objKeys({})), "Object Result should be an array");
             }
         });
     }
