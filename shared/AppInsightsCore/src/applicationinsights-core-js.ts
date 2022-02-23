@@ -5,7 +5,7 @@ export { IChannelControls, MinChannelPriorty } from "./JavaScriptSDK.Interfaces/
 export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetryPlugin";
 export { IAppInsightsCore } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
 export { ITelemetryItem, ICustomProperties, Tags } from "./JavaScriptSDK.Interfaces/ITelemetryItem";
-export { IProcessTelemetryContext } from "./JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+export { IProcessTelemetryContext, GetExtCfgMergeType } from "./JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 export { INotificationListener } from "./JavaScriptSDK.Interfaces/INotificationListener";
 export { ITelemetryPluginChain } from "./JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -15,9 +15,9 @@ export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from "./JavaScriptSDK/BaseCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
-export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./JavaScriptSDK/RandomHelper";
+export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./JavaScriptSDK/RandomHelper";
 export {
-    CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, newId, generateW3CId,
+    CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, generateW3CId,
     disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr, addEventListeners, addPageUnloadEventListener,
     addPageHideEventListener, addPageShowEventListener
 } from "./JavaScriptSDK/CoreUtils";
@@ -48,7 +48,7 @@ export { IPerfEvent } from "./JavaScriptSDK.Interfaces/IPerfEvent";
 export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/IPerfManager";
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
 export { safeGetLogger, DiagnosticLogger, _InternalLogMessage } from "./JavaScriptSDK/DiagnosticLogger";
-export { ProcessTelemetryContext } from "./JavaScriptSDK/ProcessTelemetryContext";
+export { ProcessTelemetryContext, createProcessTelemetryContext } from "./JavaScriptSDK/ProcessTelemetryContext";
 export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
 export { _InternalMessageId, LoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
@@ -59,3 +59,4 @@ export {
 export { strIKey, strExtensionConfig } from "./JavaScriptSDK/Constants";
 export { IDbgExtension } from "./JavaScriptSDK.Interfaces/IDbgExtension";
 export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils"
+export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./JavaScriptSDK.Interfaces/ITelemetryInitializers";

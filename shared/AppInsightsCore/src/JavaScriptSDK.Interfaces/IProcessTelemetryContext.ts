@@ -6,8 +6,14 @@ import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IDiagnosticLogger } from "./IDiagnosticLogger";
 import { IConfiguration } from "./IConfiguration";
 import { ITelemetryItem } from "./ITelemetryItem";
-import { IPlugin } from "./ITelemetryPlugin";
+import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
 import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
+
+export const enum GetExtCfgMergeType {
+    None = 0,
+    MergeDefaultOnly = 1,
+    MergeDefaultFromRootOrDefault = 2,
+}
 
 /**
  * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance
@@ -27,12 +33,12 @@ export interface IProcessTelemetryContext {
     /**
      * Gets the current core config instance
      */
-    getCfg: ()=> IConfiguration;
+    getCfg: () => IConfiguration;
 
     /**
      * Gets the named extension config
      */
-    getExtCfg: <T>(identifier: string, defaultValue?:T|any) => T;
+    getExtCfg: <T>(identifier: string, defaultValue?: T | any, mergeDefault?: GetExtCfgMergeType) => T;
 
     /**
      * Gets the named config from either the named identifier extension or core config if neither exist then the
@@ -41,7 +47,7 @@ export interface IProcessTelemetryContext {
      * @param field The config field name
      * @param defaultValue The default value to return if no defined config exists
      */
-    getConfig: (identifier: string, field: string, defaultValue?: number | string | boolean) => number | string | boolean;
+    getConfig: (identifier: string, field: string, defaultValue?: number | string | boolean | string[] | RegExp[] | Function) => number | string | boolean | string[] | RegExp[] | Function;
 
     /**
      * Helper to allow plugins to check and possibly shortcut executing code only
@@ -57,13 +63,20 @@ export interface IProcessTelemetryContext {
     /**
      * Helper to set the next plugin proxy
      */
-    setNext: (nextCtx:ITelemetryPluginChain) => void;
+    setNext: (nextCtx: ITelemetryPluginChain) => void;
 
     /**
      * Call back for telemetry processing before it it is sent
      * @param env - This is the current event being reported
      */
     processNext: (env: ITelemetryItem) => void;
+
+    /**
+     * Synchronously iterate over the context chain running the callback for each plugin, once
+     * every plugin has been executed via the callback, any associated onComplete will be called.
+     * @param callback - The function call for each plugin in the context chain
+     */
+    iterate: <T extends ITelemetryPlugin = ITelemetryPlugin>(callback: (plugin: T) => void) => void;
 
     /**
      * Create a new context using the core and config from the current instance
@@ -73,4 +86,9 @@ export interface IProcessTelemetryContext {
      *                  order then the next plugin will be NOT set.
      */
     createNew: (plugins?:IPlugin[]|ITelemetryPluginChain, startAt?:IPlugin) => IProcessTelemetryContext;
+
+    /**
+     * Set the function to call when the current chain has executed all processNext or unloadNext items.
+     */
+    onComplete: (onComplete: () => void) => void;
 }

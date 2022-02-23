@@ -12,7 +12,7 @@ import {
     isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof,
     isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
 } from "./HelperFuncs";
-import { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./RandomHelper";
+import { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./RandomHelper";
 
 const strVisibilityChangeEvt: string = "visibilitychange";
 const strPageHide: string = "pagehide";
@@ -180,33 +180,6 @@ export function perfNow(): number {
     }
 
     return dateNow();
-}
-
-/**
- * Generate random base64 id string.
- * The default length is 22 which is 132-bits so almost the same as a GUID but as base64 (the previous default was 5)
- * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
- */
-export function newId(maxLength = 22): string {
-    const base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    // Start with an initial random number, consuming the value in reverse byte order
-    let number = random32() >>> 0;  // Make sure it's a +ve number
-    let chars = 0;
-    let result = "";
-    while (result.length < maxLength) {
-        chars ++;
-        result += base64chars.charAt(number & 0x3F);
-        number >>>= 6;              // Zero fill with right shift
-        if (chars === 5) {
-            // 5 base64 characters === 30 bits so we don't have enough bits for another base64 char
-            // So add on another 30 bits and make sure it's +ve
-            number = (((random32() << 2) & 0xFFFFFFFF) | (number & 0x03)) >>> 0;
-            chars = 0;      // We need to reset the number every 5 chars (30 bits)
-        }
-    }
-
-    return result;
 }
 
 /**

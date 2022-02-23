@@ -10,8 +10,11 @@ import { IDiagnosticLogger } from "./IDiagnosticLogger";
 import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { ICookieMgr } from "./ICookieMgr";
+import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
 
-"use strict";
+export interface ILoadedPlugin<T extends IPlugin> {
+    plugin: T;
+}
 
 export interface IAppInsightsCore extends IPerfManagerProvider {
 
@@ -72,6 +75,13 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      */
     removeNotificationListener?(listener: INotificationListener): void;
 
+    /**
+     * Add a telemetry processor to decorate or drop telemetry events.
+     * @param telemetryInitializer - The Telemetry Initializer function
+     * @returns - A ITelemetryInitializerHandler to enable the initializer to be removed
+     */
+    addTelemetryInitializer(telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler | void;
+
     pollInternalLogs?(eventName?: string): number;
 
     stopPollingInternalLogs?(): void;
@@ -80,4 +90,10 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * Return a new instance of the IProcessTelemetryContext for processing events
      */
     getProcessTelContext() : IProcessTelemetryContext;
+
+    /**
+     * Find and return the (first) plugin with the specified identifier if present
+     * @param pluginIdentifier
+     */
+    getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
 }

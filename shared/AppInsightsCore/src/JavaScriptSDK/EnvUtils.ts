@@ -31,6 +31,7 @@ const strMsCrypto = "msCrypto";
 const strReactNative = "ReactNative";
 const strMsie = "msie";
 const strTrident = "trident/";
+const strXMLHttpRequest = "XMLHttpRequest";
 
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
@@ -371,8 +372,7 @@ export function isSafari(userAgentStr ?: string) {
 export function isFetchSupported(withKeepAlive?: boolean): boolean {
     let isSupported = false;
     try {
-        const fetchApi = getGlobalInst("fetch");
-        isSupported = !!fetchApi;
+        isSupported = !!getGlobalInst("fetch");
         const request = getGlobalInst("Request");
         if (isSupported && withKeepAlive && request) {
             isSupported = _hasProperty(request, "keepalive");
@@ -386,9 +386,9 @@ export function isFetchSupported(withKeepAlive?: boolean): boolean {
 
 export function useXDomainRequest(): boolean | undefined {
     if (_useXDomainRequest === null) {
-        _useXDomainRequest = (typeof XDomainRequest !== "undefined");
+        _useXDomainRequest = (typeof XDomainRequest !== strShimUndefined);
         if (_useXDomainRequest && isXhrSupported()) {
-            _useXDomainRequest = _useXDomainRequest && !_hasProperty(getGlobalInst("XMLHttpRequest"), "withCredentials");
+            _useXDomainRequest = _useXDomainRequest && !_hasProperty(getGlobalInst(strXMLHttpRequest), "withCredentials");
         }
     }
 
@@ -402,7 +402,7 @@ export function useXDomainRequest(): boolean | undefined {
 export function isXhrSupported(): boolean {
     let isSupported = false;
     try {
-        const xmlHttpRequest = getGlobalInst("XMLHttpRequest");
+        const xmlHttpRequest = getGlobalInst(strXMLHttpRequest);
         isSupported = !!xmlHttpRequest;
     } catch (e) {
         // Just Swallow any failure during availability checks

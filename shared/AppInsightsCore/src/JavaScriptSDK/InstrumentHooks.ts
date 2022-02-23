@@ -6,6 +6,7 @@ import {
 } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
 import { strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
 import { hasOwnProperty, _getObjProto } from "./HelperFuncs";
+import { getGlobalInst } from "./EnvUtils";
 
 const aiInstrumentHooks = "_aiHooks";
 
@@ -78,7 +79,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
         let orgArgs = arguments as any;
         let hooks = aiHook.h;
 
-        let funcArgs:IInstrumentCallDetails = {
+        let funcArgs: IInstrumentCallDetails = {
             name: aiHook.n,
             inst: funcThis,
             ctx: null,
@@ -87,6 +88,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 
         let hookCtx: any[] = [];
         let cbArgs = _createArgs([funcArgs], orgArgs);
+        funcArgs.evt = getGlobalInst("event");
 
         function _createArgs(target:any[], theArgs:any[]): any[] {
             _arrLoop((theArgs as any), (arg) => {
