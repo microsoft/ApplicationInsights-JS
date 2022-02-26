@@ -6,14 +6,17 @@ import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { GetExtCfgMergeType, IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { GetExtCfgMergeType, IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { safeGetLogger } from "./DiagnosticLogger";
-import { arrForEach, isArray, isFunction, isNullOrUndefined, isObject, objExtend, objForEachKey, objFreeze, objKeys, proxyFunctions } from "./HelperFuncs";
+import { arrForEach, isArray, isFunction, isNullOrUndefined, isObject, isUndefined, objExtend, objForEachKey, objFreeze, objKeys, proxyFunctions } from "./HelperFuncs";
 import { doPerf } from "./PerfManager";
-import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { dumpObj } from "./EnvUtils";
+import { strCore, strDisabled, strEmpty, strIsInitialized, strTeardown } from "./InternalConstants";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { _getPluginState } from "./TelemetryHelpers";
 
 const strTelemetryPluginChain = "TelemetryPluginChain";
 const strHasRunFlags = "_hasRun";
@@ -21,9 +24,22 @@ const strGetTelCtx = "_getTelCtx";
 
 let _chainId = 0;
 
+interface OnCompleteCallback {
+    func: Function;
+    self: any;      // This for the function
+    args: any[];    // Additional arguments for the function
+}
+
 interface IInternalTelemetryPluginChain extends ITelemetryPluginChain {
     _id: string;
     _setNext: (nextPlugin: IInternalTelemetryPluginChain) => void;
+}
+
+interface IInternalContext<T extends IBaseProcessingContext> {
+    _next: () => ITelemetryPluginChain,
+
+    // The public context that will be exposed
+    ctx: T
 }
 
 function _getNextProxyStart(proxy: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt: IPlugin): ITelemetryPluginChain {
@@ -39,65 +55,74 @@ function _getNextProxyStart(proxy: ITelemetryPluginChain, config: IConfiguration
     return createTelemetryProxyChain([startAt], config, core);
 }
 
-/**
- * Creates a new Telemetry Item context with the current config, core and plugin execution chain
- * @param plugins - The plugin instances that will be executed
- * @param config - The current config
- * @param core - The current core instance
- */
-export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryContext {
-    let _nextProxy: ITelemetryPluginChain = null; // Null == No next plugin
-    let _onComplete: () => void = null;
+function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IInternalContext<T> {
+    // We have a special case where we want to start execution from this specific plugin
+    // or we simply reuse the existing telemetry plugin chain (normal execution case)
+    let _nextProxy: ITelemetryPluginChain = startAt ? _getNextProxyStart(telemetryChain, config, core, startAt) : telemetryChain;
+    let _onComplete: OnCompleteCallback[] = [];
 
-    // There is no next element (null === last element) vs not defined (undefined)
-    // We have a proxy chain object
-    if (startAt) {
-        // We have a special case where we want to start execution from this specific plugin
-        _nextProxy = _getNextProxyStart(telemetryChain, config, core, startAt);
-    } else {
-        // Reuse the existing telemetry plugin chain (normal execution case)
-        _nextProxy = telemetryChain;
+    let context: IInternalContext<T> = {
+        _next: _moveNext,
+        ctx: {
+            core: () => { return core },
+            diagLog: () => {
+                return safeGetLogger(core, config);
+            },
+            getCfg: () => {
+                return config;
+            },
+            getExtCfg: _getExtCfg,
+            getConfig: _getConfig,
+            hasNext: () => {
+                return !!_nextProxy;
+            },
+            getNext: () => {
+                return _nextProxy;
+            },
+            setNext: (nextPlugin:ITelemetryPluginChain) => {
+                _nextProxy = nextPlugin;
+            },
+            iterate: _iterateChain,
+            onComplete: _addOnComplete
+        } as T
+    };
+
+    function _addOnComplete(onComplete: Function, that?: any, ...args: any[]) {
+        if (onComplete) {
+            _onComplete.push({
+                func: onComplete,
+                self: !isUndefined(that) ? that : context.ctx,
+                args: args
+            });
+        }
     }
 
-    let context: IProcessTelemetryContext = {
-        core: () => {
-            return core;
-        },
-        diagLog: () => {
-            return safeGetLogger(core, config);
-        },
-        getCfg: () => {
-            return config;
-        },
-        getExtCfg: _getExtCfg,
-        getConfig: _getConfig,
-        hasNext: () => {
-            return _nextProxy != null;
-        },
-        getNext: () => {
-            return _nextProxy;
-        },
-        setNext: (nextPlugin:ITelemetryPluginChain) => {
-            _nextProxy = nextPlugin;
-        },
-        processNext: (env: ITelemetryItem) => {
-            _processChain((nextPlugin) => {
-                // Run the next plugin which will call "processNext()"
-                nextPlugin.processTelemetry(env, context);
-            });
-        },
-        iterate: _iterateChain,
-        createNew: (plugins: IPlugin[] | ITelemetryPluginChain = null, startAt?: IPlugin) => {
-            if (isArray(plugins)) {
-                plugins = createTelemetryProxyChain(plugins, config, core, startAt);
-            }
+    function _moveNext() {
+        let nextProxy = _nextProxy;
 
-            return createProcessTelemetryContext(plugins || _nextProxy, config, core, startAt);
-        },
-        onComplete: (onComplete: () => void) => {
-            _onComplete = onComplete;
+        // Automatically move to the next plugin
+        _nextProxy = nextProxy ? nextProxy.getNext() : null;
+
+        if (!nextProxy) {
+            let onComplete = _onComplete;
+            if (onComplete && onComplete.length > 0) {
+                arrForEach(onComplete, (completeDetails) => {
+                    try {
+                        completeDetails.func.call(completeDetails.self, completeDetails.args);
+                    } catch (e) {
+                        core.logger.throwInternal(
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.PluginException,
+                        "Unexpected Exception during onComplete - " + dumpObj(e));
+                    }
+                });
+
+                _onComplete = [];
+            }
         }
-    };
+
+        return nextProxy;
+    }
 
     function _getExtCfg<T>(identifier: string, defaultValue: T|any = {}, mergeDefault: GetExtCfgMergeType = GetExtCfgMergeType.None) {
         let theConfig: T;
@@ -147,35 +172,85 @@ export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginCh
         return !isNullOrUndefined(theValue) ? theValue : defaultValue;
     }
 
-    function _processChain(cb: (nextPlugin: ITelemetryPluginChain) => void) {
-        let nextPlugin = _nextProxy;
-
-        if (nextPlugin) {
-            // Automatically move to the next plugin
-            _nextProxy = nextPlugin.getNext();
-            cb(nextPlugin);
-        } else {
-            if (_onComplete) {
-                _onComplete();
-                _onComplete = null;
-            }
-        }
-    }
-
     function _iterateChain<T extends ITelemetryPlugin = ITelemetryPlugin>(cb: (plugin: T) => void) {
-        while(_nextProxy) {
-            _processChain((nextPlugin: ITelemetryPluginChain) => {
-                let plugin = nextPlugin.getPlugin();
-                if (plugin) {
-                    // callback with the current on
-                    cb(plugin as T);
-                }
-            });
+        // Keep processing until we reach the end of the chain
+        let nextPlugin: ITelemetryPluginChain;
+        while(!!(nextPlugin = context._next())) {
+            let plugin = nextPlugin.getPlugin();
+            if (plugin) {
+                // callback with the current on
+                cb(plugin as T);
+            }
         }
     }
 
     return context;
 }
+
+/**
+ * Creates a new Telemetry Item context with the current config, core and plugin execution chain
+ * @param plugins - The plugin instances that will be executed
+ * @param config - The current config
+ * @param core - The current core instance
+ */
+export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryContext {
+
+    let internalContext: IInternalContext<IProcessTelemetryContext> = _createInternalContext<IProcessTelemetryContext>(telemetryChain, config, core, startAt);
+    let context = internalContext.ctx;
+
+    function _processNext(env: ITelemetryItem) {
+        let nextPlugin: ITelemetryPluginChain = internalContext._next();
+        // Run the next plugin which will call "processNext()"
+        nextPlugin && nextPlugin.processTelemetry(env, context);
+
+        return !nextPlugin;
+    }
+
+    function _createNew(plugins: IPlugin[] | ITelemetryPluginChain = null, startAt?: IPlugin) {
+        if (isArray(plugins)) {
+            plugins = createTelemetryProxyChain(plugins, config, core, startAt);
+        }
+
+        return createProcessTelemetryContext(plugins || context.getNext(), config, core, startAt);
+    }
+
+    context.processNext = _processNext;
+    context.createNew = _createNew;
+
+    return context;
+}
+
+/**
+ * Creates a new Telemetry Item context with the current config, core and plugin execution chain for handling the unloading of the chain
+ * @param plugins - The plugin instances that will be executed
+ * @param config - The current config
+ * @param core - The current core instance
+ */
+export function createProcessTelemetryUnloadContext(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryUnloadContext {
+    let internalContext: IInternalContext<IProcessTelemetryUnloadContext> = _createInternalContext<IProcessTelemetryUnloadContext>(telemetryChain, config, core, startAt);
+    let context = internalContext.ctx;
+
+    function _processNext(unloadState: ITelemetryUnloadState) {
+        let nextPlugin: ITelemetryPluginChain = internalContext._next();
+        nextPlugin && nextPlugin.unload(context, unloadState);
+
+        return !nextPlugin;
+    }
+
+    function _createNew(plugins: IPlugin[] | ITelemetryPluginChain = null, startAt?: IPlugin): IProcessTelemetryUnloadContext {
+        if (isArray(plugins)) {
+            plugins = createTelemetryProxyChain(plugins, config, core, startAt);
+        }
+
+        return createProcessTelemetryUnloadContext(plugins || context.getNext(), config, core, startAt);
+    }
+
+    context.processNext = _processNext;
+    context.createNew = _createNew
+
+    return context;
+}
+
 
 /**
  * Creates an execution chain from the array of plugins
@@ -250,34 +325,38 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
             return nextProxy;
         },
         processTelemetry: _processTelemetry,
+        unload: _unloadPlugin,
         _id: chainId,
         _setNext: (nextPlugin: IInternalTelemetryPluginChain) => {
             nextProxy = nextPlugin;
         }
     };
 
-    function _processChain(
-                itemCtx: IProcessTelemetryContext,
-                processPluginFn: (itemCtx: IProcessTelemetryContext) => boolean,
-                processProxyFn: (itemCtx: IProcessTelemetryContext) => void,
+    function _getTelCtx() {
+        let itemCtx: IProcessTelemetryContext;
+
+        // Looks like a plugin didn't pass the (optional) context, so create a new one
+        if (plugin && isFunction(plugin[strGetTelCtx])) {
+            // This plugin extends from the BaseTelemetryPlugin so lets use it
+            itemCtx = plugin[strGetTelCtx]();
+        }
+
+        if (!itemCtx) {
+            // Create a temporary one
+            itemCtx = createProcessTelemetryContext(proxyChain, config, core);
+        }
+
+        return itemCtx;
+    }
+
+    function _processChain<T extends IBaseProcessingContext>(
+                itemCtx: T,
+                processPluginFn: (itemCtx: T) => boolean,
                 name: string,
                 details: () => any,
                 isAsync: boolean) {
 
-        // Make sure we have a context
-        if (!itemCtx) {
-            // Looks like a plugin didn't pass the (optional) context, so create a new one
-            if (plugin && isFunction(plugin[strGetTelCtx])) {
-                // This plugin extends from the BaseTelemetryPlugin so lets use it
-                itemCtx = plugin[strGetTelCtx]();
-            }
-
-            if (!itemCtx) {
-                // Create a temporary one
-                itemCtx =  createProcessTelemetryContext(proxyChain, config, core);
-            }
-        }
-
+        let hasRun = false;
         let identifier = plugin ? plugin.identifier : strTelemetryPluginChain;
         let hasRunContext = itemCtx[strHasRunFlags];
         if (!hasRunContext) {
@@ -285,18 +364,17 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
             hasRunContext = itemCtx[strHasRunFlags] = {};
         }
 
-        doPerf(itemCtx.core(), () => identifier + ":" + name, () => {
-            // Mark this component as having run
-            hasRunContext[chainId] = true;
-            let hasRun = false;
+        // Ensure that we keep the context in sync
+        itemCtx.setNext(nextProxy);
 
-            // Ensure that we keep the context in sync
-            itemCtx.setNext(nextProxy);
+        if (plugin) {
+            doPerf(itemCtx[strCore](), () => identifier + ":" + name, () => {
+                // Mark this component as having run
+                hasRunContext[chainId] = true;
 
-            if (plugin) {
                 try {
                     // Set a flag on the next plugin so we know if it was attempted to be executed
-                    let nextId = nextProxy ? nextProxy._id : "";
+                    let nextId = nextProxy ? nextProxy._id : strEmpty;
                     if (nextId) {
                         hasRunContext[nextId] = false;
                     }
@@ -314,24 +392,27 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
                         // Either we have no next plugin or the current one did not attempt to call the next plugin
                         // Which means the current one is the root of the failure so log/report this failure
                         itemCtx.diagLog().throwInternal(
-                            LoggingSeverity.CRITICAL,
-                            _InternalMessageId.PluginException,
+                            eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.PluginException,
                             "Plugin [" + plugin.identifier + "] failed during " + name + " - " + dumpObj(error) + ", run flags: " + dumpObj(hasRunContext));
                     }
                 }
-            }
-            
-            if (nextProxy && !hasRun) {
-                // The underlying plugin is not defined, but we still want the next plugin to be executed.
-                // So rather than leave the pipeline dead in the water we call the next plugin
-                processProxyFn(itemCtx);
-            }
-        }, details, isAsync);
+            }, details, isAsync);
+        }
+
+        return hasRun;
     }
 
     function _processTelemetry(env: ITelemetryItem, itemCtx: IProcessTelemetryContext) {
-        _processChain(itemCtx, (itemCtx: IProcessTelemetryContext) => {
-            if (!hasProcessTelemetry) {
+        itemCtx = itemCtx || _getTelCtx();
+
+        function _callProcessTelemetry(itemCtx: IProcessTelemetryContext) {
+            if (!plugin || !hasProcessTelemetry) {
+                return false;
+            }
+
+            let pluginState = _getPluginState(plugin);
+            if (pluginState[strTeardown] || pluginState[strDisabled]) {
                 return false;
             }
 
@@ -345,14 +426,46 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
 
             plugin.processTelemetry(env, itemCtx);
 
+            // Process Telemetry is expected to call itemCtx.processNext() or nextPlugin.processTelemetry()
             return true;
-        },
-        (itemCtx: IProcessTelemetryContext) => {
-            // The underlying plugin is either not defined or does not have a processTelemetry implementation
+        }
+
+        if (!_processChain(itemCtx, _callProcessTelemetry, "processTelemetry", () => ({ item: env }), !((env as any).sync))) {
+            // The underlying plugin is either not defined, not enabled or does not have a processTelemetry implementation
             // so we still want the next plugin to be executed.
-            nextProxy.processTelemetry(env, itemCtx);
-        },
-        "processTelemetry", () => ({ item: env }), !((env as any).sync));
+            itemCtx.processNext(env);
+        }
+    }
+
+    function _unloadPlugin(unloadCtx: IProcessTelemetryUnloadContext, unloadState: ITelemetryUnloadState) {
+
+        function _callTeardown() {
+            // Setting default of hasRun as false so the proxyProcessFn() is called as teardown() doesn't have to exist or call unloadNext().
+            let hasRun = false;
+            if (plugin) {
+                let pluginState = _getPluginState(plugin);
+                let pluginCore = plugin[strCore] || pluginState.core;
+                // Only teardown the plugin if it was initialized by the current core (i.e. It's not a shared plugin)
+                if (plugin && (!pluginCore || pluginCore === unloadCtx[strCore]()) && !pluginState[strTeardown]) {
+                    // Handle plugins that don't extend from the BaseTelemetryPlugin
+                    pluginState[strCore] = null;
+                    pluginState[strTeardown] = true;
+                    pluginState[strIsInitialized] = false;
+    
+                    if (plugin[strTeardown] && plugin[strTeardown](unloadCtx, unloadState) === true) {
+                        // plugin told us that it was going to (or has) call unloadCtx.processNext()
+                        hasRun = true;
+                    }
+                }
+            }
+
+            return hasRun;
+        }
+
+        if (!_processChain(unloadCtx, _callTeardown, "unload", () => {}, unloadState.isAsync)) {
+            // Only called if we hasRun was not true
+            unloadCtx.processNext(unloadState);
+        }
     }
 
     return objFreeze(proxyChain);
@@ -404,8 +517,9 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
      * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
+     * @returns boolean (true) if there is no more plugins to process otherwise false or undefined (void)
      */
-    public processNext: (env: ITelemetryItem) => void;
+    public processNext: (env: ITelemetryItem) => boolean | void;
 
     /**
      * Synchronously iterate over the context chain running the callback for each plugin, once
@@ -414,7 +528,6 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
      */
     public iterate: <T extends ITelemetryPlugin = ITelemetryPlugin>(callback: (plugin: T) => void) => void;
  
-    /**
     /**
      * Create a new context using the core and config from the current instance
      * @param plugins - The execution order to process the plugins, if null or not supplied

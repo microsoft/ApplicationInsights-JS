@@ -9,12 +9,15 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { createProcessTelemetryContext } from "./ProcessTelemetryContext";
-import { isArray, isFunction, isNullOrUndefined, setValue } from "./HelperFuncs";
+import { createProcessTelemetryContext, createProcessTelemetryUnloadContext } from "./ProcessTelemetryContext";
+import { arrForEach, isArray, isFunction, isNullOrUndefined, setValue } from "./HelperFuncs";
 import { strExtensionConfig } from "./Constants";
 import { IInstrumentHook } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
+import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
+import { strDoTeardown, strIsInitialized, strSetNextPlugin } from "./InternalConstants";
 
 let strGetPlugin = "getPlugin";
 
@@ -73,6 +76,16 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
      */
     protected setInitialized: (isInitialized: boolean) => void;
 
+    /**
+     * Teardown / Unload hook to allow implementations to perform some additional unload operations before the BaseTelemetryPlugin
+     * finishes it's removal.
+     * @param unloadCtx - This is the context that should be used during unloading.
+     * @param unloadState - The details / state of the unload process, it holds details like whether it should be unloaded synchronously or asynchronously and the reason for the unload.
+     * @param asyncCallback - An optional callback that the plugin must call if it returns true to inform the caller that it has completed any async unload/teardown operations.
+     * @returns boolean - true if the plugin has or will call asyncCallback, this allows the plugin to perform any asynchronous operations.
+     */
+    protected _doTeardown?: (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState, asyncCallback?: () => void) => void | boolean;
+
     constructor() {
         let _self = this;           // Setting _self here as it's used outside of the dynamicProto as well
 
@@ -90,6 +103,51 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                 _setDefaults(config, core, pluginChain);
                 _isinitialized = true;
             }
+
+            _self.teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
+                // If this plugin has already been torn down (not operational) or is not initialized (core is not set)
+                // or the core being used for unload was not the same core used for initialization.
+                if (!_self.core || (unloadCtx && _self.core !== unloadCtx.core())) {
+                    // Do Nothing
+                    return;
+                }
+
+                let result: void | boolean;
+                let unloadDone = false;
+                let theUnloadCtx = unloadCtx || createProcessTelemetryUnloadContext(null, {}, _self.core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
+                let theUnloadState: ITelemetryUnloadState = unloadState || {
+                    reason: TelemetryUnloadReason.ManualTeardown,
+                    isAsync: false
+                };
+
+
+                function _unloadCallback() {
+                    if (!unloadDone) {
+                        unloadDone = true;
+
+                        // Remove all instrumentation hooks
+                        arrForEach(_hooks, (fn) => {
+                            fn.rm();
+                        });
+                        _hooks = [];
+
+                        if (result === true) {
+                            theUnloadCtx.processNext(theUnloadState);
+                        }
+
+                        _initDefaults();
+                    }
+                }
+
+                if (!_self[strDoTeardown] || _self[strDoTeardown](theUnloadCtx, theUnloadState, _unloadCallback) !== true) {
+                    _unloadCallback();
+                } else {
+                    // Tell the caller that we will be calling processNext()
+                    result = true;
+                }
+
+                return result;
+            };
         
             _self._addHook = (hooks: IInstrumentHook | IInstrumentHook[]) => {
                 if (hooks) {
@@ -108,7 +166,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             return _getTelCtx(itemCtx).diagLog();
         }
 
-        _self.isInitialized = () => {
+        _self[strIsInitialized] = () => {
             return _isinitialized;
         }
 
@@ -121,7 +179,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
         // should use processNext() function. If you require access to the plugin use the
         // IProcessTelemetryContext.getNext().getPlugin() while in the pipeline, Note getNext() may return null.
 
-        _self.setNextPlugin = (next: ITelemetryPlugin | ITelemetryPluginChain) => {
+        _self[strSetNextPlugin] = (next: ITelemetryPlugin | ITelemetryPluginChain) => {
             _nextPlugin = next;
         };
 
@@ -187,6 +245,19 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
 
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Tear down the plugin and remove any hooked value, the plugin should be removed so that it is no longer initialized and
+     * therefore could be re-initialized after being torn down. The plugin should ensure that once this has been called any further
+     * processTelemetry calls are ignored and it just calls the processNext() with the provided context.
+     * @param unloadCtx - This is the context that should be used during unloading.
+     * @param unloadState - The details / state of the unload process, it holds details like whether it should be unloaded synchronously or asynchronously and the reason for the unload.
+     * @returns boolean - true if the plugin has or will call processNext(), this for backward compatibility as previously teardown was synchronous and returned nothing.
+     */
+     public teardown(unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState): void | boolean {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return false;
     }
 
     public abstract processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext): void;

@@ -5,6 +5,7 @@
 import {
     getGlobal, strShimUndefined, strShimObject, strShimPrototype
 } from "@microsoft/applicationinsights-shims";
+import { strEmpty } from "./InternalConstants";
 import { isString, isUndefined, strContains } from "./HelperFuncs";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
@@ -296,7 +297,7 @@ export function isIE() {
     if (nav && (nav.userAgent !== _navUserAgentCheck || _isTrident === null)) {
         // Added to support test mocking of the user agent
         _navUserAgentCheck = nav.userAgent;
-        let userAgent = (_navUserAgentCheck || "").toLowerCase();
+        let userAgent = (_navUserAgentCheck || strEmpty).toLowerCase();
         _isTrident = (strContains(userAgent, strMsie) || strContains(userAgent, strTrident));
     }
 
@@ -309,10 +310,10 @@ export function isIE() {
 export function getIEVersion(userAgentStr: string = null): number {
     if (!userAgentStr) {
         let navigator = getNavigator() || ({} as Navigator);
-        userAgentStr = navigator ? (navigator.userAgent || "").toLowerCase() : "";
+        userAgentStr = navigator ? (navigator.userAgent || strEmpty).toLowerCase() : strEmpty;
     }
 
-    var ua = (userAgentStr || "").toLowerCase();
+    var ua = (userAgentStr || strEmpty).toLowerCase();
     // Also check for documentMode in case X-UA-Compatible meta tag was included in HTML.
     if (strContains(ua, strMsie)) {
         let doc = getDocument() || {} as Document;
@@ -332,7 +333,7 @@ export function getIEVersion(userAgentStr: string = null): number {
  */
 export function dumpObj(object: any): string {
     const objectTypeDump: string = Object[strShimPrototype].toString.call(object);
-    let propertyValueDump: string = "";
+    let propertyValueDump: string = strEmpty;
     if (objectTypeDump === "[object Error]") {
         propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
     } else if (hasJSON()) {
@@ -345,10 +346,10 @@ export function dumpObj(object: any): string {
 export function isSafari(userAgentStr ?: string) {
     if (!userAgentStr || !isString(userAgentStr)) {
         let navigator = getNavigator() || ({} as Navigator);
-        userAgentStr = navigator ? (navigator.userAgent || "").toLowerCase() : "";
+        userAgentStr = navigator ? (navigator.userAgent || strEmpty).toLowerCase() : strEmpty;
     }
 
-    var ua = (userAgentStr || "").toLowerCase();
+    var ua = (userAgentStr || strEmpty).toLowerCase();
     return (ua.indexOf("safari") >= 0);
 }
 

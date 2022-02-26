@@ -4,13 +4,13 @@
 import {
     RequestHeaders, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
-    IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint
+    IConfig, ITelemetryContext, PropertiesPluginIdentifier, eDistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint
 } from "@microsoft/applicationinsights-common";
 import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj, ICustomProperties, isXhrSupported, attachEvent
+    IInstrumentHooksCallbacks, objForEachKey, generateW3CId, getIEVersion, dumpObj, ICustomProperties, isXhrSupported, eventOn, mergeEvtNamespace, createUniqueNamespace
 } from "@microsoft/applicationinsights-core-js";
 import { ajaxRecord, IAjaxRecordResponse } from "./ajaxRecord";
 import { Traceparent } from "./TraceParent";
@@ -158,7 +158,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             disableFetchTracking: true,
             excludeRequestFromAutoTrackingPatterns: undefined,
             disableCorrelationHeaders: false,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            distributedTracingMode: eDistributedTracingModes.AI_AND_W3C,
             correlationHeaderExcludedDomains: [
                 "*.blob.core.windows.net",
                 "*.blob.core.chinacloudapi.cn",
@@ -214,20 +214,24 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _enableAjaxPerfTracking:boolean = false;
         let _maxAjaxCallsPerView:number = 0;
         let _enableResponseHeaderTracking:boolean = false;
-        let _hooks:IInstrumentHook[] = [];
         let _disabledUrls:any = {};
         let _excludeRequestFromAutoTrackingPatterns: string[] | RegExp[];
         let _addRequestContext: (requestContext?: IRequestContext) => ICustomProperties;
+        let _evtNamespace: string | string[];
 
-        dynamicProto(AjaxMonitor, this, (_self, base) => {
+        dynamicProto(AjaxMonitor, this, (_self, _base) => {
+            let _addHook = _base._addHook;
+
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
                 if (!_self.isInitialized()) {
-                    base.initialize(config, core, extensions, pluginChain);
+                    _base.initialize(config, core, extensions, pluginChain);
                     let ctx = _self._getTelCtx();
                     const defaultConfig = AjaxMonitor.getDefaultConfig();
                     objForEachKey(defaultConfig, (field, value) => {
                         _config[field] = ctx.getConfig(AjaxMonitor.identifier, field, value);
                     });
+
+                    _evtNamespace = mergeEvtNamespace(createUniqueNamespace("ajax"), core && core.evtNamespace && core.evtNamespace());
 
                     let distributedTracingMode = _config.distributedTracingMode;
                     _enableRequestHeaderTracking = _config.enableRequestHeaderTracking;
@@ -238,8 +242,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _excludeRequestFromAutoTrackingPatterns = _config.excludeRequestFromAutoTrackingPatterns;
                     _addRequestContext = _config.addRequestContext;
 
-                    _isUsingAIHeaders = distributedTracingMode === DistributedTracingModes.AI || distributedTracingMode === DistributedTracingModes.AI_AND_W3C;
-                    _isUsingW3CHeaders = distributedTracingMode === DistributedTracingModes.AI_AND_W3C || distributedTracingMode === DistributedTracingModes.W3C;
+                    _isUsingAIHeaders = distributedTracingMode === eDistributedTracingModes.AI || distributedTracingMode === eDistributedTracingModes.AI_AND_W3C;
+                    _isUsingW3CHeaders = distributedTracingMode === eDistributedTracingModes.AI_AND_W3C || distributedTracingMode === eDistributedTracingModes.W3C;
                     if (_enableAjaxPerfTracking) {
                         let iKey = config.instrumentationKey || "unkwn";
                         if (iKey.length > 5) {
@@ -272,16 +276,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 }
             };
 
-            _self.teardown = () => {
-                // Remove all instrumentation hooks
-                arrForEach(_hooks, (fn) => {
-                    fn.rm();
-                });
-                _hooks = [];
+            _self._doTeardown = () => {
                 _fetchInitialized = false;
                 _xhrInitialized = false;
-                _self.setInitialized(false);
-            }
+            };
 
             _self.trackDependencyData = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }) => {
                 _self[strTrackDependencyDataInternal](dependency, properties);
@@ -359,8 +357,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     // Hack since expected format in w3c mode is |abc.def.
                     // Non-w3c format is |abc.def
                     // @todo Remove if better solution is available, e.g. handle in portal
-                    if ((_config.distributedTracingMode === DistributedTracingModes.W3C
-                        || _config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C)
+                    if ((_config.distributedTracingMode === eDistributedTracingModes.W3C
+                        || _config.distributedTracingMode === eDistributedTracingModes.AI_AND_W3C)
                         && typeof dependency.id === "string" && dependency.id[dependency.id.length - 1] !== "."
                     ) {
                         dependency.id += ".";
@@ -411,7 +409,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let global = getGlobal();
                 let isPolyfill = (fetch as any).polyfill;
                 if (_config.disableFetchTracking === false) {
-                    _hooks.push(InstrumentFunc(global, strFetch, {
+                    _addHook(InstrumentFunc(global, strFetch, {
                         // Add request hook
                         req: (callDetails: IInstrumentCallDetails, input, init) => {
                             let fetchData: ajaxRecord;
@@ -473,7 +471,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     // Note: Polyfill implementations that don't support the "poyyfill" tag are not supported
                     // the workaround is to add a polyfill property to your fetch implementation before initializing
                     // App Insights
-                    _hooks.push(InstrumentFunc(global, strFetch, {
+                    _addHook(InstrumentFunc(global, strFetch, {
                         req: (callDetails: IInstrumentCallDetails, input, init) => {
                             // Just call so that we record any disabled URL
                             _isDisabledRequest(null, input, init);
@@ -489,7 +487,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _hookProto(target: any, funcName: string, callbacks: IInstrumentHooksCallbacks) {
-                _hooks.push(InstrumentProto(target, funcName, callbacks));
+                _addHook(InstrumentProto(target, funcName, callbacks));
             }
 
             function _instrumentXhr():void {
@@ -653,7 +651,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
-                xhr[strAjaxData].xhrMonitoringState.stateChangeAttached = attachEvent(xhr, "readystatechange", () => {
+                xhr[strAjaxData].xhrMonitoringState.stateChangeAttached = eventOn(xhr, "readystatechange", () => {
                     try {
                         if (xhr && xhr.readyState === 4 && _isMonitoredXhrInstance(xhr)) {
                             _onAjaxComplete(xhr);
@@ -672,7 +670,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 });
                         }
                     }
-                });
+                }, _evtNamespace);
             }
 
             function _getResponseText(xhr: XMLHttpRequestInstrumented) {
@@ -1004,10 +1002,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
     }
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public teardown():void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

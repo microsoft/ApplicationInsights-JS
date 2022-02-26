@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { getCrypto, getMsCrypto, isIE }  from "./EnvUtils";
 import { dateNow } from "./HelperFuncs";
+import { strEmpty } from "./InternalConstants";
 
 const UInt32Mask = 0x100000000;
 const MaxUInt32 = 0xffffffff;
@@ -127,7 +128,7 @@ export function mwcRandom32(signed?: boolean) {
     // Start with an initial random number, consuming the value in reverse byte order
     let number = random32() >>> 0;  // Make sure it's a +ve number
     let chars = 0;
-    let result = "";
+    let result = strEmpty;
     while (result.length < maxLength) {
         chars ++;
         result += base64chars.charAt(number & 0x3F);

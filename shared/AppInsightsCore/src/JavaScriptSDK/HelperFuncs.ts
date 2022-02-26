@@ -4,15 +4,11 @@ import {
     strShimUndefined, strShimObject, strShimFunction, throwTypeError,
     ObjClass, ObjProto, ObjAssign, ObjHasOwnProperty, ObjDefineProperty, strShimPrototype
 } from "@microsoft/applicationinsights-shims";
+import { strEmpty } from "./InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 
 // Added to help with minfication
-const strOnPrefix = "on";
-const strAttachEvent = "attachEvent";
-const strAddEventHelper = "addEventListener";
-const strDetachEvent = "detachEvent";
-const strRemoveEventListener = "removeEventListener";
 const strToISOString = "toISOString";
 const cStrEndsWith = "endsWith";
 const cStrStartsWith = "startsWith";
@@ -123,54 +119,8 @@ export function isFunction(value: any): value is Function {
     return !!(value && typeof value === strShimFunction);
 }
 
-/**
- * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
- * @param obj Object to add the event too.
- * @param eventNameWithoutOn String that specifies any of the standard DHTML Events without "on" prefix
- * @param handlerRef Pointer that specifies the function to call when event fires
- * @param useCapture [Optional] Defaults to false
- * @returns True if the function was bound successfully to the event, otherwise false
- */
-export function attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
-    let result = false;
-    if (!isNullOrUndefined(obj)) {
-        try {
-            if (!isNullOrUndefined(obj[strAddEventHelper])) {
-                // all browsers except IE before version 9
-                obj[strAddEventHelper](eventNameWithoutOn, handlerRef, useCapture);
-                result = true;
-            } else if (!isNullOrUndefined(obj[strAttachEvent])) {
-                // IE before version 9
-                obj[strAttachEvent](strOnPrefix + eventNameWithoutOn, handlerRef);
-                result = true;
-            }
-        } catch (e) {
-            // Just Ignore any error so that we don't break any execution path
-        }
-    }
-
-    return result;
-}
-
-/**
- * Removes an event handler for the specified event
- * @param Object to remove the event from
- * @param eventNameWithoutOn {string} - The name of the event
- * @param handlerRef {any} - The callback function that needs to be executed for the given event
- * @param useCapture [Optional] Defaults to false
- */
-export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
-    if (!isNullOrUndefined(obj)) {
-        try {
-            if (!isNullOrUndefined(obj[strRemoveEventListener])) {
-                obj[strRemoveEventListener](eventNameWithoutOn, handlerRef, useCapture);
-            } else if (!isNullOrUndefined(obj[strDetachEvent])) {
-                obj[strDetachEvent](strOnPrefix + eventNameWithoutOn, handlerRef);
-            }
-        } catch (e) {
-            // Just Ignore any error so that we don't break any execution path
-        }
-    }
+export function isPromiseLike<T>(value: any): value is PromiseLike<T> {
+    return value && isFunction(value.then);
 }
 
 /**
@@ -665,6 +615,18 @@ function _doNothing<T>(value: T): T {
     return value;
 }
 
+export function deepFreeze<T>(obj: T): T {
+    if (_objFreeze) {
+        objForEachKey(obj, (name, value) => {
+            if (isArray(value) || isObject(value)) {
+                _objFreeze(value);
+            }
+        });
+    }
+
+    return objFreeze(obj);
+}
+
 export const objFreeze: <T>(value: T) => T = _objFreeze || _doNothing;
 export const objSeal: <T>(value: T) => T = _objSeal || _doNothing;
 
@@ -686,7 +648,7 @@ export function getExceptionName(object: any): string {
         return object.name;
     }
 
-    return "";
+    return strEmpty;
 }
 
 /**
@@ -861,6 +823,25 @@ export function createClassFromInterface<T>(defaults?: T) {
             }
         }
     } as new () => T;
+}
+
+/**
+ * Create an enum style object which has both the key => value and value => key mappings
+ * @param values - The values to populate on the new object
+ * @returns
+ */
+export function createEnumStyle<T>(values: T) {
+    let enumClass: any = {};
+    objForEachKey(values, (field, value) => {
+        enumClass[field] = value;
+        // Add Reverse lookup
+        if (!isUndefined(enumClass[value])) {
+            throwError("Value: [" + value + "] already exists for " + field);
+        }
+        enumClass[value] = field;
+    });
+
+    return objFreeze(enumClass as T);
 }
 
 /**

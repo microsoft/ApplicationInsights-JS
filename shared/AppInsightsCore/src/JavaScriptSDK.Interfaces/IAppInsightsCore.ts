@@ -14,6 +14,21 @@ import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./IT
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
+
+    /**
+     * Identifies whether the plugin is enabled and can process events. This is slightly different from isInitialized as the plugin may be initialized but disabled
+     * via the setEnabled() or it may be a shared plugin which has had it's teardown function called from another instance..
+     * @returns boolean = true if the plugin is in a state where it is operational.
+     */
+    isEnabled: () => boolean;
+
+    /**
+     * You can optionally enable / disable a plugin from processing events.
+     * Setting enabled to true will not necessarily cause the `isEnabled()` to also return true
+     * as the plugin must also have been successfully initialized and not had it's `teardown` method called
+     * (unless it's also been re-initialized)
+     */
+    setEnabled: (isEnabled: boolean) => void;
 }
 
 export interface IAppInsightsCore extends IPerfManagerProvider {
@@ -96,4 +111,9 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @param pluginIdentifier
      */
     getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
+  
+    /**
+     * Returns the unique event namespace that should be used when registering events
+     */
+    evtNamespace(): string;
 }
