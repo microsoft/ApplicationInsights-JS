@@ -156,10 +156,15 @@ appInsights.trackPageView();
 
 #### (Alternative Setup Method) Include AI JS SDK script and initialize statically
 
-Use this approach if you would like to host AI JS SDK script on your endpoint or bundle it with other scripts. After JS script has loaded, include the following snippet to initialize Application Insights:
+Use this approach if you would like to host AI JS SDK script on your endpoint or bundle it with other scripts. 
+```html
+<!-- use your own path to JS SDK script -->
+<script type="text/javascript" src="/pathToAIJSSDK.js"></script>
+```
+After JS script has loaded, include the following snippet to initialize Application Insights:
+
 ```html
 <!-- the snippet below assumes that JS SDK script has already loaded -->
-<script type="text/javascript" src="/pathToAIJSSDK.js"></script>
 <script type="text/javascript">
     var snippet = {
         config: {
