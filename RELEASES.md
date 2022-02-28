@@ -1,5 +1,30 @@
 # Releases
 
+## 2.7.4 (Feb 28th, 2022)
+
+- Updates React Plugin to v3.2.4 (with v2.7.4 as dependency)
+- Updates React Native Plugin to 2.4.4 (with v2.7.4 as dependency)
+- Updates Chrome Debug Extension to 0.2.4
+
+This release is primarily a performance improvement release where we will now use any built in (or provided polyfill) function
+over the internal polyfills for
+
+- String trim()
+- String endsWith()
+- String startsWith()
+- Additional Date toISOString()
+- Array isArray()
+- Array indexOf()
+- Array map()
+- Array reduce()
+- Object freeze()
+- Object seal()
+
+### Changelog
+
+- #1754 update react plugin readme
+- #1758 Additional Performance enhancements to use provided functions rather than internal polyfill's
+
 ## 2.7.3 (Jan 31st, 2022)
 
 - Updates the @microsoft/applicationinsights-shims module to 2.0.1
