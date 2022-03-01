@@ -2518,6 +2518,18 @@
         "@rushstack/node-core-library": "3.45.0"
       }
     },
+    "node_modules/@microsoft/api-extractor/node_modules/typescript": {
+      "version": "4.5.5",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.5.5.tgz",
+      "integrity": "sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA==",
+      "bin": {
+        "tsc": "bin/tsc",
+        "tsserver": "bin/tsserver"
+      },
+      "engines": {
+        "node": ">=4.2.0"
+      }
+    },
     "node_modules/@microsoft/dynamicproto-js": {
       "version": "1.1.4",
       "resolved": "https://registry.npmjs.org/@microsoft/dynamicproto-js/-/dynamicproto-js-1.1.4.tgz",
@@ -6296,9 +6308,9 @@
       }
     },
     "node_modules/dom-accessibility-api": {
-      "version": "0.5.12",
-      "resolved": "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.5.12.tgz",
-      "integrity": "sha512-gQ2mON6fLWZeM8ubjzL7RtMeHS/g8hb82j4MjHmcQECD7pevWsMlhqwp9BjIRrQvmyJMMyv/XiO1cXzeFlUw4g=="
+      "version": "0.5.13",
+      "resolved": "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.5.13.tgz",
+      "integrity": "sha512-R305kwb5CcMDIpSHUnLyIAp7SrSPBx6F0VfQFB3M75xVMHhXJJIdePYgbPPh1o57vCHNu5QztokWUPsLjWzFqw=="
     },
     "node_modules/domexception": {
       "version": "2.0.1",
@@ -6330,9 +6342,9 @@
       "integrity": "sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.73",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.73.tgz",
-      "integrity": "sha512-RlCffXkE/LliqfA5m29+dVDPB2r72y2D2egMMfIy3Le8ODrxjuZNVo4NIC2yPL01N4xb4nZQLwzi6Z5tGIGLnA=="
+      "version": "1.4.75",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.75.tgz",
+      "integrity": "sha512-LxgUNeu3BVU7sXaKjUDD9xivocQLxFtq6wgERrutdY/yIOps3ODOZExK1jg8DTEg4U8TUCb5MLGeWFOYuxjF3Q=="
     },
     "node_modules/emittery": {
       "version": "0.8.1",
@@ -15741,9 +15753,9 @@
       }
     },
     "node_modules/typescript": {
-      "version": "4.5.5",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.5.5.tgz",
-      "integrity": "sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA==",
+      "version": "4.6.2",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.6.2.tgz",
+      "integrity": "sha512-HM/hFigTBHZhLXshn9sN37H085+hQGeJHJ/X7LpBWLID/fbc2acUMfU+lGD98X81sKP+pFa9f0DZmCwB9GnbAg==",
       "bin": {
         "tsc": "bin/tsc",
         "tsserver": "bin/tsserver"
@@ -18087,6 +18099,13 @@
         "semver": "~7.3.0",
         "source-map": "~0.6.1",
         "typescript": "~4.5.2"
+      },
+      "dependencies": {
+        "typescript": {
+          "version": "4.5.5",
+          "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.5.5.tgz",
+          "integrity": "sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA=="
+        }
       }
     },
     "@microsoft/api-extractor-model": {
@@ -21147,9 +21166,9 @@
       }
     },
     "dom-accessibility-api": {
-      "version": "0.5.12",
-      "resolved": "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.5.12.tgz",
-      "integrity": "sha512-gQ2mON6fLWZeM8ubjzL7RtMeHS/g8hb82j4MjHmcQECD7pevWsMlhqwp9BjIRrQvmyJMMyv/XiO1cXzeFlUw4g=="
+      "version": "0.5.13",
+      "resolved": "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.5.13.tgz",
+      "integrity": "sha512-R305kwb5CcMDIpSHUnLyIAp7SrSPBx6F0VfQFB3M75xVMHhXJJIdePYgbPPh1o57vCHNu5QztokWUPsLjWzFqw=="
     },
     "domexception": {
       "version": "2.0.1",
@@ -21177,9 +21196,9 @@
       "integrity": "sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0="
     },
     "electron-to-chromium": {
-      "version": "1.4.73",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.73.tgz",
-      "integrity": "sha512-RlCffXkE/LliqfA5m29+dVDPB2r72y2D2egMMfIy3Le8ODrxjuZNVo4NIC2yPL01N4xb4nZQLwzi6Z5tGIGLnA=="
+      "version": "1.4.75",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.75.tgz",
+      "integrity": "sha512-LxgUNeu3BVU7sXaKjUDD9xivocQLxFtq6wgERrutdY/yIOps3ODOZExK1jg8DTEg4U8TUCb5MLGeWFOYuxjF3Q=="
     },
     "emittery": {
       "version": "0.8.1",
@@ -28425,9 +28444,9 @@
       }
     },
     "typescript": {
-      "version": "4.5.5",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.5.5.tgz",
-      "integrity": "sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA=="
+      "version": "4.6.2",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.6.2.tgz",
+      "integrity": "sha512-HM/hFigTBHZhLXshn9sN37H085+hQGeJHJ/X7LpBWLID/fbc2acUMfU+lGD98X81sKP+pFa9f0DZmCwB9GnbAg=="
     },
     "uglify-es": {
       "version": "3.3.9",

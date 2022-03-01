@@ -397,31 +397,6 @@ export function isPlainObject(value: any): boolean {
 }
 
 /**
- * Checks if the type of the value is a normal plain object (not a null or data)
- * @param value
- */
-export function isPlainObject(value: any): boolean {
-    let result: boolean = false;
-
-    if (value && typeof value === "object") {
-        let proto = _getObjProto(value);
-        if (!proto) {
-            // No prototype found so this is a plain Object eg. 'Object.create(null)'
-            result = true;
-        } else {
-            // Objects that have a prototype are plain only if they were created using the Object global (native) function
-            if (proto[strConstructor] && ObjHasOwnProperty.call(proto, strConstructor)) {
-                proto = proto[strConstructor];
-            }
-
-            result = typeof proto === strShimFunction && _fnToString.call(proto) === _objFunctionString;
-        }
-    }
-
-    return result;
-}
-
-/**
  * Convert a date to I.S.O. format in IE8
  */
 export function toISOString(date: Date) {
