@@ -1,5 +1,7 @@
 /// <reference path="../../External/qunit.d.ts" />
 
+import { expectedToString, stateToString } from "./DebugHelpers";
+
 /**
  * Wrapper around QUnit asserts. This class has two purposes:
  * - Make Assertion methods easy to discover.
@@ -19,7 +21,7 @@ export class Assert {
     * @param message A short description of the assertion
     */
     public static deepEqual(expected: any, actual: any, message?: string): any {
-        return QUnit.assert.deepEqual(actual, expected, message);
+        return QUnit.assert.deepEqual(actual, expected, message || expectedToString(expected));
     }
 
    /**
@@ -35,7 +37,7 @@ export class Assert {
     * @param message A short description of the assertion
     */
     public static equal(expected: any, actual: any, message?: string): any {
-        return QUnit.assert.equal(actual, expected, message);
+        return QUnit.assert.equal(actual, expected, message || expectedToString(expected));
     }
 
    /**
@@ -51,7 +53,7 @@ export class Assert {
     * @param message A short description of the assertion
     */
     public static notDeepEqual(expected: any, actual: any, message?: string): any {
-        return QUnit.assert.notDeepEqual(actual, expected, message);
+        return QUnit.assert.notDeepEqual(actual, expected, message || expectedToString(expected));
     }
 
    /**
@@ -67,15 +69,15 @@ export class Assert {
     * @param message A short description of the assertion
     */
     public static notEqual(expected: any, actual: any, message?: string): any {
-        return QUnit.assert.notEqual(actual, expected, message);
+        return QUnit.assert.notEqual(actual, expected, message || expectedToString(expected));
     }
 
     public static notPropEqual(expected: any, actual: any, message?: string): any {
-        return QUnit.assert.notPropEqual(actual, expected, message);
+        return QUnit.assert.notPropEqual(actual, expected, message || expectedToString(expected));
     }
 
     public static propEqual(expected: any, actual: any, message?: string): any {
-        return QUnit.assert.propEqual(actual, expected, message);
+        return QUnit.assert.propEqual(actual, expected, message || expectedToString(expected));
     }
 
    /**
@@ -91,7 +93,7 @@ export class Assert {
     * @param message A short description of the assertion
     */
     public static notStrictEqual(expected: any, actual: any, message?: string): any {
-        return QUnit.assert.notStrictEqual(actual, expected, message);
+        return QUnit.assert.notStrictEqual(actual, expected, message || expectedToString(expected));
     }
 
    /**
@@ -106,7 +108,7 @@ export class Assert {
     * @param message A short description of the assertion
     */
     public static ok(state: any, message?: string): any {
-        return QUnit.assert.ok(state, message);
+        return QUnit.assert.ok(state, message || stateToString(state));
     }
 
    /**
@@ -120,7 +122,7 @@ export class Assert {
     * @param message A short description of the assertion
     */
     public static strictEqual(expected: any, actual: any, message?: string): any {
-        return QUnit.assert.strictEqual(actual, expected, message);
+        return QUnit.assert.strictEqual(actual, expected, message || expectedToString(expected));
     }
 
    /**
@@ -142,6 +144,6 @@ export class Assert {
     public static throws(block: () => any, message?: string): any;
 
     public static throws(block: () => any, expected?: any, message?: string): any {
-        return QUnit.assert.throws(block, expected, message);
+        return QUnit.assert.throws(block, expected, message || expectedToString(expected));
     }
 }

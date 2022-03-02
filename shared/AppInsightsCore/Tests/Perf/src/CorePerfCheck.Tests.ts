@@ -1,8 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { ITestContext, StepResult } from "@microsoft/ai-test-framework/dist-esm/src/TestCase";
-import { _InternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { isObject, objForEachKey, objKeys, optimizeObject, setValue } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { _InternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
+import { isObject, isPlainObject, isString, objForEachKey, objKeys, optimizeObject, setValue } from "../../../src/JavaScriptSDK/HelperFuncs";
 
 interface PerfMeasurements {
     duration: number;
@@ -28,6 +27,22 @@ export class CorePerfCheckTests extends AITestClass {
     public registerTests() {
 
         this.testCase({
+            name: "PerfChecks: isString",
+            test: () => {
+                let testObject = "Value";
+                let iterations = 500000;
+                let checks = 0;
+                let duration = this._runPerfTest("isString", () => {
+                    if (isString(testObject)) {
+                        checks++;
+                    }
+                }, 10, iterations, 0.00001);
+
+                Assert.equal(iterations * duration.attempts, checks, "Make sure we hit all of them");
+            }
+        });
+
+        this.testCase({
             name: "PerfChecks: isObject",
             test: () => {
                 let testObject = {
@@ -40,6 +55,24 @@ export class CorePerfCheckTests extends AITestClass {
                         checks++;
                     }
                 }, 10, iterations, 0.00001);
+
+                Assert.equal(iterations * duration.attempts, checks, "Make sure we hit all of them");
+            }
+        });
+
+        this.testCase({
+            name: "PerfChecks: isPlainObject",
+            test: () => {
+                let testObject = {
+                    test: "Value"
+                };
+                let iterations = 100000;
+                let checks = 0;
+                let duration = this._runPerfTest("isPlainObject", () => {
+                    if (isPlainObject(testObject)) {
+                        checks++;
+                    }
+                }, 50, iterations, 0.00001);
 
                 Assert.equal(iterations * duration.attempts, checks, "Make sure we hit all of them");
             }
@@ -143,7 +176,7 @@ export class CorePerfCheckTests extends AITestClass {
             name: "PerfChecks: objForEachKey dynamic large (40 fields) object",
             timeout: 60000,
             test: () => {
-                let iterations = 100000;
+                let iterations = 90000;
                 let baseTestObject = { };
                 for (let lp = 0; lp < 40; lp++) {
                     baseTestObject["test.value" + lp] = "Test Value " + lp;
@@ -182,7 +215,7 @@ export class CorePerfCheckTests extends AITestClass {
             name: "PerfChecks: objForEachKey complete small (<20 fields) dynamic object",
             timeout: 60000,
             test: () => {
-                let iterations = 100000;
+                let iterations = 90000;
                 let baseTestObject = { } as any;
                 let objectFields = 19; // There is a JIT optimization for objects with <= 19 fields
                 for (let lp = 0; lp < objectFields; lp++) {
@@ -222,7 +255,7 @@ export class CorePerfCheckTests extends AITestClass {
             name: "PerfChecks: objForEachKey complete large (>= 20 fields) dynamic object",
             timeout: 60000,
             test: () => {
-                let iterations = 100000;
+                let iterations = 90000;
                 let baseTestObject = { } as any;
                 let objectFields = 21; // There is a JIT optimization for objects with <= 19 fields
                 for (let lp = 0; lp < objectFields; lp++) {
@@ -262,7 +295,7 @@ export class CorePerfCheckTests extends AITestClass {
             name: "PerfChecks: objForEachKey with small (<20 fields) extended dynamic object",
             timeout: 60000,
             test: () => {
-                let iterations = 100000;
+                let iterations = 90000;
                 let baseTestObject = { 
                     a: 1
                  } as any;
@@ -304,7 +337,7 @@ export class CorePerfCheckTests extends AITestClass {
             name: "PerfChecks: objForEachKey with large (>=20 fields) extended dynamic object",
             timeout: 60000,
             test: () => {
-                let iterations = 100000;
+                let iterations = 90000;
                 let baseTestObject = { 
                     a: 1
                  } as any;
@@ -459,7 +492,7 @@ export class CorePerfCheckTests extends AITestClass {
                 let checks = 0;
                 return this._runPerfTestAsync("baseTestObject", () => {
                     JSON.stringify(baseTestObject);
-                }, 50, iterations, 0.005).then((baseDuration) => {
+                }, 60, iterations, 0.005).then((baseDuration) => {
                     checks = 0;
                     return this._runPerfTestAsync("optTestObject", () => {
                         JSON.stringify(optTestObject);
@@ -494,7 +527,7 @@ export class CorePerfCheckTests extends AITestClass {
 
                 return this._runPerfTestAsync("baseTestObject", () => {
                     JSON.stringify(baseTestObject);
-                }, 50, iterations, 0.005).then((baseDuration) => {
+                }, 60, iterations, 0.005).then((baseDuration) => {
                     return this._runPerfTestAsync("optTestObject", () => {
                         JSON.stringify(optTestObject);
                     }, 50, iterations, 0.003, baseDuration).then((optDuration) => {
