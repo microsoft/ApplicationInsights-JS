@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { dateNow } from "@microsoft/applicationinsights-core-js";
+import { dateNow, ICustomProperties } from "@microsoft/applicationinsights-core-js";
 import ReactPlugin from "./ReactPlugin";
 
 interface ITrackedData {
@@ -24,7 +24,8 @@ function getEngagementTimeSeconds(trackedData: ITrackedData) {
 
 const useComponentTracking = (
   reactPlugin: ReactPlugin,
-  componentName: string
+  componentName: string,
+  customProperties?: ICustomProperties
 ) => {
   const tracking = useRef<ITrackedData>({
     hookTimestamp: dateNow(),
@@ -76,7 +77,7 @@ const useComponentTracking = (
         sampleCount: 1
       };
 
-      const additionalProperties = { "Component Name": componentName };
+      const additionalProperties = { "Component Name": componentName, ...customProperties };
       reactPlugin.trackMetric(metricData, additionalProperties);
     };
   }, []);
