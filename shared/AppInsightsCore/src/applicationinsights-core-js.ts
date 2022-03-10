@@ -17,17 +17,22 @@ export { BaseCore } from "./JavaScriptSDK/BaseCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
 export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./JavaScriptSDK/RandomHelper";
 export {
-    CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, generateW3CId,
-    disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr, addEventListeners, addPageUnloadEventListener,
-    addPageHideEventListener, addPageShowEventListener
+    CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, newGuid, perfNow, generateW3CId,
+    disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr
 } from "./JavaScriptSDK/CoreUtils";
 export {
-    isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName,
+    isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, normalizeJsName,
     objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf,
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
-    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, createClassFromInterface, optimizeObject, isNotUndefined, isNotNullOrUndefined,
-    objFreeze, objSeal
+    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
+    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, createEnumStyle, objExtend
 } from "./JavaScriptSDK/HelperFuncs";
+export {
+    attachEvent, detachEvent, addEventHandler, addEventListeners, addPageUnloadEventListener, addPageHideEventListener, addPageShowEventListener,
+    removeEventHandler, removeEventListeners, removePageUnloadEventListener, removePageHideEventListener, eventOn, eventOff, mergeEvtNamespace,
+    _IRegisteredEvents, __getRegisteredEvents
+} from "./JavaScriptSDK/EventHelpers";
+
 export {
     getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
@@ -48,9 +53,12 @@ export { IPerfEvent } from "./JavaScriptSDK.Interfaces/IPerfEvent";
 export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/IPerfManager";
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
 export { safeGetLogger, DiagnosticLogger, _InternalLogMessage } from "./JavaScriptSDK/DiagnosticLogger";
-export { ProcessTelemetryContext, createProcessTelemetryContext } from "./JavaScriptSDK/ProcessTelemetryContext";
+export {
+    ProcessTelemetryContext, createProcessTelemetryContext
+    // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
+} from "./JavaScriptSDK/ProcessTelemetryContext";
 export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
-export { _InternalMessageId, LoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
+export { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";
 export {
@@ -60,3 +68,5 @@ export { strIKey, strExtensionConfig } from "./JavaScriptSDK/Constants";
 export { IDbgExtension } from "./JavaScriptSDK.Interfaces/IDbgExtension";
 export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils"
 export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./JavaScriptSDK.Interfaces/ITelemetryInitializers";
+export { createUniqueNamespace } from "./JavaScriptSDK/DataCacheHelper";
+export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";

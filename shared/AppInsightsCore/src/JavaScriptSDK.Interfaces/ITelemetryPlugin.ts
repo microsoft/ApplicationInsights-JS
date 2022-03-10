@@ -5,13 +5,11 @@
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IConfiguration } from "./IConfiguration";
 import { IAppInsightsCore } from "./IAppInsightsCore";
-import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
+import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "./IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 
-/**
- * Configuration provided to SDK core
- */
-export interface ITelemetryPlugin extends IPlugin {
+export interface ITelemetryProcessor {
     /**
      * Call back for telemetry processing before it it is sent
      * @param env - This is the current event being reported
@@ -20,7 +18,12 @@ export interface ITelemetryPlugin extends IPlugin {
      * to later plugins (vs appending items to the telemetry item)
      */
     processTelemetry: (env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => void;
-    
+}
+
+/**
+ * Configuration provided to SDK core
+ */
+export interface ITelemetryPlugin extends ITelemetryProcessor, IPlugin {
     /**
      * Set next extension for telemetry processing, this is not optional as plugins should use the
      * processNext() function of the passed IProcessTelemetryContext instead. It is being kept for
@@ -52,10 +55,14 @@ export interface IPlugin {
     isInitialized?: () => boolean;
 
     /**
-     * Tear down the plugin and remove any hooked value, the plugin should remove that it is no longer initialized and
-     * therefore can be re-initialized after being torn down.
+     * Tear down the plugin and remove any hooked value, the plugin should be removed so that it is no longer initialized and
+     * therefore could be re-initialized after being torn down. The plugin should ensure that once this has been called any further
+     * processTelemetry calls are ignored and it just calls the processNext() with the provided context.
+     * @param unloadCtx - This is the context that should be used during unloading.
+     * @param unloadState - The details / state of the unload process, it holds details like whether it should be unloaded synchronously or asynchronously and the reason for the unload.
+     * @returns boolean - true if the plugin has or will call processNext(), this for backward compatibility as previously teardown was synchronous and returned nothing.
      */
-    teardown?: () => void;
+    teardown?: (unloadCtx: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => void | boolean;
 
     /**
      * Extension name

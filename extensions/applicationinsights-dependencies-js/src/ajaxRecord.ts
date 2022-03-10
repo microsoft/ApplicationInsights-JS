@@ -141,7 +141,7 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
             arrForEach(serverTiming, (value, idx) => {
                 let name = normalizeJsName(value[strName] || "" + idx);
                 let newValue = server[name] || {};
-                objForEachKey(value, (key, val) => {
+                objForEachKey(value, (key, val: any) => {
                     if (key !== strName && isString(val) || isNumber(val)) {
                         if (newValue[key]) {
                             val = newValue[key] + ";" + val;

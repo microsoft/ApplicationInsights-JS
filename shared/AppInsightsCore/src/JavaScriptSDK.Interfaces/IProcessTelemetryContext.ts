@@ -3,11 +3,12 @@
 "use strict";
 
 import { IAppInsightsCore } from "./IAppInsightsCore";
-import { IDiagnosticLogger } from "./IDiagnosticLogger";
 import { IConfiguration } from "./IConfiguration";
+import { IDiagnosticLogger } from "./IDiagnosticLogger";
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
 import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 
 export const enum GetExtCfgMergeType {
     None = 0,
@@ -15,11 +16,7 @@ export const enum GetExtCfgMergeType {
     MergeDefaultFromRootOrDefault = 2,
 }
 
-/**
- * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance
- * between multiple AppInsights instances
- */
-export interface IProcessTelemetryContext {
+export interface IBaseProcessingContext {
     /**
      * The current core instance for the request
      */
@@ -66,12 +63,6 @@ export interface IProcessTelemetryContext {
     setNext: (nextCtx: ITelemetryPluginChain) => void;
 
     /**
-     * Call back for telemetry processing before it it is sent
-     * @param env - This is the current event being reported
-     */
-    processNext: (env: ITelemetryItem) => void;
-
-    /**
      * Synchronously iterate over the context chain running the callback for each plugin, once
      * every plugin has been executed via the callback, any associated onComplete will be called.
      * @param callback - The function call for each plugin in the context chain
@@ -79,16 +70,64 @@ export interface IProcessTelemetryContext {
     iterate: <T extends ITelemetryPlugin = ITelemetryPlugin>(callback: (plugin: T) => void) => void;
 
     /**
-     * Create a new context using the core and config from the current instance
+     * Set the function to call when the current chain has executed all processNext or unloadNext items.
+     * @param onComplete - The onComplete to call
+     * @param that - The "this" value to use for the onComplete call, if not provided or undefined defaults to the current context
+     * @param args - Any additional arguments to pass to the onComplete function
+     */
+    onComplete: (onComplete: Function, that?: any, ...args: any[]) => void;
+
+    /**
+     * Create a new context using the core and config from the current instance, returns a new instance of the same type
      * @param plugins - The execution order to process the plugins, if null or not supplied
      *                  then the current execution order will be copied.
      * @param startAt - The plugin to start processing from, if missing from the execution
      *                  order then the next plugin will be NOT set.
      */
-    createNew: (plugins?:IPlugin[]|ITelemetryPluginChain, startAt?:IPlugin) => IProcessTelemetryContext;
+    createNew: (plugins?: IPlugin[] | ITelemetryPluginChain, startAt?: IPlugin) => IBaseProcessingContext;
+}
+
+/**
+ * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance
+ * between multiple AppInsights instances
+ */
+export interface IProcessTelemetryContext extends IBaseProcessingContext {
+    /**
+     * Call back for telemetry processing before it it is sent
+     * @param env - This is the current event being reported
+     * @returns boolean (true) if there is no more plugins to process otherwise false or undefined (void)
+     */
+    processNext: (env: ITelemetryItem) => boolean | void;
 
     /**
-     * Set the function to call when the current chain has executed all processNext or unloadNext items.
+     * Create a new context using the core and config from the current instance, returns a new instance of the same type
+     * @param plugins - The execution order to process the plugins, if null or not supplied
+     *                  then the current execution order will be copied.
+     * @param startAt - The plugin to start processing from, if missing from the execution
+     *                  order then the next plugin will be NOT set.
      */
-    onComplete: (onComplete: () => void) => void;
+     createNew: (plugins?: IPlugin[] | ITelemetryPluginChain, startAt?: IPlugin) => IProcessTelemetryContext;
+}
+
+/**
+ * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance
+ * between multiple AppInsights instances
+ */
+export interface IProcessTelemetryUnloadContext extends IBaseProcessingContext {
+
+    /**
+     * This Plugin has finished unloading, so unload the next one
+     * @param uploadState - The state of the unload process
+     * @returns boolean (true) if there is no more plugins to process otherwise false or undefined (void)
+     */
+    processNext: (unloadState: ITelemetryUnloadState) => boolean | void;
+
+    /**
+     * Create a new context using the core and config from the current instance, returns a new instance of the same type
+     * @param plugins - The execution order to process the plugins, if null or not supplied
+     *                  then the current execution order will be copied.
+     * @param startAt - The plugin to start processing from, if missing from the execution
+     *                  order then the next plugin will be NOT set.
+     */
+     createNew: (plugins?: IPlugin[] | ITelemetryPluginChain, startAt?: IPlugin) => IProcessTelemetryUnloadContext;
 }

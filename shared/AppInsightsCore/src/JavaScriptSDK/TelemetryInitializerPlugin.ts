@@ -2,13 +2,14 @@
 // // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryInitializerContainer, ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { BaseTelemetryPlugin } from "./BaseTelemetryPlugin";
 import { dumpObj } from "./EnvUtils";
 import { arrForEach, getExceptionName } from "./HelperFuncs";
+import { strDoTeardown } from "./InternalConstants";
 
 interface _IInternalTelemetryInitializerHandler {
     id: number;
@@ -68,8 +69,8 @@ export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements I
                             // log error but dont stop executing rest of the telemetry initializers
                             // doNotSendItem = true;
                             itemCtx.diagLog().throwInternal(
-                                LoggingSeverity.CRITICAL,
-                                _InternalMessageId.TelemetryInitializerFailed,
+                                eLoggingSeverity.CRITICAL,
+                                _eInternalMessageId.TelemetryInitializerFailed,
                                 "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
                                 { exception: dumpObj(e) }, true);
                         }
@@ -81,8 +82,7 @@ export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements I
                 }
             };
 
-            _self.unload = (itemCtx: IProcessTelemetryContext, isAsync: boolean): void => {
-                _base.unload(itemCtx, isAsync);
+            _self[strDoTeardown] = () => {
                 _initDefaults();
             };
         });
@@ -104,16 +104,6 @@ export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements I
     }
 
     public processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext): void {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    /**
-     * This plugin is being unloaded and should remove any hooked events and cleanup any global/scoped values, after this
-     * call the plugin will be removed from the telemetry processing chain and will no longer receive any events..
-     * @param itemCtx - This is the context that should be used during unloading if required to flush any cached events.
-     * @param isAsync - Should the plugin attempt to unload synchronously or can it complete asynchronously
-     */
-     public unload(itemCtx: IProcessTelemetryContext, isAsync: boolean): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

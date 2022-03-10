@@ -7,11 +7,7 @@ import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationM
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { arrForEach, arrIndexOf } from "./HelperFuncs";
-
-const strEventsSent = "eventsSent";
-const strEventsDiscarded = "eventsDiscarded";
-const strEventsSendRequest = "eventsSendRequest";
-const strPerfEvent = "perfEvent";
+import { strAddNotificationListener, strEventsDiscarded, strEventsSendRequest, strEventsSent, strPerfEvent, strRemoveNotificationListener } from "./InternalConstants";
 
 function _runListeners(listeners: INotificationListener[], name: string, isAsync: boolean, callback: (listener: INotificationListener) => void) {
     arrForEach(listeners, (listener) => {
@@ -39,7 +35,7 @@ export class NotificationManager implements INotificationManager {
         let perfEvtsSendAll = !!(config ||{}).perfEvtsSendAll;
 
         dynamicProto(NotificationManager, this, (_self) => {
-            _self.addNotificationListener = (listener: INotificationListener): void => {
+            _self[strAddNotificationListener] = (listener: INotificationListener): void => {
                 _self.listeners.push(listener);
             };
 
@@ -47,7 +43,7 @@ export class NotificationManager implements INotificationManager {
              * Removes all instances of the listener.
              * @param {INotificationListener} listener - AWTNotificationListener to remove.
              */
-            _self.removeNotificationListener = (listener: INotificationListener): void => {
+            _self[strRemoveNotificationListener] = (listener: INotificationListener): void => {
                 let index: number = arrIndexOf(_self.listeners, listener);
                 while (index > -1) {
                     _self.listeners.splice(index, 1);
@@ -59,7 +55,7 @@ export class NotificationManager implements INotificationManager {
              * Notification for events sent.
              * @param {ITelemetryItem[]} events - The array of events that have been sent.
              */
-            _self.eventsSent = (events: ITelemetryItem[]): void => {
+            _self[strEventsSent] = (events: ITelemetryItem[]): void => {
                 _runListeners(_self.listeners, strEventsSent, true, (listener) => {
                     listener[strEventsSent](events);
                 });
@@ -71,7 +67,7 @@ export class NotificationManager implements INotificationManager {
              * @param {number} reason           - The reason for which the SDK discarded the events. The EventsDiscardedReason
              * constant should be used to check the different values.
              */
-            _self.eventsDiscarded = (events: ITelemetryItem[], reason: number): void => {
+            _self[strEventsDiscarded] = (events: ITelemetryItem[], reason: number): void => {
                 _runListeners(_self.listeners, strEventsDiscarded, true, (listener) => {
                     listener[strEventsDiscarded](events, reason);
                 });
@@ -82,13 +78,13 @@ export class NotificationManager implements INotificationManager {
              * @param {number} sendReason - The reason why the event batch is being sent.
              * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
              */
-            _self.eventsSendRequest = (sendReason: number, isAsync: boolean): void => {
+            _self[strEventsSendRequest] = (sendReason: number, isAsync: boolean): void => {
                 _runListeners(_self.listeners, strEventsSendRequest, isAsync, (listener) => {
                     listener[strEventsSendRequest](sendReason, isAsync);
                 });
             };
 
-            _self.perfEvent = (perfEvent?: IPerfEvent): void => {
+            _self[strPerfEvent] = (perfEvent?: IPerfEvent): void => {
                 if (perfEvent) {
 
                     // Send all events or only parent events

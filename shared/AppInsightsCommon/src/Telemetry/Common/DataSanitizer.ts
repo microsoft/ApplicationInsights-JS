@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, isObject, strTrim } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, eLoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, isObject, strTrim } from "@microsoft/applicationinsights-core-js";
 
 export const enum DataSanitizerValues {
     /**
@@ -67,7 +67,7 @@ export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
         if (name.length > DataSanitizerValues.MAX_NAME_LENGTH) {
             nameTrunc = name.substring(0, DataSanitizerValues.MAX_NAME_LENGTH);
             logger && logger.throwInternal(
-                LoggingSeverity.WARNING,
+                eLoggingSeverity.WARNING,
                 _InternalMessageId.NameTooLong,
                 "name is too long.  It has been truncated to " + DataSanitizerValues.MAX_NAME_LENGTH + " characters.",
                 { name }, true);
@@ -85,7 +85,7 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
         if (value.toString().length > maxLength) {
             valueTrunc = value.toString().substring(0, maxLength);
             logger && logger.throwInternal(
-                LoggingSeverity.WARNING,
+                eLoggingSeverity.WARNING,
                 _InternalMessageId.StringValueTooLong,
                 "string value is too long. It has been truncated to " + maxLength + " characters.",
                 { value }, true);
@@ -105,7 +105,7 @@ export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
         if (message.length > DataSanitizerValues.MAX_MESSAGE_LENGTH) {
             messageTrunc = message.substring(0, DataSanitizerValues.MAX_MESSAGE_LENGTH);
             logger && logger.throwInternal(
-                LoggingSeverity.WARNING, _InternalMessageId.MessageTruncated,
+                eLoggingSeverity.WARNING, _InternalMessageId.MessageTruncated,
                 "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
                 { message },
                 true);
@@ -123,7 +123,7 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
         if (value.length > DataSanitizerValues.MAX_EXCEPTION_LENGTH) {
             exceptionTrunc = value.substring(0, DataSanitizerValues.MAX_EXCEPTION_LENGTH);
             logger && logger.throwInternal(
-                LoggingSeverity.WARNING, _InternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
+                eLoggingSeverity.WARNING, _InternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
                 { exception }, true);
         }
     }
@@ -140,7 +140,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
                 try {
                     value = getJSON().stringify(value);
                 } catch (e) {
-                    logger && logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
+                    logger && logger.throwInternal(eLoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
                 }
             }
             value = dataSanitizeString(logger, value, DataSanitizerValues.MAX_PROPERTY_LENGTH);
@@ -178,7 +178,7 @@ export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLeng
         if (input.length > maxLength) {
             inputTrunc = input.substring(0, maxLength);
             logger && logger.throwInternal(
-                LoggingSeverity.WARNING,
+                eLoggingSeverity.WARNING,
                 _msgId,
                 "input is too long, it has been truncated to " + maxLength + " characters.",
                 { data: input },

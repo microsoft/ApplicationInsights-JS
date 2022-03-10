@@ -2,14 +2,17 @@
 // // Licensed under the MIT License.
 
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
+import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { arrForEach, isArray, objFreeze, throwError } from "./HelperFuncs";
+import { strPause, strProcessNext, strResume, strTeardown } from "./InternalConstants";
 import { createProcessTelemetryContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
 import { initializePlugins } from "./TelemetryHelpers";
 
@@ -17,7 +20,13 @@ export const ChannelControllerPriority = 500;
 const ChannelValidationMessage = "Channel has invalid priority - ";
 
 export interface IChannelController extends IChannelControls {
-    flush(isAsync: boolean, callBack: (flushComplete?: boolean) => void, sendReason: SendRequestReason, cbTimeout?: number): void
+    flush(isAsync: boolean, callBack: (flushComplete?: boolean) => void, sendReason: SendRequestReason, cbTimeout?: number): void;
+
+    getChannel<T extends IPlugin = IPlugin>(pluginIdentifier: string): T;
+}
+
+export interface IInternalChannelController extends IChannelController {
+    _setQueue: (channels: _IInternalChannels[]) => void;
 }
 
 export interface _IInternalChannels {
@@ -46,31 +55,29 @@ function _addChannelQueue(channelQueue: _IInternalChannels[], queue: IChannelCon
 
 export function createChannelControllerPlugin(channelQueue: _IInternalChannels[], core: IAppInsightsCore): IChannelController {
 
-    function _getTelCtx(itemCtx: IProcessTelemetryContext) {
-        if (!itemCtx) {
-            // For some reason the previous plugin didn't pass down the itemCtx (perhaps an old plugin)
-            itemCtx = createProcessTelemetryContext(null, core.config, core, null)
-        }
-
-        return itemCtx;
+    function _getTelCtx() {
+        return createProcessTelemetryContext(null, core.config, core, null)
     }
 
-    function _processChannelQueue(itemCtx: IProcessTelemetryContext, processFn: (chainCtx: IProcessTelemetryContext) => void, onComplete?: () => void) {
-        if (channelQueue && channelQueue.length > 0) {
-            let waiting = channelQueue.length;
-            arrForEach(channelQueue, (channels) => {
+    function _processChannelQueue<T extends IBaseProcessingContext>(theChannels: _IInternalChannels[], itemCtx: T, processFn: (chainCtx: T) => void, onComplete: () => void) {
+        let waiting = theChannels ? (theChannels.length + 1) : 1;
+
+        function _runChainOnComplete() {
+            waiting --;
+
+            if (waiting === 0) {
+                onComplete && onComplete();
+                onComplete = null;
+            }
+        }
+
+        if (waiting > 0) {
+            arrForEach(theChannels, (channels) => {
                 // pass on to first item in queue
                 if (channels && channels.queue.length > 0) {
                     let channelChain = channels.chain;
-                    let chainCtx = _getTelCtx(itemCtx).createNew(channelChain);
-                    chainCtx.onComplete(() => {
-                        waiting --;
-
-                        if (waiting === 0) {
-                            onComplete && onComplete();
-                            onComplete = null;
-                        }
-                    });
+                    let chainCtx = itemCtx.createNew(channelChain) as T;
+                    chainCtx.onComplete(_runChainOnComplete);
 
                     // Cause this chain to start processing
                     processFn(chainCtx);
@@ -78,17 +85,55 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
                     waiting --;
                 }
             });
-
-            if (waiting === 0) {
-                onComplete && onComplete();
-            }
-        } else {
-            onComplete && onComplete();
         }
+
+        _runChainOnComplete();
+    }
+
+    function _doTeardown(unloadCtx: IProcessTelemetryUnloadContext, unloadState: ITelemetryUnloadState) {
+        let theUnloadState: ITelemetryUnloadState = unloadState || {
+            reason: TelemetryUnloadReason.ManualTeardown,
+            isAsync: false
+        };
+
+        _processChannelQueue(channelQueue, unloadCtx, (chainCtx: IProcessTelemetryUnloadContext) => {
+            chainCtx[strProcessNext](theUnloadState);
+        }, () => {
+            unloadCtx[strProcessNext](theUnloadState);
+            isInitialized = false;
+        });
+
+        return true;
+    }
+
+    function _getChannel<T extends IPlugin = IPlugin>(pluginIdentifier: string): T {
+        let thePlugin: T = null;
+
+        if (channelQueue && channelQueue.length > 0) {
+            arrForEach(channelQueue, (channels) => {
+                // pass on to first item in queue
+                if (channels && channels.queue.length > 0) {
+                    arrForEach(channels.queue, (ext: any) => {
+                        if (ext.identifier === pluginIdentifier) {
+                            thePlugin = ext;
+                            // Cause arrForEach to stop iterating
+                            return -1;
+                        }
+                    });
+
+                    if (thePlugin) {
+                        // Cause arrForEach to stop iterating
+                        return -1;
+                    }
+                }
+            });
+        }
+
+        return thePlugin;
     }
 
     let isInitialized = false;
-    let channelController: IChannelController = {
+    let channelController: IInternalChannelController = {
         identifier: "ChannelControllerPlugin",
         priority: ChannelControllerPriority,
         initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) => {
@@ -101,41 +146,38 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
         },
         isInitialized: () => { return isInitialized },
         processTelemetry: (item: ITelemetryItem, itemCtx: IProcessTelemetryContext) => {
-            _processChannelQueue(itemCtx, (chainCtx: IProcessTelemetryContext) => {
-                chainCtx.processNext(item);
+            _processChannelQueue(channelQueue, itemCtx || _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
+                chainCtx[strProcessNext](item);
             }, () => {
-                itemCtx.processNext(item);
+                itemCtx[strProcessNext](item);
             });
         },
-        pause: () => {
-            _processChannelQueue(null, (chainCtx: IProcessTelemetryContext) => {
+        [strPause]: () => {
+            _processChannelQueue(channelQueue, _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
                 chainCtx.iterate<IChannelControls>((plugin) => {
-                    plugin.pause && plugin.pause();
+                    plugin[strPause] && plugin[strPause]();
                 });
-            });
+            }, null);
         },
-        resume: () => {
-            _processChannelQueue(null, (chainCtx: IProcessTelemetryContext) => {
+        [strResume]: () => {
+            _processChannelQueue(channelQueue, _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
                 chainCtx.iterate<IChannelControls>((plugin) => {
-                    plugin.resume && plugin.resume();
+                    plugin[strResume] && plugin[strResume]();
                 });
-            });
+            }, null);
         },
-        teardown: () => {
-            _processChannelQueue(null, (chainCtx: IProcessTelemetryContext) => {
-                chainCtx.iterate<IChannelControls>((plugin) => {
-                    plugin.teardown && plugin.teardown();
-                });
-            });
-        },
+        [strTeardown]: _doTeardown,
+        getChannel: _getChannel,
         flush: (isAsync: boolean, callBack: (flushComplete?: boolean) => void, sendReason: SendRequestReason, cbTimeout?: number) => {
+            // Setting waiting to one so that we don't call the callBack until we finish iterating
+            let waiting = 1;
             let doneIterating = false;
-            let waiting = 0;
             let cbTimer: any = null;
 
             cbTimeout = cbTimeout || 5000;
 
             function doCallback() {
+                waiting--;
                 if (doneIterating && waiting === 0) {
                     if (cbTimer) {
                         clearTimeout(cbTimer);
@@ -147,36 +189,40 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
                 }
             }
 
-            // Setting waiting to one so that we don't call the callBack until we finish iterating
-            waiting  = 1;
-            _processChannelQueue(null, (chainCtx: IProcessTelemetryContext) => {
+            _processChannelQueue(channelQueue, _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
                 chainCtx.iterate<IChannelControls>((plugin) => {
                     if (plugin.flush) {
                         waiting ++;
 
+                        let handled = false;
                         // Not all channels will call this callback for every scenario
                         if (!plugin.flush(isAsync, () => {
-                            waiting--;
+                            handled = true;
                             doCallback();
                         }, sendReason)) {
-                            // If any channel doesn't return true we should assume that the callback will never be called, so use a timeout
-                            // to allow the channel some time to "finish" before triggering any followup function (such as unloading)
-                            if (cbTimer == null) {
-                                cbTimer = setTimeout(() => {
-                                    cbTimer = null;
-                                    callBack && callBack(false);
-                                    // Make sure we don't call the callback more than once
-                                    callBack = null;
-                                }, cbTimeout);
+                            if (!handled) {
+                                // If any channel doesn't return true and it didn't call the callback, then we should assume that the callback
+                                // will never be called, so use a timeout to allow the channel(s) some time to "finish" before triggering any
+                                // followup function (such as unloading)
+                                if (isAsync && cbTimer == null) {
+                                    cbTimer = setTimeout(() => {
+                                        cbTimer = null;
+                                        doCallback();
+                                    }, cbTimeout);
+                                } else {
+                                    doCallback();
+                                }
                             }
                         }
                     }
                 });
             }, () => {
-                waiting--;
                 doneIterating = true;
                 doCallback();
             });
+        },
+        _setQueue: (queue: _IInternalChannels[]) => {
+            channelQueue = queue;
         }
     };
 
