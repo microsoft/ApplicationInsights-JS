@@ -836,7 +836,7 @@ export function createEnumStyle<T>(values: T) {
         enumClass[field] = value;
         // Add Reverse lookup
         if (!isUndefined(enumClass[value])) {
-            throwError("Value: [" + value + "] already exists for " + field);
+            throwError("[" + value + "] exists for " + field);
         }
         enumClass[value] = field;
     });

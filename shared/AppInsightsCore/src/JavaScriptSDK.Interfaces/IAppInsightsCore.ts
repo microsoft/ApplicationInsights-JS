@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IChannelControls } from "./IChannelControls";
-import { IPlugin } from "./ITelemetryPlugin";
+import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
 import { IConfiguration } from "./IConfiguration";
 import { INotificationManager } from "./INotificationManager";
 import { INotificationListener } from "./INotificationListener";
@@ -11,6 +11,7 @@ import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { ICookieMgr } from "./ICookieMgr";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
+import { UnloadHandler } from "../applicationinsights-core-js";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
@@ -29,6 +30,8 @@ export interface ILoadedPlugin<T extends IPlugin> {
      * (unless it's also been re-initialized)
      */
     setEnabled: (isEnabled: boolean) => void;
+
+    remove: (isAsync?: boolean, removeCb?: (removed?: boolean) => void) => void;
 }
 
 export interface IAppInsightsCore extends IPerfManagerProvider {
@@ -107,13 +110,37 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     getProcessTelContext() : IProcessTelemetryContext;
 
     /**
+     * Unload and Tear down the SDK and any initialized plugins, after calling this the SDK will be considered
+     * to be un-initialized and non-operational, re-initializing the SDK should only be attempted if the previous
+     * unload call return `true` stating that all plugins reported that they also unloaded, the recommended
+     * approach is to create a new instance and initialize that instance.
+     * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
+     * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     */
+    unload(isAsync?: boolean, unloadComplete?: () => void): void;
+
+    /**
      * Find and return the (first) plugin with the specified identifier if present
      * @param pluginIdentifier
      */
     getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
   
     /**
+     * Add a new plugin to the installation
+     * @param plugin - The new plugin to add
+     * @param replaceExisting - should any existing plugin be replaced
+     * @param doAsync - Should the add be performed asynchronously
+     */
+    addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, doAsync: boolean, addCb?: (added?: boolean) => void): void;
+  
+    /**
      * Returns the unique event namespace that should be used when registering events
      */
     evtNamespace(): string;
-}
+  
+    /**
+     * Add a handler that will be called when the SDK is being unloaded
+     * @param handler - the handler
+     */
+    addUnloadCb(handler: UnloadHandler): void;
+ }

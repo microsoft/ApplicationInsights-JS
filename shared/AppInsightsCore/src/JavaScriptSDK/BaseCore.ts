@@ -13,14 +13,14 @@ import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationM
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { createProcessTelemetryContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
+import { createProcessTelemetryContext, createProcessTelemetryUnloadContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
 import { initializePlugins, sortPlugins, _getPluginState } from "./TelemetryHelpers";
-import { eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { getGblPerfMgr, PerfManager } from "./PerfManager";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
-import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction, objFreeze, proxyFunctions } from "./HelperFuncs";
+import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction, objFreeze, proxyFunctionAs, proxyFunctions } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
 import { DiagnosticLogger, _InternalLogMessage } from "./DiagnosticLogger";
 import { getDebugListener } from "./DbgExtensionUtils";
@@ -29,10 +29,17 @@ import { ChannelControllerPriority, createChannelControllerPlugin, createChannel
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { createUniqueNamespace } from "./DataCacheHelper";
+import { createUnloadHandlerContainer, IUnloadHandlerContainer, UnloadHandler } from "./UnloadHandlerContainer";
+import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
+import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { strAddNotificationListener, strDisabled, strEventsDiscarded, strEventsSendRequest, strEventsSent, strRemoveNotificationListener, strTeardown } from "./InternalConstants";
 
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
+const strSdkUnloadingError = "SDK is still unloading...";
+const strSdkNotInitialized = "SDK is not initialized";
+const strPluginUnloadFailed = "Failed to unload plugin";
 
 /**
  * Helper to create the default performance manager
@@ -82,6 +89,19 @@ function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number,
     };
 }
 
+function _isPluginPresent(thePlugin: IPlugin, plugins: IPlugin[]) {
+    let exists = false;
+
+    arrForEach(plugins, (plugin) => {
+        if (plugin === thePlugin) {
+            exists = true;
+            return -1;
+        }
+    });
+
+    return exists;
+}
+
 function _createDummyNotificationManager(): INotificationManager {
     return objCreateFn({
         [strAddNotificationListener]: (listener: INotificationListener) => { },
@@ -114,9 +134,11 @@ export class BaseCore implements IAppInsightsCore {
         let _channelControl: IChannelController;
         let _channelConfig: IChannelControls[][];
         let _channelQueue: _IInternalChannels[];
+        let _isUnloading: boolean;
         let _telemetryInitializerPlugin: TelemetryInitializerPlugin;
         let _internalLogsEventName: string;
         let _evtNamespace: string;
+        let _unloadHandlers: IUnloadHandlerContainer;
         let _debugListener: INotificationListener;
 
         /**
@@ -132,6 +154,10 @@ export class BaseCore implements IAppInsightsCore {
             _self.isInitialized = () => _isInitialized;
 
             _self.initialize = (config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
+                if (_isUnloading) {
+                    throwError(strSdkUnloadingError);
+                }
+        
                 // Make sure core is only initialized once
                 if (_self.isInitialized()) {
                     throwError("Core should not be initialized more than once");
@@ -153,8 +179,7 @@ export class BaseCore implements IAppInsightsCore {
                 config.extensions = isNullOrUndefined(config.extensions) ? [] : config.extensions;
         
                 // add notification to the extensions in the config so other plugins can access it
-                let extConfig = getSetValue(config, strExtensionConfig);
-                extConfig.NotificationManager = notificationManager;
+                _initExtConfig(config);
 
                 if (logger) {
                     _self.logger = logger;
@@ -194,7 +219,7 @@ export class BaseCore implements IAppInsightsCore {
                 // Common Schema 4.0
                 setValue(telemetryItem, "ver", "4.0", null, isNullOrUndefined);
         
-                if (_self.isInitialized()) {
+                if (!_isUnloading && _self.isInitialized()) {
                     // Process the telemetry plugin chain
                     _createTelCtx().processNext(telemetryItem);
                 } else {
@@ -223,9 +248,9 @@ export class BaseCore implements IAppInsightsCore {
              * called.
              * @param {INotificationListener} listener - An INotificationListener object.
              */
-             _self.addNotificationListener = (listener: INotificationListener): void => {
+             _self[strAddNotificationListener] = (listener: INotificationListener): void => {
                  if (_notificationManager) {
-                     _notificationManager.addNotificationListener(listener);
+                     _notificationManager[strAddNotificationListener](listener);
                  }
             };
         
@@ -233,9 +258,9 @@ export class BaseCore implements IAppInsightsCore {
              * Removes all instances of the listener.
              * @param {INotificationListener} listener - INotificationListener to remove.
              */
-            _self.removeNotificationListener = (listener: INotificationListener): void => {
+            _self[strRemoveNotificationListener] = (listener: INotificationListener): void => {
                 if (_notificationManager) {
-                    _notificationManager.removeNotificationListener(listener);
+                    _notificationManager[strRemoveNotificationListener](listener);
                 }
             }
         
@@ -314,11 +339,102 @@ export class BaseCore implements IAppInsightsCore {
             // Add addTelemetryInitializer
             proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
 
+            _self.unload = (isAsync: boolean = true, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void => {
+                if (!_isInitialized) {
+                    // The SDK is not initialized
+                    throwError(strSdkNotInitialized);
+                }
+
+                // Check if the SDK still unloading so throw
+                if (_isUnloading) {
+                    // The SDK is already unloading
+                    throwError(strSdkUnloadingError);
+                }
+
+                let unloadState: ITelemetryUnloadState = {
+                    reason: TelemetryUnloadReason.SdkUnload,
+                    isAsync: isAsync,
+                    flushComplete: false
+                }
+
+                let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self.config, _self);
+                processUnloadCtx.onComplete(() => {
+                    _initDefaults();
+                    unloadComplete && unloadComplete(unloadState);
+                }, _self);
+
+                function _doUnload(flushComplete: boolean) {
+                    unloadState.flushComplete = flushComplete;
+                    _isUnloading = true;
+
+                    // Run all of the unload handlers first (before unloading the plugins)
+                    _unloadHandlers.run(processUnloadCtx, unloadState);
+                    
+                    // Stop polling the internal logs
+                    _self.stopPollingInternalLogs();
+
+                    // Start unloading the components, from this point onwards the SDK should be considered to be in an unstable state
+                    processUnloadCtx.processNext(unloadState);
+                }
+
+                if (_channelControl) {
+                    _channelControl.flush(isAsync, _doUnload, SendRequestReason.SdkUnload, cbTimeout);
+                } else {
+                    _doUnload(true);
+                }
+            };
+
             _self.getPlugin = _getPlugin;
+
+            _self.addPlugin = <T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, isAsync: boolean = true, addCb?: (added?: boolean) => void): void => {
+                if (!plugin) {
+                    addCb && addCb(false);
+                    _logOrThrowError(strValidationError);
+                    return;
+                }
+
+                let existingPlugin = _getPlugin(plugin.identifier);
+                if (existingPlugin && !replaceExisting) {
+                    addCb && addCb(false);
+
+                    _logOrThrowError("Plugin [" + plugin.identifier + "] is already loaded!");
+                    return;
+                }
+
+                function _addPlugin(removed: boolean) {
+                    _configExtensions.push(plugin);
+
+                    // Re-Initialize the plugin chain
+                    _initPluginChain(_self.config);
+                    addCb && addCb(true);
+                }
+
+                if (existingPlugin) {
+                    let removedPlugins: IPlugin[] = [existingPlugin.plugin];
+                    let unloadState: ITelemetryUnloadState = {
+                        reason: TelemetryUnloadReason.PluginReplace,
+                        isAsync: isAsync
+                    };
+
+                    _removePlugins(removedPlugins, unloadState, (removed) => {
+                        if (!removed) {
+                            // Previous plugin was successfully removed or was not installed
+                            addCb && addCb(false);
+                        } else {
+                            _addPlugin(true);
+                        }
+                    });
+                } else {
+                    _addPlugin(false);
+                }
+            };
 
             _self.evtNamespace = (): string => {
                 return _evtNamespace;
             };
+
+            // Create the addUnloadCb
+            proxyFunctionAs(_self, "addUnloadCb", () => _unloadHandlers, "add");
 
             function _initDefaults() {
                 _isInitialized = false;
@@ -340,8 +456,10 @@ export class BaseCore implements IAppInsightsCore {
                 _channelControl = null;
                 _channelConfig = null;
                 _channelQueue = null;
+                _isUnloading = false;
                 _internalLogsEventName = null;
                 _evtNamespace = createUniqueNamespace("AIBaseCore", true);
+                _unloadHandlers = createUnloadHandlerContainer();
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
@@ -422,6 +540,22 @@ export class BaseCore implements IAppInsightsCore {
                         isEnabled: () => {
                             let pluginState = _getPluginState(thePlugin);
                             return !pluginState[strTeardown] && !pluginState[strDisabled];
+                        },
+                        remove: (isAsync: boolean = true, removeCb?: (removed?: boolean) => void): void => {
+                            let pluginsToRemove: IPlugin[] = [thePlugin];
+                            let unloadState: ITelemetryUnloadState = {
+                                reason: TelemetryUnloadReason.PluginUnload,
+                                isAsync: isAsync
+                            };
+
+                            _removePlugins(pluginsToRemove, unloadState, (removed) => {
+                                if (removed) {
+                                    // Re-Initialize the plugin chain
+                                    _initPluginChain(_self.config);
+                                }
+
+                                removeCb && removeCb(removed);
+                            });
                         }
                     }
                 }
@@ -443,6 +577,55 @@ export class BaseCore implements IAppInsightsCore {
                 }
 
                 return _pluginChain;
+            }
+
+            function _removePlugins(thePlugins: IPlugin[], unloadState: ITelemetryUnloadState, removeComplete: (removed: boolean) => void) {
+
+                if (thePlugins && thePlugins.length > 0) {
+                    let unloadChain = createTelemetryProxyChain(thePlugins, _self.config, _self);
+                    let unloadCtx = createProcessTelemetryUnloadContext(unloadChain, _self.config, _self);
+
+                    unloadCtx.onComplete(() => {
+                        let removed = false;
+
+                        // Remove the listed config extensions
+                        let newConfigExtensions: IPlugin[] = [];
+                        arrForEach(_configExtensions, (plugin, idx) => {
+                            if (!_isPluginPresent(plugin, thePlugins)) {
+                                newConfigExtensions.push(plugin);
+                            } else {
+                                removed = true;
+                            }
+                        });
+
+                        _configExtensions = newConfigExtensions;
+
+                        // Re-Create the channel config
+                        let newChannelConfig: IChannelControls[][] = [];
+                        if (_channelConfig) {
+                            arrForEach(_channelConfig, (queue, idx) => {
+                                let newQueue: IChannelControls[] = [];
+                                arrForEach(queue, (channel) => {
+                                    if (!_isPluginPresent(channel, thePlugins)) {
+                                        newQueue.push(channel);
+                                    } else {
+                                        removed = true;
+                                    }
+                                });
+
+                                newChannelConfig.push(newQueue);
+                            });
+
+                            _channelConfig = newChannelConfig;
+                        }
+
+                        removeComplete && removeComplete(removed);
+                    });
+
+                    unloadCtx.processNext(unloadState);
+                } else {
+                    removeComplete(false);
+                }
             }
 
             function _flushInternalLogs() {
@@ -486,6 +669,21 @@ export class BaseCore implements IAppInsightsCore {
                 if (config.enablePerfMgr) {
                     // Set the performance manager creation function if not defined
                     setValue(_self.config, "createPerfMgr", _createPerfManager);
+                }
+            }
+
+            function _initExtConfig(config: IConfiguration) {
+                let extConfig = getSetValue(config, strExtensionConfig);
+                extConfig.NotificationManager = _notificationManager;
+            }
+
+            function _logOrThrowError(message: string) {
+                let logger = _self.logger;
+                if (logger) {
+                    // there should always be a logger
+                    logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, message);
+                } else {
+                    throwError(message);
                 }
             }
         });
@@ -586,9 +784,26 @@ export class BaseCore implements IAppInsightsCore {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
+    /**
+     * Unload and Tear down the SDK and any initialized plugins, after calling this the SDK will be considered
+     * to be un-initialized and non-operational, re-initializing the SDK should only be attempted if the previous
+     * unload call return `true` stating that all plugins reported that they also unloaded, the recommended
+     * approach is to create a new instance and initialize that instance.
+     * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
+     * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     */
+    public unload(isAsync?: boolean, unloadComplete?: () => void): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
     public getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, doAsync: boolean, addCb?: (added?: boolean) => void): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
@@ -597,6 +812,14 @@ export class BaseCore implements IAppInsightsCore {
     public evtNamespace(): string {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    /**
+     * Add an unload handler that will be called when the SDK is being unloaded
+     * @param handler - the handler
+     */
+    public addUnloadCb(handler: UnloadHandler): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     protected releaseQueue() {

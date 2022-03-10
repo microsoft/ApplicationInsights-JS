@@ -12,8 +12,9 @@ import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { createProcessTelemetryContext, createProcessTelemetryUnloadContext } from "./ProcessTelemetryContext";
-import { arrForEach, isArray, isFunction, isNullOrUndefined, setValue } from "./HelperFuncs";
+import { arrForEach, isArray, isFunction, isNullOrUndefined, proxyFunctionAs, setValue } from "./HelperFuncs";
 import { strExtensionConfig } from "./Constants";
+import { createUnloadHandlerContainer, IUnloadHandlerContainer, UnloadHandler } from "./UnloadHandlerContainer";
 import { IInstrumentHook } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
@@ -93,6 +94,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
         let _isinitialized: boolean;
         let _rootCtx: IProcessTelemetryContext; // Used as the root context, holding the current config and initialized core
         let _nextPlugin: ITelemetryPlugin | ITelemetryPluginChain; // Used for backward compatibility where plugins don't call the main pipeline
+        let _unloadHandlerContainer: IUnloadHandlerContainer;
         let _hooks: IInstrumentHook[];
 
         _initDefaults();
@@ -120,10 +122,11 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                     isAsync: false
                 };
 
-
                 function _unloadCallback() {
                     if (!unloadDone) {
                         unloadDone = true;
+
+                        _unloadHandlerContainer.run(theUnloadCtx, unloadState);
 
                         // Remove all instrumentation hooks
                         arrForEach(_hooks, (fn) => {
@@ -158,6 +161,8 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                     }
                 }
             };
+
+            proxyFunctionAs(_self, "_addUnloadCb", () => _unloadHandlerContainer, "add");
         });
 
         // These are added after the dynamicProto so that are not moved to the prototype
@@ -240,6 +245,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             _rootCtx = null;
             _nextPlugin = null;
             _hooks = [];
+            _unloadHandlerContainer = createUnloadHandlerContainer();
         }
     }
 
@@ -261,6 +267,14 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
     }
 
     public abstract processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext): void;
+
+    /**
+     * Add an unload handler that will be called when the SDK is being unloaded
+     * @param handler - the handler
+     */
+    protected _addUnloadCb(handler: UnloadHandler): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
 
     /**
      * Add this hook so that it is automatically removed during unloading

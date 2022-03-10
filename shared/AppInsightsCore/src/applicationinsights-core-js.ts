@@ -69,4 +69,5 @@ export { IDbgExtension } from "./JavaScriptSDK.Interfaces/IDbgExtension";
 export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils"
 export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./JavaScriptSDK.Interfaces/ITelemetryInitializers";
 export { createUniqueNamespace } from "./JavaScriptSDK/DataCacheHelper";
+export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./JavaScriptSDK/UnloadHandlerContainer";
 export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";

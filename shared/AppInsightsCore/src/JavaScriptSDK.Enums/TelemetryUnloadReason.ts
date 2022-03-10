@@ -13,15 +13,15 @@
     /**
      * Just this plugin is being removed
      */
-    //PluginUnload = 1,
+    PluginUnload = 1,
 
     /**
      * This instance of the plugin is being removed and replaced
      */
-    //PluginReplace = 2,
+    PluginReplace = 2,
 
     /**
      * The entire SDK is being unloaded
      */
-    //SdkUnload = 50
+    SdkUnload = 50
 }
