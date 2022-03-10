@@ -38,6 +38,11 @@ export const enum SendRequestReason {
      * The event(s) being sent as a retry
      */
     Retry = 5,
+
+    /**
+     * The SDK is unloading
+     */
+    SdkUnload = 6,
     
     /**
      * Maximum batch size would be exceeded
