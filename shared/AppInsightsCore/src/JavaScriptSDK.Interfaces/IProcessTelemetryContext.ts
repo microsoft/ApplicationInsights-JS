@@ -111,8 +111,8 @@ export interface IProcessTelemetryContext extends IBaseProcessingContext {
 }
 
 /**
- * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance
- * between multiple AppInsights instances
+ * The current context for the current call to teardown() implementations, used to support when plugins are being removed
+ * or the SDK is being unloaded.
  */
 export interface IProcessTelemetryUnloadContext extends IBaseProcessingContext {
 
@@ -134,8 +134,8 @@ export interface IProcessTelemetryUnloadContext extends IBaseProcessingContext {
 }
 
 /**
- * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance
- * between multiple AppInsights instances
+ * The current context for the current call to the plugin update() implementations, used to support the notifications
+ * for when plugins are added, removed or the configuration was changed.
  */
 export interface IProcessTelemetryUpdateContext extends IBaseProcessingContext {
     /**

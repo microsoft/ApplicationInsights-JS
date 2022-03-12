@@ -21,7 +21,9 @@ export interface ITelemetryProcessor {
     processTelemetry: (env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => void;
    
     /**
-     * The the plugin should re-evaluate configuration and update any cached configuration settings.
+     * The the plugin should re-evaluate configuration and update any cached configuration settings or 
+     * plugins. If implemented this method will be called whenever a plugin is added or removed and if
+     * the configuration has bee updated.
      * @param updateCtx - This is the context that should be used during updating.
      * @param updateState - The details / state of the update process, it holds details like the current and previous configuration.
      * @returns boolean - true if the plugin has or will call updateCtx.processNext(), this allows the plugin to perform any asynchronous operations.
