@@ -12,8 +12,8 @@ import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { createProcessTelemetryContext, createProcessTelemetryUnloadContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
+import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
 import { initializePlugins, sortPlugins, _getPluginState } from "./TelemetryHelpers";
 import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
@@ -22,7 +22,7 @@ import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
 import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction, objFreeze, proxyFunctionAs, proxyFunctions } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
-import { DiagnosticLogger, _InternalLogMessage } from "./DiagnosticLogger";
+import { DiagnosticLogger, _InternalLogMessage, _throwInternal } from "./DiagnosticLogger";
 import { getDebugListener } from "./DbgExtensionUtils";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ChannelControllerPriority, createChannelControllerPlugin, createChannelQueues, IChannelController, IInternalChannelController, _IInternalChannels } from "./ChannelController";
@@ -30,6 +30,8 @@ import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../J
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { createUniqueNamespace } from "./DataCacheHelper";
 import { createUnloadHandlerContainer, IUnloadHandlerContainer, UnloadHandler } from "./UnloadHandlerContainer";
+import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
+import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
@@ -190,7 +192,7 @@ export class BaseCore implements IAppInsightsCore {
                 _configExtensions.push(...extensions, ...config.extensions);
                 _channelConfig = (config||{}).channels;
 
-                _initPluginChain(config);
+                _initPluginChain(config, null);
 
                 if (_self.getTransmissionControls().length === 0) {
                     throwError("No channels available");
@@ -401,11 +403,16 @@ export class BaseCore implements IAppInsightsCore {
                     return;
                 }
 
+                let updateState: ITelemetryUpdateState = {
+                    reason: TelemetryUpdateReason.PluginAdded
+                };
+
                 function _addPlugin(removed: boolean) {
                     _configExtensions.push(plugin);
+                    updateState.added = [plugin];
 
                     // Re-Initialize the plugin chain
-                    _initPluginChain(_self.config);
+                    _initPluginChain(_self.config, updateState);
                     addCb && addCb(true);
                 }
 
@@ -421,6 +428,8 @@ export class BaseCore implements IAppInsightsCore {
                             // Previous plugin was successfully removed or was not installed
                             addCb && addCb(false);
                         } else {
+                            updateState.removed = removedPlugins
+                            updateState.reason |= TelemetryUpdateReason.PluginRemoved;
                             _addPlugin(true);
                         }
                     });
@@ -467,7 +476,7 @@ export class BaseCore implements IAppInsightsCore {
             }
 
             // Initialize or Re-initialize the plugins
-            function _initPluginChain(config: IConfiguration) {
+            function _initPluginChain(config: IConfiguration, updateState: ITelemetryUpdateState) {
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
             
@@ -513,6 +522,10 @@ export class BaseCore implements IAppInsightsCore {
 
                 // Now reset the extensions to just those being managed by Basecore
                 _self._extensions = objFreeze(sortPlugins(_coreExtensions || [])).slice();
+
+                if (updateState) {
+                    _doUpdate(updateState);
+                }
             }
 
             function _getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
@@ -551,7 +564,10 @@ export class BaseCore implements IAppInsightsCore {
                             _removePlugins(pluginsToRemove, unloadState, (removed) => {
                                 if (removed) {
                                     // Re-Initialize the plugin chain
-                                    _initPluginChain(_self.config);
+                                    _initPluginChain(_self.config, {
+                                        reason: TelemetryUpdateReason.PluginRemoved,
+                                        removed: pluginsToRemove
+                                    });
                                 }
 
                                 removeCb && removeCb(removed);
@@ -677,11 +693,19 @@ export class BaseCore implements IAppInsightsCore {
                 extConfig.NotificationManager = _notificationManager;
             }
 
+            function _doUpdate(updateState: ITelemetryUpdateState): void {
+                let updateCtx = createProcessTelemetryUpdateContext(_getPluginChain(), _self.config, _self);
+
+                if (!_self._updateHook || _self._updateHook(updateCtx, updateState) !== true) {
+                    updateCtx.processNext(updateState);
+                }
+            }
+
             function _logOrThrowError(message: string) {
                 let logger = _self.logger;
                 if (logger) {
                     // there should always be a logger
-                    logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, message);
+                    _throwInternal(logger, eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, message);
                 } else {
                     throwError(message);
                 }
@@ -792,7 +816,7 @@ export class BaseCore implements IAppInsightsCore {
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
      */
-    public unload(isAsync?: boolean, unloadComplete?: () => void): void {
+    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
@@ -824,5 +848,16 @@ export class BaseCore implements IAppInsightsCore {
 
     protected releaseQueue() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Hook for Core extensions to allow them to update their own configuration before updating all of the plugins.
+     * @param updateCtx - The plugin update context
+     * @param updateState - The Update State
+     * @returns boolean - True means the extension class will call updateState otherwise the Core will
+     */
+    protected _updateHook?(updateCtx: IProcessTelemetryUpdateContext, updateState: ITelemetryUpdateState): void | boolean {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return false;
     }
 }

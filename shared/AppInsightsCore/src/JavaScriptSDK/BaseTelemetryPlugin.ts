@@ -9,15 +9,17 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { createProcessTelemetryContext, createProcessTelemetryUnloadContext } from "./ProcessTelemetryContext";
+import { createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext } from "./ProcessTelemetryContext";
 import { arrForEach, isArray, isFunction, isNullOrUndefined, proxyFunctionAs, setValue } from "./HelperFuncs";
 import { strExtensionConfig } from "./Constants";
 import { createUnloadHandlerContainer, IUnloadHandlerContainer, UnloadHandler } from "./UnloadHandlerContainer";
 import { IInstrumentHook } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
+import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
+import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { strDoTeardown, strIsInitialized, strSetNextPlugin } from "./InternalConstants";
 
 let strGetPlugin = "getPlugin";
@@ -87,6 +89,15 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
      */
     protected _doTeardown?: (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState, asyncCallback?: () => void) => void | boolean;
 
+    /**
+     * Extension hook to allow implementations to perform some additional update operations before the BaseTelemetryPlugin finishes it's removal
+     * @param updateCtx - This is the context that should be used during updating.
+     * @param updateState - The details / state of the update process, it holds details like the current and previous configuration.
+     * @param asyncCallback - An optional callback that the plugin must call if it returns true to inform the caller that it has completed any async update operations.
+     * @returns boolean - true if the plugin has or will call asyncCallback, this allows the plugin to perform any asynchronous operations.
+     */
+    protected _doUpdate?: (updateCtx?: IProcessTelemetryUpdateContext, updateState?: ITelemetryUpdateState, asyncCallback?: () => void) => void | boolean;
+
     constructor() {
         let _self = this;           // Setting _self here as it's used outside of the dynamicProto as well
 
@@ -146,6 +157,37 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                     _unloadCallback();
                 } else {
                     // Tell the caller that we will be calling processNext()
+                    result = true;
+                }
+
+                return result;
+            };
+
+            _self.update = (updateCtx: IProcessTelemetryUpdateContext, updateState: ITelemetryUpdateState) => {
+                // If this plugin has already been torn down (not operational) or is not initialized (core is not set)
+                // or the core being used for unload was not the same core used for initialization.
+                if (!_self.core || (updateCtx && _self.core !== updateCtx.core())) {
+                    // Do Nothing
+                    return;
+                }
+
+                let result: void | boolean;
+                let updateDone = false;
+                let theUpdateCtx = updateCtx || createProcessTelemetryUpdateContext(null, {}, _self.core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
+                let theUpdateState: ITelemetryUpdateState = updateState || {
+                    reason: TelemetryUpdateReason.Unknown
+                };
+
+                function _updateCallback() {
+                    if (!updateDone) {
+                        updateDone = true;
+                        _setDefaults(theUpdateCtx.getCfg(), theUpdateCtx.core(), theUpdateCtx.getNext());
+                    }
+                }
+
+                if (!_self._doUpdate || _self._doUpdate(theUpdateCtx, theUpdateState, _updateCallback) !== true) {
+                    _updateCallback();
+                } else {
                     result = true;
                 }
 
@@ -267,6 +309,16 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
     }
 
     public abstract processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext): void;
+
+    /**
+     * The the plugin should re-evaluate configuration and update any cached configuration settings.
+     * @param updateCtx - This is the context that should be used during updating.
+     * @param updateState - The details / state of the update process, it holds details like the current and previous configuration.
+     * @returns boolean - true if the plugin has or will call updateCtx.processNext(), this allows the plugin to perform any asynchronous operations.
+     */
+    public update(updateCtx: IProcessTelemetryUpdateContext, updateState: ITelemetryUpdateState): void | boolean{
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
 
     /**
      * Add an unload handler that will be called when the SDK is being unloaded

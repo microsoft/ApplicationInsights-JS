@@ -1,6 +1,6 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
-import { Offline } from '../../../src/Offline';
+import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, Util } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _InternalMessageId, LoggingSeverity, getGlobalInst, getGlobal } from "@microsoft/applicationinsights-core-js";
@@ -8,13 +8,21 @@ import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, No
 export class SenderTests extends AITestClass {
     private _sender: Sender;
     private _instrumentationKey = 'iKey';
+    private _offline: IOfflineListener;
 
     public testInitialize() {
         this._sender = new Sender();
         this._sender.initialize({ instrumentationKey: this._instrumentationKey }, new AppInsightsCore(), []);
+        this._offline = createOfflineListener("SenderTests");
     }
 
     public testCleanup() {
+        if (this._offline) {
+            this._offline.unload();
+        }
+        if (this._sender) {
+            //this._sender.unload();
+        }
         this._sender = null;
     }
 
@@ -1021,9 +1029,8 @@ export class SenderTests extends AITestClass {
         this.testCase({
             name: 'Offline watcher is listening to events',
             test: () => {
-                QUnit.assert.ok(Offline.isListening, 'Offline is listening');
-                QUnit.assert.equal(true, Offline.isOnline(), 'Offline reports online status');
-                QUnit.assert.equal(false, Offline.isOffline(), 'Offline reports offline status');
+                QUnit.assert.ok(this._offline.isListening(), 'Offline is listening');
+                QUnit.assert.equal(true, this._offline.isOnline(), 'Offline reports online status');
             }
         });
 
@@ -1036,22 +1043,22 @@ export class SenderTests extends AITestClass {
                 const onlineEvent = new Event('online');
 
                 // Verify precondition
-                QUnit.assert.ok(Offline.isListening);
-                QUnit.assert.ok(Offline.isOnline());
+                QUnit.assert.ok(this._offline.isListening());
+                QUnit.assert.ok(this._offline.isOnline());
 
                 // Act - Go offline
                 window.dispatchEvent(offlineEvent);
                 this.clock.tick(1);
 
                 // Verify offline
-                QUnit.assert.ok(Offline.isOffline());
+                QUnit.assert.ok(!this._offline.isOnline());
 
                 // Act - Go online
                 window.dispatchEvent(onlineEvent);
                 this.clock.tick(1);
 
                 // Verify online
-                QUnit.assert.ok(Offline.isOnline());
+                QUnit.assert.ok(this._offline.isOnline());
             }
         });
 

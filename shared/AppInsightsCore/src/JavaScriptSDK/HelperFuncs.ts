@@ -871,7 +871,9 @@ export function optimizeObject<T>(theObject: T): T {
  * @param obj5 - object to merge.
  * @returns The extended first object.
  */
- export function objExtend<T1, T2, T3, T4, T5, T6>(obj?: boolean | T1, obj2?: T2, obj3?: T3, obj4?: T4, obj5?: T5, obj6?: T6): T1 & T2 & T3 & T4 & T5 & T6 {
+export function objExtend<T2, T3, T4, T5, T6>(deepExtend?: boolean, obj2?: T2, obj3?: T3, obj4?: T4, obj5?: T5, obj6?: T6): T2 & T3 & T4 & T5 & T6
+export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1, obj2?: T2, obj3?: T3, obj4?: T4, obj5?: T5, obj6?: T6): T1 & T2 & T3 & T4 & T5 & T6
+export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, obj3?: T3, obj4?: T4, obj5?: T5, obj6?: T6): T1 & T2 & T3 & T4 & T5 & T6 {
     // Variables
     let theArgs = arguments as any;
     let extended: T1 & T2 & T3 & T4 & T5 & T6 = theArgs[0] || {};

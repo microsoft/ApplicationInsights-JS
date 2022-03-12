@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dumpObj, getExceptionName, getGlobal, getGlobalInst, IDiagnosticLogger, isNullOrUndefined, eLoggingSeverity, objForEachKey, _InternalMessageId } from "@microsoft/applicationinsights-core-js";
+import { dumpObj, getExceptionName, getGlobal, getGlobalInst, IDiagnosticLogger, isNullOrUndefined, eLoggingSeverity, objForEachKey, _InternalMessageId, _throwInternal } from "@microsoft/applicationinsights-core-js";
 import { StorageType } from "./Enums";
 
 let _canUseLocalStorage: boolean = undefined;
@@ -57,13 +57,29 @@ function _getSessionStorageObject(): Storage {
     return null;
 }
 
+/**
+ * Disables the global SDK usage of local or session storage if available
+ */
 export function utlDisableStorage() {
     _canUseLocalStorage = false;
     _canUseSessionStorage = false;
 }
 
-export function utlCanUseLocalStorage(): boolean {
-    if (_canUseLocalStorage === undefined) {
+/**
+ * Re-enables the global SDK usage of local or session storage if available
+ */
+export function utlEnableStorage() {
+    _canUseLocalStorage = utlCanUseLocalStorage(true);
+    _canUseSessionStorage = utlCanUseSessionStorage(true);
+}
+
+/**
+ * Returns whether LocalStorage can be used, if the reset parameter is passed a true this will override
+ * any previous disable calls.
+ * @param reset - Should the usage be reset and determined only based on whether LocalStorage is available
+ */
+export function utlCanUseLocalStorage(reset?: boolean): boolean {
+    if (reset || _canUseLocalStorage === undefined) {
         _canUseLocalStorage = !!_getVerifiedStorageObject(StorageType.LocalStorage);
     }
 
@@ -78,7 +94,7 @@ export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): str
         } catch (e) {
             _canUseLocalStorage = false;
 
-            logger.throwInternal(
+            _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _InternalMessageId.BrowserCannotReadLocalStorage,
                 "Browser failed read of local storage. " + getExceptionName(e),
@@ -97,7 +113,7 @@ export function utlSetLocalStorage(logger: IDiagnosticLogger, name: string, data
         } catch (e) {
             _canUseLocalStorage = false;
 
-            logger.throwInternal(
+            _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _InternalMessageId.BrowserCannotWriteLocalStorage,
                 "Browser failed write to local storage. " + getExceptionName(e),
@@ -116,7 +132,7 @@ export function utlRemoveStorage(logger: IDiagnosticLogger, name: string): boole
         } catch (e) {
             _canUseLocalStorage = false;
 
-            logger.throwInternal(
+            _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _InternalMessageId.BrowserFailedRemovalFromLocalStorage,
                 "Browser failed removal of local storage item. " + getExceptionName(e),
@@ -126,8 +142,8 @@ export function utlRemoveStorage(logger: IDiagnosticLogger, name: string): boole
     return false;
 }
 
-export function utlCanUseSessionStorage(): boolean {
-    if (_canUseSessionStorage === undefined) {
+export function utlCanUseSessionStorage(reset?: boolean): boolean {
+    if (reset || _canUseSessionStorage === undefined) {
         _canUseSessionStorage = !!_getVerifiedStorageObject(StorageType.SessionStorage);
     }
 
@@ -154,7 +170,7 @@ export function utlGetSessionStorage(logger: IDiagnosticLogger, name: string): s
         } catch (e) {
             _canUseSessionStorage = false;
 
-            logger.throwInternal(
+            _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _InternalMessageId.BrowserCannotReadSessionStorage,
                 "Browser failed read of session storage. " + getExceptionName(e),
@@ -173,7 +189,7 @@ export function utlSetSessionStorage(logger: IDiagnosticLogger, name: string, da
         } catch (e) {
             _canUseSessionStorage = false;
 
-            logger.throwInternal(
+            _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _InternalMessageId.BrowserCannotWriteSessionStorage,
                 "Browser failed write to session storage. " + getExceptionName(e),
@@ -192,12 +208,13 @@ export function utlRemoveSessionStorage(logger: IDiagnosticLogger, name: string)
         } catch (e) {
             _canUseSessionStorage = false;
 
-            logger.throwInternal(
+            _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _InternalMessageId.BrowserFailedRemovalFromSessionStorage,
                 "Browser failed removal of session storage item. " + getExceptionName(e),
                 { exception: dumpObj(e) });
         }
     }
+
     return false;
 }

@@ -17,6 +17,16 @@ export class TestCase {
 
     /** Used for debugging, set this value to ignore the automatic timeout for tests that return a promise */
     public skipTimeout? : boolean;
+
+    /**
+     * Automatically assert that all registered events have been removed
+     */
+    assertNoEvents?: boolean;
+
+    /**
+     * Automatically assert that all hooks have been removed
+     */
+    assertNoHooks?: boolean;
 }
 
 export const enum StepResult {
@@ -58,4 +68,14 @@ export interface TestCaseAsync {
      * True by default
      */
     autoComplete?: boolean;
+
+    /**
+     * Automatically assert that all registered events have been removed
+     */
+    assertNoEvents?: boolean;
+
+    /**
+     * Automatically assert that all hooks have been removed
+     */
+    assertNoHooks?: boolean;
 }
