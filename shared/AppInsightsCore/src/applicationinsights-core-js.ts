@@ -13,6 +13,7 @@ export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks,
 export { EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
+export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from "./JavaScriptSDK/BaseCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
