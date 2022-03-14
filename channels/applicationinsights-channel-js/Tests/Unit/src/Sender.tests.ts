@@ -21,7 +21,7 @@ export class SenderTests extends AITestClass {
             this._offline.unload();
         }
         if (this._sender) {
-            //this._sender.unload();
+            this._sender.teardown();
         }
         this._sender = null;
     }
