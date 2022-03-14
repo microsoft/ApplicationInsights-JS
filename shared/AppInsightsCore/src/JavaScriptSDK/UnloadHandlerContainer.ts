@@ -4,6 +4,7 @@
 import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { _throwInternal } from "./DiagnosticLogger";
 import { dumpObj } from "./EnvUtils";
 import { arrForEach } from "./HelperFuncs";
 
@@ -28,7 +29,8 @@ export function createUnloadHandlerContainer() {
             try {
                 handler(unloadCtx, unloadState);
             } catch (e) {
-                unloadCtx.diagLog().throwInternal(
+                _throwInternal(
+                    unloadCtx.diagLog(),
                     eLoggingSeverity.WARNING,
                     _eInternalMessageId.PluginException,
                     "Unexpected error calling unload handler - " + dumpObj(e));

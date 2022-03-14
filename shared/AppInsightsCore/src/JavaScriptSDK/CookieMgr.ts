@@ -11,6 +11,7 @@ import {
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { strEmpty } from "./InternalConstants";
+import { _throwInternal } from "./DiagnosticLogger";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
@@ -252,7 +253,8 @@ export function areCookiesSupported(logger?: IDiagnosticLogger): any {
             let doc = _doc || {} as Document;
             _supportsCookies = doc[strCookie] !== undefined;
         } catch (e) {
-            logger && logger.throwInternal(
+            _throwInternal(
+                logger,
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.CannotAccessCookie,
                 "Cannot access document.cookie - " + getExceptionName(e),

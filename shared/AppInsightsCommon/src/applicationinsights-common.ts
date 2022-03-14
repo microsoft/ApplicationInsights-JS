@@ -62,7 +62,7 @@ export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginE
 export { isBeaconsSupported as isBeaconApiSupported } from "@microsoft/applicationinsights-core-js"
 export { createDomEvent } from "./DomHelperFuncs";
 export {
-    utlDisableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage,
+    utlDisableStorage, utlEnableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage,
     utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage
 } from "./StorageHelperFuncs";
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./UrlHelperFuncs";

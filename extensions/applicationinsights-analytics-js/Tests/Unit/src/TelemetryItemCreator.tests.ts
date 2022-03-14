@@ -13,7 +13,7 @@ import {
     RemoteDependencyData,
     IDependencyTelemetry,
 } from '@microsoft/applicationinsights-common';
-import { ApplicationInsights } from '../../../src/JavaScriptSDK/ApplicationInsights'
+import { AnalyticsPlugin } from '../../../src/JavaScriptSDK/AnalyticsPlugin'
 import { 
     IAppInsightsCore, AppInsightsCore,
     ITelemetryItem,
@@ -24,7 +24,7 @@ import {
 
 export class TelemetryItemCreatorTests extends AITestClass {
     private _core: IAppInsightsCore;
-    private _appInsights: ApplicationInsights;
+    private _appInsights: AnalyticsPlugin;
 
     public testInitialize() {
         const plugin: IPlugin = new ChannelPlugin();
@@ -33,7 +33,7 @@ export class TelemetryItemCreatorTests extends AITestClass {
             {instrumentationKey: "key"},
             [plugin]
         );
-        this._appInsights = new ApplicationInsights();
+        this._appInsights = new AnalyticsPlugin();
         this._appInsights.initialize({ "instrumentationKey": "ikey" }, this._core, []);
     }
 

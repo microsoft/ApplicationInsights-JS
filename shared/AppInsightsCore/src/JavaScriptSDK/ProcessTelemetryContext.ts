@@ -6,16 +6,17 @@ import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { GetExtCfgMergeType, IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { GetExtCfgMergeType, IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { safeGetLogger } from "./DiagnosticLogger";
+import { safeGetLogger, _throwInternal } from "./DiagnosticLogger";
 import { arrForEach, isArray, isFunction, isNullOrUndefined, isObject, isUndefined, objExtend, objForEachKey, objFreeze, objKeys, proxyFunctions } from "./HelperFuncs";
 import { doPerf } from "./PerfManager";
 import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { dumpObj } from "./EnvUtils";
-import { strCore, strDisabled, strEmpty, strIsInitialized, strTeardown } from "./InternalConstants";
+import { strCore, strDisabled, strEmpty, strIsInitialized, strTeardown, strUpdate } from "./InternalConstants";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { _getPluginState } from "./TelemetryHelpers";
 
 const strTelemetryPluginChain = "TelemetryPluginChain";
@@ -123,10 +124,11 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
                     try {
                         completeDetails.func.call(completeDetails.self, completeDetails.args);
                     } catch (e) {
-                        core.logger.throwInternal(
-                        eLoggingSeverity.WARNING,
-                        _eInternalMessageId.PluginException,
-                        "Unexpected Exception during onComplete - " + dumpObj(e));
+                        _throwInternal(
+                            core.logger,
+                            eLoggingSeverity.WARNING,
+                            _eInternalMessageId.PluginException,
+                            "Unexpected Exception during onComplete - " + dumpObj(e));
                     }
                 });
 
@@ -265,6 +267,38 @@ export function createProcessTelemetryUnloadContext(telemetryChain: ITelemetryPl
     return context;
 }
 
+/**
+ * Creates a new Telemetry Item context with the current config, core and plugin execution chain for updating the configuration
+ * @param plugins - The plugin instances that will be executed
+ * @param config - The current config
+ * @param core - The current core instance
+ * @param startAt - Identifies the next plugin to execute, if null there is no "next" plugin and if undefined it should assume the start of the chain
+ */
+ export function createProcessTelemetryUpdateContext(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryUpdateContext {
+    let internalContext: IInternalContext<IProcessTelemetryUpdateContext> = _createInternalContext<IProcessTelemetryUpdateContext>(telemetryChain, config, core, startAt);
+    let context = internalContext.ctx;
+
+    function _processNext(updateState: ITelemetryUpdateState) {
+        return context.iterate((plugin) => {
+            if (isFunction(plugin[strUpdate])) {
+                plugin[strUpdate](context, updateState);
+            }
+        });
+    }
+
+    function _createNew(plugins: IPlugin[] | ITelemetryPluginChain = null, startAt?: IPlugin) {
+        if (isArray(plugins)) {
+            plugins = createTelemetryProxyChain(plugins, config, core, startAt);
+        }
+
+        return createProcessTelemetryUpdateContext(plugins || context.getNext(), config, core, startAt);
+    }
+
+    context.processNext = _processNext;
+    context.createNew = _createNew;
+
+    return context;
+}
 
 /**
  * Creates an execution chain from the array of plugins
@@ -340,6 +374,7 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
         },
         processTelemetry: _processTelemetry,
         unload: _unloadPlugin,
+        update: _updatePlugin,
         _id: chainId,
         _setNext: (nextPlugin: IInternalTelemetryPluginChain) => {
             nextProxy = nextPlugin;
@@ -405,7 +440,8 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
 
                         // Either we have no next plugin or the current one did not attempt to call the next plugin
                         // Which means the current one is the root of the failure so log/report this failure
-                        itemCtx.diagLog().throwInternal(
+                        _throwInternal(
+                            itemCtx.diagLog(),
                             eLoggingSeverity.CRITICAL,
                             _eInternalMessageId.PluginException,
                             "Plugin [" + plugin.identifier + "] failed during " + name + " - " + dumpObj(error) + ", run flags: " + dumpObj(hasRunContext));
@@ -479,6 +515,33 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
         if (!_processChain(unloadCtx, _callTeardown, "unload", () => {}, unloadState.isAsync)) {
             // Only called if we hasRun was not true
             unloadCtx.processNext(unloadState);
+        }
+    }
+
+    function _updatePlugin(updateCtx: IProcessTelemetryUpdateContext, updateState: ITelemetryUpdateState) {
+
+        function _callUpdate() {
+            // Setting default of hasRun as false so the proxyProcessFn() is called as teardown() doesn't have to exist or call unloadNext().
+            let hasRun = false;
+            if (plugin) {
+                let pluginState = _getPluginState(plugin);
+                let pluginCore = plugin[strCore] || pluginState.core;
+
+                // Only update the plugin if it was initialized by the current core (i.e. It's not a shared plugin)
+                if (plugin && (!pluginCore || pluginCore === updateCtx[strCore]()) && !pluginState[strTeardown]) {
+                    if (plugin[strUpdate] && plugin[strUpdate](updateCtx, updateState) === true) {
+                        // plugin told us that it was going to (or has) call unloadCtx.processNext()
+                        hasRun = true;
+                    }
+                }
+            }
+
+            return hasRun;
+        }
+        
+        if (!_processChain(updateCtx, _callUpdate, "update", () => {}, false)) {
+            // Only called if we hasRun was not true
+            updateCtx.processNext(updateState);
         }
     }
 

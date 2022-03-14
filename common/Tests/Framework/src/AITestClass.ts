@@ -24,6 +24,37 @@ function _getObjName(target:any, unknownValue?:string) {
     return (((target || {})["constructor"]) || {}).name || unknownValue || "";
 }
 
+function _getAllAiDataKeys<T = any>(target: T, callbackfn: (name: string, value: T[keyof T]) => void) {
+    if (target) {
+        let keys = Object.getOwnPropertyNames(target);
+        for (let lp = 0; lp < keys.length; lp++) {
+            if (keys[lp].startsWith("_aiData")) {
+                callbackfn.call(target, keys[lp], target[keys[lp]]);
+            }
+        }
+    }
+}
+
+function _objForEachKey<T = any>(target: T, callbackfn: (name: string, value: T[keyof T]) => void) {
+    if (target) {
+        for (let prop in target) {
+            if (Object.prototype.hasOwnProperty.call(target, prop)) {
+                callbackfn.call(target, prop, target[prop]);
+            }
+        }
+    }
+}
+
+function _formatNamespace(namespaces: string | string[]) {
+    if (namespaces) {
+        if (Array.isArray(namespaces)) {
+            return namespaces.sort().join(".");
+        }
+    }
+
+    return namespaces || "";
+}
+
 export class AITestClass {
     public static isPollingStepFlag = "isPollingStep";
 
@@ -162,6 +193,14 @@ export class AITestClass {
                 let stepIndex = 0;
     
                 const testDone = () => {
+                    if (testInfo.assertNoEvents) {
+                        self._assertEventsRemoved();
+                    }
+
+                    if (testInfo.assertNoHooks) {
+                        self._assertHooksRemoved();
+                    }
+
                     if (timeOutTimer) {
                         orgClearTimeout(timeOutTimer);
                     }
@@ -279,12 +318,21 @@ export class AITestClass {
         const testMethod = (assert: any) => {
             // Treating all tests as async, so there is no issues with mixing them
             let done = assert.async();
+            let self = this;
 
             // Save off the instance of the currently running suite.
             AITestClass.currentTestClass = this;
             AITestClass.currentTestInfo = testInfo;
 
             function _testFinished(failed?: boolean) {
+                if (testInfo.assertNoEvents) {
+                    self._assertEventsRemoved();
+                }
+
+                if (testInfo.assertNoHooks) {
+                    self._assertHooksRemoved();
+                }
+
                 AITestClass.currentTestClass._testCompleted(failed);
                 done();
             }
@@ -683,6 +731,32 @@ export class AITestClass {
         }
     }
 
+    protected _assertEventsRemoved() {
+        this._assertNoEvents(window, "window");
+        this._assertNoEvents(document, "document");
+        if (document["body"]) {
+            this._assertNoEvents(document["body"], "body");
+        }
+
+        if (navigator) {
+            this._assertNoEvents(navigator, "navigator");
+        }
+
+        if (history) {
+            this._assertNoEvents(history, "history");
+        }
+    }
+
+    protected _assertHooksRemoved() {
+        this._assertRemoveHooks(history, "history");
+        this._assertRemoveHooks(XMLHttpRequest.prototype, "XHR Prototype");
+        this._assertRemoveHooks(XMLHttpRequest, "XHR");
+        this._assertRemoveHooks(window, "window");
+        this._assertRemoveFuncHooks(window.fetch, "fetch");
+        this._assertRemoveFuncHooks(window.onerror, "onerror");
+        this._assertRemoveFuncHooks(window.onunhandledrejection, "onunhandledrejection");
+    }
+
     /** Called when the test is starting. */
     private _testStarting() {
         let _self = this;
@@ -767,10 +841,35 @@ export class AITestClass {
         }
 
         this.testCleanup();
+        this._cleanupEvents();
 
         // Clear the instance of the currently running suite.
         AITestClass.currentTestClass = null;
         AITestClass.currentTestInfo = null;
+    }
+
+    private _assertRemoveFuncHooks(fn:any, targetName: string) {
+        if (typeof fn === "function") {
+            let aiHook:any = fn["_aiHooks"];
+
+            if (aiHook && aiHook.h) {
+                aiHook.h.forEach((hook: any) => {
+                    Assert.ok(false, targetName + " Hook: " + aiHook.n + "." + _formatNamespace(hook.cbks.ns || "") + " exists");
+                });
+            }
+        }
+    }
+
+    private _assertRemoveHooks(target:any, targetName: string) {
+        if (target) {
+            Object.keys(target).forEach(name => {
+                try {
+                    this._assertRemoveFuncHooks(target[name], targetName);
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+                }
+            });
+        }
     }
 
     private _removeFuncHooks(fn:any) {
@@ -784,19 +883,25 @@ export class AITestClass {
     }
 
     private _removeHooks(target:any) {
-        Object.keys(target).forEach(name => {
-            try {
-                this._removeFuncHooks(target[name]);
-            } catch (e) {
-                // eslint-disable-next-line no-empty
-            }
-        });
+        if (target) {
+            Object.keys(target).forEach(name => {
+                try {
+                    this._removeFuncHooks(target[name]);
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+                }
+            });
+        }
     }
 
     private _cleanupAllHooks() {
+        this._removeHooks(history);
         this._removeHooks(XMLHttpRequest.prototype);
         this._removeHooks(XMLHttpRequest);
+        this._removeHooks(window);
         this._removeFuncHooks(window.fetch);
+        this._removeFuncHooks(window.onerror);
+        this._removeFuncHooks(window.onunhandledrejection);
     }
 
     private _restoreObject(objectProps: any) {
@@ -885,6 +990,63 @@ export class AITestClass {
                     _self._xhrOrgSend.apply(xhr, theArguments);
                 }
             }
+        }
+    }
+
+    private _assertNoEvents(target: any, targetName: string): void {
+        _getAllAiDataKeys(target, (name, value) => {
+            if (value && name.startsWith("_aiDataEvents")) {
+                let events = value.events;
+                _objForEachKey(events, (evtName, evts) => {
+                    for (let lp = 0; lp < evts.length; lp++) {
+                        let theEvent = evts[lp];
+                        Assert.ok(false, "[" + targetName + "] has registered event handler [" + evtName + "." + (theEvent.evtName.ns || "") + "]");
+                    }
+                });
+            }
+        });
+    }
+
+    private _removeAllEvents(target: any, targetName: string): any {
+        let dataName: string[] = [];
+        _getAllAiDataKeys(target, (name, value) => {
+            if (value && name.startsWith("_aiDataEvents")) {
+                dataName.push(name);
+                let events = value.events;
+                _objForEachKey(events, (evtName, evts) => {
+                    for (let lp = 0; lp < evts.length; lp++) {
+                        let theEvent = evts[lp];
+                        console && console.log("Removing [" + targetName + "] event handler " + evtName + "." + (theEvent.evtName.ns || ""));
+                        if (target.removeEventListener) {
+                            target.removeEventListener(evtName, theEvent.handler, theEvent.capture);
+                        }
+                    }
+                });
+
+                delete value.events;
+            }
+        });
+
+        for (let lp = 0; lp < dataName.length; lp++) {
+            delete target[dataName[lp]];
+        }
+
+        return null;
+    }
+
+    private _cleanupEvents() {
+        this._removeAllEvents(window, "window");
+        this._removeAllEvents(document, "document");
+        if (document["body"]) {
+            this._removeAllEvents(document["body"], "body");
+        }
+
+        if (navigator) {
+            this._removeAllEvents(navigator, "navigator");
+        }
+
+        if (history) {
+            this._removeAllEvents(history, "history");
         }
     }
 }

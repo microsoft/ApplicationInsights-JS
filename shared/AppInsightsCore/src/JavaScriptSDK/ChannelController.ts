@@ -3,14 +3,16 @@
 
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
+import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { arrForEach, isArray, objFreeze, throwError } from "./HelperFuncs";
 import { strPause, strProcessNext, strResume, strTeardown } from "./InternalConstants";
 import { createProcessTelemetryContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
@@ -90,6 +92,20 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
         _runChainOnComplete();
     }
 
+    function _doUpdate(updateCtx: IProcessTelemetryUpdateContext, updateState: ITelemetryUpdateState) {
+        let theUpdateState: ITelemetryUpdateState = updateState || {
+            reason: TelemetryUpdateReason.Unknown
+        };
+
+        _processChannelQueue(channelQueue, updateCtx, (chainCtx: IProcessTelemetryUpdateContext) => {
+            chainCtx[strProcessNext](theUpdateState);
+        }, () => {
+            updateCtx[strProcessNext](theUpdateState);
+        });
+
+        return true;
+    }
+
     function _doTeardown(unloadCtx: IProcessTelemetryUnloadContext, unloadState: ITelemetryUnloadState) {
         let theUnloadState: ITelemetryUnloadState = unloadState || {
             reason: TelemetryUnloadReason.ManualTeardown,
@@ -152,6 +168,7 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
                 itemCtx[strProcessNext](item);
             });
         },
+        update: _doUpdate,
         [strPause]: () => {
             _processChannelQueue(channelQueue, _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
                 chainCtx.iterate<IChannelControls>((plugin) => {

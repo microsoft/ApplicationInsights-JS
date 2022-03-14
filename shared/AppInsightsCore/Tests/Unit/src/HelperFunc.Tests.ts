@@ -1,7 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { _InternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { normalizeJsName, objExtend, strEndsWith, _strEndsWithPoly, strStartsWith, _strStartsWithPoly, isObject, objKeys, _getObjProto, isPlainObject, dateNow, isTypeof, isArray } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { normalizeJsName, objExtend, strEndsWith, _strEndsWithPoly, strStartsWith, _strStartsWithPoly, isObject, objKeys, _getObjProto, isPlainObject, dateNow, isArray } from "../../../src/JavaScriptSDK/HelperFuncs";
 import { BaseCore } from "../../../src/JavaScriptSDK/BaseCore";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 

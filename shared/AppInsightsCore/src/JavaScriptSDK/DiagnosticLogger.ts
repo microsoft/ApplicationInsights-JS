@@ -320,3 +320,17 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
+
+/**
+ * This is a helper method which will call throwInternal on the passed logger, will throw exceptions in
+ * debug mode or attempt to log the error as a console warning. This helper is provided mostly to better
+ * support minification as logger.throwInternal() will not compress the publish "throwInternal" used throughout
+ * the code.
+ * @param logger - The Diagnostic Logger instance to use.
+ * @param severity {LoggingSeverity} - The severity of the log message
+ * @param message {_InternalLogMessage} - The log message.
+ */
+export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
+    (logger || new DiagnosticLogger()).throwInternal(severity, msgId, msg, properties, isUserAct);
+}
+

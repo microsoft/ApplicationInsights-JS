@@ -49,12 +49,12 @@ function _normalizeNamespace(name: string) {
     return name;
 }
 
-function _getEvtNamespace(eventName: string, namespaces: string | string[]): IEventDetails {
-    if (namespaces) {
+function _getEvtNamespace(eventName: string, evtNamespace?: string | string[]): IEventDetails {
+    if (evtNamespace) {
         let theNamespace: string = "";
-        if (isArray(namespaces)) {
+        if (isArray(evtNamespace)) {
             theNamespace = "";
-            arrForEach(namespaces, (name) => {
+            arrForEach(evtNamespace, (name) => {
                 name = _normalizeNamespace(name);
                 if (name) {
                     if (name[0] !== ".") {
@@ -65,7 +65,7 @@ function _getEvtNamespace(eventName: string, namespaces: string | string[]): IEv
                 }
             });
         } else {
-            theNamespace = _normalizeNamespace(namespaces);
+            theNamespace = _normalizeNamespace(evtNamespace);
         }
 
         if (theNamespace) {
@@ -96,18 +96,24 @@ export interface _IRegisteredEvents {
  * Get all of the registered events on the target object, this is primarily used for testing cleanup but may also be used by
  * applications to remove their own events
  * @param target - The EventTarget that has registered events
- * @param evtName - [Optional] The name of the event to return the registered handlers and full name (with namespaces)
+ * @param eventName - [Optional] The name of the event to return the registered handlers and full name (with namespaces)
+ * @param evtNamespace - [Optional] Additional namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace,
+ * if the eventName also includes a namespace the namespace(s) are merged into a single namespace
  */
-export function __getRegisteredEvents(target: any, evtName?: string): _IRegisteredEvents[] {
+export function __getRegisteredEvents(target: any, eventName?: string, evtNamespace?: string | string[]): _IRegisteredEvents[] {
     let theEvents: _IRegisteredEvents[] = [];
     let eventCache = elmNodeData.get<IAiEvents>(target, strEvents, {}, false);
+    let evtName = _getEvtNamespace(eventName, evtNamespace);
+
     objForEachKey(eventCache, (evtType, registeredEvents) => {
         arrForEach(registeredEvents, (value) => {
-            if (!evtName || evtName === value.evtName.type) {
-                theEvents.push({
-                    name: value.evtName.type + (value.evtName.ns ? "." + value.evtName.ns : ""),
-                    handler: value.handler
-                });
+            if (!evtName.type || evtName.type === value.evtName.type) {
+                if (!evtName.ns || evtName.ns === evtName.ns) {
+                    theEvents.push({
+                        name: value.evtName.type + (value.evtName.ns ? "." + value.evtName.ns : ""),
+                        handler: value.handler
+                    });
+                }
             }
         });
     });

@@ -9,6 +9,7 @@ import { ITelemetryItem } from "./ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
 import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
+import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
 
 export const enum GetExtCfgMergeType {
     None = 0,
@@ -110,8 +111,8 @@ export interface IProcessTelemetryContext extends IBaseProcessingContext {
 }
 
 /**
- * The current context for the current call to processTelemetry(), used to support sharing the same plugin instance
- * between multiple AppInsights instances
+ * The current context for the current call to teardown() implementations, used to support when plugins are being removed
+ * or the SDK is being unloaded.
  */
 export interface IProcessTelemetryUnloadContext extends IBaseProcessingContext {
 
@@ -130,4 +131,26 @@ export interface IProcessTelemetryUnloadContext extends IBaseProcessingContext {
      *                  order then the next plugin will be NOT set.
      */
      createNew: (plugins?: IPlugin[] | ITelemetryPluginChain, startAt?: IPlugin) => IProcessTelemetryUnloadContext;
+}
+
+/**
+ * The current context for the current call to the plugin update() implementations, used to support the notifications
+ * for when plugins are added, removed or the configuration was changed.
+ */
+export interface IProcessTelemetryUpdateContext extends IBaseProcessingContext {
+    /**
+     * This Plugin has finished unloading, so unload the next one
+     * @param updateState - The update State
+     * @returns boolean (true) if there is no more plugins to process otherwise false or undefined (void)
+     */
+    processNext: (updateState: ITelemetryUpdateState) => boolean | void;
+
+    /**
+     * Create a new context using the core and config from the current instance, returns a new instance of the same type
+     * @param plugins - The execution order to process the plugins, if null or not supplied
+     *                  then the current execution order will be copied.
+     * @param startAt - The plugin to start processing from, if missing from the execution
+     *                  order then the next plugin will be NOT set.
+     */
+     createNew: (plugins?: IPlugin[] | ITelemetryPluginChain, startAt?: IPlugin) => IProcessTelemetryUpdateContext;
 }

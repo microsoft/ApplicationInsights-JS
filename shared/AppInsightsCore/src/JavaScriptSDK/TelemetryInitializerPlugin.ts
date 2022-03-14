@@ -7,6 +7,7 @@ import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTe
 import { ITelemetryInitializerContainer, ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { BaseTelemetryPlugin } from "./BaseTelemetryPlugin";
+import { _throwInternal } from "./DiagnosticLogger";
 import { dumpObj } from "./EnvUtils";
 import { arrForEach, getExceptionName } from "./HelperFuncs";
 import { strDoTeardown } from "./InternalConstants";
@@ -68,7 +69,8 @@ export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements I
                         } catch (e) {
                             // log error but dont stop executing rest of the telemetry initializers
                             // doNotSendItem = true;
-                            itemCtx.diagLog().throwInternal(
+                            _throwInternal(
+                                itemCtx.diagLog(),
                                 eLoggingSeverity.CRITICAL,
                                 _eInternalMessageId.TelemetryInitializerFailed,
                                 "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
