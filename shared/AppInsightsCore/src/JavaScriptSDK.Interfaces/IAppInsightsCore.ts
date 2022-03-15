@@ -11,7 +11,9 @@ import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { ICookieMgr } from "./ICookieMgr";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
-import { UnloadHandler } from "../applicationinsights-core-js";
+import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
+import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
+import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
@@ -116,8 +118,11 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @param unloadComplete - An optional callback that will be called once the unload has completed
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the unload. Defaults to 5 seconds.
      */
-    unload(isAsync?: boolean, unloadComplete?: () => void): void;
+    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void;
 
     /**
      * Find and return the (first) plugin with the specified identifier if present
@@ -128,10 +133,11 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     /**
      * Add a new plugin to the installation
      * @param plugin - The new plugin to add
-     * @param replaceExisting - should any existing plugin be replaced
+     * @param replaceExisting - should any existing plugin be replaced, default is false
      * @param doAsync - Should the add be performed asynchronously
+     * @param addCb - [Optional] callback to call after the plugin has been added
      */
-    addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, doAsync: boolean, addCb?: (added?: boolean) => void): void;
+    addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, doAsync?: boolean, addCb?: (added?: boolean) => void): void;
   
     /**
      * Returns the unique event namespace that should be used when registering events
@@ -143,4 +149,15 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @param handler - the handler
      */
     addUnloadCb(handler: UnloadHandler): void;
- }
+
+    /**
+     * Flush and send any batched / cached data immediately
+     * @param async - send data asynchronously when true (defaults to true)
+     * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
+     * If the caller doesn't return true the caller should assume that it may never be called.
+     * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the unload. Defaults to 5 seconds.
+     * @returns - true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
+     */
+    flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number): boolean | void;
+}

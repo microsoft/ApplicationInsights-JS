@@ -237,6 +237,8 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
                 doneIterating = true;
                 doCallback();
             });
+
+            return true;
         },
         _setQueue: (queue: _IInternalChannels[]) => {
             channelQueue = queue;

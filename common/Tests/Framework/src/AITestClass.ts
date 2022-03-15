@@ -78,6 +78,16 @@ export class AITestClass {
     public fakeServerAutoRespond: boolean = false;
     public isEmulatingEs3: boolean;
 
+    /**
+     * Automatically assert that all registered events have been removed
+     */
+    public assertNoEvents: boolean = false;
+
+     /**
+      * Automatically assert that all hooks have been removed
+      */
+    public assertNoHooks: boolean = false;
+
     protected _orgCrypto: Crypto | null;
     protected _orgLocation: Location | null;
 
@@ -95,6 +105,8 @@ export class AITestClass {
     // Simulate an Es3 environment
     private _orgObjectFuncs: any = null;
     private _orgFetch: any = null;
+
+    private _onDoneFuncs: VoidFunction[] = [];
 
     constructor(name?: string, emulateEs3?: boolean) {
         this._moduleName = (emulateEs3 ? "(ES3) " : "") + (name || _getObjName(this, ""));
@@ -122,7 +134,24 @@ export class AITestClass {
     public testInitialize() {
     }
 
-    /** Method called after each test method has completed */
+    /**
+     * Method called immediately after the test case has finished, but before the automatic test case assertions.
+     * Use this method to call unload / teardown so the SDK can remove it's own events before being validated
+     */
+    public testFinishedCleanup() {
+        this._onDoneFuncs.forEach((fn) => {
+            try {
+                fn();
+            } catch (e) {
+                // Do nothing during cleanup
+            }
+        });
+        this._onDoneFuncs = [];
+    }
+
+    /** Method called after each test method has completed and after the test sandbox has been cleanup up.
+     * This is the final step before the next test is executed
+     */
     public testCleanup() {
     }
 
@@ -185,14 +214,29 @@ export class AITestClass {
                 this._emulateEs3();
             }
 
+            if (testInfo.assertNoEvents === undefined) {
+                testInfo.assertNoEvents = this.assertNoEvents;
+            }
+
+            if (testInfo.assertNoHooks === undefined) {
+                testInfo.assertNoHooks = this.assertNoHooks;
+            }
+
             // Run the test.
             try {
                 let self = this;
                 let testComplete = false;
                 let timeOutTimer: any = null;
                 let stepIndex = 0;
-    
+
                 const testDone = () => {
+                    this._onDoneFuncs.forEach((fn) => {
+                        fn();
+                    });
+                    this._onDoneFuncs = [];
+
+                    self.testFinishedCleanup();
+
                     if (testInfo.assertNoEvents) {
                         self._assertEventsRemoved();
                     }
@@ -325,6 +369,8 @@ export class AITestClass {
             AITestClass.currentTestInfo = testInfo;
 
             function _testFinished(failed?: boolean) {
+                self.testFinishedCleanup();
+
                 if (testInfo.assertNoEvents) {
                     self._assertEventsRemoved();
                 }
@@ -364,6 +410,14 @@ export class AITestClass {
 
             if (this.isEmulatingEs3) {
                 this._emulateEs3();
+            }
+
+            if (testInfo.assertNoEvents === undefined) {
+                testInfo.assertNoEvents = this.assertNoEvents;
+            }
+
+            if (testInfo.assertNoHooks === undefined) {
+                testInfo.assertNoHooks = this.assertNoHooks;
             }
 
             // Run the test.
@@ -472,6 +526,12 @@ export class AITestClass {
         Assert.ok(false, msg);
     }
         
+    protected onDone(cleanupFn: VoidFunction) {
+        if (cleanupFn) {
+            this._onDoneFuncs.push(cleanupFn);
+        }
+    }
+
     protected setUserAgent(userAgent: string) {
         // Hook Send beacon which also mocks navigator
         this.hookSendBeacon(null);
@@ -829,6 +889,7 @@ export class AITestClass {
 
         this._beaconHooks = [];
         this._cleanupAllHooks();
+        this._cleanupEvents();
         this._restoreEs3();
 
         if (failed) {
@@ -841,7 +902,6 @@ export class AITestClass {
         }
 
         this.testCleanup();
-        this._cleanupEvents();
 
         // Clear the instance of the currently running suite.
         AITestClass.currentTestClass = null;
@@ -849,13 +909,20 @@ export class AITestClass {
     }
 
     private _assertRemoveFuncHooks(fn:any, targetName: string) {
+        let failed = false;
+
         if (typeof fn === "function") {
             let aiHook:any = fn["_aiHooks"];
 
             if (aiHook && aiHook.h) {
                 aiHook.h.forEach((hook: any) => {
                     Assert.ok(false, targetName + " Hook: " + aiHook.n + "." + _formatNamespace(hook.cbks.ns || "") + " exists");
+                    failed = true;
                 });
+
+                if (!failed) {
+                    QUnit.assert.ok(true, "Validated [" + targetName + "] has no registered hooks");
+                }
             }
         }
     }
@@ -864,7 +931,7 @@ export class AITestClass {
         if (target) {
             Object.keys(target).forEach(name => {
                 try {
-                    this._assertRemoveFuncHooks(target[name], targetName);
+                    this._assertRemoveFuncHooks(target[name], targetName + "." + name);
                 } catch (e) {
                     // eslint-disable-next-line no-empty
                 }
@@ -994,17 +1061,29 @@ export class AITestClass {
     }
 
     private _assertNoEvents(target: any, targetName: string): void {
+        let failed = false;
         _getAllAiDataKeys(target, (name, value) => {
             if (value && name.startsWith("_aiDataEvents")) {
                 let events = value.events;
-                _objForEachKey(events, (evtName, evts) => {
-                    for (let lp = 0; lp < evts.length; lp++) {
-                        let theEvent = evts[lp];
-                        Assert.ok(false, "[" + targetName + "] has registered event handler [" + evtName + "." + (theEvent.evtName.ns || "") + "]");
-                    }
-                });
+                if (events) {
+                    _objForEachKey(events, (evtName, evts) => {
+                        if (evts) {
+                            for (let lp = 0; lp < evts.length; lp++) {
+                                let theEvent = evts[lp];
+                                if (theEvent) {
+                                    Assert.ok(false, "[" + targetName + "] has registered event handler [" + evtName + "." + (theEvent.evtName.ns || "") + "]");
+                                    failed = true;
+                                }
+                            }
+                        }
+                    });
+                }
             }
         });
+
+        if (!failed) {
+            QUnit.assert.ok(true, "Validated [" + targetName + "] has no registered event handlers");
+        }
     }
 
     private _removeAllEvents(target: any, targetName: string): any {
@@ -1013,15 +1092,21 @@ export class AITestClass {
             if (value && name.startsWith("_aiDataEvents")) {
                 dataName.push(name);
                 let events = value.events;
-                _objForEachKey(events, (evtName, evts) => {
-                    for (let lp = 0; lp < evts.length; lp++) {
-                        let theEvent = evts[lp];
-                        console && console.log("Removing [" + targetName + "] event handler " + evtName + "." + (theEvent.evtName.ns || ""));
-                        if (target.removeEventListener) {
-                            target.removeEventListener(evtName, theEvent.handler, theEvent.capture);
+                if (events) {
+                    _objForEachKey(events, (evtName, evts) => {
+                        if (evts) {
+                            for (let lp = 0; lp < evts.length; lp++) {
+                                let theEvent = evts[lp];
+                                if (theEvent) {
+                                    console && console.log("Removing [" + targetName + "] event handler " + evtName + "." + (theEvent.evtName.ns || ""));
+                                    if (target.removeEventListener) {
+                                        target.removeEventListener(evtName, theEvent.handler, theEvent.capture);
+                                    }
+                                }
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 delete value.events;
             }

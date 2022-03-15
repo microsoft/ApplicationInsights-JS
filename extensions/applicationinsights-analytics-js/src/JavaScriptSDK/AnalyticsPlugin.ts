@@ -543,7 +543,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 _base.initialize(config, core, extensions, pluginChain);
                 try {
-                    _evtNamespace = mergeEvtNamespace(createUniqueNamespace("AnalyticsPlugin"), core.evtNamespace && core.evtNamespace());
+                    _evtNamespace = mergeEvtNamespace(createUniqueNamespace(_self.identifier), core.evtNamespace && core.evtNamespace());
                     if (_preInitTelemetryInitializers) {
                         arrForEach(_preInitTelemetryInitializers, (initializer) => {
                             core.addTelemetryInitializer(initializer);
@@ -605,6 +605,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             };
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
+                _pageViewManager && _pageViewManager.teardown(unloadCtx, unloadState)
+        
                 // Just register to remove all events associated with this namespace
                 eventOff(window, null, null, _evtNamespace);
                 _initDefaults();

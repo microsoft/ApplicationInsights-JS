@@ -16,7 +16,7 @@ export class SenderTests extends AITestClass {
         this._offline = createOfflineListener("SenderTests");
     }
 
-    public testCleanup() {
+    public testFinishedCleanup() {
         if (this._offline) {
             this._offline.unload();
         }

@@ -44,18 +44,27 @@ export class AjaxTests extends AITestClass {
     private _ajax:AjaxMonitor = null;
     private _context:any = {};
 
+    constructor(name?: string, emulateEs3?: boolean) {
+        super(name, emulateEs3);
+        this.assertNoEvents = true;
+        this.assertNoHooks = true;
+    }
+    
     public testInitialize() {
         this._context = {};
         this.useFakeServer = true;
         this._fetch = getGlobalInst("fetch");
     }
 
-    public testCleanup() {
-        this._context = {};
+    public testFinishedCleanup(): void {
         if (this._ajax !== null) {
             this._ajax.teardown();
             this._ajax = null;
         }
+    }
+
+    public testCleanup() {
+        this._context = {};
         getGlobal().fetch = this._fetch;
     }
 
@@ -1912,9 +1921,10 @@ export class AjaxPerfTrackTests extends AITestClass {
     private _perfEntries: PerformanceEntry[];
     private _context:any;
 
-    constructor(name?: string) {
-        super(name);
-
+    constructor(name?: string, emulateEs3?: boolean) {
+        super(name, emulateEs3);
+        this.assertNoEvents = true;
+        this.assertNoHooks = true;
         this.useFakeServer = false;
         this._perfEntries = [];
         this._context = {};
@@ -1971,12 +1981,15 @@ export class AjaxPerfTrackTests extends AITestClass {
         }
     }
 
-    public testCleanup() {
-        this._context = {};
+    public testFinishedCleanup(): void {
         if (this._ajax) {
             this._ajax.teardown();
             this._ajax = null;
         }
+    }
+
+    public testCleanup() {
+        this._context = {};
 
         if (this._initialPerformance) {
             (<any>window).performance = this._initialPerformance;
@@ -2500,8 +2513,10 @@ export class AjaxFrozenTests extends AITestClass {
     private _ajax:AjaxMonitor;
     private _context:any;
 
-    constructor(name?: string) {
-        super(name);
+    constructor(name?: string, emulateEs3?: boolean) {
+        super(name, emulateEs3);
+        this.assertNoEvents = true;
+        this.assertNoHooks = true;
 
         this.useFakeServer = false;
         this._context = {};
@@ -2513,12 +2528,15 @@ export class AjaxFrozenTests extends AITestClass {
         this._xmlHttpRequest = getGlobalInst("XMLHttpRquest)");
     }
 
-    public testCleanup() {
-        this._context = {};
+    public testFinishedCleanup(): void {
         if (this._ajax) {
             this._ajax.teardown();
             this._ajax = null;
         }
+    }
+
+    public testCleanup() {
+        this._context = {};
 
         // Restore the real fetch
         window.fetch = this._fetch;
