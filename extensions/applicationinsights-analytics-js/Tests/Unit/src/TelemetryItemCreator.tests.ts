@@ -26,15 +26,27 @@ export class TelemetryItemCreatorTests extends AITestClass {
     private _core: IAppInsightsCore;
     private _appInsights: AnalyticsPlugin;
 
+    constructor(name?: string, emulateEs3?: boolean) {
+        super(name, emulateEs3);
+        this.assertNoEvents = true;
+        this.assertNoHooks = true;
+    }
+
     public testInitialize() {
         const plugin: IPlugin = new ChannelPlugin();
         this._core = new AppInsightsCore();
         this._core.initialize(
-            {instrumentationKey: "key"},
+            {instrumentationKey: "ikey"},
             [plugin]
         );
         this._appInsights = new AnalyticsPlugin();
-        this._appInsights.initialize({ "instrumentationKey": "ikey" }, this._core, []);
+        this._core.addPlugin(this._appInsights);
+    }
+
+    public testFinishedCleanup(): void {
+        if (this._core) {
+            this._core.unload(false);
+        }    
     }
 
     public registerTests() {

@@ -31,8 +31,8 @@ export {
 } from "./JavaScriptSDK/HelperFuncs";
 export {
     attachEvent, detachEvent, addEventHandler, addEventListeners, addPageUnloadEventListener, addPageHideEventListener, addPageShowEventListener,
-    removeEventHandler, removeEventListeners, removePageUnloadEventListener, removePageHideEventListener, eventOn, eventOff, mergeEvtNamespace,
-    _IRegisteredEvents, __getRegisteredEvents
+    removeEventHandler, removeEventListeners, removePageUnloadEventListener, removePageHideEventListener, removePageShowEventListener, eventOn, eventOff,
+    mergeEvtNamespace, _IRegisteredEvents, __getRegisteredEvents
 } from "./JavaScriptSDK/EventHelpers";
 
 export {

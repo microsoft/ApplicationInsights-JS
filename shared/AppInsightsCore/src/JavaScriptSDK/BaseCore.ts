@@ -194,7 +194,7 @@ export class BaseCore implements IAppInsightsCore {
 
                 _initPluginChain(config, null);
 
-                if (_self.getTransmissionControls().length === 0) {
+                if (!_channelQueue || _channelQueue.length === 0) {
                     throwError("No channels available");
                 }
         
@@ -379,16 +379,14 @@ export class BaseCore implements IAppInsightsCore {
                     processUnloadCtx.processNext(unloadState);
                 }
 
-                if (_channelControl) {
-                    _channelControl.flush(isAsync, _doUnload, SendRequestReason.SdkUnload, cbTimeout);
-                } else {
-                    _doUnload(true);
+                if (!_flushChannels(isAsync, _doUnload, SendRequestReason.SdkUnload, cbTimeout)) {
+                    _doUnload(false);
                 }
             };
 
             _self.getPlugin = _getPlugin;
 
-            _self.addPlugin = <T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, isAsync: boolean = true, addCb?: (added?: boolean) => void): void => {
+            _self.addPlugin = <T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, isAsync?: boolean, addCb?: (added?: boolean) => void): void => {
                 if (!plugin) {
                     addCb && addCb(false);
                     _logOrThrowError(strValidationError);
@@ -442,6 +440,8 @@ export class BaseCore implements IAppInsightsCore {
                 return _evtNamespace;
             };
 
+            _self.flush = _flushChannels;
+        
             // Create the addUnloadCb
             proxyFunctionAs(_self, "addUnloadCb", () => _unloadHandlers, "add");
 
@@ -662,6 +662,15 @@ export class BaseCore implements IAppInsightsCore {
                 }
             }
 
+            function _flushChannels(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number) {
+                if (_channelControl) {
+                    return _channelControl.flush(isAsync, callBack, sendReason || SendRequestReason.SdkUnload, cbTimeout);
+                }
+
+                callBack && callBack(false);
+                return true;
+            }
+
             function _initDebugListener(config: IConfiguration) {
 
                 if (config.disableDbgExt === true && _debugListener) {
@@ -815,10 +824,12 @@ export class BaseCore implements IAppInsightsCore {
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @param unloadComplete - An optional callback that will be called once the unload has completed
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the unload. Defaults to 5 seconds.
      */
     public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return null;
     }
 
     public getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
@@ -826,7 +837,14 @@ export class BaseCore implements IAppInsightsCore {
         return null;
     }
 
-    public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, doAsync: boolean, addCb?: (added?: boolean) => void): void {
+    /**
+     * Add a new plugin to the installation
+     * @param plugin - The new plugin to add
+     * @param replaceExisting - should any existing plugin be replaced, default is false
+     * @param doAsync - Should the add be performed asynchronously
+     * @param addCb - [Optional] callback to call after the plugin has been added
+     */
+    public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, doAsync?: boolean, addCb?: (added?: boolean) => void): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -843,6 +861,18 @@ export class BaseCore implements IAppInsightsCore {
      * @param handler - the handler
      */
     public addUnloadCb(handler: UnloadHandler): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Flush and send any batched / cached data immediately
+     * @param async - send data asynchronously when true (defaults to true)
+     * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
+     * If the caller doesn't return true the caller should assume that it may never be called.
+     * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
+     * @returns - true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
+     */
+    public flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

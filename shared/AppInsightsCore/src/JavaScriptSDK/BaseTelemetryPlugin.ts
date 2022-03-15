@@ -121,7 +121,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                 // If this plugin has already been torn down (not operational) or is not initialized (core is not set)
                 // or the core being used for unload was not the same core used for initialization.
                 if (!_self.core || (unloadCtx && _self.core !== unloadCtx.core())) {
-                    // Do Nothing
+                    // Do Nothing as either the plugin is not initialized or was not initialized by the current core
                     return;
                 }
 
