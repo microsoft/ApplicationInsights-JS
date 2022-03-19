@@ -20,6 +20,9 @@ const strBeforeUnload: string = "beforeunload";
 const strPageHideNamespace = createUniqueNamespace("aiEvtPageHide");
 const strPageShowNamespace = createUniqueNamespace("aiEvtPageShow");
 
+const rRemoveEmptyNs = /\.[\.]+/g;
+const rRemoveTrailingEmptyNs = /[\.]+$/;
+
 let _guid = 1;
 
 interface IEventDetails {
@@ -82,7 +85,7 @@ function _getEvtNamespace(eventName: string, evtNamespace?: string | string[]): 
 
     return {
         type: parsedEvent[1],
-        ns: ((parsedEvent[2] || "").split(".").sort()).join(".")
+        ns: ((parsedEvent[2] || "").replace(rRemoveEmptyNs, ".").replace(rRemoveTrailingEmptyNs, "").split(".").sort()).join(".")
     };
 }
 
@@ -201,6 +204,9 @@ export function mergeEvtNamespace(theNamespace: string, namespaces: string | str
         } else {
             newNamespaces = [ theNamespace, namespaces ];
         }
+
+        // resort the namespaces so they are always in order
+        newNamespaces = (_getEvtNamespace("xx", newNamespaces).ns).split(".");
     } else {
         newNamespaces = theNamespace;
     }

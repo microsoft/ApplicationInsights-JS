@@ -410,6 +410,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let isPolyfill = (fetch as any).polyfill;
                 if (_config.disableFetchTracking === false) {
                     _addHook(InstrumentFunc(global, strFetch, {
+                        ns: _evtNamespace,
                         // Add request hook
                         req: (callDetails: IInstrumentCallDetails, input, init) => {
                             let fetchData: ajaxRecord;
@@ -472,6 +473,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     // the workaround is to add a polyfill property to your fetch implementation before initializing
                     // App Insights
                     _addHook(InstrumentFunc(global, strFetch, {
+                        ns: _evtNamespace,
                         req: (callDetails: IInstrumentCallDetails, input, init) => {
                             // Just call so that we record any disabled URL
                             _isDisabledRequest(null, input, init);
@@ -494,6 +496,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 if (_supportsAjaxMonitoring(_self) && !_xhrInitialized) {
                     // Instrument open
                     _hookProto(XMLHttpRequest, "open", {
+                        ns: _evtNamespace,
                         req: (args:IInstrumentCallDetails, method:string, url:string, async?:boolean) => {
                             let xhr = args.inst as XMLHttpRequestInstrumented;
                             let ajaxData = xhr[strAjaxData];
@@ -513,6 +516,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                     // Instrument send
                     _hookProto(XMLHttpRequest, "send", {
+                        ns: _evtNamespace,
                         req: (args:IInstrumentCallDetails, context?: Document | BodyInit | null) => {
                             let xhr = args.inst as XMLHttpRequestInstrumented;
                             let ajaxData = xhr[strAjaxData];

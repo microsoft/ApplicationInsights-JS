@@ -27,6 +27,10 @@ export class TestCase {
      * Automatically assert that all hooks have been removed
      */
     assertNoHooks?: boolean;
+
+    
+    orgSetTimeout?: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
+    orgClearTimeout?: (timeoutId: NodeJS.Timeout) => void;
 }
 
 export const enum StepResult {
@@ -78,4 +82,7 @@ export interface TestCaseAsync {
      * Automatically assert that all hooks have been removed
      */
     assertNoHooks?: boolean;
+    
+    orgSetTimeout?: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
+    orgClearTimeout?: (timeoutId: NodeJS.Timeout) => void;
 }
