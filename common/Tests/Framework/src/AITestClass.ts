@@ -60,13 +60,13 @@ export class AITestClass {
 
     /** The instance of the currently running suite. */
     public static currentTestClass: AITestClass;
-    public static currentTestInfo: TestCase|TestCaseAsync;
+    public static currentTestInfo: TestCase | TestCaseAsync;
 
     /** Turns on/off sinon's fake implementation of XMLHttpRequest. On by default. */
     public sandboxConfig: any = {};
 
-    public static orgSetTimeout: (handler: Function, timeout?: number) => number;
-    public static orgClearTimeout: (handle?: number) => void;
+    public static orgSetTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
+    public static orgClearTimeout: (timeoutId: NodeJS.Timeout) => void;
     public static orgObjectDefineProperty = Object.defineProperty;
     
     /**** Sinon methods and properties ***/
@@ -139,14 +139,6 @@ export class AITestClass {
      * Use this method to call unload / teardown so the SDK can remove it's own events before being validated
      */
     public testFinishedCleanup() {
-        this._onDoneFuncs.forEach((fn) => {
-            try {
-                fn();
-            } catch (e) {
-                // Do nothing during cleanup
-            }
-        });
-        this._onDoneFuncs = [];
     }
 
     /** Method called after each test method has completed and after the test sandbox has been cleanup up.
@@ -177,9 +169,20 @@ export class AITestClass {
             testInfo.autoComplete = true;
         }
 
+        if (!testInfo.orgClearTimeout) {
+            // Set as the real clearTimeout (as _testStarting and enable sinon fake timers)
+            testInfo.orgClearTimeout = clearTimeout;
+        }
+
+        if (!testInfo.orgSetTimeout) {
+            // Set as the real setTimeout (as _testStarting and enable sinon fake timers)
+            testInfo.orgSetTimeout = setTimeout;
+        }
+                
         // Create a wrapper around the test method so we can do test initilization and cleanup.
         const testMethod = (assert: any) => {
             const done = assert.async();
+            const self = this;
 
             // Save off the instance of the currently running suite.
             AITestClass.currentTestClass = this;
@@ -189,37 +192,45 @@ export class AITestClass {
             const orgClearTimeout = clearTimeout;
             const orgSetTimeout = setTimeout;
 
-            AITestClass.orgSetTimeout = (handler: Function, timeout?: number) => {
-                return orgSetTimeout(handler, timeout);
+            AITestClass.orgSetTimeout = (handler: (...args: any[]) => void, timeout: number, ...args: any[]) => {
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgSetTimeout) {
+                    return AITestClass.currentTestInfo.orgSetTimeout.call(null, handler, timeout, args);
+                }
+
+                orgSetTimeout(handler, timeout, args);
             };
 
-            AITestClass.orgClearTimeout = (handler: number) => {
-                orgClearTimeout(handler);
+            AITestClass.orgClearTimeout = (timeoutId: NodeJS.Timeout) => {
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgClearTimeout) {
+                    AITestClass.currentTestInfo.orgClearTimeout.call(null, timeoutId);
+                } else {
+                    orgClearTimeout(timeoutId);
+                }
             };
 
             let useFakeServer = testInfo.useFakeServer;
             if (useFakeServer === undefined) {
-                useFakeServer = this.useFakeServer;
+                useFakeServer = self.useFakeServer;
             }
 
             if (useFakeServer) {
-                this._hookXhr();
+                self._hookXhr();
             }
 
             if (testInfo.useFakeTimers) {
-                this.clock = sinon.useFakeTimers();
+                self.clock = sinon.useFakeTimers();
             }
 
-            if (this.isEmulatingEs3) {
-                this._emulateEs3();
+            if (self.isEmulatingEs3) {
+                self._emulateEs3();
             }
 
             if (testInfo.assertNoEvents === undefined) {
-                testInfo.assertNoEvents = this.assertNoEvents;
+                testInfo.assertNoEvents = self.assertNoEvents;
             }
 
             if (testInfo.assertNoHooks === undefined) {
-                testInfo.assertNoHooks = this.assertNoHooks;
+                testInfo.assertNoHooks = self.assertNoHooks;
             }
 
             // Run the test.
@@ -230,12 +241,7 @@ export class AITestClass {
                 let stepIndex = 0;
 
                 const testDone = () => {
-                    this._onDoneFuncs.forEach((fn) => {
-                        fn();
-                    });
-                    this._onDoneFuncs = [];
-
-                    self.testFinishedCleanup();
+                    self._testFinishedCleanup();
 
                     if (testInfo.assertNoEvents) {
                         self._assertEventsRemoved();
@@ -337,7 +343,7 @@ export class AITestClass {
             } catch (ex) {
                 console.error("Failed: Unexpected Exception: " + ex);
                 Assert.ok(false, "Unexpected Exception: " + ex);
-                this._testCompleted(true);
+                self._testCompleted(true);
 
                 // done is QUnit callback indicating the end of the test
                 done();
@@ -358,6 +364,16 @@ export class AITestClass {
             throw new Error("Must specify 'test' method in testInfo context in registerTestcase call");
         }
 
+        if (!testInfo.orgClearTimeout) {
+            // Set as the real clearTimeout (as _testStarting and enable sinon fake timers)
+            testInfo.orgClearTimeout = clearTimeout;
+        }
+
+        if (!testInfo.orgSetTimeout) {
+            // Set as the real setTimeout (as _testStarting and enable sinon fake timers)
+            testInfo.orgSetTimeout = setTimeout;
+        }
+
         // Create a wrapper around the test method so we can do test initilization and cleanup.
         const testMethod = (assert: any) => {
             // Treating all tests as async, so there is no issues with mixing them
@@ -369,7 +385,7 @@ export class AITestClass {
             AITestClass.currentTestInfo = testInfo;
 
             function _testFinished(failed?: boolean) {
-                self.testFinishedCleanup();
+                self._testFinishedCleanup();
 
                 if (testInfo.assertNoEvents) {
                     self._assertEventsRemoved();
@@ -387,12 +403,20 @@ export class AITestClass {
             const orgClearTimeout = clearTimeout;
             const orgSetTimeout = setTimeout;
 
-            AITestClass.orgSetTimeout = (handler: Function, timeout?: number) => {
-                return orgSetTimeout(handler, timeout);
+            AITestClass.orgSetTimeout = (handler: (...args: any[]) => void, timeout: number, ...args: any[]) => {
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgSetTimeout) {
+                    return AITestClass.currentTestInfo.orgSetTimeout.call(null, handler, timeout, args);
+                }
+
+                orgSetTimeout(handler, timeout, args);
             };
 
-            AITestClass.orgClearTimeout = (handler: number) => {
-                orgClearTimeout(handler);
+            AITestClass.orgClearTimeout = (timeoutId: NodeJS.Timeout) => {
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgClearTimeout) {
+                    AITestClass.currentTestInfo.orgClearTimeout.call(null, timeoutId);
+                } else {
+                    orgClearTimeout(timeoutId);
+                }
             };
 
             let useFakeServer = testInfo.useFakeServer;
@@ -813,8 +837,8 @@ export class AITestClass {
         this._assertRemoveHooks(XMLHttpRequest, "XHR");
         this._assertRemoveHooks(window, "window");
         this._assertRemoveFuncHooks(window.fetch, "fetch");
-        this._assertRemoveFuncHooks(window.onerror, "onerror");
-        this._assertRemoveFuncHooks(window.onunhandledrejection, "onunhandledrejection");
+        this._assertRemoveFuncHooks(window.onerror, "window.onerror");
+        this._assertRemoveFuncHooks(window.onunhandledrejection, "window.onunhandledrejection");
     }
 
     /** Called when the test is starting. */
@@ -861,6 +885,19 @@ export class AITestClass {
         this.testInitialize();
     }
 
+    private _testFinishedCleanup() {
+        this._onDoneFuncs.forEach((fn) => {
+            try {
+                fn();
+            } catch (e) {
+                // Do nothing during cleanup
+            }
+        });
+        this._onDoneFuncs = [];
+
+        this.testFinishedCleanup();
+    }
+
     /** Called when the test is completed. */
     private _testCompleted(failed?: boolean) {
         this._unhookXhr();
@@ -901,11 +938,16 @@ export class AITestClass {
             (this.sandbox as any).verifyAndRestore();
         }
 
+        this.sandbox = null;
+
         this.testCleanup();
 
         // Clear the instance of the currently running suite.
         AITestClass.currentTestClass = null;
         AITestClass.currentTestInfo = null;
+
+        AITestClass.orgSetTimeout = null;
+        AITestClass.orgClearTimeout = null;
     }
 
     private _assertRemoveFuncHooks(fn:any, targetName: string) {
