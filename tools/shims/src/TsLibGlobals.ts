@@ -29,7 +29,13 @@ export function __exposeGlobalTsLib() {
     })(globalObj, __assignFn, __extendsFn, __createBindingFn);
     
     // Assign local variables that will be used for embedded scenarios, if check is to support NativeScript where these are marked as readonly
-    if (!__assign) { __assign = globalObj.__assign; }
-    if (!__extends) { __extends = globalObj.__extends; }
-    if (!__createBinding) { __createBinding = globalObj.__createBinding; }
+    if (!__assign) {
+        __assign = globalObj.__assign;
+    }
+    if (!__extends) {
+        __extends = globalObj.__extends;
+    }
+    if (!__createBinding) {
+        __createBinding = globalObj.__createBinding;
+    }
 }

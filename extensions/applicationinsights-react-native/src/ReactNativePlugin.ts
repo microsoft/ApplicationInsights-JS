@@ -34,7 +34,7 @@ declare var global: Window;
  * @param target The target object to find and process the keys
  * @param callbackfn The function to call with the details
  */
- export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
+export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
     if (target && isObject(target)) {
         for (let prop in target) {
             if (hasOwnProperty(target, prop)) {

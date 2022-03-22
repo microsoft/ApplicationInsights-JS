@@ -98,16 +98,15 @@ export class WebEvent {
         // If override specified
         if (overrideValues && isValueAssigned(overrideValues.behavior)) {
             behavior = overrideValues.behavior;
-        }
-        // If behavior meta tag available
-        else if (isValueAssigned(this._behaviorMetaTag)) {
+        } else if (isValueAssigned(this._behaviorMetaTag)) {
+            // If behavior meta tag available
             behavior = this._behaviorMetaTag;
         }
         return this._getValidBehavior(behavior);
     }
 
     protected _getValidBehavior(behavior: string | number): string | number {
-       return this._config.behaviorValidator(behavior);
+        return this._config.behaviorValidator(behavior);
     }
 
     /**

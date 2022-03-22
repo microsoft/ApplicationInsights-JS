@@ -147,43 +147,43 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
     }
 
     switch (appPhase) {
-        case "ShowConfigurationSelection":
-            return (
-                <ConfigurationSelection
-                    configurationType={configurationType}
-                    onConfigurationSaved={applyConfigurationType}
-                    onCancel={handleConfigurationSelectionCancel}
-                />
-            );
-        case "LoadingConfiguration":
-            return <div className='loadingConfiguration'>Loading Configuration...</div>;
-        case "ConfigurationLoadFailed":
-            return (
-                <div className='loadingConfigurationFailed'>
-                    <div className='loadingConfigurationFailedHeader'>The configuration could not be loaded</div>
-                    <div>
-                        <a href='#' onClick={() => loadConfiguration(configurationType)}>
+    case "ShowConfigurationSelection":
+        return (
+            <ConfigurationSelection
+                configurationType={configurationType}
+                onConfigurationSaved={applyConfigurationType}
+                onCancel={handleConfigurationSelectionCancel}
+            />
+        );
+    case "LoadingConfiguration":
+        return <div className='loadingConfiguration'>Loading Configuration...</div>;
+    case "ConfigurationLoadFailed":
+        return (
+            <div className='loadingConfigurationFailed'>
+                <div className='loadingConfigurationFailedHeader'>The configuration could not be loaded</div>
+                <div>
+                    <a href='#' onClick={() => loadConfiguration(configurationType)}>
                             Retry
-                        </a>
-                    </div>
-                    <div>
-                        <a href='#' onClick={reset}>
-                            Choose a different configuration
-                        </a>
-                    </div>
+                    </a>
                 </div>
-            );
-        case "ConfigurationLoaded":
-            {
-                if (session !== undefined) {
-                    return (
-                        <TelemetryViewer session={session} onShowConfigurationSelection={showConfigurationSelection} />
-                    );
-                } else {
-                    reset();
-                }
+                <div>
+                    <a href='#' onClick={reset}>
+                            Choose a different configuration
+                    </a>
+                </div>
+            </div>
+        );
+    case "ConfigurationLoaded":
+        {
+            if (session !== undefined) {
+                return (
+                    <TelemetryViewer session={session} onShowConfigurationSelection={showConfigurationSelection} />
+                );
+            } else {
+                reset();
             }
-            break;
+        }
+        break;
     }
 
     return <div></div>;

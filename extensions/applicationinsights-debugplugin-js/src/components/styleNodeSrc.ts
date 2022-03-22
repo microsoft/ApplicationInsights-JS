@@ -4,15 +4,15 @@
 import { Util } from "@microsoft/applicationinsights-common";
 
 const BG_INFO = "#F0F6FF",
-      BG_ERROR = "#FEF0F1",
-      ICON_ERROR = "#E00B1C",
-      BTN_PRIMARY = "#0078d4",
-      BTN_HOVER = "#106EBE",
-      BTN_ACTIVE = "#005A9E",
-      TEXT_PRIMARY = "#323130",
-      TEXT_MATCHED = "yellow",
-      BORDER_GREY_160 = "1px solid #605E5C",
-      BORDER_GREY_60 = "1px solid #B3B0AD";
+    BG_ERROR = "#FEF0F1",
+    ICON_ERROR = "#E00B1C",
+    BTN_PRIMARY = "#0078d4",
+    BTN_HOVER = "#106EBE",
+    BTN_ACTIVE = "#005A9E",
+    TEXT_PRIMARY = "#323130",
+    TEXT_MATCHED = "yellow",
+    BORDER_GREY_160 = "1px solid #605E5C",
+    BORDER_GREY_60 = "1px solid #B3B0AD";
 
 console.log(Util.getIEVersion());
 
@@ -66,15 +66,15 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ""
-    : `.${prefix}-dbg-lgr .tree-root div::before {
+        ? ""
+        : `.${prefix}-dbg-lgr .tree-root div::before {
       content: '';
       position: absolute;
       left: -1.25em;
       height: 100%;
       border-right: 2px dotted #CCCCCC;
     }`
-  }
+}
 
   .${prefix}-dbg-lgr .tree-root div:hover::before {
     border-right: 2px solid #000;
@@ -111,8 +111,8 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ""
-    : `.${prefix}-dbg-lgr .expandable.open::before {
+        ? ""
+        : `.${prefix}-dbg-lgr .expandable.open::before {
       content: '[-] ';
       font-weight: bold;
     }
@@ -121,7 +121,7 @@ export const tempStyle = (prefix: string) => `
       content: '[+] ';
       font-weight: bold;
     }`
-  }
+}
 
   .${prefix}-dbg-lgr div:hover > .obj-key {
     text-decoration: underline;
@@ -218,8 +218,8 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ""
-    : `.${prefix}-dbg-lgr-dashboard .filterlist-input::after {
+        ? ""
+        : `.${prefix}-dbg-lgr-dashboard .filterlist-input::after {
       content: '';
       width: 8px;
       height: 8px;
@@ -232,7 +232,7 @@ export const tempStyle = (prefix: string) => `
       border-top: none;
       border-left: none;
     }`
-  }
+}
 
   .${prefix}-dbg-lgr-dashboard .filterlist-input:focus {
     border: ${BORDER_GREY_60}
@@ -296,8 +296,8 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ""
-    : `.${prefix}-dbg-lgr-dashboard .checkbox.on::after {
+        ? ""
+        : `.${prefix}-dbg-lgr-dashboard .checkbox.on::after {
       content: '';
       width: 5px;
       height: 10px;
@@ -309,7 +309,7 @@ export const tempStyle = (prefix: string) => `
       border-top: none;
       border-left: none;
     }`
-  }
+}
 
 
   .${prefix}-dbg-lgr-dashboard .checkbox.off {
@@ -317,14 +317,14 @@ export const tempStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ""
-    : `@media only screen and (max-width: 600px) {
+        ? ""
+        : `@media only screen and (max-width: 600px) {
       .${prefix}-dbg-lgr {
         width: 100%;
         min-width: 200px;
       }
     }`
-  }
+}
 
 `;
 
@@ -332,13 +332,13 @@ export const permStyle = (prefix: string) => `
   .${prefix}-debug-bin-container {
     position: fixed;
     ${Util.getIEVersion() && Util.getIEVersion() < 9
-      ? `width: 100%;
+        ? `width: 100%;
       height: 100%;
       top: 0;
       left: 0;`
-      : `width: 100vw;
+        : `width: 100vw;
       height: 100vh;`
-    }
+}
     pointer-events: none;
   }
 
@@ -411,11 +411,11 @@ export const permStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ""
-    : `.${prefix}-debug-bin-parent.notify::after {
+        ? ""
+        : `.${prefix}-debug-bin-parent.notify::after {
       content: " (!)";
     }`
-  }
+}
 
   .${prefix}-debug-bin-parent .el-value.incremented {
     transform: scale(1.5);
@@ -424,11 +424,11 @@ export const permStyle = (prefix: string) => `
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
-    ? ""
-    : `.${prefix}-debug-bin-parent:focus > span::before,
+        ? ""
+        : `.${prefix}-debug-bin-parent:focus > span::before,
     .${prefix}-debug-bin-parent:hover > span::before,
     .${prefix}-debug-bin-parent.active > span::before {
       content: attr(data-name) ": ";
     }`
-  }
+}
 `

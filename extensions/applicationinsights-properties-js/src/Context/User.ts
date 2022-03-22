@@ -192,7 +192,7 @@ export class User implements IUserContext {
         });
     }
 
-   /**
+    /**
     * Sets the authenticated user id and the account id in this session.
     *
     * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.

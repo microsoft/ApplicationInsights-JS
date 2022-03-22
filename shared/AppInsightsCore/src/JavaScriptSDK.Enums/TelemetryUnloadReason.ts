@@ -4,7 +4,7 @@
 /**
  * The TelemetryUnloadReason enumeration contains the possible reasons for why a plugin is being unloaded / torndown().
  */
- export const enum TelemetryUnloadReason {
+export const enum TelemetryUnloadReason {
     /**
      * Teardown has been called without any context.
      */

@@ -12,8 +12,10 @@
         "plugin:security/recommended"
     ],
     "rules": {
-        //"indent": ["error", 4],                                     // Re-Enable for auto fixing after merging ChromeDebugExtension Branch
+        "indent": ["error"],                                        // Enabling for auto fixing
         "quotes": ["warn", "double"],                               // Enabled for auto fixing
+        "curly": [ "error" ],                                       // Enabling for auto fixing
+        "brace-style": [ "error" ],                                 // Enabling for auto fixing
         "prefer-const": "off",
         "prefer-spread": "off",
         "no-var": "off",

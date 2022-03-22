@@ -357,7 +357,7 @@ export function isSafari(userAgentStr ?: string) {
  * Checks if HTML5 Beacons are supported in the current environment.
  * @returns True if supported, false otherwise.
  */
- export function isBeaconsSupported(): boolean {
+export function isBeaconsSupported(): boolean {
     if (_beaconsSupported === null) {
         _beaconsSupported = hasNavigator() && Boolean(getNavigator().sendBeacon);
     }

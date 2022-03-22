@@ -25,10 +25,10 @@ export interface IAppInsightsInternal {
 export class PageViewManager {
 
     constructor(
-            appInsights: IAppInsightsInternal,
-            overridePageViewDuration: boolean,
-            core: IAppInsightsCore,
-            pageViewPerformanceManager: PageViewPerformanceManager) {
+        appInsights: IAppInsightsInternal,
+        overridePageViewDuration: boolean,
+        core: IAppInsightsCore,
+        pageViewPerformanceManager: PageViewPerformanceManager) {
 
         dynamicProto(PageViewManager, this, (_self) => {
             let intervalHandle: any = null;

@@ -146,7 +146,7 @@ export interface IAutoCaptureHandler {
     click: () => void;
   }
 
-  export interface IPageActionOverrideValues extends IOverrideValues {
+export interface IPageActionOverrideValues extends IOverrideValues {
     /**
      * Uri of the referrer page
      */
@@ -177,7 +177,7 @@ export interface IAutoCaptureHandler {
     contentTags?: any;
   }
 
-  /**
+/**
    * Override values interface
    */
 export interface IOverrideValues {
@@ -223,7 +223,7 @@ export interface IContent {
     [name: string]: string | number | boolean | string[] | number[] | boolean[] | object | undefined;
 }
 
- /**
+/**
   * Content handler interface
   */
 export interface IContentHandler {

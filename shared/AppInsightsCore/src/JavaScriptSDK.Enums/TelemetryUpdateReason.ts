@@ -4,7 +4,7 @@
 /**
  * The TelemetryUpdateReason enumeration contains a set of bit-wise values that specify the reason for update request.
  */
- export const enum TelemetryUpdateReason {
+export const enum TelemetryUpdateReason {
     /**
      * Unknown.
      */

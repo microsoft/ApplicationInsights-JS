@@ -303,7 +303,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
      * @param unloadState - The details / state of the unload process, it holds details like whether it should be unloaded synchronously or asynchronously and the reason for the unload.
      * @returns boolean - true if the plugin has or will call processNext(), this for backward compatibility as previously teardown was synchronous and returned nothing.
      */
-     public teardown(unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState): void | boolean {
+    public teardown(unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState): void | boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return false;
     }

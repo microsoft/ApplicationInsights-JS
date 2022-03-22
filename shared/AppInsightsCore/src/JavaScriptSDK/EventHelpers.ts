@@ -263,7 +263,7 @@ export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNam
  * if the eventName also includes a namespace the namespace(s) are merged into a single namespace
  * @param useCapture [Optional] Defaults to false
  */
- export function eventOff<T>(target: T, eventName: string, handlerRef: any, evtNamespace?: string | string[], useCapture: boolean = false) {
+export function eventOff<T>(target: T, eventName: string, handlerRef: any, evtNamespace?: string | string[], useCapture: boolean = false) {
     if (target) {
         try {
             let evtName = _getEvtNamespace(eventName, evtNamespace);
@@ -296,7 +296,7 @@ export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNam
  * @param useCapture [Optional] Defaults to false
  * @returns True if the function was bound successfully to the event, otherwise false
  */
- export function attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
+export function attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
     return eventOn(obj, eventNameWithoutOn, handlerRef, null, useCapture);
 }
 
@@ -321,7 +321,7 @@ export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @return {boolean} - true if the handler was successfully added
  */
- export function addEventHandler(eventName: string, callback: any, evtNamespace?: string | string[]): boolean {
+export function addEventHandler(eventName: string, callback: any, evtNamespace?: string | string[]): boolean {
     let result = false;
     let w = getWindow();
     if (w) {
@@ -346,7 +346,7 @@ export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
  * otherwise this will only remove events with this specific handler.
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  */
- export function removeEventHandler(eventName: string, callback: any, evtNamespace?: string | string[]) {
+export function removeEventHandler(eventName: string, callback: any, evtNamespace?: string | string[]) {
     let w = getWindow();
     if (w) {
         eventOff(w, eventName, callback, evtNamespace);

@@ -83,7 +83,7 @@ export class AITestClass {
      */
     public assertNoEvents: boolean = false;
 
-     /**
+    /**
       * Automatically assert that all hooks have been removed
       */
     public assertNoHooks: boolean = false;
@@ -471,8 +471,7 @@ export class AITestClass {
                 } else {
                     _testFinished();
                 }
-            }
-            catch (ex) {
+            } catch (ex) {
                 console.error("Failed: Unexpected Exception: " + ex);
                 Assert.ok(false, "Unexpected Exception: " + ex);
                 _testFinished(true);
@@ -489,7 +488,9 @@ export class AITestClass {
     public spy(funcToWrap: Function): SinonSpy;
     /** Creates a spy for object.methodName and replaces the original method with the spy. The spy acts exactly like the original method in all cases. The original method can be restored by calling object.methodName.restore(). The returned spy is the function object which replaced the original method. spy === object.method. */
     public spy(object: any, methodName: string, func?: Function): SinonSpy;
-    public spy(..._args: any[]): SinonSpy { return null; }
+    public spy(..._args: any[]): SinonSpy {
+        return null;
+    }
 
     /** Creates an anonymous stub function. */
     public stub(): SinonStub;
@@ -497,10 +498,14 @@ export class AITestClass {
     public stub(object: any): SinonStub;
     /** Replaces object.methodName with a func, wrapped in a spy. As usual, object.methodName.restore(); can be used to restore the original method. */
     public stub(object: any, methodName: string, func?: Function): SinonStub;
-    public stub(..._args: any[]): SinonStub { return null; }
+    public stub(..._args: any[]): SinonStub {
+        return null;
+    }
 
     /** Creates a mock for the provided object.Does not change the object, but returns a mock object to set expectations on the object's methods. */
-    public mock(_object: any): SinonMock { return null; }
+    public mock(_object: any): SinonMock {
+        return null;
+    }
 
     /**** end: Sinon methods and properties ***/
 
@@ -562,12 +567,12 @@ export class AITestClass {
 
         try {
             AITestClass.orgObjectDefineProperty(window.navigator, "userAgent",
-            {
-                configurable: true,
-                get () {
-                    return userAgent;
-                }
-            });
+                {
+                    configurable: true,
+                    get () {
+                        return userAgent;
+                    }
+                });
         } catch (e) {
             QUnit.assert.ok(false, "Failed to set the userAgent - " + e);
             throw e;
@@ -604,12 +609,12 @@ export class AITestClass {
                         if (!newNavigator.hasOwnProperty(name)) {
                             // if it couldn't be set directly try and pretend
                             AITestClass.orgObjectDefineProperty(newNavigator, name,
-                            {
-                                configurable: true,
-                                get: function () {
-                                    return navigator[name];
-                                }
-                            });
+                                {
+                                    configurable: true,
+                                    get: function () {
+                                        return navigator[name];
+                                    }
+                                });
                         }
                     }
                 }
@@ -627,12 +632,12 @@ export class AITestClass {
     protected setNavigator(newNavigator: any) {
         try {
             AITestClass.orgObjectDefineProperty(window, "navigator",
-            {
-                configurable: true,
-                get: function () {
-                    return newNavigator;
-                }
-            });
+                {
+                    configurable: true,
+                    get: function () {
+                        return newNavigator;
+                    }
+                });
         } catch (e) {
             QUnit.assert.ok(true, "Set Navigator failed - " + e);
             sinon.stub(window, "navigator").returns(newNavigator);
@@ -733,12 +738,12 @@ export class AITestClass {
                         if (!newLocation.hasOwnProperty(name)) {
                             // if it couldn't be set directly try and pretend
                             AITestClass.orgObjectDefineProperty(newLocation, name,
-                            {
-                                configurable: true,
-                                get: function () {
-                                    return this._orgLocation[name];
-                                }
-                            });
+                                {
+                                    configurable: true,
+                                    get: function () {
+                                        return this._orgLocation[name];
+                                    }
+                                });
                         }
                     }
                 }
@@ -760,11 +765,11 @@ export class AITestClass {
         try {
             if (newLocation) {
                 AITestClass.orgObjectDefineProperty(window, "__mockLocation",
-                {
-                    configurable: true,
-                    enumerable: true,
-                    value: newLocation
-                });
+                    {
+                        configurable: true,
+                        enumerable: true,
+                        value: newLocation
+                    });
             } else {
                 delete (window as any).__mockLocation;
             }
@@ -932,8 +937,7 @@ export class AITestClass {
         if (failed) {
             // Just cleanup the sandbox since the test has already failed.
             this.sandbox.restore();
-        }
-        else {
+        } else {
             // Verify the sandbox and restore.
             (this.sandbox as any).verifyAndRestore();
         }

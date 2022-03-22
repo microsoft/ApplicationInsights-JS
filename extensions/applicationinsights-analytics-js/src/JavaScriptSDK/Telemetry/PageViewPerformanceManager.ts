@@ -125,15 +125,15 @@ export class PageViewPerformanceManager {
         return null;
     }
 
-   /**
+    /**
     * Returns true is window PerformanceNavigationTiming API is supported, false otherwise.
     */
-   public isPerformanceNavigationTimingSupported() {
+    public isPerformanceNavigationTimingSupported() {
         let perf = getPerformance();
         return perf && perf.getEntriesByType && perf.getEntriesByType("navigation").length > 0;
-}
+    }
 
-   /**
+    /**
     * Returns true is window performance timing API is supported, false otherwise.
     */
     public isPerformanceTimingSupported() {
@@ -141,7 +141,7 @@ export class PageViewPerformanceManager {
         return perf && perf.timing;
     }
 
-   /**
+    /**
     * As page loads different parts of performance timing numbers get set. When all of them are set we can report it.
     * Returns true if ready, false otherwise.
     */
@@ -160,7 +160,7 @@ export class PageViewPerformanceManager {
             && timing.domLoading > 0;
     }
 
-   /**
+    /**
     * This method tells if given durations should be excluded from collection.
     */
     public shouldCollectDuration(...durations: number[]): boolean {

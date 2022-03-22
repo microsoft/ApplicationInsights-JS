@@ -114,7 +114,9 @@ export class PageAction extends WebEvent {
         
         pageActionEvent.timeToAction = this._getTimeToClick();
         pageActionEvent.refUri = isValueAssigned(overrideValues.refUri) ? overrideValues.refUri : this._config.coreData.referrerUri;
-        if(this._isUndefinedEvent(pageActionEvent)) return;
+        if(this._isUndefinedEvent(pageActionEvent)) {
+            return;
+        }
         this.trackPageAction(pageActionEvent, pageActionProperties);
     }
 
@@ -151,8 +153,9 @@ export class PageAction extends WebEvent {
         if(this._config.dropInvalidEvents) {
             if(pageActionEvent.name === strNotSpecified
                 && pageActionEvent.parentId === strNotSpecified
-                && pageActionEvent.content === "[{}]")
+                && pageActionEvent.content === "[{}]") {
                 return true;
+            }
         }
         return false;
     }

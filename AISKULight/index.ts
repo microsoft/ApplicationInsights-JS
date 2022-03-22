@@ -96,7 +96,7 @@ export class ApplicationInsights {
 
     public stopPollingInternalLogs(): void {
         this.core.stopPollingInternalLogs();
-   }
+    }
 
     private getSKUDefaults() {
         this.config.diagnosticLogInterval =

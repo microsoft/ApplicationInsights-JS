@@ -17,7 +17,7 @@ import {
 import {
     mergeConfig, BehaviorMapValidator,
     BehaviorValueValidator, BehaviorEnumValidator, _ExtendedInternalMessageId
-    } from "./common/Utils";
+} from "./common/Utils";
 import { PageAction } from "./events/PageAction";
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
@@ -61,7 +61,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         // Append Click Analytics Plugin Version to SDK version.
         if (_propertiesExtension && _propertiesExtension.context &&
             _propertiesExtension.context.internal && _propertiesExtension.context.internal.sdkVersion) {
-                _propertiesExtension.context.internal.sdkVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
+            _propertiesExtension.context.internal.sdkVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
         }
     }
 
