@@ -73,7 +73,7 @@ function _doCallbacks(hooks:IInstrumentHook[], callDetails: IInstrumentCallDetai
 function _createFunctionHook(aiHook:IInstrumentHooks) {
 
     // Define a temporary method that queues-up a the real method call
-    return function () {
+    return function (this: any) {
         let funcThis = this;
         // Capture the original arguments passed to the method
         let orgArgs = arguments as any;

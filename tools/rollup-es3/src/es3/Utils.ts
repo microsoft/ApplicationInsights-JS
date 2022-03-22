@@ -26,7 +26,7 @@ export function padEnd(input:string, len:number, fill:string) {
     return value;
 }
   
-export function isNullOrUndefined(value: any): boolean {
+export function isNullOrUndefined(value: any): value is null | undefined {
     return value === undefined || value === null || typeof value === "undefined";
 }
 

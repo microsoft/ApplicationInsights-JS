@@ -61,7 +61,7 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
         return createProcessTelemetryContext(null, core.config, core, null)
     }
 
-    function _processChannelQueue<T extends IBaseProcessingContext>(theChannels: _IInternalChannels[], itemCtx: T, processFn: (chainCtx: T) => void, onComplete: () => void) {
+    function _processChannelQueue<T extends IBaseProcessingContext>(theChannels: _IInternalChannels[], itemCtx: T, processFn: (chainCtx: T) => void, onComplete: (() => void) | null) {
         let waiting = theChannels ? (theChannels.length + 1) : 1;
 
         function _runChainOnComplete() {

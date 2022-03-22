@@ -143,7 +143,7 @@ export class PerfManager implements IPerfManager  {
      */
     private ctx: { [key: string] : any } = {};
 
-    constructor(manager: INotificationManager) {
+    constructor(manager?: INotificationManager) {
 
         dynamicProto(PerfManager, this, (_self) => {
 

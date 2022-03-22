@@ -95,7 +95,12 @@ export class ApplicationInsightsTests extends AITestClass {
         }
     }
 
-    public testCleanup() {
+    public testFinishedCleanup(): void {
+        if (this._ai && this._ai.unload) {
+            // force unload
+            this._ai.unload(false);
+        }
+
         if (this._ai && this._ai["dependencies"]) {
             this._ai["dependencies"].teardown();
         }

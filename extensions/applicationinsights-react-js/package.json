@@ -47,7 +47,7 @@
         "@rollup/plugin-commonjs": "^18.0.0",
         "@rollup/plugin-node-resolve": "^11.2.1",
         "@rollup/plugin-replace": "^2.3.3",
-        "rollup-plugin-cleanup": "3.2.1",
+        "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-peer-deps-external": "^2.2.4",
         "rollup": "^2.32.0",
         "ts-jest": "^27.0.7",

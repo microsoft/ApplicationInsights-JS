@@ -3,7 +3,7 @@
  */
 
 import { IEventTelemetry } from "@microsoft/applicationinsights-common";
-
+import { IUnloadableComponent } from "@microsoft/applicationinsights-core-js";
 
 /**
  * ClickAnalytics Configuration
@@ -126,25 +126,25 @@ export interface IValueCallback {
  * PageTags format
  */
 export interface IPageTags {
-   /**
-    * Meta data tags
-    */
+    /**
+     * Meta data tags
+     */
     metaTags?: { [name: string]: string };
-   /**
-    * Any other page tag
-    */
+    /**
+     * Any other page tag
+     */
     [name: string]: string | number | boolean | string[] | number[] | boolean[] | object | undefined;
 }
 
 /**
  * Auto capture handler interface
  */
-export interface IAutoCaptureHandler {
+export interface IAutoCaptureHandler extends IUnloadableComponent {
     /**
      * Auto capture click
      */
     click: () => void;
-  }
+}
 
 export interface IPageActionOverrideValues extends IOverrideValues {
     /**
@@ -175,11 +175,11 @@ export interface IPageActionOverrideValues extends IOverrideValues {
      * KVPs to be added to the content tags collected on a Page Action event; extends the items in the Content blob in Page Action events
      */
     contentTags?: any;
-  }
+}
 
 /**
-   * Override values interface
-   */
+ * Override values interface
+ */
 export interface IOverrideValues {
     /**
      * One of the awa.behavior values.
@@ -201,7 +201,7 @@ export interface IOverrideValues {
      * Indicates if the event was fired automatically
      */
     isAuto?: boolean;
-  }
+}
 
 /**
  * Content interface
@@ -224,9 +224,9 @@ export interface IContent {
 }
 
 /**
-  * Content handler interface
-  */
-export interface IContentHandler {
+ * Content handler interface
+ */
+export interface IContentHandler extends IUnloadableComponent {
     /**
      * Get meta data
      */
@@ -235,8 +235,7 @@ export interface IContentHandler {
      * Get element content
      */
     getElementContent: (element: Element) => IContent;
-    
-  }
+}
 
 /**
  * Page Action event

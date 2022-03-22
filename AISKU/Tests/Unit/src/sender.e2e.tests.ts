@@ -56,6 +56,12 @@ export class SenderE2ETests extends AITestClass {
         }
     }
 
+    public testFinishedCleanup(): void {
+        if (this._ai && this._ai.unload) {
+            this._ai.unload(false);
+        }
+    }
+    
     public testCleanup() {
         this.successSpy.restore();
     }

@@ -3,13 +3,14 @@
 export { IConfiguration } from "./JavaScriptSDK.Interfaces/IConfiguration";
 export { IChannelControls, MinChannelPriorty } from "./JavaScriptSDK.Interfaces/IChannelControls";
 export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetryPlugin";
-export { IAppInsightsCore } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
+export { IAppInsightsCore, ILoadedPlugin } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
 export { ITelemetryItem, ICustomProperties, Tags } from "./JavaScriptSDK.Interfaces/ITelemetryItem";
 export { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, GetExtCfgMergeType } from "./JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 export { INotificationListener } from "./JavaScriptSDK.Interfaces/INotificationListener";
 export { ITelemetryPluginChain } from "./JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger";
 export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails } from "./JavaScriptSDK.Interfaces/IInstrumentHooks";
+export { IUnloadableComponent } from "./JavaScriptSDK.Interfaces/IUnloadableComponent";
 export { EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
@@ -27,7 +28,7 @@ export {
     objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf,
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
     setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
-    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, createEnumStyle, objExtend
+    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, createEnumStyle, objExtend, objToString
 } from "./JavaScriptSDK/HelperFuncs";
 export {
     attachEvent, detachEvent, addEventHandler, addEventListeners, addPageUnloadEventListener, addPageHideEventListener, addPageShowEventListener,
@@ -59,7 +60,7 @@ export {
     ProcessTelemetryContext, createProcessTelemetryContext
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
 } from "./JavaScriptSDK/ProcessTelemetryContext";
-export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
+export { initializePlugins, sortPlugins, unloadComponents } from "./JavaScriptSDK/TelemetryHelpers";
 export { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";

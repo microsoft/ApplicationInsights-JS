@@ -76,7 +76,7 @@ export interface IBaseProcessingContext {
      * @param that - The "this" value to use for the onComplete call, if not provided or undefined defaults to the current context
      * @param args - Any additional arguments to pass to the onComplete function
      */
-    onComplete: (onComplete: Function, that?: any, ...args: any[]) => void;
+    onComplete: (onComplete: () => void, that?: any, ...args: any[]) => void;
 
     /**
      * Create a new context using the core and config from the current instance, returns a new instance of the same type
