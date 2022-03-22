@@ -160,7 +160,9 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
                 }
             });
         },
-        isInitialized: () => { return isInitialized },
+        isInitialized: () => {
+            return isInitialized
+        },
         processTelemetry: (item: ITelemetryItem, itemCtx: IProcessTelemetryContext) => {
             _processChannelQueue(channelQueue, itemCtx || _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
                 chainCtx[strProcessNext](item);

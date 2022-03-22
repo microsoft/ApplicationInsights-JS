@@ -30,7 +30,7 @@ export class DomContentHandler implements IContentHandler {
         let metaTags = {};
         if (hasDocument) {
             metaTags = isValueAssigned(this._config.dataTags.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,this._config.dataTags.metaDataPrefix, false) :
-            this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,"", false);
+                this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,"", false);
         }
         return metaTags;
     }
@@ -126,7 +126,9 @@ export class DomContentHandler implements IContentHandler {
                     continue;
                 }
                 const attribName = attrib.name.replace(dataTagPrefix, "");
-                if(elementLevelFlag && attribName ==="id") continue; // skip capturing id if not at the first level.
+                if(elementLevelFlag && attribName ==="id") {
+                    continue;
+                } // skip capturing id if not at the first level.
                 if(!isValueAssigned(elementContent[attribName])) {
                     elementContent[attribName] = attrib.value;
                 }
@@ -141,13 +143,15 @@ export class DomContentHandler implements IContentHandler {
         }
     }
 
-     /**
+    /**
      * Capture Element content along with Data Tag attributes and values
      */
     private _populateElementContent(element: Element, dataTagPrefix: string, parentDataTagPrefix: string, aiBlobAttributeTag: string) {
         
         let elementContent: any = {};
-        if(!element) return elementContent;
+        if(!element) {
+            return elementContent;
+        }
 
         let htmlContent = this._getHtmlIdAndContentName(element);
         elementContent = {
@@ -180,7 +184,9 @@ export class DomContentHandler implements IContentHandler {
     private _populateElementContentwithDataTag(element: Element, dataTagPrefix: string, parentDataTagPrefix: string, aiBlobAttributeTag: string) {
         
         let elementContent: any = {};
-        if(!element) return elementContent;
+        if(!element) {
+            return elementContent;
+        }
         
         
         let htmlContent = this._getHtmlIdAndContentName(element);
@@ -255,15 +261,15 @@ export class DomContentHandler implements IContentHandler {
         var doc = getDocument() || ({} as Document);
         var contentName;
         switch (element.tagName) {
-            case "A":
-                contentName = doc.all ? element.innerText || element.innerHTML : element.text || element.innerHTML;
-                break;
-            case "IMG":
-            case "AREA":
-                contentName = element.alt;
-                break;
-            default:
-                contentName = element.value || element.name || element.alt || element.innerText || element.id;
+        case "A":
+            contentName = doc.all ? element.innerText || element.innerHTML : element.text || element.innerHTML;
+            break;
+        case "IMG":
+        case "AREA":
+            contentName = element.alt;
+            break;
+        default:
+            contentName = element.value || element.name || element.alt || element.innerText || element.id;
         }
 
         return contentName.substring(0, MAX_CONTENTNAME_LENGTH);
@@ -291,7 +297,9 @@ export class DomContentHandler implements IContentHandler {
 
     private _getHtmlIdAndContentName(element:Element) {
         let htmlContent: any = {};
-        if(!element) return htmlContent;
+        if(!element) {
+            return htmlContent;
+        }
 
         if (this._config.dataTags.useDefaultContentNameOrId) {
             const customizedContentName = this._config.callback.contentName ? this._config.callback.contentName(element, this._config.dataTags.useDefaultContentNameOrId) : "";
@@ -353,8 +361,7 @@ export class DomContentHandler implements IContentHandler {
         }
         if (parentId) {
             parentInfo["parentid"] = parentId;
-        }
-        else {
+        } else {
             let htmlContent= this._getHtmlIdAndContentName(element.parentElement);
             parentInfo["parentid"] = htmlContent.id;
             parentInfo["parentname"] = htmlContent.contentName;

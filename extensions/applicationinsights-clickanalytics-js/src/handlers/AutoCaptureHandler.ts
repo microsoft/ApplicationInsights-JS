@@ -17,7 +17,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
      * @param analyticsPlugin - WebAnalytics plugin
      * @param traceLogger - Trace logger to log to console.
      */
-   constructor(protected _analyticsPlugin: ClickAnalyticsPlugin, protected _config: IClickAnalyticsConfiguration, protected _pageAction: PageAction,
+    constructor(protected _analyticsPlugin: ClickAnalyticsPlugin, protected _config: IClickAnalyticsConfiguration, protected _pageAction: PageAction,
      protected _traceLogger: IDiagnosticLogger) {
 
     }
@@ -28,13 +28,21 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         if (win) {
             // IE9 onwards addEventListener is available, 'click' event captures mouse click. mousedown works on other browsers
             const event = (navigator.appVersion.indexOf("MSIE") !== -1) ? "click" : "mousedown";
-            attachEvent(win, event , (evt:any) => { this._processClick(evt); });
-            attachEvent(win, "keyup" , (evt:any) => { this._processClick(evt); });
+            attachEvent(win, event , (evt:any) => {
+                this._processClick(evt);
+            });
+            attachEvent(win, "keyup" , (evt:any) => {
+                this._processClick(evt);
+            });
         } else if (doc) {
             // IE8 and below doesn't have addEventListener so it will use attachEvent
             // attaching to window does not work in IE8
-            attachEvent(doc, "click" , (evt:any) => { this._processClick(evt); });
-            attachEvent(doc, "keyup" , (evt:any) => { this._processClick(evt); });
+            attachEvent(doc, "click" , (evt:any) => {
+                this._processClick(evt);
+            });
+            attachEvent(doc, "keyup" , (evt:any) => {
+                this._processClick(evt);
+            });
         }
     }
 

@@ -139,12 +139,10 @@ export class Serializer {
                                 output[field] = "null";
                             } else if (!value.toString) {
                                 output[field] = "invalid field: toString() is not defined.";
-                            }
-                            else {
+                            } else {
                                 output[field] = value.toString();
                             }
-                        }
-                        else if (expectedType === "number") {
+                        } else if (expectedType === "number") {
                             if (value === undefined) {
                                 output[field] = "undefined";
                             } else if (value === null) {
@@ -153,13 +151,11 @@ export class Serializer {
                                 const num = parseFloat(value);
                                 if (isNaN(num)) {
                                     output[field] = "NaN";
-                                }
-                                else {
+                                } else {
                                     output[field] = num;
                                 }
                             }
-                        }
-                        else {
+                        } else {
                             output[field] = "invalid field: " + name + " is of unknown type.";
                             logger.throwInternal(LoggingSeverity.CRITICAL, output[field], null, true);
                         }

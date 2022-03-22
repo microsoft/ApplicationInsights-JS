@@ -410,7 +410,7 @@ export const EventHelper: IEventHelper = {
  * @param logger
  * @returns
  */
- export function _legacyCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
+export function _legacyCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
     let cookieMgr = _gblCookieMgr(config, logger);
     let legacyCanUseCookies = (CoreUtils as any)._canUseCookies;
 

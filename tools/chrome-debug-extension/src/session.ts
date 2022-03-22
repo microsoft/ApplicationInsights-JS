@@ -82,9 +82,9 @@ export class Session {
             .getMinutes()
             .toString()
             .padStart(2, "0")}.${now.getSeconds().toString().padStart(2, "0")}.${now
-                .getMilliseconds()
-                .toString()
-                .padStart(3, "0")}`;
+            .getMilliseconds()
+            .toString()
+            .padStart(3, "0")}`;
         const fileName = `Telemetry capture ${dateString} ${timeString}.json`;
         FileSaver.saveAs(blob, fileName);
     }
@@ -163,18 +163,18 @@ export class Session {
         const incrementCounts = (dataEventType?: DataEventType) => {
             newCounts.all++;
             switch (dataEventType) {
-                case "appLogic":
-                    newCounts.appLogic++;
-                    break;
-                case "performance":
-                    newCounts.performance++;
-                    break;
-                case "warning":
-                    newCounts.warning++;
-                    break;
-                case "fatalError":
-                    newCounts.fatalError++;
-                    break;
+            case "appLogic":
+                newCounts.appLogic++;
+                break;
+            case "performance":
+                newCounts.performance++;
+                break;
+            case "warning":
+                newCounts.warning++;
+                break;
+            case "fatalError":
+                newCounts.fatalError++;
+                break;
             }
         };
 
@@ -231,19 +231,19 @@ export class Session {
             const value = getDynamicFieldValue(singleDataEvent, columnToDisplay.prioritizedFieldNames);
             if (value) {
                 switch (columnToDisplay.type) {
-                    case "SessionNumber":
-                    case "NumberDelta":
-                    case "TimeDelta":
-                        break;
-                    default:
-                        if (regEx) {
-                            if (regEx.exec(value) != null) {
-                                return true;
-                            }
-                        } else if (value.toLowerCase().includes(lowerFilterText)) {
+                case "SessionNumber":
+                case "NumberDelta":
+                case "TimeDelta":
+                    break;
+                default:
+                    if (regEx) {
+                        if (regEx.exec(value) != null) {
                             return true;
                         }
+                    } else if (value.toLowerCase().includes(lowerFilterText)) {
+                        return true;
                     }
+                }
             }
         }
 
@@ -262,24 +262,24 @@ export class Session {
         let dataEvent = message.details;
 
         switch (message.src) {
-            case MessageSource.WebRequest:
-                if (!this._filterSettings.listenNetwork) {
-                    // Stop logging web requests
-                    return;
-                }
-                break;
+        case MessageSource.WebRequest:
+            if (!this._filterSettings.listenNetwork) {
+                // Stop logging web requests
+                return;
+            }
+            break;
             
-            case MessageSource.DebugEvent:
-            case MessageSource.EventSentNotification:
-            case MessageSource.EventsDiscardedNotification:
-            case MessageSource.EventsSendNotification:
-            case MessageSource.DiagnosticLog:
-            case MessageSource.PerfEvent:
-                if (!this._filterSettings.listenSdk) {
-                    // Stop logging SDK requests
-                    return ;
-                }
-                break;
+        case MessageSource.DebugEvent:
+        case MessageSource.EventSentNotification:
+        case MessageSource.EventsDiscardedNotification:
+        case MessageSource.EventsSendNotification:
+        case MessageSource.DiagnosticLog:
+        case MessageSource.PerfEvent:
+            if (!this._filterSettings.listenSdk) {
+                // Stop logging SDK requests
+                return ;
+            }
+            break;
         }
 
         // If the configuration specifies a required field, check to see if it is present

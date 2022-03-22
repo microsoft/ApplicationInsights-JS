@@ -14,7 +14,9 @@ export class HashCodeScoreGenerator {
     }
 
     public getHashCode(input: string): number {
-        if (input === "") { return 0; }
+        if (input === "") {
+            return 0;
+        }
 
         while (input.length < MIN_INPUT_LENGTH) {
             input = input.concat(input);

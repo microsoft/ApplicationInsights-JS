@@ -35,9 +35,9 @@ function _getFilteredText(theText: string, textFilter: string): JSX.Element {
             return <span className="matched-text-filter">{theText}</span>;
         } else {
             return <span>{theText.substring(0, matchPos)}
-                    <span className="matched-text-filter">{theText.substring(matchPos, matchPos + matchLen)}</span>
-                    {theText.substring(matchPos + matchLen)}
-                </span>;
+                <span className="matched-text-filter">{theText.substring(matchPos, matchPos + matchLen)}</span>
+                {theText.substring(matchPos + matchLen)}
+            </span>;
         }
     }
 
@@ -106,43 +106,43 @@ export const EventTable = (props: IEventTableProps): React.ReactElement<IEventTa
                         const cells = new Array<JSX.Element>();
                         props.configuration.columnsToDisplay.map((columnToDisplay: IColumn, columnIndex: number) => {
                             switch (columnToDisplay.type) {
-                                case "SessionNumber":
-                                    {
-                                        cells.push(<td key={`Row_${rowIndex}_Td_${columnIndex}`} className={tdClassName}>{dataEvent.sessionNumber}</td>);
-                                    }
-                                    break;
-                                case "NumberDelta":
-                                    {
-                                        const currentStringValue = getDynamicFieldValue(
-                                            dataEvent,
-                                            columnToDisplay.prioritizedFieldNames
-                                        );
-                                        const currentValue = currentStringValue
-                                            ? Number.parseInt(currentStringValue, 10)
-                                            : undefined;
-
-                                        cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, "TruncateWithDigitGrouping", tdClassName));
-                                    }
-                                    break;
-                                case "TimeDelta":
-                                    {
-                                        const currentStringValue = getDynamicFieldValue(
-                                            dataEvent,
-                                            columnToDisplay.prioritizedFieldNames);
-                                        const currentValue = currentStringValue ? Date.parse(currentStringValue) : undefined;
-
-                                        cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, "NumberToWholeMilliseconds", tdClassName));
-                                    }
-                                    break;
-                                case "NormalData":
-                                default: {
-                                    let value = getDynamicFieldValue(dataEvent, columnToDisplay.prioritizedFieldNames);
-                                    cells.push(
-                                        <td key={`Row_${rowIndex}_Td_${columnIndex}`} className={tdClassName}>
-                                            {_getFilteredText(value, props.filterSettings.filterText)}
-                                        </td>
-                                    );
+                            case "SessionNumber":
+                                {
+                                    cells.push(<td key={`Row_${rowIndex}_Td_${columnIndex}`} className={tdClassName}>{dataEvent.sessionNumber}</td>);
                                 }
+                                break;
+                            case "NumberDelta":
+                                {
+                                    const currentStringValue = getDynamicFieldValue(
+                                        dataEvent,
+                                        columnToDisplay.prioritizedFieldNames
+                                    );
+                                    const currentValue = currentStringValue
+                                        ? Number.parseInt(currentStringValue, 10)
+                                        : undefined;
+
+                                    cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, "TruncateWithDigitGrouping", tdClassName));
+                                }
+                                break;
+                            case "TimeDelta":
+                                {
+                                    const currentStringValue = getDynamicFieldValue(
+                                        dataEvent,
+                                        columnToDisplay.prioritizedFieldNames);
+                                    const currentValue = currentStringValue ? Date.parse(currentStringValue) : undefined;
+
+                                    cells.push(getCellForDeltaColumn(rowIndex, columnIndex, currentValue, "NumberToWholeMilliseconds", tdClassName));
+                                }
+                                break;
+                            case "NormalData":
+                            default: {
+                                let value = getDynamicFieldValue(dataEvent, columnToDisplay.prioritizedFieldNames);
+                                cells.push(
+                                    <td key={`Row_${rowIndex}_Td_${columnIndex}`} className={tdClassName}>
+                                        {_getFilteredText(value, props.filterSettings.filterText)}
+                                    </td>
+                                );
+                            }
                             }
                         });
 

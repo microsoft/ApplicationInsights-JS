@@ -442,7 +442,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                         if (_enableResponseHeaderTracking) {
                                             const responseHeaderMap = {};
                                             response.headers.forEach((value: string, name: string) => {
-                                                if (_canIncludeHeaders(name)) { responseHeaderMap[name] = value; }
+                                                if (_canIncludeHeaders(name)) {
+                                                    responseHeaderMap[name] = value;
+                                                }
                                             });
 
                                             ajaxResponse.headerMap = responseHeaderMap;
@@ -453,10 +455,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                                     return response;
                                 })
-                                .catch((reason: any) => {
-                                    _reportFetchMetrics(callDetails, 0, input, null, fetchData, null, { error: reason.message });
-                                    throw reason;
-                                });
+                                    .catch((reason: any) => {
+                                        _reportFetchMetrics(callDetails, 0, input, null, fetchData, null, { error: reason.message });
+                                        throw reason;
+                                    });
                             }
                         },
                         // Create an error callback to report any hook errors
@@ -733,7 +735,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                         const parts = line.split(": ");
                                         const header = parts.shift();
                                         const value = parts.join(": ");
-                                        if(_canIncludeHeaders(header)) { responseHeaderMap[header] = value; }
+                                        if(_canIncludeHeaders(header)) {
+                                            responseHeaderMap[header] = value;
+                                        }
                                     });
 
                                     ajaxResponse.headerMap = responseHeaderMap;
@@ -761,9 +765,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             _self[strTrackDependencyDataInternal](dependency);
                         } else {
                             _reportXhrError(null, {
-                                    requestSentTime: ajaxData.requestSentTime,
-                                    responseFinishedTime: ajaxData.responseFinishedTime
-                                });
+                                requestSentTime: ajaxData.requestSentTime,
+                                responseFinishedTime: ajaxData.responseFinishedTime
+                            });
                         }
                     } finally {
                         // cleanup telemetry data
@@ -903,7 +907,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 if (_enableRequestHeaderTracking) {
                     let headers = new Headers((init ? init.headers : 0) || (input instanceof Request ? (input.headers || {}) : {}));
                     headers.forEach((value, key) => {
-                        if (_canIncludeHeaders(key)) { requestHeaders[key] = value; }
+                        if (_canIncludeHeaders(key)) {
+                            requestHeaders[key] = value;
+                        }
                     });
                 }
 

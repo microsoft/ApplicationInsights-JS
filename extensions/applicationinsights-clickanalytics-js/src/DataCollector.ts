@@ -41,26 +41,26 @@ export function getImageHref(element: HTMLImageElement): string {
 export function getClickTarget(element: any) {
     var clickTarget = "";
     switch (element.tagName) {
-        case "A":
-        case "AREA":
-            clickTarget = element.href || "";
-            break;
-        case "IMG":
-            clickTarget = getImageHref(element as HTMLImageElement);
-            break;
-        case "INPUT":
-            var type = element.type;
-            if (type && (clickCaptureInputTypes[type.toUpperCase()])) {
-                let loc = getLocation() || ({} as Location);
-                if (element.form) {
-                    clickTarget = element.form.action || (loc.pathname || "");
-                } else {
-                    clickTarget = loc.pathname || "";
-                }
+    case "A":
+    case "AREA":
+        clickTarget = element.href || "";
+        break;
+    case "IMG":
+        clickTarget = getImageHref(element as HTMLImageElement);
+        break;
+    case "INPUT":
+        var type = element.type;
+        if (type && (clickCaptureInputTypes[type.toUpperCase()])) {
+            let loc = getLocation() || ({} as Location);
+            if (element.form) {
+                clickTarget = element.form.action || (loc.pathname || "");
+            } else {
+                clickTarget = loc.pathname || "";
             }
-            break;
-        default:
-            break;
+        }
+        break;
+    default:
+        break;
     }
     return clickTarget;
 }
@@ -95,7 +95,9 @@ function onDomReadyDo(f: any) {
     /// <param type='function'>function to call on domRead</param>
 
     let doc = getDocument() || ({} as Document);
-    /in/.test(doc.readyState) ? setTimeout(() => { onDomReadyDo(f); }, 100) : f.call();
+    /in/.test(doc.readyState) ? setTimeout(() => {
+        onDomReadyDo(f);
+    }, 100) : f.call();
 }
 
 /**
@@ -115,8 +117,8 @@ export function getPageName(config: IClickAnalyticsConfiguration, overrideValues
     } else if (config.coreData && config.coreData.pageName) {
         return config.coreData.pageName;
     } else {
-       const doc = getDocument();
-       return doc && doc.title || "";
+        const doc = getDocument();
+        return doc && doc.title || "";
     }
 }
 

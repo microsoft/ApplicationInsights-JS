@@ -20,7 +20,7 @@ let _cachedGlobal: Window = null;
  * While the return type is a Window for the normal case, not all environments will support all
  * of the properties or functions.
  */
- export function getGlobal(useCached: boolean = true): Window {
+export function getGlobal(useCached: boolean = true): Window {
     if (!_cachedGlobal || !useCached) {
 
         if (typeof globalThis !== strShimUndefined && globalThis) {

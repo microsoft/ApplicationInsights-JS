@@ -2,7 +2,7 @@ import { Assert } from "./Assert";
 import { AITestClass } from "./AITestClass";
 
 export class PollingAssert {
-   /**
+    /**
     * Starts polling assertion function for a period of time after which it's considered failed.
     * @param {() => boolean} assertionFunctionReturnsBoolean - funciton returning true if condition passes and false if condition fails. Assertion will be done on this function's result.
     * @param {string} assertDescription - message shown with the assertion

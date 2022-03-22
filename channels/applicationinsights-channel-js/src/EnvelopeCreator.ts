@@ -279,7 +279,7 @@ export function PageViewEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem
 
     const bd = telemetryItem[strBaseData] as IPageViewTelemetryInternal;
 
-        // special case: pageview.id is grabbed from current operation id. Analytics plugin is decoupled from properties plugin, so this is done here instead. This can be made a default telemetry intializer instead if needed to be decoupled from channel
+    // special case: pageview.id is grabbed from current operation id. Analytics plugin is decoupled from properties plugin, so this is done here instead. This can be made a default telemetry intializer instead if needed to be decoupled from channel
     let currentContextId;
     if (((telemetryItem.ext || {}).trace || {}).traceID) {
         currentContextId = telemetryItem.ext.trace.traceID;

@@ -51,8 +51,7 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
 
             if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
                 out[key] = `<circular (${key} - "${getTargetName(targetValue)}")>`;
-            }
-            else if (targetValue !== null && isObject(targetValue)) {
+            } else if (targetValue !== null && isObject(targetValue)) {
                 if (currentDepth >= maxDepth) {
                     out[key] = "<max allowed depth reached>";
                 } else {
@@ -60,8 +59,7 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
                     out[key] = traverseAndReplace(targetValue, maxDepth, currentDepth + 1, thingsReferenced, excludedKeys, includeFunctions);
                     thingsReferenced.pop();
                 }
-            }
-            else {
+            } else {
                 out[key] = targetValue;
             }
         }
@@ -135,7 +133,9 @@ export function focusHandler(evt: Event, target: Object, level: number, excludeK
     }
     lastSelectedElement = (evt.target as HTMLElement);
     for (let i = 0; i < 10; i++) {
-        if (lastSelectedElement.tagName === "DIV") { break; }
+        if (lastSelectedElement.tagName === "DIV") {
+            break;
+        }
         lastSelectedElement = lastSelectedElement.parentElement as HTMLElement;
     }
     lastSelectedElement.className += " last-selected-element";
@@ -151,13 +151,17 @@ function _navHandler(evt: KeyboardEvent, openHandler?: (evt: Event, forceState?:
     case 38:
         evt.preventDefault();
         const prev = el.previousElementSibling as HTMLElement;
-        if (prev && prev.tagName !== "BUTTON") { prev.focus(); }
+        if (prev && prev.tagName !== "BUTTON") {
+            prev.focus();
+        }
         break;
         // ArrowDown
     case 40:
         evt.preventDefault();
         const next = el.nextElementSibling as HTMLElement;
-        if (next) { next.focus(); }
+        if (next) {
+            next.focus();
+        }
         break;
         // ArrowRight
     case 39:
@@ -170,8 +174,12 @@ function _navHandler(evt: KeyboardEvent, openHandler?: (evt: Event, forceState?:
         break;
         // ArrowLeft
     case 37:
-        if (openHandler) { openHandler(evt, false); }
-        if (!currentState) { (el.parentElement as HTMLElement).focus(); }
+        if (openHandler) {
+            openHandler(evt, false);
+        }
+        if (!currentState) {
+            (el.parentElement as HTMLElement).focus();
+        }
         break;
         // c
     case 67:
@@ -297,8 +305,12 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
     // Always displayed opened if there is no filter
     let childOpened = textFilter ? false : true;
     const keys = getTargetKeys(target, excludeKeys, includeFunctions as boolean);
-    if (keys.length === 0) { keys.push("<empty>"); }
-    if (level >= MAX_DEPTH) { keys.unshift("<maxdepth>"); }
+    if (keys.length === 0) {
+        keys.push("<empty>");
+    }
+    if (level >= MAX_DEPTH) {
+        keys.unshift("<maxdepth>");
+    }
     for (const key of keys) {
         if (excludeKeys.indexOf(key) !== -1) {
             continue;
@@ -315,20 +327,17 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             builder.innerText = "<max allowed depth reached>";
             children.push(builder);
             break;
-        }
-        else if (key === "<empty>") {
+        } else if (key === "<empty>") {
             const builder = document.createElement("div");
             builder.className = "empty";
             builder.innerText = "<empty>";
             children.push(builder);
-        }
-        else if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
+        } else if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
             const builder = document.createElement("div");
             builder.className = "empty";
             builder.innerText = `<circular (${key}) - "${getTargetName(targetValue)}">`;
             children.push(builder);
-        }
-        else if (targetValue !== null && (isObject(targetValue) || Util.isError(targetValue))) {
+        } else if (targetValue !== null && (isObject(targetValue) || Util.isError(targetValue))) {
             thingsReferenced.push(target);
             let formatted = formatLogElements(targetValue, "", key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
             thingsReferenced.pop();
@@ -431,7 +440,9 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         _openNode(currentLine);
     }
     if (isObj) {
-        if (isErr) { rootDiv.className = "exception" }
+        if (isErr) {
+            rootDiv.className = "exception"
+        }
         const openHandler = (evt: Event, forceState?: boolean) => {
             evt.stopPropagation();
             if (Util.getIEVersion()) {
@@ -443,8 +454,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             if (lastSelectedElement === rootDiv) {
                 if (openState) {
                     _collapseNode(currentLine);
-                }
-                else {
+                } else {
                     _openNode(currentLine);
                 }
             }

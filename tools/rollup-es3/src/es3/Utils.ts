@@ -5,7 +5,7 @@ import { IEs3CheckKeyword } from "./Interfaces";
 
 export function isSourceMapEnabled(options:any) {
     if (options) {
-      return options.sourceMap !== false && options.sourcemap !== false;
+        return options.sourceMap !== false && options.sourcemap !== false;
     }
   
     return false;
@@ -26,8 +26,7 @@ export function padEnd(input:string, len:number, fill:string) {
     return value;
 }
   
-export function isNullOrUndefined(value: any): boolean
-{
+export function isNullOrUndefined(value: any): boolean {
     return value === undefined || value === null || typeof value === "undefined";
 }
 

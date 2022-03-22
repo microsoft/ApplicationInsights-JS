@@ -165,7 +165,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              * This will write an error to the console if possible
              * @param message {string} - The error message
              */
-             _self.errorToConsole = (message: string) => {
+            _self.errorToConsole = (message: string) => {
                 _logToConsole("error", message);
                 _debugExtMsg("error", message);
             }

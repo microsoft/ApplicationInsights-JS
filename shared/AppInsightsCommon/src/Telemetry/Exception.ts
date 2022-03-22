@@ -341,32 +341,44 @@ export class Exception extends ExceptionData implements ISerializable {
             this.exceptions = [new _ExceptionDetails(logger, exception, properties)];
             this.properties = dataSanitizeProperties(logger, properties);
             this.measurements = dataSanitizeMeasurements(logger, measurements);
-            if (severityLevel) { this.severityLevel = severityLevel; }
-            if (id) { this.id = id; }
+            if (severityLevel) {
+                this.severityLevel = severityLevel;
+            }
+            if (id) {
+                this.id = id;
+            }
         } else {
             this.exceptions = exception.exceptions;
             this.properties = exception.properties;
             this.measurements = exception.measurements;
-            if (exception.severityLevel) { this.severityLevel = exception.severityLevel; }
-            if (exception.id) { this.id = exception.id; }
-            if (exception.problemGroup) { this.problemGroup = exception.problemGroup; }
+            if (exception.severityLevel) {
+                this.severityLevel = exception.severityLevel;
+            }
+            if (exception.id) {
+                this.id = exception.id;
+            }
+            if (exception.problemGroup) {
+                this.problemGroup = exception.problemGroup;
+            }
 
             // bool/int types, use isNullOrUndefined
             this.ver = 2; // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
-            if (!isNullOrUndefined(exception.isManual)) { this.isManual = exception.isManual; }
+            if (!isNullOrUndefined(exception.isManual)) {
+                this.isManual = exception.isManual;
+            }
         }
     }
 
     public static CreateAutoException(
-            message: string | Event,
-            url: string,
-            lineNumber: number,
-            columnNumber: number,
-            error: any,
-            evt?: Event|string,
-            stack?: string,
-            errorSrc?: string
-        ): IAutoExceptionTelemetry {
+        message: string | Event,
+        url: string,
+        lineNumber: number,
+        columnNumber: number,
+        error: any,
+        evt?: Event|string,
+        stack?: string,
+        errorSrc?: string
+    ): IAutoExceptionTelemetry {
 
         let errorType = _getErrorType(error || evt || message);
 

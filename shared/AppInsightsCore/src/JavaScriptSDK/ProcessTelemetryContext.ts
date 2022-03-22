@@ -78,7 +78,9 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
     let context: IInternalContext<T> = {
         _next: _moveNext,
         ctx: {
-            core: () => { return core },
+            core: () => {
+                return core
+            },
             diagLog: () => {
                 return safeGetLogger(core, config);
             },
@@ -274,7 +276,7 @@ export function createProcessTelemetryUnloadContext(telemetryChain: ITelemetryPl
  * @param core - The current core instance
  * @param startAt - Identifies the next plugin to execute, if null there is no "next" plugin and if undefined it should assume the start of the chain
  */
- export function createProcessTelemetryUpdateContext(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryUpdateContext {
+export function createProcessTelemetryUpdateContext(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryUpdateContext {
     let internalContext: IInternalContext<IProcessTelemetryUpdateContext> = _createInternalContext<IProcessTelemetryUpdateContext>(telemetryChain, config, core, startAt);
     let context = internalContext.ctx;
 
@@ -307,7 +309,7 @@ export function createProcessTelemetryUnloadContext(telemetryChain: ITelemetryPl
  * should be for legacy plugins only. Currently, only used for passing the current core instance and to provide better error
  * reporting (hasRun) when errors occur.
  */
- export function createTelemetryProxyChain(plugins: IPlugin[], config: IConfiguration, core: IAppInsightsCore, startAt?: IPlugin): ITelemetryPluginChain {
+export function createTelemetryProxyChain(plugins: IPlugin[], config: IConfiguration, core: IAppInsightsCore, startAt?: IPlugin): ITelemetryPluginChain {
     let firstProxy: ITelemetryPluginChain = null;
     let add = startAt ? false : true;
 
@@ -399,11 +401,11 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
     }
 
     function _processChain<T extends IBaseProcessingContext>(
-                itemCtx: T,
-                processPluginFn: (itemCtx: T) => boolean,
-                name: string,
-                details: () => any,
-                isAsync: boolean) {
+        itemCtx: T,
+        processPluginFn: (itemCtx: T) => boolean,
+        name: string,
+        details: () => any,
+        isAsync: boolean) {
 
         let hasRun = false;
         let identifier = plugin ? plugin.identifier : strTelemetryPluginChain;

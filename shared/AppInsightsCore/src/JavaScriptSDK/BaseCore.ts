@@ -250,10 +250,10 @@ export class BaseCore implements IAppInsightsCore {
              * called.
              * @param {INotificationListener} listener - An INotificationListener object.
              */
-             _self[strAddNotificationListener] = (listener: INotificationListener): void => {
-                 if (_notificationManager) {
-                     _notificationManager[strAddNotificationListener](listener);
-                 }
+            _self[strAddNotificationListener] = (listener: INotificationListener): void => {
+                if (_notificationManager) {
+                    _notificationManager[strAddNotificationListener](listener);
+                }
             };
         
             /**
@@ -310,8 +310,8 @@ export class BaseCore implements IAppInsightsCore {
             /**
              * Periodically check logger.queue for log messages to be flushed
              */
-             _self.pollInternalLogs = (eventName?: string): number => {
-                 _internalLogsEventName = eventName;
+            _self.pollInternalLogs = (eventName?: string): number => {
+                _internalLogsEventName = eventName;
 
                 let interval = _self.config.diagnosticLogInterval;
                 if (!interval || !(interval > 0)) {

@@ -139,6 +139,6 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
      * @param event The event that needs to be processed
      */
     public processTelemetry(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-       // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

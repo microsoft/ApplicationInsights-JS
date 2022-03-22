@@ -588,9 +588,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
             function _checkAndUpdateEndPointUrl(responseUrl: string) {
                 // Maximum stamp specific redirects allowed(uncomment this when breeze is ready with not allowing redirects feature)
-               if(_stamp_specific_redirects >= 10) {
-               //  _self._senderConfig.endpointUrl = () => Sender._getDefaultAppInsightsChannelConfig().endpointUrl()+"/?redirect=false";
-               //  _stamp_specific_redirects = 0;
+                if(_stamp_specific_redirects >= 10) {
+                    //  _self._senderConfig.endpointUrl = () => Sender._getDefaultAppInsightsChannelConfig().endpointUrl()+"/?redirect=false";
+                    //  _stamp_specific_redirects = 0;
                     return false;
                 }
                 if(!isNullOrUndefined(responseUrl) && responseUrl !== "") {
@@ -724,16 +724,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * @param payload {string} - The data payload to be sent.
              * @param isAsync {boolean} - not used
              */
-             function _fetchSender(payload: string[], isAsync: boolean) {
-                 _doFetchSender(payload, true);
-             }
+            function _fetchSender(payload: string[], isAsync: boolean) {
+                _doFetchSender(payload, true);
+            }
 
             /**
              * Send fetch API request
              * @param payload {string} - The data payload to be sent.
              * @param isAsync {boolean} - For fetch this identifies whether we are "unloading" (false) or a normal request
              */
-             function _doFetchSender(payload: string[], isAsync: boolean) {
+            function _doFetchSender(payload: string[], isAsync: boolean) {
                 const endPointUrl = _self._senderConfig.endpointUrl();
                 const batch = _self._buffer.batchPayloads(payload);
                 const plainTextBatch = new Blob([batch], { type: "application/json" });
@@ -964,7 +964,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         _InternalMessageId.TransmissionFailed, ". " +
                         "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
         
-                        buffer.clear();
+                    buffer.clear();
                     return;
                 }
         
@@ -1142,7 +1142,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      * @param name   - Header name.
      * @param value  - Header value.
      */
-     public addHeader(name: string, value: string) {
+    public addHeader(name: string, value: string) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
 }

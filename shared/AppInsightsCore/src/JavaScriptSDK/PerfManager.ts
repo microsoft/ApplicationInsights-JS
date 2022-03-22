@@ -104,12 +104,9 @@ export class PerfEvent implements IPerfEvent {
                         _self.isChildEvt = (): boolean => true;
                     }
                     _self[key] = value;
-                }
-                else if (key === PerfEvent.ChildrenContextKey) {
+                } else if (key === PerfEvent.ChildrenContextKey) {
                     _self[key] = value;
-                }
-                else
-                {
+                } else {
                     let ctx = _self[strExecutionContextKey] = _self[strExecutionContextKey] || {};
                     ctx[key] = value;
                 }

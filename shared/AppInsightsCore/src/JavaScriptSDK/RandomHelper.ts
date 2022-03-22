@@ -122,7 +122,7 @@ export function mwcRandom32(signed?: boolean) {
  * The default length is 22 which is 132-bits so almost the same as a GUID but as base64 (the previous default was 5)
  * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
  */
- export function newId(maxLength = 22): string {
+export function newId(maxLength = 22): string {
     const base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     // Start with an initial random number, consuming the value in reverse byte order

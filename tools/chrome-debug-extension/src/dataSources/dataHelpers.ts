@@ -100,18 +100,18 @@ export function applyConverter(
     }
 
     switch (converter) {
-        case "RemoveSafeTags": {
-            return value.replace("<safe>", "").replace("</safe>", "");
-        }
-        case "NumberToWholeMilliseconds": {
-            return `${Math.trunc(Number.parseInt(value, 10))} ms`;
-        }
-        case "TruncateWithDigitGrouping": {
-            return `${Math.trunc(Number.parseInt(value, 10)).toLocaleString()}`;
-        }
-        default: {
-            return value;
-        }
+    case "RemoveSafeTags": {
+        return value.replace("<safe>", "").replace("</safe>", "");
+    }
+    case "NumberToWholeMilliseconds": {
+        return `${Math.trunc(Number.parseInt(value, 10))} ms`;
+    }
+    case "TruncateWithDigitGrouping": {
+        return `${Math.trunc(Number.parseInt(value, 10)).toLocaleString()}`;
+    }
+    default: {
+        return value;
+    }
     }
 }
 

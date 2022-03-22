@@ -22,9 +22,9 @@ const strToString = "toString";
  * Constant string defined to support minimization
  * @ignore
  */
- const str__Proto = "__proto__";
+const str__Proto = "__proto__";
 
- /**
+/**
   * Constant string defined to support minimization
   * @ignore
   */
@@ -58,27 +58,27 @@ const rLeadingNumeric = /^(\d+[\w\d_$])/;
  * Pre-lookup to check if we are running on a modern browser (i.e. not IE8)
  * @ignore
  */
- let _objGetPrototypeOf = Object["getPrototypeOf"];
+let _objGetPrototypeOf = Object["getPrototypeOf"];
 
- /**
+/**
   * Helper used to get the prototype of the target object as getPrototypeOf is not available in an ES3 environment.
   * @ignore
   */
- export function _getObjProto(target:any) {
-     if (target) {
-         // This method doesn't existing in older browsers (e.g. IE8)
-         if (_objGetPrototypeOf) {
-             return _objGetPrototypeOf(target);
-         }
+export function _getObjProto(target:any) {
+    if (target) {
+        // This method doesn't existing in older browsers (e.g. IE8)
+        if (_objGetPrototypeOf) {
+            return _objGetPrototypeOf(target);
+        }
  
-         // target[Constructor] May break if the constructor has been changed or removed
-         let newProto = target[str__Proto] || target[strShimPrototype] || target[strConstructor];
-         if(newProto) {
-             return newProto;
-         }
-     }
+        // target[Constructor] May break if the constructor has been changed or removed
+        let newProto = target[str__Proto] || target[strShimPrototype] || target[strConstructor];
+        if(newProto) {
+            return newProto;
+        }
+    }
  
-     return null;
+    return null;
 }
 
 export function objToString(obj: any) {
@@ -186,7 +186,7 @@ export function strEndsWith(value: string, search: string) {
  * @param search - The characters to be searched for at the end of the value.
  * @returns true if the given search value is found at the end of the string, otherwise false.
  */
- export function _strEndsWithPoly(value: string, search: string) {
+export function _strEndsWithPoly(value: string, search: string) {
     let result = false;
     let searchLen = search ? search.length : 0;
     let valLen = value ? value.length : 0;
@@ -214,7 +214,7 @@ export function strEndsWith(value: string, search: string) {
 export function strStartsWith(value: string, checkValue: string) {
     let result = false;
     if (value && checkValue && !(result = value === checkValue)) {
-       // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
+        // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
         result = _strStartsWith ? value[cStrStartsWith](checkValue) : _strStartsWithPoly(value, checkValue);
     }
 
@@ -227,7 +227,7 @@ export function strStartsWith(value: string, checkValue: string) {
  * @param checkValue - The characters to be searched for at the start of the value.
  * @returns true if the given search value is found at the start of the string, otherwise false.
  */
- export function _strStartsWithPoly(value: string, checkValue: string) {
+export function _strStartsWithPoly(value: string, checkValue: string) {
     // Using helper for performance and because string startsWith() is not available on IE
     let result = false;
     let chkLen = checkValue ? checkValue.length : 0;
@@ -328,7 +328,7 @@ export function isPlainObject(value: any): boolean {
     let result: boolean = false;
 
     if (value && typeof value === "object") {
-            // Inlining _objGetPrototypeOf for performance to avoid an additional function call
+        // Inlining _objGetPrototypeOf for performance to avoid an additional function call
         let proto = _objGetPrototypeOf ? _objGetPrototypeOf(value) : _getObjProto(value);
         if (!proto) {
             // No prototype found so this is a plain Object eg. 'Object.create(null)'
@@ -796,7 +796,7 @@ export function proxyFunctionAs<T, S>(target: T, name: string, source: S | (() =
  * @param source - The source object which will be assigned / called by setting / calling the targets proxies
  * @param functionsToProxy - An array of function names that will be proxied on the target
  */
- export function proxyFunctions<T, S>(target: T, source: S | (() => S), functionsToProxy: (keyof S)[], overwriteTarget: boolean = true) {
+export function proxyFunctions<T, S>(target: T, source: S | (() => S), functionsToProxy: (keyof S)[], overwriteTarget: boolean = true) {
     if (target && source && isObject(target) && isArray(functionsToProxy)) {
         arrForEach(functionsToProxy, (theFuncName) => {
             if (isString(theFuncName)) {
@@ -888,7 +888,7 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
         idx++;
     }
 
-	// Handle case when target is a string or something (possible in deep copy)
+    // Handle case when target is a string or something (possible in deep copy)
     if (!isObject(extended)) {
         extended = {} as T1 & T2 & T3 & T4 & T5 & T6;
     }

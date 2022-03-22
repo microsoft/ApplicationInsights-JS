@@ -3,7 +3,7 @@
  * @copyright Microsoft 2018
  */
 
- import {
+import {
     IConfig, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
     TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
@@ -408,7 +408,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
             };
 
-           /**
+            /**
             * @ignore INTERNAL ONLY
             * @param exception
             * @param properties
@@ -1000,7 +1000,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-   /**
+    /**
     * @ignore INTERNAL ONLY
     * @param exception
     * @param properties
