@@ -81,12 +81,12 @@ export class AITestClass {
     /**
      * Automatically assert that all registered events have been removed
      */
-    public assertNoEvents: boolean = false;
+    public assertNoEvents: boolean = true;
 
     /**
       * Automatically assert that all hooks have been removed
       */
-    public assertNoHooks: boolean = false;
+    public assertNoHooks: boolean = true;
 
     protected _orgCrypto: Crypto | null;
     protected _orgLocation: Location | null;
@@ -264,7 +264,8 @@ export class AITestClass {
                 let testContext: ITestContext = {
                     context: {},
                     retryCnt: 0,
-                    testDone: testDone
+                    testDone: testDone,
+                    clock: testInfo.useFakeTimers ? self.clock : null
                 };
 
                 if (testInfo.timeOut !== undefined) {
@@ -297,7 +298,7 @@ export class AITestClass {
                         try {
                             if (step) {
                                 if (step[AITestClass.isPollingStepFlag]) {
-                                    step.call(this, nextTestStepTrigger);
+                                    step.call(this, testContext, nextTestStepTrigger);
                                 } else {
                                     testContext.retryCnt = step[stepRetryCnt] || 0;
     

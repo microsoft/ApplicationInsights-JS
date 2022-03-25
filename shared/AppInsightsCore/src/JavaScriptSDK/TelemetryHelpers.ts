@@ -3,13 +3,16 @@
 "use strict";
 
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { arrForEach, isFunction } from "./HelperFuncs";
-import { strCore, strIsInitialized, strPriority, strProcessTelemetry, strSetNextPlugin, strTeardown } from "./InternalConstants";
+import { strCore, strDoTeardown, strIsInitialized, strPriority, strProcessTelemetry, strSetNextPlugin, strTeardown } from "./InternalConstants";
 import { createElmNodeData } from "./DataCacheHelper";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
+import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 
+const strDoUnload = "_doUnload";
 export interface IPluginState {
     core?: IAppInsightsCore;
     isInitialized?: boolean;
@@ -100,4 +103,33 @@ export function sortPlugins<T = IPlugin>(plugins:T[]) {
         return result;
     });
     // sort complete
+}
+
+/**
+ * Teardown / Unload helper to perform teardown/unloading operations for the provided components synchronously or asynchronously, this will call any
+ * _doTeardown() or _doUnload() functions on the provided components to allow them to finish removal.
+ * @param components - The components you want to unload
+ * @param unloadCtx - This is the context that should be used during unloading.
+ * @param unloadState - The details / state of the unload process, it holds details like whether it should be unloaded synchronously or asynchronously and the reason for the unload.
+ * @param asyncCallback - An optional callback that the plugin must call if it returns true to inform the caller that it has completed any async unload/teardown operations.
+ * @returns boolean - true if the plugin has or will call asyncCallback, this allows the plugin to perform any asynchronous operations.
+ */
+export function unloadComponents(components: any | IUnloadableComponent[], unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState, asyncCallback?: () => void): void | boolean {
+    let idx = 0;
+
+    function _doUnload(): void | boolean {
+        while (idx < components.length) {
+            let component = components[idx++];
+            if (component) {
+                let func = component[strDoUnload] || component[strDoTeardown];
+                if (isFunction(func)) {
+                    if (func.call(component, unloadCtx, unloadState, _doUnload) === true) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return _doUnload();
 }

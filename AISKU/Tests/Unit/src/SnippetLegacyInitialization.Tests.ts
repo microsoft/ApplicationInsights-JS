@@ -299,6 +299,14 @@ export class SnippetLegacyInitializationTests extends AITestClass {
             ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IAppInsightsDeprecated); 
 
             const appInsights = (snippet as any).appInsights;
+            this.onDone(() => {
+                if (snippet["unload"]) {
+                    snippet["unload"](false);
+                } else if (snippet["appInsightsNew"]) {
+                    snippet["appInsightsNew"].unload(false);
+                }
+            });
+
             Assert.ok(appInsights, "The App insights instance should be populated");
             Assert.ok(appInsights.core, "The Core exists");
             Assert.equal(appInsights.core, (snippet as any).core, "The core instances should match");

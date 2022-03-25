@@ -2,21 +2,27 @@
  * @copyright Microsoft 2020
  */
 
-
+import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     isValueAssigned, extend
 } from "../common/Utils";
 import * as DataCollector from "../DataCollector";
-import { IDiagnosticLogger, getLocation, hasWindow } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, getLocation, hasWindow, IUnloadableComponent, IProcessTelemetryUnloadContext, ITelemetryUnloadState } from "@microsoft/applicationinsights-core-js";
 import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler, ICoreData, IPageActionTelemetry } from "../Interfaces/Datamodel";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
 
-export class WebEvent {
+export class WebEvent implements IUnloadableComponent {
 
-    protected _pageTags: IPageTags = {};
+    protected _pageTags: IPageTags;
     protected _pageTypeMetaTag: string;
     protected _marketMetaTag: string;
     protected _behaviorMetaTag: string;
+    protected _clickAnalyticsPlugin: ClickAnalyticsPlugin;
+    protected _config: IClickAnalyticsConfiguration;
+    protected _contentHandler: IContentHandler;
+    protected _pageTagsCallback: any;
+    protected _metaTags: { [name: string]: string };
+    protected _traceLogger: IDiagnosticLogger;
 
     /**
      * @param clickAnalyticsPlugin - Click Analytics plugin instance
@@ -27,20 +33,131 @@ export class WebEvent {
      * @param metaTags - Meta tags
      * @param traceLogger - Trace logger to log to console.
      */
-    constructor(protected _clickAnalyticsPlugin: ClickAnalyticsPlugin, protected _config: IClickAnalyticsConfiguration, protected _contentHandler: IContentHandler,
-        protected _pageTagsCallback: any, protected _metaTags: { [name: string]: string },
-        protected _traceLogger: IDiagnosticLogger) {
+    constructor(
+        clickAnalyticsPlugin: ClickAnalyticsPlugin,
+        config: IClickAnalyticsConfiguration,
+        contentHandler: IContentHandler,
+        pageTagsCallback: any,
+        metaTags: { [name: string]: string },
+        traceLogger: IDiagnosticLogger) {
 
+        dynamicProto(WebEvent, this, (_self) => {
+            _initDefaults();
+
+            function _initDefaults() {
+                _self._pageTags = {};
+                _self._clickAnalyticsPlugin = clickAnalyticsPlugin;
+                _self._config = config;
+                _self._contentHandler = contentHandler;
+                _self._pageTagsCallback = pageTagsCallback;
+                _self._metaTags = metaTags;
+                _self._traceLogger = traceLogger;
+            }
+
+            _self.setBasicProperties = (event: IPageActionTelemetry, overrideValues: IOverrideValues) => {
+                if (!isValueAssigned(event.name)) {
+                    event.pageName = DataCollector.getPageName(_self._config, overrideValues);
+                }
+                if (!isValueAssigned(event.uri) && hasWindow) {
+                    event.uri = DataCollector.getUri(_self._config, getLocation());
+                }
+            };
+        
+            /**
+             * Sets common properties for events that are based on the WebEvent schema.
+             * @param event - The event
+             */
+            _self.setCommonProperties = (event: IPageActionTelemetry, overrideValues: IOverrideValues) => {
+                _self.setBasicProperties(event, overrideValues);
+                _self._setPageTags(event, overrideValues);
+        
+                // extract specific meta tags out of the pageTags.metaTags collection.  These will go into assigned first class fields in the event.
+                // the rest will go into pageTags.metaTags collection as is.
+                _self._pageTypeMetaTag = _getMetaData(_self._metaTags, _self._config.coreData, "pageType");
+                _self._behaviorMetaTag = _getMetaData(_self._metaTags, _self._config.coreData, "behavior");
+        
+                if (isValueAssigned(overrideValues.pageType)) {
+                    event.pageType = overrideValues.pageType;
+                }
+                // Only assign if not overriden and meta data is available
+                if (isValueAssigned(_self._pageTypeMetaTag) && !isValueAssigned(event.pageType)) {
+                    event.pageType = _self._pageTypeMetaTag;
+                }
+            };
+        
+            /**
+             * Sets pageTags.
+             * @param event - The event
+             */
+            _self._setPageTags = (event: IPageActionTelemetry, overrideValues: IOverrideValues) => {
+                // Prepare the pageTags object that is mostly the same for all events.  Event specific pageTags will be added inside event constructors.
+               
+                if (_self._pageTagsCallback) {
+                    _self._pageTags = extend(true, _self._pageTags, _self._pageTagsCallback());
+                }
+                if (isValueAssigned(overrideValues.pageTags)) {
+                    _self._pageTags = extend(true, _self._pageTags, overrideValues.pageTags);
+                }
+                // If metadata is present add it to pageTags property
+                if (_self._metaTags) {
+                    _self._pageTags.metaTags = {};
+                    // Remove not supported meta data in pageTags.metaTags
+                    for (var metaTag in _self._metaTags) {
+                        if (metaTag != "behavior" && metaTag != "market" && metaTag != "pageType") {
+                            _self._pageTags.metaTags[metaTag] = _self._metaTags[metaTag];
+                        }
+                    }
+                }
+                // All metadata tags that must be saved as properties have been extracted at this point.  Assign pageTags as is.
+                event.properties = event.properties || {};
+                event.properties["pageTags"] = _self._pageTags;
+            };
+        
+            _self._getBehavior = (overrideValues?: IOverrideValues): string | number => {
+                let behavior: string | number;
+                // If override specified
+                if (overrideValues && isValueAssigned(overrideValues.behavior)) {
+                    behavior = overrideValues.behavior;
+                } else if (isValueAssigned(_self._behaviorMetaTag)) {
+                    // If behavior meta tag available
+                    behavior = _self._behaviorMetaTag;
+                }
+                return _self._getValidBehavior(behavior);
+            };
+        
+            _self._getValidBehavior = (behavior: string | number): string | number => {
+                return _self._config.behaviorValidator(behavior);
+            };
+        
+            _self._doUnload = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState, asyncCallback?: () => void): void | boolean => {
+                _initDefaults();
+            };
+
+            /**
+             * Get the specified metadata value from the collection
+             * If overrideValue is specified in the config that takes precedence.
+             * @param metaTags - Meta data.
+             * @param coreData - Coredata values from configuration.
+             * @param metaTagName - Name of the metaTag to get.
+             * @returns Meta data value
+             */
+            function _getMetaData(metaTags: { [name: string]: string }, coreData: ICoreData, metaTagName: string): string {
+                if (coreData && coreData[metaTagName]) {
+                    return coreData[metaTagName];
+                }
+                
+                if (metaTags) {
+                    return metaTags[metaTagName];
+                }
+
+                return "";
+            }
+        });
     }
 
     // Fill common PartB fields
     public setBasicProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
-        if (!isValueAssigned(event.name)) {
-            event.pageName = DataCollector.getPageName(this._config, overrideValues);
-        }
-        if (!isValueAssigned(event.uri) && hasWindow) {
-            event.uri = DataCollector.getUri(this._config, getLocation());
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
@@ -48,21 +165,19 @@ export class WebEvent {
      * @param event - The event
      */
     public setCommonProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
-        this.setBasicProperties(event, overrideValues);
-        this._setPageTags(event, overrideValues);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
 
-        // extract specific meta tags out of the pageTags.metaTags collection.  These will go into assigned first class fields in the event.
-        // the rest will go into pageTags.metaTags collection as is.
-        this._pageTypeMetaTag = this._getMetaData(this._metaTags, this._config.coreData, "pageType");
-        this._behaviorMetaTag = this._getMetaData(this._metaTags, this._config.coreData, "behavior");
-
-        if (isValueAssigned(overrideValues.pageType)) {
-            event.pageType = overrideValues.pageType;
-        }
-        // Only assign if not overriden and meta data is available
-        if (isValueAssigned(this._pageTypeMetaTag) && !isValueAssigned(event.pageType)) {
-            event.pageType = this._pageTypeMetaTag;
-        }
+    /**
+     * Teardown / Unload hook to allow implementations to perform some additional unload operations before the BaseTelemetryPlugin
+     * finishes it's removal.
+     * @param unloadCtx - This is the context that should be used during unloading.
+     * @param unloadState - The details / state of the unload process, it holds details like whether it should be unloaded synchronously or asynchronously and the reason for the unload.
+     * @param asyncCallback - An optional callback that the plugin must call if it returns true to inform the caller that it has completed any async unload/teardown operations.
+     * @returns boolean - true if the plugin has or will call asyncCallback, this allows the plugin to perform any asynchronous operations.
+     */
+    public _doUnload(unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState, asyncCallback?: () => void): void | boolean {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
@@ -70,61 +185,16 @@ export class WebEvent {
      * @param event - The event
      */
     protected _setPageTags(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
-        // Prepare the pageTags object that is mostly the same for all events.  Event specific pageTags will be added inside event constructors.
-       
-        if (this._pageTagsCallback) {
-            this._pageTags = extend(true, this._pageTags, this._pageTagsCallback());
-        }
-        if (isValueAssigned(overrideValues.pageTags)) {
-            this._pageTags = extend(true, this._pageTags, overrideValues.pageTags);
-        }
-        // If metadata is present add it to pageTags property
-        if (this._metaTags) {
-            this._pageTags.metaTags = {};
-            // Remove not supported meta data in pageTags.metaTags
-            for (var metaTag in this._metaTags) {
-                if (metaTag != "behavior" && metaTag != "market" && metaTag != "pageType") {
-                    this._pageTags.metaTags[metaTag] = this._metaTags[metaTag];
-                }
-            }
-        }
-        // All metadata tags that must be saved as properties have been extracted at this point.  Assign pageTags as is.
-        event.properties = event.properties || {};
-        event.properties["pageTags"] = this._pageTags;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     protected _getBehavior(overrideValues?: IOverrideValues): string | number {
-        let behavior: string | number;
-        // If override specified
-        if (overrideValues && isValueAssigned(overrideValues.behavior)) {
-            behavior = overrideValues.behavior;
-        } else if (isValueAssigned(this._behaviorMetaTag)) {
-            // If behavior meta tag available
-            behavior = this._behaviorMetaTag;
-        }
-        return this._getValidBehavior(behavior);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     protected _getValidBehavior(behavior: string | number): string | number {
-        return this._config.behaviorValidator(behavior);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
-
-    /**
-     * Get the specified metadata value from the collection
-     * If overrideValue is specified in the config that takes precedence.
-     * @param metaTags - Meta data.
-     * @param coreData - Coredata values from configuration.
-     * @param metaTagName - Name of the metaTag to get.
-     * @returns Meta data value
-     */
-    private _getMetaData(metaTags: { [name: string]: string }, coreData: ICoreData, metaTagName: string): string {
-        if (coreData && coreData[metaTagName]) {
-            return coreData[metaTagName];
-        } else if (metaTags) {
-            return metaTags[metaTagName];
-        }
-        return "";
-    }
-
-
 }

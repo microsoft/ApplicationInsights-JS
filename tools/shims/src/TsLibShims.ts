@@ -63,7 +63,7 @@ export function __extendsFn(d: any, b: any) {
         throwTypeError("Class extends value " + String(b) + " is not a constructor or null");
     }
     extendStaticsFn(d, b);
-    function __() {
+    function __(this: any) {
         this.constructor = d;
     }
     // tslint:disable-next-line: ban-comma-operator
@@ -129,7 +129,7 @@ export function __createBindingFn(o: any, m: any, k: any, k2?: any) {
         k2 = k;
     }
     
-    if (ObjCreate) {
+    if (!!ObjCreate) {
         ObjDefineProperty(o, k2, {
             enumerable: true,
             get() {
@@ -243,7 +243,7 @@ export function __importStarFn(mod: any) {
     }
 
     // Set default module
-    if (ObjCreate) {
+    if (!!ObjCreate) {
         ObjDefineProperty( result, strDefault, { enumerable: true, value: mod });
     } else {
         result[strDefault] = mod;

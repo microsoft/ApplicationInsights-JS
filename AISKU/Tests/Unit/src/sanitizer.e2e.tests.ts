@@ -46,7 +46,11 @@ export class SanitizerE2ETests extends AITestClass {
         }
     }
 
-    public testCleanup() {
+    public testFinishedCleanup(): void {
+        if (this._ai && this._ai.unload) {
+            // force unload
+            this._ai.unload(false);
+        }
     }
 
     public registerTests() {

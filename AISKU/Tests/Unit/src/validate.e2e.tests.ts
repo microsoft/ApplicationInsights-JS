@@ -46,7 +46,11 @@ export class ValidateE2ETests extends AITestClass {
         }
     }
 
-    public testCleanup() {
+    public testFinishedCleanup(): void {
+        if (this._ai) {
+            this._ai.unload(false);
+            this._ai = null;
+        }        
     }
 
     public registerTests() {

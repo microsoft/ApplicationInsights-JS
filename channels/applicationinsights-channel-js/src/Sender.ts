@@ -19,7 +19,7 @@ import {
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
     SendRequestReason, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, objKeys,
     isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported, isArray, createUniqueNamespace, mergeEvtNamespace,
-    IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal
+    IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { createOfflineListener, IOfflineListener } from "./Offline";
 import { Sample } from "./TelemetryProcessors/Sample"
@@ -202,6 +202,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             };
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
+                if (_self.isInitialized()) {
+                    _throwInternal(_self.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender is already initialized");
+                }
+                
                 _base.initialize(config, core, extensions, pluginChain);
                 let ctx = _self._getTelCtx();
                 let identifier = _self.identifier;
@@ -1078,10 +1082,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      * Will not flush if the Send has been paused.
      */
     public onunloadFlush() {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public teardown(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

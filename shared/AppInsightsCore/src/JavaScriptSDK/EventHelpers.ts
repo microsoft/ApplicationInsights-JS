@@ -52,7 +52,7 @@ function _normalizeNamespace(name: string) {
     return name;
 }
 
-function _getEvtNamespace(eventName: string, evtNamespace?: string | string[]): IEventDetails {
+function _getEvtNamespace(eventName: string | undefined, evtNamespace?: string | string[] | null): IEventDetails {
     if (evtNamespace) {
         let theNamespace: string = "";
         if (isArray(evtNamespace)) {
@@ -81,7 +81,7 @@ function _getEvtNamespace(eventName: string, evtNamespace?: string | string[]): 
         }
     }
 
-    let parsedEvent: any[] = (eventNamespace.exec(eventName) || []);
+    let parsedEvent: any[] = (eventNamespace.exec(eventName || "") || []);
 
     return {
         type: parsedEvent[1],
@@ -195,7 +195,7 @@ function _unregisterEvents(target: any, evtName: IEventDetails, unRegFn: (regEve
     }
 }
 
-export function mergeEvtNamespace(theNamespace: string, namespaces: string | string[]): string | string[] {
+export function mergeEvtNamespace(theNamespace: string, namespaces?: string | string[] | null): string | string[] {
     let newNamespaces: string | string[];
 
     if (namespaces) {
@@ -225,7 +225,7 @@ export function mergeEvtNamespace(theNamespace: string, namespaces: string | str
  * @param useCapture [Optional] Defaults to false
  * @returns True if the function was bound successfully to the event, otherwise false
  */
-export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNamespace?: string | string[], useCapture: boolean = false) {
+export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNamespace?: string | string[] | null, useCapture: boolean = false) {
     let result = false;
 
     if (target) {
@@ -263,7 +263,7 @@ export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNam
  * if the eventName also includes a namespace the namespace(s) are merged into a single namespace
  * @param useCapture [Optional] Defaults to false
  */
-export function eventOff<T>(target: T, eventName: string, handlerRef: any, evtNamespace?: string | string[], useCapture: boolean = false) {
+export function eventOff<T>(target: T, eventName: string, handlerRef: any, evtNamespace?: string | string[] | null, useCapture: boolean = false) {
     if (target) {
         try {
             let evtName = _getEvtNamespace(eventName, evtNamespace);
@@ -321,7 +321,7 @@ export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @return {boolean} - true if the handler was successfully added
  */
-export function addEventHandler(eventName: string, callback: any, evtNamespace?: string | string[]): boolean {
+export function addEventHandler(eventName: string, callback: any, evtNamespace?: string | string[] | null): boolean {
     let result = false;
     let w = getWindow();
     if (w) {
@@ -346,7 +346,7 @@ export function addEventHandler(eventName: string, callback: any, evtNamespace?:
  * otherwise this will only remove events with this specific handler.
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  */
-export function removeEventHandler(eventName: string, callback: any, evtNamespace?: string | string[]) {
+export function removeEventHandler(eventName: string, callback: any, evtNamespace?: string | string[] | null) {
     let w = getWindow();
     if (w) {
         eventOff(w, eventName, callback, evtNamespace);
@@ -367,7 +367,7 @@ export function removeEventHandler(eventName: string, callback: any, evtNamespac
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @returns true - when at least one of the events was registered otherwise false
  */
-function _addEventListeners(events: string[], listener: any, excludeEvents: string[], evtNamespace: string | string[]): boolean {
+function _addEventListeners(events: string[], listener: any, excludeEvents?: string[] | null, evtNamespace?: string | string[] | null): boolean {
     let added = false;
 
     if (listener && events && events.length > 0) {
@@ -391,7 +391,6 @@ function _addEventListeners(events: string[], listener: any, excludeEvents: stri
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @returns true - when at least one of the events was registered otherwise false
  */
-// export function addEventListeners(events: string[], listener: any, excludeEvents?: string[], evtNamespace?: string): boolean {
 export function addEventListeners(events: string[], listener: any, excludeEvents?: string[], evtNamespace?: string | string[]): boolean {
     let added = false;
 
@@ -434,8 +433,7 @@ export function removeEventListeners(events: string[], listener: any, evtNamespa
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @returns true - when at least one of the events was registered otherwise false
  */
-//export function addPageUnloadEventListener(listener: any, excludeEvents?: string[], evtNamespace?: string): boolean {
-export function addPageUnloadEventListener(listener: any, excludeEvents: string[], evtNamespace?: string | string[]): boolean {
+export function addPageUnloadEventListener(listener: any, excludeEvents?: string[], evtNamespace?: string | string[]): boolean {
     // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
     // As just hooking the window does not always fire (on chrome) for page navigation's.
     return addEventListeners([strBeforeUnload, strUnload, strPageHide], listener, excludeEvents, evtNamespace);
@@ -464,8 +462,7 @@ export function removePageUnloadEventListener(listener: any, evtNamespace?: stri
  * Suggestion: pass as true if you are also calling addPageUnloadEventListener as that also hooks pagehide
  * @returns true - when at least one of the events was registered otherwise false
  */
-//export function addPageHideEventListener(listener: any, excludeEvents?: string[], evtNamespace?: string): boolean {
-export function addPageHideEventListener(listener: any, excludeEvents: string[], evtNamespace?: string | string[]): boolean {
+export function addPageHideEventListener(listener: any, excludeEvents?: string[] | null, evtNamespace?: string | string[] | null): boolean {
 
     function _handlePageVisibility(evt: any) {
         let doc = getDocument();
@@ -498,7 +495,7 @@ export function addPageHideEventListener(listener: any, excludeEvents: string[],
  * @param evtNamespace - The unique namespace used when calling addPageShowEventListener
  */
 
-export function removePageHideEventListener(listener: any, evtNamespace?: string | string[]) {
+export function removePageHideEventListener(listener: any, evtNamespace?: string | string[] | null) {
     // add the unique page show namespace to any provided namespace so we only remove the ones added by "pagehide"
     let newNamespaces = mergeEvtNamespace(strPageHideNamespace, evtNamespace);
     removeEventListeners([strPageHide], listener, newNamespaces);
@@ -516,8 +513,7 @@ export function removePageHideEventListener(listener: any, evtNamespace?: string
  * so that only the matching "removePageShowEventListener" can remove these events.
  * @returns true - when at least one of the events was registered otherwise false
  */
-//export function addPageShowEventListener(listener: any, excludeEvents?: string[], evtNamespace?: string): boolean {
-export function addPageShowEventListener(listener: any, excludeEvents: string[], evtNamespace?: string | string[]): boolean {
+export function addPageShowEventListener(listener: any, excludeEvents?: string[] | null, evtNamespace?: string | string[] | null): boolean {
 
     function _handlePageVisibility(evt: any) {
         let doc = getDocument();
@@ -546,7 +542,7 @@ export function addPageShowEventListener(listener: any, excludeEvents: string[],
  * @param listener - The specific listener to remove for the 'pageshow' event only (ignored for 'visibilitychange')
  * @param evtNamespace - The unique namespace used when calling addPageShowEventListener
  */
-export function removePageShowEventListener(listener: any, evtNamespace?: string | string[]) {
+export function removePageShowEventListener(listener: any, evtNamespace?: string | string[] | null) {
     // add the unique page show namespace to any provided namespace so we only remove the ones added by "pageshow"
     let newNamespaces = mergeEvtNamespace(strPageShowNamespace, evtNamespace);
     removeEventListeners([strPageShow], listener, newNamespaces);

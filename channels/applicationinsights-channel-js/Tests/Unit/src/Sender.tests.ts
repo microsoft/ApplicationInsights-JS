@@ -12,7 +12,6 @@ export class SenderTests extends AITestClass {
 
     public testInitialize() {
         this._sender = new Sender();
-        this._sender.initialize({ instrumentationKey: this._instrumentationKey }, new AppInsightsCore(), []);
         this._offline = createOfflineListener("SenderTests");
     }
 
@@ -20,9 +19,12 @@ export class SenderTests extends AITestClass {
         if (this._offline) {
             this._offline.unload();
         }
-        if (this._sender) {
+
+        if (this._sender && this._sender.isInitialized()) {
+            this._sender.pause();
             this._sender.teardown();
         }
+
         this._sender = null;
     }
 
@@ -166,6 +168,9 @@ export class SenderTests extends AITestClass {
                     instrumentationKey: 'abc',
                     isBeaconApiDisabled: true
                 }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
 
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
@@ -207,6 +212,9 @@ export class SenderTests extends AITestClass {
                     instrumentationKey: 'abc',
                     isBeaconApiDisabled: false
                 }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
 
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
@@ -253,6 +261,9 @@ export class SenderTests extends AITestClass {
                     instrumentationKey: 'abc',
                     isBeaconApiDisabled: false
                 }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
 
                 const telemetryItems: ITelemetryItem[] = [];
                 for (let i = 0; i < 8; i ++) {
@@ -311,6 +322,9 @@ export class SenderTests extends AITestClass {
                     isBeaconApiDisabled: true,
                     disableXhr: true
                 }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
 
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
@@ -359,6 +373,9 @@ export class SenderTests extends AITestClass {
                     instrumentationKey: 'abc',
                     isBeaconApiDisabled: true
                 }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
 
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
@@ -408,6 +425,9 @@ export class SenderTests extends AITestClass {
                         }
                     ]
                 }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
 
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
@@ -451,6 +471,9 @@ export class SenderTests extends AITestClass {
                         }
                     ]
                 }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
 
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
@@ -490,6 +513,9 @@ export class SenderTests extends AITestClass {
                     instrumentationKey: 'abc',
                     isBeaconApiDisabled: true
                 }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
 
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
@@ -1272,6 +1298,7 @@ export class SenderTests extends AITestClass {
 
                 QUnit.assert.equal(false,logInternalSpy.calledOnce, 'valid Ikey test-1');
                 QUnit.assert.equal(0, appInsightsCore.logger.queue.length, "POST: No messageId logged");
+                this._sender.teardown();
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
@@ -1298,6 +1325,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
                 QUnit.assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
                 QUnit.assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
+                this._sender.teardown();
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
@@ -1324,6 +1352,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
                 QUnit.assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
                 QUnit.assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
+                this._sender.teardown();
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
@@ -1350,6 +1379,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
                 QUnit.assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
                 QUnit.assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
+                this._sender.teardown();
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
@@ -1373,9 +1403,8 @@ export class SenderTests extends AITestClass {
 
                 QUnit.assert.equal(false,logInternalSpy.calledOnce, 'disableIKeyValidation flag set to yes');
                 QUnit.assert.equal(0, appInsightsCore.logger.queue.length, "POST: No messageId logged");
+                this._sender.teardown();
             }
-
-            
         });
 
         this.testCase({

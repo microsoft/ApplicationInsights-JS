@@ -26,7 +26,7 @@ const strGetTelCtx = "_getTelCtx";
 let _chainId = 0;
 
 interface OnCompleteCallback {
-    func: Function;
+    func: () => void;
     self: any;      // This for the function
     args: any[];    // Additional arguments for the function
 }
@@ -67,7 +67,7 @@ function _getNextProxyStart(proxy: ITelemetryPluginChain, config: IConfiguration
 function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IInternalContext<T> {
     // We have a special case where we want to start execution from this specific plugin
     // or we simply reuse the existing telemetry plugin chain (normal execution case)
-    let _nextProxy: ITelemetryPluginChain = null;  // By Default set as no next plugin
+    let _nextProxy: ITelemetryPluginChain | null = null;  // By Default set as no next plugin
     let _onComplete: OnCompleteCallback[] = [];
 
     if (startAt !== null) {
@@ -103,7 +103,7 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
         } as T
     };
 
-    function _addOnComplete(onComplete: Function, that?: any, ...args: any[]) {
+    function _addOnComplete(onComplete: () => void, that?: any, ...args: any[]) {
         if (onComplete) {
             _onComplete.push({
                 func: onComplete,
@@ -211,7 +211,7 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
  * @param core - The current core instance
  * @param startAt - Identifies the next plugin to execute, if null there is no "next" plugin and if undefined it should assume the start of the chain
  */
-export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryContext {
+export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginChain | null, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryContext {
     let internalContext: IInternalContext<IProcessTelemetryContext> = _createInternalContext<IProcessTelemetryContext>(telemetryChain, config, core, startAt);
     let context = internalContext.ctx;
 
@@ -223,7 +223,7 @@ export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginCh
         return !nextPlugin;
     }
 
-    function _createNew(plugins: IPlugin[] | ITelemetryPluginChain = null, startAt?: IPlugin) {
+    function _createNew(plugins: IPlugin[] | ITelemetryPluginChain | null = null, startAt?: IPlugin) {
         if (isArray(plugins)) {
             plugins = createTelemetryProxyChain(plugins, config, core, startAt);
         }
@@ -562,7 +562,7 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
 
     public getExtCfg: <T>(identifier:string, defaultValue?:T|any) => T;
                         
-    public getConfig: (identifier:string, field: string, defaultValue?: number | string | boolean) => number | string | boolean;
+    public getConfig: (identifier:string, field: string, defaultValue?: number | string | boolean | string[] | RegExp[] | Function) => number | string | boolean | string[] | RegExp[] | Function;
 
     /**
      * Returns the IAppInsightsCore instance for the current request

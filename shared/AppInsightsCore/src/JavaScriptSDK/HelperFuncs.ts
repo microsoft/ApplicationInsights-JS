@@ -89,19 +89,19 @@ export function isTypeof(value: any, theType: string): boolean {
     return typeof value === theType;
 }
 
-export function isUndefined(value: any): boolean {
+export function isUndefined(value: any): value is undefined {
     return value === undefined || typeof value === strShimUndefined;
 }
 
-export function isNotUndefined(value: any): boolean {
+export function isNotUndefined<T>(value: T): value is T {
     return !isUndefined(value);
 }
 
-export function isNullOrUndefined(value: any): boolean {
+export function isNullOrUndefined(value: any): value is null | undefined {
     return (value === null || isUndefined(value));
 }
 
-export function isNotNullOrUndefined(value: any): boolean {
+export function isNotNullOrUndefined<T>(value: T): value is T {
     return !isNullOrUndefined(value);
 }
 
@@ -109,7 +109,7 @@ export function hasOwnProperty(obj: any, prop: string): boolean {
     return !!(obj && ObjHasOwnProperty.call(obj, prop));
 }
 
-export function isObject(value: any): boolean {
+export function isObject<T>(value: T): value is T {
     // Changing to inline for performance
     return !!(value && typeof value === strShimObject);
 }
@@ -389,7 +389,7 @@ export function _toISOStringPoly(date: Date) {
  * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the array. It can return -1 to break out of the loop
  * @param thisArg  [Optional] An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
  */
-export function arrForEach<T = any>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void|number, thisArg?: any): void {
+export function arrForEach<T = any>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => undefined | void | number, thisArg?: any): void {
     let len = arr.length;
     try {
         for (let idx = 0; idx < len; idx++) {
@@ -661,7 +661,7 @@ export function getExceptionName(object: any): string {
  * @param srcChk - [Optional] Callback to check to original value that if supplied will be called if the new value should be set (if allowed)
  * @returns The existing or new value, depending what was set
  */
-export function setValue<T, K extends keyof T>(target: T, field: K, value: T[K], valChk?: (value: T[K]) => boolean, srcChk?: (value: T[K]) => boolean) {
+export function setValue<T, K extends keyof T>(target: T, field: K, value: T[K], valChk?: ((value: T[K]) => boolean) | null, srcChk?: ((value: T[K]) => boolean) | null) {
     let theValue = value;
     if (target) {
         theValue = target[field];

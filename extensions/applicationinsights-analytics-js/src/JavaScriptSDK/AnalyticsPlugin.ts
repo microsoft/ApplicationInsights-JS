@@ -20,7 +20,7 @@ import {
     isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, ICookieMgr, safeGetCookieMgr,
     TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentFunc, IInstrumentCallDetails, eventOn, eventOff,
     mergeEvtNamespace, createUniqueNamespace, ITelemetryInitializerHandler, throwError, isUndefined, hasWindow, createProcessTelemetryContext,
-    ITelemetryUnloadState
+    ITelemetryUnloadState, IProcessTelemetryUnloadContext
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -30,7 +30,6 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 // For types only
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { Timing } from "./Timing";
-import { IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "@microsoft/applicationinsights-core-js/types/JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 
 "use strict";
 

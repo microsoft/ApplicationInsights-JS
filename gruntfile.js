@@ -113,7 +113,7 @@ module.exports = function (grunt) {
             "aiskulite":            { path: "./AISKULight", 
                                         cfg: { 
                                             src: [ 
-                                                "AISKULight/*.ts" 
+                                                "AISKULight/src/*.ts" 
                                             ] 
                                         } 
                                     },
@@ -224,6 +224,13 @@ module.exports = function (grunt) {
                         './AISKU/Tests/Perf/src/**/*.ts',
                     ],
                     out: 'AISKU/Tests/Perf/dist/aiskuperftests.tests.js'
+                },
+                aiskuliteunittests: {
+                    tsconfig: './AISKULight/Tests/tsconfig.json',
+                    src: [
+                        './AISKULight/Tests/Unit/src/**/*.ts',
+                    ],
+                    out: 'AISKULight/Tests/Unit/dist/aiskuliteunittests.tests.js'
                 },
                 clickanalyticstests: {
                     tsconfig: './extensions/applicationinsights-clickanalytics-js/Tests/tsconfig.json',
@@ -458,6 +465,17 @@ module.exports = function (grunt) {
                         '--web-security': 'false'
                     }
                 },
+                aiskulite: {
+                    options: {
+                        urls: [
+                            'http://localhost:9001/AISKULight/Tests/UnitTests.html'
+                        ],
+                        timeout: 5 * 60 * 1000, // 5 min
+                        console: true,
+                        summaryOnly: false,
+                        '--web-security': 'false'
+                    }
+                },
                 aichannel: {
                     options: {
                         urls: [
@@ -532,6 +550,7 @@ module.exports = function (grunt) {
         grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
         grunt.registerTask("aiskuunittests", ["connect", "ts:aiskuunittests", "qunit:aisku"]);
         grunt.registerTask("aiskuperf", ["connect", "ts:aiskuperf", "qunit:aiskuperf"]);
+        grunt.registerTask("aiskuliteunittests", ["connect", "ts:aiskuliteunittests", "qunit:aiskulite"]);
         grunt.registerTask("test", ["connect", "ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
         grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
         grunt.registerTask("coreunittest", ["connect", "ts:coreunittest", "qunit:core"]);

@@ -57,6 +57,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
                 
                 const element = document.createElement('a');
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');   
@@ -100,6 +103,10 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 const element = document.createElement('a');
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 this.clock.tick(500);  
@@ -143,6 +150,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -201,6 +211,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -259,6 +272,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -312,6 +328,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -366,6 +385,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -419,6 +441,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -467,6 +492,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -519,6 +547,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -570,6 +601,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -619,6 +653,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');  
@@ -665,6 +702,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -720,6 +760,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -769,6 +812,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -823,6 +869,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -878,6 +927,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -934,6 +986,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -984,6 +1039,9 @@ export class ClickEventTest extends AITestClass {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');

@@ -41,7 +41,7 @@ const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";
 const strSdkNotInitialized = "SDK is not initialized";
-const strPluginUnloadFailed = "Failed to unload plugin";
+// const strPluginUnloadFailed = "Failed to unload plugin";
 
 /**
  * Helper to create the default performance manager
@@ -126,22 +126,22 @@ export class BaseCore implements IAppInsightsCore {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
         let _isInitialized: boolean;
         let _eventQueue: ITelemetryItem[];
-        let _notificationManager: INotificationManager;
-        let _perfManager: IPerfManager;
-        let _cfgPerfManager: IPerfManager;
-        let _cookieManager: ICookieMgr;
-        let _pluginChain: ITelemetryPluginChain;
+        let _notificationManager: INotificationManager | null | undefined;
+        let _perfManager: IPerfManager | null;
+        let _cfgPerfManager: IPerfManager | null;
+        let _cookieManager: ICookieMgr | null;
+        let _pluginChain: ITelemetryPluginChain | null;
         let _configExtensions: IPlugin[];
-        let _coreExtensions: ITelemetryPlugin[];
-        let _channelControl: IChannelController;
-        let _channelConfig: IChannelControls[][];
-        let _channelQueue: _IInternalChannels[];
+        let _coreExtensions: ITelemetryPlugin[] | null;
+        let _channelControl: IChannelController | null;
+        let _channelConfig: IChannelControls[][] | null | undefined;
+        let _channelQueue: _IInternalChannels[] | null;
         let _isUnloading: boolean;
         let _telemetryInitializerPlugin: TelemetryInitializerPlugin;
-        let _internalLogsEventName: string;
+        let _internalLogsEventName: string | null;
         let _evtNamespace: string;
         let _unloadHandlers: IUnloadHandlerContainer;
-        let _debugListener: INotificationListener;
+        let _debugListener: INotificationListener | null;
 
         /**
          * Internal log poller
@@ -204,9 +204,11 @@ export class BaseCore implements IAppInsightsCore {
         
             _self.getTransmissionControls = (): IChannelControls[][] => {
                 let controls: IChannelControls[][] = [];
-                arrForEach(_channelQueue, (channels) => {
-                    controls.push(channels.queue);
-                });
+                if (_channelQueue) {
+                    arrForEach(_channelQueue, (channels) => {
+                        controls.push(channels.queue);
+                    });
+                }
 
                 return objFreeze(controls);
             };
@@ -311,7 +313,7 @@ export class BaseCore implements IAppInsightsCore {
              * Periodically check logger.queue for log messages to be flushed
              */
             _self.pollInternalLogs = (eventName?: string): number => {
-                _internalLogsEventName = eventName;
+                _internalLogsEventName = eventName || null;
 
                 let interval = _self.config.diagnosticLogInterval;
                 if (!interval || !(interval > 0)) {
@@ -418,7 +420,7 @@ export class BaseCore implements IAppInsightsCore {
                     let removedPlugins: IPlugin[] = [existingPlugin.plugin];
                     let unloadState: ITelemetryUnloadState = {
                         reason: TelemetryUnloadReason.PluginReplace,
-                        isAsync: isAsync
+                        isAsync: !!isAsync
                     };
 
                     _removePlugins(removedPlugins, unloadState, (removed) => {
@@ -450,7 +452,7 @@ export class BaseCore implements IAppInsightsCore {
 
                 // Use a default logger so initialization errors are not dropped on the floor with full logging
                 _self.logger = new DiagnosticLogger({ loggingLevelConsole: eLoggingSeverity.CRITICAL });
-                _self.config = null;
+                _self.config = {};
                 _self._extensions = [];
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
@@ -461,7 +463,7 @@ export class BaseCore implements IAppInsightsCore {
                 _cookieManager = null;
                 _pluginChain = null;
                 _coreExtensions = null;
-                _configExtensions = null;
+                _configExtensions = [];
                 _channelControl = null;
                 _channelConfig = null;
                 _channelQueue = null;
@@ -476,7 +478,7 @@ export class BaseCore implements IAppInsightsCore {
             }
 
             // Initialize or Re-initialize the plugins
-            function _initPluginChain(config: IConfiguration, updateState: ITelemetryUpdateState) {
+            function _initPluginChain(config: IConfiguration, updateState: ITelemetryUpdateState | null) {
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
             
