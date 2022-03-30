@@ -3,15 +3,13 @@
 
 import { Snippet } from "./Initialization";
 import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
+import { strUndefined } from "@microsoft/applicationinsights-core-js";
 
-export { Initialization as ApplicationInsights, Telemetry, Snippet } from "./Initialization";
+export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
 
-"use strict";
-
-const Undefined = "undefined";
 function _logWarn(aiName:string, message:string) {
     // TODO: Find better place to warn to console when SDK initialization fails
-    var _console = typeof console !== Undefined ? console : null;
+    var _console = typeof console !== strUndefined ? console : null;
     if (_console && _console.warn) {
         _console.warn("Failed to initialize AppInsights JS SDK for instance " + (aiName || "<unknown>") + " - " + message);
     }
@@ -23,10 +21,10 @@ try {
     // E2E sku on load initializes core and pipeline using snippet as input for configuration
     // tslint:disable-next-line: no-var-keyword
     var aiName;
-    if (typeof window !== Undefined) {
+    if (typeof window !== strUndefined) {
         var _window = window;
         aiName = _window["appInsightsSDK"] || "appInsights";
-        if (typeof JSON !== Undefined) {
+        if (typeof JSON !== strUndefined) {
             // get snippet or initialize to an empty object
 
             if (_window[aiName] !== undefined) {
@@ -49,7 +47,7 @@ try {
     // else write what was there for v2 SDK prior to rollup bundle output name change.
     // e.g Microsoft.ApplicationInsights.ApplicationInsights, Microsoft.ApplicationInsights.Telemetry
     // @todo uncomment once integration tests for this can be added
-    // if (typeof window !== Undefined && window && ((window as any).Microsoft && !(window as any).Microsoft.ApplicationInsights)) {
+    // if (typeof window !== strUndefined && window && ((window as any).Microsoft && !(window as any).Microsoft.ApplicationInsights)) {
     //     (window as any).Microsoft = (window as any).Microsoft || {};
     //     (window as any).Microsoft.ApplicationInsights = {
     //         ApplicationInsights, Telemetry

@@ -12,6 +12,11 @@ export type InstrumentorHooksCallback = (funcArgs:IInstrumentCallDetails, ...org
  * You must always supply the error callback
  */
 export interface IInstrumentHooksCallbacks {
+    /**
+     * [Optional] Namespace details (same as the namespace used for events), useful for debugging and testing to
+     * identify the source of the instrumented hooks
+     */
+    ns?: string | string[];
 
     /**
      * The hook callback to call before the original function is called
@@ -40,20 +45,20 @@ export interface IInstrumentHooksCallbacks {
  */
 export interface IInstrumentHook {
     /** Unique Id for this callback on the hooked method */
-    id:number;
+    id: number;
 
     /** Holds the callbacks */
-    cbks:IInstrumentHooksCallbacks;
+    cbks: IInstrumentHooksCallbacks;
 
     /** Remove this hook from the function */
     rm: () => void;
 }
 
 export interface IInstrumentHooks {
-    i:number;               // Used to create unique ids
-    n:string;               // Function name
-    f:any;                  // Original Function
-    h:IInstrumentHook[];    // The hook
+    i: number;               // Used to create unique ids
+    n: string;               // Function name
+    f: any;                  // Original Function
+    h: IInstrumentHook[];    // The hook
 }
 
 export interface IInstrumentCallDetails {
@@ -85,4 +90,9 @@ export interface IInstrumentCallDetails {
      * The error (exception) which occurred while executing the original method
      */
     err?: Error;
+
+    /**
+     * The Event object from (window.event) at the start of the original call
+     */
+    evt?: Event;
 }

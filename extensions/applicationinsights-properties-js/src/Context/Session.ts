@@ -76,8 +76,8 @@ export class _SessionManager {
             _self.config = config;
             // sessionCookiePostfix takes the preference if it is configured, otherwise takes namePrefix if configured.
             const sessionCookiePostfix = (_self.config.sessionCookiePostfix && _self.config.sessionCookiePostfix()) ?
-                                            _self.config.sessionCookiePostfix() :
-                                            ((_self.config.namePrefix && _self.config.namePrefix()) ? _self.config.namePrefix() : "");
+                _self.config.sessionCookiePostfix() :
+                ((_self.config.namePrefix && _self.config.namePrefix()) ? _self.config.namePrefix() : "");
 
             _storageNamePrefix = () => cookieNameConst + sessionCookiePostfix;
     

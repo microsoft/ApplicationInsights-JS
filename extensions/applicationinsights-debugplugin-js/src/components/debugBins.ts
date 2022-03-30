@@ -73,14 +73,15 @@ export class DebugBinParent {
             if (ch instanceof DebugBin) {
                 if (ch.el.parentElement !== _self.el && _self.showChildren) {
                     _self.el.appendChild(ch.el);
-                }
-                else if (ch.el.parentElement === _self.el && !_self.showChildren) {
+                } else if (ch.el.parentElement === _self.el && !_self.showChildren) {
                     _self.el.removeChild(ch.el);
                 }
-            }
-            else {
-                if (_self.showChildren) { _self.el.appendChild(ch); }
-                else { _self.el.removeChild(ch); }
+            } else {
+                if (_self.showChildren) {
+                    _self.el.appendChild(ch);
+                } else {
+                    _self.el.removeChild(ch);
+                }
             }
         }
     }

@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-"use strict";
 
-import { ITelemetryItem } from "./ITelemetryItem";
-import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
-import { ITelemetryPlugin } from "./ITelemetryPlugin";
+import { IProcessTelemetryUnloadContext } from "./IProcessTelemetryContext";
+import { ITelemetryPlugin, ITelemetryProcessor } from "./ITelemetryPlugin";
+import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 
 /**
  * Configuration provided to SDK core
  */
-export interface ITelemetryPluginChain {
+export interface ITelemetryPluginChain extends ITelemetryProcessor {
 
     /**
      * Returns the underlying plugin that is being proxied for the processTelemetry call
@@ -22,11 +21,10 @@ export interface ITelemetryPluginChain {
     getNext: () => ITelemetryPluginChain;
 
     /**
-     * Call back for telemetry processing before it it is sent
-     * @param env - This is the current event being reported
-     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
-     * can optionally use this to access the current core instance or define / pass additional information
-     * to later plugins (vs appending items to the telemetry item)
+     * This plugin is being unloaded and should remove any hooked events and cleanup any global/scoped values, after this
+     * call the plugin will be removed from the telemetry processing chain and will no longer receive any events..
+     * @param unloadCtx - The unload context to use for this call.
+     * @param unloadState - The details of the unload operation
      */
-    processTelemetry: (env: ITelemetryItem, itemCtx:IProcessTelemetryContext) => void;
+    unload?: (unloadCtx: IProcessTelemetryUnloadContext, unloadState: ITelemetryUnloadState) => void;
 }

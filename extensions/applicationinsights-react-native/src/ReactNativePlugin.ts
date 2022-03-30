@@ -17,7 +17,9 @@ import {
     getExceptionName,
     isObject,
     hasOwnProperty,
-    isUndefined
+    isUndefined,
+    IProcessTelemetryUnloadContext,
+    ITelemetryUnloadState
 } from "@microsoft/applicationinsights-core-js";
 import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from "@microsoft/applicationinsights-common";
 import DeviceInfo from "react-native-device-info";
@@ -34,7 +36,7 @@ declare var global: Window;
  * @param target The target object to find and process the keys
  * @param callbackfn The function to call with the details
  */
- export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
+export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
     if (target && isObject(target)) {
         for (let prop in target) {
             if (hasOwnProperty(target, prop)) {
@@ -56,12 +58,15 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
     constructor(config?: IReactNativePluginConfig) {
         super();
 
-        let _device: INativeDevice = {};
-        let _config: IReactNativePluginConfig = config || _getDefaultConfig();
+        // Automatic defaults, don't set values here only set in  _initDefaults()
+        let _device: INativeDevice;
+        let _config: IReactNativePluginConfig;
         let _analyticsPlugin: IAppInsights;
         let _defaultHandler;
     
         dynamicProto(ReactNativePlugin, this, (_self, _base) => {
+            _initDefaults();
+
             _self.initialize = (
                 config?: IReactNativePluginConfig | object, // need `| object` to coerce to interface
                 core?: IAppInsightsCore,
@@ -130,6 +135,18 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                 }
             }
 
+            _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState, asyncCallback?: () => void): void | boolean => {
+                _resetGlobalErrorHandler();
+                _initDefaults();
+            };
+
+            function _initDefaults() {
+                _device = {};
+                _config = config || _getDefaultConfig();
+                _analyticsPlugin = null;
+                _defaultHandler = null;
+            }
+
             function _applyDeviceContext(item: ITelemetryItem) {
                 if (_device) {
                     item.ext = item.ext || {};
@@ -159,7 +176,14 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                 if (_global && _global.ErrorUtils) {
                     // intercept react-native error handling
                     _defaultHandler = (typeof _global.ErrorUtils.getGlobalHandler === "function" && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
-                    _global.ErrorUtils.setGlobalHandler(_trackException.bind(this));
+                    _global.ErrorUtils.setGlobalHandler(_trackException);
+                }
+            }
+
+            function _resetGlobalErrorHandler() {
+                const _global = _getGlobal();
+                if (_global && _global.ErrorUtils && _global.ErrorUtils.getGlobalHandler() === _trackException) {
+                    _global.ErrorUtils.setGlobalHandler(_defaultHandler || null);
                 }
             }
 

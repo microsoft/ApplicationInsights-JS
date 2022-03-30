@@ -29,7 +29,7 @@ export class TelemetryItemCreator {
         if (isNullOrUndefined(item) ||
             isNullOrUndefined(baseType) ||
             isNullOrUndefined(envelopeName)) {
-                throw Error("Input doesn't contain all required fields");
+            throw Error("Input doesn't contain all required fields");
         }
         
         let iKey = "";

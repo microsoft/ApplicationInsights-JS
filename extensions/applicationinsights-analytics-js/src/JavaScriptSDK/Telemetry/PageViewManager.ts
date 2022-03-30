@@ -6,7 +6,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, getDocument, getLocation, arrForEach, isNullOrUndefined, getExceptionName, dumpObj
+    _InternalMessageId, getDocument, getLocation, arrForEach, isNullOrUndefined, getExceptionName, dumpObj, IProcessTelemetryUnloadContext, ITelemetryUnloadState
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 import dynamicProto from "@microsoft/dynamicproto-js";
@@ -25,10 +25,10 @@ export interface IAppInsightsInternal {
 export class PageViewManager {
 
     constructor(
-            appInsights: IAppInsightsInternal,
-            overridePageViewDuration: boolean,
-            core: IAppInsightsCore,
-            pageViewPerformanceManager: PageViewPerformanceManager) {
+        appInsights: IAppInsightsInternal,
+        overridePageViewDuration: boolean,
+        core: IAppInsightsCore,
+        pageViewPerformanceManager: PageViewPerformanceManager) {
 
         dynamicProto(PageViewManager, this, (_self) => {
             let intervalHandle: any = null;
@@ -40,11 +40,9 @@ export class PageViewManager {
                 _logger = core.logger;
             }
     
-            function _flushChannels() {
+            function _flushChannels(isAsync: boolean) {
                 if (core) {
-                    arrForEach(core.getTransmissionControls(), queues => {
-                        arrForEach(queues, q => q.flush(true))
-                    });
+                    core.flush(isAsync);
                 }
             }
         
@@ -72,7 +70,7 @@ export class PageViewManager {
     
                         if (doFlush) {
                             // We process at least one item so flush the queue
-                            _flushChannels();
+                            _flushChannels(true);
                         }
                     }), 100);
                 }
@@ -99,7 +97,7 @@ export class PageViewManager {
                         pageView,
                         customProperties
                     );
-                    _flushChannels();
+                    _flushChannels(true);
         
                     // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
                     _logger.throwInternal(
@@ -143,7 +141,7 @@ export class PageViewManager {
                         pageView,
                         customProperties
                     );
-                    _flushChannels();
+                    _flushChannels(true);
                     pageViewSent = true;
                 }
         
@@ -207,7 +205,24 @@ export class PageViewManager {
         
                     return processed;
                 });
-            }
+            };
+
+            _self.teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
+                if (intervalHandle) {
+                    clearInterval(intervalHandle);
+                    intervalHandle = null;
+
+                    let allItems = itemQueue.slice(0);
+                    let doFlush = false;
+                    itemQueue = [];
+                    arrForEach(allItems, (item) => {
+                        if (item()) {
+                            doFlush = true;
+                        }
+                    });
+                }
+            };
+
         });
     }
 
@@ -222,6 +237,10 @@ export class PageViewManager {
      * In all cases page view performance is sent once (only for the 1st call of trackPageView), or not sent if navigation timing is not supported.
      */
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public teardown(unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

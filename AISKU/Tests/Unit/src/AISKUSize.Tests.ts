@@ -1,12 +1,31 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
+import { strUndefined } from "@microsoft/applicationinsights-core-js";
 import * as pako from "pako";
+import { Snippet } from "../../../src/Initialization";
 
 export class AISKUSizeCheck extends AITestClass {
-    private readonly MAX_DEFLATE_SIZE = 40;
+    private readonly MAX_DEFLATE_SIZE = 44;
     private readonly rawFilePath = "../dist/applicationinsights-web.min.js";
     private readonly prodFilePath = "../browser/ai.2.min.js";
 
     public testInitialize() {
+    }
+
+    public testFinishedCleanup(): void {
+        if (typeof window !== strUndefined) {
+            var _window = window;
+            let aiName = _window["appInsightsSDK"] || "appInsights";
+            if (_window[aiName] !== undefined) {
+                const snippet: Snippet = _window[aiName] as any;
+                if (snippet["unload"]) {
+                    snippet["unload"](false);
+                } else {
+                    if (snippet["appInsightsNew"]) {
+                        snippet["appInsightsNew"].unload();
+                    }
+                }
+            }
+        }
     }
 
     public testCleanup() {

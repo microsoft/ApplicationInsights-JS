@@ -5,6 +5,7 @@
 import {
     getGlobal, strShimUndefined, strShimObject, strShimPrototype
 } from "@microsoft/applicationinsights-shims";
+import { strEmpty } from "./InternalConstants";
 import { isString, isUndefined, strContains } from "./HelperFuncs";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
@@ -31,6 +32,7 @@ const strMsCrypto = "msCrypto";
 const strReactNative = "ReactNative";
 const strMsie = "msie";
 const strTrident = "trident/";
+const strXMLHttpRequest = "XMLHttpRequest";
 
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
@@ -295,7 +297,7 @@ export function isIE() {
     if (nav && (nav.userAgent !== _navUserAgentCheck || _isTrident === null)) {
         // Added to support test mocking of the user agent
         _navUserAgentCheck = nav.userAgent;
-        let userAgent = (_navUserAgentCheck || "").toLowerCase();
+        let userAgent = (_navUserAgentCheck || strEmpty).toLowerCase();
         _isTrident = (strContains(userAgent, strMsie) || strContains(userAgent, strTrident));
     }
 
@@ -308,10 +310,10 @@ export function isIE() {
 export function getIEVersion(userAgentStr: string = null): number {
     if (!userAgentStr) {
         let navigator = getNavigator() || ({} as Navigator);
-        userAgentStr = navigator ? (navigator.userAgent || "").toLowerCase() : "";
+        userAgentStr = navigator ? (navigator.userAgent || strEmpty).toLowerCase() : strEmpty;
     }
 
-    var ua = (userAgentStr || "").toLowerCase();
+    var ua = (userAgentStr || strEmpty).toLowerCase();
     // Also check for documentMode in case X-UA-Compatible meta tag was included in HTML.
     if (strContains(ua, strMsie)) {
         let doc = getDocument() || {} as Document;
@@ -331,7 +333,7 @@ export function getIEVersion(userAgentStr: string = null): number {
  */
 export function dumpObj(object: any): string {
     const objectTypeDump: string = Object[strShimPrototype].toString.call(object);
-    let propertyValueDump: string = "";
+    let propertyValueDump: string = strEmpty;
     if (objectTypeDump === "[object Error]") {
         propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
     } else if (hasJSON()) {
@@ -344,10 +346,10 @@ export function dumpObj(object: any): string {
 export function isSafari(userAgentStr ?: string) {
     if (!userAgentStr || !isString(userAgentStr)) {
         let navigator = getNavigator() || ({} as Navigator);
-        userAgentStr = navigator ? (navigator.userAgent || "").toLowerCase() : "";
+        userAgentStr = navigator ? (navigator.userAgent || strEmpty).toLowerCase() : strEmpty;
     }
 
-    var ua = (userAgentStr || "").toLowerCase();
+    var ua = (userAgentStr || strEmpty).toLowerCase();
     return (ua.indexOf("safari") >= 0);
 }
 
@@ -355,7 +357,7 @@ export function isSafari(userAgentStr ?: string) {
  * Checks if HTML5 Beacons are supported in the current environment.
  * @returns True if supported, false otherwise.
  */
- export function isBeaconsSupported(): boolean {
+export function isBeaconsSupported(): boolean {
     if (_beaconsSupported === null) {
         _beaconsSupported = hasNavigator() && Boolean(getNavigator().sendBeacon);
     }
@@ -371,8 +373,7 @@ export function isSafari(userAgentStr ?: string) {
 export function isFetchSupported(withKeepAlive?: boolean): boolean {
     let isSupported = false;
     try {
-        const fetchApi = getGlobalInst("fetch");
-        isSupported = !!fetchApi;
+        isSupported = !!getGlobalInst("fetch");
         const request = getGlobalInst("Request");
         if (isSupported && withKeepAlive && request) {
             isSupported = _hasProperty(request, "keepalive");
@@ -386,9 +387,9 @@ export function isFetchSupported(withKeepAlive?: boolean): boolean {
 
 export function useXDomainRequest(): boolean | undefined {
     if (_useXDomainRequest === null) {
-        _useXDomainRequest = (typeof XDomainRequest !== "undefined");
+        _useXDomainRequest = (typeof XDomainRequest !== strShimUndefined);
         if (_useXDomainRequest && isXhrSupported()) {
-            _useXDomainRequest = _useXDomainRequest && !_hasProperty(getGlobalInst("XMLHttpRequest"), "withCredentials");
+            _useXDomainRequest = _useXDomainRequest && !_hasProperty(getGlobalInst(strXMLHttpRequest), "withCredentials");
         }
     }
 
@@ -402,7 +403,7 @@ export function useXDomainRequest(): boolean | undefined {
 export function isXhrSupported(): boolean {
     let isSupported = false;
     try {
-        const xmlHttpRequest = getGlobalInst("XMLHttpRequest");
+        const xmlHttpRequest = getGlobalInst(strXMLHttpRequest);
         isSupported = !!xmlHttpRequest;
     } catch (e) {
         // Just Swallow any failure during availability checks

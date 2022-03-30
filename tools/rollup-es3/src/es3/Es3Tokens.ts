@@ -106,7 +106,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
             "} " +
             "return cpy; "+
             "})(%value%)"
-        }
+    }
 ];
 
 export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [

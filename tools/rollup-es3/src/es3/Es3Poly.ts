@@ -23,7 +23,7 @@ function _replaceToken(keyword:IEs3Keyword, code:string, theString:MagicString, 
     let result = false;
     let extract:RegExp = keyword.extract;
     let replaceValue:string = keyword.replace || "";
-    let checkGroups:number[] = keyword.checkGroups;
+    let checkGroups = keyword.checkGroups;
 
     if (!extract) {
         return result;
@@ -88,7 +88,7 @@ export function es3Poly(options:IEs3RollupOptions = {}) {
         }
     }
 
-    function replaceTokens(code:string, id:string, entry:string, isTransform:boolean): MagicString {
+    function replaceTokens(code:string, id:string, entry:string, isTransform:boolean): MagicString | null {
         let changed = false;
         let theString = null;
         if (doReplace && code) {

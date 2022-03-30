@@ -342,18 +342,18 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
     };
 
     let attributesThatAreObjectsInConfig: any[] = [];
-        for (const attribute in defaultConfig) {
-            if (typeof defaultConfig[attribute] === "object") {
-                attributesThatAreObjectsInConfig.push(attribute);
-            }
+    for (const attribute in defaultConfig) {
+        if (typeof defaultConfig[attribute] === "object") {
+            attributesThatAreObjectsInConfig.push(attribute);
         }
+    }
 
     if (overrideConfig) {
-            // delete attributes that should be object and
-            // delete properties that are null, undefined, ''
-         removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
+        // delete attributes that should be object and
+        // delete properties that are null, undefined, ''
+        removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
         if(isValueAssigned(overrideConfig.dataTags)) {
-                overrideConfig.dataTags.customDataPrefix = validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
+            overrideConfig.dataTags.customDataPrefix = validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
         }
         return extend(true, defaultConfig, overrideConfig);
     }

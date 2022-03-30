@@ -104,12 +104,9 @@ export class PerfEvent implements IPerfEvent {
                         _self.isChildEvt = (): boolean => true;
                     }
                     _self[key] = value;
-                }
-                else if (key === PerfEvent.ChildrenContextKey) {
+                } else if (key === PerfEvent.ChildrenContextKey) {
                     _self[key] = value;
-                }
-                else
-                {
+                } else {
                     let ctx = _self[strExecutionContextKey] = _self[strExecutionContextKey] || {};
                     ctx[key] = value;
                 }
@@ -119,7 +116,7 @@ export class PerfEvent implements IPerfEvent {
         _self.complete = () => {
             let childTime = 0;
             let childEvts = _self.getCtx(PerfEvent.ChildrenContextKey);
-            if (isArray(childEvts)) {
+            if (isArray<IPerfEvent>(childEvts)) {
                 for (let lp = 0; lp < childEvts.length; lp++) {
                     let childEvt: IPerfEvent = childEvts[lp];
                     if (childEvt) {
@@ -146,7 +143,7 @@ export class PerfManager implements IPerfManager  {
      */
     private ctx: { [key: string] : any } = {};
 
-    constructor(manager: INotificationManager) {
+    constructor(manager?: INotificationManager) {
 
         dynamicProto(PerfManager, this, (_self) => {
 

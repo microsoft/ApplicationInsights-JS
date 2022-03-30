@@ -44,7 +44,9 @@ export var __assignFn: ObjAssignFunc = ObjAssign || __objAssignFnImpl;
 var extendStaticsFn = function(d: any, b: any): any {
     extendStaticsFn = ObjClass["setPrototypeOf"] ||
         // tslint:disable-next-line: only-arrow-functions
-        ({ __proto__: [] } instanceof Array && function (d: any, b: any) { d.__proto__ = b; }) ||
+        ({ __proto__: [] } instanceof Array && function (d: any, b: any) {
+            d.__proto__ = b;
+        }) ||
         // tslint:disable-next-line: only-arrow-functions
         function (d: any, b: any) {
             for (var p in b) {
@@ -61,7 +63,9 @@ export function __extendsFn(d: any, b: any) {
         throwTypeError("Class extends value " + String(b) + " is not a constructor or null");
     }
     extendStaticsFn(d, b);
-    function __() { this.constructor = d; }
+    function __(this: any) {
+        this.constructor = d;
+    }
     // tslint:disable-next-line: ban-comma-operator
     d[strShimPrototype] = b === null ? objCreateFn(b) : (__[strShimPrototype] = b[strShimPrototype], new (__ as any)());
 }
@@ -125,7 +129,7 @@ export function __createBindingFn(o: any, m: any, k: any, k2?: any) {
         k2 = k;
     }
     
-    if (ObjCreate) {
+    if (!!ObjCreate) {
         ObjDefineProperty(o, k2, {
             enumerable: true,
             get() {
@@ -239,7 +243,7 @@ export function __importStarFn(mod: any) {
     }
 
     // Set default module
-    if (ObjCreate) {
+    if (!!ObjCreate) {
         ObjDefineProperty( result, strDefault, { enumerable: true, value: mod });
     } else {
         result[strDefault] = mod;

@@ -47,8 +47,7 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
 
             if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
                 out[key] = `<circular (${key} - "${getTargetName(targetValue)}")>`;
-            }
-            else if (targetValue !== null && isObject(targetValue)) {
+            } else if (targetValue !== null && isObject(targetValue)) {
                 if (currentDepth >= maxDepth) {
                     out[key] = "<max allowed depth reached>";
                 } else {
@@ -56,8 +55,7 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
                     out[key] = traverseAndReplace(targetValue, maxDepth, currentDepth + 1, thingsReferenced, excludedKeys, includeFunctions);
                     thingsReferenced.pop();
                 }
-            }
-            else {
+            } else {
                 out[key] = targetValue;
             }
         }
@@ -129,7 +127,9 @@ export function focusHandler(evt: Event, target: Object, level: number, excludeK
     }
     lastSelectedElement = (evt.target as HTMLElement);
     for (let i = 0; i < 10; i++) {
-        if (lastSelectedElement.tagName === "DIV") { break; }
+        if (lastSelectedElement.tagName === "DIV") {
+            break;
+        }
         lastSelectedElement = lastSelectedElement.parentElement;
     }
     lastSelectedElement.className += " last-selected-element";
@@ -139,41 +139,49 @@ export function focusHandler(evt: Event, target: Object, level: number, excludeK
 function _navHandler(evt: KeyboardEvent, openHandler?: (evt: Event, forceState?: boolean) => void, currentState?: boolean) {
     const el = evt.target as HTMLElement;
     switch (evt.which) {
-        // Enter
-        case 13: (openHandler) ? openHandler(evt) : void 0; break;
+    // Enter
+    case 13: (openHandler) ? openHandler(evt) : void 0; break;
         // ArrowUp
-        case 38:
-            evt.preventDefault();
-            const prev = el.previousElementSibling as HTMLElement;
-            if (prev && prev.tagName !== "BUTTON") { prev.focus(); }
-            break;
+    case 38:
+        evt.preventDefault();
+        const prev = el.previousElementSibling as HTMLElement;
+        if (prev && prev.tagName !== "BUTTON") {
+            prev.focus();
+        }
+        break;
         // ArrowDown
-        case 40:
-            evt.preventDefault();
-            const next = el.nextElementSibling as HTMLElement;
-            if (next) { next.focus(); }
-            break;
+    case 40:
+        evt.preventDefault();
+        const next = el.nextElementSibling as HTMLElement;
+        if (next) {
+            next.focus();
+        }
+        break;
         // ArrowRight
-        case 39:
-            if (openHandler) {
-                openHandler(evt, true);
-                if (currentState) {
-                    (el.firstElementChild.nextSibling as HTMLElement).focus();
-                }
+    case 39:
+        if (openHandler) {
+            openHandler(evt, true);
+            if (currentState) {
+                (el.firstElementChild.nextSibling as HTMLElement).focus();
             }
-            break;
+        }
+        break;
         // ArrowLeft
-        case 37:
-            if (openHandler) { openHandler(evt, false); }
-            if (!currentState) { (el.parentElement as HTMLElement).focus(); }
-            break;
+    case 37:
+        if (openHandler) {
+            openHandler(evt, false);
+        }
+        if (!currentState) {
+            (el.parentElement as HTMLElement).focus();
+        }
+        break;
         // c
-        case 67:
-            if (evt.ctrlKey) {
-                copySelectedTree();
-                (evt.target as HTMLElement).focus();
-            }
-            break;
+    case 67:
+        if (evt.ctrlKey) {
+            copySelectedTree();
+            (evt.target as HTMLElement).focus();
+        }
+        break;
     }
 }
 
@@ -290,8 +298,12 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
     let matched = false;
     let childOpened = false;
     const keys = getTargetKeys(target, excludeKeys, includeFunctions);
-    if (keys.length === 0) { keys.push("<empty>"); }
-    if (level >= MAX_DEPTH) { keys.unshift("<maxdepth>"); }
+    if (keys.length === 0) {
+        keys.push("<empty>");
+    }
+    if (level >= MAX_DEPTH) {
+        keys.unshift("<maxdepth>");
+    }
     for (const key of keys) {
         if (excludeKeys.indexOf(key) !== -1) {
             continue;
@@ -308,20 +320,17 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             builder.innerText = "<max allowed depth reached>";
             children.push(builder);
             break;
-        }
-        else if (key === "<empty>") {
+        } else if (key === "<empty>") {
             const builder = document.createElement("div");
             builder.className = "empty";
             builder.innerText = "<empty>";
             children.push(builder);
-        }
-        else if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
+        } else if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
             const builder = document.createElement("div");
             builder.className = "empty";
             builder.innerText = `<circular (${key}) - "${getTargetName(targetValue)}">`;
             children.push(builder);
-        }
-        else if (targetValue !== null && (isObject(targetValue) || Util.isError(targetValue))) {
+        } else if (targetValue !== null && (isObject(targetValue) || Util.isError(targetValue))) {
             thingsReferenced.push(target);
             let formatted = formatLogElements(targetValue, null, key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
             thingsReferenced.pop();
@@ -421,7 +430,9 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         _openNode(currentLine);
     }
     if (isObj) {
-        if (isErr) { rootDiv.className = "exception" }
+        if (isErr) {
+            rootDiv.className = "exception"
+        }
         const openHandler = (evt: Event, forceState?: boolean) => {
             evt.stopPropagation();
             if (Util.getIEVersion()) {
@@ -433,8 +444,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             if (lastSelectedElement === rootDiv) {
                 if (openState) {
                     _collapseNode(currentLine);
-                }
-                else {
+                } else {
                     _openNode(currentLine);
                 }
             }

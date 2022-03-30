@@ -14,12 +14,14 @@ export function importCheck(options:IImportCheckRollupOptions = {}) {
     };
 
     for (let lp = 0; lp < ((options.exclude)||[]).length; lp++) {
-        checkOptions.keywords.push({
-            // eslint-disable-next-line security/detect-non-literal-regexp
-            funcNames: [ new RegExp("import[\\s]*(\\*|\\{[^\\}]*\\})[\\s]*from[\\s]*[\\'\\\"][^\\'\\\"]*" + _escapeRegEx(options.exclude[lp]) + "[\\'\\\"]", "gi") ],
-            errorMsg: "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [%funcName%]",
-            errorTitle: "Invalid Import detected"
-        });
+        if (options.exclude && checkOptions.keywords) {
+            checkOptions.keywords.push({
+                // eslint-disable-next-line security/detect-non-literal-regexp
+                funcNames: [ new RegExp("import[\\s]*(\\*|\\{[^\\}]*\\})[\\s]*from[\\s]*[\\'\\\"][^\\'\\\"]*" + _escapeRegEx(options.exclude[lp]) + "[\\'\\\"]", "gi") ],
+                errorMsg: "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [%funcName%]",
+                errorTitle: "Invalid Import detected"
+            });
+        }
     }
 
     let plugin = es3Check(checkOptions);

@@ -17,6 +17,20 @@ export class TestCase {
 
     /** Used for debugging, set this value to ignore the automatic timeout for tests that return a promise */
     public skipTimeout? : boolean;
+
+    /**
+     * Automatically assert that all registered events have been removed
+     */
+    assertNoEvents?: boolean;
+
+    /**
+     * Automatically assert that all hooks have been removed
+     */
+    assertNoHooks?: boolean;
+
+    
+    orgSetTimeout?: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
+    orgClearTimeout?: (timeoutId: NodeJS.Timeout) => void;
 }
 
 export const enum StepResult {
@@ -30,6 +44,7 @@ export interface ITestContext {
     context: { [key: string]: any };
     retryCnt: number;
     testDone: VoidFunction;     // Consider that the test is complete
+    clock: sinon.SinonFakeTimers
 }
 
 /** Defines a test case */
@@ -58,4 +73,17 @@ export interface TestCaseAsync {
      * True by default
      */
     autoComplete?: boolean;
+
+    /**
+     * Automatically assert that all registered events have been removed
+     */
+    assertNoEvents?: boolean;
+
+    /**
+     * Automatically assert that all hooks have been removed
+     */
+    assertNoHooks?: boolean;
+    
+    orgSetTimeout?: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
+    orgClearTimeout?: (timeoutId: NodeJS.Timeout) => void;
 }

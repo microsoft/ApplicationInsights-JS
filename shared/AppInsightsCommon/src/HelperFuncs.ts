@@ -3,6 +3,8 @@
 
 import { arrForEach, IPlugin, isString } from "@microsoft/applicationinsights-core-js";
 
+const strEmpty = "";
+
 export function stringToBoolOrDefault(str: any, defaultValue = false): boolean {
     if (str === undefined || str === null) {
         return defaultValue;
@@ -21,10 +23,10 @@ export function msToTimeSpan(totalms: number): string {
 
     totalms = Math.round(totalms);
 
-    let ms = "" + totalms % 1000;
-    let sec = "" + Math.floor(totalms / 1000) % 60;
-    let min = "" + Math.floor(totalms / (1000 * 60)) % 60;
-    let hour = "" + Math.floor(totalms / (1000 * 60 * 60)) % 24;
+    let ms = strEmpty + totalms % 1000;
+    let sec = strEmpty + Math.floor(totalms / 1000) % 60;
+    let min = strEmpty + Math.floor(totalms / (1000 * 60)) % 60;
+    let hour = strEmpty + Math.floor(totalms / (1000 * 60 * 60)) % 24;
     const days = Math.floor(totalms / (1000 * 60 * 60 * 24));
 
     ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
@@ -32,7 +34,7 @@ export function msToTimeSpan(totalms: number): string {
     min = min.length < 2 ? "0" + min : min;
     hour = hour.length < 2 ? "0" + hour : hour;
 
-    return (days > 0 ? days + "." : "") + hour + ":" + min + ":" + sec + "." + ms;
+    return (days > 0 ? days + "." : strEmpty) + hour + ":" + min + ":" + sec + "." + ms;
 }
 
 export function getExtensionByName(extensions: IPlugin[], identifier: string): IPlugin | null {

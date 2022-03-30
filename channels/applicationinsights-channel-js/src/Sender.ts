@@ -17,10 +17,11 @@ import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, throwError, objKeys,
-    isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported, isArray
+    SendRequestReason, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, objKeys,
+    isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported, isArray, createUniqueNamespace, mergeEvtNamespace,
+    IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal, throwError
 } from "@microsoft/applicationinsights-core-js";
-import { Offline } from "./Offline";
+import { createOfflineListener, IOfflineListener } from "./Offline";
 import { Sample } from "./TelemetryProcessors/Sample"
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -103,7 +104,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     /**
      * The configuration for this sender instance
      */
-    public readonly _senderConfig: ISenderConfig;
+    public readonly _senderConfig: ISenderConfig = _getDefaultAppInsightsChannelConfig();
 
     /**
      * A method which will cause data to be send to the url
@@ -125,57 +126,24 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     constructor() {
         super();
 
-        /**
-         * How many times in a row a retryable error condition has occurred.
-         */
-        let _consecutiveErrors: number;
-
-        /**
-         * The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
-         */
-        let _retryAt: number;
-
-        /**
-         * The time of the last send operation.
-         */
-        let _lastSend: number;
-
-        /**
-         * Flag indicating that the sending should be paused
-         */
-        let _paused = false;
-
-        /**
-         * Handle to the timer for delayed sending of batches of data.
-         */
-        let _timeoutHandle: any;
-
+        // Don't set the defaults here, set them in the _initDefaults() as this is also called during unload
+        let _consecutiveErrors: number;         // How many times in a row a retryable error condition has occurred.
+        let _retryAt: number;                   // The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
+        let _lastSend: number;                  // The time of the last send operation.
+        let _paused: boolean;                   // Flag indicating that the sending should be paused
+        let _timeoutHandle: any;                // Handle to the timer for delayed sending of batches of data.
         let _serializer: Serializer;
-
         let _stamp_specific_redirects: number;
-
-        let _headers: { [name: string]: string } = {};
-
-        // Keep track of the outstanding sync fetch payload total (as sync fetch has limits)
-        let _syncFetchPayload = 0;
-
-        /**
-         * The sender to use if the payload size is too large
-         */
-        let _fallbackSender: SenderFunction;
-
-        /**
-         * The identified sender to use for the synchronous unload stage
-         */
-        let _syncUnloadSender: SenderFunction;
-
-        this._senderConfig = _getDefaultAppInsightsChannelConfig();
+        let _headers: { [name: string]: string };
+        let _syncFetchPayload = 0;              // Keep track of the outstanding sync fetch payload total (as sync fetch has limits)
+        let _fallbackSender: SenderFunction;    // The sender to use if the payload size is too large
+        let _syncUnloadSender: SenderFunction;  // The identified sender to use for the synchronous unload stage
+        let _offlineListener: IOfflineListener;
+        let _evtNamespace: string | string[];
 
         dynamicProto(Sender, this, (_self, _base) => {
 
-            function _notImplemented() {
-                throwError("Method not implemented.");
-            }
+            _initDefaults();
 
             _self.pause = () => {
                 _clearScheduledTimer();
@@ -196,15 +164,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
             };
         
-            _self.flush = () => {
+            _self.flush = (isAsync: boolean = true, callBack?: () => void, sendReason?: SendRequestReason) => {
                 if (!_paused) {
                     // Clear the normal schedule timer as we are going to try and flush ASAP
                     _clearScheduledTimer();
 
                     try {
-                        _self.triggerSend(true, null, SendRequestReason.ManualFlush);
+                        _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                     } catch (e) {
-                        _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                        _throwInternal(_self.diagLog(),LoggingSeverity.CRITICAL,
                             _InternalMessageId.FlushFailed,
                             "flush failed, telemetry will not be collected: " + getExceptionName(e),
                             { exception: dumpObj(e) });
@@ -218,7 +186,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         try {
                             _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
                         } catch (e) {
-                            _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                            _throwInternal(_self.diagLog(),LoggingSeverity.CRITICAL,
                                 _InternalMessageId.FailedToSendQueuedTelemetry,
                                 "failed to flush with beacon sender on page unload, telemetry will not be collected: " + getExceptionName(e),
                                 { exception: dumpObj(e) });
@@ -229,13 +197,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
             };
 
-            _self.teardown = _notImplemented;
-
             _self.addHeader = (name: string, value: string) => {
                 _headers[name] = value;
             };
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
+                if (_self.isInitialized()) {
+                    _throwInternal(_self.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender is already initialized");
+                }
+                
                 _base.initialize(config, core, extensions, pluginChain);
                 let ctx = _self._getTelCtx();
                 let identifier = _self.identifier;
@@ -246,6 +216,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _self._sender = null;
                 _stamp_specific_redirects = 0;
                 let diagLog = _self.diagLog();
+                _evtNamespace = mergeEvtNamespace(createUniqueNamespace("Sender"), core.evtNamespace && core.evtNamespace());
+                _offlineListener = createOfflineListener(_evtNamespace);
 
                 const defaultConfig = _getDefaultAppInsightsChannelConfig();
                 objForEachKey(defaultConfig, (field, value) => {
@@ -257,7 +229,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _self._sample = new Sample(_self._senderConfig.samplingPercentage(), diagLog);
                 
                 if(!_validateInstrumentationKey(config)) {
-                    diagLog.throwInternal(
+                    _throwInternal(diagLog,
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key "+config.instrumentationKey);
                 }
@@ -317,13 +289,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     // validate input
                     if (!telemetryItem) {
-                        itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
                         return;
                     }
         
                     // validate event
                     if (telemetryItem.baseData && !telemetryItem.baseType) {
-                        itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
                         return;
                     }
         
@@ -334,14 +306,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     // ensure a sender was constructed
                     if (!_self._sender) {
-                        itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
                         return;
                     }
                   
                     // check if this item should be sampled in, else add sampleRate tag
                     if (!_isSampledIn(telemetryItem)) {
                         // Item is sampled out, do not send it
-                        itemCtx.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
+                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
                             "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
                         return;
                     } else {
@@ -354,7 +326,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     let defaultEnvelopeIkey = telemetryItem.iKey || _self._senderConfig.instrumentationKey();
                     let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, itemCtx.diagLog(), convertUndefined);
                     if (!aiEnvelope) {
-                        itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
                     }
         
@@ -370,7 +342,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             } catch (e) {
                                 // log error but dont stop executing rest of the telemetry initializers
                                 // doNotSendItem = true;
-                                itemCtx.diagLog().throwInternal(
+                                _throwInternal(itemCtx.diagLog(),
                                     LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
                                     { exception: dumpObj(e) }, true);
                             }
@@ -400,7 +372,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _setupTimer();
         
                 } catch (e) {
-                    itemCtx.diagLog().throwInternal(
+                    _throwInternal(itemCtx.diagLog(),
                         LoggingSeverity.WARNING,
                         _InternalMessageId.FailedAddingTelemetryToBuffer,
                         "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + getExceptionName(e),
@@ -457,7 +429,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         /* Ignore this error for IE under v10 */
                         let ieVer = getIEVersion();
                         if (!ieVer || ieVer > 9) {
-                            _self.diagLog().throwInternal(
+                            _throwInternal(_self.diagLog(),
                                 LoggingSeverity.CRITICAL,
                                 _InternalMessageId.TransmissionFailed,
                                 "Telemetry transmission failed, some telemetry will be lost: " + getExceptionName(e),
@@ -467,11 +439,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
             };
         
+            _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
+                _self.onunloadFlush();
+                _offlineListener.unload();
+                _initDefaults();
+            };
+
             /**
              * error handler
              */
             _self._onError = (payload: string[], message: string, event?: ErrorEvent) => {
-                _self.diagLog().throwInternal(
+                _throwInternal(_self.diagLog(),
                     LoggingSeverity.WARNING,
                     _InternalMessageId.OnError,
                     "Failed to send telemetry.",
@@ -510,7 +488,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if (retry.length > 0) {
                     _resendPayload(retry);
         
-                    _self.diagLog().throwInternal(
+                    _throwInternal(_self.diagLog(),
                         LoggingSeverity.WARNING,
                         _InternalMessageId.TransmissionFailed, "Partial success. " +
                         "Delivered: " + payload.length + ", Failed: " + failed.length +
@@ -572,22 +550,22 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
                     if (!_self._senderConfig.isRetryDisabled() && _isRetriable(status)) {
                         _resendPayload(payload);
-                        _self.diagLog().throwInternal(
+                        _throwInternal(_self.diagLog(),
                             LoggingSeverity.WARNING,
                             _InternalMessageId.TransmissionFailed, ". " +
                             "Response code " + status + ". Will retry to send " + payload.length + " items.");
                     } else {
                         _self._onError(payload, errorMessage);
                     }
-                } else if (Offline.isOffline()) { // offline
+                } else if (_offlineListener && !_offlineListener.isOnline()) { // offline
                     // Note: Don't check for status == 0, since adblock gives this code
                     if (!_self._senderConfig.isRetryDisabled()) {
                         const offlineBackOffMultiplier = 10; // arbritrary number
                         _resendPayload(payload, offlineBackOffMultiplier);
     
-                        _self.diagLog().throwInternal(
+                        _throwInternal(_self.diagLog(),
                             LoggingSeverity.WARNING,
-                            _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
+                            _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${!_offlineListener.isOnline()}. Will retry to send ${payload.length} items.`);
                     }
                 } else {
 
@@ -614,9 +592,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
             function _checkAndUpdateEndPointUrl(responseUrl: string) {
                 // Maximum stamp specific redirects allowed(uncomment this when breeze is ready with not allowing redirects feature)
-               if(_stamp_specific_redirects >= 10) {
-               //  _self._senderConfig.endpointUrl = () => Sender._getDefaultAppInsightsChannelConfig().endpointUrl()+"/?redirect=false";
-               //  _stamp_specific_redirects = 0;
+                if(_stamp_specific_redirects >= 10) {
+                    //  _self._senderConfig.endpointUrl = () => Sender._getDefaultAppInsightsChannelConfig().endpointUrl()+"/?redirect=false";
+                    //  _stamp_specific_redirects = 0;
                     return false;
                 }
                 if(!isNullOrUndefined(responseUrl) && responseUrl !== "") {
@@ -682,8 +660,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         }
     
                         if (droppedPayload.length > 0) {
-                            _fallbackSender(droppedPayload, true);
-                            _self.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
+                            _fallbackSender && _fallbackSender(droppedPayload, true);
+                            _throwInternal(_self.diagLog(),LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                         }
                     }
                 }
@@ -740,7 +718,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     } else {
                         // Payload is going to be too big so just try and send via XHR
                         _fallbackSender && _fallbackSender(payload, true);
-                        _self.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
+                        _throwInternal(_self.diagLog(),LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
                     }
                 }
             }
@@ -750,16 +728,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * @param payload {string} - The data payload to be sent.
              * @param isAsync {boolean} - not used
              */
-             function _fetchSender(payload: string[], isAsync: boolean) {
-                 _doFetchSender(payload, true);
-             }
+            function _fetchSender(payload: string[], isAsync: boolean) {
+                _doFetchSender(payload, true);
+            }
 
             /**
              * Send fetch API request
              * @param payload {string} - The data payload to be sent.
              * @param isAsync {boolean} - For fetch this identifies whether we are "unloading" (false) or a normal request
              */
-             function _doFetchSender(payload: string[], isAsync: boolean) {
+            function _doFetchSender(payload: string[], isAsync: boolean) {
                 const endPointUrl = _self._senderConfig.endpointUrl();
                 const batch = _self._buffer.batchPayloads(payload);
                 const plainTextBatch = new Blob([batch], { type: "application/json" });
@@ -865,7 +843,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         }
                     }
                 } catch (e) {
-                    _self.diagLog().throwInternal(
+                    _throwInternal(_self.diagLog(),
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.InvalidBackendResponse,
                         "Cannot parse the response. " + getExceptionName(e),
@@ -985,12 +963,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 // If the protocol doesn't match, we can't send the telemetry :(.
                 const hostingProtocol = _window && _window.location && _window.location.protocol || "";
                 if (_self._senderConfig.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
-                    _self.diagLog().throwInternal(
+                    _throwInternal(_self.diagLog(),
                         LoggingSeverity.WARNING,
                         _InternalMessageId.TransmissionFailed, ". " +
                         "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
         
-                        buffer.clear();
+                    buffer.clear();
                     return;
                 }
         
@@ -1029,7 +1007,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     try {
                         manager.eventsSendRequest(sendRequest, isAsync);
                     } catch (e) {
-                        _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                        _throwInternal(_self.diagLog(),LoggingSeverity.CRITICAL,
                             _InternalMessageId.NotificationException,
                             "send request notification failed: " + getExceptionName(e),
                             { exception: dumpObj(e) });
@@ -1051,6 +1029,25 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 return regexp.test(config.instrumentationKey);
             }
         
+            function _initDefaults() {
+                _self._sender = null;
+                _self._buffer = null;
+                _self._appId = null;
+                _self._sample = null;
+                _headers = {};
+                _offlineListener = null;
+                _consecutiveErrors = 0;
+                _retryAt = null;
+                _lastSend = null;
+                _paused = false;
+                _timeoutHandle = null;
+                _serializer = null;
+                _stamp_specific_redirects = 0;
+                _syncFetchPayload = 0;
+                _fallbackSender = null;
+                _syncUnloadSender = null;
+                _evtNamespace = null;
+            }
         });
     }
 
@@ -1085,10 +1082,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      * Will not flush if the Send has been paused.
      */
     public onunloadFlush() {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public teardown(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1149,7 +1142,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      * @param name   - Header name.
      * @param value  - Header value.
      */
-     public addHeader(name: string, value: string) {
+    public addHeader(name: string, value: string) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
 }

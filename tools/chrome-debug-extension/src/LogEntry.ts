@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isBoolean, isNumber, isObject, isString } from "@microsoft/applicationinsights-core-js";
+import { isBoolean, isNumber, isObject, isString, objToString } from "@microsoft/applicationinsights-core-js";
 import { makeRegex, traverseAndReplace, toggleClassName, MAX_DEPTH, formatLogElements, getTargetName, getTargetKeys } from "./helpers";
 import { Util } from "@microsoft/applicationinsights-common";
 
@@ -47,7 +47,7 @@ export class LogEntry {
                         }
                     }
                 } else if (isString(value) || isNumber(value) || isBoolean(value)) {
-                    return _testValue(rg, value.toString());
+                    return _testValue(rg, objToString(value));
                 }
             }
 
