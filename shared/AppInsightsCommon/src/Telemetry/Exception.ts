@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StackFrame } from "../Interfaces/Contracts/Generated/StackFrame";
-import { ExceptionData } from "../Interfaces/Contracts/Generated/ExceptionData";
-import { ExceptionDetails } from "../Interfaces/Contracts/Generated/ExceptionDetails";
+import { IStackFrame } from "../Interfaces/Contracts/IStackFrame";
+import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";
+import { IExceptionDetails } from "../Interfaces/Contracts/IExceptionDetails";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
 import { FieldType } from "../Enums";
-import { SeverityLevel } from "../Interfaces/Contracts/Generated/SeverityLevel";
+import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
 import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction } from "@microsoft/applicationinsights-core-js";
 import {
     IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal, IAutoExceptionTelemetry, IStackDetails
@@ -310,7 +310,7 @@ export function _formatErrorCode(errorObj:any) {
     return "" + (errorObj || "");
 }
 
-export class Exception extends ExceptionData implements ISerializable {
+export class Exception implements IExceptionData, ISerializable {
 
     public static envelopeType = "Microsoft.ApplicationInsights.{0}.Exception";
     public static dataType = "ExceptionData";
@@ -328,43 +328,67 @@ export class Exception extends ExceptionData implements ISerializable {
     }
 
     /**
+     * Schema version
+     */
+    public ver: number; /* 2 */
+
+    /**
+     * Exception chain - list of inner exceptions.
+     */
+    public exceptions: IExceptionDetails[]; /* [] */
+ 
+    /**
+     * Severity level. Mostly used to indicate exception severity level when it is reported by logging library.
+     */
+    public severityLevel: SeverityLevel;
+ 
+    /**
+     * Collection of custom properties.
+     */
+    public properties: any;
+ 
+    /**
+     * Collection of custom measurements.
+     */
+    public measurements: any;
+ 
+    /**
      * Constructs a new instance of the ExceptionTelemetry object
      */
     constructor(logger: IDiagnosticLogger, exception: Error | IExceptionInternal | IAutoExceptionTelemetry, properties?: {[key: string]: any}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel, id?: string) {
-        super();
-
+        let _self = this;
+        _self.ver = 2; // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
         if (!_isExceptionInternal(exception)) {
             if (!properties) {
                 properties = { };
             }
             
-            this.exceptions = [new _ExceptionDetails(logger, exception, properties)];
-            this.properties = dataSanitizeProperties(logger, properties);
-            this.measurements = dataSanitizeMeasurements(logger, measurements);
+            _self.exceptions = [new _ExceptionDetails(logger, exception, properties)];
+            _self.properties = dataSanitizeProperties(logger, properties);
+            _self.measurements = dataSanitizeMeasurements(logger, measurements);
             if (severityLevel) {
-                this.severityLevel = severityLevel;
+                _self.severityLevel = severityLevel;
             }
             if (id) {
-                this.id = id;
+                _self.id = id;
             }
         } else {
-            this.exceptions = exception.exceptions;
-            this.properties = exception.properties;
-            this.measurements = exception.measurements;
+            _self.exceptions = exception.exceptions || [];
+            _self.properties = exception.properties;
+            _self.measurements = exception.measurements;
             if (exception.severityLevel) {
-                this.severityLevel = exception.severityLevel;
+                _self.severityLevel = exception.severityLevel;
             }
             if (exception.id) {
-                this.id = exception.id;
+                _self.id = exception.id;
             }
             if (exception.problemGroup) {
-                this.problemGroup = exception.problemGroup;
+                _self.problemGroup = exception.problemGroup;
             }
 
             // bool/int types, use isNullOrUndefined
-            this.ver = 2; // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
             if (!isNullOrUndefined(exception.isManual)) {
-                this.isManual = exception.isManual;
+                _self.isManual = exception.isManual;
             }
         }
     }
@@ -434,7 +458,7 @@ export class Exception extends ExceptionData implements ISerializable {
                     message,
                     stack: details,
                     typeName
-                } as ExceptionDetails
+                } as IExceptionDetails
             ]
         } as Exception;
     }
@@ -442,7 +466,7 @@ export class Exception extends ExceptionData implements ISerializable {
     public static formatError = _formatErrorCode;
 }
 
-export class _ExceptionDetails extends ExceptionDetails implements ISerializable {
+export class _ExceptionDetails implements IExceptionDetails, ISerializable {
 
     public aiDataContract = {
         id: FieldType.Default,
@@ -454,9 +478,43 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
         parsedStack: FieldType.Array
     };
 
-    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionDetailsInternal | IAutoExceptionTelemetry, properties?: {[key: string]: any}) {
-        super();
+    /**
+     * In case exception is nested (outer exception contains inner one), the id and outerId properties are used to represent the nesting.
+     */
+    public id: number;
 
+    /**
+     * The value of outerId is a reference to an element in ExceptionDetails that represents the outer exception
+     */
+    public outerId: number;
+ 
+    /**
+     * Exception type name.
+     */
+    public typeName: string;
+     
+    /**
+     * Exception message.
+     */
+    public message: string;
+ 
+    /**
+     * Indicates if full exception stack is provided in the exception. The stack may be trimmed, such as in the case of a StackOverflow exception.
+     */
+    public hasFullStack: boolean;
+ 
+    /**
+     * Text describing the stack. Either stack or parsedStack should have a value.
+     */
+    public stack: string;
+ 
+    /**
+     * List of stack frames. Either stack or parsedStack should have a value.
+     */
+    public parsedStack: IStackFrame[]; /* [] */
+ 
+    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionDetailsInternal | IAutoExceptionTelemetry, properties?: {[key: string]: any}) {
+        let _self = this;
         if (!_isExceptionDetailsInternal(exception)) {
             let error = exception as any;
             let evt = error && error.evt;
@@ -464,36 +522,37 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
                 error = error[strError] || evt || error;
             }
 
-            this.typeName = dataSanitizeString(logger, _getErrorType(error)) || strNotSpecified;
-            this.message = dataSanitizeMessage(logger, _formatMessage(exception || error, this.typeName)) || strNotSpecified;
+            _self.typeName = dataSanitizeString(logger, _getErrorType(error)) || strNotSpecified;
+            _self.message = dataSanitizeMessage(logger, _formatMessage(exception || error, _self.typeName)) || strNotSpecified;
             const stack = exception[strStackDetails] || _getStackFromErrorObj(exception);
-            this.parsedStack = _parseStack(stack);
-            this[strStack] = dataSanitizeException(logger, _formatStackTrace(stack));
-            this.hasFullStack = isArray(this.parsedStack) && this.parsedStack.length > 0;
+            _self.parsedStack = _parseStack(stack);
+            _self[strStack] = dataSanitizeException(logger, _formatStackTrace(stack));
+            _self.hasFullStack = isArray(_self.parsedStack) && _self.parsedStack.length > 0;
 
             if (properties) {
-                properties.typeName = properties.typeName || this.typeName;
+                properties.typeName = properties.typeName || _self.typeName;
             }
         } else {
-            this.typeName = exception.typeName;
-            this.message = exception.message;
-            this[strStack] = exception[strStack];
-            this.parsedStack = exception.parsedStack
-            this.hasFullStack = exception.hasFullStack
+            _self.typeName = exception.typeName;
+            _self.message = exception.message;
+            _self[strStack] = exception[strStack];
+            _self.parsedStack = exception.parsedStack || [];
+            _self.hasFullStack = exception.hasFullStack;
         }
     }
 
     public toInterface(): IExceptionDetailsInternal {
-        const parsedStack = this.parsedStack instanceof Array
-            && arrMap(this.parsedStack, (frame: _StackFrame) => frame.toInterface());
+        let _self = this;
+        const parsedStack = _self.parsedStack instanceof Array
+            && arrMap(_self.parsedStack, (frame: _StackFrame) => frame.toInterface());
 
         const exceptionDetailsInterface: IExceptionDetailsInternal = {
-            id: this.id,
-            outerId: this.outerId,
-            typeName: this.typeName,
-            message: this.message,
-            hasFullStack: this.hasFullStack,
-            stack: this[strStack],
+            id: _self.id,
+            outerId: _self.outerId,
+            typeName: _self.typeName,
+            message: _self.message,
+            hasFullStack: _self.hasFullStack,
+            stack: _self[strStack],
             parsedStack: parsedStack || undefined
         };
 
@@ -511,13 +570,14 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
     }
 }
 
-export class _StackFrame extends StackFrame implements ISerializable {
+export class _StackFrame implements IStackFrame, ISerializable {
 
     // regex to match stack frames from ie/chrome/ff
     // methodName=$2, fileName=$4, lineNo=$5, column=$6
     public static regex = /^([\s]+at)?[\s]{0,50}([^\@\()]+?)[\s]{0,50}(\@|\()([^\(\n]+):([0-9]+):([0-9]+)(\)?)$/;
     public static baseSize = 58; // '{"method":"","level":,"assembly":"","fileName":"","line":}'.length
-    public sizeInBytes = 0;
+
+    public sizeInBytes: number; /* 0 */
 
     public aiDataContract = {
         level: FieldType.Required,
@@ -527,41 +587,67 @@ export class _StackFrame extends StackFrame implements ISerializable {
         line: FieldType.Default
     };
 
+    /**
+     * Level in the call stack. For the long stacks SDK may not report every function in a call stack.
+     */
+    public level: number;
+
+    /**
+     * Method name.
+     */
+    public method: string;
+ 
+    /**
+     * Name of the assembly (dll, jar, etc.) containing this function.
+     */
+    public assembly: string;
+ 
+    /**
+     * File name or URL of the method implementation.
+     */
+    public fileName: string;
+ 
+    /**
+     * Line number of the code implementation.
+     */
+    public line: number;
+ 
     constructor(sourceFrame: string | IExceptionStackFrameInternal, level: number) {
-        super();
+        let _self = this;
+        _self.sizeInBytes = 0;
 
         // Not converting this to isString() as typescript uses this logic to "understand" the different
         // types for the 2 different code paths
         if (typeof sourceFrame === "string") {
             const frame: string = sourceFrame;
-            this.level = level;
-            this.method = NoMethod;
-            this.assembly = strTrim(frame);
-            this.fileName = "";
-            this.line = 0;
+            _self.level = level;
+            _self.method = NoMethod;
+            _self.assembly = strTrim(frame);
+            _self.fileName = "";
+            _self.line = 0;
             const matches = frame.match(_StackFrame.regex);
             if (matches && matches.length >= 5) {
-                this.method = strTrim(matches[2]) || this.method;
-                this.fileName = strTrim(matches[4]);
-                this.line = parseInt(matches[5]) || 0;
+                _self.method = strTrim(matches[2]) || _self.method;
+                _self.fileName = strTrim(matches[4]);
+                _self.line = parseInt(matches[5]) || 0;
             }
         } else {
-            this.level = sourceFrame.level;
-            this.method = sourceFrame.method;
-            this.assembly = sourceFrame.assembly;
-            this.fileName = sourceFrame.fileName;
-            this.line = sourceFrame.line;
-            this.sizeInBytes = 0;
+            _self.level = sourceFrame.level;
+            _self.method = sourceFrame.method;
+            _self.assembly = sourceFrame.assembly;
+            _self.fileName = sourceFrame.fileName;
+            _self.line = sourceFrame.line;
+            _self.sizeInBytes = 0;
         }
 
-        this.sizeInBytes += this.method.length;
-        this.sizeInBytes += this.fileName.length;
-        this.sizeInBytes += this.assembly.length;
+        _self.sizeInBytes += _self.method.length;
+        _self.sizeInBytes += _self.fileName.length;
+        _self.sizeInBytes += _self.assembly.length;
 
         // todo: these might need to be removed depending on how the back-end settles on their size calculation
-        this.sizeInBytes += _StackFrame.baseSize;
-        this.sizeInBytes += this.level.toString().length;
-        this.sizeInBytes += this.line.toString().length;
+        _self.sizeInBytes += _StackFrame.baseSize;
+        _self.sizeInBytes += _self.level.toString().length;
+        _self.sizeInBytes += _self.line.toString().length;
     }
 
     public static CreateFromInterface(frame: IExceptionStackFrameInternal) {
@@ -569,12 +655,13 @@ export class _StackFrame extends StackFrame implements ISerializable {
     }
 
     public toInterface() {
+        let _self = this;
         return {
-            level: this.level,
-            method: this.method,
-            assembly: this.assembly,
-            fileName: this.fileName,
-            line: this.line
+            level: _self.level,
+            method: _self.method,
+            assembly: _self.assembly,
+            fileName: _self.fileName,
+            line: _self.line
         };
     }
 }

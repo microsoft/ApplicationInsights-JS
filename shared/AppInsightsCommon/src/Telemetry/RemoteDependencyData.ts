@@ -5,11 +5,11 @@ import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, d
 import { FieldType } from "../Enums";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { AjaxHelperParseDependencyPath} from "../Util";
-import { RemoteDependencyData as GeneratedRemoteDependencyData } from "../Interfaces/Contracts/Generated/RemoteDependencyData";
+import { IRemoteDependencyData } from "../Interfaces/Contracts/IRemoteDependencyData";
 import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 import { msToTimeSpan } from "../HelperFuncs";
 
-export class RemoteDependencyData extends GeneratedRemoteDependencyData implements ISerializable {
+export class RemoteDependencyData implements IRemoteDependencyData, ISerializable {
 
     public static envelopeType = "Microsoft.ApplicationInsights.{0}.RemoteDependency";
     public static dataType = "RemoteDependencyData";
@@ -40,28 +40,83 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
     }
 
     /**
+     * Schema version
+     */
+    public ver: number; // = 2;
+
+    /**
+     * Name of the command initiated with this dependency call. Low cardinality value. Examples are stored procedure name and URL path template.
+     */
+    public name: string;
+ 
+    /**
+     * Identifier of a dependency call instance. Used for correlation with the request telemetry item corresponding to this dependency call.
+     */
+    public id: string;
+ 
+    /**
+     * Result code of a dependency call. Examples are SQL error code and HTTP status code.
+     */
+    public resultCode: string;
+ 
+    /**
+     * Request duration in format: DD.HH:MM:SS.MMMMMM. Must be less than 1000 days.
+     */
+    public duration: string;
+ 
+    /**
+     * Indication of successful or unsuccessful call.
+     */
+    public success: boolean; /* true */
+ 
+    /**
+     * Command initiated by this dependency call. Examples are SQL statement and HTTP URL's with all query parameters.
+     */
+    public data: string;
+ 
+    /**
+     * Target site of a dependency call. Examples are server name, host address.
+     */
+    public target: string;
+ 
+    /**
+     * Dependency type name. Very low cardinality value for logical grouping of dependencies and interpretation of other fields like commandName and resultCode. Examples are SQL, Azure table, and HTTP.
+     */
+    public type: string;
+ 
+    /**
+     * Collection of custom properties.
+     */
+    public properties: any; // = {};
+ 
+    /**
+     * Collection of custom measurements.
+     */
+    public measurements: any; // = {};
+ 
+    /**
      * Constructs a new instance of the RemoteDependencyData object
      */
     constructor(logger: IDiagnosticLogger, id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, requestAPI: string = "Ajax", correlationContext?: string, properties?: Object, measurements?: Object) {
-        super();
+        let _self = this;
 
-        this.id = id;
+        _self.ver = 2;
+        _self.id = id;
+        _self.duration = msToTimeSpan(value);
+        _self.success = success;
+        _self.resultCode = resultCode + "";
 
-        this.duration = msToTimeSpan(value);
-        this.success = success;
-        this.resultCode = resultCode + "";
-
-        this.type = dataSanitizeString(logger, requestAPI);
+        _self.type = dataSanitizeString(logger, requestAPI);
 
         const dependencyFields = AjaxHelperParseDependencyPath(logger, absoluteUrl, method, commandName);
-        this.data = dataSanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
-        this.target = dataSanitizeString(logger, dependencyFields.target);
+        _self.data = dataSanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
+        _self.target = dataSanitizeString(logger, dependencyFields.target);
         if (correlationContext) {
-            this.target = `${this.target} | ${correlationContext}`;
+            _self.target = `${_self.target} | ${correlationContext}`;
         }
-        this.name = dataSanitizeString(logger, dependencyFields.name);
+        _self.name = dataSanitizeString(logger, dependencyFields.name);
 
-        this.properties = dataSanitizeProperties(logger, properties);
-        this.measurements = dataSanitizeMeasurements(logger, measurements);
+        _self.properties = dataSanitizeProperties(logger, properties);
+        _self.measurements = dataSanitizeMeasurements(logger, measurements);
     }
 }
