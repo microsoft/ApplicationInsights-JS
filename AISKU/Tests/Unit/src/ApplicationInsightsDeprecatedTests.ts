@@ -19,7 +19,11 @@ export class ApplicationInsightsDeprecatedTests extends AITestClass {
     
     constructor() {
         super("ApplicationInsightsDeprecatedTests");
+
+        // this.assertNoEvents = false;
+        // this.assertNoHooks = false;
     }
+
     public testInitialize() {
         try {
             this.useFakeServer = false;
@@ -46,7 +50,18 @@ export class ApplicationInsightsDeprecatedTests extends AITestClass {
         }
     }
 
-    public testCleanup() {
+    public testFinishedCleanup(): void {
+        if (this._snippet) {
+            if (this._snippet["unload"]) {
+                // force unload
+                this._snippet["unload"](false);
+            } else {
+                const appInsights = (this._aiDeprecated as any).appInsightsNew;
+                if (appInsights.unload) {
+                    appInsights.unload(false);
+                }
+            }
+        }
     }
 
     public registerTests() {

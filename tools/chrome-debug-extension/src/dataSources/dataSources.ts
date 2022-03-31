@@ -42,12 +42,12 @@ export function createDataSource(configuration: IConfiguration): IDataSource {
     }
 
     switch (configuration.dataSourceType) {
-        case undefined:
-        case "Default":
-            return new DefaultDataSource(tabId, urls, configuration.ignoreNotifications);
+    case undefined:
+    case "Default":
+        return new DefaultDataSource(tabId, urls, configuration.ignoreNotifications);
 
-        default:
-            console.error(`Unrecognized data source supplied in the configuration: ${configuration.dataSourceType}`);
-            return new NoOpDataSource();
+    default:
+        console.error(`Unrecognized data source supplied in the configuration: ${configuration.dataSourceType}`);
+        return new NoOpDataSource();
     }
 }

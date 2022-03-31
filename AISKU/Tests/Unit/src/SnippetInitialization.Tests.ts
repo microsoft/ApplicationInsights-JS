@@ -129,6 +129,8 @@ export class SnippetInitializationTests extends AITestClass {
                             // that this functions exists we can't validate that it is called
                         } else if (method === "setAuthenticatedUserContext" || method === "clearAuthenticatedUserContext") {
                             funcSpy = this.sandbox.spy(theSnippet.context.user, method);
+                        } else if (method === "addTelemetryInitializer") {
+                            funcSpy = this.sandbox.spy(theSnippet.core, method);
                         } else {
                             funcSpy = this.sandbox.spy(theSnippet.appInsights, method);
                         }
@@ -857,10 +859,18 @@ export class SnippetInitializationTests extends AITestClass {
             this.useFakeServer = false;
 
             // Call the initialization
-            ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights); 
+            ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
 
             // Setup Sinon stuff
             const appInsights = (snippet as any).appInsights;
+            this.onDone(() => {
+                if (snippet["unload"]) {
+                    snippet["unload"](false);
+                } else if (snippet["appInsightsNew"]) {
+                    snippet["appInsightsNew"].unload(false);
+                }
+            });
+
             Assert.ok(appInsights, "The App insights instance should be populated");
             Assert.ok(appInsights.core, "The Core exists");
             Assert.equal(appInsights.core, (snippet as any).core, "The core instances should match");

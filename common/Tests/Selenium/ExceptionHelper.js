@@ -119,6 +119,7 @@ function ExceptionHelper(config) {
     return {
         capture: capturePageOnError,
         captureStrict: captureStrictPageOnError,
+        restore: restoreOnError,
         throw: throwPageException,
         throwCors: throwCorsException,
         throwStrict: throwStrictException,

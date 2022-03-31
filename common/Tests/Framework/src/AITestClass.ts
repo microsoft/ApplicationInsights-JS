@@ -24,18 +24,49 @@ function _getObjName(target:any, unknownValue?:string) {
     return (((target || {})["constructor"]) || {}).name || unknownValue || "";
 }
 
+function _getAllAiDataKeys<T = any>(target: T, callbackfn: (name: string, value: T[keyof T]) => void) {
+    if (target) {
+        let keys = Object.getOwnPropertyNames(target);
+        for (let lp = 0; lp < keys.length; lp++) {
+            if (keys[lp].startsWith("_aiData")) {
+                callbackfn.call(target, keys[lp], target[keys[lp]]);
+            }
+        }
+    }
+}
+
+function _objForEachKey<T = any>(target: T, callbackfn: (name: string, value: T[keyof T]) => void) {
+    if (target) {
+        for (let prop in target) {
+            if (Object.prototype.hasOwnProperty.call(target, prop)) {
+                callbackfn.call(target, prop, target[prop]);
+            }
+        }
+    }
+}
+
+function _formatNamespace(namespaces: string | string[]) {
+    if (namespaces) {
+        if (Array.isArray(namespaces)) {
+            return namespaces.sort().join(".");
+        }
+    }
+
+    return namespaces || "";
+}
+
 export class AITestClass {
     public static isPollingStepFlag = "isPollingStep";
 
     /** The instance of the currently running suite. */
     public static currentTestClass: AITestClass;
-    public static currentTestInfo: TestCase|TestCaseAsync;
+    public static currentTestInfo: TestCase | TestCaseAsync;
 
     /** Turns on/off sinon's fake implementation of XMLHttpRequest. On by default. */
     public sandboxConfig: any = {};
 
-    public static orgSetTimeout: (handler: Function, timeout?: number) => number;
-    public static orgClearTimeout: (handle?: number) => void;
+    public static orgSetTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
+    public static orgClearTimeout: (timeoutId: NodeJS.Timeout) => void;
     public static orgObjectDefineProperty = Object.defineProperty;
     
     /**** Sinon methods and properties ***/
@@ -46,6 +77,16 @@ export class AITestClass {
     public sandbox: SinonSandbox;
     public fakeServerAutoRespond: boolean = false;
     public isEmulatingEs3: boolean;
+
+    /**
+     * Automatically assert that all registered events have been removed
+     */
+    public assertNoEvents: boolean = true;
+
+    /**
+      * Automatically assert that all hooks have been removed
+      */
+    public assertNoHooks: boolean = true;
 
     protected _orgCrypto: Crypto | null;
     protected _orgLocation: Location | null;
@@ -64,6 +105,8 @@ export class AITestClass {
     // Simulate an Es3 environment
     private _orgObjectFuncs: any = null;
     private _orgFetch: any = null;
+
+    private _onDoneFuncs: VoidFunction[] = [];
 
     constructor(name?: string, emulateEs3?: boolean) {
         this._moduleName = (emulateEs3 ? "(ES3) " : "") + (name || _getObjName(this, ""));
@@ -91,7 +134,16 @@ export class AITestClass {
     public testInitialize() {
     }
 
-    /** Method called after each test method has completed */
+    /**
+     * Method called immediately after the test case has finished, but before the automatic test case assertions.
+     * Use this method to call unload / teardown so the SDK can remove it's own events before being validated
+     */
+    public testFinishedCleanup() {
+    }
+
+    /** Method called after each test method has completed and after the test sandbox has been cleanup up.
+     * This is the final step before the next test is executed
+     */
     public testCleanup() {
     }
 
@@ -117,9 +169,20 @@ export class AITestClass {
             testInfo.autoComplete = true;
         }
 
+        if (!testInfo.orgClearTimeout) {
+            // Set as the real clearTimeout (as _testStarting and enable sinon fake timers)
+            testInfo.orgClearTimeout = clearTimeout;
+        }
+
+        if (!testInfo.orgSetTimeout) {
+            // Set as the real setTimeout (as _testStarting and enable sinon fake timers)
+            testInfo.orgSetTimeout = setTimeout;
+        }
+                
         // Create a wrapper around the test method so we can do test initilization and cleanup.
         const testMethod = (assert: any) => {
             const done = assert.async();
+            const self = this;
 
             // Save off the instance of the currently running suite.
             AITestClass.currentTestClass = this;
@@ -129,29 +192,45 @@ export class AITestClass {
             const orgClearTimeout = clearTimeout;
             const orgSetTimeout = setTimeout;
 
-            AITestClass.orgSetTimeout = (handler: Function, timeout?: number) => {
-                return orgSetTimeout(handler, timeout);
+            AITestClass.orgSetTimeout = (handler: (...args: any[]) => void, timeout: number, ...args: any[]) => {
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgSetTimeout) {
+                    return AITestClass.currentTestInfo.orgSetTimeout.call(null, handler, timeout, args);
+                }
+
+                orgSetTimeout(handler, timeout, args);
             };
 
-            AITestClass.orgClearTimeout = (handler: number) => {
-                orgClearTimeout(handler);
+            AITestClass.orgClearTimeout = (timeoutId: NodeJS.Timeout) => {
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgClearTimeout) {
+                    AITestClass.currentTestInfo.orgClearTimeout.call(null, timeoutId);
+                } else {
+                    orgClearTimeout(timeoutId);
+                }
             };
 
             let useFakeServer = testInfo.useFakeServer;
             if (useFakeServer === undefined) {
-                useFakeServer = this.useFakeServer;
+                useFakeServer = self.useFakeServer;
             }
 
             if (useFakeServer) {
-                this._hookXhr();
+                self._hookXhr();
             }
 
             if (testInfo.useFakeTimers) {
-                this.clock = sinon.useFakeTimers();
+                self.clock = sinon.useFakeTimers();
             }
 
-            if (this.isEmulatingEs3) {
-                this._emulateEs3();
+            if (self.isEmulatingEs3) {
+                self._emulateEs3();
+            }
+
+            if (testInfo.assertNoEvents === undefined) {
+                testInfo.assertNoEvents = self.assertNoEvents;
+            }
+
+            if (testInfo.assertNoHooks === undefined) {
+                testInfo.assertNoHooks = self.assertNoHooks;
             }
 
             // Run the test.
@@ -160,8 +239,18 @@ export class AITestClass {
                 let testComplete = false;
                 let timeOutTimer: any = null;
                 let stepIndex = 0;
-    
+
                 const testDone = () => {
+                    self._testFinishedCleanup();
+
+                    if (testInfo.assertNoEvents) {
+                        self._assertEventsRemoved();
+                    }
+
+                    if (testInfo.assertNoHooks) {
+                        self._assertHooksRemoved();
+                    }
+
                     if (timeOutTimer) {
                         orgClearTimeout(timeOutTimer);
                     }
@@ -175,7 +264,8 @@ export class AITestClass {
                 let testContext: ITestContext = {
                     context: {},
                     retryCnt: 0,
-                    testDone: testDone
+                    testDone: testDone,
+                    clock: testInfo.useFakeTimers ? self.clock : null
                 };
 
                 if (testInfo.timeOut !== undefined) {
@@ -208,7 +298,7 @@ export class AITestClass {
                         try {
                             if (step) {
                                 if (step[AITestClass.isPollingStepFlag]) {
-                                    step.call(this, nextTestStepTrigger);
+                                    step.call(this, testContext, nextTestStepTrigger);
                                 } else {
                                     testContext.retryCnt = step[stepRetryCnt] || 0;
     
@@ -254,7 +344,7 @@ export class AITestClass {
             } catch (ex) {
                 console.error("Failed: Unexpected Exception: " + ex);
                 Assert.ok(false, "Unexpected Exception: " + ex);
-                this._testCompleted(true);
+                self._testCompleted(true);
 
                 // done is QUnit callback indicating the end of the test
                 done();
@@ -275,16 +365,37 @@ export class AITestClass {
             throw new Error("Must specify 'test' method in testInfo context in registerTestcase call");
         }
 
+        if (!testInfo.orgClearTimeout) {
+            // Set as the real clearTimeout (as _testStarting and enable sinon fake timers)
+            testInfo.orgClearTimeout = clearTimeout;
+        }
+
+        if (!testInfo.orgSetTimeout) {
+            // Set as the real setTimeout (as _testStarting and enable sinon fake timers)
+            testInfo.orgSetTimeout = setTimeout;
+        }
+
         // Create a wrapper around the test method so we can do test initilization and cleanup.
         const testMethod = (assert: any) => {
             // Treating all tests as async, so there is no issues with mixing them
             let done = assert.async();
+            let self = this;
 
             // Save off the instance of the currently running suite.
             AITestClass.currentTestClass = this;
             AITestClass.currentTestInfo = testInfo;
 
             function _testFinished(failed?: boolean) {
+                self._testFinishedCleanup();
+
+                if (testInfo.assertNoEvents) {
+                    self._assertEventsRemoved();
+                }
+
+                if (testInfo.assertNoHooks) {
+                    self._assertHooksRemoved();
+                }
+
                 AITestClass.currentTestClass._testCompleted(failed);
                 done();
             }
@@ -293,12 +404,20 @@ export class AITestClass {
             const orgClearTimeout = clearTimeout;
             const orgSetTimeout = setTimeout;
 
-            AITestClass.orgSetTimeout = (handler: Function, timeout?: number) => {
-                return orgSetTimeout(handler, timeout);
+            AITestClass.orgSetTimeout = (handler: (...args: any[]) => void, timeout: number, ...args: any[]) => {
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgSetTimeout) {
+                    return AITestClass.currentTestInfo.orgSetTimeout.call(null, handler, timeout, args);
+                }
+
+                orgSetTimeout(handler, timeout, args);
             };
 
-            AITestClass.orgClearTimeout = (handler: number) => {
-                orgClearTimeout(handler);
+            AITestClass.orgClearTimeout = (timeoutId: NodeJS.Timeout) => {
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgClearTimeout) {
+                    AITestClass.currentTestInfo.orgClearTimeout.call(null, timeoutId);
+                } else {
+                    orgClearTimeout(timeoutId);
+                }
             };
 
             let useFakeServer = testInfo.useFakeServer;
@@ -316,6 +435,14 @@ export class AITestClass {
 
             if (this.isEmulatingEs3) {
                 this._emulateEs3();
+            }
+
+            if (testInfo.assertNoEvents === undefined) {
+                testInfo.assertNoEvents = this.assertNoEvents;
+            }
+
+            if (testInfo.assertNoHooks === undefined) {
+                testInfo.assertNoHooks = this.assertNoHooks;
             }
 
             // Run the test.
@@ -345,8 +472,7 @@ export class AITestClass {
                 } else {
                     _testFinished();
                 }
-            }
-            catch (ex) {
+            } catch (ex) {
                 console.error("Failed: Unexpected Exception: " + ex);
                 Assert.ok(false, "Unexpected Exception: " + ex);
                 _testFinished(true);
@@ -363,7 +489,9 @@ export class AITestClass {
     public spy(funcToWrap: Function): SinonSpy;
     /** Creates a spy for object.methodName and replaces the original method with the spy. The spy acts exactly like the original method in all cases. The original method can be restored by calling object.methodName.restore(). The returned spy is the function object which replaced the original method. spy === object.method. */
     public spy(object: any, methodName: string, func?: Function): SinonSpy;
-    public spy(..._args: any[]): SinonSpy { return null; }
+    public spy(..._args: any[]): SinonSpy {
+        return null;
+    }
 
     /** Creates an anonymous stub function. */
     public stub(): SinonStub;
@@ -371,10 +499,14 @@ export class AITestClass {
     public stub(object: any): SinonStub;
     /** Replaces object.methodName with a func, wrapped in a spy. As usual, object.methodName.restore(); can be used to restore the original method. */
     public stub(object: any, methodName: string, func?: Function): SinonStub;
-    public stub(..._args: any[]): SinonStub { return null; }
+    public stub(..._args: any[]): SinonStub {
+        return null;
+    }
 
     /** Creates a mock for the provided object.Does not change the object, but returns a mock object to set expectations on the object's methods. */
-    public mock(_object: any): SinonMock { return null; }
+    public mock(_object: any): SinonMock {
+        return null;
+    }
 
     /**** end: Sinon methods and properties ***/
 
@@ -424,18 +556,24 @@ export class AITestClass {
         Assert.ok(false, msg);
     }
         
+    protected onDone(cleanupFn: VoidFunction) {
+        if (cleanupFn) {
+            this._onDoneFuncs.push(cleanupFn);
+        }
+    }
+
     protected setUserAgent(userAgent: string) {
         // Hook Send beacon which also mocks navigator
         this.hookSendBeacon(null);
 
         try {
             AITestClass.orgObjectDefineProperty(window.navigator, "userAgent",
-            {
-                configurable: true,
-                get () {
-                    return userAgent;
-                }
-            });
+                {
+                    configurable: true,
+                    get () {
+                        return userAgent;
+                    }
+                });
         } catch (e) {
             QUnit.assert.ok(false, "Failed to set the userAgent - " + e);
             throw e;
@@ -472,12 +610,12 @@ export class AITestClass {
                         if (!newNavigator.hasOwnProperty(name)) {
                             // if it couldn't be set directly try and pretend
                             AITestClass.orgObjectDefineProperty(newNavigator, name,
-                            {
-                                configurable: true,
-                                get: function () {
-                                    return navigator[name];
-                                }
-                            });
+                                {
+                                    configurable: true,
+                                    get: function () {
+                                        return navigator[name];
+                                    }
+                                });
                         }
                     }
                 }
@@ -495,12 +633,12 @@ export class AITestClass {
     protected setNavigator(newNavigator: any) {
         try {
             AITestClass.orgObjectDefineProperty(window, "navigator",
-            {
-                configurable: true,
-                get: function () {
-                    return newNavigator;
-                }
-            });
+                {
+                    configurable: true,
+                    get: function () {
+                        return newNavigator;
+                    }
+                });
         } catch (e) {
             QUnit.assert.ok(true, "Set Navigator failed - " + e);
             sinon.stub(window, "navigator").returns(newNavigator);
@@ -601,12 +739,12 @@ export class AITestClass {
                         if (!newLocation.hasOwnProperty(name)) {
                             // if it couldn't be set directly try and pretend
                             AITestClass.orgObjectDefineProperty(newLocation, name,
-                            {
-                                configurable: true,
-                                get: function () {
-                                    return this._orgLocation[name];
-                                }
-                            });
+                                {
+                                    configurable: true,
+                                    get: function () {
+                                        return this._orgLocation[name];
+                                    }
+                                });
                         }
                     }
                 }
@@ -628,11 +766,11 @@ export class AITestClass {
         try {
             if (newLocation) {
                 AITestClass.orgObjectDefineProperty(window, "__mockLocation",
-                {
-                    configurable: true,
-                    enumerable: true,
-                    value: newLocation
-                });
+                    {
+                        configurable: true,
+                        enumerable: true,
+                        value: newLocation
+                    });
             } else {
                 delete (window as any).__mockLocation;
             }
@@ -683,6 +821,32 @@ export class AITestClass {
         }
     }
 
+    protected _assertEventsRemoved() {
+        this._assertNoEvents(window, "window");
+        this._assertNoEvents(document, "document");
+        if (document["body"]) {
+            this._assertNoEvents(document["body"], "body");
+        }
+
+        if (navigator) {
+            this._assertNoEvents(navigator, "navigator");
+        }
+
+        if (history) {
+            this._assertNoEvents(history, "history");
+        }
+    }
+
+    protected _assertHooksRemoved() {
+        this._assertRemoveHooks(history, "history");
+        this._assertRemoveHooks(XMLHttpRequest.prototype, "XHR Prototype");
+        this._assertRemoveHooks(XMLHttpRequest, "XHR");
+        this._assertRemoveHooks(window, "window");
+        this._assertRemoveFuncHooks(window.fetch, "fetch");
+        this._assertRemoveFuncHooks(window.onerror, "window.onerror");
+        this._assertRemoveFuncHooks(window.onunhandledrejection, "window.onunhandledrejection");
+    }
+
     /** Called when the test is starting. */
     private _testStarting() {
         let _self = this;
@@ -727,6 +891,19 @@ export class AITestClass {
         this.testInitialize();
     }
 
+    private _testFinishedCleanup() {
+        this._onDoneFuncs.forEach((fn) => {
+            try {
+                fn();
+            } catch (e) {
+                // Do nothing during cleanup
+            }
+        });
+        this._onDoneFuncs = [];
+
+        this.testFinishedCleanup();
+    }
+
     /** Called when the test is completed. */
     private _testCompleted(failed?: boolean) {
         this._unhookXhr();
@@ -755,22 +932,58 @@ export class AITestClass {
 
         this._beaconHooks = [];
         this._cleanupAllHooks();
+        this._cleanupEvents();
         this._restoreEs3();
 
         if (failed) {
             // Just cleanup the sandbox since the test has already failed.
             this.sandbox.restore();
-        }
-        else {
+        } else {
             // Verify the sandbox and restore.
             (this.sandbox as any).verifyAndRestore();
         }
+
+        this.sandbox = null;
 
         this.testCleanup();
 
         // Clear the instance of the currently running suite.
         AITestClass.currentTestClass = null;
         AITestClass.currentTestInfo = null;
+
+        AITestClass.orgSetTimeout = null;
+        AITestClass.orgClearTimeout = null;
+    }
+
+    private _assertRemoveFuncHooks(fn:any, targetName: string) {
+        let failed = false;
+
+        if (typeof fn === "function") {
+            let aiHook:any = fn["_aiHooks"];
+
+            if (aiHook && aiHook.h) {
+                aiHook.h.forEach((hook: any) => {
+                    Assert.ok(false, targetName + " Hook: " + aiHook.n + "." + _formatNamespace(hook.cbks.ns || "") + " exists");
+                    failed = true;
+                });
+
+                if (!failed) {
+                    QUnit.assert.ok(true, "Validated [" + targetName + "] has no registered hooks");
+                }
+            }
+        }
+    }
+
+    private _assertRemoveHooks(target:any, targetName: string) {
+        if (target) {
+            Object.keys(target).forEach(name => {
+                try {
+                    this._assertRemoveFuncHooks(target[name], targetName + "." + name);
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+                }
+            });
+        }
     }
 
     private _removeFuncHooks(fn:any) {
@@ -784,19 +997,25 @@ export class AITestClass {
     }
 
     private _removeHooks(target:any) {
-        Object.keys(target).forEach(name => {
-            try {
-                this._removeFuncHooks(target[name]);
-            } catch (e) {
-                // eslint-disable-next-line no-empty
-            }
-        });
+        if (target) {
+            Object.keys(target).forEach(name => {
+                try {
+                    this._removeFuncHooks(target[name]);
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+                }
+            });
+        }
     }
 
     private _cleanupAllHooks() {
+        this._removeHooks(history);
         this._removeHooks(XMLHttpRequest.prototype);
         this._removeHooks(XMLHttpRequest);
+        this._removeHooks(window);
         this._removeFuncHooks(window.fetch);
+        this._removeFuncHooks(window.onerror);
+        this._removeFuncHooks(window.onunhandledrejection);
     }
 
     private _restoreObject(objectProps: any) {
@@ -885,6 +1104,81 @@ export class AITestClass {
                     _self._xhrOrgSend.apply(xhr, theArguments);
                 }
             }
+        }
+    }
+
+    private _assertNoEvents(target: any, targetName: string): void {
+        let failed = false;
+        _getAllAiDataKeys(target, (name, value) => {
+            if (value && name.startsWith("_aiDataEvents")) {
+                let events = value.events;
+                if (events) {
+                    _objForEachKey(events, (evtName, evts) => {
+                        if (evts) {
+                            for (let lp = 0; lp < evts.length; lp++) {
+                                let theEvent = evts[lp];
+                                if (theEvent) {
+                                    Assert.ok(false, "[" + targetName + "] has registered event handler [" + evtName + "." + (theEvent.evtName.ns || "") + "]");
+                                    failed = true;
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        if (!failed) {
+            QUnit.assert.ok(true, "Validated [" + targetName + "] has no registered event handlers");
+        }
+    }
+
+    private _removeAllEvents(target: any, targetName: string): any {
+        let dataName: string[] = [];
+        _getAllAiDataKeys(target, (name, value) => {
+            if (value && name.startsWith("_aiDataEvents")) {
+                dataName.push(name);
+                let events = value.events;
+                if (events) {
+                    _objForEachKey(events, (evtName, evts) => {
+                        if (evts) {
+                            for (let lp = 0; lp < evts.length; lp++) {
+                                let theEvent = evts[lp];
+                                if (theEvent) {
+                                    console && console.log("Removing [" + targetName + "] event handler " + evtName + "." + (theEvent.evtName.ns || ""));
+                                    if (target.removeEventListener) {
+                                        target.removeEventListener(evtName, theEvent.handler, theEvent.capture);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                delete value.events;
+            }
+        });
+
+        for (let lp = 0; lp < dataName.length; lp++) {
+            delete target[dataName[lp]];
+        }
+
+        return null;
+    }
+
+    private _cleanupEvents() {
+        this._removeAllEvents(window, "window");
+        this._removeAllEvents(document, "document");
+        if (document["body"]) {
+            this._removeAllEvents(document["body"], "body");
+        }
+
+        if (navigator) {
+            this._removeAllEvents(navigator, "navigator");
+        }
+
+        if (history) {
+            this._removeAllEvents(history, "history");
         }
     }
 }

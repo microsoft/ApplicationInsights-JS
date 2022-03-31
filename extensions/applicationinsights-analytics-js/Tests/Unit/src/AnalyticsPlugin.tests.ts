@@ -7,10 +7,10 @@ import {
     Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal, 
     AnalyticsPluginIdentifier, Util, IAppInsights, Metric, PageView, RemoteDependencyData 
 } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { ApplicationInsights } from "../../../src/JavaScriptSDK/ApplicationInsights";
+import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin";
 
 declare class ExceptionHelper {
     capture: (appInsights:IAppInsights) => void;
@@ -22,11 +22,17 @@ declare class ExceptionHelper {
     throwStrictRuntimeException: (timeoutFunc: VoidFunction) => void;
 };
 
-export class ApplicationInsightsTests extends AITestClass {
+export class AnalyticsPluginTests extends AITestClass {
     private _onerror:any = null;
     private trackSpy:SinonSpy;
     private throwInternalSpy:SinonSpy;
     private exceptionHelper: any = new ExceptionHelper();
+
+    constructor(name?: string, emulateEs3?: boolean) {
+        super(name, emulateEs3);
+        this.assertNoEvents = true;
+        this.assertNoHooks = true;
+    }
 
     public testInitialize() {
         this._onerror = window.onerror;
@@ -61,10 +67,18 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'enableAutoRouteTracking: event listener is added to the popstate event',
             test: () => {
                 // Setup
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const eventListenerStub = this.sandbox.stub(window, 'addEventListener');
+                let evtNamespace = (appInsights as any)._evtNamespace;
+
+                let registeredEvents = __getRegisteredEvents(window, null, evtNamespace);
+                Assert.equal(0, registeredEvents.length, "No Events should be registered");
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 // Act
                 core.initialize({
@@ -72,35 +86,58 @@ export class ApplicationInsightsTests extends AITestClass {
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel]);
 
+                registeredEvents = __getRegisteredEvents(window, null, evtNamespace);
+                Assert.equal(2, registeredEvents.length, "Two Events should be registered");
+
                 // Assert
                 Assert.ok(eventListenerStub.calledTwice);
                 Assert.equal(eventListenerStub.args[0][0], "popstate");
                 Assert.equal(eventListenerStub.args[1][0], "locationchange");
+
+                core.getPlugin(appInsights.identifier).remove(false);
+
+                registeredEvents = __getRegisteredEvents(window, null, evtNamespace);
+                Assert.equal(0, registeredEvents.length, "All Events should have been removed");
             }
         });
 
         this.testCase({
             name: 'enableAutoRouteTracking: route changes trigger a new pageview',
             useFakeTimers: true,
+            assertNoEvents: true,
             test: () => {
                 // Current URL will be the test page
                 setEnableEnvMocks(true);
                 this.setLocationHref("firstUri");
 
                 // Setup
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
                 appInsights.autoRoutePVDelay = 500;
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const properties = new PropertiesPlugin();
                 properties.context = { telemetryTrace: { traceID: 'not set', name: 'name not set' } } as any;
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
+                let evtNamespace = (appInsights as any)._evtNamespace;
+
+                let registeredEvents = __getRegisteredEvents(window, null, evtNamespace);
+                Assert.equal(0, registeredEvents.length, "No Events should be registered");
+
+                this.onDone(() => {
+                    if (core.isInitialized()) {
+                        core.unload(false);
+                    }
+                });
 
                 // Act
                 core.initialize({
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel, properties]);
+
+                registeredEvents = __getRegisteredEvents(window, null, evtNamespace);
+                Assert.equal(2, registeredEvents.length, "Two Events should be registered");
+
                 this.setLocationHref("secondUri");
                 window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(500);
@@ -120,6 +157,10 @@ export class ApplicationInsightsTests extends AITestClass {
 
                 Assert.equal("firstUri", trackPageViewStub.args[0][0].refUri, "previous uri is assigned to refUri as firstUri, and send as an argument of trackPageview method");
                 Assert.equal("secondUri", trackPageViewStub.args[1][0].refUri, "previous uri is assigned to refUri as secondUri and send as an argument of trackPageview method");
+
+                core.unload(false);
+                registeredEvents = __getRegisteredEvents(window, null, evtNamespace);
+                Assert.equal(0, registeredEvents.length, "All Events should have been removed");
             }
         });
 
@@ -131,7 +172,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 setEnableEnvMocks(true);
                 this.setLocationHref("firstUri");
 
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
                 appInsights.autoRoutePVDelay = 500;
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
@@ -139,6 +180,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 properties.context = { telemetryTrace: { traceID: 'not set', name: 'name not set' } } as any;
                 appInsights['_prevUri'] = "firstUri";
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 // Act
                 core.initialize({
@@ -175,12 +220,16 @@ export class ApplicationInsightsTests extends AITestClass {
                 const originalReplaceState = history.replaceState;
                 history.pushState = null;
                 history.replaceState = null;
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const properties = new PropertiesPlugin();
                 properties.context = { telemetryTrace: { traceID: 'not set', parentID: undefined} } as any;
                 this.sandbox.stub(appInsights, 'trackPageView');
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 // Act
                 core.initialize({
@@ -204,12 +253,16 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const channel = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights: ApplicationInsights = new ApplicationInsights();
+                const appInsights: AnalyticsPlugin = new AnalyticsPlugin();
 
                 // Act
                 const config = {
                     instrumentationKey: 'ikey'
                 };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 core.initialize(
                     config,
@@ -230,12 +283,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const channel = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights: ApplicationInsights = new ApplicationInsights();
+                const appInsights: AnalyticsPlugin = new AnalyticsPlugin();
 
                 const config = {
                     instrumentationKey: 'ikey',
                     autoTrackPageVisitTime: true
                 };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
                     config,
                     [appInsights, channel]
@@ -258,7 +316,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'AppInsightsTests: config can be set from root',
             test: () => {
                 // Setup
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const properties = new PropertiesPlugin();
@@ -274,6 +332,10 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                 };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
 
                 // Initialize
                 core.initialize(config, [appInsights, channel, properties]);
@@ -301,7 +363,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: "AppInsightsTests: public members are correct",
             test: () => {
                 // setup
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
                 // the assert test will only see config as part of an object member if it has been initialized. Not sure how it worked before
                 appInsights.config = {};
                 const leTest = (name) => {
@@ -349,8 +411,13 @@ export class ApplicationInsightsTests extends AITestClass {
                     {instrumentationKey: iKey},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({instrumentationKey: core.config.instrumentationKey}, core, []);
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.addPlugin(appInsights);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
     
                 let envelope: ITelemetryItem;
@@ -381,12 +448,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 const senderStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Act
@@ -407,12 +479,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Test
@@ -432,12 +509,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Test
@@ -461,12 +543,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
 
                 const unexpectedError = new Error();
                 const expectedString = dumpObj(unexpectedError);
@@ -491,12 +578,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "ikey"}, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 const unexpectedError = new Error("some message");
                 const throwSpy = this.sandbox.spy(core.logger, "throwInternal");
                 const stub = this.sandbox.stub(appInsights, "trackException").throws(unexpectedError);
@@ -518,12 +610,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
                     {instrumentationKey: "key"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
 
                 const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
 
@@ -544,12 +641,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 const trackSpy = this.sandbox.spy(appInsights.core, "track");
 
                 // Act
@@ -566,12 +668,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 const trackExceptionSpy = this.sandbox.spy(appInsights, "trackException");
 
                 // Act
@@ -590,12 +697,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
                     {instrumentationKey: "key"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
 
                 const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
 
@@ -624,6 +736,11 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const sender: Sender = new Sender();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
                     {
                         instrumentationKey: "key",
@@ -636,8 +753,8 @@ export class ApplicationInsightsTests extends AITestClass {
                     },
                     [sender]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
                     Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
                 });
@@ -702,6 +819,11 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const sender: Sender = new Sender();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
                     {
                         instrumentationKey: "key",
@@ -714,8 +836,8 @@ export class ApplicationInsightsTests extends AITestClass {
                     },
                     [sender]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
                     Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
                 });
@@ -771,6 +893,11 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const sender: Sender = new Sender();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
                     {
                         instrumentationKey: "key",
@@ -783,8 +910,8 @@ export class ApplicationInsightsTests extends AITestClass {
                     },
                     [sender]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
                     Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
                 });
@@ -848,6 +975,11 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const sender: Sender = new Sender();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
                     {
                         instrumentationKey: "key",
@@ -860,8 +992,8 @@ export class ApplicationInsightsTests extends AITestClass {
                     },
                     [sender]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
                     Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
                 });
@@ -951,12 +1083,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
                     {instrumentationKey: "key"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 const spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
                 this.clock.tick(1);
 
@@ -986,8 +1123,13 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // setup
                 const core = new AppInsightsCore();
+
                 this.sandbox.stub(core, "getTransmissionControls");
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+                this.onDone(() => {
+                    appInsights.teardown();
+                });
+
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
@@ -1011,8 +1153,13 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // setup
                 const core = new AppInsightsCore();
+
                 this.sandbox.stub(core, "getTransmissionControls");
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+                this.onDone(() => {
+                    appInsights.teardown();
+                });
+
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
@@ -1051,12 +1198,17 @@ export class ApplicationInsightsTests extends AITestClass {
                     // setup
                     const plugin = new ChannelPlugin();
                     const core = new AppInsightsCore();
+
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
+    
                     core.initialize(
-                        {instrumentationKey: "key"},
+                        {instrumentationKey: "ikey"},
                         [plugin]
                     );
-                    const appInsights = new ApplicationInsights();
-                    appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                    const appInsights = new AnalyticsPlugin();
+                    core.addPlugin(appInsights);
                     const logStub = this.sandbox.stub(core.logger, "throwInternal");
                     core.logger.consoleLoggingLevel = () => 999;
 
@@ -1076,12 +1228,17 @@ export class ApplicationInsightsTests extends AITestClass {
                     // setup
                     const plugin = new ChannelPlugin();
                     const core = new AppInsightsCore();
+
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
+    
                     core.initialize(
-                        {instrumentationKey: "key"},
+                        {instrumentationKey: "ikey"},
                         [plugin]
                     );
-                    const appInsights = new ApplicationInsights();
-                    appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                    const appInsights = new AnalyticsPlugin();
+                    core.addPlugin(appInsights);
                     const logStub = this.sandbox.stub(core.logger, "throwInternal");
                     core.logger.consoleLoggingLevel = () => 999;
 
@@ -1102,12 +1259,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin]
                 );
-                const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Act
@@ -1139,13 +1301,16 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
 
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
                 const telemetryInitializer = {
@@ -1171,13 +1336,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
                 const nameOverride = "my unique name";
                 const telemetryInitializer = {
@@ -1205,13 +1374,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 const messageOverride = "my unique name";
@@ -1251,13 +1424,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const initializer1 = { init: () => { } };
                 const initializer2 = { init: () => { } };
                 const spy1 = this.sandbox.spy(initializer1, "init");
@@ -1281,13 +1458,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const initializer1 = { init: (item: ITelemetryItem) => { 
                     if (item.data !== undefined) {
                         item.data.init1 = true;
@@ -1320,13 +1501,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const initializer1 = { init: () => { } };
                 const initializer2 = { init: () => { } };
                 const spy1 = this.sandbox.spy(initializer1, "init");
@@ -1350,13 +1535,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
@@ -1374,13 +1563,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
@@ -1398,13 +1591,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
@@ -1422,13 +1619,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
@@ -1448,13 +1649,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
@@ -1474,13 +1679,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
@@ -1500,13 +1709,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
-                const appInsights = new ApplicationInsights();
+                const appInsights = new AnalyticsPlugin();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "ikey"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
                 const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
                 const logStub = this.sandbox.spy(appInsights.core.logger, "throwInternal")
                 // act

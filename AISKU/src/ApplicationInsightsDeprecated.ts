@@ -76,7 +76,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         this.context = { addTelemetryInitializer: this.addTelemetryInitializers.bind(this) }
     }
 
-   /**
+    /**
     * The array of telemetry initializers to call before sending each telemetry item.
     */
 

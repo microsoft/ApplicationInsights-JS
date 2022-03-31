@@ -27,7 +27,7 @@ export class Sample implements ISample {
         this.samplingScoreGenerator = new SamplingScoreGenerator();
     }
 
-   /**
+    /**
     * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
     */
     public isSampledIn(envelope: ITelemetryItem): boolean {

@@ -350,7 +350,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
         // TODO: test stopPollingInternalLogs
         this.testCase({
-            name: "DiagnosticLogger: stop Polling InternalLogs",
+            name: "DiagnosticLogger: stop Polling InternalLogs flushes logs when not empty",
             useFakeTimers: true,
             test: () => {
                 // Setup
@@ -375,10 +375,14 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 
                 // Act
                 appInsightsCore.stopPollingInternalLogs();
-                this.clock.tick(1);
 
-                // Assert postcondition
-                Assert.equal(2, appInsightsCore.logger.queue.length, "Queue is not empty");
+                // We now flush the internal logs when stop Polling internal logs is called
+                Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
+
+                queue.push(new _InternalLogMessage(2, "Hello3"));
+                this.clock.tick(60000);
+
+                Assert.equal(1, appInsightsCore.logger.queue.length, "Queue is not empty");
             }
         });
 
@@ -408,7 +412,8 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, count, "Test Error");
                     --count;
                 }
-              //  this.clock.tick(1000);
+
+                //  this.clock.tick(1000);
                 // Assert postcondition
                 Assert.equal(26, appInsightsCore.logger.queue.length, "Queue is not empty");
             }

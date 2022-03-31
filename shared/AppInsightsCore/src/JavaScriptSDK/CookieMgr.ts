@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
-import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { dumpObj, getDocument, getLocation, getNavigator, isIE } from "./EnvUtils";
 import {
     arrForEach, dateNow, getExceptionName, isFunction, isNotNullOrUndefined, isNullOrUndefined, isString, isTruthy, isUndefined,
@@ -10,6 +10,8 @@ import {
 } from "./HelperFuncs";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { strEmpty } from "./InternalConstants";
+import { _throwInternal } from "./DiagnosticLogger";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
@@ -19,7 +21,6 @@ const strEnabled = "enabled";
 const strIsCookieUseDisabled = "isCookieUseDisabled";
 const strDisableCookiesUsage = "disableCookiesUsage";
 const strConfigCookieMgr = "_ckMgr";
-const strEmpty = "";
 
 let _supportsCookies: boolean = null;
 let _allowUaSameSite: boolean = null;
@@ -252,9 +253,10 @@ export function areCookiesSupported(logger?: IDiagnosticLogger): any {
             let doc = _doc || {} as Document;
             _supportsCookies = doc[strCookie] !== undefined;
         } catch (e) {
-            logger && logger.throwInternal(
-                LoggingSeverity.WARNING,
-                _InternalMessageId.CannotAccessCookie,
+            _throwInternal(
+                logger,
+                eLoggingSeverity.WARNING,
+                _eInternalMessageId.CannotAccessCookie,
                 "Cannot access document.cookie - " + getExceptionName(e),
                 { exception: dumpObj(e) });
         }

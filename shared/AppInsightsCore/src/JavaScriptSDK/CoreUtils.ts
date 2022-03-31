@@ -6,158 +6,21 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _gblCookieMgr } from "./CookieMgr";
-import { getWindow, getDocument, getPerformance, isIE }  from "./EnvUtils";
+import { getPerformance, isIE }  from "./EnvUtils";
 import {
-    arrForEach, arrIndexOf, arrMap, arrReduce, attachEvent, dateNow, detachEvent, hasOwnProperty,
+    arrForEach, arrIndexOf, arrMap, arrReduce, dateNow, hasOwnProperty,
     isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof,
     isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
 } from "./HelperFuncs";
-import { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./RandomHelper";
-
-const strVisibilityChangeEvt: string = "visibilitychange";
-const strPageHide: string = "pagehide";
-const strPageShow: string = "pageshow";
+import { addEventHandler, attachEvent, detachEvent } from "./EventHelpers";
+import { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./RandomHelper";
+import { strEmpty } from "./InternalConstants";
 
 let _cookieMgrs: ICookieMgr[] = null;
 let _canUseCookies: boolean;    // legacy supported config
 
 // Added to help with minfication
 export const Undefined = strShimUndefined;
-
-/**
- * Trys to add an event handler for the specified event to the window, body and document
- * @param eventName {string} - The name of the event
- * @param callback {any} - The callback function that needs to be executed for the given event
- * @return {boolean} - true if the handler was successfully added
- */
-export function addEventHandler(eventName: string, callback: any): boolean {
-    let result = false;
-    let w = getWindow();
-    if (w) {
-        result = attachEvent(w, eventName, callback);
-        result = attachEvent(w["body"], eventName, callback) || result;
-    }
-
-    let doc = getDocument();
-    if (doc) {
-        result = attachEvent(doc, eventName, callback) || result;
-    }
-
-    return result;
-}
-
-/**
- * Bind the listener to the array of events
- * @param events An string array of event names to bind the listener to
- * @param listener The event callback to call when the event is triggered
- * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
- * @returns true - when at least one of the events was registered otherwise false
- */
- export function addEventListeners(events: string[], listener: any, excludeEvents?: string[]): boolean {
-    let added = false;
-
-    if (listener && events && isArray(events)) {
-        let excluded: string[] = [];
-        arrForEach(events, (name) => {
-            if (isString(name)) {
-                if (!excludeEvents || arrIndexOf(excludeEvents, name) === -1) {
-                    added = addEventHandler(name, listener) || added;
-                } else {
-                    excluded.push(name);
-                }
-            }
-        });
-
-        if (!added && excluded.length > 0) {
-            // Failed to add any listeners and we excluded some, so just attempt to add the excluded events
-            added = addEventListeners(excluded, listener);
-        }
-    }
-
-    return added;
-}
-
-/**
- * Listen to the 'beforeunload', 'unload' and 'pagehide' events which indicates a page unload is occurring,
- * this does NOT listen to the 'visibilitychange' event as while it does indicate that the page is being hidden
- * it does not *necessarily* mean that the page is being completely unloaded, it can mean that the user is
- * just navigating to a different Tab and may come back (without unloading the page). As such you may also
- * need to listen to the 'addPageHideEventListener' and 'addPageShowEventListener' events.
- * @param listener - The event callback to call when a page unload event is triggered
- * @param excludeEvents - [Optional] An array of events that should not be hooked, unless no other events can be.
- * @returns true - when at least one of the events was registered otherwise false
- */
-export function addPageUnloadEventListener(listener: any, excludeEvents?: string[]): boolean {
-    // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
-    // As just hooking the window does not always fire (on chrome) for page navigation's.
-    return addEventListeners(["beforeunload", "unload", "pagehide"], listener, excludeEvents);
-}
-
-/**
- * Listen to the pagehide and visibility changing to 'hidden' events
- * @param listener - The event callback to call when a page hide event is triggered
- * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
- * Suggestion: pass as true if you are also calling addPageUnloadEventListener as that also hooks pagehide
- * @returns true - when at least one of the events was registered otherwise false
- */
- export function addPageHideEventListener(listener: any, excludeEvents?: string[]): boolean {
-
-    function _handlePageVisibility(evt: any) {
-        let doc = getDocument();
-        if (listener && doc && doc.visibilityState === "hidden") {
-            listener(evt);
-        }
-    }
-
-    let pageUnloadAdded = false;
-    if (!excludeEvents || arrIndexOf(excludeEvents, strPageHide) === -1) {
-        pageUnloadAdded = addEventHandler(strPageHide, listener);
-    }
-
-    if (!excludeEvents || arrIndexOf(excludeEvents, strVisibilityChangeEvt) === -1) {
-        pageUnloadAdded = addEventHandler(strVisibilityChangeEvt, _handlePageVisibility) || pageUnloadAdded;
-    }
-
-    if (!pageUnloadAdded && excludeEvents) {
-        // Failed to add any listeners and we where requested to exclude some, so just call again without excluding anything
-        pageUnloadAdded = addPageHideEventListener(listener);
-    }
-
-    return pageUnloadAdded;
-}
-
-/**
- * Listen to the pageshow and visibility changing to 'visible' events
- * @param listener - The event callback to call when a page is show event is triggered
- * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
- * @returns true - when at least one of the events was registered otherwise false
- */
- export function addPageShowEventListener(listener: any, excludeEvents?: string[]): boolean {
-
-    function _handlePageVisibility(evt: any) {
-        let doc = getDocument();
-        if (listener && doc && doc.visibilityState === "visible") {
-            listener(evt);
-        }
-    }
-
-    let pageShowAdded = false;
-    if (!excludeEvents || arrIndexOf(excludeEvents, strPageShow) === -1) {
-        pageShowAdded = addEventHandler(strPageShow, listener);
-    }
-
-    if (!excludeEvents || arrIndexOf(excludeEvents, strVisibilityChangeEvt) === -1) {
-        pageShowAdded = addEventHandler(strVisibilityChangeEvt, _handlePageVisibility) || pageShowAdded;
-    }
-
-    if (!pageShowAdded && excludeEvents) {
-        // Failed to add any listeners and we where requested to exclude some, so just call again without excluding anything
-        pageShowAdded = addPageShowEventListener(listener);
-    }
-
-    return pageShowAdded;
-}
-
 export function newGuid(): string {
     function randomHexDigit() {
         return randomValue(15); // Get a random value from 0..15
@@ -183,33 +46,6 @@ export function perfNow(): number {
 }
 
 /**
- * Generate random base64 id string.
- * The default length is 22 which is 132-bits so almost the same as a GUID but as base64 (the previous default was 5)
- * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
- */
-export function newId(maxLength = 22): string {
-    const base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    // Start with an initial random number, consuming the value in reverse byte order
-    let number = random32() >>> 0;  // Make sure it's a +ve number
-    let chars = 0;
-    let result = "";
-    while (result.length < maxLength) {
-        chars ++;
-        result += base64chars.charAt(number & 0x3F);
-        number >>>= 6;              // Zero fill with right shift
-        if (chars === 5) {
-            // 5 base64 characters === 30 bits so we don't have enough bits for another base64 char
-            // So add on another 30 bits and make sure it's +ve
-            number = (((random32() << 2) & 0xFFFFFFFF) | (number & 0x03)) >>> 0;
-            chars = 0;      // We need to reset the number every 5 chars (30 bits)
-        }
-    }
-
-    return result;
-}
-
-/**
  * The strEndsWith() method determines whether a string ends with the characters of a specified string, returning true or false as appropriate.
  * @param value - The value to check whether it ends with the search value.
  * @param search - The characters to be searched for at the end of the value.
@@ -232,7 +68,7 @@ export function generateW3CId(): string {
     const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
 
     // rfc4122 version 4 UUID without dashes and with lowercase letters
-    let oct = "", tmp;
+    let oct = strEmpty, tmp;
     for (let a = 0; a < 4; a++) {
         tmp = random32();
         oct +=
@@ -407,7 +243,7 @@ export interface ICoreUtils {
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
-    addEventHandler: (eventName: string, callback: any) => boolean;
+    addEventHandler: (eventName: string, callback: any, evtNamespace?: string | string[]) => boolean;
 
     /**
      * Return the current time via the Date now() function (if available) and falls back to (new Date()).getTime() if now() is unavailable (IE8 or less)
@@ -574,7 +410,7 @@ export const EventHelper: IEventHelper = {
  * @param logger
  * @returns
  */
- export function _legacyCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
+export function _legacyCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
     let cookieMgr = _gblCookieMgr(config, logger);
     let legacyCanUseCookies = (CoreUtils as any)._canUseCookies;
 

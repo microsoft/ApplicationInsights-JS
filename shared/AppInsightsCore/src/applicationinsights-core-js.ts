@@ -3,31 +3,39 @@
 export { IConfiguration } from "./JavaScriptSDK.Interfaces/IConfiguration";
 export { IChannelControls, MinChannelPriorty } from "./JavaScriptSDK.Interfaces/IChannelControls";
 export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetryPlugin";
-export { IAppInsightsCore } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
+export { IAppInsightsCore, ILoadedPlugin } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
 export { ITelemetryItem, ICustomProperties, Tags } from "./JavaScriptSDK.Interfaces/ITelemetryItem";
-export { IProcessTelemetryContext } from "./JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+export { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, GetExtCfgMergeType } from "./JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 export { INotificationListener } from "./JavaScriptSDK.Interfaces/INotificationListener";
 export { ITelemetryPluginChain } from "./JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger";
 export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails } from "./JavaScriptSDK.Interfaces/IInstrumentHooks";
+export { IUnloadableComponent } from "./JavaScriptSDK.Interfaces/IUnloadableComponent";
 export { EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
+export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
+export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from "./JavaScriptSDK/BaseCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
-export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./JavaScriptSDK/RandomHelper";
+export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./JavaScriptSDK/RandomHelper";
 export {
-    CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, newId, generateW3CId,
-    disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr, addEventListeners, addPageUnloadEventListener,
-    addPageHideEventListener, addPageShowEventListener
+    CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, newGuid, perfNow, generateW3CId,
+    disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr
 } from "./JavaScriptSDK/CoreUtils";
 export {
-    isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName,
+    isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, normalizeJsName,
     objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf,
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
-    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, createClassFromInterface, optimizeObject, isNotUndefined, isNotNullOrUndefined,
-    objFreeze, objSeal
+    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
+    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, createEnumStyle, objExtend, objToString
 } from "./JavaScriptSDK/HelperFuncs";
+export {
+    attachEvent, detachEvent, addEventHandler, addEventListeners, addPageUnloadEventListener, addPageHideEventListener, addPageShowEventListener,
+    removeEventHandler, removeEventListeners, removePageUnloadEventListener, removePageHideEventListener, removePageShowEventListener, eventOn, eventOff,
+    mergeEvtNamespace, _IRegisteredEvents, __getRegisteredEvents
+} from "./JavaScriptSDK/EventHelpers";
+
 export {
     getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
@@ -47,10 +55,13 @@ export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationMa
 export { IPerfEvent } from "./JavaScriptSDK.Interfaces/IPerfEvent";
 export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/IPerfManager";
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
-export { safeGetLogger, DiagnosticLogger, _InternalLogMessage } from "./JavaScriptSDK/DiagnosticLogger";
-export { ProcessTelemetryContext } from "./JavaScriptSDK/ProcessTelemetryContext";
-export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
-export { _InternalMessageId, LoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
+export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal } from "./JavaScriptSDK/DiagnosticLogger";
+export {
+    ProcessTelemetryContext, createProcessTelemetryContext
+    // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
+} from "./JavaScriptSDK/ProcessTelemetryContext";
+export { initializePlugins, sortPlugins, unloadComponents } from "./JavaScriptSDK/TelemetryHelpers";
+export { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";
 export {
@@ -59,3 +70,8 @@ export {
 export { strIKey, strExtensionConfig } from "./JavaScriptSDK/Constants";
 export { IDbgExtension } from "./JavaScriptSDK.Interfaces/IDbgExtension";
 export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils"
+export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./JavaScriptSDK.Interfaces/ITelemetryInitializers";
+export { createUniqueNamespace } from "./JavaScriptSDK/DataCacheHelper";
+export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./JavaScriptSDK/UnloadHandlerContainer";
+export { ITelemetryUpdateState } from "./JavaScriptSDK.Interfaces/ITelemetryUpdateState";
+export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";

@@ -2,10 +2,10 @@
  * @copyright Microsoft 2021
  */
 
- /**
+/**
   * PerfMarkMeasure Configuration
   */
- export interface IPerfMarkMeasureConfiguration {
+export interface IPerfMarkMeasureConfiguration {
 
     /**
      * Should the Performance manager create and use window.performance.mark(), defaults to true

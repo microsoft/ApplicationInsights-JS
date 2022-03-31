@@ -8,7 +8,7 @@ import { expectedToString, stateToString } from "./DebugHelpers";
  * - Make them consistent with XUnit assertions in the order of the actual and expected parameter values.
  */
 export class Assert {
-   /**
+    /**
     * A deep recursive comparison assertion, working on primitive types, arrays, objects,
     * regular expressions, dates and functions.
     *
@@ -24,7 +24,7 @@ export class Assert {
         return QUnit.assert.deepEqual(actual, expected, message || expectedToString(expected));
     }
 
-   /**
+    /**
     * A non-strict comparison assertion, roughly equivalent to JUnit assertEquals.
     *
     * The equal assertion uses the simple comparison operator (==) to compare the actual
@@ -40,7 +40,7 @@ export class Assert {
         return QUnit.assert.equal(actual, expected, message || expectedToString(expected));
     }
 
-   /**
+    /**
     * An inverted deep recursive comparison assertion, working on primitive types,
     * arrays, objects, regular expressions, dates and functions.
     *
@@ -56,7 +56,7 @@ export class Assert {
         return QUnit.assert.notDeepEqual(actual, expected, message || expectedToString(expected));
     }
 
-   /**
+    /**
     * A non-strict comparison assertion, checking for inequality.
     *
     * The notEqual assertion uses the simple inverted comparison operator (!=) to compare
@@ -80,7 +80,7 @@ export class Assert {
         return QUnit.assert.propEqual(actual, expected, message || expectedToString(expected));
     }
 
-   /**
+    /**
     * A non-strict comparison assertion, checking for inequality.
     *
     * The notStrictEqual assertion uses the strict inverted comparison operator (!==)
@@ -96,7 +96,7 @@ export class Assert {
         return QUnit.assert.notStrictEqual(actual, expected, message || expectedToString(expected));
     }
 
-   /**
+    /**
     * A boolean assertion, equivalent to CommonJS's assert.ok() and JUnit's assertTrue().
     * Passes if the first argument is truthy.
     *
@@ -111,7 +111,7 @@ export class Assert {
         return QUnit.assert.ok(state, message || stateToString(state));
     }
 
-   /**
+    /**
     * A strict type and value comparison assertion.
     *
     * The strictEqual() assertion provides the most rigid comparison of type and value with
@@ -125,7 +125,7 @@ export class Assert {
         return QUnit.assert.strictEqual(actual, expected, message || expectedToString(expected));
     }
 
-   /**
+    /**
     * Assertion to test if a callback throws an exception when run.
     *
     * When testing code that is expected to throw an exception based on a specific set of
@@ -137,7 +137,7 @@ export class Assert {
     */
     public static throws(block: () => any, expected: any, message?: string): any;
 
-   /**
+    /**
     * @param block Function to execute
     * @param message A short description of the assertion
     */

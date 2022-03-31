@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 "use strict"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
-import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { hasJSON, getJSON, getConsole } from "./EnvUtils";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { getDebugExt } from "./DbgExtensionUtils";
+import { strEmpty } from "./InternalConstants";
 
 /**
  * For user non actionable traces use AI Internal prefix.
@@ -30,10 +31,10 @@ const strWarnToConsole = "warnToConsole";
 
 function _sanitizeDiagnosticText(text: string) {
     if (text) {
-        return "\"" + text.replace(/\"/g, "") + "\"";
+        return "\"" + text.replace(/\"/g, strEmpty) + "\"";
     }
 
-    return "";
+    return strEmpty;
 }
 
 function _logToConsole(func: string, message: string) {
@@ -64,14 +65,14 @@ export class _InternalLogMessage{
             (isUserAct ? AiUserActionablePrefix : AiNonUserActionablePrefix) +
             msgId;
 
-        let strProps:string = "";
+        let strProps:string = strEmpty;
         if (hasJSON()) {
             strProps = getJSON().stringify(properties);
         }
 
         const diagnosticText =
-            (msg ? " message:" + _sanitizeDiagnosticText(msg) : "") +
-            (properties ? " props:" + _sanitizeDiagnosticText(strProps) : "");
+            (msg ? " message:" + _sanitizeDiagnosticText(msg) : strEmpty) +
+            (properties ? " props:" + _sanitizeDiagnosticText(strProps) : strEmpty);
 
         _self.message += diagnosticText;
     }
@@ -125,7 +126,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     throw message;
                 } else {
                     // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
-                    let logFunc = severity === LoggingSeverity.CRITICAL ? strErrorToConsole : strWarnToConsole;
+                    let logFunc = severity === eLoggingSeverity.CRITICAL ? strErrorToConsole : strWarnToConsole;
 
                     if (!isUndefined(message.message)) {
                         const logLevel = _self.consoleLoggingLevel();
@@ -146,7 +147,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
                         _self.logInternalMessage(severity, message);
                     } else {
-                        _debugExtMsg("throw" + (severity === LoggingSeverity.CRITICAL ? "Critical" : "Warning"), message);
+                        _debugExtMsg("throw" + (severity === eLoggingSeverity.CRITICAL ? "Critical" : "Warning"), message);
                     }
                 }
             }
@@ -164,7 +165,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              * This will write an error to the console if possible
              * @param message {string} - The error message
              */
-             _self.errorToConsole = (message: string) => {
+            _self.errorToConsole = (message: string) => {
                 _logToConsole("error", message);
                 _debugExtMsg("error", message);
             }
@@ -203,15 +204,15 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     if (severity <= _self.telemetryLoggingLevel()) {
                         _self.queue.push(message);
                         _messageCount++;
-                        _debugExtMsg((severity === LoggingSeverity.CRITICAL ? "error" : "warn"), message);
+                        _debugExtMsg((severity === eLoggingSeverity.CRITICAL ? "error" : "warn"), message);
                     }
 
                     // When throttle limit reached, send a special event
                     if (_messageCount === _self.maxInternalMessageLimit()) {
                         const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
-                        const throttleMessage = new _InternalLogMessage(_InternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
+                        const throttleMessage = new _InternalLogMessage(_eInternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
                         _self.queue.push(throttleMessage);
-                        if (severity === LoggingSeverity.CRITICAL) {
+                        if (severity === eLoggingSeverity.CRITICAL) {
                             _self.errorToConsole(throttleLimitMessage);
                         } else {
                             _self.warnToConsole(throttleLimitMessage);
@@ -319,3 +320,17 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
+
+/**
+ * This is a helper method which will call throwInternal on the passed logger, will throw exceptions in
+ * debug mode or attempt to log the error as a console warning. This helper is provided mostly to better
+ * support minification as logger.throwInternal() will not compress the publish "throwInternal" used throughout
+ * the code.
+ * @param logger - The Diagnostic Logger instance to use.
+ * @param severity {LoggingSeverity} - The severity of the log message
+ * @param message {_InternalLogMessage} - The log message.
+ */
+export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
+    (logger || new DiagnosticLogger()).throwInternal(severity, msgId, msg, properties, isUserAct);
+}
+

@@ -23,7 +23,7 @@ export class PageVisitTimeManager {
         this._logger = logger;
     }
 
-   /**
+    /**
     * Tracks the previous page visit time telemetry (if exists) and starts timing of new page visit time
     * @param currentPageName Name of page to begin timing for visit duration
     * @param currentPageUrl Url of page to begin timing for visit duration
