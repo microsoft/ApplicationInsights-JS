@@ -9,8 +9,8 @@ export { parseConnectionString, ConnectionStringParser } from "./ConnectionStrin
 export { FieldType } from "./Enums";
 export { IRequestHeaders, RequestHeaders } from "./RequestResponseHeaders";
 export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, strNotSpecified } from "./Constants";
-export { Data as AIData } from "./Interfaces/Contracts/Generated/Data";
-export { Base as AIBase } from "./Interfaces/Contracts/Generated/Base";
+export { IData as AIData } from "./Interfaces/Contracts/IData";
+export { IBase as AIBase } from "./Interfaces/Contracts/IBase";
 export { ISerializable } from "./Interfaces/Telemetry/ISerializable";
 export { IEnvelope } from "./Interfaces/Telemetry/IEnvelope";
 export { Envelope } from "./Telemetry/Common/Envelope";
@@ -18,7 +18,7 @@ export { Event } from "./Telemetry/Event";
 export { Exception } from "./Telemetry/Exception";
 export { Metric } from "./Telemetry/Metric";
 export { PageView } from "./Telemetry/PageView";
-export { PageViewData } from "./Interfaces/Contracts/Generated/PageViewData";
+export { IPageViewData } from "./Interfaces/Contracts/IPageViewData";
 export { RemoteDependencyData } from "./Telemetry/RemoteDependencyData";
 export { IEventTelemetry } from "./Interfaces/IEventTelemetry";
 export { ITraceTelemetry } from "./Interfaces/ITraceTelemetry";
@@ -30,10 +30,10 @@ export { IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal } 
 export { Trace } from "./Telemetry/Trace";
 export { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 export { Data } from "./Telemetry/Common/Data";
-export { SeverityLevel } from "./Interfaces/Contracts/Generated/SeverityLevel";
+export { SeverityLevel } from "./Interfaces/Contracts/SeverityLevel";
 export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
 export { IChannelControlsAI } from "./Interfaces/IChannelControlsAI";
-export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/Generated/ContextTagKeys";
+export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
 export {
     DataSanitizerValues, IDataSanitizer, DataSanitizer,
     dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage,
