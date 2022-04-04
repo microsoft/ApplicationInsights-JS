@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { MessageData } from "../Interfaces/Contracts/Generated/MessageData";
+import { IMessageData } from "../Interfaces/Contracts/IMessageData";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { dataSanitizeMessage, dataSanitizeProperties, dataSanitizeMeasurements } from "./Common/DataSanitizer";
 import { FieldType } from "../Enums";
-import { SeverityLevel } from "../Interfaces/Contracts/Generated/SeverityLevel";
+import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
 import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 import { strNotSpecified } from "../Constants";
 
-export class Trace extends MessageData implements ISerializable {
+export class Trace implements IMessageData, ISerializable {
 
     public static envelopeType = "Microsoft.ApplicationInsights.{0}.Message";
     public static dataType = "MessageData";
@@ -22,17 +22,43 @@ export class Trace extends MessageData implements ISerializable {
     };
 
     /**
+     * Schema version
+     */
+    public ver: number; // = 2;
+
+    /**
+     * Trace message
+     */
+    public message: string;
+ 
+    /**
+     * Trace severity level.
+     */
+    public severityLevel: SeverityLevel;
+ 
+    /**
+     * Collection of custom properties.
+     */
+    public properties: any;
+ 
+    /**
+     * Collection of custom measurements.
+     */
+    public measurements: any;
+ 
+    /**
      * Constructs a new instance of the TraceTelemetry object
      */
     constructor(logger: IDiagnosticLogger, message: string, severityLevel?: SeverityLevel, properties?: any, measurements?: { [key: string]: number }) {
-        super();
+        let _self = this;
+        _self.ver = 2;
         message = message || strNotSpecified;
-        this.message = dataSanitizeMessage(logger, message);
-        this.properties = dataSanitizeProperties(logger, properties);
-        this.measurements = dataSanitizeMeasurements(logger, measurements);
+        _self.message = dataSanitizeMessage(logger, message);
+        _self.properties = dataSanitizeProperties(logger, properties);
+        _self.measurements = dataSanitizeMeasurements(logger, measurements);
 
         if (severityLevel) {
-            this.severityLevel = severityLevel;
+            _self.severityLevel = severityLevel;
         }
     }
 }
