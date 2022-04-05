@@ -10,7 +10,7 @@ import {
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext,
-    ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties, safeGetCookieMgr, ICookieMgr, arrForEach, proxyFunctions, IProcessTelemetryUnloadContext, ITelemetryUnloadState, isFunction, objDefineAccessors
+    ITelemetryPluginChain, _eInternalMessageId, eLoggingSeverity, ICustomProperties, safeGetCookieMgr, ICookieMgr, arrForEach, proxyFunctions, IProcessTelemetryUnloadContext, ITelemetryUnloadState, isFunction, objDefineAccessors, _throwInternal
 } from "@microsoft/applicationinsights-core-js";
 import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
 import { History, Location, Update } from "history";
@@ -91,8 +91,8 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
 
             function _getAnalytics() {
                 if (!_analyticsPlugin) {
-                    _self.diagLog().throwInternal(
-                        LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
+                    _throwInternal(_self.diagLog(),
+                        eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
                 }
 
                 return _analyticsPlugin;

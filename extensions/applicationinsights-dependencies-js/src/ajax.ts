@@ -7,7 +7,7 @@ import {
     IConfig, ITelemetryContext, PropertiesPluginIdentifier, eDistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint
 } from "@microsoft/applicationinsights-common";
 import {
-    isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
+    isNullOrUndefined, arrForEach, isString, strTrim, isFunction, eLoggingSeverity, _eInternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
     IInstrumentHooksCallbacks, objForEachKey, generateW3CId, getIEVersion, dumpObj, ICustomProperties, isXhrSupported, eventOn,
@@ -74,7 +74,7 @@ function _supportsAjaxMonitoring(ajaxMonitorInstance:AjaxMonitor): boolean {
             // We can't decorate the xhr object so disable monitoring
             result = false;
             _throwInternalCritical(ajaxMonitorInstance,
-                _InternalMessageId.FailedMonitorAjaxOpen,
+                _eInternalMessageId.FailedMonitorAjaxOpen,
                 "Failed to enable XMLHttpRequest monitoring, extension is not supported",
                 {
                     exception: dumpObj(e)
@@ -102,17 +102,17 @@ function _getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): stri
 }
 
 /** @ignore */
-function _throwInternalCritical(ajaxMonitorInstance:AjaxMonitor, msgId: _InternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
-    ajaxMonitorInstance[strDiagLog]()[strThrowInternal](LoggingSeverity.CRITICAL, msgId, message, properties, isUserAct);
+function _throwInternalCritical(ajaxMonitorInstance:AjaxMonitor, msgId: _eInternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
+    ajaxMonitorInstance[strDiagLog]()[strThrowInternal](eLoggingSeverity.CRITICAL, msgId, message, properties, isUserAct);
 }
 
 /** @ignore */
-function _throwInternalWarning(ajaxMonitorInstance:AjaxMonitor, msgId: _InternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
-    ajaxMonitorInstance[strDiagLog]()[strThrowInternal](LoggingSeverity.WARNING, msgId, message, properties, isUserAct);
+function _throwInternalWarning(ajaxMonitorInstance:AjaxMonitor, msgId: _eInternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
+    ajaxMonitorInstance[strDiagLog]()[strThrowInternal](eLoggingSeverity.WARNING, msgId, message, properties, isUserAct);
 }
 
 /** @Ignore */
-function _createErrorCallbackFunc(ajaxMonitorInstance:AjaxMonitor, internalMessage:_InternalMessageId, message:string) {
+function _createErrorCallbackFunc(ajaxMonitorInstance:AjaxMonitor, internalMessage: _eInternalMessageId, message:string) {
     // tslint:disable-next-line
     return function (args:IInstrumentCallDetails) {
         _throwInternalCritical(ajaxMonitorInstance,
@@ -340,7 +340,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _self.core.track(item);
                 } else if (_trackAjaxAttempts === _maxAjaxCallsPerView) {
                     _throwInternalCritical(_self,
-                        _InternalMessageId.MaxAjaxPerPVExceeded,
+                        _eInternalMessageId.MaxAjaxPerPVExceeded,
                         "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.",
                         true);
                 }
@@ -494,7 +494,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             }
                         },
                         // Create an error callback to report any hook errors
-                        hkErr: _createErrorCallbackFunc(_self, _InternalMessageId.FailedMonitorAjaxOpen,
+                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
                             "Failed to monitor Window.fetch, monitoring data for this fetch call may be incorrect.")
                     }));
 
@@ -546,7 +546,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 }
                             }
                         },
-                        hkErr: _createErrorCallbackFunc(_self, _InternalMessageId.FailedMonitorAjaxOpen,
+                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
                             "Failed to monitor XMLHttpRequest.open, monitoring data for this ajax call may be incorrect.")
                     });
 
@@ -565,7 +565,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 }
                             }
                         },
-                        hkErr: _createErrorCallbackFunc(_self, _InternalMessageId.FailedMonitorAjaxSend,
+                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxSend,
                             "Failed to monitor XMLHttpRequest, monitoring data for this ajax call may be incorrect.")
                     });
 
@@ -582,7 +582,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 }
                             }
                         },
-                        hkErr: _createErrorCallbackFunc(_self, _InternalMessageId.FailedMonitorAjaxAbort,
+                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxAbort,
                             "Failed to monitor XMLHttpRequest.abort, monitoring data for this ajax call may be incorrect.")
                     });
 
@@ -597,7 +597,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 }
                             }
                         },
-                        hkErr: _createErrorCallbackFunc(_self, _InternalMessageId.FailedMonitorAjaxSetRequestHeader,
+                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
                             "Failed to monitor XMLHttpRequest.setRequestHeader, monitoring data for this ajax call may be incorrect.")
                     });
 
@@ -708,7 +708,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         // ignore messages with c00c023f, as this a known IE9 XHR abort issue
                         if (!exceptionText || _indexOf(exceptionText.toLowerCase(), "c00c023f") === -1) {
                             _throwInternalCritical(_self,
-                                _InternalMessageId.FailedMonitorAjaxRSC,
+                                _eInternalMessageId.FailedMonitorAjaxRSC,
                                 "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.",
                                 {
                                     ajaxDiagnosticsMessage: _getFailedAjaxDiagnosticsMessage(xhr),
@@ -746,7 +746,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     }
 
                     _throwInternalWarning(_self,
-                        _InternalMessageId.FailedMonitorAjaxDur,
+                        _eInternalMessageId.FailedMonitorAjaxDur,
                         "Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.",
                         errorProps
                     );
@@ -794,7 +794,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             }
                         } catch (e) {
                             _throwInternalWarning(_self,
-                                _InternalMessageId.FailedAddingCustomDefinedRequestContext,
+                                _eInternalMessageId.FailedAddingCustomDefinedRequestContext,
                                 "Failed to add custom defined request context as configured call back may missing a null check.")
                         }
 
@@ -834,7 +834,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     }
                 } catch (e) {
                     _throwInternalWarning(_self,
-                        _InternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
+                        _eInternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
                         "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.",
                         {
                             ajaxDiagnosticsMessage: _getFailedAjaxDiagnosticsMessage(xhr),
@@ -972,7 +972,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     }
                 } catch (e) {
                     _throwInternalCritical(_self,
-                        _InternalMessageId.FailedMonitorAjaxOpen,
+                        _eInternalMessageId.FailedMonitorAjaxOpen,
                         "Failed to grab failed fetch diagnostics message",
                         { exception: dumpObj(e) }
                     );
@@ -985,7 +985,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     return;
                 }
 
-                function _reportFetchError(msgId: _InternalMessageId, e: any, failedProps?:Object) {
+                function _reportFetchError(msgId: _eInternalMessageId, e: any, failedProps?:Object) {
                     let errorProps = failedProps||{};
                     errorProps["fetchDiagnosticsMessage"] = _getFailedFetchDiagnosticsMessage(input);
                     if (e) {
@@ -1011,7 +1011,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         }
                     } catch (e) {
                         _throwInternalWarning(_self,
-                            _InternalMessageId.FailedAddingCustomDefinedRequestContext,
+                            _eInternalMessageId.FailedAddingCustomDefinedRequestContext,
                             "Failed to add custom defined request context as configured call back may missing a null check.")
                     }
                     
@@ -1021,14 +1021,14 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         }
                         _self[strTrackDependencyDataInternal](dependency);
                     } else {
-                        _reportFetchError(_InternalMessageId.FailedMonitorAjaxDur, null,
+                        _reportFetchError(_eInternalMessageId.FailedMonitorAjaxDur, null,
                             {
                                 requestSentTime: ajaxData.requestSentTime,
                                 responseFinishedTime: ajaxData.responseFinishedTime
                             });
                     }
                 }, (e) => {
-                    _reportFetchError(_InternalMessageId.FailedMonitorAjaxGetCorrelationHeader, e, null);
+                    _reportFetchError(_eInternalMessageId.FailedMonitorAjaxGetCorrelationHeader, e, null);
                 });
             }
 
@@ -1039,7 +1039,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         return CorrelationIdHelper.getCorrelationContext(responseHeader);
                     } catch (e) {
                         _throwInternalWarning(_self,
-                            _InternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
+                            _eInternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
                             "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.",
                             {
                                 fetchDiagnosticsMessage: _getFailedFetchDiagnosticsMessage(response),

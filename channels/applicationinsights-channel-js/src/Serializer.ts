@@ -1,6 +1,6 @@
 ﻿import { ISerializable, FieldType } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, objForEachKey, isFunction, isObject, isArray
+    IDiagnosticLogger, eLoggingSeverity, _eInternalMessageId, getJSON, objForEachKey, isFunction, isObject, isArray, _throwInternal
 } from "@microsoft/applicationinsights-core-js";
 import dynamicProto from "@microsoft/dynamicproto-js"
 
@@ -17,7 +17,7 @@ export class Serializer {
                     return getJSON().stringify(output);
                 } catch (e) {
                     // if serialization fails return an empty string
-                    logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
+                    _throwInternal(logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSerializeObject, (e && isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
                 }
             }
 
@@ -26,12 +26,12 @@ export class Serializer {
                 let output = {};
 
                 if (!source) {
-                    logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, "cannot serialize object because it is null or undefined", { name }, true);
+                    _throwInternal(logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSerializeObject, "cannot serialize object because it is null or undefined", { name }, true);
                     return output;
                 }
 
                 if (source[circularReferenceCheck]) {
-                    logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CircularReferenceDetected, "Circular reference detected while serializing object", { name }, true);
+                    _throwInternal(logger, eLoggingSeverity.WARNING, _eInternalMessageId.CircularReferenceDetected, "Circular reference detected while serializing object", { name }, true);
                     return output;
                 }
 
@@ -46,7 +46,7 @@ export class Serializer {
                     } else if (isArray(source)) {
                         output = _serializeArray(source as any, name);
                     } else {
-                        logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "Attempting to serialize an object which does not implement ISerializable", { name }, true);
+                        _throwInternal(logger, eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "Attempting to serialize an object which does not implement ISerializable", { name }, true);
 
                         try {
                             // verify that the object can be stringified
@@ -54,7 +54,7 @@ export class Serializer {
                             output = source;
                         } catch (e) {
                             // if serialization fails return an empty string
-                            logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
+                            _throwInternal(logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSerializeObject, (e && isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
                         }
                     }
 
@@ -71,9 +71,9 @@ export class Serializer {
                     const isObj = isObject(source[field]) && source[field] !== null;
 
                     if (isRequired && !isPresent && !isArray) {
-                        logger.throwInternal(
-                            LoggingSeverity.CRITICAL,
-                            _InternalMessageId.MissingRequiredFieldSpecification,
+                        _throwInternal(logger,
+                            eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.MissingRequiredFieldSpecification,
                             "Missing required field specification. The field is required but not present on source",
                             { field, name });
 
@@ -109,9 +109,9 @@ export class Serializer {
 
                 if (!!sources) {
                     if (!isArray(sources)) {
-                        logger.throwInternal(
-                            LoggingSeverity.CRITICAL,
-                            _InternalMessageId.ItemNotInArray,
+                        _throwInternal(logger,
+                            eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.ItemNotInArray,
                             "This field was specified as an array in the contract but the item is not an array.\r\n",
                             { name }, true);
                     } else {
@@ -157,7 +157,7 @@ export class Serializer {
                             }
                         } else {
                             output[field] = "invalid field: " + name + " is of unknown type.";
-                            logger.throwInternal(LoggingSeverity.CRITICAL, output[field], null, true);
+                            _throwInternal(logger, eLoggingSeverity.CRITICAL, output[field], null, true);
                         }
                     });
                 }

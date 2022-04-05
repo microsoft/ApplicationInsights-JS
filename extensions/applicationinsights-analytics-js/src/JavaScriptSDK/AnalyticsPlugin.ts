@@ -15,7 +15,7 @@ import {
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
-    LoggingSeverity, _InternalMessageId, ICustomProperties,
+    eLoggingSeverity, _eInternalMessageId, ICustomProperties,
     getWindow, getDocument, getHistory, getLocation, objForEachKey,
     isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, ICookieMgr, safeGetCookieMgr,
     TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentFunc, IInstrumentCallDetails, eventOn, eventOff,
@@ -172,8 +172,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                     _self.core.track(telemetryItem);
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.WARNING,
-                        _InternalMessageId.TrackTraceFailed,
+                    _throwInternal(eLoggingSeverity.WARNING,
+                        _eInternalMessageId.TrackTraceFailed,
                         "trackTrace failed, trace will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -187,8 +187,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     _eventTracking.start(name);
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.CRITICAL,
-                        _InternalMessageId.StartTrackEventFailed,
+                    _throwInternal(eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.StartTrackEventFailed,
                         "startTrackEvent failed, event will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -204,8 +204,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     _eventTracking.stop(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.CRITICAL,
-                        _InternalMessageId.StopTrackEventFailed,
+                    _throwInternal(eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.StopTrackEventFailed,
                         "stopTrackEvent failed, event will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -228,8 +228,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
                     _self.core.track(telemetryItem);
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.WARNING,
-                        _InternalMessageId.TrackTraceFailed,
+                    _throwInternal(eLoggingSeverity.WARNING,
+                        _eInternalMessageId.TrackTraceFailed,
                         "trackTrace failed, trace will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -258,8 +258,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
                     _self.core.track(telemetryItem);
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.CRITICAL,
-                        _InternalMessageId.TrackMetricFailed,
+                    _throwInternal(eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackMetricFailed,
                         "trackMetric failed, metric will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -281,8 +281,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.TrackPVFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackPVFailed,
                         "trackPageView failed, page view will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -343,8 +343,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.sendPageViewPerformanceInternal(inPvp, customProperties);
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.TrackPVFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackPVFailed,
                         "trackPageViewPerformance failed, page view will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -366,8 +366,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _pageTracking.start(name);
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.StartTrackFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.StartTrackFailed,
                         "startTrackPage failed, page view may not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -400,8 +400,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.StopTrackFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.StopTrackFailed,
                         "stopTrackPage failed, page view will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -453,8 +453,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.sendExceptionInternal(exception, customProperties);
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.TrackExceptionFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackExceptionFailed,
                         "trackException failed, exception will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -508,8 +508,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     const errorString = error ? (error.name + ", " + error.message) : "null";
         
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.ExceptionWhileLoggingError,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.ExceptionWhileLoggingError,
                         "_onError threw exception while logging error, error will not be collected: "
                         + getExceptionName(e),
                         { exception: dumpObj(e), errorString }
@@ -839,7 +839,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param severity {LoggingSeverity} - The severity of the log message
              * @param message {_InternalLogMessage} - The log message.
              */
-            function _throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void {
+            function _throwInternal(severity: eLoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void {
                 _self.diagLog().throwInternal(severity, msgId, msg, properties, isUserAct);
             }
 

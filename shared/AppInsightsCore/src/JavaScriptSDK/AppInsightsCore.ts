@@ -5,7 +5,7 @@ import { BaseCore } from "./BaseCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { EventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
+import { eEventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { NotificationManager } from "./NotificationManager";
 import { doPerf } from "./PerfManager";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
@@ -13,8 +13,6 @@ import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger
 import { DiagnosticLogger } from "./DiagnosticLogger";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { isNullOrUndefined, throwError } from "./HelperFuncs";
-
-"use strict";
 
 export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
     constructor() {
@@ -51,7 +49,7 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
             function _notifyInvalidEvent(telemetryItem: ITelemetryItem): void {
                 let manager = _self.getNotifyMgr();
                 if (manager) {
-                    manager.eventsDiscarded([telemetryItem], EventsDiscardedReason.InvalidEvent);
+                    manager.eventsDiscarded([telemetryItem], eEventsDiscardedReason.InvalidEvent);
                 }
             }
         });

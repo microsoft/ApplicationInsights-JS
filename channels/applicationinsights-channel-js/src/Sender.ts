@@ -15,11 +15,11 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
-    _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
+    _eInternalMessageId, eLoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
     SendRequestReason, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, objKeys,
     isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported, isArray, createUniqueNamespace, mergeEvtNamespace,
-    IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal, throwError
+    IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal, _warnToConsole
 } from "@microsoft/applicationinsights-core-js";
 import { createOfflineListener, IOfflineListener } from "./Offline";
 import { Sample } from "./TelemetryProcessors/Sample"
@@ -172,8 +172,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     try {
                         _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                     } catch (e) {
-                        _throwInternal(_self.diagLog(),LoggingSeverity.CRITICAL,
-                            _InternalMessageId.FlushFailed,
+                        _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.FlushFailed,
                             "flush failed, telemetry will not be collected: " + getExceptionName(e),
                             { exception: dumpObj(e) });
                     }
@@ -186,8 +186,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         try {
                             _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
                         } catch (e) {
-                            _throwInternal(_self.diagLog(),LoggingSeverity.CRITICAL,
-                                _InternalMessageId.FailedToSendQueuedTelemetry,
+                            _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
+                                _eInternalMessageId.FailedToSendQueuedTelemetry,
                                 "failed to flush with beacon sender on page unload, telemetry will not be collected: " + getExceptionName(e),
                                 { exception: dumpObj(e) });
                         }
@@ -203,7 +203,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
                 if (_self.isInitialized()) {
-                    _throwInternal(_self.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender is already initialized");
+                    _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender is already initialized");
                 }
                 
                 _base.initialize(config, core, extensions, pluginChain);
@@ -230,8 +230,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 
                 if(!_validateInstrumentationKey(config)) {
                     _throwInternal(diagLog,
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key "+config.instrumentationKey);
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key "+config.instrumentationKey);
                 }
 
                 if (!isInternalApplicationInsightsEndpoint(_self._senderConfig.endpointUrl()) && _self._senderConfig.customHeaders() && _self._senderConfig.customHeaders().length > 0) {
@@ -289,13 +289,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     // validate input
                     if (!telemetryItem) {
-                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
                         return;
                     }
         
                     // validate event
                     if (telemetryItem.baseData && !telemetryItem.baseType) {
-                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
                         return;
                     }
         
@@ -306,14 +306,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     // ensure a sender was constructed
                     if (!_self._sender) {
-                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender was not initialized");
                         return;
                     }
                   
                     // check if this item should be sampled in, else add sampleRate tag
                     if (!_isSampledIn(telemetryItem)) {
                         // Item is sampled out, do not send it
-                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
+                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
                             "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
                         return;
                     } else {
@@ -326,7 +326,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     let defaultEnvelopeIkey = telemetryItem.iKey || _self._senderConfig.instrumentationKey();
                     let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, itemCtx.diagLog(), convertUndefined);
                     if (!aiEnvelope) {
-                        _throwInternal(itemCtx.diagLog(), LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
                     }
         
@@ -337,13 +337,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             try {
                                 if (callBack && callBack(aiEnvelope) === false) {
                                     doNotSendItem = true;
-                                    itemCtx.diagLog().warnToConsole("Telemetry processor check returns false");
+                                    _warnToConsole(itemCtx.diagLog(), "Telemetry processor check returns false");
                                 }
                             } catch (e) {
                                 // log error but dont stop executing rest of the telemetry initializers
                                 // doNotSendItem = true;
                                 _throwInternal(itemCtx.diagLog(),
-                                    LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
+                                    eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
                                     { exception: dumpObj(e) }, true);
                             }
                         });
@@ -373,8 +373,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                 } catch (e) {
                     _throwInternal(itemCtx.diagLog(),
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.FailedAddingTelemetryToBuffer,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.FailedAddingTelemetryToBuffer,
                         "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -430,8 +430,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         let ieVer = getIEVersion();
                         if (!ieVer || ieVer > 9) {
                             _throwInternal(_self.diagLog(),
-                                LoggingSeverity.CRITICAL,
-                                _InternalMessageId.TransmissionFailed,
+                                eLoggingSeverity.CRITICAL,
+                                _eInternalMessageId.TransmissionFailed,
                                 "Telemetry transmission failed, some telemetry will be lost: " + getExceptionName(e),
                                 { exception: dumpObj(e) });
                         }
@@ -450,8 +450,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              */
             _self._onError = (payload: string[], message: string, event?: ErrorEvent) => {
                 _throwInternal(_self.diagLog(),
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.OnError,
+                    eLoggingSeverity.WARNING,
+                    _eInternalMessageId.OnError,
                     "Failed to send telemetry.",
                     { message });
         
@@ -489,8 +489,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _resendPayload(retry);
         
                     _throwInternal(_self.diagLog(),
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.TransmissionFailed, "Partial success. " +
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.TransmissionFailed, "Partial success. " +
                         "Delivered: " + payload.length + ", Failed: " + failed.length +
                         ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
                 }
@@ -551,8 +551,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     if (!_self._senderConfig.isRetryDisabled() && _isRetriable(status)) {
                         _resendPayload(payload);
                         _throwInternal(_self.diagLog(),
-                            LoggingSeverity.WARNING,
-                            _InternalMessageId.TransmissionFailed, ". " +
+                            eLoggingSeverity.WARNING,
+                            _eInternalMessageId.TransmissionFailed, ". " +
                             "Response code " + status + ". Will retry to send " + payload.length + " items.");
                     } else {
                         _self._onError(payload, errorMessage);
@@ -564,8 +564,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         _resendPayload(payload, offlineBackOffMultiplier);
     
                         _throwInternal(_self.diagLog(),
-                            LoggingSeverity.WARNING,
-                            _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${!_offlineListener.isOnline()}. Will retry to send ${payload.length} items.`);
+                            eLoggingSeverity.WARNING,
+                            _eInternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${!_offlineListener.isOnline()}. Will retry to send ${payload.length} items.`);
                     }
                 } else {
 
@@ -661,7 +661,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     
                         if (droppedPayload.length > 0) {
                             _fallbackSender && _fallbackSender(droppedPayload, true);
-                            _throwInternal(_self.diagLog(),LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
+                            _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                         }
                     }
                 }
@@ -718,7 +718,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     } else {
                         // Payload is going to be too big so just try and send via XHR
                         _fallbackSender && _fallbackSender(payload, true);
-                        _throwInternal(_self.diagLog(),LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
+                        _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
                     }
                 }
             }
@@ -844,8 +844,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
                 } catch (e) {
                     _throwInternal(_self.diagLog(),
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.InvalidBackendResponse,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.InvalidBackendResponse,
                         "Cannot parse the response. " + getExceptionName(e),
                         {
                             response
@@ -964,8 +964,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 const hostingProtocol = _window && _window.location && _window.location.protocol || "";
                 if (_self._senderConfig.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
                     _throwInternal(_self.diagLog(),
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.TransmissionFailed, ". " +
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.TransmissionFailed, ". " +
                         "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
         
                     buffer.clear();
@@ -1007,8 +1007,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     try {
                         manager.eventsSendRequest(sendRequest, isAsync);
                     } catch (e) {
-                        _throwInternal(_self.diagLog(),LoggingSeverity.CRITICAL,
-                            _InternalMessageId.NotificationException,
+                        _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.NotificationException,
                             "send request notification failed: " + getExceptionName(e),
                             { exception: dumpObj(e) });
                     }
