@@ -4,7 +4,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ITelemetryConfig } from "../Interfaces/ITelemetryConfig";
 import { utlRemoveStorage, IUserContext } from "@microsoft/applicationinsights-common";
-import { _InternalMessageId, LoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, safeGetLogger, newId, toISOString } from "@microsoft/applicationinsights-core-js";
+import { _eInternalMessageId, eLoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, safeGetLogger, newId, toISOString, _throwInternal } from "@microsoft/applicationinsights-core-js";
 
 
 function _validateUserInput(id: string): boolean {
@@ -147,9 +147,9 @@ export class User implements IUserContext {
                 // Validate inputs to ensure no cookie control characters.
                 const isInvalidInput = !_validateUserInput(authenticatedUserId) || (accountId && !_validateUserInput(accountId));
                 if (isInvalidInput) {
-                    _logger.throwInternal(
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.SetAuthContextFailedAccountName,
+                    _throwInternal(_logger,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.SetAuthContextFailedAccountName,
                         "Setting auth user context failed. " +
                         "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.",
                         true);

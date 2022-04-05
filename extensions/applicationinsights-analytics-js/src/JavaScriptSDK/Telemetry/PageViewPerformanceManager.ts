@@ -5,8 +5,8 @@ import {
     IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeSpan
 } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, getNavigator, getPerformance
+    IAppInsightsCore, IDiagnosticLogger, eLoggingSeverity,
+    _eInternalMessageId, getNavigator, getPerformance, _throwInternal
 } from "@microsoft/applicationinsights-core-js";
 
 /**
@@ -74,26 +74,28 @@ export class PageViewPerformanceManager {
                 dom = dateTimeUtilsDuration(timing.responseEnd, timing.loadEventEnd);
             }
 
+            let logger = this._logger;
+
             if (total === 0) {
-                this._logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.ErrorPVCalc,
+                _throwInternal(logger,
+                    eLoggingSeverity.WARNING,
+                    _eInternalMessageId.ErrorPVCalc,
                     "error calculating page view performance.",
                     { total, network, request, response, dom });
 
             } else if (!this.shouldCollectDuration(total, network, request, response, dom)) {
-                this._logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.InvalidDurationValue,
+                _throwInternal(logger,
+                    eLoggingSeverity.WARNING,
+                    _eInternalMessageId.InvalidDurationValue,
                     "Invalid page load duration value. Browser perf data won't be sent.",
                     { total, network, request, response, dom });
 
             } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                 // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
                 // in this case, don't report client performance from this page
-                this._logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.ClientPerformanceMathError,
+                _throwInternal(logger,
+                    eLoggingSeverity.WARNING,
+                    _eInternalMessageId.ClientPerformanceMathError,
                     "client performance math error.",
                     { total, network, request, response, dom });
 

@@ -6,9 +6,9 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     removeInvalidElements,
     walkUpDomChainWithElementValidation,
-    extend, _ExtendedInternalMessageId, isValueAssigned
+    extend, isValueAssigned
 } from "../common/Utils";
-import { IDiagnosticLogger, LoggingSeverity, getDocument, isNullOrUndefined, hasDocument, IProcessTelemetryUnloadContext, ITelemetryUnloadState} from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, eLoggingSeverity, getDocument, isNullOrUndefined, hasDocument, _throwInternal, _eInternalMessageId } from "@microsoft/applicationinsights-core-js";
 import { IClickAnalyticsConfiguration, IContent, IContentHandler } from "../Interfaces/Datamodel";
 
 const MAX_CONTENTNAME_LENGTH = 200;
@@ -56,9 +56,9 @@ export class DomContentHandler implements IContentHandler {
                         try {
                             elementContent = JSON.parse(biBlobValue);
                         } catch (e) {
-                            _self._traceLogger.throwInternal(
-                                LoggingSeverity.CRITICAL,
-                                _ExtendedInternalMessageId.CannotParseAiBlobValue, "Can not parse " + biBlobValue
+                            _throwInternal(_self._traceLogger,
+                                eLoggingSeverity.CRITICAL,
+                                _eInternalMessageId.CannotParseAiBlobValue, "Can not parse " + biBlobValue
                             );
                         }
                     } else {
@@ -168,9 +168,9 @@ export class DomContentHandler implements IContentHandler {
                 // requiring these fields would result in majority of adopter's content from being collected.
                 // Just throw a warning and continue collection.
                 if (!elementContent.id && !elementContent.contentName) {
-                    _traceLogger.throwInternal(
-                        LoggingSeverity.WARNING,
-                        _ExtendedInternalMessageId.InvalidContentBlob, "Invalid content blob.  Missing required attributes (id, contentName. " +
+                    _throwInternal(_traceLogger,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.InvalidContentBlob, "Invalid content blob.  Missing required attributes (id, contentName. " +
                         " Content information will still be collected!"
                     )
                 }
@@ -210,9 +210,9 @@ export class DomContentHandler implements IContentHandler {
                 // requiring these fields would result in majority of adopter's content from being collected.
                 // Just throw a warning and continue collection.
                 if (!elementContent.id && !elementContent.contentName) {
-                    _traceLogger.throwInternal(
-                        LoggingSeverity.WARNING,
-                        _ExtendedInternalMessageId.InvalidContentBlob, "Invalid content blob.  Missing required attributes (id, contentName. " +
+                    _throwInternal(_traceLogger,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.InvalidContentBlob, "Invalid content blob.  Missing required attributes (id, contentName. " +
                         " Content information will still be collected!"
                     )
                 }
@@ -349,9 +349,9 @@ export class DomContentHandler implements IContentHandler {
                         try {
                             var telemetryObject = JSON.parse(dataAttr);
                         } catch (e) {
-                            _traceLogger.throwInternal(
-                                LoggingSeverity.CRITICAL,
-                                _ExtendedInternalMessageId.CannotParseAiBlobValue, "Can not parse " + dataAttr
+                            _throwInternal(_traceLogger,
+                                eLoggingSeverity.CRITICAL,
+                                _eInternalMessageId.CannotParseAiBlobValue, "Can not parse " + dataAttr
                             );
                         }
                         if (telemetryObject) {

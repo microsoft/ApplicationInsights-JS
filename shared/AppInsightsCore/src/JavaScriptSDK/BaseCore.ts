@@ -22,7 +22,7 @@ import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
 import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction, objFreeze, proxyFunctionAs, proxyFunctions } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
-import { DiagnosticLogger, _InternalLogMessage, _throwInternal } from "./DiagnosticLogger";
+import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
 import { getDebugListener } from "./DbgExtensionUtils";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ChannelControllerPriority, createChannelControllerPlugin, createChannelQueues, IChannelController, IInternalChannelController, _IInternalChannels } from "./ChannelController";
@@ -71,7 +71,7 @@ function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number,
 
         if (ext && extPriority) {
             if (!isNullOrUndefined(extPriorities[extPriority])) {
-                logger.warnToConsole("Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
+                _warnToConsole(logger, "Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
             } else {
                 // set a value
                 extPriorities[extPriority] = identifier;

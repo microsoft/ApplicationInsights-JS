@@ -5,7 +5,7 @@ import { IPageViewPerfData } from "../Interfaces/Contracts/IPageViewPerfData";
 import { FieldType } from "../Enums";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from "./Common/DataSanitizer";
-import { IDiagnosticLogger, _InternalMessageId } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 import { IPageViewPerformanceTelemetry } from "../Interfaces/IPageViewPerformanceTelemetry";
 import { strNotSpecified } from "../Constants";
 

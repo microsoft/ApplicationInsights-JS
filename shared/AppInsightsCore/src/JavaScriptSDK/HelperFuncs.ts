@@ -781,9 +781,18 @@ export function proxyAssign<T, S>(target: T, source: S, chkSet?: (name: string, 
     return target;
 }
 
-export function proxyFunctionAs<T, S>(target: T, name: string, source: S | (() => S), theFunc: (keyof S), overwriteTarget: boolean = true) {
+/**
+ * Creates a proxy function on the target which internally will call the source version with all arguments passed to the target method.
+ *
+ * @param target - The target object to be assigned with the source properties and functions
+ * @param name - The function name that will be added on the target
+ * @param source - The source object which will be assigned / called by setting / calling the targets proxies
+ * @param theFunc - The function name on the source that will be proxied on the target
+ * @param overwriteTarget - If `false` this will not replace any pre-existing name otherwise (the default) it will overwrite any existing name
+ */
+export function proxyFunctionAs<T, S>(target: T, name: string, source: S | (() => S), theFunc: (keyof S), overwriteTarget?: boolean) {
     if (target && name && source) {
-        if (overwriteTarget || isUndefined(target[name])) {
+        if (overwriteTarget !== false || isUndefined(target[name])) {
             (target as any)[name] = _createProxyFunction(source, theFunc);
         }
     }
@@ -795,8 +804,9 @@ export function proxyFunctionAs<T, S>(target: T, name: string, source: S | (() =
  * @param target - The target object to be assigned with the source properties and functions
  * @param source - The source object which will be assigned / called by setting / calling the targets proxies
  * @param functionsToProxy - An array of function names that will be proxied on the target
+ * @param overwriteTarget - If false this will not replace any pre-existing name otherwise (the default) it will overwrite any existing name
  */
-export function proxyFunctions<T, S>(target: T, source: S | (() => S), functionsToProxy: (keyof S)[], overwriteTarget: boolean = true) {
+export function proxyFunctions<T, S>(target: T, source: S | (() => S), functionsToProxy: (keyof S)[], overwriteTarget?: boolean) {
     if (target && source && isObject(target) && isArray(functionsToProxy)) {
         arrForEach(functionsToProxy, (theFuncName) => {
             if (isString(theFuncName)) {
@@ -823,25 +833,6 @@ export function createClassFromInterface<T>(defaults?: T) {
             }
         }
     } as new () => T;
-}
-
-/**
- * Create an enum style object which has both the key => value and value => key mappings
- * @param values - The values to populate on the new object
- * @returns
- */
-export function createEnumStyle<T>(values: T) {
-    let enumClass: any = {};
-    objForEachKey(values, (field, value) => {
-        enumClass[field] = value;
-        // Add Reverse lookup
-        if (!isUndefined(enumClass[value])) {
-            throwError("[" + value + "] exists for " + field);
-        }
-        enumClass[value] = field;
-    });
-
-    return objFreeze(enumClass as T);
 }
 
 /**

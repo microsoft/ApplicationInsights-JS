@@ -4,8 +4,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction,
-    newId, dumpObj, getExceptionName, dateNow, safeGetLogger
+    IDiagnosticLogger, _eInternalMessageId, eLoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction,
+    newId, dumpObj, getExceptionName, dateNow, safeGetLogger, _throwInternal
 } from "@microsoft/applicationinsights-core-js";
 
 const cookieNameConst = "ai_session";
@@ -168,12 +168,14 @@ export class _SessionManager {
                         const acqMs = +tokens[1] || 0;
                         const renewalMs = +tokens[2] || 0;
                         if (isNaN(acqMs) || acqMs <= 0) {
-                            _logger.throwInternal(LoggingSeverity.WARNING,
-                                _InternalMessageId.SessionRenewalDateIsZero,
+                            _throwInternal(_logger,
+                                eLoggingSeverity.WARNING,
+                                _eInternalMessageId.SessionRenewalDateIsZero,
                                 "AI session acquisition date is 0" + sessionReset);
                         } else if (isNaN(renewalMs) || renewalMs <= 0) {
-                            _logger.throwInternal(LoggingSeverity.WARNING,
-                                _InternalMessageId.SessionRenewalDateIsZero,
+                            _throwInternal(_logger,
+                                eLoggingSeverity.WARNING,
+                                _eInternalMessageId.SessionRenewalDateIsZero,
                                 "AI session renewal date is 0" + sessionReset);
                         } else if (tokens[0]) {
                             // Everything looks valid so set the values
@@ -183,8 +185,9 @@ export class _SessionManager {
                             isValid = true;
                         }
                     } catch (e) {
-                        _logger.throwInternal(LoggingSeverity.CRITICAL,
-                            _InternalMessageId.ErrorParsingAISessionCookie,
+                        _throwInternal(_logger,
+                            eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.ErrorParsingAISessionCookie,
                             "Error parsing ai_session value [" + (sessionData || "") + "]" + sessionReset + " - " + getExceptionName(e),
                             { exception: dumpObj(e) });
                     }
@@ -203,8 +206,9 @@ export class _SessionManager {
         
                 // If this browser does not support local storage, fire an internal log to keep track of it at this point
                 if (!utlCanUseLocalStorage()) {
-                    _logger.throwInternal(LoggingSeverity.WARNING,
-                        _InternalMessageId.BrowserDoesNotSupportLocalStorage,
+                    _throwInternal(_logger,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.BrowserDoesNotSupportLocalStorage,
                         "Browser does not support local storage. Session durations will be inaccurate.");
                 }
             }

@@ -4,9 +4,9 @@
  */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { ITelemetryItem, IProcessTelemetryContext, IAppInsightsCore, IDiagnosticLogger, isString, objKeys, hasWindow, _InternalLogMessage, setValue, getSetValue, isObject, isArray } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IProcessTelemetryContext, IAppInsightsCore, isString, objKeys, hasWindow, _InternalLogMessage, setValue, getSetValue } from "@microsoft/applicationinsights-core-js";
 import { Session, _SessionManager } from "./Context/Session";
-import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys, PageView, IApplication, IDevice, ILocation, IUser, IUserContext, IInternal, ISession } from "@microsoft/applicationinsights-common";
+import { Extensions, IOperatingSystem, ITelemetryTrace, IWeb, CtxTagKeys, PageView, IApplication, IDevice, ILocation, IUserContext, IInternal, ISession } from "@microsoft/applicationinsights-common";
 import { Application } from "./Context/Application";
 import { Device } from "./Context/Device";
 import { Internal } from "./Context/Internal";

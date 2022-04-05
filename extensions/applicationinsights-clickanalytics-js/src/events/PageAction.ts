@@ -5,9 +5,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { WebEvent } from "./WebEvent";
 import * as DataCollector from "../DataCollector";
-import { ITelemetryItem, getPerformance, ICustomProperties, LoggingSeverity, objForEachKey, IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState } from "@microsoft/applicationinsights-core-js"
+import { ITelemetryItem, getPerformance, ICustomProperties, eLoggingSeverity, _eInternalMessageId, objForEachKey, IDiagnosticLogger, _throwInternal } from "@microsoft/applicationinsights-core-js"
 import { IClickAnalyticsConfiguration, IContentHandler, IPageActionOverrideValues, IPageActionTelemetry } from "../Interfaces/Datamodel";
-import { extractFieldFromObject, bracketIt, isValueAssigned, extend, _ExtendedInternalMessageId } from "../common/Utils";
+import { extractFieldFromObject, bracketIt, isValueAssigned, extend  } from "../common/Utils";
 import { strNotSpecified } from "@microsoft/applicationinsights-common";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
 
@@ -98,9 +98,9 @@ export class PageAction extends WebEvent {
                     // requiring these fields would result in majority of adopter's content from being collected.
                     // Just throw a warning and continue collection.
                     if (!isValueAssigned(elementContent.id) && !isValueAssigned(elementContent.contentName)) {
-                        _self._traceLogger.throwInternal(
-                            LoggingSeverity.WARNING,
-                            _ExtendedInternalMessageId.InvalidContentBlob, "Missing attributes id or contentName in click event. Click event information will still be collected!"
+                        _throwInternal(_self._traceLogger,
+                            eLoggingSeverity.WARNING,
+                            _eInternalMessageId.InvalidContentBlob, "Missing attributes id or contentName in click event. Click event information will still be collected!"
                         );
                     }
                 }

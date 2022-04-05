@@ -3,7 +3,7 @@
 
 import {
     BaseTelemetryPlugin, IConfiguration, arrForEach,
-    IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, _InternalMessageId,
+    IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage,
     ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls,
     objForEachKey, isFunction, dateNow, isArray, isUndefined, getDebugExt
 } from "@microsoft/applicationinsights-core-js";
