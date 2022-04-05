@@ -30,11 +30,11 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
         if (isNullOrUndefined(getGlobal())) {
             return null;
         }
-        let uid = new Date;
+        let uid = (new Date).toString();
         let storage: Storage = getGlobalInst(storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage");
-        storage.setItem(uid.toString(), uid.toString());
-        let fail = storage.getItem(uid.toString()) !== uid.toString();
-        storage.removeItem(uid.toString());
+        storage.setItem(uid, uid);
+        let fail = storage.getItem(uid) !== uid;
+        storage.removeItem(uid);
         if (!fail) {
             return storage;
         }

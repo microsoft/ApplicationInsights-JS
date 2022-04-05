@@ -2,25 +2,24 @@
 // Licensed under the MIT License.
 
 import {
-    RequestHeaders, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
+    RequestHeaders, CorrelationIdHelper, createTelemetryItem, ICorrelationConfig,
     RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
-    IConfig, ITelemetryContext, PropertiesPluginIdentifier, eDistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint
+    IConfig, ITelemetryContext, PropertiesPluginIdentifier, eDistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint,
+    eRequestHeaders, formatTraceParent, createTraceParent
 } from "@microsoft/applicationinsights-common";
 import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, eLoggingSeverity, _eInternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
     IInstrumentHooksCallbacks, objForEachKey, generateW3CId, getIEVersion, dumpObj, ICustomProperties, isXhrSupported, eventOn,
-    mergeEvtNamespace, createUniqueNamespace, createProcessTelemetryContext
+    mergeEvtNamespace, createUniqueNamespace, createProcessTelemetryContext, _throwInternal
 } from "@microsoft/applicationinsights-core-js";
 import { ajaxRecord, IAjaxRecordResponse } from "./ajaxRecord";
-import { Traceparent } from "./TraceParent";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
 const strAjaxData = "ajaxData";
-const strThrowInternal = "throwInternal";
 const strFetch = "fetch";
 const strTrackDependencyDataInternal = "trackDependencyDataInternal"; // Using string to help with minification
 
@@ -103,12 +102,12 @@ function _getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): stri
 
 /** @ignore */
 function _throwInternalCritical(ajaxMonitorInstance:AjaxMonitor, msgId: _eInternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
-    ajaxMonitorInstance[strDiagLog]()[strThrowInternal](eLoggingSeverity.CRITICAL, msgId, message, properties, isUserAct);
+    _throwInternal(ajaxMonitorInstance[strDiagLog](), eLoggingSeverity.CRITICAL, msgId, message, properties, isUserAct);
 }
 
 /** @ignore */
 function _throwInternalWarning(ajaxMonitorInstance:AjaxMonitor, msgId: _eInternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
-    ajaxMonitorInstance[strDiagLog]()[strThrowInternal](eLoggingSeverity.WARNING, msgId, message, properties, isUserAct);
+    _throwInternal(ajaxMonitorInstance[strDiagLog](), eLoggingSeverity.WARNING, msgId, message, properties, isUserAct);
 }
 
 /** @Ignore */
@@ -262,23 +261,23 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
                         if (_isUsingAIHeaders) {
                             const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
-                            init.headers.set(RequestHeaders.requestIdHeader, id);
+                            init.headers.set(RequestHeaders[eRequestHeaders.requestIdHeader], id);
                             if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders.requestIdHeader] = id;
+                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
                             }
                         }
                         const appId: string = _config.appId ||(_context && _context.appId());
                         if (appId) {
-                            init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
+                            init.headers.set(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
                             if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders.requestContextHeader] = RequestHeaders.requestContextAppIdFormat + appId;
+                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestContextHeader]] = RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId;
                             }
                         }
                         if (_isUsingW3CHeaders) {
-                            const traceparent = new Traceparent(ajaxData.traceID, ajaxData.spanID);
-                            init.headers.set(RequestHeaders.traceParentHeader, traceparent.toString());
+                            const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, 0x01));
+                            init.headers.set(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
                             if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders.traceParentHeader] = traceparent.toString();
+                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
                             }
                         }
                     }
@@ -288,23 +287,23 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     if (CorrelationIdHelper.canIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (_isUsingAIHeaders) {
                             const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
-                            xhr.setRequestHeader(RequestHeaders.requestIdHeader, id);
+                            xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestIdHeader], id);
                             if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders.requestIdHeader] = id;
+                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
                             }
                         }
                         const appId = _config.appId || (_context && _context.appId());
                         if (appId) {
-                            xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
+                            xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
                             if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders.requestContextHeader] = RequestHeaders.requestContextAppIdFormat + appId;
+                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestContextHeader]] = RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId;
                             }
                         }
                         if (_isUsingW3CHeaders) {
-                            const traceparent = new Traceparent(ajaxData.traceID, ajaxData.spanID);
-                            xhr.setRequestHeader(RequestHeaders.traceParentHeader, traceparent.toString());
+                            const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, 0x01));
+                            xhr.setRequestHeader(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
                             if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders.traceParentHeader] = traceparent.toString();
+                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
                             }
                         }
                     }
@@ -329,7 +328,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     if (isNullOrUndefined(dependency.startTime)) {
                         dependency.startTime = new Date();
                     }
-                    const item = TelemetryItemCreator.create<IDependencyTelemetry>(
+                    const item = createTelemetryItem<IDependencyTelemetry>(
                         dependency,
                         RemoteDependencyData.dataType,
                         RemoteDependencyData.envelopeType,
@@ -826,9 +825,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 try {
                     const responseHeadersString = xhr.getAllResponseHeaders();
                     if (responseHeadersString !== null) {
-                        const index = _indexOf(responseHeadersString.toLowerCase(), RequestHeaders.requestContextHeaderLowerCase);
+                        const index = _indexOf(responseHeadersString.toLowerCase(), RequestHeaders[eRequestHeaders.requestContextHeaderLowerCase]);
                         if (index !== -1) {
-                            const responseHeader = xhr.getResponseHeader(RequestHeaders.requestContextHeader);
+                            const responseHeader = xhr.getResponseHeader(RequestHeaders[eRequestHeaders.requestContextHeader]);
                             return CorrelationIdHelper.getCorrelationContext(responseHeader);
                         }
                     }
@@ -1035,7 +1034,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             function _getFetchCorrelationContext(response: Response): string {
                 if (response && response.headers) {
                     try {
-                        const responseHeader: string = response.headers.get(RequestHeaders.requestContextHeader);
+                        const responseHeader: string = response.headers.get(RequestHeaders[eRequestHeaders.requestContextHeader]);
                         return CorrelationIdHelper.getCorrelationContext(responseHeader);
                     } catch (e) {
                         _throwInternalWarning(_self,
