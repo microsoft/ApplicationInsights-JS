@@ -1,5 +1,5 @@
 ﻿import { utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, arrForEach, isFunction, arrIndexOf, isString, dumpObj, isArray, getExceptionName } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, eLoggingSeverity, _eInternalMessageId, getJSON, arrForEach, isFunction, arrIndexOf, isString, dumpObj, isArray, getExceptionName, _throwInternal } from "@microsoft/applicationinsights-core-js";
 import { ISenderConfig } from "./Interfaces";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -70,9 +70,9 @@ abstract class BaseSendBuffer {
                 if (_self.count() >= config.eventsLimitInMem()) {
                     // sent internal log only once per page view
                     if (!_bufferFullMessageSent) {
-                        logger.throwInternal(
-                            LoggingSeverity.WARNING,
-                            _InternalMessageId.InMemoryStorageBufferFull,
+                        _throwInternal(logger,
+                            eLoggingSeverity.WARNING,
+                            _eInternalMessageId.InMemoryStorageBufferFull,
                             "Maximum in-memory buffer size reached: " + _self.count(),
                             true);
                         _bufferFullMessageSent = true;
@@ -214,9 +214,9 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 if (_self.count() >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                     // sent internal log only once per page view
                     if (!_bufferFullMessageSent) {
-                        logger.throwInternal(
-                            LoggingSeverity.WARNING,
-                            _InternalMessageId.SessionStorageBufferFull,
+                        _throwInternal(logger,
+                            eLoggingSeverity.WARNING,
+                            _eInternalMessageId.SessionStorageBufferFull,
                             "Maximum buffer size reached: " + _self.count(),
                             true);
                         _bufferFullMessageSent = true;
@@ -248,9 +248,9 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                     if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                         // We send telemetry normally. If the SENT_BUFFER is too big we don't add new elements
                         // until we receive a response from the backend and the buffer has free space again (see clearSent method)
-                        logger.throwInternal(
-                            LoggingSeverity.CRITICAL,
-                            _InternalMessageId.SessionStorageBufferFull,
+                        _throwInternal(logger,
+                            eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.SessionStorageBufferFull,
                             "Sent buffer reached its maximum size: " + sentElements.length,
                             true);
         
@@ -297,8 +297,8 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                         }
                     }
                 } catch (e) {
-                    logger.throwInternal(LoggingSeverity.CRITICAL,
-                        _InternalMessageId.FailedToRestoreStorageBuffer,
+                    _throwInternal(logger, eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.FailedToRestoreStorageBuffer,
                         " storage key: " + prefixedKey + ", " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -317,8 +317,8 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                     // telemetry is stored in the _buffer array so we won't loose any items
                     utlSetSessionStorage(logger, prefixedKey, JSON.stringify([]));
         
-                    logger.throwInternal(LoggingSeverity.WARNING,
-                        _InternalMessageId.FailedToSetStorageBuffer,
+                    _throwInternal(logger, eLoggingSeverity.WARNING,
+                        _eInternalMessageId.FailedToSetStorageBuffer,
                         " storage key: " + prefixedKey + ", " + getExceptionName(e) + ". Buffer cleared",
                         { exception: dumpObj(e) });
                 }

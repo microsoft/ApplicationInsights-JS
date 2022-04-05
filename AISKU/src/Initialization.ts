@@ -3,11 +3,11 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties,
+    IConfiguration, AppInsightsCore, IAppInsightsCore, eLoggingSeverity, _eInternalMessageId, ITelemetryItem, ICustomProperties,
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign, proxyFunctions,
     arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener, addPageHideEventListener,
     createUniqueNamespace, ITelemetryPlugin, IPlugin, ILoadedPlugin, UnloadHandler, removePageUnloadEventListener, removePageHideEventListener,
-    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace
+    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal
 } from "@microsoft/applicationinsights-core-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -303,7 +303,7 @@ export class Initialization implements IApplicationInsights {
         
                     // need from core
                     // Microsoft.ApplicationInsights._InternalLogging.throwInternal(
-                    //     LoggingSeverity.WARNING,
+                    //     eLoggingSeverity.WARNING,
                     //     _InternalMessageId.FailedToSendQueuedTelemetry,
                     //     "Failed to send queued telemetry",
                     //     properties);
@@ -359,9 +359,9 @@ export class Initialization implements IApplicationInsights {
                         // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
                         // log the failure in this case
                         if (!added && !isReactNative()) {
-                            appInsightsInstance.appInsights.core.logger.throwInternal(
-                                LoggingSeverity.CRITICAL,
-                                _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
+                            _throwInternal(appInsightsInstance.appInsights.core.logger,
+                                eLoggingSeverity.CRITICAL,
+                                _eInternalMessageId.FailedToAddHandlerForOnBeforeUnload,
                                 "Could not add handler for beforeunload and pagehide");
                         }
                     }

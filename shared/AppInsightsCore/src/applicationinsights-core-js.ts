@@ -11,7 +11,7 @@ export { ITelemetryPluginChain } from "./JavaScriptSDK.Interfaces/ITelemetryPlug
 export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger";
 export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails } from "./JavaScriptSDK.Interfaces/IInstrumentHooks";
 export { IUnloadableComponent } from "./JavaScriptSDK.Interfaces/IUnloadableComponent";
-export { EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
+export { eEventsDiscardedReason, EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
@@ -28,8 +28,9 @@ export {
     objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf,
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
     setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
-    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, createEnumStyle, objExtend, objToString
+    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, objExtend, objToString
 } from "./JavaScriptSDK/HelperFuncs";
+export { EnumValue, createEnumStyle, EnumMap, createEnumMap, createValueMap } from "./JavaScriptSDK.Enums/EnumHelperFuncs";
 export {
     attachEvent, detachEvent, addEventHandler, addEventListeners, addPageUnloadEventListener, addPageHideEventListener, addPageShowEventListener,
     removeEventHandler, removeEventListeners, removePageUnloadEventListener, removePageHideEventListener, removePageShowEventListener, eventOn, eventOff,
@@ -55,7 +56,7 @@ export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationMa
 export { IPerfEvent } from "./JavaScriptSDK.Interfaces/IPerfEvent";
 export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/IPerfManager";
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
-export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal } from "./JavaScriptSDK/DiagnosticLogger";
+export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole, _logInternalMessage } from "./JavaScriptSDK/DiagnosticLogger";
 export {
     ProcessTelemetryContext, createProcessTelemetryContext
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally

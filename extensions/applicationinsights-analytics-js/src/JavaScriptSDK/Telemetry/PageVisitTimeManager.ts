@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { utlCanUseSessionStorage, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, hasJSON, getJSON, dateNow, dumpObj, throwError } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, hasJSON, getJSON, dateNow, dumpObj, throwError, _warnToConsole } from "@microsoft/applicationinsights-core-js";
 
 /**
  * Used to track page visit durations
@@ -39,7 +39,7 @@ export class PageVisitTimeManager {
                 this.pageVisitTimeTrackingHandler(prevPageVisitTimeData.pageName, prevPageVisitTimeData.pageUrl, prevPageVisitTimeData.pageVisitTime);
             }
         } catch (e) {
-            this._logger.warnToConsole("Auto track page visit time failed, metric will not be collected: " + dumpObj(e));
+            _warnToConsole(this._logger, "Auto track page visit time failed, metric will not be collected: " + dumpObj(e));
         }
     }
 
@@ -55,7 +55,7 @@ export class PageVisitTimeManager {
 
             return prevPageVisitData;
         } catch (e) {
-            this._logger.warnToConsole("Call to restart failed: " + dumpObj(e));
+            _warnToConsole(this._logger, "Call to restart failed: " + dumpObj(e));
             return null;
         }
     }
@@ -78,7 +78,7 @@ export class PageVisitTimeManager {
             }
         } catch (e) {
             // TODO: Remove this catch in next phase, since if start is called twice in a row the exception needs to be propagated out
-            this._logger.warnToConsole("Call to start failed: " + dumpObj(e));
+            _warnToConsole(this._logger, "Call to start failed: " + dumpObj(e));
         }
     }
 
@@ -113,7 +113,7 @@ export class PageVisitTimeManager {
             }
             return null;
         } catch (e) {
-            this._logger.warnToConsole("Stop page visit timer failed: " + dumpObj(e));
+            _warnToConsole(this._logger, "Stop page visit timer failed: " + dumpObj(e));
             return null;
         }
     }

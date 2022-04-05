@@ -3,7 +3,10 @@
  */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument, isNullOrUndefined, attachEvent, IProcessTelemetryUnloadContext, ITelemetryUnloadState, mergeEvtNamespace, createUniqueNamespace, eventOn, removePageHideEventListener, removePageUnloadEventListener, eventOff } from "@microsoft/applicationinsights-core-js";
+import {
+    IDiagnosticLogger, getWindow, getDocument, isNullOrUndefined, IProcessTelemetryUnloadContext, ITelemetryUnloadState,
+    mergeEvtNamespace, createUniqueNamespace, eventOn, eventOff
+} from "@microsoft/applicationinsights-core-js";
 import { IAutoCaptureHandler, IPageActionOverrideValues, IClickAnalyticsConfiguration } from "../Interfaces/Datamodel"
 import { isRightClick, isLeftClick, isKeyboardEnter, isKeyboardSpace, isMiddleClick, isElementDnt } from "../common/Utils";
 import { ActionType } from "../Enums";

@@ -6,8 +6,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, IConfiguration, isNullOrUndefined,
-    IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, LoggingSeverity, _InternalMessageId, getNavigator,
-    ITelemetryPluginChain, objForEachKey, getSetValue
+    IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, eLoggingSeverity, _eInternalMessageId, getNavigator,
+    ITelemetryPluginChain, objForEachKey, getSetValue, _logInternalMessage
 } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from "./TelemetryContext";
 import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName } from "@microsoft/applicationinsights-common";
@@ -101,8 +101,8 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
     
                     if (userCtx && userCtx.isNewUser) {
                         userCtx.isNewUser = false;
-                        const message = new _InternalLogMessage(_InternalMessageId.SendBrowserInfoOnUserInit, ((getNavigator()||{} as any).userAgent||""));
-                        itemCtx.diagLog().logInternalMessage(LoggingSeverity.CRITICAL, message);
+                        const message = new _InternalLogMessage(_eInternalMessageId.SendBrowserInfoOnUserInit, ((getNavigator()||{} as any).userAgent||""));
+                        _logInternalMessage(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, message);
                     }
     
                     _self.processNext(event, itemCtx);

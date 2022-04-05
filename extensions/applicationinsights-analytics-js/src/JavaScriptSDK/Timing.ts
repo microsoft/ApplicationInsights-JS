@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { dateTimeUtilsDuration } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, _throwInternal } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, eLoggingSeverity, _eInternalMessageId, _throwInternal } from "@microsoft/applicationinsights-core-js";
 
 /**
  * Used to record timed events and page views.
@@ -20,7 +20,7 @@ export class Timing {
         _self.start = (name: string) => {
             if (typeof _events[name] !== "undefined") {
                 _throwInternal(logger,
-                    LoggingSeverity.WARNING, _InternalMessageId.StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
+                    eLoggingSeverity.WARNING, _eInternalMessageId.StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
                     { name, key: name }, true);
             }
     
@@ -31,7 +31,7 @@ export class Timing {
             const start = _events[name];
             if (isNaN(start)) {
                 _throwInternal(logger,
-                    LoggingSeverity.WARNING, _InternalMessageId.StopCalledWithoutStart, "stop was called without a corresponding start.",
+                    eLoggingSeverity.WARNING, _eInternalMessageId.StopCalledWithoutStart, "stop was called without a corresponding start.",
                     { name, key: name }, true);
             } else {
                 const end = +new Date;

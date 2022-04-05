@@ -5,8 +5,8 @@ import {
     dateTimeUtilsDuration, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
 } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, getDocument, getLocation, arrForEach, isNullOrUndefined, getExceptionName, dumpObj, IProcessTelemetryUnloadContext, ITelemetryUnloadState
+    IAppInsightsCore, IDiagnosticLogger, eLoggingSeverity,
+    _eInternalMessageId, getDocument, getLocation, arrForEach, isNullOrUndefined, getExceptionName, dumpObj, IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 import dynamicProto from "@microsoft/dynamicproto-js";
@@ -100,9 +100,9 @@ export class PageViewManager {
                     _flushChannels(true);
         
                     // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
-                    _logger.throwInternal(
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.NavigationTimingNotSupported,
+                    _throwInternal(_logger,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.NavigationTimingNotSupported,
                         "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
         
                     return;
@@ -196,9 +196,9 @@ export class PageViewManager {
                             }
                         }
                     } catch (e) {
-                        _logger.throwInternal(
-                            LoggingSeverity.CRITICAL,
-                            _InternalMessageId.TrackPVFailedCalc,
+                        _throwInternal(_logger,
+                            eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.TrackPVFailedCalc,
                             "trackPageView failed on page load calculation: " + getExceptionName(e),
                             { exception: dumpObj(e) });
                     }
