@@ -192,6 +192,7 @@ export {
 } from "@microsoft/applicationinsights-core-js";
 export {
     SeverityLevel,
+    eSeverityLevel,
     IPageViewTelemetry,
     IDependencyTelemetry,
     IAutoExceptionTelemetry,

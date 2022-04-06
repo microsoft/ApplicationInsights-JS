@@ -22,7 +22,7 @@ import {
     ITelemetryUnloadState,
     _throwInternal, _warnToConsole
 } from "@microsoft/applicationinsights-core-js";
-import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from "@microsoft/applicationinsights-common";
+import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, eSeverityLevel, AnalyticsPluginIdentifier  } from "@microsoft/applicationinsights-common";
 import DeviceInfo from "react-native-device-info";
 
 import { INativeDevice, IReactNativePluginConfig } from "./Interfaces";
@@ -190,7 +190,7 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
 
             // default global error handler syntax: handleError(e, isFatal)
             function _trackException(e, isFatal) {
-                const exception: IExceptionTelemetry = { exception: e, severityLevel: SeverityLevel.Error };
+                const exception: IExceptionTelemetry = { exception: e, severityLevel: eSeverityLevel.Error };
 
                 if (_analyticsPlugin) {
                     _analyticsPlugin.trackException(exception);

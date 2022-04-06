@@ -51,6 +51,7 @@ export {
     IEventTelemetry,
     IAppInsights,
     SeverityLevel,
+    eSeverityLevel,
     Event,
     Exception,
     Metric,

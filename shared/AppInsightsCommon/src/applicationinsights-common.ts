@@ -7,7 +7,7 @@ export {
 } from "./Util";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
 export { FieldType } from "./Enums";
-export { IRequestHeaders, RequestHeaders } from "./RequestResponseHeaders";
+export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
 export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, strNotSpecified } from "./Constants";
 export { IData as AIData } from "./Interfaces/Contracts/IData";
 export { IBase as AIBase } from "./Interfaces/Contracts/IBase";
@@ -30,7 +30,7 @@ export { IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal } 
 export { Trace } from "./Telemetry/Trace";
 export { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 export { Data } from "./Telemetry/Common/Data";
-export { SeverityLevel } from "./Interfaces/Contracts/SeverityLevel";
+export { eSeverityLevel, SeverityLevel } from "./Interfaces/Contracts/SeverityLevel";
 export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
 export { IChannelControlsAI } from "./Interfaces/IChannelControlsAI";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
@@ -40,7 +40,7 @@ export {
     dataSanitizeException, dataSanitizeProperties, dataSanitizeMeasurements, dataSanitizeId, dataSanitizeInput,
     dsPadNumber
 } from "./Telemetry/Common/DataSanitizer";
-export { TelemetryItemCreator } from "./TelemetryItemCreator";
+export { TelemetryItemCreator, createTelemetryItem } from "./TelemetryItemCreator";
 export { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 export { IAppInsights } from "./Interfaces/IAppInsights";
 export { IWeb } from "./Interfaces/Context/IWeb";
@@ -66,6 +66,11 @@ export {
     utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage
 } from "./StorageHelperFuncs";
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./UrlHelperFuncs";
+export { ITraceParent } from "./Interfaces/ITraceParent";
+export {
+    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
+} from "./W3cTraceParent";
+
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
 export const AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";
