@@ -171,7 +171,7 @@ export interface IConfig {
     enableSessionStorageBuffer?: boolean;
 
     /**
-     * @deprecated Use either disableCookiesUsage or specify a cookieMgrCfg with the enabled value set.
+     * @deprecated Use either disableCookiesUsage or specify a cookieCfg with the enabled value set.
      * If true, the SDK will not store or read any data from cookies. Default is false. As this field is being deprecated, when both
      * isCookieUseDisabled and disableCookiesUsage are used disableCookiesUsage will take precedent.
      * @defaultValue false
@@ -180,7 +180,7 @@ export interface IConfig {
 
     /**
      * If true, the SDK will not store or read any data from cookies. Default is false.
-     * If you have also specified a cookieMgrCfg then enabled property (if specified) will take precedent over this value.
+     * If you have also specified a cookieCfg then enabled property (if specified) will take precedent over this value.
      * @defaultValue false
      */
     disableCookiesUsage?: boolean;
@@ -196,13 +196,6 @@ export interface IConfig {
      * @defaultValue ""
      */
     cookiePath?: string;
-
-    /**
-     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie
-     * operations. If this configuration is specified any specified enabled and domain properties will take precedence over the
-     * cookieDomain and disableCookiesUsage values.
-     */
-    cookieMgrCfg?: ICookieMgrConfig;
 
     /**
      * Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected)

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import {
-    _InternalMessageId, IDiagnosticLogger, IPlugin, getPerformance,
+    IDiagnosticLogger, IPlugin, getPerformance,
     getExceptionName as coreGetExceptionName, dumpObj,
     isNullOrUndefined, strTrim, random32, isArray, isError, isDate,
     newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent,
@@ -11,7 +11,7 @@ import {
     setCookie as coreSetCookie, deleteCookie as coreDeleteCookie,
     isBeaconsSupported
 } from "@microsoft/applicationinsights-core-js";
-import { RequestHeaders } from "./RequestResponseHeaders";
+import { eRequestHeaders, RequestHeaders } from "./RequestResponseHeaders";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 import { createDomEvent } from "./DomHelperFuncs";
@@ -393,7 +393,7 @@ export const CorrelationIdHelper: ICorrelationIdHelper = {
      */
     getCorrelationContext(responseHeader: string) {
         if (responseHeader) {
-            const correlationId = CorrelationIdHelper.getCorrelationContextValue(responseHeader, RequestHeaders.requestContextTargetKey);
+            const correlationId = CorrelationIdHelper.getCorrelationContextValue(responseHeader, RequestHeaders[eRequestHeaders.requestContextTargetKey]);
             if (correlationId && correlationId !== CorrelationIdHelper.correlationIdPrefix) {
                 return correlationId;
             }

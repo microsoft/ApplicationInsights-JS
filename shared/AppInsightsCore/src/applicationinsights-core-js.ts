@@ -28,7 +28,7 @@ export {
     objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf,
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
     setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
-    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, objExtend, objToString
+    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, objExtend, objToString, deepFreeze
 } from "./JavaScriptSDK/HelperFuncs";
 export { EnumValue, createEnumStyle, EnumMap, createEnumMap, createValueMap } from "./JavaScriptSDK.Enums/EnumHelperFuncs";
 export {

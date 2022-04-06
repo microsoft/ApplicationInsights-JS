@@ -5,7 +5,7 @@
 
 import {
     IConfig, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
-    TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
+    createTelemetryItem, Metric, Exception, eSeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
     IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault, createDomEvent,
@@ -162,7 +162,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
             _self.trackEvent = (event: IEventTelemetry, customProperties?: ICustomProperties): void => {
                 try {
-                    let telemetryItem = TelemetryItemCreator.create<IEventTelemetry>(
+                    let telemetryItem = createTelemetryItem<IEventTelemetry>(
                         event,
                         EventTelemetry.dataType,
                         EventTelemetry.envelopeType,
@@ -219,7 +219,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              */
             _self.trackTrace = (trace: ITraceTelemetry, customProperties?: ICustomProperties): void => {
                 try {
-                    let telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
+                    let telemetryItem = createTelemetryItem<ITraceTelemetry>(
                         trace,
                         Trace.dataType,
                         Trace.envelopeType,
@@ -248,7 +248,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              */
             _self.trackMetric = (metric: IMetricTelemetry, customProperties?: ICustomProperties): void => {
                 try {
-                    let telemetryItem = TelemetryItemCreator.create<IMetricTelemetry>(
+                    let telemetryItem = createTelemetryItem<IMetricTelemetry>(
                         metric,
                         Metric.dataType,
                         Metric.envelopeType,
@@ -300,7 +300,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
         
-                let telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
+                let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,
                     PageView.dataType,
                     PageView.envelopeType,
@@ -320,7 +320,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param properties
              */
             _self.sendPageViewPerformanceInternal = (pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
-                let telemetryItem = TelemetryItemCreator.create<IPageViewPerformanceTelemetryInternal>(
+                let telemetryItem = createTelemetryItem<IPageViewPerformanceTelemetryInternal>(
                     pageViewPerformance,
                     PageViewPerformance.dataType,
                     PageViewPerformance.envelopeType,
@@ -424,7 +424,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     exception.id
                 ).toInterface();
         
-                let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionInternal>(
+                let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
                     exceptionPartB,
                     Exception.dataType,
                     Exception.envelopeType,
@@ -502,7 +502,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         if (!exception.errorSrc) {
                             exception.errorSrc = errorSrc;
                         }
-                        _self.trackException({ exception, severityLevel: SeverityLevel.Error }, properties);
+                        _self.trackException({ exception, severityLevel: eSeverityLevel.Error }, properties);
                     }
                 } catch (e) {
                     const errorString = error ? (error.name + ", " + error.message) : "null";
@@ -677,7 +677,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             }
 
             function _sendCORSException(exception: IAutoExceptionTelemetry, properties?: ICustomProperties) {
-                let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IAutoExceptionTelemetry>(
+                let telemetryItem: ITelemetryItem = createTelemetryItem<IAutoExceptionTelemetry>(
                     exception,
                     Exception.dataType,
                     Exception.envelopeType,
