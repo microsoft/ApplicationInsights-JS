@@ -11,7 +11,9 @@ export { ITelemetryPluginChain } from "./JavaScriptSDK.Interfaces/ITelemetryPlug
 export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger";
 export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails } from "./JavaScriptSDK.Interfaces/IInstrumentHooks";
 export { IUnloadableComponent } from "./JavaScriptSDK.Interfaces/IUnloadableComponent";
+export { eConfigEnum, ConfigEnum } from "./JavaScriptSDK.Enums/ConfigEnums";
 export { eEventsDiscardedReason, EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
+export { eSdkCoreNames, SdkCoreNames } from "./JavaScriptSDK.Enums/SdkCoreNames";
 export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
@@ -68,7 +70,6 @@ export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookie
 export {
     createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported
 } from "./JavaScriptSDK/CookieMgr";
-export { strIKey, strExtensionConfig } from "./JavaScriptSDK/Constants";
 export { IDbgExtension } from "./JavaScriptSDK.Interfaces/IDbgExtension";
 export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils"
 export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./JavaScriptSDK.Interfaces/ITelemetryInitializers";
@@ -76,3 +77,5 @@ export { createUniqueNamespace } from "./JavaScriptSDK/DataCacheHelper";
 export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./JavaScriptSDK/UnloadHandlerContainer";
 export { ITelemetryUpdateState } from "./JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+export { ConfigDefault, ConfigValue, ConfigFieldValidator, ConfigDefaults, IMappedConfig } from "./JavaScriptSDK.Interfaces/IMappedConfig";
+export { getMappedConfig, getCfgValue, setCfgValue } from "./JavaScriptSDK/MappedConfig";

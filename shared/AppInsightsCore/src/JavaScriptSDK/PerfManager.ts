@@ -1,13 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
-
-import dynamicProto from "@microsoft/dynamicproto-js";
 import { dateNow, isArray, isFunction, objDefineAccessors } from "./HelperFuncs";
 
 const strExecutionContextKey = "ctx";
+const strGetCtx = "getCtx";
+const strSetCtx = "setCtx";
+const strParentContextKey = "ParentContextKey";
+const strChildrenContextKey = "ChildrenContextKey";
+const strGetPerfMgr = "getPerfMgr";
 
 let _defaultPerfManager: IPerfManager = null;
 
@@ -82,10 +86,10 @@ export class PerfEvent implements IPerfEvent {
             });
         }
 
-        _self.getCtx = (key: string): any | null | undefined => {
+        _self[strGetCtx] = (key: string): any | null | undefined => {
             if (key) {
                 // The parent and child links are located directly on the object (for better viewing in the DebugPlugin)
-                if (key === PerfEvent.ParentContextKey || key === PerfEvent.ChildrenContextKey) {
+                if (key === PerfEvent[strParentContextKey] || key === PerfEvent[strChildrenContextKey]) {
                     return _self[key];
                 }
 
@@ -95,16 +99,16 @@ export class PerfEvent implements IPerfEvent {
             return null;
         };
 
-        _self.setCtx = (key: string, value: any) => {
+        _self[strSetCtx] = (key: string, value: any) => {
             if (key) {
                 // Put the parent and child links directly on the object (for better viewing in the DebugPlugin)
-                if (key === PerfEvent.ParentContextKey) {
+                if (key === PerfEvent[strParentContextKey]) {
                     // Simple assumption, if we are setting a parent then we must be a child
                     if (!_self[key]) {
                         _self.isChildEvt = (): boolean => true;
                     }
                     _self[key] = value;
-                } else if (key === PerfEvent.ChildrenContextKey) {
+                } else if (key === PerfEvent[strChildrenContextKey]) {
                     _self[key] = value;
                 } else {
                     let ctx = _self[strExecutionContextKey] = _self[strExecutionContextKey] || {};
@@ -115,7 +119,7 @@ export class PerfEvent implements IPerfEvent {
 
         _self.complete = () => {
             let childTime = 0;
-            let childEvts = _self.getCtx(PerfEvent.ChildrenContextKey);
+            let childEvts = _self[strGetCtx](PerfEvent[strChildrenContextKey]);
             if (isArray<IPerfEvent>(childEvts)) {
                 for (let lp = 0; lp < childEvts.length; lp++) {
                     let childEvt: IPerfEvent = childEvts[lp];
@@ -163,14 +167,14 @@ export class PerfManager implements IPerfManager  {
                 }
             };
 
-            _self.setCtx = (key: string, value: any): void => {
+            _self[strSetCtx] = (key: string, value: any): void => {
                 if (key) {
                     let ctx = _self[strExecutionContextKey] = _self[strExecutionContextKey] || {};
                     ctx[key] = value;
                 }
             };
         
-            _self.getCtx = (key: string): any => {
+            _self[strGetCtx] = (key: string): any => {
                 return (_self[strExecutionContextKey] || {})[key];
             };
         });
@@ -227,24 +231,24 @@ const doPerfActiveKey = "CoreUtils.doPerf";
 export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSource: () => string, func: (perfEvt?: IPerfEvent) => T, details?: () => any, isAsync?: boolean) {
     if (mgrSource) {
         let perfMgr: IPerfManager = mgrSource as IPerfManager;
-        if (isFunction(perfMgr["getPerfMgr"])) {
+        if (perfMgr[strGetPerfMgr]) {
             // Looks like a perf manager provider object
-            perfMgr = perfMgr["getPerfMgr"]();
+            perfMgr = perfMgr[strGetPerfMgr]();
         }
         
         if (perfMgr) {
             let perfEvt: IPerfEvent;
-            let currentActive: IPerfEvent = perfMgr.getCtx(doPerfActiveKey);
+            let currentActive: IPerfEvent = perfMgr[strGetCtx](doPerfActiveKey);
             try {
                 perfEvt = perfMgr.create(getSource(), details, isAsync);
                 if (perfEvt) {
-                    if (currentActive && perfEvt.setCtx) {
-                        perfEvt.setCtx(PerfEvent.ParentContextKey, currentActive);
-                        if (currentActive.getCtx && currentActive.setCtx) {
-                            let children: IPerfEvent[] = currentActive.getCtx(PerfEvent.ChildrenContextKey);
+                    if (currentActive && perfEvt[strSetCtx]) {
+                        perfEvt[strSetCtx](PerfEvent[strParentContextKey], currentActive);
+                        if (currentActive[strGetCtx] && currentActive[strSetCtx]) {
+                            let children: IPerfEvent[] = currentActive[strGetCtx](PerfEvent[strChildrenContextKey]);
                             if (!children) {
                                 children = [];
-                                currentActive.setCtx(PerfEvent.ChildrenContextKey, children);
+                                currentActive[strSetCtx](PerfEvent[strChildrenContextKey], children);
                             }
     
                             children.push(perfEvt);
@@ -252,12 +256,12 @@ export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSou
                     }
     
                     // Set this event as the active event now
-                    perfMgr.setCtx(doPerfActiveKey, perfEvt);
+                    perfMgr[strSetCtx](doPerfActiveKey, perfEvt);
                     return func(perfEvt);
                 }
             } catch (ex) {
-                if (perfEvt && perfEvt.setCtx) {
-                    perfEvt.setCtx("exception", ex);
+                if (perfEvt && perfEvt[strSetCtx]) {
+                    perfEvt[strSetCtx]("exception", ex);
                 }
             } finally {
                 // fire the perf event
@@ -266,7 +270,7 @@ export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSou
                 }
                 
                 // Reset the active event to the previous value
-                perfMgr.setCtx(doPerfActiveKey, currentActive);
+                perfMgr[strSetCtx](doPerfActiveKey, currentActive);
             }
         }
     }

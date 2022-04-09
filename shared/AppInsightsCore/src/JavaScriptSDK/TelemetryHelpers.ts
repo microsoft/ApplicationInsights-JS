@@ -2,21 +2,21 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { arrForEach, isFunction } from "./HelperFuncs";
-import { strCore, strDoTeardown, strIsInitialized, strPriority, strProcessTelemetry, strSetNextPlugin, strTeardown } from "./InternalConstants";
-import { createElmNodeData } from "./DataCacheHelper";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
+import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
+import { createElmNodeData } from "./DataCacheHelper";
+import { arrForEach, isFunction } from "./HelperFuncs";
+import { strCore, strPriority, strProcessTelemetry } from "./InternalConstants";
 
 const strDoUnload = "_doUnload";
 export interface IPluginState {
     core?: IAppInsightsCore;
     isInitialized?: boolean;
-    tearDown?: boolean;
+    teardown?: boolean;
     disabled?: boolean;
 }
 
@@ -44,18 +44,18 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
         let thePlugin = proxy.getPlugin();
         if (thePlugin) {
             if (lastPlugin &&
-                    isFunction(lastPlugin[strSetNextPlugin]) &&
-                    isFunction(thePlugin[strProcessTelemetry])) {
+                    isFunction(lastPlugin.setNextPlugin) &&
+                    isFunction(thePlugin.processTelemetry)) {
                 // Set this plugin as the next for the previous one
-                lastPlugin[strSetNextPlugin](thePlugin);
+                lastPlugin.setNextPlugin(thePlugin);
             }
 
             let isInitialized = false;
-            if (isFunction(thePlugin[strIsInitialized])) {
-                isInitialized = thePlugin[strIsInitialized]();
+            if (isFunction(thePlugin.isInitialized)) {
+                isInitialized = thePlugin.isInitialized();
             } else {
                 pluginState = _getPluginState(thePlugin);
-                isInitialized = pluginState[strIsInitialized];
+                isInitialized = pluginState.isInitialized;
             }
 
             if (!isInitialized) {
@@ -69,7 +69,7 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
 
     // Now initialize the plugins
     arrForEach(initPlugins, thePlugin => {
-        let core = processContext.core();
+        let core = processContext[strCore]();
 
         thePlugin.initialize(
             processContext.getCfg(),
@@ -84,8 +84,8 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
             pluginState[strCore] = core;
         }
 
-        pluginState[strIsInitialized] = true;
-        delete pluginState[strTeardown];
+        pluginState.isInitialized = true;
+        delete pluginState.teardown;
     });
 }
 
@@ -121,7 +121,7 @@ export function unloadComponents(components: any | IUnloadableComponent[], unloa
         while (idx < components.length) {
             let component = components[idx++];
             if (component) {
-                let func = component[strDoUnload] || component[strDoTeardown];
+                let func = component[strDoUnload] || component._doTeardown;
                 if (isFunction(func)) {
                     if (func.call(component, unloadCtx, unloadState, _doUnload) === true) {
                         return true;

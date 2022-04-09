@@ -1,11 +1,11 @@
 import {
-    IConfig, SeverityLevel, stringToBoolOrDefault,
-    IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry,
-    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry,
-    IEventTelemetry, IEnvelope, ProcessLegacy
+    IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEnvelope, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry,
+    IPageViewTelemetry, ITraceTelemetry, ProcessLegacy, SeverityLevel, stringToBoolOrDefault
 } from "@microsoft/applicationinsights-common";
-import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
-import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign, throwError, ICookieMgr } from "@microsoft/applicationinsights-core-js";
+import {
+    IConfiguration, ICookieMgr, IDiagnosticLogger, ITelemetryItem, proxyAssign, throwError
+} from "@microsoft/applicationinsights-core-js";
+import { Initialization as ApplicationInsights, Snippet } from "./Initialization";
 
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names

@@ -1,20 +1,20 @@
 /**
- * ReactPlugin.ts
- * @copyright Microsoft 2019
- */
+* ReactPlugin.ts
+* @copyright Microsoft 2019
+*/
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry, IExceptionTelemetry, ITraceTelemetry
+    IAppInsights, IConfig, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewTelemetry, ITraceTelemetry
 } from "@microsoft/applicationinsights-common";
 import {
-    IPlugin, IConfiguration, IAppInsightsCore,
-    ITelemetryPlugin, BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext,
-    ITelemetryPluginChain, _eInternalMessageId, eLoggingSeverity, ICustomProperties, safeGetCookieMgr, ICookieMgr, arrForEach, proxyFunctions, IProcessTelemetryUnloadContext, ITelemetryUnloadState, isFunction, objDefineAccessors, _throwInternal
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICookieMgr, ICustomProperties, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPlugin, ITelemetryPluginChain, ITelemetryUnloadState, _eInternalMessageId,
+    _throwInternal, arrForEach, eLoggingSeverity, isFunction, objDefineAccessors, proxyFunctions, safeGetCookieMgr
 } from "@microsoft/applicationinsights-core-js";
-import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
 import { History, Location, Update } from "history";
 
+import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
 export default class ReactPlugin extends BaseTelemetryPlugin {
     public priority = 185;
     public identifier = 'ReactPlugin';

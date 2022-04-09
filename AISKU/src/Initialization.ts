@@ -2,27 +2,26 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import {
-    IConfiguration, AppInsightsCore, IAppInsightsCore, eLoggingSeverity, _eInternalMessageId, ITelemetryItem, ICustomProperties,
-    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign, proxyFunctions,
-    arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener, addPageHideEventListener,
-    createUniqueNamespace, ITelemetryPlugin, IPlugin, ILoadedPlugin, UnloadHandler, removePageUnloadEventListener, removePageHideEventListener,
-    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal
-} from "@microsoft/applicationinsights-core-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
-    IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType,
-    IRequestHeaders, RequestHeaders, DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT,
-    Envelope, Event, Exception, Metric, PageView, RemoteDependencyData, IEventTelemetry,
-    ITraceTelemetry, IMetricTelemetry, IDependencyTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetry, IPageViewPerformanceTelemetry, Trace, PageViewPerformance, Data, SeverityLevel,
-    IConfig, ConfigurationManager, ContextTagKeys, IDataSanitizer, DataSanitizer, TelemetryItemCreator, IAppInsights, CtxTagKeys, Extensions,
-    IPropertiesPlugin, DistributedTracingModes, PropertiesPluginIdentifier, BreezeChannelIdentifier, AnalyticsPluginIdentifier,
-    ITelemetryContext as Common_ITelemetryContext, parseConnectionString
-} from "@microsoft/applicationinsights-common"
+    AnalyticsPluginIdentifier, BreezeChannelIdentifier, ConfigurationManager, ConnectionStringParser, ContextTagKeys, CorrelationIdHelper,
+    CtxTagKeys, DEFAULT_BREEZE_ENDPOINT, Data, DataSanitizer, DateTimeUtils, DisabledPropertyName, DistributedTracingModes, Envelope, Event,
+    Exception, Extensions, FieldType, HttpMethod, IAppInsights, IAutoExceptionTelemetry, IConfig, ICorrelationIdHelper, IDataSanitizer,
+    IDateTimeUtils, IDependencyTelemetry, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
+    IPageViewTelemetry, IPropertiesPlugin, IRequestHeaders, ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, IUrlHelper,
+    IUtil, Metric, PageView, PageViewPerformance, ProcessLegacy, PropertiesPluginIdentifier, RemoteDependencyData, RequestHeaders,
+    SampleRate, SeverityLevel, TelemetryItemCreator, Trace, UrlHelper, Util, parseConnectionString
+} from "@microsoft/applicationinsights-common";
+import {
+    AppInsightsCore, IAppInsightsCore, IChannelControls, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger, ILoadedPlugin,
+    INotificationManager, IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, UnloadHandler,
+    _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, arrForEach, createUniqueNamespace, doPerf,
+    eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
+    objForEachKey, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, throwError
+} from "@microsoft/applicationinsights-core-js";
+import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 
 export { IUtil, ICorrelationIdHelper, IUrlHelper, IDateTimeUtils, IRequestHeaders };
 
@@ -304,7 +303,7 @@ export class Initialization implements IApplicationInsights {
                     // need from core
                     // Microsoft.ApplicationInsights._InternalLogging.throwInternal(
                     //     eLoggingSeverity.WARNING,
-                    //     _InternalMessageId.FailedToSendQueuedTelemetry,
+                    //     _eInternalMessageId.FailedToSendQueuedTelemetry,
                     //     "Failed to send queued telemetry",
                     //     properties);
                 }

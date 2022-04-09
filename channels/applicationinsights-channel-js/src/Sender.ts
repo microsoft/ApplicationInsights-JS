@@ -1,29 +1,25 @@
-import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from "./Interfaces";
-import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from "./SendBuffer";
+import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    DependencyEnvelopeCreator, EventEnvelopeCreator,
-    ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
-    PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
-} from "./EnvelopeCreator";
-import { Serializer } from "./Serializer"; // todo move to channel
-import {
-    DisabledPropertyName, RequestHeaders, IEnvelope, PageView, Event,
-    Trace, Exception, Metric, PageViewPerformance, RemoteDependencyData,
-    IChannelControlsAI, IConfig, ProcessLegacy, BreezeChannelIdentifier,
-    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage,
-    ISample
+    BreezeChannelIdentifier, DisabledPropertyName, Event, Exception, IChannelControlsAI, IConfig, IEnvelope, ISample, Metric, PageView,
+    PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace, isInternalApplicationInsightsEndpoint,
+    utlCanUseSessionStorage
 } from "@microsoft/applicationinsights-common";
 import {
-    ITelemetryItem, IProcessTelemetryContext, IConfiguration,
-    _eInternalMessageId, eLoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
-    getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, objKeys,
-    isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported, isArray, createUniqueNamespace, mergeEvtNamespace,
-    IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal, _warnToConsole
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, IDiagnosticLogger, INotificationManager, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, SendRequestReason, _eInternalMessageId,
+    _throwInternal, _warnToConsole, arrForEach, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion,
+    getJSON, getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace,
+    objForEachKey, objKeys, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
-import { createOfflineListener, IOfflineListener } from "./Offline";
-import { Sample } from "./TelemetryProcessors/Sample"
-import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
+    PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
+} from "./EnvelopeCreator";
+import { IBackendResponse, ISenderConfig, XDomainRequest as IXDomainRequest } from "./Interfaces";
+import { IOfflineListener, createOfflineListener } from "./Offline";
+import { ArraySendBuffer, ISendBuffer, SessionStorageSendBuffer } from "./SendBuffer";
+import { Serializer } from "./Serializer";
+import { Sample } from "./TelemetryProcessors/Sample";
 
 const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 
@@ -45,6 +41,9 @@ function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
 }
 
 function _getDefaultAppInsightsChannelConfig(): ISenderConfig {
+    let defaultValue: string;
+    let defaultCustomHeaders: [{header: string, value: string}];
+
     // set default values
     return {
         endpointUrl: () => "https://dc.services.visualstudio.com/v2/track",
@@ -58,11 +57,11 @@ function _getDefaultAppInsightsChannelConfig(): ISenderConfig {
         disableXhr: () => false,
         onunloadDisableFetch: () => false,
         onunloadDisableBeacon: () => false,
-        instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
-        namePrefix: () => undefined,
+        instrumentationKey: () => defaultValue,  // Channel doesn't need iKey, it should be set already
+        namePrefix: () => defaultValue,
         samplingPercentage: () => 100,
-        customHeaders: () => undefined,
-        convertUndefined: () => undefined,
+        customHeaders: () => defaultCustomHeaders,
+        convertUndefined: () => defaultValue,
         eventsLimitInMem: () => 10000
     }
 }

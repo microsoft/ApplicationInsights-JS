@@ -1,26 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 "use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
+import { eConfigEnum } from "../JavaScriptSDK.Enums/ConfigEnums";
+import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
+import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext } from "./ProcessTelemetryContext";
-import { arrForEach, isArray, isFunction, isNullOrUndefined, proxyFunctionAs, setValue } from "./HelperFuncs";
-import { strExtensionConfig } from "./Constants";
-import { createUnloadHandlerContainer, IUnloadHandlerContainer, UnloadHandler } from "./UnloadHandlerContainer";
 import { IInstrumentHook } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
+import {
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
+} from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
-import { strDoTeardown, strIsInitialized, strSetNextPlugin } from "./InternalConstants";
+import { arrForEach, isArray, isFunction, isNullOrUndefined, proxyFunctionAs } from "./HelperFuncs";
+import { setCfgValue } from "./MappedConfig";
+import {
+    createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext
+} from "./ProcessTelemetryContext";
+import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 
 let strGetPlugin = "getPlugin";
 
@@ -120,14 +123,15 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             _self.teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 // If this plugin has already been torn down (not operational) or is not initialized (core is not set)
                 // or the core being used for unload was not the same core used for initialization.
-                if (!_self.core || (unloadCtx && _self.core !== unloadCtx.core())) {
+                let core = _self.core;
+                if (!core || (unloadCtx && core !== unloadCtx.core())) {
                     // Do Nothing as either the plugin is not initialized or was not initialized by the current core
                     return;
                 }
 
                 let result: void | boolean;
                 let unloadDone = false;
-                let theUnloadCtx = unloadCtx || createProcessTelemetryUnloadContext(null, {}, _self.core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
+                let theUnloadCtx = unloadCtx || createProcessTelemetryUnloadContext(null, core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
                 let theUnloadState: ITelemetryUnloadState = unloadState || {
                     reason: TelemetryUnloadReason.ManualTeardown,
                     isAsync: false
@@ -153,7 +157,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                     }
                 }
 
-                if (!_self[strDoTeardown] || _self[strDoTeardown](theUnloadCtx, theUnloadState, _unloadCallback) !== true) {
+                if (!_self._doTeardown || _self._doTeardown(theUnloadCtx, theUnloadState, _unloadCallback) !== true) {
                     _unloadCallback();
                 } else {
                     // Tell the caller that we will be calling processNext()
@@ -166,14 +170,15 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             _self.update = (updateCtx: IProcessTelemetryUpdateContext, updateState: ITelemetryUpdateState) => {
                 // If this plugin has already been torn down (not operational) or is not initialized (core is not set)
                 // or the core being used for unload was not the same core used for initialization.
-                if (!_self.core || (updateCtx && _self.core !== updateCtx.core())) {
+                let core = _self.core;
+                if (!core || (updateCtx && core !== updateCtx.core())) {
                     // Do Nothing
                     return;
                 }
 
                 let result: void | boolean;
                 let updateDone = false;
-                let theUpdateCtx = updateCtx || createProcessTelemetryUpdateContext(null, {}, _self.core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
+                let theUpdateCtx = updateCtx || createProcessTelemetryUpdateContext(null, core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
                 let theUpdateState: ITelemetryUpdateState = updateState || {
                     reason: TelemetryUpdateReason.Unknown
                 };
@@ -213,7 +218,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             return _getTelCtx(itemCtx).diagLog();
         }
 
-        _self[strIsInitialized] = () => {
+        _self.isInitialized = () => {
             return _isinitialized;
         }
 
@@ -226,7 +231,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
         // should use processNext() function. If you require access to the plugin use the
         // IProcessTelemetryContext.getNext().getPlugin() while in the pipeline, Note getNext() may return null.
 
-        _self[strSetNextPlugin] = (next: ITelemetryPlugin | ITelemetryPluginChain) => {
+        _self.setNextPlugin = (next: ITelemetryPlugin | ITelemetryPluginChain) => {
             _nextPlugin = next;
         };
 
@@ -243,7 +248,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
 
         _self._getTelCtx = _getTelCtx;
         
-        function _getTelCtx(currentCtx:IProcessTelemetryContext = null) {
+        function _getTelCtx(currentCtx: IProcessTelemetryContext = null) {
             let itemCtx:IProcessTelemetryContext = currentCtx;
             if (!itemCtx) {
                 let rootCtx = _rootCtx || createProcessTelemetryContext(null, {}, _self.core);
@@ -262,7 +267,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
         function _setDefaults(config: IConfiguration, core: IAppInsightsCore, pluginChain: ITelemetryPluginChain) {
             if (config) {
                 // Make sure the extensionConfig exists
-                setValue(config, strExtensionConfig, [], null, isNullOrUndefined);
+                setCfgValue(config, eConfigEnum.extensionConfig, [], isNullOrUndefined);
             }
     
             if (!pluginChain && core) {

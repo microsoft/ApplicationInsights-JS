@@ -1,4 +1,39 @@
 module.exports = function (grunt) {
+
+    const aiCoreDefaultNameReplacements = [
+       {
+           src: "./src/JavaScriptSDK.Enums/SdkCoreNames.ts",
+           import: "./src/JavaScriptSDK.Enums/SdkCoreNames"
+       },
+       {
+           src: "./src/JavaScriptSDK.Enums/ConfigEnums.ts",
+           import: "./src/JavaScriptSDK.Enums/ConfigEnums"
+       }
+   ];
+
+   const aiDefaultNameReplacements = [
+        {
+            src: "../shared/AppInsightsCore/src/JavaScriptSDK.Enums/SdkCoreNames.ts",
+            import: "@microsoft/applicationinsights-core-js"
+        },
+        {
+            src: "../shared/AppInsightsCore/src/JavaScriptSDK.Enums/ConfigEnums.ts",
+            import: "@microsoft/applicationinsights-core-js"
+        },
+        {
+            src: "../../shared/AppInsightsCore/src/JavaScriptSDK.Enums/SdkCoreNames.ts",
+            import: "@microsoft/applicationinsights-core-js"
+        },
+        {
+            src: "../../shared/AppInsightsCore/src/JavaScriptSDK.Enums/ConfigEnums.ts",
+            import: "@microsoft/applicationinsights-core-js"
+        }
+    ];
+
+    const aiInternalConstants = [
+        "./src/InternalConstants.ts"
+    ];
+
     function deepMerge(target, src) {
         try {
             var newValue = Object.assign({}, target, src);
@@ -25,6 +60,11 @@ module.exports = function (grunt) {
         }
     }
 
+    // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
+    // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
+    // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
+    const perfTestVersions=["2.7.4"];
+
     function buildConfig(modules) {
         var buildCmds = {
             ts: {
@@ -36,13 +76,74 @@ module.exports = function (grunt) {
                 options: {
                     debug: true
                 }
-            }
+            },
+            "ai-minify": {
+                options: {
+                    debug: true,
+                    //testOnly: true,
+                }
+            },
+            "qunit" : {
+                all: {
+                    options: {
+                    }
+                }
+            },
+            connect: {
+                server: {
+                    options: {
+                        port: 9001,
+                        base: '.'
+                    }
+                }        
+            }            
         };
 
         for (var key in modules) {
             if (modules.hasOwnProperty(key)) {
                 var modulePath = modules[key].path;
                 var moduleCfg = modules[key].cfg;
+                var packageJsonFile = modulePath + '/package.json';
+
+                if (grunt.file.exists(packageJsonFile)) {
+                    // Read the actual module version from the package.json
+                    var pkg = grunt.file.readJSON(modulePath + '/package.json');
+                    var packageName = pkg["name"];
+
+                    var addMinifyTasks = true;
+                    if (packageName.indexOf("rollup-") !== -1 || packageName.indexOf("-shims") !== -1) {
+                        addMinifyTasks = false;
+                    }
+
+                    if (addMinifyTasks) {
+                        var nameMaps = aiDefaultNameReplacements;
+                        var internalConstants = aiInternalConstants;
+                        if (pkg['name'] === "@microsoft/applicationinsights-core-js") {
+                            nameMaps = aiCoreDefaultNameReplacements;
+                            internalConstants = [ "./src/JavaScriptSDK/InternalConstants.ts" ];
+                        }
+    
+                        var aiMinify = buildCmds["ai-minify"];
+                        aiMinify[key] = {
+                            options: {
+                                projectRoot: modulePath,
+                                src: "./src/**/*.ts",
+                                nameMaps: nameMaps,
+                                internalConstants: internalConstants
+                            }
+                        };
+    
+                        aiMinify[key + "-reverse"] = {
+                            options: {
+                                projectRoot: modulePath,
+                                src: "./src/**/*.ts",
+                                restore: true,
+                                nameMaps: nameMaps,
+                                internalConstants: internalConstants
+                            }
+                        };
+                    }
+                }
 
                 if (grunt.file.exists(modulePath + '/src/tsconfig.json')) {
                     // Use the src tsconfig (if available)
@@ -63,15 +164,89 @@ module.exports = function (grunt) {
                 }
 
                 // If the tests have their own tsconfig, add that as a new target
-                // if (grunt.file.exists(modulePath + '/test/tsconfig.json')) {
-                //     buildCmds.ts[key + '-tests'] = {
-                //         'tsconfig': modulePath + "/test/tsconfig.json",
-                //     };
-                // } else if (grunt.file.exists(modulePath + '/tests/tsconfig.json')) {
-                //     buildCmds.ts[key + '-tests'] = {
-                //         'tsconfig': modulePath + "/tests/tsconfig.json",
-                //     };
-                // }
+                var addQunit = false;
+                var testRoot = "";
+                if (modules[key].testHttp !== false) {
+                    testRoot = "http://localhost:9001/";
+                }
+
+                var testUrl = testRoot + modulePath + "/test/UnitTests.html";
+                if (grunt.file.exists(modulePath + '/test/tsconfig.json')) {
+                    addQunit = true;
+                    buildCmds.ts[key + '-tests'] = {
+                        tsconfig: modulePath + "/test/tsconfig.json",
+                        src: [
+                            modulePath + "/test/Unit/src/**/*.ts"
+                        ],
+                        out: modulePath + "/test/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")
+                    };
+                } else if (grunt.file.exists(modulePath + '/Tests/tsconfig.json')) {
+                    addQunit = true;
+                    testUrl = testRoot + modulePath + "/Tests/UnitTests.html";
+                    buildCmds.ts[key + '-tests'] = {
+                        tsconfig: modulePath + "/Tests/tsconfig.json",
+                        src: [
+                            modulePath + "/Tests/Unit/src/**/*.ts"
+                        ],
+                        out: modulePath + "/Tests/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")
+                    };
+                }
+
+                if (addQunit) {
+                    buildCmds.qunit[key] = {
+                        options: {
+                            urls: [ testUrl ],
+                            timeout: 300 * 1000, // 5 min
+                            console: true,
+                            summaryOnly: false,
+                            '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                        }
+                    };
+                }
+
+                // If the tests have their own tsconfig, add that as a new target
+                addQunit = false;
+                var testUrl = testRoot + modulePath + "/test/PerfTests.html";
+                if (grunt.file.exists(modulePath + '/test/PerfTests.html')) {
+                    addQunit = true;
+                    buildCmds.ts[key + '-perftest'] = {
+                        tsconfig: modulePath + "/test/tsconfig.json",
+                        src: [
+                            modulePath + "/test/Perf/src/**/*.ts"
+                        ],
+                        out: modulePath + "/test/Perf/dist/" + (modules[key].perfTestName || key + ".perf.tests.js")
+                    };
+                } else if (grunt.file.exists(modulePath + '/Tests/PerfTests.html')) {
+                    addQunit = true;
+                    testUrl = testRoot + modulePath + "/Tests/PerfTests.html";
+                    buildCmds.ts[key + '-perftest'] = {
+                        tsconfig: modulePath + "/Tests/tsconfig.json",
+                        src: [
+                            modulePath + "/Tests/Perf/src/**/*.ts"
+                        ],
+                        out: modulePath + "/Tests/Perf/dist/" + (modules[key].perfTestName || key + ".perf.tests.js")
+                    };
+                }
+
+                if (addQunit) {
+                    var testUrls = [ testUrl ];
+                    if (key === "aisku") {
+                        testUrls = perfTestVersions.map((version) => {
+                            return testUrl + `?version=${version}`;
+                        });
+                    }
+
+                    buildCmds.qunit[key + "-perf"] = {
+                        options: {
+                            urls: testUrls,
+                            timeout: 300 * 1000, // 5 min
+                            console: true,
+                            summaryOnly: false,
+                            puppeteer: { headless: true, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
+                            '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                        }
+                    };
+                }
 
                 let esLintCmd = buildCmds["eslint-ts"];
                 esLintCmd[key + '-lint'] = {
@@ -91,77 +266,113 @@ module.exports = function (grunt) {
         return buildCmds;
     }
 
-    // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
-    // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
-    // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions=["2.7.1"];
-
     try {
         var theBuildConfig = deepMerge(buildConfig({
             // Shared
-            "core":                 { path: "./shared/AppInsightsCore" },
-            "common":               { path: "./shared/AppInsightsCommon" },
+            "core":                 { 
+                                        path: "./shared/AppInsightsCore",
+                                        unitTestName: "aicoreunit.tests.js",
+                                        perfTestName: "aicoreperf.tests.js"
+                                    },
+            "common":               { 
+                                        path: "./shared/AppInsightsCommon",
+                                        unitTestName: "aicommon.tests.js"
+                                    },
     
             // SKUs
-            "aisku":                { path: "./AISKU", 
+            "aisku":                { 
+                                        path: "./AISKU", 
                                         cfg: { 
                                             src: [ 
                                                 "AISKU/src/*.ts" 
                                             ] 
-                                        } 
+                                        },
+                                        unitTestName: "aiskuunittests.tests.js",
+                                        perfTestName: "aiskuperftests.tests.js"
                                     },
-            "aiskulite":            { path: "./AISKULight", 
+            "aiskulite":            { 
+                                        path: "./AISKULight", 
                                         cfg: { 
                                             src: [ 
                                                 "AISKULight/src/*.ts" 
                                             ] 
-                                        } 
+                                        },
+                                        unitTestName: "aiskuliteunittests.tests.js"
                                     },
     
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
     
             // Extensions
-            "appinsights":          { path: "./extensions/applicationinsights-analytics-js" },
-            "clickanalytics":       { path: "./extensions/applicationinsights-clickanalytics-js" },
+            "appinsights":          { 
+                                        path: "./extensions/applicationinsights-analytics-js",
+                                        unitTestName: "appinsights-analytics.tests.js"
+                                    },
+            "clickanalytics":       { 
+                                        path: "./extensions/applicationinsights-clickanalytics-js",
+                                        unitTestName: "appinsights-clickanalytics.tests.js"
+                                    },
             "debugplugin":          { path: "./extensions/applicationinsights-debugplugin-js" },
-            "deps":                 { path: "./extensions/applicationinsights-dependencies-js" },
-            "perfmarkmeasure":      { path: "./extensions/applicationinsights-perfmarkmeasure-js" },
-            "properties":           { path: "./extensions/applicationinsights-properties-js" },
-            "react":                { path: "./extensions/applicationinsights-react-js",
+            "deps":                 { 
+                                        path: "./extensions/applicationinsights-dependencies-js",
+                                        unitTestName: "dependencies.tests.js"
+                                    },
+            "perfmarkmeasure":      { 
+                                        path: "./extensions/applicationinsights-perfmarkmeasure-js",
+                                        unitTestName: "appinsights-perfmarkmeasure.tests.js"
+                                    },
+            "properties":           { 
+                                        path: "./extensions/applicationinsights-properties-js",
+                                        unitTestName: "prop.tests.js"
+                                    },
+            "react":                { 
+                                        path: "./extensions/applicationinsights-react-js",
                                         cfg: {
                                             src: [
                                                 "./extensions/applicationinsights-react-js/src/index.ts"
                                             ]
-                                        } 
+                                        },
+                                        unitTestName: "reactplugin.tests.js"
                                     },
-            "reactnative":          { path: "./extensions/applicationinsights-react-native",
+            "reactnative":          { 
+                                        path: "./extensions/applicationinsights-react-native",
                                         cfg: {
                                             src: [
                                                 "./extensions/applicationinsights-react-native/src/**/*.ts"
                                             ]
-                                        } 
+                                        },
+                                        unitTestName: "reactnativeplugin.tests.js"
                                     },
     
             // Tools
-            "rollupuglify":         { path: "./tools/rollup-plugin-uglify3-js",
+            "rollupuglify":         { 
+                                        path: "./tools/rollup-plugin-uglify3-js",
                                         cfg: {
                                             src: [
                                                 "./tools/rollup-plugin-uglify3-js/src/*.ts",
                                                 "!node_modules/**"
                                             ],
                                             out: './tools/rollup-plugin-uglify3-js/out/src/uglify3-js.js'
-                                        }
+                                        },
+                                        testHttp: false
                                     },
-            "rollupes3":            { path: "./tools/rollup-es3" },
-            "shims":                { path: "./tools/shims",
+            "rollupes3":            { 
+                                        path: "./tools/rollup-es3",
+                                        unitTestName: "es3rolluptests.js",
+                                        testHttp: false
+                                    },
+            "shims":                { 
+                                        path: "./tools/shims",
                                         cfg: {
                                             src: [
                                                 "./tools/shims/src/*.ts"
                                             ]
-                                        }
+                                        },
+                                        unitTestName: "shimstests.js",
+                                        testHttp: false
                                     },
-            "chrome-debug-extension": { path: "./tools/chrome-debug-extension",
+            "chrome-debug-extension": { 
+                                        path: "./tools/chrome-debug-extension",
                                         cfg: {
                                             src: [
                                                 "./tools/chrome-debug-extension/src/**/*.tsx",
@@ -170,150 +381,90 @@ module.exports = function (grunt) {
                                         }
                                     },
             // Common
-            "tst-framework":        { path: "./common/Tests/Framework",
+            "tst-framework":        { 
+                                        path: "./common/Tests/Framework",
                                         cfg: {
                                             src: [
                                                 "./common/Tests/Framework/src/*.ts"
                                             ]
                                         } 
                                     }
-        }), {
-            ts: {
-                options: {
-                    comments: true,
-                    debug: true
-                },
-                coreunittest: {
-                    tsconfig: './shared/AppInsightsCore/Tests/tsconfig.json',
-                    src: [
-                        './shared/AppInsightsCore/Tests/Unit/src/**/*.ts'
-                    ],
-                    out: 'shared/AppInsightsCore/Tests/Unit/dist/aicoreunit.tests.js'
-                },
-                coreperftest: {
-                    tsconfig: './shared/AppInsightsCore/Tests/tsconfig.json',
-                    src: [
-                        './shared/AppInsightsCore/Tests/Perf/src/**/*.ts'
-                    ],
-                    out: 'shared/AppInsightsCore/Tests/Perf/dist/aicoreperf.tests.js'
-                },
-                commonunittest: {
-                    tsconfig: './shared/AppInsightsCommon/Tests/tsconfig.json',
-                    src: [
-                        './shared/AppInsightsCommon/Tests/Unit/src/**/*.ts',
-                    ],
-                    out: 'shared/AppInsightsCommon/Tests/Unit/dist/aicommon.tests.js'
-                },
-                appinsightsunittests: {
-                    tsconfig: './extensions/applicationinsights-analytics-js/Tests/tsconfig.json',
-                    src: [
-                        './extensions/applicationinsights-analytics-js/Tests/Unit/src/**/*.ts'
-                    ],
-                    out: 'extensions/applicationinsights-analytics-js/Tests/Unit/dist/appinsights-analytics.tests.js'
-                },
-                aiskuunittests: {
-                    tsconfig: './AISKU/Tests/tsconfig.json',
-                    src: [
-                        './AISKU/Tests/Unit/src/**/*.ts',
-                    ],
-                    out: 'AISKU/Tests/Unit/dist/aiskuunittests.tests.js'
-                },
-                aiskuperf: {
-                    tsconfig: './AISKU/Tests/tsconfig.json',
-                    src: [
-                        './AISKU/Tests/Perf/src/**/*.ts',
-                    ],
-                    out: 'AISKU/Tests/Perf/dist/aiskuperftests.tests.js'
-                },
-                aiskuliteunittests: {
-                    tsconfig: './AISKULight/Tests/tsconfig.json',
-                    src: [
-                        './AISKULight/Tests/Unit/src/**/*.ts',
-                    ],
-                    out: 'AISKULight/Tests/Unit/dist/aiskuliteunittests.tests.js'
-                },
-                clickanalyticstests: {
-                    tsconfig: './extensions/applicationinsights-clickanalytics-js/Tests/tsconfig.json',
-                    src: [
-                        './extensions/applicationinsights-clickanalytics-js/Tests/Unit/src/**/*.ts'
-                    ],
-                    out: 'extensions/applicationinsights-clickanalytics-js/Tests/Unit/dist/appinsights-clickanalytics.tests.js'
-                },
-                perfmarkmeasureunittests: {
-                    tsconfig: './extensions/applicationinsights-perfmarkmeasure-js/Tests/tsconfig.json',
-                    src: [ './extensions/applicationinsights-perfmarkmeasure-js/Tests/Unit/src/**/*.ts' ],
-                    out: './extensions/applicationinsights-perfmarkmeasure-js/Tests/Unit/dist/appinsights-perfmarkmeasure.tests.js'
-                },
-                propertiesunittests: {
-                    tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
-                    src: [ './extensions/applicationinsights-properties-js/Tests/Unit/src/**/*.ts' ],
-                    out: './extensions/applicationinsights-properties-js/Tests/Unit/dist/prop.tests.js'
-                },
-                reactnativetests: {
-                    tsconfig: './extensions/applicationinsights-react-native/Tests/tsconfig.json',
-                    src: [ './extensions/applicationinsights-react-native/Tests/Unit/src/**/*.ts' ],
-                    out: './extensions/applicationinsights-react-native/Tests/Unit/dist/reactnativeplugin.tests.js'
-                },
-                reacttests: {
-                    tsconfig: './extensions/applicationinsights-react/Tests/tsconfig.json',
-                    src: [ './extensions/applicationinsights-react/Tests/Unit/src/**/*.ts' ],
-                    out: './extensions/applicationinsights-react/Tests/Unit/dist/reactplugin.tests.js'
-                },
-                depsunittest: {
-                    tsconfig: './extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
-                    src: [
-                        './extensions/applicationinsights-dependencies-js/Tests/Unit/src/**/*.ts'
-                    ],
-                    out: './extensions/applicationinsights-dependencies-js/Tests/Unit/dist/dependencies.tests.js'
-                },
-                aichanneltest: {
-                    tsconfig: './channels/applicationinsights-channel-js/Tests/tsconfig.json',
-                    src: [
-                        './channels/applicationinsights-channel-js/Tests/Unit/src/**/*.ts'
-                    ],
-                    out: './channels/applicationinsights-channel-js/Tests/Unit/dist/aichannel.tests.js'
-                },
-                rollupes3test: {
-                    tsconfig: './tools/rollup-es3/Tests/tsconfig.json',
-                    src: [
-                        './tools/rollup-es3/Tests/Unit/src/**/*.ts'
-                    ],
-                    out: './tools/rollup-es3/Tests/Unit/dist/es3rolluptests.js'
-                },
-                shimstest: {
-                    tsconfig: './tools/shims/Tests/tsconfig.json',
-                    src: [
-                        './tools/shims/Tests/Unit/src**/*.ts'
-                    ],
-                    out: './tools/shims/Tests/Unit/dist/shimstests.js'
-                }
-            }
-        });
+        }));
     
         function tsBuildActions(name, addTests, replaceName) {
             var actions = [
                 "eslint-ts:" + name + "-lint-fix"
             ];
     
+            var aiMinifyConfig = theBuildConfig["ai-minify"] || {};
             var gruntTsConfig = theBuildConfig["ts"];
             if (replaceName) {
+
                 actions.push("string-replace:" + replaceName);
+                if (aiMinifyConfig[name]) {
+                    // Attempt to compile without any translations (Validates that the original source code is fine before transforming it)
+                    actions.push("ts:" + name);
+                    actions.push("ai-minify:" + name);
+                }
+
+                // Now perform the "real" final compile after minification
                 actions.push("ts:" + name);
-    
+        
                 if (addTests && gruntTsConfig[name + "-tests"]) {
                     actions.push("ts:" + name + "-tests");
+                }
+                if (aiMinifyConfig[name + "-reverse"]) {
+                    actions.push("ai-minify:" + name + "-reverse");
                 }
     
                 actions.push("string-replace:" + replaceName + "-reverse");
             } else {
+                if (aiMinifyConfig[name]) {
+                    // Attempt to compile without any translations (Validates that the original source code is fine before transforming it)
+                    actions.push("ts:" + name);
+                    actions.push("ai-minify:" + name);
+                }
+
+                // Now perform the "real" final compile after minification
                 actions.push("ts:" + name);
                 if (addTests && gruntTsConfig[name + "-tests"]) {
                     actions.push("ts:" + name + "-tests");
+                }
+                
+                if (aiMinifyConfig[name + "-reverse"]) {
+                    actions.push("ai-minify:" + name + "-reverse");
                 }
             }
     
             actions.push("eslint-ts:" + name + "-lint");
     
+            return actions;
+        }
+
+        function tsTestActions(name, minifySrc, compileSrc) {
+            var gruntTsConfig = theBuildConfig["ts"];
+            var aiMinifyConfig = theBuildConfig["ai-minify"] || {};
+
+            var actions = [
+                "connect"
+            ];
+
+            if (minifySrc && aiMinifyConfig[name]) {
+                // Attempt to compile without any translations (Validates that the original source code is fine before transforming it)
+                actions.push("ai-minify:" + name);
+                if (compileSrc && gruntTsConfig[name]) {
+                    actions.push("ts:" + name);
+                }
+            }
+
+            // If this helper is called then these should always exist
+            actions.push("ts:" + name + "-tests");
+            actions.push("qunit:" + name);
+
+            if (minifySrc && aiMinifyConfig[name + "-reverse"]) {
+                actions.push("ai-minify:" + name + "-reverse");
+            }
+
             return actions;
         }
 
@@ -336,198 +487,6 @@ module.exports = function (grunt) {
                         }
                     }
                 }
-            },
-            qunit: {
-                all: {
-                    options: {
-                    }
-                },
-                core: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/shared/AppInsightsCore/Tests/UnitTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
-                    }
-                },
-                coreperf: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/shared/AppInsightsCore/Tests/PerfTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
-                    }
-                },
-                common: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/shared/AppInsightsCommon/Tests/UnitTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
-                    }
-                },
-                aitests: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/extensions/applicationinsights-analytics-js/Tests/UnitTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
-                    }
-                },
-                deps: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/extensions/applicationinsights-dependencies-js/Tests/UnitTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        '--web-security': 'false'
-                    }
-                },
-                perfmarkmeasure: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/extensions/applicationinsights-perfmarkmeasure-js/Tests/UnitTests.html'
-                        ],
-                        timeout: 5 * 60 * 1000, // 5 min
-                        console: false,
-                        summaryOnly: true,
-                        '--web-security': 'false'
-                    }
-                },
-                properties: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/extensions/applicationinsights-properties-js/Tests/UnitTests.html'
-                        ],
-                        timeout: 5 * 60 * 1000, // 5 min
-                        console: false,
-                        summaryOnly: true,
-                        '--web-security': 'false'
-                    }
-                },
-                react: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/extensions/applicationinsights-react-js/Tests/Selenium/Tests.html'
-                        ],
-                        timeout: 5 * 60 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: true,
-                        '--web-security': 'false'
-                    }
-                },
-                reactnative: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/extensions/applicationinsights-react-native/Tests/UnitTests.html'
-                        ],
-                        timeout: 5 * 60 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: true,
-                        '--web-security': 'false'
-                    }
-                },
-                aisku: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/AISKU/Tests/UnitTests.html'
-                        ],
-                        timeout: 5 * 60 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        '--web-security': 'false'
-                    }
-                },
-                aiskuperf: {
-                    options: {
-                        urls: perfTestVersions.map((version) => {
-                            return `http://localhost:9001/AISKU/Tests/PerfTests.html?version=${version}`
-
-                        }),
-                        timeout: 5 * 60 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        puppeteer: { headless: true, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
-                        '--web-security': 'false'
-                    }
-                },
-                aiskulite: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/AISKULight/Tests/UnitTests.html'
-                        ],
-                        timeout: 5 * 60 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        '--web-security': 'false'
-                    }
-                },
-                aichannel: {
-                    options: {
-                        urls: [
-                            'http://localhost:9001/channels/applicationinsights-channel-js/Tests/UnitTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: false,
-                        summaryOnly: true,
-                        '--web-security': 'false'
-                    }
-                },
-                rollupes3: {
-                    options: {
-                        urls: [
-                            './tools/rollup-es3/Tests/UnitTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: false,
-                        summaryOnly: true,
-                        '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
-                    }
-                },
-                shims: {
-                    options: {
-                        urls: [
-                            './tools/shims/Tests/UnitTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: false,
-                        summaryOnly: true,
-                        '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
-                    }
-                },
-                clickanalytics: {
-                    options: {
-                        urls: [
-                        'http://localhost:9001/extensions/applicationinsights-clickanalytics-js/Tests/UnitTests.html'
-                        ],
-                        timeout: 300 * 1000, // 5 min
-                        console: true,
-                        summaryOnly: false,
-                        '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
-                    }
-                },
-            },
-            connect: {
-                server: {
-                    options: {
-                        port: 9001,
-                        base: '.'
-                    }
-                }        
             }
         }));
     
@@ -540,43 +499,103 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-qunit');
         grunt.loadNpmTasks('grunt-contrib-connect');
+        grunt.loadTasks('./tools/grunt-tasks');
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
+
         grunt.registerTask("core", tsBuildActions("core"));
+        grunt.registerTask("core-min", ["ai-minify:core"]);
+        grunt.registerTask("core-unmin", ["ai-minify:core-reverse"]);
+        grunt.registerTask("coreunittest", tsTestActions("core"));
+        grunt.registerTask("core-mintest", tsTestActions("core", true));
+        grunt.registerTask("coreperftest", ["connect", "ts:core-perftest", "qunit:core-perf"]);
+
         grunt.registerTask("common", tsBuildActions("common"));
+        grunt.registerTask("common-min", ["ai-minify:common"]);
+        grunt.registerTask("common-unmin", ["ai-minify:common-reverse"]);
+        grunt.registerTask("commontest", tsTestActions("common"));
+        grunt.registerTask("common-mintest", tsTestActions("common", true));
+
         grunt.registerTask("ai", tsBuildActions("appinsights"));
-        grunt.registerTask("aitests", ["connect", "ts:appinsightsunittests", "qunit:aitests"]);
+        grunt.registerTask("ai-min", ["ai-minify:appinsights"]);
+        grunt.registerTask("ai-unmin", ["ai-minify:appinsights-reverse"]);
+        grunt.registerTask("aitests", tsTestActions("appinsights"));
+        grunt.registerTask("ai-mintests", tsTestActions("appinsights", true));
+
         grunt.registerTask("aisku", tsBuildActions("aisku"));
+        grunt.registerTask("aisku-min", ["ai-minify:aisku"]);
+        grunt.registerTask("aisku-unmin", ["ai-minify:aisku-reverse"]);
+        grunt.registerTask("aiskuunittests", tsTestActions("aisku"));
+        grunt.registerTask("aisku-mintests", tsTestActions("aisku", true));
+        grunt.registerTask("aiskuperf", ["connect", "ts:aisku-perftest", "qunit:aisku-perf"]);
+
         grunt.registerTask("aiskulite", tsBuildActions("aiskulite"));
+        grunt.registerTask("aiskulite-min", ["ai-minify:aiskulite"]);
+        grunt.registerTask("aiskulite-unmin", ["ai-minify:aiskulite-reverse"]);
+        grunt.registerTask("aiskuliteunittests", tsTestActions("aiskulite"));
+        grunt.registerTask("aiskulite-mintests", tsTestActions("aiskulite", true));
+
         grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
-        grunt.registerTask("aiskuunittests", ["connect", "ts:aiskuunittests", "qunit:aisku"]);
-        grunt.registerTask("aiskuperf", ["connect", "ts:aiskuperf", "qunit:aiskuperf"]);
-        grunt.registerTask("aiskuliteunittests", ["connect", "ts:aiskuliteunittests", "qunit:aiskulite"]);
+
         grunt.registerTask("test", ["connect", "ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
         grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
-        grunt.registerTask("coreunittest", ["connect", "ts:coreunittest", "qunit:core"]);
-        grunt.registerTask("coreperftest", ["connect", "ts:coreperftest", "qunit:coreperf"]);
-        grunt.registerTask("commontest", ["connect", "ts:common", "ts:commonunittest", "qunit:common"]);
+
         grunt.registerTask("perfmarkmeasure", tsBuildActions("perfmarkmeasure"));
-        grunt.registerTask("perfmarkmeasuretests", ["connect", "ts:perfmarkmeasureunittests", "qunit:perfmarkmeasure"]);
+        grunt.registerTask("perfmarkmeasure-min", ["ai-minify:perfmarkmeasure"]);
+        grunt.registerTask("perfmarkmeasure-unmin", ["ai-minify:perfmarkmeasure-reverse"]);
+        grunt.registerTask("perfmarkmeasuretests", tsTestActions("perfmarkmeasure"));
+        grunt.registerTask("perfmarkmeasure-mintests", tsTestActions("perfmarkmeasure", true));
+
         grunt.registerTask("properties", tsBuildActions("properties"));
-        grunt.registerTask("propertiestests", ["connect", "ts:propertiesunittests", "qunit:properties"]);
+        grunt.registerTask("properties-min", ["ai-minify:properties"]);
+        grunt.registerTask("properties-unmin", ["ai-minify:properties-reverse"]);
+        grunt.registerTask("propertiestests", tsTestActions("properties"));
+        grunt.registerTask("properties-mintests", tsTestActions("properties", true));
+
         grunt.registerTask("react", tsBuildActions("react"));
-        grunt.registerTask("reacttests", ["connect", "ts:reacttests", "qunit:react"]);
+        grunt.registerTask("react-min", ["ai-minify:react"]);
+        grunt.registerTask("react-unmin", ["ai-minify:react-reverse"]);
+        grunt.registerTask("reacttests", tsTestActions("react"));
+        grunt.registerTask("react-mintests", tsTestActions("react", true));
+
         grunt.registerTask("reactnative", tsBuildActions("reactnative"));
-        grunt.registerTask("reactnativetests", ["connect", "ts:reactnativetests", "qunit:reactnative"]);
+        grunt.registerTask("reactnative-min", ["ai-minify:reactnative"]);
+        grunt.registerTask("reactnative-unmin", ["ai-minify:reactnative-reverse"]);
+        grunt.registerTask("reactnativetests", tsTestActions("reactnative"));
+        grunt.registerTask("reactnative-mintests", tsTestActions("reactnative", true));
+
         grunt.registerTask("deps", tsBuildActions("deps"));
-        grunt.registerTask("depstest", [ "connect", "ts:depsunittest","qunit:deps"]);
+        grunt.registerTask("deps-min", ["ai-minify:deps"]);
+        grunt.registerTask("deps-unmin", ["ai-minify:deps-reverse"]);
+        grunt.registerTask("depstest", tsTestActions("deps"));
+        grunt.registerTask("deps-mintest", tsTestActions("deps", true));
+
         grunt.registerTask("debugplugin", tsBuildActions("debugplugin"));
+        grunt.registerTask("debugplugin-min", ["ai-minify:debugplugin"]);
+        grunt.registerTask("debugplugin-unmin", ["ai-minify:debugplugin-reverse"]);
+
         grunt.registerTask("aichannel", tsBuildActions("aichannel"));
-        grunt.registerTask("aichanneltest", ["connect", "ts:aichanneltest", "qunit:aichannel"]);
+        grunt.registerTask("aichannel-min", ["ai-minify:aichannel"]);
+        grunt.registerTask("aichannel-unmin", ["ai-minify:aichannel-reverse"]);
+        grunt.registerTask("aichanneltest", tsTestActions("aichannel"));
+        grunt.registerTask("aichannel-mintest", tsTestActions("aichannel", true));
+
         grunt.registerTask("rollupuglify", tsBuildActions("rollupuglify"));
-        grunt.registerTask("rollupes3", tsBuildActions("rollupes3").concat(["ts:rollupes3test", "qunit:rollupes3"]));
-        grunt.registerTask("rollupes3test", ["ts:rollupes3test", "qunit:rollupes3"]);
-        grunt.registerTask("shims", tsBuildActions("shims").concat(["ts:shimstest", "qunit:shims"]));
-        grunt.registerTask("shimstest", ["ts:shimstest", "qunit:shims"]);
+        grunt.registerTask("rollupes3", tsBuildActions("rollupes3").concat(["ts:rollupes3-tests", "qunit:rollupes3"]));
+        grunt.registerTask("rollupes3test", [ "ts:rollupes3-tests", "qunit:rollupes3" ]);
+
+        grunt.registerTask("shims", tsBuildActions("shims").concat(["ts:shims-tests", "qunit:shims"]));
+        grunt.registerTask("shimstest", ["ts:shims-tests", "qunit:shims"]);
+
         grunt.registerTask("chromedebugextension", tsBuildActions("chrome-debug-extension"));
+        grunt.registerTask("chromedebugextension-min", ["ai-minify:chrome-debug-extension"]);
+        grunt.registerTask("chromedebugextension-unmin", ["ai-minify:chrome-debug-extension-reverse"]);
+
         grunt.registerTask("clickanalytics", tsBuildActions("clickanalytics"));
-        grunt.registerTask("clickanalyticstests", ["connect", "ts:clickanalyticstests", "qunit:clickanalytics"]);
+        grunt.registerTask("clickanalytics-min", ["ai-minify:clickanalytics"]);
+        grunt.registerTask("clickanalytics-unmin", ["ai-minify:clickanalytics-reverse"]);
+        grunt.registerTask("clickanalyticstests", tsTestActions("clickanalytics"));
+        grunt.registerTask("clickanalytics-mintests", tsTestActions("clickanalytics", true));
+
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
         grunt.registerTask("serve", ["connect:server:keepalive"]);
     } catch (e) {

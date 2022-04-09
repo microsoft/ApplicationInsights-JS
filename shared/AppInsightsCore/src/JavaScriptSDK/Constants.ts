@@ -2,4 +2,3 @@
 // Licensed under the MIT License.
 
 export const strIKey = "iKey";
-export const strExtensionConfig = "extensionConfig";

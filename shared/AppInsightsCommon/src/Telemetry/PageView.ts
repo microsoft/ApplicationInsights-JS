@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IPageViewData } from "../Interfaces/Contracts/IPageViewData";
-import { dataSanitizeId, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from "./Common/DataSanitizer";
-import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
-import { FieldType } from "../Enums";
 import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
-import { msToTimeSpan } from "../HelperFuncs";
 import { strNotSpecified } from "../Constants";
+import { FieldType } from "../Enums";
+import { msToTimeSpan } from "../HelperFuncs";
+import { IPageViewData } from "../Interfaces/Contracts/IPageViewData";
+import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import {
+    dataSanitizeId, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl
+} from "./Common/DataSanitizer";
 
 export class PageView implements IPageViewData, ISerializable {
 

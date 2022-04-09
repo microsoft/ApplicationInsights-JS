@@ -1,28 +1,21 @@
 /**
- * @copyright Microsoft 2020
- */
+* @copyright Microsoft 2020
+*/
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import {
-    IPlugin, IConfiguration, IAppInsightsCore,
-    BaseTelemetryPlugin, isNullOrUndefined, ITelemetryItem,
-    IProcessTelemetryContext, ITelemetryPluginChain,
-    _eInternalMessageId, ICustomProperties,
-    eLoggingSeverity, arrForEach, dumpObj, getExceptionName, throwError, _throwInternal, IProcessTelemetryUnloadContext, ITelemetryUnloadState, unloadComponents
-} from "@microsoft/applicationinsights-core-js";
 import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
 import {
-    IClickAnalyticsConfiguration, IContentHandler,
-    IAutoCaptureHandler, IPageActionTelemetry
-} from "./Interfaces/Datamodel";
-import {
-    mergeConfig, BehaviorMapValidator,
-    BehaviorValueValidator, BehaviorEnumValidator
-} from "./common/Utils";
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICustomProperties, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
+    arrForEach, dumpObj, eLoggingSeverity, getExceptionName, isNullOrUndefined, throwError, unloadComponents
+} from "@microsoft/applicationinsights-core-js";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, IPageActionTelemetry } from "./Interfaces/Datamodel";
+import { BehaviorEnumValidator, BehaviorMapValidator, BehaviorValueValidator, mergeConfig } from "./common/Utils";
 import { PageAction } from "./events/PageAction";
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
-import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+
 export { BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
 
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {

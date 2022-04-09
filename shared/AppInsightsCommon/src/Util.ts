@@ -2,22 +2,21 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, IPlugin, getPerformance,
-    getExceptionName as coreGetExceptionName, dumpObj,
-    isNullOrUndefined, strTrim, random32, isArray, isError, isDate,
-    newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent,
-    dateNow, uaDisallowsSameSiteNone, disableCookies as coreDisableCookies,
-    canUseCookies as coreCanUseCookies, getCookie as coreGetCookie,
-    setCookie as coreSetCookie, deleteCookie as coreDeleteCookie,
-    isBeaconsSupported
+    IDiagnosticLogger, IPlugin, arrForEach, attachEvent, canUseCookies as coreCanUseCookies, dateNow, deleteCookie as coreDeleteCookie,
+    disableCookies as coreDisableCookies, dumpObj, generateW3CId, getCookie as coreGetCookie, getExceptionName as coreGetExceptionName,
+    getIEVersion, getPerformance, isArray, isBeaconsSupported, isDate, isError, isNullOrUndefined, newId, random32,
+    setCookie as coreSetCookie, strTrim, toISOString, uaDisallowsSameSiteNone
 } from "@microsoft/applicationinsights-core-js";
-import { eRequestHeaders, RequestHeaders } from "./RequestResponseHeaders";
-import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
-import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
-import { createDomEvent } from "./DomHelperFuncs";
-import { stringToBoolOrDefault, msToTimeSpan, isCrossOriginError, getExtensionByName } from "./HelperFuncs";
 import { strNotSpecified } from "./Constants";
-import { utlCanUseLocalStorage, utlCanUseSessionStorage, utlDisableStorage, utlGetSessionStorage, utlGetSessionStorageKeys, utlGetLocalStorage, utlRemoveSessionStorage, utlRemoveStorage, utlSetSessionStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
+import { createDomEvent } from "./DomHelperFuncs";
+import { getExtensionByName, isCrossOriginError, msToTimeSpan, stringToBoolOrDefault } from "./HelperFuncs";
+import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
+import { RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
+import {
+    utlCanUseLocalStorage, utlCanUseSessionStorage, utlDisableStorage, utlGetLocalStorage, utlGetSessionStorage, utlGetSessionStorageKeys,
+    utlRemoveSessionStorage, utlRemoveStorage, utlSetLocalStorage, utlSetSessionStorage
+} from "./StorageHelperFuncs";
+import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { urlGetAbsoluteUrl, urlGetCompleteUrl, urlGetPathName, urlParseFullHost, urlParseHost, urlParseUrl } from "./UrlHelperFuncs";
 
 // listing only non-geo specific locations

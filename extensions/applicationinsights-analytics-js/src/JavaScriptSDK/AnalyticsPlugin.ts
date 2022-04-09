@@ -1,36 +1,31 @@
 /**
- * ApplicationInsights.ts
- * @copyright Microsoft 2018
- */
+* ApplicationInsights.ts
+* @copyright Microsoft 2018
+*/
 
-import {
-    IConfig, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
-    createTelemetryItem, Metric, Exception, eSeverityLevel, Trace, IDependencyTelemetry,
-    IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault, createDomEvent,
-    strNotSpecified, isCrossOriginError, utlDisableStorage, utlEnableStorage, dataSanitizeString
-} from "@microsoft/applicationinsights-common";
-
-import {
-    IPlugin, IConfiguration, IAppInsightsCore,
-    BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
-    eLoggingSeverity, _eInternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory, getLocation, objForEachKey,
-    isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, ICookieMgr, safeGetCookieMgr,
-    TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentFunc, IInstrumentCallDetails, eventOn, eventOff,
-    mergeEvtNamespace, createUniqueNamespace, ITelemetryInitializerHandler, throwError, isUndefined, hasWindow, createProcessTelemetryContext,
-    ITelemetryUnloadState, IProcessTelemetryUnloadContext
-} from "@microsoft/applicationinsights-core-js";
-import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
-import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import dynamicProto from "@microsoft/dynamicproto-js";
-
-// For types only
+import {
+    AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
+    IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
+    IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
+    PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDomEvent, createTelemetryItem, dataSanitizeString,
+    eSeverityLevel, isCrossOriginError, strNotSpecified, stringToBoolOrDefault, utlDisableStorage, utlEnableStorage
+} from "@microsoft/applicationinsights-common";
+import {
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICookieMgr, ICustomProperties, IInstrumentCallDetails, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, InstrumentFunc, TelemetryInitializerFunction, _eInternalMessageId, arrForEach, createProcessTelemetryContext,
+    createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory,
+    getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace,
+    objDefineAccessors, objForEachKey, safeGetCookieMgr, strUndefined, throwError
+} from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
+import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
+import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { Timing } from "./Timing";
 
+// For types only
 "use strict";
 
 const durationProperty: string = "duration";

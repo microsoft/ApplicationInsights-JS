@@ -3,7 +3,7 @@
 
 import { SamplingScoreGenerator } from "./SamplingScoreGenerators/SamplingScoreGenerator";
 import { ISample, Metric } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity, safeGetLogger } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, _eInternalMessageId, eLoggingSeverity, safeGetLogger } from "@microsoft/applicationinsights-core-js";
 
 export class Sample implements ISample {
     public sampleRate: number;
@@ -16,8 +16,8 @@ export class Sample implements ISample {
         let _logger = logger || safeGetLogger(null);
         
         if (sampleRate > 100 || sampleRate < 0) {
-            _logger.throwInternal(LoggingSeverity.WARNING,
-                _InternalMessageId.SampleRateOutOfRange,
+            _logger.throwInternal(eLoggingSeverity.WARNING,
+                _eInternalMessageId.SampleRateOutOfRange,
                 "Sampling rate is out of range (0..100). Sampling will be disabled, you may be sending too much data which may affect your AI service level.",
                 { samplingRate: sampleRate }, true);
             sampleRate = 100;

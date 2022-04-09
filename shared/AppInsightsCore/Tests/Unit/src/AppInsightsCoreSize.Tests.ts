@@ -2,7 +2,7 @@ import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import * as pako from "pako";
 
 export class AppInsightsCoreSizeCheck extends AITestClass {
-    private readonly MAX_DEFLATE_SIZE = 18;
+    private readonly MAX_DEFLATE_SIZE = 19;
     private readonly rawFilePath = "../dist/applicationinsights-core-js.min.js";
     private readonly prodFilePath = "../browser/applicationinsights-core-js.min.js";
 

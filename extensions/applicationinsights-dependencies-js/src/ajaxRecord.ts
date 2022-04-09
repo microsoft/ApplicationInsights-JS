@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dataSanitizeUrl, dateTimeUtilsDuration, IDependencyTelemetry, urlGetAbsoluteUrl, urlGetCompleteUrl, msToTimeSpan } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, objKeys, arrForEach, isNumber, isString, normalizeJsName, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    IDependencyTelemetry, dataSanitizeUrl, dateTimeUtilsDuration, msToTimeSpan, urlGetAbsoluteUrl, urlGetCompleteUrl
+} from "@microsoft/applicationinsights-common";
+import {
+    IDiagnosticLogger, arrForEach, isNumber, isString, normalizeJsName, objForEachKey, objKeys
+} from "@microsoft/applicationinsights-core-js";
+import { strDuration } from "./InternalConstants";
 
 export interface IAjaxRecordResponse {
     statusText: string,
@@ -86,7 +91,6 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
     let strRedirect = "redirect";
     let strRequest = "request";
     let strResponse = "response";
-    let strDuration = "duration";
     let strStartTime = "startTime";
     let strDomainLookupStart = strDomainLookup + strStart;
     let strDomainLookupEnd = strDomainLookup + strEnd;
@@ -364,4 +368,3 @@ export class ajaxRecord {
         return null;
     }
 }
-

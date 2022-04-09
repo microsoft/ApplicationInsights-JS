@@ -1,38 +1,43 @@
 /**
- * PropertiesPlugin.ts
- * @copyright Microsoft 2018
- */
+* PropertiesPlugin.ts
+* @copyright Microsoft 2018
+*/
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BaseTelemetryPlugin, IConfiguration, isNullOrUndefined,
-    IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, eLoggingSeverity, _eInternalMessageId, getNavigator,
-    ITelemetryPluginChain, objForEachKey, getSetValue, _logInternalMessage
+    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, getExtensionByName
+} from "@microsoft/applicationinsights-common";
+import {
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
+    _InternalLogMessage, _eInternalMessageId, _logInternalMessage, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined,
+    objForEachKey
 } from "@microsoft/applicationinsights-core-js";
-import { TelemetryContext } from "./TelemetryContext";
-import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName } from "@microsoft/applicationinsights-common";
-import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
+import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
+import { TelemetryContext } from "./TelemetryContext";
 
 export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPropertiesPlugin {
 
     public static getDefaultConfig(): ITelemetryConfig {
+        let defaultValue: string;
+        let nullValue: any = null;
+
         const defaultConfig: ITelemetryConfig = {
-            instrumentationKey: () => undefined,
-            accountId: () => null,
+            instrumentationKey: () => defaultValue,
+            accountId: () => nullValue,
             sessionRenewalMs: () => 30 * 60 * 1000,
             samplingPercentage: () => 100,
             sessionExpirationMs: () => 24 * 60 * 60 * 1000,
-            cookieDomain: () => null,
-            sdkExtension: () => null,
+            cookieDomain: () => nullValue,
+            sdkExtension: () => nullValue,
             isBrowserLinkTrackingEnabled: () => false,
-            appId: () => null,
-            getSessionId: () => null,
-            namePrefix: () => undefined,
-            sessionCookiePostfix: () => undefined,
-            userCookiePostfix: () => undefined,
+            appId: () => nullValue,
+            getSessionId: () => nullValue,
+            namePrefix: () => defaultValue,
+            sessionCookiePostfix: () => defaultValue,
+            userCookiePostfix: () => defaultValue,
             idLength: () => 22,
-            getNewId: () => null
+            getNewId: () => nullValue
         };
         
         return defaultConfig;

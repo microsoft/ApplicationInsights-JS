@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { INotificationListener, IPerfEvent, ITelemetryItem, arrForEach, objKeys, toISOString, IDbgExtension } from "@microsoft/applicationinsights-core-js";
+import {
+    IDbgExtension, INotificationListener, IPerfEvent, ITelemetryItem, arrForEach, objKeys, toISOString
+} from "@microsoft/applicationinsights-core-js";
 import { MessageSource, MessageType } from "./Enums";
 import { IMessage } from "./interfaces/IMessage";
 
@@ -153,4 +155,3 @@ function _diagLog(name: string, data: any) {
         debugExt.enable();
     }
 })();
-

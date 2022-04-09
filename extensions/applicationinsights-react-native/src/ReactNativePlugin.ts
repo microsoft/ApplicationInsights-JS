@@ -1,33 +1,20 @@
 /**
- * ReactNativePlugin.ts
- * @copyright Microsoft 2019
- */
+* ReactNativePlugin.ts
+* @copyright Microsoft 2019
+*/
 
-import {
-    ITelemetryPlugin,
-    ITelemetryItem,
-    IPlugin,
-    IAppInsightsCore,
-    eLoggingSeverity,
-    _eInternalMessageId,
-    BaseTelemetryPlugin,
-    IProcessTelemetryContext,//,
-    arrForEach,
-    dumpObj,
-    getExceptionName,
-    isObject,
-    hasOwnProperty,
-    isUndefined,
-    IProcessTelemetryUnloadContext,
-    ITelemetryUnloadState,
-    _throwInternal, _warnToConsole
-} from "@microsoft/applicationinsights-core-js";
-import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, eSeverityLevel, AnalyticsPluginIdentifier  } from "@microsoft/applicationinsights-common";
-import DeviceInfo from "react-native-device-info";
-
-import { INativeDevice, IReactNativePluginConfig } from "./Interfaces";
 import dynamicProto from "@microsoft/dynamicproto-js";
+import DeviceInfo from "react-native-device-info";
+import {
+    AnalyticsPluginIdentifier, ConfigurationManager, IAppInsights, IDevice, IExceptionTelemetry, eSeverityLevel
+} from "@microsoft/applicationinsights-common";
+import {
+    BaseTelemetryPlugin, IAppInsightsCore, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
+    ITelemetryPlugin, ITelemetryUnloadState, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dumpObj, eLoggingSeverity,
+    getExceptionName, hasOwnProperty, isObject, isUndefined
+} from "@microsoft/applicationinsights-core-js";
 import { getGlobal, strShimUndefined } from "@microsoft/applicationinsights-shims";
+import { INativeDevice, IReactNativePluginConfig } from "./Interfaces";
 
 declare var global: Window;
 

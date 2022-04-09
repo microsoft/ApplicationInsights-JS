@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeSpan } from "@microsoft/applicationinsights-common";
 import {
-    IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeSpan
-} from "@microsoft/applicationinsights-common";
-import {
-    IAppInsightsCore, IDiagnosticLogger, eLoggingSeverity,
-    _eInternalMessageId, getNavigator, getPerformance, _throwInternal
+    IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getNavigator, getPerformance
 } from "@microsoft/applicationinsights-core-js";
 
 /**

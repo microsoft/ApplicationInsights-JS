@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 "use strict"
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
-import { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { hasJSON, getJSON, getConsole } from "./EnvUtils";
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
+import { eConfigEnum } from "../JavaScriptSDK.Enums/ConfigEnums";
+import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IMappedConfig } from "../JavaScriptSDK.Interfaces/IMappedConfig";
 import { getDebugExt } from "./DbgExtensionUtils";
+import { getConsole, getJSON, hasJSON } from "./EnvUtils";
+import { isFunction, isUndefined } from "./HelperFuncs";
 import { strEmpty } from "./InternalConstants";
+import { getCfgValue, getMappedConfig } from "./MappedConfig";
 
 /**
  * For user non actionable traces use AI Internal prefix.
@@ -94,25 +97,28 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         /**
          * Count of internal messages sent
          */
-        let _messageCount = 0;
+        let _messageCount: number = 0;
 
         /**
          * Holds information about what message types were already logged to console or sent to server.
          */
         let _messageLogged: { [msg: number]: boolean } = {};
 
+        let _loggingLevelConsole: number;
+        let _loggingLevelTelemetry: number;
+        let _maxInternalMessageLimit: number;
+        let _enableDebugExceptions: boolean;
+
         dynamicProto(DiagnosticLogger, this, (_self) => {
-            if (isNullOrUndefined(config)) {
-                config = {};
-            }
+            _setDefaultsFromConfig(getMappedConfig(config || {}, null, true));
 
-            _self.consoleLoggingLevel = () => _getConfigValue("loggingLevelConsole", 0);
+            _self.consoleLoggingLevel = () => _loggingLevelConsole;
             
-            _self.telemetryLoggingLevel = () => _getConfigValue("loggingLevelTelemetry", 1);
+            _self.telemetryLoggingLevel = () => _loggingLevelTelemetry;
 
-            _self.maxInternalMessageLimit = () => _getConfigValue("maxMessageLimit", 25);
+            _self.maxInternalMessageLimit = () => _maxInternalMessageLimit;
 
-            _self.enableDebugExceptions = () => _getConfigValue("enableDebugExceptions", false);
+            _self.enableDebugExceptions = () => _enableDebugExceptions;
             
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
@@ -122,30 +128,29 @@ export class DiagnosticLogger implements IDiagnosticLogger {
             _self.throwInternal = (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => {
                 const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
 
-                if (_self.enableDebugExceptions()) {
+                if (_enableDebugExceptions) {
                     throw message;
                 } else {
                     // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
                     let logFunc = severity === eLoggingSeverity.CRITICAL ? strErrorToConsole : strWarnToConsole;
 
                     if (!isUndefined(message.message)) {
-                        const logLevel = _self.consoleLoggingLevel();
                         if (isUserAct) {
                             // check if this message type was already logged to console for this page view and if so, don't log it again
                             const messageKey: number = +message.messageId;
 
-                            if (!_messageLogged[messageKey] && logLevel >= severity) {
+                            if (!_messageLogged[messageKey] && _loggingLevelConsole >= severity) {
                                 _self[logFunc](message.message);
                                 _messageLogged[messageKey] = true;
                             }
                         } else {
                             // Only log traces if the console Logging Level is >= the throwInternal severity level
-                            if (logLevel >= severity) {
+                            if (_loggingLevelConsole >= severity) {
                                 _self[logFunc](message.message);
                             }
                         }
 
-                        _self.logInternalMessage(severity, message);
+                        _logInternalMessage(severity, message);
                     } else {
                         _debugExtMsg("throw" + (severity === eLoggingSeverity.CRITICAL ? "Critical" : "Warning"), message);
                     }
@@ -156,7 +161,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              * This will write a warning to the console if possible
              * @param message {string} - The warning message
              */
-            _self.warnToConsole = (message: string) => {
+            _self[strWarnToConsole] = (message: string) => {
                 _logToConsole("warn", message);
                 _debugExtMsg("warning", message);
             }
@@ -165,7 +170,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              * This will write an error to the console if possible
              * @param message {string} - The error message
              */
-            _self.errorToConsole = (message: string) => {
+            _self[strErrorToConsole] = (message: string) => {
                 _logToConsole("error", message);
                 _debugExtMsg("error", message);
             }
@@ -183,7 +188,9 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              * @param severity {LoggingSeverity} - The severity of the log message
              * @param message {_InternalLogMessage} - The message to log.
              */
-            _self.logInternalMessage = (severity: LoggingSeverity, message: _InternalLogMessage): void => {
+            _self.logInternalMessage = _logInternalMessage;
+            
+            function _logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
                 if (_areInternalMessagesThrottled()) {
                     return;
                 }
@@ -201,41 +208,39 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
                 if (logMessage) {
                     // Push the event in the internal queue
-                    if (severity <= _self.telemetryLoggingLevel()) {
+                    if (severity <= _loggingLevelTelemetry) {
                         _self.queue.push(message);
                         _messageCount++;
                         _debugExtMsg((severity === eLoggingSeverity.CRITICAL ? "error" : "warn"), message);
                     }
 
                     // When throttle limit reached, send a special event
-                    if (_messageCount === _self.maxInternalMessageLimit()) {
+                    if (_messageCount === _maxInternalMessageLimit) {
                         const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                         const throttleMessage = new _InternalLogMessage(_eInternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
                         _self.queue.push(throttleMessage);
                         if (severity === eLoggingSeverity.CRITICAL) {
-                            _self.errorToConsole(throttleLimitMessage);
+                            _self[strErrorToConsole](throttleLimitMessage);
                         } else {
-                            _self.warnToConsole(throttleLimitMessage);
+                            _self[strWarnToConsole](throttleLimitMessage);
                         }
                     }
                 }
-            };
+            }
 
-            function _getConfigValue<T>(name: keyof IConfiguration, defValue: T): T {
-                let value = config[name] as T;
-                if (!isNullOrUndefined(value)) {
-                    return value;
-                }
-
-                return defValue;
+            function _setDefaultsFromConfig(config: IMappedConfig) {
+                _loggingLevelConsole = getCfgValue(config, eConfigEnum.loggingLevelConsole, 0);
+                _loggingLevelTelemetry = getCfgValue(config, eConfigEnum.loggingLevelTelemetry, 1)
+                _maxInternalMessageLimit = getCfgValue(config, eConfigEnum.maxMessageLimit, 25);
+                _enableDebugExceptions =  getCfgValue(config, eConfigEnum.enableDebugExceptions, false);
             }
 
             function _areInternalMessagesThrottled(): boolean {
-                return _messageCount >= _self.maxInternalMessageLimit();
+                return _messageCount >= _maxInternalMessageLimit;
             }
 
             function _debugExtMsg(name: string, data: any) {
-                let dbgExt = getDebugExt(config);
+                let dbgExt = getDebugExt(config || {});
                 if (dbgExt && dbgExt.diagLog) {
                     dbgExt.diagLog(name, data);
                 }
@@ -335,7 +340,7 @@ function _getLogger(logger: IDiagnosticLogger) {
  * @param message {_InternalLogMessage} - The log message.
  */
 export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
-    (logger || new DiagnosticLogger()).throwInternal(severity, msgId, msg, properties, isUserAct);
+    _getLogger(logger).throwInternal(severity, msgId, msg, properties, isUserAct);
 }
 
 /**

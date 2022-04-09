@@ -34,7 +34,9 @@
         "copy": "cp ./images ./dist-esm",
         "update_manifest": "node ../../tools/release-tools/updatemanifest.js",
         "pack": "node ../../tools/release-tools/zipbrowser.js ai.chrome-ext dist",
-        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt chromedebugextension-min",
+        "ai-unmin": "grunt chromedebugextension-unmin"
     },
     "private": false,
     "license": "MIT",

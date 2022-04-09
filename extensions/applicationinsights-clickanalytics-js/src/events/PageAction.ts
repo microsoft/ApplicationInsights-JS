@@ -1,15 +1,18 @@
 /**
- * @copyright Microsoft 2020
- */
+* @copyright Microsoft 2020
+*/
 
-import dynamicProto from "@microsoft/dynamicproto-js";
-import { WebEvent } from "./WebEvent";
 import * as DataCollector from "../DataCollector";
-import { ITelemetryItem, getPerformance, ICustomProperties, eLoggingSeverity, _eInternalMessageId, objForEachKey, IDiagnosticLogger, _throwInternal } from "@microsoft/applicationinsights-core-js"
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { IClickAnalyticsConfiguration, IContentHandler, IPageActionOverrideValues, IPageActionTelemetry } from "../Interfaces/Datamodel";
-import { extractFieldFromObject, bracketIt, isValueAssigned, extend  } from "../common/Utils";
+import { bracketIt, extend, extractFieldFromObject, isValueAssigned } from "../common/Utils";
 import { strNotSpecified } from "@microsoft/applicationinsights-common";
+import {
+    ICustomProperties, IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, eLoggingSeverity, getPerformance,
+    objForEachKey
+} from "@microsoft/applicationinsights-core-js";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
+import { WebEvent } from "./WebEvent";
 
 export class PageAction extends WebEvent {
     

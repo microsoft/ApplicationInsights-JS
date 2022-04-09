@@ -1,25 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { eConfigEnum } from "../JavaScriptSDK.Enums/ConfigEnums";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IMappedConfig } from "../JavaScriptSDK.Interfaces/IMappedConfig";
+import { _throwInternal } from "./DiagnosticLogger";
 import { dumpObj, getDocument, getLocation, getNavigator, isIE } from "./EnvUtils";
 import {
     arrForEach, dateNow, getExceptionName, isFunction, isNotNullOrUndefined, isNullOrUndefined, isString, isTruthy, isUndefined,
     objForEachKey, setValue, strContains, strEndsWith, strTrim
 } from "./HelperFuncs";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { strEmpty } from "./InternalConstants";
-import { _throwInternal } from "./DiagnosticLogger";
+import { getCfgValue, getMappedConfig } from "./MappedConfig";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
 const strCookie = "cookie";
 const strExpires = "expires";
 const strEnabled = "enabled";
-const strIsCookieUseDisabled = "isCookieUseDisabled";
-const strDisableCookiesUsage = "disableCookiesUsage";
 const strConfigCookieMgr = "_ckMgr";
 
 let _supportsCookies: boolean = null;
@@ -59,23 +60,18 @@ function _isMgrEnabled(cookieMgr: ICookieMgr) {
     return true;
 }
 
-function _createCookieMgrConfig(rootConfig: IConfiguration): ICookieMgrConfig {
-    let cookieMgrCfg = rootConfig.cookieCfg = rootConfig.cookieCfg || {};
+function _createCookieMgrConfig(rootConfig: IMappedConfig): ICookieMgrConfig {
+    let cookieMgrCfg: ICookieMgrConfig = getCfgValue(rootConfig, eConfigEnum.cookieCfg) || {};
 
     // Sets the values from the root config if not already present on the cookieMgrCfg
-    setValue(cookieMgrCfg, "domain", rootConfig.cookieDomain, isNotNullOrUndefined, isNullOrUndefined);
-    setValue(cookieMgrCfg, "path", rootConfig.cookiePath || "/", null, isNullOrUndefined);
+    setValue(cookieMgrCfg, "domain", getCfgValue(rootConfig, eConfigEnum.cookieDomain), isNotNullOrUndefined, isNullOrUndefined);
+    setValue(cookieMgrCfg, "path", getCfgValue(rootConfig, eConfigEnum.cookiePath) || "/", null, isNullOrUndefined);
     if (isNullOrUndefined(cookieMgrCfg[strEnabled])) {
         // Set the enabled from the provided setting or the legacy root values
-        let cookieEnabled: boolean;
-        if (!isUndefined(rootConfig[strIsCookieUseDisabled])) {
-            cookieEnabled = !rootConfig[strIsCookieUseDisabled];
+        let isDisabled: boolean = getCfgValue(rootConfig, eConfigEnum.disableCookiesUsage, getCfgValue(rootConfig, eConfigEnum.isCookieUseDisabled));
+        if (!isUndefined(isDisabled)) {
+            cookieMgrCfg[strEnabled] = !isDisabled;
         }
-        if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
-            cookieEnabled = !rootConfig[strDisableCookiesUsage];
-        }
-
-        cookieMgrCfg[strEnabled] = cookieEnabled;
     }
 
     return cookieMgrCfg;
@@ -94,7 +90,8 @@ export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration
         // Always returns an instance
         cookieMgr = core.getCookieMgr();
     } else if (config) {
-        let cookieCfg = config.cookieCfg;
+        let mappedConfig = getMappedConfig(config, null, true);
+        let cookieCfg = getCfgValue(mappedConfig, eConfigEnum.cookieCfg);
         if (cookieCfg[strConfigCookieMgr]) {
             cookieMgr = cookieCfg[strConfigCookieMgr];
         } else {
@@ -111,7 +108,8 @@ export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration
 }
 
 export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
-    let cookieMgrConfig = _createCookieMgrConfig(rootConfig || _globalCookieConfig);
+    let mappedConfig = getMappedConfig(rootConfig || _globalCookieConfig, null, true);
+    let cookieMgrConfig = _createCookieMgrConfig(mappedConfig);
 
     let _path = cookieMgrConfig.path || "/";
     let _domain = cookieMgrConfig.domain;

@@ -7,18 +7,20 @@ import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateRea
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import {
+    IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
+} from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { arrForEach, isArray, objFreeze, throwError } from "./HelperFuncs";
-import { strPause, strProcessNext, strResume, strTeardown } from "./InternalConstants";
 import { createProcessTelemetryContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
 import { initializePlugins } from "./TelemetryHelpers";
 
 export const ChannelControllerPriority = 500;
+
 const ChannelValidationMessage = "Channel has invalid priority - ";
 
 export interface IChannelController extends IChannelControls {
@@ -36,7 +38,7 @@ export interface _IInternalChannels {
     chain: ITelemetryPluginChain;
 }
 
-function _addChannelQueue(channelQueue: _IInternalChannels[], queue: IChannelControls[], config: IConfiguration, core: IAppInsightsCore) {
+function _addChannelQueue(channelQueue: _IInternalChannels[], queue: IChannelControls[], core: IAppInsightsCore) {
     if (queue && isArray(queue) && queue.length > 0) {
         queue = queue.sort((a, b) => { // sort based on priority within each queue
             return a.priority - b.priority;
@@ -50,7 +52,7 @@ function _addChannelQueue(channelQueue: _IInternalChannels[], queue: IChannelCon
 
         channelQueue.push({
             queue: objFreeze(queue),
-            chain: createTelemetryProxyChain(queue, config, core)
+            chain: createTelemetryProxyChain(queue, core.config, core)
         });
     }
 }
@@ -98,9 +100,9 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
         };
 
         _processChannelQueue(channelQueue, updateCtx, (chainCtx: IProcessTelemetryUpdateContext) => {
-            chainCtx[strProcessNext](theUpdateState);
+            chainCtx.processNext(theUpdateState);
         }, () => {
-            updateCtx[strProcessNext](theUpdateState);
+            updateCtx.processNext(theUpdateState);
         });
 
         return true;
@@ -113,9 +115,9 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
         };
 
         _processChannelQueue(channelQueue, unloadCtx, (chainCtx: IProcessTelemetryUnloadContext) => {
-            chainCtx[strProcessNext](theUnloadState);
+            chainCtx.processNext(theUnloadState);
         }, () => {
-            unloadCtx[strProcessNext](theUnloadState);
+            unloadCtx.processNext(theUnloadState);
             isInitialized = false;
         });
 
@@ -165,27 +167,27 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
         },
         processTelemetry: (item: ITelemetryItem, itemCtx: IProcessTelemetryContext) => {
             _processChannelQueue(channelQueue, itemCtx || _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
-                chainCtx[strProcessNext](item);
+                chainCtx.processNext(item);
             }, () => {
-                itemCtx[strProcessNext](item);
+                itemCtx.processNext(item);
             });
         },
         update: _doUpdate,
-        [strPause]: () => {
+        pause: () => {
             _processChannelQueue(channelQueue, _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
                 chainCtx.iterate<IChannelControls>((plugin) => {
-                    plugin[strPause] && plugin[strPause]();
+                    plugin.pause && plugin.pause();
                 });
             }, null);
         },
-        [strResume]: () => {
+        resume: () => {
             _processChannelQueue(channelQueue, _getTelCtx(), (chainCtx: IProcessTelemetryContext) => {
                 chainCtx.iterate<IChannelControls>((plugin) => {
-                    plugin[strResume] && plugin[strResume]();
+                    plugin.resume && plugin.resume();
                 });
             }, null);
         },
-        [strTeardown]: _doTeardown,
+        teardown: _doTeardown,
         getChannel: _getChannel,
         flush: (isAsync: boolean, callBack: (flushComplete?: boolean) => void, sendReason: SendRequestReason, cbTimeout?: number) => {
             // Setting waiting to one so that we don't call the callBack until we finish iterating
@@ -250,12 +252,12 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
     return channelController;
 }
 
-export function createChannelQueues(channels: IChannelControls[][], extensions: IPlugin[], config: IConfiguration, core: IAppInsightsCore) {
+export function createChannelQueues(channels: IChannelControls[][], extensions: IPlugin[], core: IAppInsightsCore) {
     let channelQueue: _IInternalChannels[] = [];
 
     if (channels) {
         // Add and sort the configuration channel queues
-        arrForEach(channels, queue => _addChannelQueue(channelQueue, queue, config, core));
+        arrForEach(channels, queue => _addChannelQueue(channelQueue, queue, core));
     }
 
     if (extensions) {
@@ -267,7 +269,7 @@ export function createChannelQueues(channels: IChannelControls[][], extensions: 
             }
         });
     
-        _addChannelQueue(channelQueue, extensionQueue, config, core);
+        _addChannelQueue(channelQueue, extensionQueue, core);
     }
 
     return channelQueue;

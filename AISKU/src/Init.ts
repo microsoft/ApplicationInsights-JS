@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Snippet } from "./Initialization";
-import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
+import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
+import { Snippet } from "./Initialization";
 
 export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
 

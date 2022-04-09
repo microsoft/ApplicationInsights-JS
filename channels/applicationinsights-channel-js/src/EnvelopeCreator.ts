@@ -1,17 +1,13 @@
 import {
-    IEnvelope, Data, Envelope,
-    RemoteDependencyData, Event, Exception,
-    Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
-    IPageViewPerformanceTelemetry, CtxTagKeys,
-    HttpMethod, IPageViewTelemetryInternal, IWeb,
-    IExceptionInternal,
-    SampleRate,
-    dataSanitizeString
+    CtxTagKeys, Data, Envelope, Event, Exception, HttpMethod, IDependencyTelemetry, IEnvelope, IExceptionInternal,
+    IPageViewPerformanceTelemetry, IPageViewTelemetryInternal, IWeb, Metric, PageView, PageViewPerformance, RemoteDependencyData, SampleRate,
+    Trace, dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 import {
-    ITelemetryItem, IDiagnosticLogger, eLoggingSeverity, _eInternalMessageId, hasJSON, getJSON, objForEachKey,
-    isNullOrUndefined, isNumber, isString, toISOString, setValue, isTruthy, optimizeObject, _throwInternal, _warnToConsole
+    IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, _warnToConsole, eLoggingSeverity, getJSON, hasJSON,
+    isNullOrUndefined, isNumber, isString, isTruthy, objForEachKey, optimizeObject, setValue, toISOString
 } from "@microsoft/applicationinsights-core-js";
+import { strDuration } from "./InternalConstants";
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
 const strBaseType = "baseType";
@@ -263,7 +259,6 @@ export function PageViewEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem
     EnvelopeCreatorInit(logger, telemetryItem);
 
     // Since duration is not part of the domain properties in Common Schema, extract it from part C
-    let strDuration = "duration";
     let duration;
     let baseData = telemetryItem[strBaseData];
     if (!isNullOrUndefined(baseData) &&

@@ -1,20 +1,25 @@
 /**
- * TelemetryContext.ts
- * @copyright Microsoft 2018
- */
+* TelemetryContext.ts
+* @copyright Microsoft 2018
+*/
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { ITelemetryItem, IProcessTelemetryContext, IAppInsightsCore, isString, objKeys, hasWindow, _InternalLogMessage, setValue, getSetValue } from "@microsoft/applicationinsights-core-js";
-import { Session, _SessionManager } from "./Context/Session";
-import { Extensions, IOperatingSystem, ITelemetryTrace, IWeb, CtxTagKeys, PageView, IApplication, IDevice, ILocation, IUserContext, IInternal, ISession } from "@microsoft/applicationinsights-common";
+import {
+    CtxTagKeys, Extensions, IApplication, IDevice, IInternal, ILocation, IOperatingSystem, ISession, ITelemetryTrace, IUserContext, IWeb,
+    PageView
+} from "@microsoft/applicationinsights-common";
+import {
+    IAppInsightsCore, IProcessTelemetryContext, ITelemetryItem, _InternalLogMessage, getSetValue, hasWindow, isString, objKeys, setValue
+} from "@microsoft/applicationinsights-core-js";
 import { Application } from "./Context/Application";
 import { Device } from "./Context/Device";
 import { Internal } from "./Context/Internal";
-import { User } from "./Context/User";
 import { Location } from "./Context/Location";
-import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
+import { Session, _SessionManager } from "./Context/Session";
 import { TelemetryTrace } from "./Context/TelemetryTrace";
+import { User } from "./Context/User";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
+import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
 
 const strExt = "ext";
 const strTags = "tags";

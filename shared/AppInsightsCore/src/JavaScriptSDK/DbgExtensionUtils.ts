@@ -1,12 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ConfigEnum, eConfigEnum } from "../JavaScriptSDK.Enums/ConfigEnums";
+import { eSdkCoreNames, SdkCoreNames } from "../JavaScriptSDK.Enums/SdkCoreNames";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDbgExtension } from "../JavaScriptSDK.Interfaces/IDbgExtension";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { getGlobalInst } from "./EnvUtils";
 
-const listenerFuncs = [ "eventsSent", "eventsDiscarded", "eventsSendRequest", "perfEvent" ];
+const listenerFuncs = [
+    SdkCoreNames[eSdkCoreNames.eventsSent],
+    SdkCoreNames[eSdkCoreNames.eventsDiscarded],
+    SdkCoreNames[eSdkCoreNames.eventsSendRequest],
+    SdkCoreNames[eSdkCoreNames.perfEvent]
+];
 
 let _aiNamespace: any = null;
 let _debugListener: INotificationListener;
@@ -36,7 +43,8 @@ function _getExtensionNamespace() {
 
 export function getDebugExt(config: IConfiguration): IDbgExtension {
     let ns = _aiNamespace;
-    if (!ns && config.disableDbgExt !== true) {
+    // Using direct lookup rather than the getCfgValue() for performance -- avoiding function call as this is generally not set
+    if (!ns && config[ConfigEnum[eConfigEnum.disableDbgExt]] !== true) {
         ns = _aiNamespace || _getExtensionNamespace();
     }
 
