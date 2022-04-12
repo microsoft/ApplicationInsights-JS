@@ -1,4 +1,39 @@
 module.exports = function (grunt) {
+    function _createRegEx(str) {
+        return str.replace(/\\/g, '\\\\').
+        replace(/\u0008/g, '\\b').
+        replace(/\t/g, '\\t').
+        replace(/\n/g, '\\n').
+        replace(/\f/g, '\\f').
+        replace(/\r/g, '\\r').
+        replace(/'/g, '\\\'').
+        replace(/"/g, '\\"');
+    }
+    
+    function setNewSnippet() {
+        var snippetBuffer = grunt.file.read("./AISKU/snippet/snippet.min.js");
+        var snippetStr = _createRegEx(snippetBuffer.toString());
+        var expectedStr = "##replaceSnippet##";
+        var srcPath = "./tools/applicationinsights-web-snippet/src";
+        return {
+            inline: {
+                files: [{
+                    expand: true,
+                    cwd: srcPath,
+                    dest: "./tools/applicationinsights-web-snippet/dest",
+                    src: 'applicationinsights-web-snippet.ts'
+                }],
+                options: {
+                    replacements: [{
+                        pattern: expectedStr,
+                        replacement: snippetStr
+                    }]
+                }
+            }
+           
+        };
+    }
+
     function deepMerge(target, src) {
         try {
             var newValue = Object.assign({}, target, src);
@@ -169,6 +204,13 @@ module.exports = function (grunt) {
                                             ]
                                         }
                                     },
+            "applicationinsights-web-snippet": { path: "./tools/applicationinsights-web-snippet",
+                                                cfg: {
+                                                    src: [
+                                                        "./tools/applicationinsights-web-snippet/dest/*.ts"
+                                                    ]
+                                                }
+                                            },
             // Common
             "tst-framework":        { path: "./common/Tests/Framework",
                                         cfg: {
@@ -528,7 +570,8 @@ module.exports = function (grunt) {
                         base: '.'
                     }
                 }        
-            }
+            },
+            'string-replace': setNewSnippet()
         }));
     
         grunt.event.on('qunit.testStart', function (name) {
@@ -540,6 +583,7 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-qunit');
         grunt.loadNpmTasks('grunt-contrib-connect');
+        grunt.loadNpmTasks('grunt-string-replace');
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
         grunt.registerTask("core", tsBuildActions("core"));
         grunt.registerTask("common", tsBuildActions("common"));
@@ -575,6 +619,8 @@ module.exports = function (grunt) {
         grunt.registerTask("shims", tsBuildActions("shims").concat(["ts:shimstest", "qunit:shims"]));
         grunt.registerTask("shimstest", ["ts:shimstest", "qunit:shims"]);
         grunt.registerTask("chromedebugextension", tsBuildActions("chrome-debug-extension"));
+        grunt.registerTask("websnippetReplace", ["string-replace"]);
+        grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
         grunt.registerTask("clickanalytics", tsBuildActions("clickanalytics"));
         grunt.registerTask("clickanalyticstests", ["connect", "ts:clickanalyticstests", "qunit:clickanalytics"]);
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));

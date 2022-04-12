@@ -1,0 +1,40 @@
+{
+  "name": "@microsoft/applicationinsights-web-snippet",
+  "version": "1.0.0",
+  "description": "Microsoft Application Insights Web Snippet",
+  "main": "dist/node/applicationinsights-web-snippet.js",
+  "module": "dist/esm/applicationinsights-web-snippet.js",
+  "types": "types/applicationinsights-web-snippet.d.ts",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-web-snippet"
+  },
+  "scripts": {
+    "build": " npm run replace && npm run build:esm && npm run build:browser",
+    "replace": "grunt websnippetReplace",
+    "build:esm": "grunt websnippet",
+    "build:browser": "rollup -c",
+    "rebuild": "npm run build",
+    "lint": "tslint -p tsconfig.json"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
+    "@microsoft/applicationinsights-rollup-es3": "1.1.3",
+    "typescript": "^4.3.4",
+    "tslib": "^2.0.0",
+    "magic-string": "^0.25.7",
+    "@rollup/plugin-commonjs": "^18.0.0",
+    "@rollup/plugin-node-resolve": "^11.2.1",
+    "@rollup/plugin-replace": "^2.3.3",
+    "rollup-plugin-cleanup": "^3.2.1",
+    "rollup": "^2.32.0",
+    "grunt": "^1.4.1",
+    "grunt-cli": "^1.4.3",
+    "grunt-contrib-qunit": "^5.0.1",
+    "@nevware21/grunt-ts-plugin": "^0.4.3",
+    "@nevware21/grunt-eslint-ts": "^0.2.2"
+  },
+  "dependencies": {}
+}

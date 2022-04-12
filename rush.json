@@ -36,6 +36,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-web-snippet",
+      "projectFolder": "tools/applicationinsights-web-snippet",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-core-js",
       "projectFolder": "shared/AppInsightsCore",
       "shouldPublish": true
