@@ -16,6 +16,7 @@
     "build:esm": "grunt websnippet",
     "build:browser": "rollup -c",
     "rebuild": "npm run build",
+    "test": "",
     "lint": "tslint -p tsconfig.json"
   },
   "license": "MIT",
