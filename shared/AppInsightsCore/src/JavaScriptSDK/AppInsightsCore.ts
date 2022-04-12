@@ -42,7 +42,7 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
             function _validateTelemetryItem(telemetryItem: ITelemetryItem) {
                 if (isNullOrUndefined(telemetryItem.name)) {
                     _notifyInvalidEvent(telemetryItem);
-                    throw Error("telemetry name required");
+                    throwError("telemetry name required");
                 }
             }
         

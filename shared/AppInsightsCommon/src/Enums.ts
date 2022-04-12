@@ -11,12 +11,11 @@ export const enum eStorageType {
     SessionStorage
 }
 
-export const StorageType = createEnumStyle<{ [key in (keyof typeof eStorageType)]: number; }>({
+export const StorageType = createEnumStyle<typeof eStorageType>({
     LocalStorage: eStorageType.LocalStorage,
     SessionStorage: eStorageType.SessionStorage
 });
 export type StorageType = eStorageType | typeof StorageType;
-
 
 /**
  * Enum is used in aiDataContract to describe how fields are serialized.
@@ -42,7 +41,7 @@ export const enum eDistributedTracingModes {
     W3C
 }
 
-export const DistributedTracingModes = createEnumStyle<{ [key in (keyof typeof eDistributedTracingModes)]: number; }>({
+export const DistributedTracingModes = createEnumStyle<typeof eDistributedTracingModes>({
     AI: eDistributedTracingModes.AI,
     AI_AND_W3C: eDistributedTracingModes.AI_AND_W3C,
     W3C: eDistributedTracingModes.W3C
