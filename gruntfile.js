@@ -1,18 +1,19 @@
 module.exports = function (grunt) {
-    function _createRegEx(str) {
+    function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
+        replace(/"/g, '\\"').
+        replace(/'/g, '\\\'').
         replace(/\u0008/g, '\\b').
+        replace(/\r/g, '\\r').
         replace(/\t/g, '\\t').
         replace(/\n/g, '\\n').
-        replace(/\f/g, '\\f').
-        replace(/\r/g, '\\r').
-        replace(/'/g, '\\\'').
-        replace(/"/g, '\\"');
+        replace(/\f/g, '\\f');
+        
     }
     
     function setNewSnippet() {
         var snippetBuffer = grunt.file.read("./AISKU/snippet/snippet.min.js");
-        var snippetStr = _createRegEx(snippetBuffer.toString());
+        var snippetStr = _encodeStr(snippetBuffer.toString());
         var expectedStr = "##replaceSnippet##";
         var srcPath = "./tools/applicationinsights-web-snippet/src";
         return {
