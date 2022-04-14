@@ -86,7 +86,7 @@ export interface IConfig {
     disableAjaxTracking?: boolean;
 
     /**
-     * If true, Fetch requests are not autocollected. Default is true.
+     * If true, Fetch requests are not autocollected. Default is false (Since 2.8.0, previously true).
      * @defaultValue true
      */
     disableFetchTracking?: boolean;

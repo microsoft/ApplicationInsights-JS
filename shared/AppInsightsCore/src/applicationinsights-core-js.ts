@@ -68,7 +68,6 @@ export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookie
 export {
     createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported
 } from "./JavaScriptSDK/CookieMgr";
-export { strIKey, strExtensionConfig } from "./JavaScriptSDK/Constants";
 export { IDbgExtension } from "./JavaScriptSDK.Interfaces/IDbgExtension";
 export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils"
 export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./JavaScriptSDK.Interfaces/ITelemetryInitializers";
