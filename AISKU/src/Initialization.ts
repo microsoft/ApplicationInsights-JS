@@ -304,7 +304,7 @@ export class Initialization implements IApplicationInsights {
                     // need from core
                     // Microsoft.ApplicationInsights._InternalLogging.throwInternal(
                     //     eLoggingSeverity.WARNING,
-                    //     _InternalMessageId.FailedToSendQueuedTelemetry,
+                    //     _eInternalMessageId.FailedToSendQueuedTelemetry,
                     //     "Failed to send queued telemetry",
                     //     properties);
                 }
