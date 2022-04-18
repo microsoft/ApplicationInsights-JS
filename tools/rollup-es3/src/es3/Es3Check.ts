@@ -28,8 +28,16 @@ export function checkResult(tokens:IEs3CheckKeyword[], result:string, id:string,
                         while ((funcMatch = funcRegEx.exec(result))) {
                             let funcName = funcMatch[0]||"";
                             if (funcName.length > 0 && !isIgnoreFuncMatch(funcName, keyword)) {
-                                errorMessage += formatError(keyword, funcName, keyword.errorMsg, result, funcMatch.index, id, entry);
-                                errorMessage += "\n--------------------=([" + visibleNewlines(funcName) + "])=--------------------\n";
+                                let newErrorMessage = formatError(keyword, funcName, keyword.errorMsg, result, funcMatch.index, id, entry);
+                                if ((errorMessage.length + newErrorMessage.length) < 32768) {
+                                    errorMessage += formatError(keyword, funcName, keyword.errorMsg, result, funcMatch.index, id, entry);
+                                    errorMessage += "\n--------------------=([" + visibleNewlines(funcName) + "])=--------------------\n";
+                                } else {
+                                    errorMessage += "\n-------------------------------------------------------------------------------";
+                                    errorMessage += "\n Too Many errors detected!";
+                                    errorMessage += "\n-------------------------------------------------------------------------------";
+                                    throw new Error(errorMessage);
+                                }
                             }
                         }
                     }

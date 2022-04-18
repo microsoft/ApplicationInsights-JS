@@ -84,9 +84,9 @@ export interface IConfiguration {
      * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
     channels?: IChannelControls[][];
+
     /**
      * @type {boolean}
-     * @memberof IConfiguration
      * Flag that disables the Instrumentation Key validation.
      */
     disableInstrumentationKeyValidation?: boolean;
@@ -123,7 +123,6 @@ export interface IConfiguration {
      * @description Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. It
      * can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
      * @type {string}
-     * @memberof IConfig
      * @defaultValue ""
      */
     cookieDomain?: string;
@@ -132,7 +131,6 @@ export interface IConfiguration {
      * @description Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application
      * gateway. It can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
      * @type {string}
-     * @memberof IConfig
      * @defaultValue ""
      */
     cookiePath?: string;
