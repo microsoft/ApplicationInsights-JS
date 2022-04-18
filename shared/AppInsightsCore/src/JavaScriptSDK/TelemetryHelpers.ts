@@ -16,7 +16,7 @@ const strDoUnload = "_doUnload";
 export interface IPluginState {
     core?: IAppInsightsCore;
     isInitialized?: boolean;
-    tearDown?: boolean;
+    teardown?: boolean;
     disabled?: boolean;
 }
 

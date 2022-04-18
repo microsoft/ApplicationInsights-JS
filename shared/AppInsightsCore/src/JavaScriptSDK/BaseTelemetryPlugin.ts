@@ -120,14 +120,15 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             _self.teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 // If this plugin has already been torn down (not operational) or is not initialized (core is not set)
                 // or the core being used for unload was not the same core used for initialization.
-                if (!_self.core || (unloadCtx && _self.core !== unloadCtx.core())) {
+                let core = _self.core;
+                if (!core || (unloadCtx && core !== unloadCtx.core())) {
                     // Do Nothing as either the plugin is not initialized or was not initialized by the current core
                     return;
                 }
 
                 let result: void | boolean;
                 let unloadDone = false;
-                let theUnloadCtx = unloadCtx || createProcessTelemetryUnloadContext(null, {}, _self.core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
+                let theUnloadCtx = unloadCtx || createProcessTelemetryUnloadContext(null, core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
                 let theUnloadState: ITelemetryUnloadState = unloadState || {
                     reason: TelemetryUnloadReason.ManualTeardown,
                     isAsync: false
@@ -166,14 +167,15 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             _self.update = (updateCtx: IProcessTelemetryUpdateContext, updateState: ITelemetryUpdateState) => {
                 // If this plugin has already been torn down (not operational) or is not initialized (core is not set)
                 // or the core being used for unload was not the same core used for initialization.
-                if (!_self.core || (updateCtx && _self.core !== updateCtx.core())) {
+                let core = _self.core;
+                if (!core || (updateCtx && core !== updateCtx.core())) {
                     // Do Nothing
                     return;
                 }
 
                 let result: void | boolean;
                 let updateDone = false;
-                let theUpdateCtx = updateCtx || createProcessTelemetryUpdateContext(null, {}, _self.core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
+                let theUpdateCtx = updateCtx || createProcessTelemetryUpdateContext(null, core, _nextPlugin && _nextPlugin[strGetPlugin] ? _nextPlugin[strGetPlugin]() : _nextPlugin);
                 let theUpdateState: ITelemetryUpdateState = updateState || {
                     reason: TelemetryUpdateReason.Unknown
                 };
