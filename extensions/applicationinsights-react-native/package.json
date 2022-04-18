@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-native",
-    "version": "2.4.4",
+    "version": "2.5.0",
     "description": "Microsoft Application Insights React Native Plugin",
     "main": "dist-esm/index.js",
     "types": "types/index.d.ts",
@@ -53,8 +53,8 @@
         "uglify-js": "^3.11.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-common": "2.7.4",
-        "@microsoft/applicationinsights-core-js": "2.7.4",
+        "@microsoft/applicationinsights-common": "2.8.0",
+        "@microsoft/applicationinsights-core-js": "2.8.0",
         "@microsoft/applicationinsights-shims": "2.0.1",
         "@microsoft/dynamicproto-js": "^1.1.4"
     },
