@@ -113,7 +113,7 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
     React.useEffect(() => {
         versionCheck();
 
-        let configurationTypeToSet = undefined;
+        let configurationTypeToSet: ConfigurationType = undefined;
         try {
             const savedValue = localStorage.getItem(configurationTypeStorageKey);
             if (savedValue && Object.keys(ConfigurationURLs).includes(savedValue)) {
