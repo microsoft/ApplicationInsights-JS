@@ -1,4 +1,4 @@
-﻿
+
 /** Defines a test case */
 export class TestCase {
     /** Name to use for the test case */

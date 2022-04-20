@@ -19,7 +19,9 @@
         "test": "jest --config test/jestconfig.json",
         "test-watch": "jest --config test/jestconfig.json --watch",
         "lint": "tslint -p tsconfig.json",
-        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights react plugin\""
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights react plugin\"",
+        "ai-min": "grunt react-min",
+        "ai-restore": "grunt react-restore"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

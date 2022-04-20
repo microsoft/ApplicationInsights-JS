@@ -2,31 +2,29 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, IPlugin, getPerformance,
-    getExceptionName as coreGetExceptionName, dumpObj,
-    isNullOrUndefined, strTrim, random32, isArray, isError, isDate,
-    newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent,
-    dateNow, uaDisallowsSameSiteNone, disableCookies as coreDisableCookies,
-    canUseCookies as coreCanUseCookies, getCookie as coreGetCookie,
-    setCookie as coreSetCookie, deleteCookie as coreDeleteCookie,
-    isBeaconsSupported, arrIndexOf, IDistributedTraceContext,
-    isValidTraceId, isValidSpanId
+    IDiagnosticLogger, IDistributedTraceContext, IPlugin, arrForEach, arrIndexOf, attachEvent, canUseCookies as coreCanUseCookies, dateNow,
+    deleteCookie as coreDeleteCookie, disableCookies as coreDisableCookies, dumpObj, generateW3CId, getCookie as coreGetCookie,
+    getExceptionName as coreGetExceptionName, getIEVersion, getPerformance, isArray, isBeaconsSupported, isDate, isError, isNullOrUndefined,
+    isValidSpanId, isValidTraceId, newId, random32, setCookie as coreSetCookie, strTrim, toISOString, uaDisallowsSameSiteNone
 } from "@microsoft/applicationinsights-core-js";
-import { eRequestHeaders, RequestHeaders } from "./RequestResponseHeaders";
-import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
-import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified } from "./Constants";
 import { createDomEvent } from "./DomHelperFuncs";
-import { stringToBoolOrDefault, msToTimeSpan, isCrossOriginError, getExtensionByName } from "./HelperFuncs";
-import { strNotSpecified } from "./Constants";
-import { utlCanUseLocalStorage, utlCanUseSessionStorage, utlDisableStorage, utlGetSessionStorage, utlGetSessionStorageKeys, utlGetLocalStorage, utlRemoveSessionStorage, utlRemoveStorage, utlSetSessionStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
-import { urlGetAbsoluteUrl, urlGetCompleteUrl, urlGetPathName, urlParseFullHost, urlParseHost, urlParseUrl } from "./UrlHelperFuncs";
+import { getExtensionByName, isCrossOriginError, msToTimeSpan, stringToBoolOrDefault } from "./HelperFuncs";
 import { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
+import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
+import { RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
+import {
+    utlCanUseLocalStorage, utlCanUseSessionStorage, utlDisableStorage, utlGetLocalStorage, utlGetSessionStorage, utlGetSessionStorageKeys,
+    utlRemoveSessionStorage, utlRemoveStorage, utlSetLocalStorage, utlSetSessionStorage
+} from "./StorageHelperFuncs";
+import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
+import { urlGetAbsoluteUrl, urlGetCompleteUrl, urlGetPathName, urlParseFullHost, urlParseHost, urlParseUrl } from "./UrlHelperFuncs";
 
 // listing only non-geo specific locations
 const _internalEndpoints: string[] = [
-    "https://dc.services.visualstudio.com/v2/track",
-    "https://breeze.aimon.applicationinsights.io/v2/track",
-    "https://dc-int.services.visualstudio.com/v2/track"
+    DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH,
+    "https://breeze.aimon.applicationinsights.io" + DEFAULT_BREEZE_PATH,
+    "https://dc-int.services.visualstudio.com" + DEFAULT_BREEZE_PATH
 ];
 
 export function isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {

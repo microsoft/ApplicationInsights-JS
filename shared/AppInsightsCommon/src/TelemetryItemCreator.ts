@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    IDiagnosticLogger, ITelemetryItem, isNullOrUndefined, objForEachKey, throwError, toISOString
+} from "@microsoft/applicationinsights-core-js";
+import { strIkey, strNotSpecified } from "./Constants";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
-import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString, throwError } from "@microsoft/applicationinsights-core-js";
-import { strNotSpecified, strIkey } from "./Constants";
-
 
 /**
  * Create a telemetry item that the 1DS channel understands

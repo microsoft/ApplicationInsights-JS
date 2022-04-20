@@ -1,25 +1,34 @@
 /**
- * @copyright Microsoft 2020
- * File containing utility functions.
- */
+* @copyright Microsoft 2020
+* File containing utility functions.
+*/
 
-import { isNullOrUndefined, _InternalMessageId, hasDocument, hasOwnProperty, arrForEach } from "@microsoft/applicationinsights-core-js";
 import {
-    IClickAnalyticsConfiguration
-} from "../Interfaces/Datamodel";
+    _InternalMessageId, _eInternalMessageId, arrForEach, createEnumStyle, hasDocument, hasOwnProperty, isNullOrUndefined, objExtend
+} from "@microsoft/applicationinsights-core-js";
+import { IClickAnalyticsConfiguration } from "../Interfaces/Datamodel";
 
-
-const Prototype = "prototype";
 const DEFAULT_DONOT_TRACK_TAG = "ai-dnt";
 const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = "ai-blob";
 const DEFAULT_DATA_PREFIX = "data-";
 
+export const enum _eExtendedInternalMessageId {
+    CannotParseAiBlobValue = 101,
+    InvalidContentBlob = 102,
+    TrackPageActionEventFailed = 103
+}
+
 export const _ExtendedInternalMessageId = {
     ..._InternalMessageId,
-    CannotParseAiBlobValue: 101,
-    InvalidContentBlob: 102,
-    TrackPageActionEventFailed: 103
-};
+    ...createEnumStyle<typeof _eExtendedInternalMessageId>({
+        CannotParseAiBlobValue: _eExtendedInternalMessageId.CannotParseAiBlobValue,
+        InvalidContentBlob: _eExtendedInternalMessageId.InvalidContentBlob,
+        TrackPageActionEventFailed: _eExtendedInternalMessageId.TrackPageActionEventFailed
+    })
+}
+
+export type _ExtendedInternalMessageId = number | _eExtendedInternalMessageId | _eInternalMessageId;
+
 
 /**
  * Finds attributes in overrideConfig which are invalid or should be objects
@@ -30,7 +39,7 @@ export const _ExtendedInternalMessageId = {
 export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyticsConfiguration, attributeNamesExpectedObjects: Array<string>): void {
     removeInvalidElements(overrideConfig);
     for (var i in attributeNamesExpectedObjects) {
-        if (attributeNamesExpectedObjects.hasOwnProperty(i)) {
+        if (hasOwnProperty(attributeNamesExpectedObjects, i)) {
             var objectName = attributeNamesExpectedObjects[i];
             if (typeof overrideConfig[objectName] === "object") {
                 removeInvalidElements(overrideConfig[objectName]);
@@ -258,54 +267,6 @@ export function bracketIt(str: string): string {
     return "[" + str + "]";
 }
 
-/**
- * Pass in the objects to merge as arguments.
- * @param obj1 - object to merge.  Set this argument to 'true' for a deep extend.
- * @param obj2 - object to merge.
- * @param obj3 - object to merge.
- * @param obj4 - object to merge.
- * @param obj5 - object to merge.
- * @returns The extended object.
- */
-export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any): any {
-    // Variables
-    var extended = {};
-    var deep = false;
-    var i = 0;
-    var length = arguments.length;
-    var objProto = Object[Prototype];
-    var theArgs = arguments;
-
-    // Check if a deep merge
-    if (objProto.toString.call(theArgs[0]) === "[object Boolean]") {
-        deep = theArgs[0];
-        i++;
-    }
-
-    // Merge the object into the extended object
-    var merge = (obj: Object) => {
-        for (var prop in obj) {
-            if (hasOwnProperty(obj, prop)) {
-                // If deep merge and property is an object, merge properties
-                if (deep && objProto.toString.call(obj[prop]) === "[object Object]") {
-                    extended[prop] = extend(true, extended[prop], obj[prop]);
-                } else {
-                    extended[prop] = obj[prop];
-                }
-            }
-        }
-    };
-
-    // Loop through each object and conduct a merge
-    for (; i < length; i++) {
-        var obj = theArgs[i];
-        merge(obj);
-    }
-
-    return extended;
-
-}
-
 export function validateContentNamePrefix ( config: IClickAnalyticsConfiguration, defaultDataPrefix: string) {
     return isValueAssigned(config.dataTags.customDataPrefix) && (config.dataTags.customDataPrefix.indexOf(defaultDataPrefix) === 0);
 }
@@ -355,7 +316,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
         if(isValueAssigned(overrideConfig.dataTags)) {
             overrideConfig.dataTags.customDataPrefix = validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
         }
-        return extend(true, defaultConfig, overrideConfig);
+        return objExtend(true, defaultConfig, overrideConfig);
     }
 }
 
@@ -380,5 +341,3 @@ export function BehaviorValueValidator (behaviorArray: string[]) {
 export function BehaviorEnumValidator (enumObj: any) {
     return (key: string)  => enumObj[key] || "";
 }
-
-

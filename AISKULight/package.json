@@ -14,9 +14,12 @@
         "build:browser": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
         "test": "grunt aiskuliteunittests",
+        "mintest": "grunt aiskulite-mintests",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../scripts/dtsgen.js 'Microsoft.ApplicationInsights'",
-        "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt aiskulite-min",
+        "ai-restore": "grunt aiskulite-restore"
     },
     "repository": {
         "type": "git",

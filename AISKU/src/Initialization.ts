@@ -1,40 +1,47 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+"use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import {
-    IConfiguration, AppInsightsCore, IAppInsightsCore, eLoggingSeverity, _eInternalMessageId, ITelemetryItem, ICustomProperties,
-    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign, proxyFunctions,
-    arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener, addPageHideEventListener,
-    createUniqueNamespace, ITelemetryPlugin, IPlugin, ILoadedPlugin, UnloadHandler, removePageUnloadEventListener, removePageHideEventListener,
-    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal, arrIndexOf, IDistributedTraceContext
-} from "@microsoft/applicationinsights-core-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import {
+    AnalyticsPluginIdentifier, BreezeChannelIdentifier, ConfigurationManager, ConnectionStringParser, ContextTagKeys, CorrelationIdHelper,
+    CtxTagKeys, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Data, DataSanitizer, DateTimeUtils, DisabledPropertyName,
+    DistributedTracingModes, Envelope, Event, Exception, Extensions, FieldType, HttpMethod, IAppInsights, IAutoExceptionTelemetry, IConfig,
+    ICorrelationIdHelper, IDataSanitizer, IDateTimeUtils, IDependencyTelemetry, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry,
+    IPageViewPerformanceTelemetry, IPageViewTelemetry, IPropertiesPlugin, IRequestHeaders, ITelemetryContext as Common_ITelemetryContext,
+    ITraceTelemetry, IUrlHelper, IUtil, Metric, PageView, PageViewPerformance, ProcessLegacy, PropertiesPluginIdentifier,
+    RemoteDependencyData, RequestHeaders, SampleRate, SeverityLevel, TelemetryItemCreator, Trace, UrlHelper, Util, parseConnectionString
+} from "@microsoft/applicationinsights-common";
+import {
+    AppInsightsCore, IAppInsightsCore, IChannelControls, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
+    IDistributedTraceContext, ILoadedPlugin, INotificationManager, IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin,
+    ITelemetryUnloadState, UnloadHandler, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener,
+    arrForEach, arrIndexOf, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined,
+    isReactNative, isString, mergeEvtNamespace, objForEachKey, proxyAssign, proxyFunctions, removePageHideEventListener,
+    removePageUnloadEventListener, throwError
+} from "@microsoft/applicationinsights-core-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
-    IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType,
-    IRequestHeaders, RequestHeaders, DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT,
-    Envelope, Event, Exception, Metric, PageView, RemoteDependencyData, IEventTelemetry,
-    ITraceTelemetry, IMetricTelemetry, IDependencyTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetry, IPageViewPerformanceTelemetry, Trace, PageViewPerformance, Data, SeverityLevel,
-    IConfig, ConfigurationManager, ContextTagKeys, IDataSanitizer, DataSanitizer, TelemetryItemCreator, IAppInsights, CtxTagKeys, Extensions,
-    IPropertiesPlugin, DistributedTracingModes, PropertiesPluginIdentifier, BreezeChannelIdentifier, AnalyticsPluginIdentifier,
-    ITelemetryContext as Common_ITelemetryContext, parseConnectionString
-} from "@microsoft/applicationinsights-common"
-import { DependencyListenerFunction, IDependencyListenerHandler } from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
+    DependencyListenerFunction, IDependencyListenerHandler
+} from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import {
+    STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
+    STR_POLL_INTERNAL_LOGS, STR_SET_AUTHENTICATED_USER_CONTEXT, STR_SNIPPET, STR_START_TRACK_EVENT, STR_START_TRACK_PAGE,
+    STR_STOP_TRACK_EVENT, STR_STOP_TRACK_PAGE, STR_TRACK_DEPENDENCY_DATA, STR_TRACK_EVENT, STR_TRACK_EXCEPTION, STR_TRACK_METRIC,
+    STR_TRACK_PAGE_VIEW, STR_TRACK_TRACE
+} from "./InternalConstants";
 
 export { IUtil, ICorrelationIdHelper, IUrlHelper, IDateTimeUtils, IRequestHeaders };
-
-"use strict";
 
 let _internalSdkSrc: string;
 
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names
 const _ignoreUpdateSnippetProperties = [
-    "snippet", "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults"
+    STR_SNIPPET, "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults"
 ];
 
 /**
@@ -178,7 +185,7 @@ export class Initialization implements IApplicationInsights {
             if (config.connectionString) {
                 const cs = parseConnectionString(config.connectionString);
                 const ingest = cs.ingestionendpoint;
-                config.endpointUrl = ingest ? `${ingest}/v2/track` : config.endpointUrl; // only add /v2/track when from connectionstring
+                config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : config.endpointUrl; // only add /v2/track when from connectionstring
                 config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
             }
 
@@ -257,7 +264,7 @@ export class Initialization implements IApplicationInsights {
                 }
         
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
-                    const extensions = [];
+                    const extensions: any[] = [];
         
                     extensions.push(_sender);
                     extensions.push(properties);
@@ -399,32 +406,32 @@ export class Initialization implements IApplicationInsights {
             };
         
             proxyFunctions(_self, _self.appInsights, [
-                "getCookieMgr",
-                "trackEvent",
-                "trackPageView",
+                STR_GET_COOKIE_MGR,
+                STR_TRACK_EVENT,
+                STR_TRACK_PAGE_VIEW,
                 "trackPageViewPerformance",
-                "trackException",
+                STR_TRACK_EXCEPTION,
                 "_onerror",
-                "trackTrace",
-                "trackMetric",
-                "startTrackPage",
-                "stopTrackPage",
-                "startTrackEvent",
-                "stopTrackEvent"
+                STR_TRACK_TRACE,
+                STR_TRACK_METRIC,
+                STR_START_TRACK_PAGE,
+                STR_STOP_TRACK_PAGE,
+                STR_START_TRACK_EVENT,
+                STR_STOP_TRACK_EVENT
             ]);
 
             proxyFunctions(_self, _getCurrentDependencies, [
-                "trackDependencyData",
+                STR_TRACK_DEPENDENCY_DATA,
                 "addDependencyListener"
             ]);
 
             proxyFunctions(_self, _core, [
-                "addTelemetryInitializer",
-                "pollInternalLogs",
+                STR_ADD_TELEMETRY_INITIALIZER,
+                STR_POLL_INTERNAL_LOGS,
                 "stopPollingInternalLogs",
-                "getPlugin",
+                STR_GET_PLUGIN,
                 "addPlugin",
-                "evtNamespace",
+                STR_EVT_NAMESPACE,
                 "addUnloadCb",
                 "getTraceCtx"
             ]);
@@ -433,8 +440,8 @@ export class Initialization implements IApplicationInsights {
                 let context = properties.context;
                 return context ? context.user : null;
             }, [
-                "setAuthenticatedUserContext",
-                "clearAuthenticatedUserContext"
+                STR_SET_AUTHENTICATED_USER_CONTEXT,
+                STR_CLEAR_AUTHENTICATED_USER_CONTEXT
             ]);
        
 

@@ -2,15 +2,16 @@
 // // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryInitializerContainer, ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
+import {
+    ITelemetryInitializerContainer, ITelemetryInitializerHandler, TelemetryInitializerFunction
+} from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { BaseTelemetryPlugin } from "./BaseTelemetryPlugin";
 import { _throwInternal } from "./DiagnosticLogger";
 import { dumpObj } from "./EnvUtils";
 import { arrForEach, getExceptionName } from "./HelperFuncs";
-import { strDoTeardown } from "./InternalConstants";
 
 interface _IInternalTelemetryInitializerHandler {
     id: number;
@@ -84,7 +85,7 @@ export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements I
                 }
             };
 
-            _self[strDoTeardown] = () => {
+            _self._doTeardown = () => {
                 _initDefaults();
             };
         });

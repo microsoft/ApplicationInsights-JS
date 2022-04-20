@@ -18,9 +18,12 @@
         "build:browser": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt aitests",
+        "mintest": "grunt ai-mintests",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights JavaScript SDK - Web Analytics\"",
-        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt ai-min",
+        "ai-restore": "grunt ai-restore"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

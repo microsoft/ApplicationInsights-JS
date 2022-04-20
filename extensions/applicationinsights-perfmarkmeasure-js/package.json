@@ -18,9 +18,12 @@
         "build:browser": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt perfmarkmeasuretests",
+        "mintest": "grunt perfmarkmeasure-mintests",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Performance Mark and Measure Manager plugin\"",
-        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt perfmarkmeasure-min",
+        "ai-restore": "grunt perfmarkmeasure-restore"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

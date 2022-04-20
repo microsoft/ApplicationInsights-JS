@@ -969,6 +969,8 @@ export class AITestClass {
 
                 if (!failed) {
                     QUnit.assert.ok(true, "Validated [" + targetName + "] has no registered hooks");
+                } else {
+                    QUnit.assert.ok(false, "Hooks: " + JSON.stringify(aiHook.h));
                 }
             }
         }

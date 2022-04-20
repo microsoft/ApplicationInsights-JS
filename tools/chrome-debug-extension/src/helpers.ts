@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, arrIndexOf, hasOwnProperty, isFunction, isObject, isString, isSymbol, objKeys } from "@microsoft/applicationinsights-core-js";
 import { Util } from "@microsoft/applicationinsights-common";
+import {
+    arrForEach, arrIndexOf, hasOwnProperty, isFunction, isObject, isString, isSymbol, objKeys
+} from "@microsoft/applicationinsights-core-js";
 import { strShimPrototype } from "@microsoft/applicationinsights-shims";
 
 const strConstructor = "constructor";
@@ -122,8 +124,9 @@ export function copySelectedTree() {
     document.body.appendChild(textArea);
     textArea.select();
     document.execCommand("copy");
-    if (textArea.parentElement) {
-        textArea.parentElement.removeChild(textArea);
+    const parent = textArea.parentElement;
+    if (parent) {
+        parent.removeChild(textArea);
     }
 }
 

@@ -15,9 +15,12 @@
         "build:package": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt reactnativetests",
+        "mintest": "grunt reactnative-mintests",
         "testx": "npm run build:test && grunt reactnativetests",
         "lint": "tslint -p tsconfig.json",
-        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights react native plugin\""
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights react native plugin\"",
+        "ai-min": "grunt reactnative-min",
+        "ai-restore": "grunt reactnative-restore"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

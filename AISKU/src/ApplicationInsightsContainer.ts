@@ -1,6 +1,6 @@
-import { IAppInsightsDeprecated, AppInsightsDeprecated } from "./ApplicationInsightsDeprecated";
-import { Initialization as ApplicationInsights, Snippet, IApplicationInsights } from "./Initialization";
 import { _legacyCookieMgr } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsDeprecated, IAppInsightsDeprecated } from "./ApplicationInsightsDeprecated";
+import { IApplicationInsights, Initialization as ApplicationInsights, Snippet } from "./Initialization";
 
 export class ApplicationInsightsContainer {
 

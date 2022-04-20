@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
-import { dateNow, ICustomProperties } from "@microsoft/applicationinsights-core-js";
 import ReactPlugin from "./ReactPlugin";
+import { ICustomProperties, dateNow } from "@microsoft/applicationinsights-core-js";
+import { useEffect, useRef } from "react";
 
 interface ITrackedData {
   hookTimestamp: number;

@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { _throwInternal } from "./DiagnosticLogger";
 import { dumpObj, getDocument, getLocation, getNavigator, isIE } from "./EnvUtils";
 import {
     arrForEach, dateNow, getExceptionName, isFunction, isNotNullOrUndefined, isNullOrUndefined, isString, isTruthy, isUndefined,
     objForEachKey, setValue, strContains, strEndsWith, strTrim
 } from "./HelperFuncs";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { strEmpty } from "./InternalConstants";
-import { _throwInternal } from "./DiagnosticLogger";
+import { STR_EMPTY } from "./InternalConstants";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
@@ -140,7 +140,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             let result = false;
             if (_isMgrEnabled(cookieMgr)) {
                 let values: any = {};
-                let theValue = strTrim(value || strEmpty);
+                let theValue = strTrim(value || STR_EMPTY);
                 let idx = theValue.indexOf(";");
                 if (idx !== -1) {
                     theValue = strTrim(value.substring(0, idx));
@@ -162,14 +162,14 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                             let expiry = new Date();
                             expiry.setTime(expireMs);
                             setValue(values, strExpires,
-                                _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || strEmpty,
+                                _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
                                 isTruthy);
                         }
                     }
             
                     if (!_isIE) {
                         // Only replace if not already present
-                        setValue(values, "max-age", strEmpty + maxAgeSec, null, isUndefined);
+                        setValue(values, "max-age", STR_EMPTY + maxAgeSec, null, isUndefined);
                     }
                 }
             
@@ -197,7 +197,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             return result;
         },
         get: (name: string): string => {
-            let value = strEmpty
+            let value = STR_EMPTY
             if (_isMgrEnabled(cookieMgr)) {
                 value = (cookieMgrConfig.getCookie || _getCookieValue)(name);
             }
@@ -228,7 +228,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 }
 
                 let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
-                delCookie(name, _formatCookieValue(strEmpty, values));
+                delCookie(name, _formatCookieValue(STR_EMPTY, values));
                 result = true;
             }
 
@@ -270,7 +270,7 @@ function _extractParts(theValue: string) {
     if (theValue && theValue.length) {
         let parts = strTrim(theValue).split(";");
         arrForEach(parts, (thePart) => {
-            thePart = strTrim(thePart || strEmpty);
+            thePart = strTrim(thePart || STR_EMPTY);
             if (thePart) {
                 let idx = thePart.indexOf("=");
                 if (idx === -1) {
@@ -294,24 +294,24 @@ function _formatDate(theDate: Date, func: string) {
 }
 
 function _formatCookieValue(value: string, values: any) {
-    let cookieValue = value || strEmpty;
+    let cookieValue = value || STR_EMPTY;
     objForEachKey(values, (name, theValue) => {
-        cookieValue += "; " + name + (!isNullOrUndefined(theValue) ? "=" + theValue : strEmpty);
+        cookieValue += "; " + name + (!isNullOrUndefined(theValue) ? "=" + theValue : STR_EMPTY);
     });
 
     return cookieValue;
 }
 
 function _getCookieValue(name: string) {
-    let cookieValue = strEmpty;
+    let cookieValue = STR_EMPTY;
     if (_doc) {
-        let theCookie = _doc[strCookie] || strEmpty;
+        let theCookie = _doc[strCookie] || STR_EMPTY;
         if (_parsedCookieValue !== theCookie) {
             _cookieCache = _extractParts(theCookie);
             _parsedCookieValue = theCookie;
         }
 
-        cookieValue = strTrim(_cookieCache[name] || strEmpty);
+        cookieValue = strTrim(_cookieCache[name] || STR_EMPTY);
     }
 
     return cookieValue;

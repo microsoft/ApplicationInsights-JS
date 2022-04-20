@@ -1,79 +1,219 @@
+import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IConfig, SeverityLevel, stringToBoolOrDefault,
-    IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry,
-    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry,
-    IEventTelemetry, IEnvelope, ProcessLegacy
+    DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEnvelope, IEventTelemetry,
+    IExceptionTelemetry, IMetricTelemetry, IPageViewTelemetry, ITraceTelemetry, ProcessLegacy, SeverityLevel, stringToBoolOrDefault
 } from "@microsoft/applicationinsights-common";
-import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
-import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign, throwError, ICookieMgr, arrIndexOf } from "@microsoft/applicationinsights-core-js";
+import {
+    IConfiguration, ICookieMgr, IDiagnosticLogger, ITelemetryItem, arrIndexOf, isFunction, proxyAssign, proxyFunctions, throwError
+} from "@microsoft/applicationinsights-core-js";
+import { DfltAjaxCorrelationHeaderExDomains } from "@microsoft/applicationinsights-dependencies-js";
+import { Initialization as ApplicationInsights, Snippet } from "./Initialization";
+import {
+    STR_FLUSH, STR_GET_COOKIE_MGR, STR_SNIPPET, STR_START_TRACK_EVENT, STR_START_TRACK_PAGE, STR_STOP_TRACK_EVENT, STR_STOP_TRACK_PAGE
+} from "./InternalConstants";
 
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names
 const _ignoreUpdateSnippetProperties = [
-    "snippet", "getDefaultConfig", "_hasLegacyInitializers", "_queue", "_processLegacyInitializers"
+    STR_SNIPPET, "getDefaultConfig", "_hasLegacyInitializers", "_queue", "_processLegacyInitializers"
 ];
 
-// ToDo: fix properties and measurements once updates are done to common
+function getDefaultConfig(config?: any): any {
+    if (!config) {
+        config = ({} as any);
+    }
+
+    // set default values
+    config.endpointUrl = config.endpointUrl || DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+    config.sessionRenewalMs = 30 * 60 * 1000;
+    config.sessionExpirationMs = 24 * 60 * 60 * 1000;
+    config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
+    config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
+    config.enableDebug = stringToBoolOrDefault(config.enableDebug);
+    config.disableExceptionTracking = stringToBoolOrDefault(config.disableExceptionTracking);
+    config.disableTelemetry = stringToBoolOrDefault(config.disableTelemetry);
+    config.verboseLogging = stringToBoolOrDefault(config.verboseLogging);
+    config.emitLineDelimitedJson = stringToBoolOrDefault(config.emitLineDelimitedJson);
+    config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
+    config.autoTrackPageVisitTime = stringToBoolOrDefault(config.autoTrackPageVisitTime);
+
+    if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
+        config.samplingPercentage = 100;
+    }
+
+    config.disableAjaxTracking = stringToBoolOrDefault(config.disableAjaxTracking);
+    config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
+
+    config.isBeaconApiDisabled = stringToBoolOrDefault(config.isBeaconApiDisabled, true);
+    config.disableCorrelationHeaders = stringToBoolOrDefault(config.disableCorrelationHeaders);
+    config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || DfltAjaxCorrelationHeaderExDomains;
+    config.disableFlushOnBeforeUnload = stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+    config.disableFlushOnUnload = stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
+    config.enableSessionStorageBuffer = stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
+    config.isRetryDisabled = stringToBoolOrDefault(config.isRetryDisabled);
+    config.isCookieUseDisabled = stringToBoolOrDefault(config.isCookieUseDisabled);
+    config.isStorageUseDisabled = stringToBoolOrDefault(config.isStorageUseDisabled);
+    config.isBrowserLinkTrackingEnabled = stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
+    config.enableCorsCorrelation = stringToBoolOrDefault(config.enableCorsCorrelation);
+
+    return config;
+}
+    
 export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
-    private static getDefaultConfig(config?: any): any {
-        if (!config) {
-            config = ({} as any);
-        }
-
-        // set default values
-        config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
-        config.sessionRenewalMs = 30 * 60 * 1000;
-        config.sessionExpirationMs = 24 * 60 * 60 * 1000;
-        config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
-        config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
-        config.enableDebug = stringToBoolOrDefault(config.enableDebug);
-        config.disableExceptionTracking = stringToBoolOrDefault(config.disableExceptionTracking);
-        config.disableTelemetry = stringToBoolOrDefault(config.disableTelemetry);
-        config.verboseLogging = stringToBoolOrDefault(config.verboseLogging);
-        config.emitLineDelimitedJson = stringToBoolOrDefault(config.emitLineDelimitedJson);
-        config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
-        config.autoTrackPageVisitTime = stringToBoolOrDefault(config.autoTrackPageVisitTime);
-
-        if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
-            config.samplingPercentage = 100;
-        }
-
-        config.disableAjaxTracking = stringToBoolOrDefault(config.disableAjaxTracking);
-        config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-
-        config.isBeaconApiDisabled = stringToBoolOrDefault(config.isBeaconApiDisabled, true);
-        config.disableCorrelationHeaders = stringToBoolOrDefault(config.disableCorrelationHeaders);
-        config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
-            "*.blob.core.windows.net",
-            "*.blob.core.chinacloudapi.cn",
-            "*.blob.core.cloudapi.de",
-            "*.blob.core.usgovcloudapi.net"];
-        config.disableFlushOnBeforeUnload = stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
-        config.disableFlushOnUnload = stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
-        config.enableSessionStorageBuffer = stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
-        config.isRetryDisabled = stringToBoolOrDefault(config.isRetryDisabled);
-        config.isCookieUseDisabled = stringToBoolOrDefault(config.isCookieUseDisabled);
-        config.isStorageUseDisabled = stringToBoolOrDefault(config.isStorageUseDisabled);
-        config.isBrowserLinkTrackingEnabled = stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
-        config.enableCorsCorrelation = stringToBoolOrDefault(config.enableCorsCorrelation);
-
-        return config;
-    }
-    
     public config: IConfig & IConfiguration;
     public snippet: Snippet;
     public context: ITelemetryContext;
     public logger: IDiagnosticLogger;
-    queue: Array<() => void>;
-    private appInsightsNew: ApplicationInsights;
-    private _hasLegacyInitializers = false;
-    private _queue: Array<((env: IEnvelope) => boolean | void)> = [];
+    public queue: Array<() => void>;
+    public appInsightsNew: ApplicationInsights;
 
     constructor(snippet: Snippet, appInsightsNew: ApplicationInsights) {
-        this.config = AppInsightsDeprecated.getDefaultConfig(snippet.config);
-        this.appInsightsNew = appInsightsNew;
-        this.context = { addTelemetryInitializer: this.addTelemetryInitializers.bind(this) }
+        let _hasLegacyInitializers = false;
+        let _queue: Array<((env: IEnvelope) => boolean | void)> = [];
+        let _config: IConfiguration;
+
+        dynamicProto(AppInsightsDeprecated, this, (_self) => {
+            _config = getDefaultConfig(snippet.config);
+            _self.config = _config;
+            _self.snippet = snippet;
+            _self.appInsightsNew = appInsightsNew;
+            _self.context = { addTelemetryInitializer: _addTelemetryInitializers.bind(_self) };
+
+            _self.addTelemetryInitializers = _addTelemetryInitializers;
+
+            function _addTelemetryInitializers(callBack: (env: IEnvelope) => boolean | void) {
+
+                // Add initializer to current processing only if there is any old telemetry initializer
+                if (!_hasLegacyInitializers) {
+        
+                    appInsightsNew.addTelemetryInitializer(item => {
+                        _processLegacyInitializers(item); // setup call back for each legacy processor
+                    })
+        
+                    _hasLegacyInitializers = true;
+                }
+        
+                _queue.push(callBack);
+            }
+
+            proxyFunctions(_self, appInsightsNew, [
+                STR_GET_COOKIE_MGR,
+                STR_START_TRACK_PAGE,
+                STR_STOP_TRACK_PAGE,
+                STR_FLUSH,
+                STR_START_TRACK_EVENT,
+                STR_STOP_TRACK_EVENT
+            ]);
+
+            _self.trackPageView = (name?: string, url?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }, duration?: number) => {
+                const telemetry: IPageViewTelemetry = {
+                    name,
+                    uri: url,
+                    properties,
+                    measurements
+                };
+        
+                // fix for props, measurements, duration
+                appInsightsNew.trackPageView(telemetry);
+            };
+        
+            _self.trackEvent = (name: string, properties?: Object, measurements?: Object) => {
+                appInsightsNew.trackEvent({ name} as IEventTelemetry);
+            };
+        
+            _self.trackDependency = (id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) => {
+                appInsightsNew.trackDependencyData(
+                    {
+                        id,
+                        target: absoluteUrl,
+                        type: pathName,
+                        duration: totalTime,
+                        properties: { HttpMethod: method },
+                        success,
+                        responseCode: resultCode
+                    } as IDependencyTelemetry);
+            };
+        
+            _self.trackException = (exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: any) => {
+                appInsightsNew.trackException({
+                    exception
+                } as IExceptionTelemetry);
+            };
+        
+            _self.trackMetric = (name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }) => {
+                appInsightsNew.trackMetric({name, average, sampleCount, min, max} as IMetricTelemetry);
+            };
+        
+            _self.trackTrace = (message: string, properties?: { [name: string]: string; }, severityLevel?: any) => {
+                appInsightsNew.trackTrace({ message, severityLevel } as ITraceTelemetry);
+            };
+        
+            _self.setAuthenticatedUserContext = (authenticatedUserId: string, accountId?: string, storeInCookie?: boolean) => {
+                appInsightsNew.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+            };
+        
+            _self.clearAuthenticatedUserContext = () => {
+                appInsightsNew.context.user.clearAuthenticatedUserContext();
+            };
+        
+            _self._onerror = (message: string, url: string, lineNumber: number, columnNumber: number, error: Error) => {
+                appInsightsNew._onerror({ message, url, lineNumber, columnNumber, error } as IAutoExceptionTelemetry);
+            };
+        
+            _self.downloadAndSetup = (config: IConfig): void => {
+                throwError("downloadAndSetup not implemented in web SKU");
+            };
+        
+            _self.updateSnippetDefinitions = (snippet: Snippet) => {
+                // apply full appInsights to the global instance
+                // Note: This must be called before loadAppInsights is called
+                proxyAssign(snippet, this, (name: string) => {
+                    // Not excluding names prefixed with "_" as we need to proxy some functions like _onError
+                    return name && arrIndexOf(_ignoreUpdateSnippetProperties, name) === -1;
+                });
+            };
+        
+            // note: these are split into methods to enable unit tests
+            _self.loadAppInsights = () => {
+        
+                // initialize global instance of appInsights
+                // var appInsights = new Microsoft.ApplicationInsights.AppInsights(_self.config);
+        
+                // implement legacy version of trackPageView for 0.10<
+                if (_self.config["iKey"]) {
+                    const originalTrackPageView = _self.trackPageView;
+                    _self.trackPageView = (pagePath?: string, properties?: Object, measurements?: Object) => {
+                        originalTrackPageView.apply(_self, [null, pagePath, properties, measurements]);
+                    }
+                }
+        
+                // implement legacy pageView interface if it is present in the snippet
+                const legacyPageView = "logPageView";
+                if (isFunction(_self.snippet[legacyPageView])) {
+                    this[legacyPageView] = (pagePath?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }) => {
+                        _self.trackPageView(null, pagePath, properties, measurements);
+                    }
+                }
+        
+                // implement legacy event interface if it is present in the snippet
+                const legacyEvent = "logEvent";
+                if (isFunction(_self.snippet[legacyEvent])) {
+                    this[legacyEvent] = (name: string, props?: Object, measurements?: Object) => {
+                        _self.trackEvent(name, props, measurements);
+                    }
+                }
+        
+                return this;
+            };
+
+            function _processLegacyInitializers(item: ITelemetryItem): ITelemetryItem {
+                // instead of mapping new to legacy and then back again and repeating in channel, attach callback for channel to call
+                item.tags[ProcessLegacy] = _queue;
+                return item;
+            }
+        
+        });
     }
 
     /**
@@ -81,154 +221,84 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     */
 
     public addTelemetryInitializers(callBack: (env: IEnvelope) => boolean | void) {
-
-        // Add initializer to current processing only if there is any old telemetry initializer
-        if (!this._hasLegacyInitializers) {
-
-            this.appInsightsNew.addTelemetryInitializer(item => {
-                this._processLegacyInitializers(item); // setup call back for each legacy processor
-            })
-
-            this._hasLegacyInitializers = true;
-        }
-
-        this._queue.push(callBack);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * Get the current cookie manager for this instance
      */
     public getCookieMgr(): ICookieMgr {
-        return this.appInsightsNew.getCookieMgr();
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     startTrackPage(name?: string) {
-        this.appInsightsNew.startTrackPage(name);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
-        this.appInsightsNew.stopTrackPage(name, url, properties); // update
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     trackPageView(name?: string, url?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }, duration?: number) {
-        const telemetry: IPageViewTelemetry = {
-            name,
-            uri: url,
-            properties,
-            measurements
-        };
-
-        // fix for props, measurements, duration
-        this.appInsightsNew.trackPageView(telemetry);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     trackEvent(name: string, properties?: Object, measurements?: Object) {
-        this.appInsightsNew.trackEvent({ name} as IEventTelemetry);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
-        this.appInsightsNew.trackDependencyData(
-            {
-                id,
-                target: absoluteUrl,
-                type: pathName,
-                duration: totalTime,
-                properties: { HttpMethod: method },
-                success,
-                responseCode: resultCode
-            } as IDependencyTelemetry);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: any) {
-        this.appInsightsNew.trackException({
-            exception
-        } as IExceptionTelemetry);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }) {
-        this.appInsightsNew.trackMetric({name, average, sampleCount, min, max} as IMetricTelemetry);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     trackTrace(message: string, properties?: { [name: string]: string; }, severityLevel?: any) {
-        this.appInsightsNew.trackTrace({ message, severityLevel } as ITraceTelemetry);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     flush(async?: boolean) {
-        this.appInsightsNew.flush(async);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean) {
-        this.appInsightsNew.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     clearAuthenticatedUserContext() {
-        this.appInsightsNew.context.user.clearAuthenticatedUserContext();
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
-        this.appInsightsNew._onerror({ message, url, lineNumber, columnNumber, error } as IAutoExceptionTelemetry);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-
     startTrackEvent(name: string) {
-        this.appInsightsNew.startTrackEvent(name);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
-        this.appInsightsNew.stopTrackEvent(name, properties, measurements);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     downloadAndSetup?(config: IConfig): void {
-        throwError("downloadAndSetup not implemented in web SKU");
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public updateSnippetDefinitions(snippet: Snippet) {
-        // apply full appInsights to the global instance
-        // Note: This must be called before loadAppInsights is called
-        proxyAssign(snippet, this, (name: string) => {
-            // Not excluding names prefixed with "_" as we need to proxy some functions like _onError
-            return name && arrIndexOf(_ignoreUpdateSnippetProperties, name) === -1;
-        });
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     // note: these are split into methods to enable unit tests
     public loadAppInsights() {
-
-        // initialize global instance of appInsights
-        // var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.config);
-
-        // implement legacy version of trackPageView for 0.10<
-        if (this.config["iKey"]) {
-            const originalTrackPageView = this.trackPageView;
-            this.trackPageView = (pagePath?: string, properties?: Object, measurements?: Object) => {
-                originalTrackPageView.apply(this, [null, pagePath, properties, measurements]);
-            }
-        }
-
-        // implement legacy pageView interface if it is present in the snippet
-        const legacyPageView = "logPageView";
-        if (typeof this.snippet[legacyPageView] === "function") {
-            this[legacyPageView] = (pagePath?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }) => {
-                this.trackPageView(null, pagePath, properties, measurements);
-            }
-        }
-
-        // implement legacy event interface if it is present in the snippet
-        const legacyEvent = "logEvent";
-        if (typeof this.snippet[legacyEvent] === "function") {
-            this[legacyEvent] = (name: string, props?: Object, measurements?: Object) => {
-                this.trackEvent(name, props, measurements);
-            }
-        }
-
-        return this;
-    }
-
-    private _processLegacyInitializers(item: ITelemetryItem): ITelemetryItem {
-
-        // instead of mapping new to legacy and then back again and repeating in channel, attach callback for channel to call
-        item.tags[ProcessLegacy] = this._queue;
-        return item;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
 
@@ -249,7 +319,7 @@ export interface IAppInsightsDeprecated {
     /**
      * Get the current cookie manager for this instance
      */
-     getCookieMgr(): ICookieMgr;
+    getCookieMgr(): ICookieMgr;
 
    /**
     * Starts timing how long the user views a page or other item. Call this when the page opens.

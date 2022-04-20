@@ -2,21 +2,12 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import {
-    IConfiguration,
-    AppInsightsCore,
-    _InternalMessageId,
-    isNullOrUndefined,
-    ITelemetryItem,
-    throwError,
-    proxyFunctions,
-    UnloadHandler,
-    IPlugin,
-    ITelemetryPlugin,
-    ILoadedPlugin
-} from "@microsoft/applicationinsights-core-js";
-import { IConfig } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { IConfig } from "@microsoft/applicationinsights-common";
+import {
+    AppInsightsCore, IConfiguration, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin, UnloadHandler, _InternalMessageId,
+    _eInternalMessageId, isNullOrUndefined, proxyFunctions, throwError
+} from "@microsoft/applicationinsights-core-js";
 
 /**
  * @export

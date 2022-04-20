@@ -1,8 +1,8 @@
-﻿import { ISerializable, FieldType } from "@microsoft/applicationinsights-common";
-import {
-    IDiagnosticLogger, eLoggingSeverity, _eInternalMessageId, getJSON, objForEachKey, isFunction, isObject, isArray, _throwInternal
-} from "@microsoft/applicationinsights-core-js";
 import dynamicProto from "@microsoft/dynamicproto-js"
+import {
+    IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getJSON, isArray, isFunction, isObject, objForEachKey
+} from "@microsoft/applicationinsights-core-js";
+import { FieldType, ISerializable } from "@microsoft/applicationinsights-common";
 
 export class Serializer {
 
@@ -105,7 +105,7 @@ export class Serializer {
             }
 
             function _serializeArray(sources: ISerializable[], name: string): any[] {
-                let output;
+                let output: any[];
 
                 if (!!sources) {
                     if (!isArray(sources)) {

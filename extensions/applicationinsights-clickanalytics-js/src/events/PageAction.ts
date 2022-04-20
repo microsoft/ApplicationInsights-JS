@@ -1,15 +1,18 @@
 /**
- * @copyright Microsoft 2020
- */
+* @copyright Microsoft 2020
+*/
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { WebEvent } from "./WebEvent";
-import * as DataCollector from "../DataCollector";
-import { ITelemetryItem, getPerformance, ICustomProperties, eLoggingSeverity, _eInternalMessageId, objForEachKey, IDiagnosticLogger, _throwInternal } from "@microsoft/applicationinsights-core-js"
-import { IClickAnalyticsConfiguration, IContentHandler, IPageActionOverrideValues, IPageActionTelemetry } from "../Interfaces/Datamodel";
-import { extractFieldFromObject, bracketIt, isValueAssigned, extend  } from "../common/Utils";
 import { strNotSpecified } from "@microsoft/applicationinsights-common";
+import {
+    ICustomProperties, IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, eLoggingSeverity, getPerformance, objExtend,
+    objForEachKey
+} from "@microsoft/applicationinsights-core-js";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
+import { getClickTarget } from "../DataCollector";
+import { IClickAnalyticsConfiguration, IContentHandler, IPageActionOverrideValues, IPageActionTelemetry } from "../Interfaces/Datamodel";
+import { bracketIt, extractFieldFromObject, isValueAssigned } from "../common/Utils";
+import { WebEvent } from "./WebEvent";
 
 export class PageAction extends WebEvent {
     
@@ -84,7 +87,7 @@ export class PageAction extends WebEvent {
                 }
                 // Fill PartB
                 if (element) {
-                    pageActionEvent.targetUri = DataCollector.getClickTarget(element);
+                    pageActionEvent.targetUri = getClickTarget(element);
         
                     elementContent = _self._contentHandler.getElementContent(element); // collect id,cn tags
         
@@ -116,7 +119,7 @@ export class PageAction extends WebEvent {
                 }
         
                 _sanitizePageActionEventContent(elementContent);
-                pageActionEvent.content = bracketIt(JSON.stringify(extend(
+                pageActionEvent.content = bracketIt(JSON.stringify(objExtend(
                     elementContent,
                     overrideValues && overrideValues.contentTags ? overrideValues.contentTags : {})));
         

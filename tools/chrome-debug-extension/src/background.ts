@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { objKeys } from "@microsoft/applicationinsights-core-js";
-import { getPopupSettings, setPopupSize } from "./configuration/PopupConfigCache";
 import { MessageType } from "./Enums";
+import { getPopupSettings, setPopupSize } from "./configuration/PopupConfigCache";
 import { IMessage } from "./interfaces/IMessage";
 
 const openTabs: {[key: string]: chrome.windows.Window} = { };

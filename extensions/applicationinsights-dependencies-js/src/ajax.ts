@@ -1,22 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    RequestHeaders, CorrelationIdHelper, createTelemetryItem, ICorrelationConfig,
-    RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
-    IConfig, ITelemetryContext, PropertiesPluginIdentifier, eDistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint,
-    eRequestHeaders, formatTraceParent, createTraceParent, createDistributedTraceContextFromTrace
+    CorrelationIdHelper, DisabledPropertyName, IConfig, ICorrelationConfig, IDependencyTelemetry, IRequestContext, ITelemetryContext,
+    PropertiesPluginIdentifier, RemoteDependencyData, RequestHeaders, createDistributedTraceContextFromTrace, createTelemetryItem,
+    createTraceParent, dateTimeUtilsNow, eDistributedTracingModes, eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint
 } from "@microsoft/applicationinsights-common";
 import {
-    isNullOrUndefined, arrForEach, isString, strTrim, isFunction, eLoggingSeverity, _eInternalMessageId,
-    IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
-    getLocation, getGlobal, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, objForEachKey, generateW3CId, getIEVersion, dumpObj, ICustomProperties, isXhrSupported, eventOn,
-    mergeEvtNamespace, createUniqueNamespace, createProcessTelemetryContext, _throwInternal, IDistributedTraceContext, getExceptionName
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICustomProperties, IDistributedTraceContext, IInstrumentCallDetails,
+    IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain, InstrumentFunc, InstrumentProto,
+    _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace, deepFreeze, dumpObj,
+    eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
+    isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, objForEachKey, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { ajaxRecord, IAjaxRecordResponse } from "./ajaxRecord";
-import dynamicProto from "@microsoft/dynamicproto-js";
-import { DependencyListenerFunction, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler } from "./DependencyListener";
+import {
+    DependencyListenerFunction, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler
+} from "./DependencyListener";
+import { IAjaxRecordResponse, ajaxRecord } from "./ajaxRecord";
 
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
@@ -178,6 +179,13 @@ export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
 }
 
+export const DfltAjaxCorrelationHeaderExDomains = deepFreeze([
+    "*.blob.core.windows.net",
+    "*.blob.core.chinacloudapi.cn",
+    "*.blob.core.cloudapi.de",
+    "*.blob.core.usgovcloudapi.net"
+]);
+
 export interface IDependenciesPlugin extends IDependencyListenerContainer {
     /**
      * Logs dependency call
@@ -202,11 +210,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             excludeRequestFromAutoTrackingPatterns: undefined,
             disableCorrelationHeaders: false,
             distributedTracingMode: eDistributedTracingModes.AI_AND_W3C,
-            correlationHeaderExcludedDomains: [
-                "*.blob.core.windows.net",
-                "*.blob.core.chinacloudapi.cn",
-                "*.blob.core.cloudapi.de",
-                "*.blob.core.usgovcloudapi.net"],
+            correlationHeaderExcludedDomains: DfltAjaxCorrelationHeaderExDomains,
             correlationHeaderDomains: undefined,
             correlationHeaderExcludePatterns: undefined,
             appId: undefined,
@@ -302,20 +306,21 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         if (!init) {
                             init = {};
                         }
+
                         // init headers override original request headers
                         // so, if they exist use only them, otherwise use request's because they should have been applied in the first place
                         // not using original request headers will result in them being lost
-                        init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
+                        let headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
                         if (_isUsingAIHeaders) {
                             const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
-                            init.headers.set(RequestHeaders[eRequestHeaders.requestIdHeader], id);
+                            headers.set(RequestHeaders[eRequestHeaders.requestIdHeader], id);
                             if (_enableRequestHeaderTracking) {
                                 ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
                             }
                         }
                         const appId: string = _config.appId ||(_context && _context.appId());
                         if (appId) {
-                            init.headers.set(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
+                            headers.set(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
                             if (_enableRequestHeaderTracking) {
                                 ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestContextHeader]] = RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId;
                             }
@@ -327,11 +332,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             }
 
                             const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, traceFlags));
-                            init.headers.set(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
+                            headers.set(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
                             if (_enableRequestHeaderTracking) {
                                 ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
                             }
                         }
+
+                        init.headers = headers;
                     }
 
                     return init;
@@ -552,7 +559,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
     
                                             if (_enableResponseHeaderTracking) {
                                                 const responseHeaderMap = {};
-                                                response.headers.forEach((value: string, name: string) => {
+                                                response.headers.forEach((value: string, name: string) => {     // @skip-minify
                                                     if (_canIncludeHeaders(name)) {
                                                         responseHeaderMap[name] = value;
                                                     }
@@ -1046,7 +1053,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let requestHeaders = {};
                 if (_enableRequestHeaderTracking) {
                     let headers = new Headers((init ? init.headers : 0) || (input instanceof Request ? (input.headers || {}) : {}));
-                    headers.forEach((value, key) => {
+                    headers.forEach((value, key) => {       // @skip-minify
                         if (_canIncludeHeaders(key)) {
                             requestHeaders[key] = value;
                         }
