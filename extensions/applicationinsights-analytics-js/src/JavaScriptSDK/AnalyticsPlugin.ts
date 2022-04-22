@@ -18,7 +18,7 @@ import {
     eLoggingSeverity, _eInternalMessageId, ICustomProperties,
     getWindow, getDocument, getHistory, getLocation, objForEachKey,
     isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, ICookieMgr, safeGetCookieMgr,
-    TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentFunc, IInstrumentCallDetails, eventOn, eventOff,
+    TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentEvent, IInstrumentCallDetails, eventOn, eventOff,
     mergeEvtNamespace, createUniqueNamespace, ITelemetryInitializerHandler, throwError, isUndefined, hasWindow, createProcessTelemetryContext,
     ITelemetryUnloadState, IProcessTelemetryUnloadContext
 } from "@microsoft/applicationinsights-core-js";
@@ -696,7 +696,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 if (!_disableExceptionTracking && !_autoExceptionInstrumented && !extConfig.autoExceptionInstrumented) {
                     // We want to enable exception auto collection and it has not been done so yet
-                    _addHook(InstrumentFunc(_window, "onerror", {
+                    _addHook(InstrumentEvent(_window, "onerror", {
                         ns: _evtNamespace,
                         rsp: (callDetails: IInstrumentCallDetails, message, url, lineNumber, columnNumber, error) => {
                             if (!_disableExceptionTracking && callDetails.rslt !== true) {
@@ -781,7 +781,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
 
                 if (!_historyListenerAdded) {
-                    _addHook(InstrumentFunc(history, "pushState", {
+                    _addHook(InstrumentEvent(history, "pushState", {
                         ns: _evtNamespace,
                         rsp: () => {
                             if (_enableAutoRouteTracking) {
@@ -791,7 +791,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         }
                     }));
     
-                    _addHook(InstrumentFunc(history, "replaceState", {
+                    _addHook(InstrumentEvent(history, "replaceState", {
                         ns: _evtNamespace,
                         rsp: () => {
                             if (_enableAutoRouteTracking) {
@@ -813,7 +813,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 if (_enableUnhandledPromiseRejectionTracking && !_autoUnhandledPromiseInstrumented) {
                     // We want to enable exception auto collection and it has not been done so yet
-                    _addHook(InstrumentFunc(_window, "onunhandledrejection", {
+                    _addHook(InstrumentEvent(_window, "onunhandledrejection", {
                         ns: _evtNamespace,
                         rsp: (callDetails: IInstrumentCallDetails, error: PromiseRejectionEvent) => {
                             if (_enableUnhandledPromiseRejectionTracking && callDetails.rslt !== true) { // handled could be typeof function

@@ -63,7 +63,7 @@ export {
 } from "./JavaScriptSDK/ProcessTelemetryContext";
 export { initializePlugins, sortPlugins, unloadComponents } from "./JavaScriptSDK/TelemetryHelpers";
 export { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
-export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
+export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs, InstrumentEvent } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";
 export {
     createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported
