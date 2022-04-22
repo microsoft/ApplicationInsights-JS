@@ -7,7 +7,7 @@ import {
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign, proxyFunctions,
     arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener, addPageHideEventListener,
     createUniqueNamespace, ITelemetryPlugin, IPlugin, ILoadedPlugin, UnloadHandler, removePageUnloadEventListener, removePageHideEventListener,
-    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal
+    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal,strUndefined
 } from "@microsoft/applicationinsights-core-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -179,6 +179,11 @@ export class Initialization implements IApplicationInsights {
                 const ingest = cs.ingestionendpoint;
                 config.endpointUrl = ingest ? `${ingest}/v2/track` : config.endpointUrl; // only add /v2/track when from connectionstring
                 config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
+            } else {
+                var _console = typeof console !== strUndefined ? console : null;
+                if (_console && _console.warn) {
+                    _console.warn("Instrumentation key based ingestion will be no longer supported, please use connection string instead.");
+                }
             }
 
             _self.appInsights = new AnalyticsPlugin();

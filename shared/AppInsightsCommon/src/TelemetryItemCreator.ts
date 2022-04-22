@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
-import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString, throwError } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString, throwError, strUndefined } from "@microsoft/applicationinsights-core-js";
 import { strNotSpecified, strIkey } from "./Constants";
 
 
@@ -35,6 +35,11 @@ export function createTelemetryItem<T>(item: T,
     if (item[strIkey]) {
         iKey = item[strIkey];
         delete item[strIkey];
+        //TODO: add connectionString Config
+        var _console = typeof console !== strUndefined ? console : null;
+        if (_console && _console.warn) {
+            _console.warn("Instrumentation key based ingestion will be no longer supported.");
+        }
     }
 
     const telemetryItem: ITelemetryItem = {
