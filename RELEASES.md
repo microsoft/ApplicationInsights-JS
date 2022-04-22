@@ -2,16 +2,31 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.1 (Apr 22nd, 2022)
+
+- Updates React Plugin to v3.3.1 (with v2.8.1 as dependency) -- using React 17
+- Updates React Native Plugin to 2.5.1 (with v2.8.1 as dependency)
+- Updates Chrome Debug Extension to 0.3.0
+
+This patch release restores TypeScript 3.x support for the Sdk.
+
+### Changelog
+
+- #1807 [BUG] Angular project doesn't build after install latest version v.2.8.0
+- #1810 v2.8.0 has incompatible TypeScript 3.x type declaration
+- #1812 [BUG] Browser exceptions are no longer automatically tracked after 2.8.0
+- #1814 [BUG]SPFx React project doesn't build after latest version of @microsoft/application-insights-core-js v.2.8.0 got published
+
 ## 2.8.0 (Apr 16th, 2022)
 
 - Updates React Plugin to v3.3.0 (with v2.8.0 as dependency) -- using React 17
-- Updates React Native Plugin to 2.5.0 (with v2.8.9 as dependency)
+- Updates React Native Plugin to 2.5.0 (with v2.8.0 as dependency)
 - Updates Chrome Debug Extension to 0.3.0
 
 ### Potential Breaking Change
 
 - `fetch` Ajax tracking was also been change to be on by default from this version moving forward, if you are running in an environment without `fetch` support and you are using an incompatible polyfill (that doesn't identify itself as a polyfill) or the SDK you start seeing recursive or duplicate (`fetch` and `XHR` requests) being reported you WILL need to add `disableFetchTracking` with a value of `true` to your configuration to disable this functionality.
-- TypeScript 4.x required for some typings from the core EnumHelperFuncs.d.ts
+- TypeScript 4.x required for some typings from the core EnumHelperFuncs.d.ts  (Fixed in v2.8.1)
 
 ### Significant changes
 
