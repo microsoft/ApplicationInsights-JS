@@ -4,7 +4,7 @@
 import {
     IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties,
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
-    arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener,  addPageHideEventListener
+    arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener,  addPageHideEventListener, arrIndexOf
 } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -377,7 +377,7 @@ export class Initialization implements IApplicationInsights {
                     if (isString(field) &&
                             !isFunction(value) &&
                             field && field[0] !== "_" &&                                // Don't copy "internal" values
-                            _ignoreUpdateSnippetProperties.indexOf(field) === -1) {
+                            arrIndexOf(_ignoreUpdateSnippetProperties, field) === -1) {
                         snippet[field as string] = value;
                     }
                 });
@@ -425,7 +425,7 @@ export class Initialization implements IApplicationInsights {
         // Note: This must be called before loadAppInsights is called
         proxyAssign(snippet, this, (name: string) => {
             // Not excluding names prefixed with "_" as we need to proxy some functions like _onError
-            return name && _ignoreUpdateSnippetProperties.indexOf(name) === -1;
+            return name && arrIndexOf(_ignoreUpdateSnippetProperties, name) === -1;
         });
     }
 

@@ -5,7 +5,7 @@ import {
     BaseTelemetryPlugin, IConfiguration, arrForEach,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, _InternalMessageId,
     ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls,
-    objForEachKey, isFunction, dateNow, isArray, isUndefined, getDebugExt
+    objForEachKey, isFunction, dateNow, isArray, isUndefined, getDebugExt, arrIndexOf
 } from "@microsoft/applicationinsights-core-js";
 import { Dashboard } from "./components/Dashboard";
 import { getTargetName } from "./components/helpers";
@@ -162,16 +162,16 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                                 }
                             });
 
-                            if (trackers.indexOf("eventsSent") !== -1) {
+                            if (arrIndexOf(trackers, "eventsSent") !== -1) {
                                 foundTrackers.push("eventsSent");
                             }
-                            if (trackers.indexOf("eventsSendRequest") !== -1) {
+                            if (arrIndexOf(trackers, "eventsSendRequest") !== -1) {
                                 foundTrackers.push("eventsSendRequest");
                             }
-                            if (trackers.indexOf("eventsDiscarded") !== -1) {
+                            if (arrIndexOf(trackers, "eventsDiscarded") !== -1) {
                                 foundTrackers.push("eventsDiscarded");
                             }
-                            if (trackers.indexOf("perfEvent") !== -1) {
+                            if (arrIndexOf(trackers, "perfEvent") !== -1) {
                                 foundTrackers.push("perfEvent");
                             }
                         }
@@ -217,7 +217,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                             }, true);
 
                             if (val) {
-                                if (foundTrackers.indexOf(tracker) === -1) {
+                                if (arrIndexOf(foundTrackers, tracker) === -1) {
                                     foundTrackers.push(tracker);
                                 }
                             }
@@ -271,7 +271,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
             }
 
             function _addTarget(targetObjects: any[], ext:any) {
-                if (ext && targetObjects.indexOf(ext) === -1) {
+                if (ext && arrIndexOf(targetObjects, ext) === -1) {
                     targetObjects.push(ext);
                     return true;
                 }

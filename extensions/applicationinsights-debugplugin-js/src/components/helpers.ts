@@ -225,7 +225,7 @@ export function getTargetKeys(target: any, excludedKeys: string[], includeFuncti
                 if (propKeys) {
                     arrForEach(propKeys, (key) => {
                         const theKey = _toString(key);
-                        if (theKey && keys.indexOf(theKey) === -1) {
+                        if (theKey && arrIndexOf(keys, theKey) === -1) {
                             keys.push(key);
                         }
                     });
@@ -245,7 +245,7 @@ export function getTargetKeys(target: any, excludedKeys: string[], includeFuncti
         }
 
         const theKey = _toString(key);
-        if (theKey && excludedKeys.indexOf(theKey) === -1) {
+        if (theKey && arrIndexOf(excludedKeys, theKey) === -1) {
             theKeys.push(theKey);
         }
     });
@@ -293,7 +293,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
     if (keys.length === 0) { keys.push("<empty>"); }
     if (level >= MAX_DEPTH) { keys.unshift("<maxdepth>"); }
     for (const key of keys) {
-        if (excludeKeys.indexOf(key) !== -1) {
+        if (arrIndexOf(excludeKeys, key) !== -1) {
             continue;
         }
 
