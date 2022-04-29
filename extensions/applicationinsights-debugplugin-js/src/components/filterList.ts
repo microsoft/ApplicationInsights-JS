@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { arrIndexOf } from "@microsoft/applicationinsights-core-js";
+
 export class FilterList {
 
     private el: HTMLElement;
@@ -70,7 +72,7 @@ export class FilterList {
                             (ch.childNodes[0] as HTMLElement).className = "checkbox off";
                         }
                     }
-                    _self.filterList.splice(_self.filterList.indexOf(t), 1);
+                    _self.filterList.splice(arrIndexOf(_self.filterList, t), 1);
                     checkbox.className = "checkbox on";
                 } else {
                     if (evt.shiftKey) {

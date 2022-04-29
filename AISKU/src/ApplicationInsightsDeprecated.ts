@@ -5,7 +5,7 @@ import {
     IEventTelemetry, IEnvelope, ProcessLegacy
 } from "@microsoft/applicationinsights-common";
 import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
-import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign, throwError, ICookieMgr } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign, throwError, ICookieMgr, arrIndexOf } from "@microsoft/applicationinsights-core-js";
 
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names
@@ -187,7 +187,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         // Note: This must be called before loadAppInsights is called
         proxyAssign(snippet, this, (name: string) => {
             // Not excluding names prefixed with "_" as we need to proxy some functions like _onError
-            return name && _ignoreUpdateSnippetProperties.indexOf(name) === -1;
+            return name && arrIndexOf(_ignoreUpdateSnippetProperties, name) === -1;
         });
     }
 

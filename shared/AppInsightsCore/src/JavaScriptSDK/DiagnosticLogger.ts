@@ -4,7 +4,7 @@
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
 import { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { hasJSON, getJSON, getConsole } from "./EnvUtils";
+import { hasJSON, getJSON, getConsole, dumpObj } from "./EnvUtils";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
@@ -123,7 +123,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
 
                 if (_self.enableDebugExceptions()) {
-                    throw message;
+                    throw dumpObj(message);
                 } else {
                     // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
                     let logFunc = severity === eLoggingSeverity.CRITICAL ? strErrorToConsole : strWarnToConsole;

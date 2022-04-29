@@ -710,7 +710,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 ));
                             }
                         }
-                    }));
+                    }, false));
 
                     _autoExceptionInstrumented = true;
                 }
@@ -789,7 +789,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "locationchange"));
                             }
                         }
-                    }));
+                    }, true));
     
                     _addHook(InstrumentEvent(history, "replaceState", {
                         ns: _evtNamespace,
@@ -799,7 +799,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "locationchange"));
                             }
                         }
-                    }));
+                    }, true));
 
                     eventOn(win, extConfig.namePrefix + "popstate", _popstateHandler, _evtNamespace);
                     eventOn(win, extConfig.namePrefix + "locationchange", _locationChangeHandler, _evtNamespace);
@@ -827,7 +827,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 ));
                             }
                         }
-                    }));
+                    }, false));
     
                     _autoUnhandledPromiseInstrumented = true;
                     extConfig.autoUnhandledPromiseInstrumented = _autoUnhandledPromiseInstrumented;
