@@ -1,5 +1,16 @@
 # Releases
 
+## 2.7.5 (Apr 29th, 2022)
+
+- Updates React Plugin to v3.2.5 (with v2.7.5 as dependency)
+- Updates React Native Plugin to 2.4.5 (with v2.7.5 as dependency)
+- Updates Chrome Debug Extension to 0.2.5
+
+### Changelog
+
+- #1823 [BUG] IE8 Support was broken by several components
+  - Updates to dynamicProto() v1.1.5 which also fixes IE8 issues
+
 ## 2.7.4 (Feb 28th, 2022)
 
 - Updates React Plugin to v3.2.4 (with v2.7.4 as dependency)
