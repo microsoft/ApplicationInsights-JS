@@ -64,7 +64,7 @@
         "tslib": "*"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^1.1.4",
+        "@microsoft/dynamicproto-js": "^1.1.5",
         "@microsoft/applicationinsights-shims": "2.0.1",
         "@microsoft/applicationinsights-analytics-js": "2.7.4",
         "@microsoft/applicationinsights-channel-js": "2.7.4",
