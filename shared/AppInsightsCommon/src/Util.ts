@@ -9,7 +9,8 @@ import {
     dateNow, uaDisallowsSameSiteNone, disableCookies as coreDisableCookies,
     canUseCookies as coreCanUseCookies, getCookie as coreGetCookie,
     setCookie as coreSetCookie, deleteCookie as coreDeleteCookie,
-    isBeaconsSupported
+    isBeaconsSupported,
+    arrIndexOf
 } from "@microsoft/applicationinsights-core-js";
 import { eRequestHeaders, RequestHeaders } from "./RequestResponseHeaders";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
@@ -28,7 +29,7 @@ const _internalEndpoints: string[] = [
 ];
 
 export function isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {
-    return _internalEndpoints.indexOf(endpointUrl.toLowerCase()) !== -1;
+    return arrIndexOf(_internalEndpoints, endpointUrl.toLowerCase()) !== -1;
 }
 
 export interface IUtil {

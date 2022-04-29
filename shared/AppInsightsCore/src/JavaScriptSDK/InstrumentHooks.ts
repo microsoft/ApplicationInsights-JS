@@ -132,7 +132,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 
 
 /** @ignore */
-function _getOwner(target:any, name:string, checkPrototype:boolean): any {
+function _getOwner(target:any, name:string, checkPrototype: boolean): any {
     let owner = null;
     if (target) {
         if (hasOwnProperty(target, name)) {
@@ -266,9 +266,9 @@ export function InstrumentFuncs(target:any, funcNames:string[], callbacks: IInst
  * @param callbacks - The callbacks to configure and call whenever the function is called
  * @param checkPrototype - If the function doesn't exist on the target should it attempt to hook the prototype function
  */
-export function InstrumentEvent(target: any, evtName: string, callbacks: IInstrumentHooksCallbacks, checkPrototype:boolean = true): IInstrumentHook {
+export function InstrumentEvent(target: any, evtName: string, callbacks: IInstrumentHooksCallbacks, checkPrototype?: boolean): IInstrumentHook {
     if (target && evtName && callbacks) {
-        let owner = _getOwner(target, evtName, checkPrototype);
+        let owner = _getOwner(target, evtName, checkPrototype) || target;
         if (owner) {
             return _createInstrumentHook(owner, evtName, owner[evtName], callbacks);
         }

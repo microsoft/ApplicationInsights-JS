@@ -22,7 +22,8 @@ import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
 import {
     arrForEach, isNullOrUndefined, getSetValue, setValue, isNotTruthy, isFunction, objExtend, objFreeze, proxyFunctionAs, proxyFunctions, throwError,
-    toISOString
+    toISOString,
+    arrIndexOf
 } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
@@ -503,12 +504,12 @@ export class BaseCore implements IAppInsightsCore {
                     // But we also want the controller as the last, so remove if already present
                     // And reusing the existing instance, just in case an installed plugin has a reference and
                     // is using it.
-                    let idx = allExtensions.indexOf(_channelControl);
+                    let idx = arrIndexOf(allExtensions, _channelControl);
                     if (idx !== -1) {
                         allExtensions.splice(idx, 1);
                     }
 
-                    idx = _coreExtensions.indexOf(_channelControl);
+                    idx = arrIndexOf(_coreExtensions, _channelControl);
                     if (idx !== -1) {
                         _coreExtensions.splice(idx, 1);
                     }
@@ -595,7 +596,7 @@ export class BaseCore implements IAppInsightsCore {
                     let extensions = (_coreExtensions || []).slice();
 
                     // During add / remove this may get called again, so don't readd if already present
-                    if (extensions.indexOf(_telemetryInitializerPlugin) === -1) {
+                    if (arrIndexOf(extensions, _telemetryInitializerPlugin) === -1) {
                         extensions.push(_telemetryInitializerPlugin);
                     }
 
