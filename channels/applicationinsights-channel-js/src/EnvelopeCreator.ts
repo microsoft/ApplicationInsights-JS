@@ -9,8 +9,8 @@ import {
     dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 import {
-    ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey,
-    isNullOrUndefined, isNumber, isString, toISOString, setValue, isTruthy, optimizeObject
+    ITelemetryItem, IDiagnosticLogger, eLoggingSeverity, _eInternalMessageId, hasJSON, getJSON, objForEachKey,
+    isNullOrUndefined, isNumber, isString, toISOString, setValue, isTruthy, optimizeObject, _throwInternal, _warnToConsole
 } from "@microsoft/applicationinsights-core-js";
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
@@ -168,14 +168,14 @@ function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, tel
 
 function EnvelopeCreatorInit(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem) {
     if (isNullOrUndefined(telemetryItem[strBaseData])) {
-        logger.throwInternal(
-            LoggingSeverity.CRITICAL,
-            _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
+        _throwInternal(logger,
+            eLoggingSeverity.CRITICAL,
+            _eInternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
     }
 }
 
 export const EnvelopeCreator = {
-    Version: "2.7.4"
+    Version: "2.8.1"
 };
 
 export function DependencyEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
@@ -189,7 +189,7 @@ export function DependencyEnvelopeCreator(logger: IDiagnosticLogger, telemetryIt
     }
     const bd = telemetryItem[strBaseData] as IDependencyTelemetry;
     if (isNullOrUndefined(bd)) {
-        logger.warnToConsole("Invalid input for dependency data");
+        _warnToConsole(logger, "Invalid input for dependency data");
         return null;
     }
 

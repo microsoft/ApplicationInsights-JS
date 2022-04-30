@@ -279,7 +279,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | samplingPercentage | numeric | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
 | autoTrackPageVisitTime | boolean | false | If true, on a pageview, the _previous_ instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. It is sent as a custom metric named `PageVisitTime` in `milliseconds` and is calculated via the Date [now()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now) function (if available) and falls back to (new Date()).[getTime()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime) if now() is unavailable (IE8 or less). Default is false. |
 | disableAjaxTracking | boolean | false | If true, Ajax calls are not autocollected. Default is false. |
-| disableFetchTracking | boolean | true | If true, Fetch requests are not autocollected. Default is true |
+| disableFetchTracking | boolean | false | If true, Fetch requests are not autocollected. Default is false (Since v2.8.0, previously false) |
 | excludeRequestFromAutoTrackingPatterns | string[] \| RegExp[] | undefined | Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request. If defined, for an ajax / fetch request that the request url matches with the regex patterns, auto tracking is turned off. Default is undefined. |
 | addRequestContext | (requestContext: IRequestionContext) => {[key: string]: any} | undefined | Provide a way to enrich dependencies logs with context at the beginning of api call. Default is undefined. You will need to check if `xhr` exists if you configure `xhr` related conetext. You will need to check if `fetch request` and `fetch response` exist if you configure `fetch` related context. Otherwise you may not get the data you need. |
 | overridePageViewDuration | boolean | false | If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false. |
@@ -633,6 +633,8 @@ It is expected that most users will be using the `Public` URL, however, it is al
 --- | --- | --- | --- | --- |
 Latest ✔ | Latest ✔ | 9+ Full ✔<br>8- Compatible | Latest ✔ | Latest ✔ |
 
+> Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
+
 ## Contributing
 
 Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
@@ -659,6 +661,8 @@ git push
 ```
 
 ## ES3/IE8 Compatibility
+
+> Future releases of the SDK numbered v3.x.x will be removing ES3 (IE8) support, so if you need to retain ES3 compatibility for your environment you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
 As an SDK there are numerous users which cannot control the browsers that their customers use. As such we need to ensure that this SDK continues to "work" and does not break the JS execution when loaded by an older browser. While it would be ideal to just not support IE8 and older generation (ES3) browsers there are numerous large customers/users that continue to require pages to "work" and as noted they may or cannot control which browser that their end users choose to use.
 

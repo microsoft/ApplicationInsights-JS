@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger, eLoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, isObject, strTrim, _throwInternal } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, eLoggingSeverity, _eInternalMessageId, hasJSON, getJSON, objForEachKey, isObject, strTrim, _throwInternal } from "@microsoft/applicationinsights-core-js";
 
 export const enum DataSanitizerValues {
     /**
@@ -68,7 +68,7 @@ export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
             nameTrunc = name.substring(0, DataSanitizerValues.MAX_NAME_LENGTH);
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
-                _InternalMessageId.NameTooLong,
+                _eInternalMessageId.NameTooLong,
                 "name is too long.  It has been truncated to " + DataSanitizerValues.MAX_NAME_LENGTH + " characters.",
                 { name }, true);
         }
@@ -86,7 +86,7 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
             valueTrunc = value.toString().substring(0, maxLength);
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
-                _InternalMessageId.StringValueTooLong,
+                _eInternalMessageId.StringValueTooLong,
                 "string value is too long. It has been truncated to " + maxLength + " characters.",
                 { value }, true);
         }
@@ -96,7 +96,7 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
 }
 
 export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any) {
-    return dataSanitizeInput(logger, url, DataSanitizerValues.MAX_URL_LENGTH, _InternalMessageId.UrlTooLong);
+    return dataSanitizeInput(logger, url, DataSanitizerValues.MAX_URL_LENGTH, _eInternalMessageId.UrlTooLong);
 }
 
 export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
@@ -105,7 +105,7 @@ export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
         if (message.length > DataSanitizerValues.MAX_MESSAGE_LENGTH) {
             messageTrunc = message.substring(0, DataSanitizerValues.MAX_MESSAGE_LENGTH);
             _throwInternal(logger,
-                eLoggingSeverity.WARNING, _InternalMessageId.MessageTruncated,
+                eLoggingSeverity.WARNING, _eInternalMessageId.MessageTruncated,
                 "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
                 { message },
                 true);
@@ -123,7 +123,7 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
         if (value.length > DataSanitizerValues.MAX_EXCEPTION_LENGTH) {
             exceptionTrunc = value.substring(0, DataSanitizerValues.MAX_EXCEPTION_LENGTH);
             _throwInternal(logger,
-                eLoggingSeverity.WARNING, _InternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
+                eLoggingSeverity.WARNING, _eInternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
                 { exception }, true);
         }
     }
@@ -140,7 +140,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
                 try {
                     value = getJSON().stringify(value);
                 } catch (e) {
-                    _throwInternal(logger,eLoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
+                    _throwInternal(logger,eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
                 }
             }
             value = dataSanitizeString(logger, value, DataSanitizerValues.MAX_PROPERTY_LENGTH);
@@ -168,10 +168,10 @@ export function dataSanitizeMeasurements(logger: IDiagnosticLogger, measurements
 }
 
 export function dataSanitizeId(logger: IDiagnosticLogger, id: string): string {
-    return id ? dataSanitizeInput(logger, id, DataSanitizerValues.MAX_ID_LENGTH, _InternalMessageId.IdTooLong).toString() : id;
+    return id ? dataSanitizeInput(logger, id, DataSanitizerValues.MAX_ID_LENGTH, _eInternalMessageId.IdTooLong).toString() : id;
 }
 
-export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _InternalMessageId) {
+export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _eInternalMessageId) {
     let inputTrunc : String;
     if (input) {
         input = strTrim(input);
@@ -248,7 +248,7 @@ export interface IDataSanitizer {
  
     sanitizeId: (logger: IDiagnosticLogger, id: string) => string;
  
-    sanitizeInput: (logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _InternalMessageId) => any;
+    sanitizeInput: (logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _eInternalMessageId) => any;
 
     padNumber: (num: number) => string;
  

@@ -3,11 +3,11 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties,
+    IConfiguration, AppInsightsCore, IAppInsightsCore, eLoggingSeverity, _eInternalMessageId, ITelemetryItem, ICustomProperties,
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign, proxyFunctions,
     arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener, addPageHideEventListener,
     createUniqueNamespace, ITelemetryPlugin, IPlugin, ILoadedPlugin, UnloadHandler, removePageUnloadEventListener, removePageHideEventListener,
-    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace
+    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal, arrIndexOf
 } from "@microsoft/applicationinsights-core-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -15,8 +15,8 @@ import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType,
-    IRequestHeaders, RequestHeaders, DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, AIData, AIBase,
-    Envelope, Event, Exception, Metric, PageView, PageViewData, RemoteDependencyData, IEventTelemetry,
+    IRequestHeaders, RequestHeaders, DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT,
+    Envelope, Event, Exception, Metric, PageView, RemoteDependencyData, IEventTelemetry,
     ITraceTelemetry, IMetricTelemetry, IDependencyTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetry, IPageViewPerformanceTelemetry, Trace, PageViewPerformance, Data, SeverityLevel,
     IConfig, ConfigurationManager, ContextTagKeys, IDataSanitizer, DataSanitizer, TelemetryItemCreator, IAppInsights, CtxTagKeys, Extensions,
@@ -124,14 +124,11 @@ export const Telemetry = {
     SampleRate,
     HttpMethod,
     DEFAULT_BREEZE_ENDPOINT,
-    AIData,
-    AIBase,
     Envelope,
     Event,
     Exception,
     Metric,
     PageView,
-    PageViewData,
     RemoteDependencyData,
     Trace,
     PageViewPerformance,
@@ -238,7 +235,7 @@ export class Initialization implements IApplicationInsights {
                             if (isString(field) &&
                                     !isFunction(value) &&
                                     field && field[0] !== "_" &&                                // Don't copy "internal" values
-                                    _ignoreUpdateSnippetProperties.indexOf(field) === -1) {
+                                    arrIndexOf(_ignoreUpdateSnippetProperties, field) === -1) {
                                 snippet[field as string] = value;
                             }
                         });
@@ -280,7 +277,7 @@ export class Initialization implements IApplicationInsights {
                 // Note: This must be called before loadAppInsights is called
                 proxyAssign(snippet, _self, (name: string) => {
                     // Not excluding names prefixed with "_" as we need to proxy some functions like _onError
-                    return name && _ignoreUpdateSnippetProperties.indexOf(name) === -1;
+                    return name && arrIndexOf(_ignoreUpdateSnippetProperties, name) === -1;
                 });
             };
         
@@ -306,8 +303,8 @@ export class Initialization implements IApplicationInsights {
         
                     // need from core
                     // Microsoft.ApplicationInsights._InternalLogging.throwInternal(
-                    //     LoggingSeverity.WARNING,
-                    //     _InternalMessageId.FailedToSendQueuedTelemetry,
+                    //     eLoggingSeverity.WARNING,
+                    //     _eInternalMessageId.FailedToSendQueuedTelemetry,
                     //     "Failed to send queued telemetry",
                     //     properties);
                 }
@@ -362,9 +359,9 @@ export class Initialization implements IApplicationInsights {
                         // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
                         // log the failure in this case
                         if (!added && !isReactNative()) {
-                            appInsightsInstance.appInsights.core.logger.throwInternal(
-                                LoggingSeverity.CRITICAL,
-                                _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
+                            _throwInternal(appInsightsInstance.appInsights.core.logger,
+                                eLoggingSeverity.CRITICAL,
+                                _eInternalMessageId.FailedToAddHandlerForOnBeforeUnload,
                                 "Could not add handler for beforeunload and pagehide");
                         }
                     }

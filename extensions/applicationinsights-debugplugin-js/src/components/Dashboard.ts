@@ -1,4 +1,4 @@
-import { arrForEach } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, arrIndexOf } from "@microsoft/applicationinsights-core-js";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { tempStyle } from "./styleNodeSrc";
 import { FilterList } from "./filterList";
@@ -138,11 +138,11 @@ export class Dashboard {
                         }
 
                         let type = entry.getKind();
-                        let allowOther = excludedTypes.indexOf("other") === -1;     // Other types are not excluded
-                        if (trackers.indexOf(type) === -1 && !allowOther) {
+                        let allowOther = arrIndexOf(excludedTypes, "other") === -1;     // Other types are not excluded
+                        if (arrIndexOf(trackers, type) === -1 && !allowOther) {
                             // Not a tracked type and we are not allowing other types
                             return;
-                        } else if (excludedTypes.indexOf(type) !== -1) {
+                        } else if (arrIndexOf(excludedTypes, type) !== -1) {
                             // This type is explicitly excluded
                             return;
                         }

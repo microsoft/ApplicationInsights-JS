@@ -5,7 +5,7 @@
 
 import {
     IConfig, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
-    TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
+    createTelemetryItem, Metric, Exception, eSeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
     IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault, createDomEvent,
@@ -15,10 +15,10 @@ import {
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
-    LoggingSeverity, _InternalMessageId, ICustomProperties,
+    eLoggingSeverity, _eInternalMessageId, ICustomProperties,
     getWindow, getDocument, getHistory, getLocation, objForEachKey,
     isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, ICookieMgr, safeGetCookieMgr,
-    TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentFunc, IInstrumentCallDetails, eventOn, eventOff,
+    TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentEvent, IInstrumentCallDetails, eventOn, eventOff,
     mergeEvtNamespace, createUniqueNamespace, ITelemetryInitializerHandler, throwError, isUndefined, hasWindow, createProcessTelemetryContext,
     ITelemetryUnloadState, IProcessTelemetryUnloadContext
 } from "@microsoft/applicationinsights-core-js";
@@ -109,7 +109,7 @@ function _updateStorageUsage(extConfig: IConfig) {
 }
 
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.7.4"; // Not currently used anywhere
+    public static Version = "2.8.1"; // Not currently used anywhere
 
     public static getDefaultConfig = _getDefaultConfig;
 
@@ -162,7 +162,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
             _self.trackEvent = (event: IEventTelemetry, customProperties?: ICustomProperties): void => {
                 try {
-                    let telemetryItem = TelemetryItemCreator.create<IEventTelemetry>(
+                    let telemetryItem = createTelemetryItem<IEventTelemetry>(
                         event,
                         EventTelemetry.dataType,
                         EventTelemetry.envelopeType,
@@ -172,8 +172,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                     _self.core.track(telemetryItem);
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.WARNING,
-                        _InternalMessageId.TrackTraceFailed,
+                    _throwInternal(eLoggingSeverity.WARNING,
+                        _eInternalMessageId.TrackTraceFailed,
                         "trackTrace failed, trace will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -187,8 +187,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     _eventTracking.start(name);
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.CRITICAL,
-                        _InternalMessageId.StartTrackEventFailed,
+                    _throwInternal(eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.StartTrackEventFailed,
                         "startTrackEvent failed, event will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -204,8 +204,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     _eventTracking.stop(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.CRITICAL,
-                        _InternalMessageId.StopTrackEventFailed,
+                    _throwInternal(eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.StopTrackEventFailed,
                         "stopTrackEvent failed, event will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -219,7 +219,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              */
             _self.trackTrace = (trace: ITraceTelemetry, customProperties?: ICustomProperties): void => {
                 try {
-                    let telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
+                    let telemetryItem = createTelemetryItem<ITraceTelemetry>(
                         trace,
                         Trace.dataType,
                         Trace.envelopeType,
@@ -228,8 +228,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
                     _self.core.track(telemetryItem);
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.WARNING,
-                        _InternalMessageId.TrackTraceFailed,
+                    _throwInternal(eLoggingSeverity.WARNING,
+                        _eInternalMessageId.TrackTraceFailed,
                         "trackTrace failed, trace will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -248,7 +248,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              */
             _self.trackMetric = (metric: IMetricTelemetry, customProperties?: ICustomProperties): void => {
                 try {
-                    let telemetryItem = TelemetryItemCreator.create<IMetricTelemetry>(
+                    let telemetryItem = createTelemetryItem<IMetricTelemetry>(
                         metric,
                         Metric.dataType,
                         Metric.envelopeType,
@@ -258,8 +258,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
                     _self.core.track(telemetryItem);
                 } catch (e) {
-                    _throwInternal(LoggingSeverity.CRITICAL,
-                        _InternalMessageId.TrackMetricFailed,
+                    _throwInternal(eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackMetricFailed,
                         "trackMetric failed, metric will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -281,8 +281,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.TrackPVFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackPVFailed,
                         "trackPageView failed, page view will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -300,7 +300,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
         
-                let telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
+                let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,
                     PageView.dataType,
                     PageView.envelopeType,
@@ -320,7 +320,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param properties
              */
             _self.sendPageViewPerformanceInternal = (pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
-                let telemetryItem = TelemetryItemCreator.create<IPageViewPerformanceTelemetryInternal>(
+                let telemetryItem = createTelemetryItem<IPageViewPerformanceTelemetryInternal>(
                     pageViewPerformance,
                     PageViewPerformance.dataType,
                     PageViewPerformance.envelopeType,
@@ -343,8 +343,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.sendPageViewPerformanceInternal(inPvp, customProperties);
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.TrackPVFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackPVFailed,
                         "trackPageViewPerformance failed, page view will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -366,8 +366,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _pageTracking.start(name);
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.StartTrackFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.StartTrackFailed,
                         "startTrackPage failed, page view may not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -400,8 +400,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.StopTrackFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.StopTrackFailed,
                         "stopTrackPage failed, page view will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -424,7 +424,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     exception.id
                 ).toInterface();
         
-                let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionInternal>(
+                let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
                     exceptionPartB,
                     Exception.dataType,
                     Exception.envelopeType,
@@ -453,8 +453,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.sendExceptionInternal(exception, customProperties);
                 } catch (e) {
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.TrackExceptionFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackExceptionFailed,
                         "trackException failed, exception will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
@@ -502,14 +502,14 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         if (!exception.errorSrc) {
                             exception.errorSrc = errorSrc;
                         }
-                        _self.trackException({ exception, severityLevel: SeverityLevel.Error }, properties);
+                        _self.trackException({ exception, severityLevel: eSeverityLevel.Error }, properties);
                     }
                 } catch (e) {
                     const errorString = error ? (error.name + ", " + error.message) : "null";
         
                     _throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.ExceptionWhileLoggingError,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.ExceptionWhileLoggingError,
                         "_onError threw exception while logging error, error will not be collected: "
                         + getExceptionName(e),
                         { exception: dumpObj(e), errorString }
@@ -677,7 +677,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             }
 
             function _sendCORSException(exception: IAutoExceptionTelemetry, properties?: ICustomProperties) {
-                let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IAutoExceptionTelemetry>(
+                let telemetryItem: ITelemetryItem = createTelemetryItem<IAutoExceptionTelemetry>(
                     exception,
                     Exception.dataType,
                     Exception.envelopeType,
@@ -696,7 +696,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 if (!_disableExceptionTracking && !_autoExceptionInstrumented && !extConfig.autoExceptionInstrumented) {
                     // We want to enable exception auto collection and it has not been done so yet
-                    _addHook(InstrumentFunc(_window, "onerror", {
+                    _addHook(InstrumentEvent(_window, "onerror", {
                         ns: _evtNamespace,
                         rsp: (callDetails: IInstrumentCallDetails, message, url, lineNumber, columnNumber, error) => {
                             if (!_disableExceptionTracking && callDetails.rslt !== true) {
@@ -710,7 +710,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 ));
                             }
                         }
-                    }));
+                    }, false));
 
                     _autoExceptionInstrumented = true;
                 }
@@ -781,7 +781,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
 
                 if (!_historyListenerAdded) {
-                    _addHook(InstrumentFunc(history, "pushState", {
+                    _addHook(InstrumentEvent(history, "pushState", {
                         ns: _evtNamespace,
                         rsp: () => {
                             if (_enableAutoRouteTracking) {
@@ -789,9 +789,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "locationchange"));
                             }
                         }
-                    }));
+                    }, true));
     
-                    _addHook(InstrumentFunc(history, "replaceState", {
+                    _addHook(InstrumentEvent(history, "replaceState", {
                         ns: _evtNamespace,
                         rsp: () => {
                             if (_enableAutoRouteTracking) {
@@ -799,7 +799,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "locationchange"));
                             }
                         }
-                    }));
+                    }, true));
 
                     eventOn(win, extConfig.namePrefix + "popstate", _popstateHandler, _evtNamespace);
                     eventOn(win, extConfig.namePrefix + "locationchange", _locationChangeHandler, _evtNamespace);
@@ -813,7 +813,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 if (_enableUnhandledPromiseRejectionTracking && !_autoUnhandledPromiseInstrumented) {
                     // We want to enable exception auto collection and it has not been done so yet
-                    _addHook(InstrumentFunc(_window, "onunhandledrejection", {
+                    _addHook(InstrumentEvent(_window, "onunhandledrejection", {
                         ns: _evtNamespace,
                         rsp: (callDetails: IInstrumentCallDetails, error: PromiseRejectionEvent) => {
                             if (_enableUnhandledPromiseRejectionTracking && callDetails.rslt !== true) { // handled could be typeof function
@@ -827,7 +827,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 ));
                             }
                         }
-                    }));
+                    }, false));
     
                     _autoUnhandledPromiseInstrumented = true;
                     extConfig.autoUnhandledPromiseInstrumented = _autoUnhandledPromiseInstrumented;
@@ -839,7 +839,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param severity {LoggingSeverity} - The severity of the log message
              * @param message {_InternalLogMessage} - The log message.
              */
-            function _throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void {
+            function _throwInternal(severity: eLoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void {
                 _self.diagLog().throwInternal(severity, msgId, msg, properties, isUserAct);
             }
 

@@ -4,7 +4,7 @@
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
 import { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { hasJSON, getJSON, getConsole } from "./EnvUtils";
+import { hasJSON, getJSON, getConsole, dumpObj } from "./EnvUtils";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
@@ -123,7 +123,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
 
                 if (_self.enableDebugExceptions()) {
-                    throw message;
+                    throw dumpObj(message);
                 } else {
                     // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
                     let logFunc = severity === eLoggingSeverity.CRITICAL ? strErrorToConsole : strWarnToConsole;
@@ -321,6 +321,10 @@ export class DiagnosticLogger implements IDiagnosticLogger {
     }
 }
 
+function _getLogger(logger: IDiagnosticLogger) {
+    return (logger || new DiagnosticLogger());
+}
+
 /**
  * This is a helper method which will call throwInternal on the passed logger, will throw exceptions in
  * debug mode or attempt to log the error as a console warning. This helper is provided mostly to better
@@ -334,3 +338,21 @@ export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSever
     (logger || new DiagnosticLogger()).throwInternal(severity, msgId, msg, properties, isUserAct);
 }
 
+/**
+ * This is a helper method which will call warnToConsole on the passed logger with the provided message.
+ * @param logger - The Diagnostic Logger instance to use.
+ * @param message {_InternalLogMessage} - The log message.
+ */
+export function _warnToConsole(logger: IDiagnosticLogger, message: string) {
+    _getLogger(logger).warnToConsole(message);
+}
+
+/**
+ * Logs a message to the internal queue.
+ * @param logger - The Diagnostic Logger instance to use.
+ * @param severity {LoggingSeverity} - The severity of the log message
+ * @param message {_InternalLogMessage} - The message to log.
+ */
+export function _logInternalMessage(logger: IDiagnosticLogger, severity: LoggingSeverity, message: _InternalLogMessage) {
+    _getLogger(logger).logInternalMessage(severity, message);
+}

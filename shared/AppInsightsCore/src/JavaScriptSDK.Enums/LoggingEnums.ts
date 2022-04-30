@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createEnumStyle } from "../JavaScriptSDK/HelperFuncs";
+import { createEnumStyle } from "../JavaScriptSDK.Enums/EnumHelperFuncs";
 
 export const enum eLoggingSeverity {
     /**
@@ -15,8 +15,7 @@ export const enum eLoggingSeverity {
     WARNING = 2
 }
 
-
-export const LoggingSeverity = createEnumStyle<{ [key in (keyof typeof eLoggingSeverity)]: number; }>({
+export const LoggingSeverity = createEnumStyle<typeof eLoggingSeverity>({
     CRITICAL: eLoggingSeverity.CRITICAL,
     WARNING: eLoggingSeverity.WARNING
 });
@@ -112,7 +111,7 @@ export const enum _eInternalMessageId {
 /**
  * Internal message ID. Please create a new one for every conceptually different message. Please keep alphabetically ordered
  */
-export const _InternalMessageId = createEnumStyle<{ [key in (keyof typeof _eInternalMessageId)]: number; }>({
+export const _InternalMessageId = createEnumStyle<typeof _eInternalMessageId>({
     // Non user actionable
     BrowserDoesNotSupportLocalStorage: _eInternalMessageId.BrowserDoesNotSupportLocalStorage,
     BrowserCannotReadLocalStorage: _eInternalMessageId.BrowserCannotReadLocalStorage,

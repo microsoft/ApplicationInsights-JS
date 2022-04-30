@@ -32,6 +32,7 @@ function showHelp() {
     console.log(" -patch       - Increment the current version to the next patch number (x.y.z => x.y.[z+1]");
     console.log(" -minor       - Increment the current version to the next minor number (x.y.z => x.[y+1].0");
     console.log(" -major       - Increment the current version to the next major number (x.y.z => [x+1].0.0");
+    console.log(" -next        - Increment the current version to the next value (patch, minor or major) based on the 'next' value in version.json");
     console.log(" -dev         - Add the 'dev' pre-release to the number (x.y.z => x.y.z-dev)");
     console.log(" -alpha       - Add the 'alpha' pre-release to the number (x.y.z => x.y.z-alpha)");
     console.log(" -beta        - Add the 'beta' pre-release to the number (x.y.z => x.y.z-beta)");
@@ -166,7 +167,7 @@ function parseArgs() {
 
 function updateVersions() {
     // Get the configured next release, default to "patch"
-    const verNext = theVersion.next || "patch";
+    const verNext = theVersion.next = theVersion.next || "patch";
     const rootVersion = require(process.cwd() + "/package.json");
     let newVersion = calculateVersion(rootVersion.version, verNext);
     if (newVersion) {

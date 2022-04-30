@@ -6,6 +6,7 @@ import { AppInsightsCoreSizeCheck } from "./AppInsightsCoreSize.Tests";
 import { EventHelperTests } from "./EventHelper.Tests";
 import { LoggingEnumTests } from "./LoggingEnum.Tests";
 import { DynamicTests } from "./Dynamic.Tests";
+import { EventsDiscardedReasonTests } from "./EventsDiscardedReason.Tests";
 
 export function runTests() {
     new DynamicTests().registerTests();
@@ -16,4 +17,5 @@ export function runTests() {
     new AppInsightsCoreSizeCheck().registerTests();
     new EventHelperTests().registerTests();
     new LoggingEnumTests().registerTests();
+    new EventsDiscardedReasonTests().registerTests();
 }

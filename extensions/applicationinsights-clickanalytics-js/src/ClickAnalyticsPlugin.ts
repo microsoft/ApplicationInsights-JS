@@ -7,8 +7,8 @@ import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, isNullOrUndefined, ITelemetryItem,
     IProcessTelemetryContext, ITelemetryPluginChain,
-    _InternalMessageId, ICustomProperties,
-    LoggingSeverity, arrForEach, dumpObj, getExceptionName, throwError, _throwInternal, IProcessTelemetryUnloadContext, ITelemetryUnloadState, unloadComponents
+    _eInternalMessageId, ICustomProperties,
+    eLoggingSeverity, arrForEach, dumpObj, getExceptionName, throwError, _throwInternal, IProcessTelemetryUnloadContext, ITelemetryUnloadState, unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
 import {
@@ -17,7 +17,7 @@ import {
 } from "./Interfaces/Datamodel";
 import {
     mergeConfig, BehaviorMapValidator,
-    BehaviorValueValidator, BehaviorEnumValidator, _ExtendedInternalMessageId
+    BehaviorValueValidator, BehaviorEnumValidator
 } from "./common/Utils";
 import { PageAction } from "./events/PageAction";
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
@@ -28,7 +28,7 @@ export { BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
     public identifier: string = "ClickAnalyticsPlugin";
     public priority: number = 181;
-    public static Version = "2.7.4";
+    public static Version = "2.8.1";
 
     constructor() {
         super();
@@ -89,8 +89,8 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                 } catch (e) {
                     _throwInternal(
                         _self.diagLog(),
-                        LoggingSeverity.CRITICAL,
-                        _ExtendedInternalMessageId.TrackPageActionEventFailed,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TrackPageActionEventFailed,
                         "trackPageAction failed, page action event will not be collected: " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }

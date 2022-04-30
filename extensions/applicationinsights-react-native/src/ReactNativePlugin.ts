@@ -8,8 +8,8 @@ import {
     ITelemetryItem,
     IPlugin,
     IAppInsightsCore,
-    LoggingSeverity,
-    _InternalMessageId,
+    eLoggingSeverity,
+    _eInternalMessageId,
     BaseTelemetryPlugin,
     IProcessTelemetryContext,//,
     arrForEach,
@@ -19,9 +19,10 @@ import {
     hasOwnProperty,
     isUndefined,
     IProcessTelemetryUnloadContext,
-    ITelemetryUnloadState
+    ITelemetryUnloadState,
+    _throwInternal, _warnToConsole
 } from "@microsoft/applicationinsights-core-js";
-import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from "@microsoft/applicationinsights-common";
+import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, eSeverityLevel, AnalyticsPluginIdentifier  } from "@microsoft/applicationinsights-common";
 import DeviceInfo from "react-native-device-info";
 
 import { INativeDevice, IReactNativePluginConfig } from "./Interfaces";
@@ -131,7 +132,7 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                     _device.id = DeviceInfo.getUniqueId(); // Installation ID
                     _device.model = DeviceInfo.getModel();
                 } catch (e) {
-                    _self.diagLog().warnToConsole("Failed to get DeviceInfo: " + getExceptionName(e) + " - " + dumpObj(e));
+                    _warnToConsole(_self.diagLog(), "Failed to get DeviceInfo: " + getExceptionName(e) + " - " + dumpObj(e));
                 }
             }
 
@@ -189,13 +190,13 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
 
             // default global error handler syntax: handleError(e, isFatal)
             function _trackException(e, isFatal) {
-                const exception: IExceptionTelemetry = { exception: e, severityLevel: SeverityLevel.Error };
+                const exception: IExceptionTelemetry = { exception: e, severityLevel: eSeverityLevel.Error };
 
                 if (_analyticsPlugin) {
                     _analyticsPlugin.trackException(exception);
                 } else {
-                    _self.diagLog().throwInternal(
-                        LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
+                    _throwInternal(_self.diagLog(),
+                        eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
                 }
 
                 // call the _defaultHandler - react native also gets the error
