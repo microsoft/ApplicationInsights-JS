@@ -123,7 +123,6 @@ function addSnippetLoadingTimeEvent(AISKUPerfTest: any, endtime: number): void {
     createPerfEvent(AISKUPerfTest, "SDKInit", duration, true, `AppInsightsInit-Init: Script LoadingTime: ${duration} ms added`);
 }
 
-
 export class AISKUPerf extends AITestClass {
     public AISKUPerfTest: AppInsightsInitPerfTestClass;
     public perfMgr: any;
@@ -137,7 +136,6 @@ export class AISKUPerf extends AITestClass {
     public testInitialize() {
         try {
            this.AISKUPerfTest = new AppInsightsInitPerfTestClass();
-           this.AISKUPerfTest.loadScriptOnInit = () => {return this._loadScriptOnInit();}
            Assert.ok(window["oneDS"], "oneDS exists");
            Assert.ok(window["Microsoft"]?.ApplicationInsights?.PerfMarkMeasureManager, "perfMgr exists");
            Assert.ok(window["Microsoft"]?.ApplicationInsights?.doPerf, "doPerf exists");
@@ -167,6 +165,7 @@ export class AISKUPerf extends AITestClass {
         this.testCaseAsync({
             name: "AppInsights AISKU perf Test",
             stepDelay: 10000,
+            assertNoHooks: false,
             steps: [() => {
                 Assert.ok(window["appInsightsInitPerftest"], "global appInsightsInitPerftest exists");
                 Assert.ok(window["oneDS"], "oneDS exists");
@@ -199,16 +198,27 @@ export class AISKUPerf extends AITestClass {
         });
     }
 
-    protected _loadScriptOnInit(): void {
+    protected _loadScriptOnInit(theModule: any): void {
         var snippetLoadingEndTime = performance.now();
         this._addMemoryPerfEvent(this.initialMemoryUsage);
         Assert.ok(true,"AppInsights script loaded");
 
-        addSnippetLoadingTimeEvent(this.AISKUPerfTest,snippetLoadingEndTime);
+        addSnippetLoadingTimeEvent(this.AISKUPerfTest, snippetLoadingEndTime);
     
         let appInsights = window["appInsights"];
         this.appInsights = appInsights;
 
+        this.onDone(() => {
+            if (appInsights && appInsights.unload && appInsights.core && appInsights.core.isInitialized()) {
+                Assert.ok(true, "Unloading...");
+                appInsights.unload(false);
+            } else {
+                Assert.ok(true, "Unload not supported...");
+            }
+            
+            appInsights = null;
+            this.appInsights = null;
+        });
         try {
             let notificationManager = this.appInsights.core["_notificationManager"] ||this.appInsights.core?.getNotifyMgr();
             if (notificationManager) {
@@ -230,29 +240,31 @@ export class AISKUPerf extends AITestClass {
     }
 
     protected _loadSnippet():void {
-        this.initialMemoryUsage = performance["memory"]?.usedJSHeapSize;
-        var tag = document.createElement("script");
-        tag.innerText = this.getSnippet();
-        this.AISKUPerfTest.snippetStartTime = performance.now();
-        document.getElementsByTagName("head")[0].appendChild(tag);
-    }
+        let self = this;
+        self.initialMemoryUsage = performance["memory"]?.usedJSHeapSize;
+        window["loadSdkUsingRequire"]({
+            src: self.getScriptSrc(),
+            onInit: function (theInstance) {
+                console.log("snippet loaded");
+                self._loadScriptOnInit(theInstance);
 
-    public getSnippet(): string {
-        return `
-            loadSdkUsingRequire({
-                src: "https://js.monitor.azure.com/scripts/b/ai.${this.AISKUPerfTest.version}.min.js?${this.AISKUPerfTest.testPostfix}",
-                onInit: function (appInsights) {
-                    console.log("snippet loaded");
-                    appInsightsInitPerftest.loadScriptOnInit();
-                },
-                cfg: { 
-                    instrumentationKey: "key",
-                    enablePerfMgr: true,
-                    maxBatchSizeInBytes: 1000000,
-                    maxBatchInterval: 30000000,
-                    extensionConfig: {}
-                }
-            });`;
+                self.onDone(() => {
+                    if (theInstance && theInstance.unload && theInstance.core && theInstance.core.isInitialized()) {
+                        Assert.ok(true, "Unloading from onInit...");
+                        theInstance.unload(false);
+                    } else {
+                        Assert.ok(true, "Unload not supported in onInit...");
+                    }
+                });
+            },
+            cfg: { 
+                instrumentationKey: "key",
+                enablePerfMgr: true,
+                maxBatchSizeInBytes: 1000000,
+                maxBatchInterval: 30000000,
+                extensionConfig: {}
+            }            
+        });
     }
 
     public addPerfEvents() {
@@ -277,8 +289,14 @@ export class AISKUPerf extends AITestClass {
     }
 
     public getScriptSrc(): string {
-        return `https://js.monitor.azure.com/scripts/b/ai.${this.AISKUPerfTest.version}.min.js?${this.AISKUPerfTest.testPostfix}`;
-    }
+        let baseUrl = "https://js.monitor.azure.com/scripts/b/ai.";
+
+        if (this.AISKUPerfTest.version.indexOf("nightly") !== -1) {
+            baseUrl = "https://js.monitor.azure.com/nightly/ai.";
+        }
+
+        return baseUrl + `${this.AISKUPerfTest.version}.min.js?${this.AISKUPerfTest.testPostfix}`;
+    }    
 
     private _addMemoryPerfEvent(initialMemoryUsage: number, metric?: string): void {
         let curMemory = performance["memory"]?.usedJSHeapSize;

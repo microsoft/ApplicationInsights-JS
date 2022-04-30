@@ -55,7 +55,9 @@
             };
 
             if (snippetCfg.onInit) {
-                appInsights.queue.push(snippetCfg.onInit);
+                appInsights.queue.push(function() {
+                    snippetCfg.onInit(appInsights);
+                });
             }
 
             window["appInsights"] = appInsights;
