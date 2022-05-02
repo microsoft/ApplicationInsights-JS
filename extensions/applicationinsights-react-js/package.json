@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-js",
-    "version": "3.3.1",
+    "version": "3.3.2",
     "description": "Microsoft Application Insights React plugin",
     "main": "dist/applicationinsights-react-js.js",
     "module": "dist-esm/applicationinsights-react-js.js",
@@ -58,8 +58,8 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "2.0.1",
-        "@microsoft/applicationinsights-core-js": "2.8.1",
-        "@microsoft/applicationinsights-common": "2.8.1",
+        "@microsoft/applicationinsights-core-js": "2.8.2",
+        "@microsoft/applicationinsights-common": "2.8.2",
         "@microsoft/dynamicproto-js": "^1.1.5"
     },
     "peerDependencies": {

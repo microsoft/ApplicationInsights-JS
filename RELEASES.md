@@ -2,6 +2,20 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.2 (May 2nd, 2022)
+
+- Updates React Plugin to v3.3.1 (with v2.8.1 as dependency) -- using React 17
+- Updates React Native Plugin to 2.5.1 (with v2.8.1 as dependency)
+- Updates Chrome Debug Extension to 0.3.0
+
+This patch release restores complete ES3 support (broken in 2.8.0) and IE8 support (broken eariler via dynamicProto()) for the Sdk.
+
+### Changelog
+
+- #1822 [BUG] v2.8.1 with a Hosted IE environment fails to initialize for a hosted instance of IE #1822 (#1824)
+- #1823 [BUG] IE8 Support was broken by several components #1823
+- Also updates to dynamicProto() v1.1.5 to restore IE8 support
+
 ## 2.8.1 (Apr 22nd, 2022)
 
 - Updates React Plugin to v3.3.1 (with v2.8.1 as dependency) -- using React 17

@@ -28,7 +28,7 @@ export { BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
     public identifier: string = "ClickAnalyticsPlugin";
     public priority: number = 181;
-    public static Version = "2.8.1";
+    public static Version = "2.8.2";
 
     constructor() {
         super();
