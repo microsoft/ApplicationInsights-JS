@@ -60,7 +60,7 @@
         "@microsoft/applicationinsights-shims": "2.0.1",
         "@microsoft/applicationinsights-core-js": "2.8.2",
         "@microsoft/applicationinsights-common": "2.8.2",
-        "@microsoft/dynamicproto-js": "^1.1.5"
+        "@microsoft/dynamicproto-js": "^1.1.6"
     },
     "peerDependencies": {
         "tslib": "*",

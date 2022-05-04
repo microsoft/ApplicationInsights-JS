@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home Page - HelloWorld</title>
+    <!-- <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css" /> -->
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <h1 class="display-4">Welcome</h1>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            
+<div class="text-center">
+    From your repository<br/>
+    Perform a full build <code>rush rebuild</code><br/>
+    Enable the test http server <code>npm run serve</code><br />
+    <a href="http://localhost:9001/AISKU/Tests/Manual/HelloWorld.html">Load this page from the local service</a>
+    <ul>
+        <li>Load in different browsers and ensure that the events are attempted to be sent</li>
+        <li>Use different browsers, Firefox, Chrome and Edge</li>
+        <li>Using Edge enable IE Mode</li>
+        <div>
+            Use IEChooser to debug and change the Emulation mode
+            <ul>
+                <li>Default IE 11</li>
+                <li>Default IE 10</li>
+                <li>Default IE 9</li>
+                <li>Default IE 8</li>
+                <li>Default IE 7 - This will fail due to no JSON implementation, the console should show a warning</li>
+            </ul>
+
+        </div>
+    </ul>
+    Note: The send attempt will fail, but you should see the outbound network attempt. If not debug the code and find out why!
+</div>
+
+</div>
+
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> -->
+
+<!-- <script src="file://./ai.2.8.0.js"></script> -->
+<script src="http://localhost:9001/AISKU/browser/ai.2.js"></script>
+<!-- <script src="https://js.monitor.azure.com/scripts/b/ai.2.7.4.js" crossorigin="anonymous"></script> -->
+<!-- <script src="https://js.monitor.azure.com/scripts/b/ai.2.8.0.js" crossorigin="anonymous"></script> -->
+<script>
+
+    //var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var s="Track"+r[0];if(n("start"+s),n("stop"+s),n("addTelemetryInitializer"),n("setAuthenticatedUserContext"),n("clearAuthenticatedUserContext"),n("flush"),t.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4},!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var o=a[r];a[r]=function(e,n,i,a,s){var c=o&&o(e,n,i,a,s);return!0!==c&&t["_"+r]({message:e,url:n,lineNumber:i,columnNumber:a,error:s}),c},e.autoExceptionInstrumented=!0}return t}(
+    //    {
+    //        instrumentationKey: "2bd72339-a683-4cce-8ed7-b1b0e8767295"
+    //    }
+    //); window[aiName] = aisdk, aisdk.queue && 0 === aisdk.queue.length && aisdk.trackPageView({});
+
+
+    // var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/scripts/b/ai.2.8.0.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var s="Track"+r[0];if(n("start"+s),n("stop"+s),n("addTelemetryInitializer"),n("setAuthenticatedUserContext"),n("clearAuthenticatedUserContext"),n("flush"),t.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4},!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var o=a[r];a[r]=function(e,n,i,a,s){var c=o&&o(e,n,i,a,s);return!0!==c&&t["_"+r]({message:e,url:n,lineNumber:i,columnNumber:a,error:s}),c},e.autoExceptionInstrumented=!0}return t}(
+    //     {
+    //         url: "./ai.2.8.0.js",
+    //         instrumentationKey: "2bd72339-a683-4cce-8ed7-b1b0e8767295",
+    //         enableCorsCorrelation: true,
+    //         enableApplicationInsightsTrace: true
+    //     }
+    // ); window[aiName] = aisdk;
+
+    // if (aisdk.queue && aisdk.queue.length === 0) {
+    //     setTimeout(function() {
+    //         aisdk.properties.context.telemetryTrace.traceID = "<server operation id>"
+    //         aisdk.properties.context.telemetryTrace.parentID = "<server request id>"
+    //         aisdk.properties.context.telemetryTrace.name = "<server operation name>"
+    //         aisdk.trackPageView();
+    //     }, 100);
+    // }
+
+    var enableDebug = true;
+    var instrumentationKey = "2bd72339-a683-4cce-8ed7-b1b0e8700000";
+    var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({
+        config: {
+            instrumentationKey: instrumentationKey,
+            endpointUrl: "http://localhost:9001/v2/track",
+            //extensions: [reactPlugin],
+            enableDebug: true,
+            loggingLevelConsole: enableDebug ? 2 : 0,
+            loggingLevelTelemetry: enableDebug ? 2 : 1,
+            autoTrackPageVisitTime: true,
+            enableAutoRouteTracking: true,
+            enableDebugExceptions: enableDebug,
+            enableUnhandledPromiseRejectionTracking: true,
+            enableCorsCorrelation: false,
+            enableRequestHeaderTracking: true,
+            enableResponseHeaderTracking: true
+        }
+    });    
+
+    appInsights.loadAppInsights();
+    appInsights.trackPageView();    
+
+    //$.ajax({
+    //    url: "https://www.mocky.io/v2/5185415ba171ea3a00704eed",
+    //    type: 'GET',
+    //    dataType: 'json', // added data type
+    //    success: function(res) {
+    //        console.log(res.hello);
+    //        alert(res.hello);
+    //    }
+    //});
+
+</script>
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2019 - HelloWorld
+        </div>
+    </footer>
+    
+</body>
+</html>
