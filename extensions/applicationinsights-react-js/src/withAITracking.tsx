@@ -22,7 +22,7 @@ export abstract class AITrackedComponentBase<P> extends React.Component<P> {
   protected _componentName: string;
   protected _reactPlugin: ReactPlugin;
 
-  public constructor(props: P, reactPlugin: ReactPlugin, componentName: string,) {
+  public constructor(props: P, reactPlugin: ReactPlugin, componentName: string) {
     super(props);
 
     this._reactPlugin = reactPlugin;
