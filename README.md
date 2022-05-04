@@ -21,7 +21,7 @@
 [![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)
 [![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)
 
-> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights). For Node.js instrumentation reference this [repository](https://github.com/microsoft/ApplicationInsights-node.js).
+> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights). For Node.js instrumentation reference this [repository](https://github.com/microsoft/ApplicationInsights-node.js). 
 
 ## Getting Started
 
