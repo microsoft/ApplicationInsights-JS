@@ -1,5 +1,18 @@
 # Releases
 
+## 2.7.6 (May 4th, 2022)
+
+This release is just to update the base version of dynamicProto(), there is no known changes or issues between v2.7.5 and this release.
+
+- Updates React Plugin to v3.2.6 (with v2.7.5 as dependency)
+- Updates React Native Plugin to 2.4.6 (with v2.7.5 as dependency)
+- Updates Chrome Debug Extension to 0.2.6
+
+### Changelog
+
+- Updates to dynamicProto() v1.1.6 which provides a final edge case fix for IE8
+  - [#50](https://github.com/microsoft/DynamicProto-JS/issues/50) [IE8] Fix in 1.1.5 only handles 2 levels of dynamically nested classes
+
 ## 2.7.5 (Apr 29th, 2022)
 
 - Updates React Plugin to v3.2.5 (with v2.7.5 as dependency)
