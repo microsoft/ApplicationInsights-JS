@@ -109,7 +109,7 @@ function _updateStorageUsage(extConfig: IConfig) {
 }
 
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.8.2"; // Not currently used anywhere
+    public static Version = "2.8.3"; // Not currently used anywhere
 
     public static getDefaultConfig = _getDefaultConfig;
 

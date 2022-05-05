@@ -7,7 +7,7 @@ import { newId } from "./RandomHelper";
 
 const _objDefineProperty = ObjDefineProperty;
 
-const version = "2.8.2";
+const version = "2.8.3";
 let instanceName = "." + newId(6);
 let _dataUid = 0;
 
