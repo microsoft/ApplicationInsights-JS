@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
-import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString, throwError} from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString, throwError } from "@microsoft/applicationinsights-core-js";
 import { strNotSpecified, strIkey } from "./Constants";
 
 

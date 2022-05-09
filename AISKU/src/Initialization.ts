@@ -7,7 +7,7 @@ import {
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign, proxyFunctions,
     arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener, addPageHideEventListener,
     createUniqueNamespace, ITelemetryPlugin, IPlugin, ILoadedPlugin, UnloadHandler, removePageUnloadEventListener, removePageHideEventListener,
-    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal,strUndefined
+    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal
 } from "@microsoft/applicationinsights-core-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -194,7 +194,7 @@ export class Initialization implements IApplicationInsights {
                 _throwInternal(_core.logger,
                     eLoggingSeverity.CRITICAL,
                     _eInternalMessageId.InstrumentationKeyDeprecation,
-                    "Instrumentation key based ingestion will be no longer supported, please use connection string instead.");
+                    "Instrumentation key based ingestion support will end, please use connection string instead. More information at: https://docs.microsoft.com/en-us/azure/azure-monitor/app/migrate-from-instrumentation-keys-to-connection-strings");
             }
 
             _self.snippet = snippet;
