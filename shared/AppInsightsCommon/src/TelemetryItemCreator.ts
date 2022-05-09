@@ -35,11 +35,6 @@ export function createTelemetryItem<T>(item: T,
     if (item[strIkey]) {
         iKey = item[strIkey];
         delete item[strIkey];
-        //TODO: add connectionString Config
-        var _console = typeof console !== strUndefined ? console : null;
-        if (_console && _console.warn) {
-            _console.warn("Instrumentation key based ingestion will be no longer supported.");
-        }
     }
 
     const telemetryItem: ITelemetryItem = {

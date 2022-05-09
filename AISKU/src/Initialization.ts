@@ -179,11 +179,6 @@ export class Initialization implements IApplicationInsights {
                 const ingest = cs.ingestionendpoint;
                 config.endpointUrl = ingest ? `${ingest}/v2/track` : config.endpointUrl; // only add /v2/track when from connectionstring
                 config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
-            } else {
-                var _console = typeof console !== strUndefined ? console : null;
-                if (_console && _console.warn) {
-                    _console.warn("Instrumentation key based ingestion will be no longer supported, please use connection string instead.");
-                }
             }
 
             _self.appInsights = new AnalyticsPlugin();
@@ -193,6 +188,14 @@ export class Initialization implements IApplicationInsights {
             _sender = new Sender();
             _core = new AppInsightsCore();
             _self.core = _core;
+
+        
+            if (!config.connectionString) {
+                _throwInternal(_core.logger,
+                    eLoggingSeverity.CRITICAL,
+                    _eInternalMessageId.InstrumentationKeyDeprecation,
+                    "Instrumentation key based ingestion will be no longer supported, please use connection string instead.");
+            }
 
             _self.snippet = snippet;
             _self.config = config;

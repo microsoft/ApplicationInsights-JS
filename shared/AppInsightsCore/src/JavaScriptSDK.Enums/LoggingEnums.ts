@@ -105,7 +105,8 @@ export const enum _eInternalMessageId {
     InvalidContentBlob = 102,
     TrackPageActionEventFailed = 103,
     FailedAddingCustomDefinedRequestContext = 104,
-    InMemoryStorageBufferFull = 105
+    InMemoryStorageBufferFull = 105,
+    InstrumentationKeyDeprecation = 106
 }
 
 /**
