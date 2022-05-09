@@ -194,7 +194,7 @@ export class Initialization implements IApplicationInsights {
                 _throwInternal(_core.logger,
                     eLoggingSeverity.CRITICAL,
                     _eInternalMessageId.InstrumentationKeyDeprecation,
-                    "Instrumentation key based ingestion support will end, please use connection string instead. More information at: https://docs.microsoft.com/en-us/azure/azure-monitor/app/migrate-from-instrumentation-keys-to-connection-strings");
+                    "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
             }
 
             _self.snippet = snippet;
