@@ -197,6 +197,8 @@ export const _InternalMessageId = createEnumStyle<typeof _eInternalMessageId>({
     InvalidContentBlob: _eInternalMessageId.InvalidContentBlob,
     TrackPageActionEventFailed: _eInternalMessageId.TrackPageActionEventFailed,
     FailedAddingCustomDefinedRequestContext: _eInternalMessageId.FailedAddingCustomDefinedRequestContext,
-    InMemoryStorageBufferFull: _eInternalMessageId.InMemoryStorageBufferFull
+    InMemoryStorageBufferFull: _eInternalMessageId.InMemoryStorageBufferFull,
+    InstrumentationKeyDeprecation: _eInternalMessageId.InstrumentationKeyDeprecation
+
 });
 export type _InternalMessageId = number | _eInternalMessageId;
