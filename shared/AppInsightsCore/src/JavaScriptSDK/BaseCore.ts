@@ -20,7 +20,11 @@ import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { getGblPerfMgr, PerfManager } from "./PerfManager";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
-import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction, objFreeze, proxyFunctionAs, proxyFunctions } from "./HelperFuncs";
+import {
+    arrForEach, isNullOrUndefined, getSetValue, setValue, isNotTruthy, isFunction, objExtend, objFreeze, proxyFunctionAs, proxyFunctions, throwError,
+    toISOString,
+    arrIndexOf
+} from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
 import { getDebugListener } from "./DbgExtensionUtils";
@@ -42,6 +46,11 @@ const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";
 const strSdkNotInitialized = "SDK is not initialized";
 // const strPluginUnloadFailed = "Failed to unload plugin";
+
+const defaultInitConfig = {
+    // Have the Diagnostic Logger default to log critical errors to the console
+    loggingLevelConsole: eLoggingSeverity.CRITICAL
+};
 
 /**
  * Helper to create the default performance manager
@@ -361,7 +370,7 @@ export class BaseCore implements IAppInsightsCore {
                     flushComplete: false
                 }
 
-                let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self.config, _self);
+                let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self);
                 processUnloadCtx.onComplete(() => {
                     _initDefaults();
                     unloadComplete && unloadComplete(unloadState);
@@ -451,8 +460,8 @@ export class BaseCore implements IAppInsightsCore {
                 _isInitialized = false;
 
                 // Use a default logger so initialization errors are not dropped on the floor with full logging
-                _self.logger = new DiagnosticLogger({ loggingLevelConsole: eLoggingSeverity.CRITICAL });
-                _self.config = {};
+                _self.config = objExtend(true, {}, defaultInitConfig);
+                _self.logger = new DiagnosticLogger(_self.config);
                 _self._extensions = [];
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
@@ -495,12 +504,12 @@ export class BaseCore implements IAppInsightsCore {
                     // But we also want the controller as the last, so remove if already present
                     // And reusing the existing instance, just in case an installed plugin has a reference and
                     // is using it.
-                    let idx = allExtensions.indexOf(_channelControl);
+                    let idx = arrIndexOf(allExtensions, _channelControl);
                     if (idx !== -1) {
                         allExtensions.splice(idx, 1);
                     }
 
-                    idx = _coreExtensions.indexOf(_channelControl);
+                    idx = arrIndexOf(_coreExtensions, _channelControl);
                     if (idx !== -1) {
                         _coreExtensions.splice(idx, 1);
                     }
@@ -587,7 +596,7 @@ export class BaseCore implements IAppInsightsCore {
                     let extensions = (_coreExtensions || []).slice();
 
                     // During add / remove this may get called again, so don't readd if already present
-                    if (extensions.indexOf(_telemetryInitializerPlugin) === -1) {
+                    if (arrIndexOf(extensions, _telemetryInitializerPlugin) === -1) {
                         extensions.push(_telemetryInitializerPlugin);
                     }
 
@@ -601,7 +610,7 @@ export class BaseCore implements IAppInsightsCore {
 
                 if (thePlugins && thePlugins.length > 0) {
                     let unloadChain = createTelemetryProxyChain(thePlugins, _self.config, _self);
-                    let unloadCtx = createProcessTelemetryUnloadContext(unloadChain, _self.config, _self);
+                    let unloadCtx = createProcessTelemetryUnloadContext(unloadChain, _self);
 
                     unloadCtx.onComplete(() => {
                         let removed = false;
@@ -705,7 +714,7 @@ export class BaseCore implements IAppInsightsCore {
             }
 
             function _doUpdate(updateState: ITelemetryUpdateState): void {
-                let updateCtx = createProcessTelemetryUpdateContext(_getPluginChain(), _self.config, _self);
+                let updateCtx = createProcessTelemetryUpdateContext(_getPluginChain(), _self);
 
                 if (!_self._updateHook || _self._updateHook(updateCtx, updateState) !== true) {
                     updateCtx.processNext(updateState);

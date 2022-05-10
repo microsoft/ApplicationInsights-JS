@@ -45,7 +45,7 @@ export function createEnumMap<E, I = keyof E>(values: { [key in keyof E]: E[keyo
  * @param values - The values to populate on the new object
  * @returns
  */
-export function createValueMap<E, V = E>(values: { [key in keyof E]: [ eValue: E[keyof E], mapValue: V[keyof V]] }): V {
+export function createValueMap<E, V = E>(values: { [key in keyof E]: [ E[keyof E], V[keyof V] ] }): V {
     let mapClass: any = {};
     objForEachKey(values, (field, value) => {
         mapClass[field] = value[1];

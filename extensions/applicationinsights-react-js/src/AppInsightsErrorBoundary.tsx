@@ -8,6 +8,7 @@ import ReactPlugin from "./ReactPlugin";
 export interface IAppInsightsErrorBoundaryProps {
     appInsights: ReactPlugin
     onError: React.ComponentType<any>
+    children: React.ReactElement
 }
 
 export interface IAppInsightsErrorBoundaryState {

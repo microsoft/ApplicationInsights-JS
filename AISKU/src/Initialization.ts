@@ -7,7 +7,7 @@ import {
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign, proxyFunctions,
     arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener, addPageHideEventListener,
     createUniqueNamespace, ITelemetryPlugin, IPlugin, ILoadedPlugin, UnloadHandler, removePageUnloadEventListener, removePageHideEventListener,
-    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal
+    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal, arrIndexOf
 } from "@microsoft/applicationinsights-core-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -189,6 +189,14 @@ export class Initialization implements IApplicationInsights {
             _core = new AppInsightsCore();
             _self.core = _core;
 
+        
+            if (!config.connectionString) {
+                _throwInternal(_core.logger,
+                    eLoggingSeverity.CRITICAL,
+                    _eInternalMessageId.InstrumentationKeyDeprecation,
+                    "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
+            }
+
             _self.snippet = snippet;
             _self.config = config;
             _getSKUDefaults();
@@ -235,7 +243,7 @@ export class Initialization implements IApplicationInsights {
                             if (isString(field) &&
                                     !isFunction(value) &&
                                     field && field[0] !== "_" &&                                // Don't copy "internal" values
-                                    _ignoreUpdateSnippetProperties.indexOf(field) === -1) {
+                                    arrIndexOf(_ignoreUpdateSnippetProperties, field) === -1) {
                                 snippet[field as string] = value;
                             }
                         });
@@ -277,7 +285,7 @@ export class Initialization implements IApplicationInsights {
                 // Note: This must be called before loadAppInsights is called
                 proxyAssign(snippet, _self, (name: string) => {
                     // Not excluding names prefixed with "_" as we need to proxy some functions like _onError
-                    return name && _ignoreUpdateSnippetProperties.indexOf(name) === -1;
+                    return name && arrIndexOf(_ignoreUpdateSnippetProperties, name) === -1;
                 });
             };
         
@@ -304,7 +312,7 @@ export class Initialization implements IApplicationInsights {
                     // need from core
                     // Microsoft.ApplicationInsights._InternalLogging.throwInternal(
                     //     eLoggingSeverity.WARNING,
-                    //     _InternalMessageId.FailedToSendQueuedTelemetry,
+                    //     _eInternalMessageId.FailedToSendQueuedTelemetry,
                     //     "Failed to send queued telemetry",
                     //     properties);
                 }

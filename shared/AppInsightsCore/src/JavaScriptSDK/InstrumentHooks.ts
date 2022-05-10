@@ -7,6 +7,7 @@ import {
 import { strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
 import { hasOwnProperty, _getObjProto } from "./HelperFuncs";
 import { getGlobalInst } from "./EnvUtils";
+import { createElmNodeData } from "./DataCacheHelper";
 
 const aiInstrumentHooks = "_aiHooks";
 
@@ -109,15 +110,17 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 
         // Call the original function was called
         let theFunc = aiHook.f;
-        try {
-            funcArgs.rslt = theFunc.apply(funcThis, orgArgs);
-        } catch (err) {
-            // Report the request callback
-            funcArgs.err = err;
-            _doCallbacks(hooks, funcArgs, cbArgs, hookCtx, CallbackType.FunctionError);
-
-            // rethrow the original exception so anyone listening for it can catch the exception
-            throw err;
+        if (theFunc) {
+            try {
+                funcArgs.rslt = theFunc.apply(funcThis, orgArgs);
+            } catch (err) {
+                // Report the request callback
+                funcArgs.err = err;
+                _doCallbacks(hooks, funcArgs, cbArgs, hookCtx, CallbackType.FunctionError);
+    
+                // rethrow the original exception so anyone listening for it can catch the exception
+                throw err;
+            }
         }
 
         // Call the post-request hooks
@@ -129,7 +132,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 
 
 /** @ignore */
-function _getOwner(target:any, name:string, checkPrototype:boolean): any {
+function _getOwner(target:any, name:string, checkPrototype: boolean): any {
     let owner = null;
     if (target) {
         if (hasOwnProperty(target, name)) {
@@ -170,6 +173,47 @@ export function InstrumentProtos(target:any, funcNames:string[], callbacks: IIns
     return null;
 }
 
+function _createInstrumentHook(owner: any, funcName: string, fn: any, callbacks: IInstrumentHooksCallbacks) {
+    let aiHook: IInstrumentHooks = fn && fn[aiInstrumentHooks];
+    if (!aiHook) {
+        // Only hook the function once
+        aiHook = {
+            i: 0,
+            n: funcName,
+            f: fn,
+            h: []
+        };
+
+        // Override (hook) the original function
+        let newFunc = _createFunctionHook(aiHook);
+        newFunc[aiInstrumentHooks] = aiHook; // Tag and store the function hooks
+        owner[funcName] = newFunc;
+    }
+
+    const theHook: IInstrumentHook = {
+        // tslint:disable:object-literal-shorthand
+        id: aiHook.i,
+        cbks: callbacks,
+        rm: function () {
+            // DO NOT Use () => { shorthand for the function as the this gets replaced
+            // with the outer this and not the this for theHook instance.
+            let id = this.id;
+            _arrLoop(aiHook.h, (hook, idx) => {
+                if (hook.id === id) {
+                    aiHook.h.splice(idx, 1);
+                    return 1;
+                }
+            });
+        }
+        // tslint:enable:object-literal-shorthand
+    };
+
+    aiHook.i++;
+    aiHook.h.push(theHook);
+
+    return theHook;
+}
+
 /**
  * Intercept the named prototype functions for the target class / object
  * @param target - The target object
@@ -183,44 +227,7 @@ export function InstrumentFunc(target:any, funcName:string, callbacks: IInstrume
         if (owner) {
             let fn = owner[funcName]
             if (typeof fn === strShimFunction) {
-                let aiHook:IInstrumentHooks = fn[aiInstrumentHooks];
-                if (!aiHook) {
-                    // Only hook the function once
-                    aiHook = {
-                        i: 0,
-                        n: funcName,
-                        f: fn,
-                        h: []
-                    };
-
-                    // Override (hook) the original function
-                    let newFunc = _createFunctionHook(aiHook);
-                    newFunc[aiInstrumentHooks] = aiHook;        // Tag and store the function hooks
-                    owner[funcName] = newFunc;
-                }
-
-                const theHook: IInstrumentHook = {
-                    // tslint:disable:object-literal-shorthand
-                    id: aiHook.i,
-                    cbks: callbacks,
-                    rm: function() {
-                        // DO NOT Use () => { shorthand for the function as the this gets replaced
-                        // with the outer this and not the this for theHook instance.
-                        let id = this.id;
-                        _arrLoop(aiHook.h, (hook, idx) => {
-                            if (hook.id === id) {
-                                aiHook.h.splice(idx, 1);
-                                return 1;
-                            }
-                        });
-                    }
-                    // tslint:enable:object-literal-shorthand
-                }
-
-                aiHook.i ++;
-                aiHook.h.push(theHook);
-
-                return theHook;
+                return _createInstrumentHook(owner, funcName, fn, callbacks);
             }
         }
     }
@@ -250,3 +257,23 @@ export function InstrumentFuncs(target:any, funcNames:string[], callbacks: IInst
 
     return hooks;
 }
+
+/**
+ * Add an instrumentation hook to the provided named "event" for the target class / object, this doesn't check whether the
+ * named "event" is in fact a function and just assigns the instrumentation hook to the target[evtName]
+ * @param target - The target object
+ * @param evtName - The name of the event
+ * @param callbacks - The callbacks to configure and call whenever the function is called
+ * @param checkPrototype - If the function doesn't exist on the target should it attempt to hook the prototype function
+ */
+export function InstrumentEvent(target: any, evtName: string, callbacks: IInstrumentHooksCallbacks, checkPrototype?: boolean): IInstrumentHook {
+    if (target && evtName && callbacks) {
+        let owner = _getOwner(target, evtName, checkPrototype) || target;
+        if (owner) {
+            return _createInstrumentHook(owner, evtName, owner[evtName], callbacks);
+        }
+    }
+
+    return null;
+}
+

@@ -105,7 +105,8 @@ export const enum _eInternalMessageId {
     InvalidContentBlob = 102,
     TrackPageActionEventFailed = 103,
     FailedAddingCustomDefinedRequestContext = 104,
-    InMemoryStorageBufferFull = 105
+    InMemoryStorageBufferFull = 105,
+    InstrumentationKeyDeprecation = 106
 }
 
 /**
@@ -196,6 +197,8 @@ export const _InternalMessageId = createEnumStyle<typeof _eInternalMessageId>({
     InvalidContentBlob: _eInternalMessageId.InvalidContentBlob,
     TrackPageActionEventFailed: _eInternalMessageId.TrackPageActionEventFailed,
     FailedAddingCustomDefinedRequestContext: _eInternalMessageId.FailedAddingCustomDefinedRequestContext,
-    InMemoryStorageBufferFull: _eInternalMessageId.InMemoryStorageBufferFull
+    InMemoryStorageBufferFull: _eInternalMessageId.InMemoryStorageBufferFull,
+    InstrumentationKeyDeprecation: _eInternalMessageId.InstrumentationKeyDeprecation
+
 });
 export type _InternalMessageId = number | _eInternalMessageId;
