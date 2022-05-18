@@ -21,7 +21,7 @@
 [![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)
 [![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)
 
-> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
+> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights). For Node.js instrumentation reference this [repository](https://github.com/microsoft/ApplicationInsights-node.js). 
 
 ## Getting Started
 
@@ -138,7 +138,7 @@ All active CDN endpoints contain all of the previous (and future) versions of th
 | State | CDN Endpoint | Description
 |-------|--------------|--------------------
 | Primary | https://js.monitor.azure.com/scripts/b/ai.2.min.js | Provides additional resiliency, allowing us to redirect to a different CDN provider should there be an unexpected issue (if required).
-| Legacy/Backup |  https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js | Due to the legacy nature of this URL / Domain, if there is an unexpected issue (outage) with this domain, your application will need to be updated and deployed to use the new URL.
+| ~~Legacy/Backup~~<br />:exclamation: Deprecated | ~~https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js~~ | Due to the legacy nature of this URL / Domain, __if there is an unexpected issue (outage) with this domain, your application will need to be updated and deployed to use the new URL__.<br />:exclamation: Due to #1813 this URL is now being classified as Deprecated and we will be actively making changes to the SDK to warnings in your telemetry if we detect this domain being used.
 
 ### Connection String Setup
 
@@ -729,9 +729,11 @@ You *may* be able to workaround this limitation by providing and your own polyfi
 
 ### ES3/IE8 Features, Solutions, Workarounds and Polyfill style helper functions
 
-As part of contributing to the project the following table highlights all of the currently known issues and the available solution/workaround. During PR and reviewing please ensure that you do not use the unsupported feature directly and instead use (or provide) the helper, soultion or workaround.
+> Note: We will be removing our internal ES3 / IE8 support polyfills as part of the next major release 3.x.x (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment __before__ loading / initializing the SDK.
 
-This table does not attempt to include ALL of the ES3 unsuported features, just the currently known functions that where being used at the time or writing. You are welcome to contribute to provide additional helpers, workarounds or documentation of values that should not be used.
+As part of contributing to the project the following table highlights all of the currently known issues and the available solution/workaround. During PR and reviewing please ensure that you do not use the unsupported feature directly and instead use (or provide) the helper, solution or workaround.
+
+This table does not attempt to include ALL of the ES3 unsupported features, just the currently known functions that where being used at the time or writing. You are welcome to contribute to provide additional helpers, workarounds or documentation of values that should not be used.
 
 |  Feature  |  Description  |  Helper, Solution or Workaround |
 |-----------|-----------------|-----------------|

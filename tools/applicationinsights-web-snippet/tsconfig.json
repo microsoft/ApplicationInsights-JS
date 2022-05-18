@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "sourceMap": false,
+    "noImplicitAny": true,
+    "module": "es6",
+    "moduleResolution": "Node",
+    "target": "es3",
+    "alwaysStrict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "noEmitHelpers": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationDir": "tools/applicationinsights-web-snippet/types",
+    "outDir": "./out",
+    "rootDir": "./tools/applicationinsights-web-snippet/dest"
+  },
+  "include": [
+    "./dest/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

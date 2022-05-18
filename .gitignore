@@ -178,6 +178,7 @@ dist-esm/
 browser/
 types/
 dist/
+dest/
 # Don't commit the sub resource integrity generated files
 **/*.integrity.json
 

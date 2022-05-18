@@ -189,6 +189,14 @@ export class Initialization implements IApplicationInsights {
             _core = new AppInsightsCore();
             _self.core = _core;
 
+        
+            if (!config.connectionString) {
+                _throwInternal(_core.logger,
+                    eLoggingSeverity.CRITICAL,
+                    _eInternalMessageId.InstrumentationKeyDeprecation,
+                    "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
+            }
+
             _self.snippet = snippet;
             _self.config = config;
             _getSKUDefaults();
