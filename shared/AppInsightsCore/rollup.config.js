@@ -42,6 +42,12 @@ const browserRollupConfigFactory = isProduction => {
       freeze: false,
       sourcemap: true
     },
+    treeshake: {
+      propertyReadSideEffects: false,
+      moduleSideEffects: false,
+      tryCatchDeoptimization: false,
+      correctVarValueBeforeDeclaration: false
+    },
     plugins: [
       dynamicRemove(),
       replace({
@@ -92,6 +98,12 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       extend: true,
       freeze: false,
       sourcemap: true
+    },
+    treeshake: {
+      propertyReadSideEffects: false,
+      moduleSideEffects: false,
+      tryCatchDeoptimization: false,
+      correctVarValueBeforeDeclaration: false
     },
     plugins: [
       dynamicRemove(),
