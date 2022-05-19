@@ -7,9 +7,28 @@ Web Snippet for the Application Insights Javascript SDK
 
 This project exists to publish latest Application Insights Javascript Web Snippet.
 
+## Basic Usage
+
+Add the Application Insights Web Snippet to your app's dependencies and package.json.
+```
+npm i @microsoft/applicationinsights-web-snippet
+```
 
 
-## Build:
+Import web snippet from the package.
+```
+import { webSnippet } from "@microsoft/applicationinsights-web-snippet";
+```
+
+
+Replace "INSTRUMENTATION_KEY" with valid Instrumentation Key.
+```
+webSnippet.replace("INSTRUMENTATION_KEY", your_valid_ikey);
+```
+
+More details on web snippet, see [Web Snippet](https://github.com/microsoft/ApplicationInsights-JS#snippet-setup-ignore-if-using-npm-setup).
+
+## Build
 ```
 npm install -g grunt-cli
 npm install
