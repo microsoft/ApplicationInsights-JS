@@ -370,7 +370,7 @@ export interface IConfig {
      * [Optional] Disable iKey deprecation error message.
      * @defaultValue true
      */
-       disableIkeydeprecationMessage?: boolean;
+       disableIkeyDeprecationMessage?: boolean;
 }
 
 export class ConfigurationManager {
