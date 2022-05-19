@@ -366,6 +366,11 @@ export interface IConfig {
      * [Optional] The number of events that can be kept in memory before the SDK starts to drop events. By default, this is 10,000.
      */
     eventsLimitInMem?: number;
+      /**
+     * [Optional] Disable iKey deprecation error message.
+     * @defaultValue true
+     */
+       disableIkeydeprecationMessage?: boolean;
 }
 
 export class ConfigurationManager {
