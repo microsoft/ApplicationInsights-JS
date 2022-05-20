@@ -20,17 +20,23 @@ export { BaseCore } from "./JavaScriptSDK/BaseCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
 export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./JavaScriptSDK/RandomHelper";
 export {
-    CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, newGuid, perfNow, generateW3CId,
-    disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr
+    Undefined, newGuid, perfNow, generateW3CId
 } from "./JavaScriptSDK/CoreUtils";
 export {
-    isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, normalizeJsName,
-    objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf,
-    arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
-    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
-    isNotUndefined, isNotNullOrUndefined, objFreeze, objSeal, objExtend, objToString, deepFreeze
+    normalizeJsName, toISOString, dateNow, getExceptionName, strContains, setValue, getSetValue,
+    proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
+    isNotUndefined, isNotNullOrUndefined, objExtend
 } from "./JavaScriptSDK/HelperFuncs";
-export { EnumValue, createEnumStyle, EnumMap, createEnumMap, createValueMap } from "./JavaScriptSDK.Enums/EnumHelperFuncs";
+
+export {
+    isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
+    objForEachKey, strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,
+    arrReduce, arrMap, strTrim, objKeys, objDefineAccessors, throwError, isSymbol,
+    isNotTruthy, isTruthy, objFreeze, objSeal, objToString, objDeepFreeze as deepFreeze,
+    getInst as getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, hasNavigator, getNavigator, hasHistory,
+    getHistory, dumpObj
+} from "@nevware21/ts-utils";
+export { EnumValue, createEnumStyle, createValueMap } from "./JavaScriptSDK.Enums/EnumHelperFuncs";
 export {
     attachEvent, detachEvent, addEventHandler, addEventListeners, addPageUnloadEventListener, addPageHideEventListener, addPageShowEventListener,
     removeEventHandler, removeEventListeners, removePageUnloadEventListener, removePageHideEventListener, removePageShowEventListener, eventOn, eventOff,
@@ -38,9 +44,8 @@ export {
 } from "./JavaScriptSDK/EventHelpers";
 
 export {
-    getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
-    hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
-    isReactNative, getConsole, dumpObj, isIE, getIEVersion, isSafari,
+    getCrypto, getMsCrypto, getLocation, getPerformance, hasJSON, getJSON,
+    isReactNative, getConsole, isIE, getIEVersion, isSafari,
     setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported,
     findMetaTag, findNamedServerTiming
 } from "./JavaScriptSDK/EnvUtils";

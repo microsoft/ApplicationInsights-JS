@@ -1,7 +1,7 @@
 import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { Util } from '@microsoft/applicationinsights-common';
-import { getJSON } from '@microsoft/applicationinsights-core-js';
+import { utlGetSessionStorage } from '@microsoft/applicationinsights-common';
+import { getJSON, isArray } from '@microsoft/applicationinsights-core-js';
 import { SinonSpy } from 'sinon';
 import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
 
@@ -192,10 +192,10 @@ export class SenderE2ETests extends AITestClass {
     private _getBuffer(key: string): string[] {
         let prefixedKey = key;
         try {
-            const bufferJson = Util.getSessionStorage(null, key);
+            const bufferJson = utlGetSessionStorage(null, key);
             if (bufferJson) {
                 let buffer: string[] = getJSON().parse(bufferJson);
-                if (buffer && Util.isArray(buffer)) {
+                if (buffer && isArray(buffer)) {
                     return buffer;
                 }
             }

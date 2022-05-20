@@ -3,9 +3,10 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    CorrelationIdHelper, DisabledPropertyName, IConfig, ICorrelationConfig, IDependencyTelemetry, IRequestContext, ITelemetryContext,
-    PropertiesPluginIdentifier, RemoteDependencyData, RequestHeaders, createDistributedTraceContextFromTrace, createTelemetryItem,
-    createTraceParent, dateTimeUtilsNow, eDistributedTracingModes, eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint
+    DisabledPropertyName, IConfig, ICorrelationConfig, IDependencyTelemetry, IRequestContext, ITelemetryContext, PropertiesPluginIdentifier,
+    RemoteDependencyData, RequestHeaders, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext,
+    createDistributedTraceContextFromTrace, createTelemetryItem, createTraceParent, dateTimeUtilsNow, eDistributedTracingModes,
+    eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICustomProperties, IDistributedTraceContext, IInstrumentCallDetails,
@@ -301,7 +302,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init);
 
                 if (input) { // Fetch
-                    if (CorrelationIdHelper.canIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
+                    if (correlationIdCanIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (!init) {
                             init = {};
                         }
@@ -342,7 +343,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                     return init;
                 } else if (xhr) { // XHR
-                    if (CorrelationIdHelper.canIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
+                    if (correlationIdCanIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (_isUsingAIHeaders) {
                             const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
                             xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestIdHeader], id);
@@ -932,7 +933,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         const index = _indexOf(responseHeadersString.toLowerCase(), RequestHeaders[eRequestHeaders.requestContextHeaderLowerCase]);
                         if (index !== -1) {
                             const responseHeader = xhr.getResponseHeader(RequestHeaders[eRequestHeaders.requestContextHeader]);
-                            return CorrelationIdHelper.getCorrelationContext(responseHeader);
+                            return correlationIdGetCorrelationContext(responseHeader);
                         }
                     }
                 } catch (e) {
@@ -1142,7 +1143,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 if (response && response.headers) {
                     try {
                         const responseHeader: string = response.headers.get(RequestHeaders[eRequestHeaders.requestContextHeader]);
-                        return CorrelationIdHelper.getCorrelationContext(responseHeader);
+                        return correlationIdGetCorrelationContext(responseHeader);
                     } catch (e) {
                         _throwInternalWarning(_self,
                             _eInternalMessageId.FailedMonitorAjaxGetCorrelationHeader,

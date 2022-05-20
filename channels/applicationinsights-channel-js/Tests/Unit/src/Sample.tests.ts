@@ -1,7 +1,7 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sample } from "../../../src/TelemetryProcessors/Sample";
-import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
-import { PageView, TelemetryItemCreator, IPageViewTelemetry, Util } from "@microsoft/applicationinsights-common";
+import { ITelemetryItem, newId } from "@microsoft/applicationinsights-core-js";
+import { PageView, TelemetryItemCreator, IPageViewTelemetry } from "@microsoft/applicationinsights-common";
 import { HashCodeScoreGenerator } from "../../../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
 
 export class SampleTests extends AITestClass {
@@ -118,7 +118,7 @@ export class SampleTests extends AITestClass {
                 const totalItems = 1000;
                 const ids = [];
                 for (let i = 0; i < totalItems; ++i) {
-                    ids.push(Util.newId());
+                    ids.push(newId());
                 }
 
                 const sampleRates = [50, 33, 25, 20, 16, 10];

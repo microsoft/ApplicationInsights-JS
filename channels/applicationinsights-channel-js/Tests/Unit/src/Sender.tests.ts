@@ -2,7 +2,7 @@ import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
 import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
-import { Exception, CtxTagKeys, Util } from "@microsoft/applicationinsights-common";
+import { Exception, CtxTagKeys, isBeaconApiSupported } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _InternalMessageId, LoggingSeverity, getGlobalInst, getGlobal } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends AITestClass {
@@ -179,7 +179,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -223,7 +223,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -281,7 +281,7 @@ export class SenderTests extends AITestClass {
                     telemetryItems[i] = telemetryItem;
                 }
 
-                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -333,7 +333,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -384,7 +384,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 

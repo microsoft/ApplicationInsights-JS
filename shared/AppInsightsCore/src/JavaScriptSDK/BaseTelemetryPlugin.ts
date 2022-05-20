@@ -3,6 +3,7 @@
 "use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { arrForEach, isArray, isFunction, isNullOrUndefined } from "@nevware21/ts-utils";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
@@ -17,7 +18,7 @@ import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetr
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { arrForEach, isArray, isFunction, isNullOrUndefined, proxyFunctionAs, setValue } from "./HelperFuncs";
+import { proxyFunctionAs, setValue } from "./HelperFuncs";
 import { STR_EXTENSION_CONFIG } from "./InternalConstants";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext

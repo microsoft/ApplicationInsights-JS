@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
+import { getInst, objHasOwnProperty } from "@nevware21/ts-utils";
 import {
     IInstrumentCallDetails, IInstrumentHook, IInstrumentHooks, IInstrumentHooksCallbacks, InstrumentorHooksCallback
 } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
-import { getGlobalInst } from "./EnvUtils";
-import { _getObjProto, hasOwnProperty } from "./HelperFuncs";
+import { _getObjProto } from "./HelperFuncs";
 
 const aiInstrumentHooks = "_aiHooks";
 
@@ -88,7 +88,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 
         let hookCtx: any[] = [];
         let cbArgs = _createArgs([funcArgs], orgArgs);
-        funcArgs.evt = getGlobalInst("event");
+        funcArgs.evt = getInst("event");
 
         function _createArgs(target:any[], theArgs:any[]): any[] {
             _arrLoop((theArgs as any), (arg) => {
@@ -134,7 +134,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 function _getOwner(target:any, name:string, checkPrototype: boolean): any {
     let owner = null;
     if (target) {
-        if (hasOwnProperty(target, name)) {
+        if (objHasOwnProperty(target, name)) {
             owner = target;
         } else if (checkPrototype) {
             owner = _getOwner(_getObjProto(target), name, false);

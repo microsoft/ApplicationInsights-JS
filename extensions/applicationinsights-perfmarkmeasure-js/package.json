@@ -28,7 +28,7 @@
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
-        "@microsoft/applicationinsights-rollup-es3": "1.1.3",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.0",
         "@microsoft/api-extractor": "^7.18.1",
         "typescript": "^4.3.4",
         "tslib": "^2.0.0",
@@ -51,7 +51,8 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.6",
         "@microsoft/applicationinsights-shims": "2.0.1",
-        "@microsoft/applicationinsights-core-js": "2.8.6"
+        "@microsoft/applicationinsights-core-js": "2.8.6",
+        "@nevware21/ts-utils": "^0.4.1"
     },
     "license": "MIT"
 }

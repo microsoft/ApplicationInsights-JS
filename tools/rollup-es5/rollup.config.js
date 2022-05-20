@@ -5,8 +5,8 @@ import minify from 'rollup-plugin-minify-es';
 
 const version = require("./package.json").version;
 const desc = require("./package.json").description;
-const inputName = "./out/applicationinsights-rollup-es3";
-const outputName = "applicationinsights-rollup-es3";
+const inputName = "./out/applicationinsights-rollup-es5";
+const outputName = "applicationinsights-rollup-es5";
 const distPath = "./dist/";
 const banner = [
   "/*!",
@@ -22,7 +22,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `${distPath}node/${outputName}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights-Rollup-ES3",
+      name: "Microsoft.ApplicationInsights-Rollup-ES5",
       extend: true,
       freeze: false,
       sourcemap: false
@@ -70,7 +70,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
       file: `${distPath}${format}/${outputName}.js`,
       banner: banner,
       format: format,
-      name: "Microsoft.ApplicationInsights-Rollup-ES3",
+      name: "Microsoft.ApplicationInsights-Rollup-ES5",
       extend: true,
       freeze: false,
       sourcemap: false

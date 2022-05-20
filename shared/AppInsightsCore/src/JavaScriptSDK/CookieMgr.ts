@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import {
+    arrForEach, dumpObj, getDocument, getNavigator, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objForEachKey,
+    strEndsWith, strTrim
+} from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _throwInternal } from "./DiagnosticLogger";
-import { dumpObj, getDocument, getLocation, getNavigator, isIE } from "./EnvUtils";
-import {
-    arrForEach, dateNow, getExceptionName, isFunction, isNotNullOrUndefined, isNullOrUndefined, isString, isTruthy, isUndefined,
-    objForEachKey, setValue, strContains, strEndsWith, strTrim
-} from "./HelperFuncs";
+import { getLocation, isIE } from "./EnvUtils";
+import { dateNow, getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
 const strToGMTString = "toGMTString";

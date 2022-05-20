@@ -36,6 +36,9 @@ function loadCommonModules(moduleLoader) {
 
     // Load DynamicProto
     moduleLoader.add("@microsoft/dynamicproto-js", "./node_modules/@microsoft/dynamicproto-js/lib/dist/umd/dynamicproto-js", true);
+
+    // Load ts-utils
+    moduleLoader.add("@nevware21/ts-utils", "./node_modules/@nevware21/ts-utils/dist/umd/ts-utils");
 }
 
 function ModuleLoader(config) {

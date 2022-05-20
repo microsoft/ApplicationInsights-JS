@@ -8,8 +8,8 @@ export class TelemetryContextTests extends AITestClass {
     private core: AppInsightsCore;
     private _cookies: { [name: string ]: string } = {};
 
-    constructor(emulateEs3?: boolean) {
-        super("TelemetryContextTests", emulateEs3);
+    constructor(emulateIe?: boolean) {
+        super("TelemetryContextTests", emulateIe);
     }
 
     public testInitialize() {

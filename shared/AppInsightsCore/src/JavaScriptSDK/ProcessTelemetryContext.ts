@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 "use strict";
 
+import {
+    arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isObject, isUndefined, objForEachKey, objFreeze, objKeys
+} from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
@@ -15,10 +18,7 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
-import { dumpObj } from "./EnvUtils";
-import {
-    arrForEach, isArray, isFunction, isNullOrUndefined, isObject, isUndefined, objExtend, objForEachKey, objFreeze, objKeys, proxyFunctions
-} from "./HelperFuncs";
+import { objExtend, proxyFunctions } from "./HelperFuncs";
 import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
 import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";

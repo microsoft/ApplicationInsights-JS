@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { getInst } from "@nevware21/ts-utils";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDbgExtension } from "../JavaScriptSDK.Interfaces/IDbgExtension";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { getGlobalInst } from "./EnvUtils";
 
 const listenerFuncs = [ "eventsSent", "eventsDiscarded", "eventsSendRequest", "perfEvent" ];
 
@@ -26,7 +26,7 @@ function _listenerProxyFunc(name: string, config: IConfiguration) {
 
 function _getExtensionNamespace() {
     // Cache the lookup of the global namespace object
-    let target = getGlobalInst("Microsoft");
+    let target = getInst("Microsoft");
     if (target) {
         _aiNamespace = target["ApplicationInsights"];
     }

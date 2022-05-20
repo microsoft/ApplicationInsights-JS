@@ -5,9 +5,9 @@ import {
 import { SinonStub, SinonSpy } from 'sinon';
 import { 
     Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal, 
-    AnalyticsPluginIdentifier, Util, IAppInsights, Metric, PageView, RemoteDependencyData 
+    AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent 
 } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin";
@@ -27,9 +27,10 @@ export class AnalyticsPluginTests extends AITestClass {
     private trackSpy:SinonSpy;
     private throwInternalSpy:SinonSpy;
     private exceptionHelper: any = new ExceptionHelper();
+    private cookieMgr = createCookieMgr();
 
-    constructor(name?: string, emulateEs3?: boolean) {
-        super(name, emulateEs3);
+    constructor(name?: string, emulateIe?: boolean) {
+        super(name, emulateIe);
         this.assertNoEvents = true;
         this.assertNoHooks = true;
     }
@@ -38,18 +39,18 @@ export class AnalyticsPluginTests extends AITestClass {
         this._onerror = window.onerror;
         setEnableEnvMocks(false);
         super.testInitialize();
-        Util.setCookie(undefined, 'ai_session', "");
-        Util.setCookie(undefined, 'ai_user', "");
-        if (Util.canUseLocalStorage()) {
+        this.cookieMgr.set('ai_session', "");
+        this.cookieMgr.set('ai_user', "");
+        if (utlCanUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
 
     public testCleanup() {
         super.testCleanup();
-        Util.setCookie(undefined, 'ai_session', "");
-        Util.setCookie(undefined, 'ai_user', "");
-        if (Util.canUseLocalStorage()) {
+        this.cookieMgr.set('ai_session', "");
+        this.cookieMgr.set('ai_user', "");
+        if (utlCanUseLocalStorage()) {
             window.localStorage.clear();
         }
         window.onerror = this._onerror;
@@ -139,11 +140,11 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.equal(2, registeredEvents.length, "Two Events should be registered");
 
                 this.setLocationHref("secondUri");
-                window.dispatchEvent(Util.createDomEvent('locationchange'));
+                window.dispatchEvent(createDomEvent('locationchange'));
                 this.clock.tick(500);
 
                 this.setLocationHref("thirdUri");
-                window.dispatchEvent(Util.createDomEvent('locationchange'));
+                window.dispatchEvent(createDomEvent('locationchange'));
                 this.clock.tick(500);
 
                 // Assert
@@ -190,11 +191,11 @@ export class AnalyticsPluginTests extends AITestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel, properties]);
-                window.dispatchEvent(Util.createDomEvent('locationchange'));
+                window.dispatchEvent(createDomEvent('locationchange'));
                 this.clock.tick(200);
 
                 // set up second dispatch
-                window.dispatchEvent(Util.createDomEvent('locationchange'));
+                window.dispatchEvent(createDomEvent('locationchange'));
                 this.clock.tick(500);
 
 
@@ -236,7 +237,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel]);
-                window.dispatchEvent(Util.createDomEvent('locationchange'));
+                window.dispatchEvent(createDomEvent('locationchange'));
 
                 // Assert
                 Assert.ok(true, 'App does not crash when history object is incomplete');

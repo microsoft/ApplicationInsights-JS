@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the
 export {
-    IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper,
-    IDateTimeUtils, DateTimeUtils, dateTimeUtilsNow, dateTimeUtilsDuration,
-    IUrlHelper, UrlHelper, isInternalApplicationInsightsEndpoint,
+    correlationIdSetPrefix, correlationIdGetPrefix, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext,
+    correlationIdGetCorrelationContextValue, dateTimeUtilsNow, dateTimeUtilsDuration, isInternalApplicationInsightsEndpoint,
     createDistributedTraceContextFromTrace
 } from "./Util";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
@@ -36,7 +35,7 @@ export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
 export { IChannelControlsAI } from "./Interfaces/IChannelControlsAI";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
 export {
-    DataSanitizerValues, IDataSanitizer, DataSanitizer,
+    DataSanitizerValues,
     dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage,
     dataSanitizeException, dataSanitizeProperties, dataSanitizeMeasurements, dataSanitizeId, dataSanitizeInput,
     dsPadNumber

@@ -1,12 +1,10 @@
 export {
     IApplicationInsights,
     Snippet,
-    Initialization as ApplicationInsights,
-    Telemetry
+    Initialization as ApplicationInsights
 } from "./Initialization";
 
 export { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
-export { IAppInsightsDeprecated } from "./ApplicationInsightsDeprecated";
 
 // Re-exports
 export {
@@ -35,11 +33,9 @@ export {
     INotificationManager,
     IProcessTelemetryContext,
     Tags,
-    BaseCore,
-    CoreUtils, ICoreUtils
+    BaseCore
 } from "@microsoft/applicationinsights-core-js";
 export {
-    Util, IUtil,
     IConfig,
     IDependencyTelemetry,
     IPageViewPerformanceTelemetry,
@@ -60,7 +56,7 @@ export {
     RemoteDependencyData,
     Trace,
     DistributedTracingModes,
-    ICorrelationIdHelper, IUrlHelper, IDateTimeUtils, IRequestHeaders
+    IRequestHeaders
 } from "@microsoft/applicationinsights-common";
 export { Sender } from "@microsoft/applicationinsights-channel-js";
 export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";

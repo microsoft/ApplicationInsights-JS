@@ -76,7 +76,7 @@ export class AITestClass {
     protected clock: any;
     public sandbox: SinonSandbox;
     public fakeServerAutoRespond: boolean = false;
-    public isEmulatingEs3: boolean;
+    public isEmulatingIe: boolean;
 
     /**
      * Automatically assert that all registered events have been removed
@@ -102,15 +102,15 @@ export class AITestClass {
     private _beaconHooks: any[] = [];
     private _dynProtoOpts: any = null;
 
-    // Simulate an Es3 environment
+    // Simulate an IE environment
     private _orgObjectFuncs: any = null;
     private _orgFetch: any = null;
 
     private _onDoneFuncs: VoidFunction[] = [];
 
-    constructor(name?: string, emulateEs3?: boolean) {
-        this._moduleName = (emulateEs3 ? "(ES3) " : "") + (name || _getObjName(this, ""));
-        this.isEmulatingEs3 = emulateEs3
+    constructor(name?: string, emulateIE?: boolean) {
+        this._moduleName = (emulateIE ? "(IE) " : "") + (name || _getObjName(this, ""));
+        this.isEmulatingIe = emulateIE
         QUnit.module(this._moduleName);
         this.sandboxConfig.injectIntoThis = true;
         this.sandboxConfig.injectInto = null;
@@ -221,8 +221,8 @@ export class AITestClass {
                 self.clock = sinon.useFakeTimers();
             }
 
-            if (self.isEmulatingEs3) {
-                self._emulateEs3();
+            if (self.isEmulatingIe) {
+                self._emulateIE();
             }
 
             if (testInfo.assertNoEvents === undefined) {
@@ -352,7 +352,7 @@ export class AITestClass {
         };
 
         // Register the test with QUnit
-        QUnit.test((this.isEmulatingEs3 ? "(ES3) " : "") + testInfo.name + " - (Async)", testMethod);
+        QUnit.test((this.isEmulatingIe ? "(IE) " : "") + testInfo.name + " - (Async)", testMethod);
     }
 
     /** Register a Javascript unit testcase. */
@@ -433,8 +433,8 @@ export class AITestClass {
                 this.clock = sinon.useFakeTimers();
             }
 
-            if (this.isEmulatingEs3) {
-                this._emulateEs3();
+            if (this.isEmulatingIe) {
+                this._emulateIE();
             }
 
             if (testInfo.assertNoEvents === undefined) {
@@ -480,7 +480,7 @@ export class AITestClass {
         };
 
         // Register the test with QUnit
-        QUnit.test((this.isEmulatingEs3 ? "(ES3) " : "") + testInfo.name, testMethod);
+        QUnit.test((this.isEmulatingIe ? "(IE) " : "") + testInfo.name, testMethod);
     }
 
     /** Creates an anonymous function that records arguments, this value, exceptions and return values for all calls. */
@@ -853,7 +853,7 @@ export class AITestClass {
         // Initialize the sandbox similar to what is done in sinon.js "test()" override. See note on class.
         _self.sandbox = sinon.createSandbox(this.sandboxConfig);
 
-        if (_self.isEmulatingEs3) {
+        if (_self.isEmulatingIe) {
             // As we removed Object.define we need to temporarily restore this for each sandbox call
             for (var field in _self.sandbox) {
                 var value = _self.sandbox[field];
@@ -936,7 +936,7 @@ export class AITestClass {
         this._beaconHooks = [];
         this._cleanupAllHooks();
         this._cleanupEvents();
-        this._restoreEs3();
+        this._restoreIE();
 
         if (failed) {
             // Just cleanup the sandbox since the test has already failed.
@@ -1034,7 +1034,7 @@ export class AITestClass {
         }
     }
 
-    private _restoreEs3() {
+    private _restoreIE() {
         this._restoreObject(this._orgObjectFuncs);
         this._orgObjectFuncs = null;
 
@@ -1045,8 +1045,8 @@ export class AITestClass {
         }
     }
 
-    private _emulateEs3() {
-        const objectNames = [ "defineProperty", "defineProperties"];
+    private _emulateIE() {
+        const objectNames = [ "assign"];
         if (!this._orgObjectFuncs) {
             this._orgObjectFuncs = {};
             for (var lp = 0; lp < objectNames.length; lp++) {
@@ -1062,8 +1062,8 @@ export class AITestClass {
             global.fetch = null;
         }
 
-        // Lets pretend to also be IE8
-        this.setUserAgent("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)");
+        // Lets pretend to also be IE9
+        this.setUserAgent("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0)");
     }
 
     private _unhookXhr() {

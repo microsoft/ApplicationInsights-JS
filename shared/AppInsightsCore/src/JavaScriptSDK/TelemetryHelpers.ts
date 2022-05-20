@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
+import { arrForEach, isFunction } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
@@ -11,7 +12,6 @@ import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnl
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
 import { createElmNodeData } from "./DataCacheHelper";
-import { arrForEach, isFunction } from "./HelperFuncs";
 import { STR_CORE, STR_PRIORITY, STR_PROCESS_TELEMETRY } from "./InternalConstants";
 import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
 

@@ -4,7 +4,7 @@
     "inlineSources": true,
     "noImplicitAny": false,
     "module": "amd",
-    "target": "es3",
+    "target": "es5",
     "alwaysStrict": true,
     "declaration": true
   },

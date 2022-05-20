@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-analytics-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-analytics-js)
 
-Rollup ES3 Support Plugin for the Application Insights Javascript SDK
+Rollup ES5/IE Support Plugin for the Application Insights Javascript SDK
 
 ## Build:
 ```

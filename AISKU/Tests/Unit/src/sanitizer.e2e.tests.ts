@@ -1,7 +1,8 @@
-import { ApplicationInsights, IApplicationInsights, Util, LoggingSeverity, _InternalMessageId } from '../../../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights, LoggingSeverity, _InternalMessageId } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { AITestClass, Assert, PollingAssert } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
+import { newId } from '@microsoft/applicationinsights-core-js';
 
 export class SanitizerE2ETests extends AITestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -69,7 +70,7 @@ export class SanitizerE2ETests extends AITestClass {
             steps: [
                 () => {
                     this._ai.trackDependencyData({
-                        id: Util.newId(),
+                        id: newId(),
                         name: new Array(1234).join("a"), // exceeds max of 1024
                         responseCode: 200
                     });

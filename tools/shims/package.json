@@ -10,7 +10,7 @@
         "microsoft",
         "application insights",
         "tslib",
-        "es3"
+        "es5"
     ],
     "main": "dist/umd/applicationinsights-shims.js",
     "module": "dist-esm/applicationinsights-shims.js",
@@ -36,7 +36,7 @@
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
-        "@microsoft/applicationinsights-rollup-es3" : "1.1.3",
+        "@microsoft/applicationinsights-rollup-es5" : "1.0.0",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-qunit": "^5.0.1",

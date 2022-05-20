@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // // Licensed under the MIT License.
 
+import { arrForEach, isArray, objFreeze, throwError } from "@nevware21/ts-utils";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
@@ -15,7 +16,6 @@ import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { arrForEach, isArray, objFreeze, throwError } from "./HelperFuncs";
 import { createProcessTelemetryContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
 import { initializePlugins } from "./TelemetryHelpers";
 

@@ -61,9 +61,9 @@ export class CdnPackagingChecks extends AITestClass {
     
     private _validateExpectedExports(theExports: any) {
         Assert.ok(theExports.ApplicationInsights, "ApplicationInsights exists");
-        Assert.ok(theExports.Telemetry, "Telemetry exists");
-        Assert.ok(theExports.Telemetry.DistributedTracingModes, "Telemetry.DistributedTracingModes exists");
-        Assert.ok(theExports.Telemetry.Util, "Telemetry exists");
+        Assert.ok(!theExports.Telemetry, "Telemetry no longer exists");
+        // Assert.ok(theExports.Telemetry.DistributedTracingModes, "Telemetry.DistributedTracingModes exists");
+        // Assert.ok(theExports.Telemetry.Util, "Telemetry exists");
 
         Assert.ok(theExports.LoggingSeverity, "LoggingSeverity exists");
         objForEachKey(LoggingSeverity, (name, value) => {
@@ -74,7 +74,7 @@ export class CdnPackagingChecks extends AITestClass {
         Assert.ok(theExports.PerfEvent, "PerfEvent exists");
         Assert.ok(theExports.PerfManager, "PerfManager exists");
         Assert.ok(theExports.doPerf, "doPerf exists");
-        Assert.ok(theExports.CoreUtils, "CoreUtils exists");
+        Assert.ok(!theExports.CoreUtils, "CoreUtils no longer exists");
         Assert.ok(theExports.newId, "newId exists");
         Assert.ok(theExports.newGuid, "newGuid exists");
         Assert.ok(theExports.random32, "random32 exists");
@@ -90,8 +90,8 @@ export class CdnPackagingChecks extends AITestClass {
     
         Assert.ok(theExports.isBeaconsSupported, "isBeaconsSupported exists");
 
-        Assert.ok(theExports.Util, "Util exists");
-        Assert.equal(theExports.Util, theExports.Telemetry.Util, "Telemetry.Util matches Util");
+        Assert.ok(!theExports.Util, "Util no longer exists");
+        // Assert.equal(theExports.Util, theExports.Telemetry.Util, "Telemetry.Util matches Util");
         Assert.ok(theExports.RequestHeaders, "RequestHeaders exists");
         objForEachKey(RequestHeaders, (name, value) => {
             Assert.equal(value, theExports.RequestHeaders[name], `Checking RequestHeaders.${value} === ${name}`);
@@ -108,7 +108,6 @@ export class CdnPackagingChecks extends AITestClass {
         });
 
         Assert.ok(theExports.DistributedTracingModes, "DistributedTracingModes exists");
-        Assert.equal(theExports.DistributedTracingModes, theExports.Telemetry.DistributedTracingModes, "Telemetry.DistributedTracingModes equals DistributedTracingModes");
         objForEachKey(DistributedTracingModes, (name, value) => {
             Assert.equal(name, theExports.DistributedTracingModes[value], `Checking DistributedTracingMode.${name} === ${value}`);
             Assert.equal(value, theExports.DistributedTracingModes[name], `Checking DistributedTracingMode.${value} === ${name}`);

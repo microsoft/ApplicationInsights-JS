@@ -21,7 +21,18 @@
 [![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)
 [![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)
 
-> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights). For Node.js instrumentation reference this [repository](https://github.com/microsoft/ApplicationInsights-node.js). 
+## Beta (v3.x) Release Breaking changes
+
+- Removed ES3 / IE8 Support
+- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
+
+See [Breaking Changes](./BETA_BREAKING_CHANGES.md)
+
+> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md).
+>
+> See the [V1 Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
+>
+> For Node.js instrumentation reference this [repository](https://github.com/microsoft/ApplicationInsights-node.js).
 
 ## Getting Started
 
@@ -630,6 +641,11 @@ It is expected that most users will be using the `Public` URL, however, it is al
 
 [Changelist](./CHANGELIST.md)
 
+
+### Beta Breaking Changes
+
+See [the working beta breaking changes notes](./BETA_BREAKING_CHANGES.md)
+
 ## Browser Support
 
 ![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![IE](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Opera](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
@@ -661,7 +677,9 @@ git push
 
 ## ES3/IE8 Compatibility
 
-> Future releases of the SDK numbered v3.x.x will be removing ES3 (IE8) support, so if you need to retain ES3 compatibility for your environment you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
+__v3.x NO Longer supports ES3 / IE8__
+
+> If you need to retain ES3 compatibility for your environment you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK. However, v3.x now uses [Object.defineProperty](https://caniuse.com/?search=defineProperty) so a polyfills that can correctly implement this functionality (if available) will be required, without this the SDK will not function correctly.
 
 As an SDK there are numerous users which cannot control the browsers that their customers use. As such we need to ensure that this SDK continues to "work" and does not break the JS execution when loaded by an older browser. While it would be ideal to just not support IE8 and older generation (ES3) browsers there are numerous large customers/users that continue to require pages to "work" and as noted they may or cannot control which browser that their end users choose to use.
 
@@ -669,7 +687,7 @@ This does NOT mean that we will only support the lowest common set of features, 
 
 As part of enabling ES3/IE8 support we have set the ```tsconfig.json``` to ES3 and ```uglify``` settings in ```rollup.config.js``` transformations to support ie8. This provides a first level of support which blocks anyone from adding unsupported ES3 features to the code and enables the generated javascript to be validily parsed in an ES3+ environment.
 
-Ensuring that the generated code is compatible with ES3 is only the first step, JS parsers will still parse the code when an unsupport core function is used, it will just fail or throw an exception at runtime. Therefore, we also need to require/use polyfil implementations or helper functions to handle those scenarios.
+Ensuring that the generated code is compatible with ES3 is only the first step, JS parsers will still parse the code when an unsupport core function is used, it will just fail or throw an exception at runtime. Therefore, we also need to require/use polyfill implementations or helper functions to handle those scenarios.
 
 It should also be noted that the overall goal of ES3/IE8 compatibility is the support at least the following 2 usage usage patterns. By supporting these two (2) basic use-cases, application/developers will be able to determine what browsers their users are using and whether they are experiencing any issues. As the SDK will report the data to the server, thus enabling the insights into whether they need to either fully support ES3/IE8 or provide some sort of browser upgrade notifications.
 
@@ -695,6 +713,8 @@ For this case either provide a JSON polyfil or add the ["X-UA-Compatible"](https
 [More details on this are available here](https://docs.microsoft.com/en-us/archive/blogs/asiatech/ie11-migration-guide-understanding-browser-mode-document-mode-user-agent-and-x-ua-compatible)
 
 ### ES3/IE8 Packaging helper (ES3 rollup-plugin)
+
+> Removed for v.3, only supported for 2.x
 
 To ensure that the system conforms to the ES3 spec, by only using ES3 compatible code we have created a rollup plugin which has 2 functions
 

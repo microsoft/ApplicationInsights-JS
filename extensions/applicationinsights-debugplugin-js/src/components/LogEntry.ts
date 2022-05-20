@@ -1,5 +1,4 @@
-import { Util } from "@microsoft/applicationinsights-common";
-import { isBoolean, isNumber, isObject, isString, objToString } from "@microsoft/applicationinsights-core-js";
+import { isArray, isBoolean, isError, isNumber, isObject, isString, objToString } from "@microsoft/applicationinsights-core-js";
 import { MAX_DEPTH, formatLogElements, getTargetKeys, getTargetName, makeRegex, toggleClassName, traverseAndReplace } from "./helpers";
 
 export class LogEntry {
@@ -29,13 +28,13 @@ export class LogEntry {
 
         function _testObj(rg: RegExp, value: any, excludedKeys: string[], includeFunctions: boolean): boolean {
             if (value !== null && value !== undefined && value !== "") {
-                if (Util.isArray(value)) {
+                if (isArray(value)) {
                     for (let lp = 0; lp < value.length; lp++) {
                         if (_testObj(rg, value[lp], excludedKeys, includeFunctions)) {
                             return true;
                         }
                     }
-                } else if (isObject(value) || Util.isError(value)) {
+                } else if (isObject(value) || isError(value)) {
                     let keys = getTargetKeys(value, excludedKeys, includeFunctions);
                     for (let lp = 0; lp < keys.length; lp++) {
                         let key = keys[lp];

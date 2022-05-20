@@ -26,8 +26,8 @@ export class TelemetryItemCreatorTests extends AITestClass {
     private _core: IAppInsightsCore;
     private _appInsights: AnalyticsPlugin;
 
-    constructor(name?: string, emulateEs3?: boolean) {
-        super(name, emulateEs3);
+    constructor(name?: string, emulateIe?: boolean) {
+        super(name, emulateIe);
         this.assertNoEvents = true;
         this.assertNoHooks = true;
     }

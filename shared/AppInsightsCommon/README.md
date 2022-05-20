@@ -5,6 +5,13 @@
 
 Common library for the Application Insights Javascript SDK
 
+## Beta Release Breaking changes
+
+- Removed ES3 / IE8 Support
+- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
+
+See [Breaking Changes](./BETA_BREAKING_CHANGES.md)
+
 ## Build:
 ```
 npm install -g grunt-cli

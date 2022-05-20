@@ -1,9 +1,21 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { _InternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { normalizeJsName, objExtend, strEndsWith, _strEndsWithPoly, strStartsWith, _strStartsWithPoly, isObject, objKeys, _getObjProto, isPlainObject, dateNow, isArray } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { normalizeJsName, objExtend, _getObjProto, isPlainObject, dateNow } from "../../../src/JavaScriptSDK/HelperFuncs";
 import { BaseCore } from "../../../src/JavaScriptSDK/BaseCore";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
+import { isArray, isObject, objKeys, strEndsWith, strStartsWith } from "@nevware21/ts-utils";
+import { dumpObj } from "../../../src/applicationinsights-core-js";
+
+
+function _expectException(cb: () => void) {
+    try {
+        cb();
+        Assert.ok(false, "Expected and exception to be thrown");
+    } catch(e) {
+        Assert.ok(true, "Expected an exception - " + dumpObj(e));
+    }
+}
 
 export class HelperFuncTests extends AITestClass {
 
@@ -20,13 +32,17 @@ export class HelperFuncTests extends AITestClass {
         this.testCase({
             name: "strEndsWith",
             test: () => {
-                Assert.ok(!strEndsWith(null, null));
+                _expectException(() => {
+                    Assert.ok(!strEndsWith(null, null));
+                });
                 Assert.ok(!strEndsWith("", null));
-                Assert.ok(!strEndsWith(null, ""));
-                Assert.ok(!strEndsWith("", ""));
+                _expectException(() => {
+                    Assert.ok(!strEndsWith(null, ""));
+                });
+                Assert.ok(strEndsWith("", ""));
                 Assert.ok(!strEndsWith("", "a"));
                 Assert.ok(!strEndsWith("a", "b"));
-                Assert.ok(!strEndsWith("a", ""));
+                Assert.ok(strEndsWith("a", ""));
                 Assert.ok(!strEndsWith("a", "ab"));
                 Assert.ok(strEndsWith("a", "a"));
                 Assert.ok(strEndsWith("ba", "a"));
@@ -38,34 +54,18 @@ export class HelperFuncTests extends AITestClass {
         });
 
         this.testCase({
-            name: "_strEndsWithPoly",
-            test: () => {
-                Assert.ok(!_strEndsWithPoly(null, null));
-                Assert.ok(!_strEndsWithPoly("", null));
-                Assert.ok(!_strEndsWithPoly(null, ""));
-                Assert.ok(!_strEndsWithPoly("", ""));
-                Assert.ok(!_strEndsWithPoly("", "a"));
-                Assert.ok(!_strEndsWithPoly("a", "b"));
-                Assert.ok(!_strEndsWithPoly("a", ""));
-                Assert.ok(!_strEndsWithPoly("a", "ab"));
-                Assert.ok(_strEndsWithPoly("a", "a"));
-                Assert.ok(_strEndsWithPoly("ba", "a"));
-                Assert.ok(_strEndsWithPoly("zyxyvutsrqponmlkjihgfedcba", "cba"));
-                Assert.ok(!_strEndsWithPoly("a", "ba"));
-                Assert.ok(!_strEndsWithPoly("abba", "cba"));
-                Assert.ok(!_strEndsWithPoly("abba", "bb"));
-            }
-        });
-
-        this.testCase({
             name: "strStartsWith",
             test: () => {
-                Assert.ok(!strStartsWith(null, null));
-                Assert.ok(!strStartsWith("", null));
-                Assert.ok(!strStartsWith(null, ""));
-                Assert.ok(!strStartsWith("", ""));
+                _expectException(() => {
+                    Assert.ok(!strStartsWith(null as any, null as any));
+                });
+                Assert.ok(!strStartsWith("", null as any));
+                _expectException(() => {
+                    Assert.ok(!strStartsWith(null as any, ""));
+                });
+                Assert.ok(strStartsWith("", ""));
                 Assert.ok(!strStartsWith("", "a"));
-                Assert.ok(!strStartsWith("a", ""));
+                Assert.ok(strStartsWith("a", ""));
                 Assert.ok(!strStartsWith("a", "b"));
                 Assert.ok(!strStartsWith("a", "ba"));
                 Assert.ok(strStartsWith("ab", "a"));
@@ -74,26 +74,6 @@ export class HelperFuncTests extends AITestClass {
                 Assert.ok(!strStartsWith("a", "ab"));
                 Assert.ok(!strStartsWith("abba", "abc"));
                 Assert.ok(!strStartsWith("abba", "bb"));
-            }
-        });
-
-        this.testCase({
-            name: "_strStartsWithPoly",
-            test: () => {
-                Assert.ok(!_strStartsWithPoly(null, null));
-                Assert.ok(!_strStartsWithPoly("", null));
-                Assert.ok(!_strStartsWithPoly(null, ""));
-                Assert.ok(!_strStartsWithPoly("", ""));
-                Assert.ok(!_strStartsWithPoly("", "a"));
-                Assert.ok(!_strStartsWithPoly("a", ""));
-                Assert.ok(!_strStartsWithPoly("a", "b"));
-                Assert.ok(!_strStartsWithPoly("a", "ba"));
-                Assert.ok(_strStartsWithPoly("ab", "a"));
-                Assert.ok(!_strStartsWithPoly("zyxyvutsrqponmlkjihgfedcba", "a"));
-                Assert.ok(_strStartsWithPoly("zyxwvutsrqponmlkjihgfedcba", "zyxw"));
-                Assert.ok(!_strStartsWithPoly("a", "ab"));
-                Assert.ok(!_strStartsWithPoly("abba", "abc"));
-                Assert.ok(!_strStartsWithPoly("abba", "bb"));
             }
         });
 
@@ -342,8 +322,12 @@ export class HelperFuncTests extends AITestClass {
         this.testCase({
             name: "_getObjProto",
             test: () => {
-                Assert.equal(null, _getObjProto(null));
-                Assert.equal(null, _getObjProto(undefined));
+                _expectException(() => {
+                    Assert.equal(null, _getObjProto(null));
+                });
+                _expectException(() => {
+                    Assert.equal(null, _getObjProto(undefined));
+                });
                 Assert.equal(Object.prototype, _getObjProto({}));
                 Assert.equal(Date.prototype, _getObjProto(new Date()));
                 Assert.equal(Number.prototype, _getObjProto(dateNow()));

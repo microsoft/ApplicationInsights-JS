@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { isArray, isFunction, objDefineAccessors } from "@nevware21/ts-utils";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
-import { dateNow, isArray, isFunction, objDefineAccessors } from "./HelperFuncs";
+import { dateNow } from "./HelperFuncs";
 import { STR_GET_PERF_MGR } from "./InternalConstants";
 
 const strExecutionContextKey = "ctx";
@@ -63,7 +64,6 @@ export class PerfEvent implements IPerfEvent {
 
     constructor(name: string, payloadDetails: () => any, isAsync: boolean) {
         let _self = this;
-        let accessorDefined = false;
         _self.start = dateNow();
         _self.name = name;
         _self.isAsync = isAsync;
@@ -72,7 +72,7 @@ export class PerfEvent implements IPerfEvent {
         if (isFunction(payloadDetails)) {
             // Create an accessor to minimize the potential performance impact of executing the payloadDetails callback
             let theDetails:any;
-            accessorDefined = objDefineAccessors(_self, "payload", () => {
+            objDefineAccessors(_self, "payload", () => {
                 // Delay the execution of the payloadDetails until needed
                 if (!theDetails && isFunction(payloadDetails)) {
                     theDetails = payloadDetails();
@@ -130,10 +130,6 @@ export class PerfEvent implements IPerfEvent {
             _self.time = dateNow() - _self.start;
             _self.exTime = _self.time - childTime;
             _self.complete = () => {};
-            if (!accessorDefined && isFunction(payloadDetails)) {
-                // If we couldn't define the property set during complete -- to minimize the perf impact until after the time
-                _self.payload = payloadDetails();
-            }
         };
     }
 }

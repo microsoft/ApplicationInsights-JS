@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { isNullOrUndefined, isIgnoreFuncMatch, isIgnore } from "./Utils";
-import { IEs3CheckKeyword, IEs3CheckRollupOptions } from "./Interfaces";
-import { defaultEs3CheckTokens } from "./Es3Tokens";
+import { IEs5CheckKeyword, IEs5CheckRollupOptions } from "./Interfaces";
+import { defaultEs5CheckTokens } from "./Es5Tokens";
 import { formatError } from "./FormatError";
 
 function visibleNewlines(value:string) {
@@ -13,12 +13,12 @@ function visibleNewlines(value:string) {
     return value;
 }
 
-export function checkResult(tokens:IEs3CheckKeyword[], result:string, id:string, entry:string, isTransform:boolean) {
+export function checkResult(tokens:IEs5CheckKeyword[], result:string, id:string, entry:string, isTransform:boolean) {
     if (result) {
         let errorMessage = "";
 
         for (let idx in tokens) {
-            let keyword:IEs3CheckKeyword = tokens[idx];
+            let keyword:IEs5CheckKeyword = tokens[idx];
             if (!isIgnore(id, keyword, isTransform)) {
                 for (let funcIdx in keyword.funcNames) {
                     let funcRegEx = keyword.funcNames[funcIdx];
@@ -51,8 +51,8 @@ export function checkResult(tokens:IEs3CheckKeyword[], result:string, id:string,
     }
 }
 
-export function es3Check(options:IEs3CheckRollupOptions = {}) {
-    let tokens:IEs3CheckKeyword[] = defaultEs3CheckTokens.slice(0);
+export function es5Check(options:IEs5CheckRollupOptions = {}) {
+    let tokens:IEs5CheckKeyword[] = defaultEs5CheckTokens.slice(0);
     if (options) {
         if (!isNullOrUndefined(options.ignoreDefault) && options.ignoreDefault) {
             tokens = [];
@@ -71,7 +71,7 @@ export function es3Check(options:IEs3CheckRollupOptions = {}) {
     }
 
     return {
-        name: "ai-rollup-es3check",
+        name: "ai-rollup-es5check",
         renderChunk(code:string, chunk:any) {
             return doCheck(code, chunk.filename || chunk.fileName || chunk.name, "renderChunk", false);
         },
