@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IEs3CheckKeyword } from "./Interfaces";
+import { IEs5CheckKeyword } from "./Interfaces";
 
 export function isSourceMapEnabled(options:any) {
     if (options) {
@@ -38,7 +38,7 @@ export function isNullOrWhitespace(value:string) {
     return true;
 }
 
-export function isIgnore(id:string, keyword:IEs3CheckKeyword, _isTransform:boolean) {
+export function isIgnore(id:string, keyword:IEs5CheckKeyword, _isTransform:boolean) {
     let result = false;
     
     if (keyword.ignoreIds) {
@@ -54,7 +54,7 @@ export function isIgnore(id:string, keyword:IEs3CheckKeyword, _isTransform:boole
     return result;
 }
 
-export function isIgnoreFuncMatch(funcMatch:string, keyword:IEs3CheckKeyword) {
+export function isIgnoreFuncMatch(funcMatch:string, keyword:IEs5CheckKeyword) {
     let result = false;
     if (funcMatch && keyword.ignoreFuncMatch) {
         for (let ignoreIdx in keyword.ignoreFuncMatch) {

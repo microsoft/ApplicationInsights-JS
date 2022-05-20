@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { isNullOrUndefined, isNullOrWhitespace, isSourceMapEnabled, isIgnore } from "./Utils";
-import { defaultEs3Tokens } from "./Es3Tokens";
-import { INamedGroups, IEs3Keyword, IEs3RollupOptions } from "./Interfaces";
-import { checkResult } from "./Es3Check";
+import { defaultEs5Tokens } from "./Es5Tokens";
+import { INamedGroups, IEs5Keyword, IEs5RollupOptions } from "./Interfaces";
+import { checkResult } from "./Es5Check";
 import MagicString from "magic-string";
 
 // Start the temp name from the recent milliseconds -- this is to try and ensure that multiple runs which
@@ -19,7 +19,7 @@ function _replaceAll(str:string, value:string, newValue: string) {
     return str.replace(new RegExp(_escapeRegEx(value), "g"), newValue);
 }
 
-function _replaceToken(keyword:IEs3Keyword, code:string, theString:MagicString, _entry:string):boolean {
+function _replaceToken(keyword:IEs5Keyword, code:string, theString:MagicString, _entry:string):boolean {
     let result = false;
     let extract:RegExp = keyword.extract;
     let replaceValue:string = keyword.replace || "";
@@ -60,7 +60,7 @@ function _replaceToken(keyword:IEs3Keyword, code:string, theString:MagicString, 
             }
 
             if (!nameUsed) {
-                let tempName = "aies3_" + tempIndex;
+                let tempName = "aies5_" + tempIndex;
                 tempIndex++;
                 newValue = newValue.replace("%tempName%", tempName);
             }
@@ -72,9 +72,9 @@ function _replaceToken(keyword:IEs3Keyword, code:string, theString:MagicString, 
     return result;
 }
 
-export function es3Poly(options:IEs3RollupOptions = {}) {
+export function es5Poly(options:IEs5RollupOptions = {}) {
     let doReplace = true;
-    let tokens:IEs3Keyword[] = defaultEs3Tokens.slice(0);
+    let tokens:IEs5Keyword[] = defaultEs5Tokens.slice(0);
     if (options) {
         if (!isNullOrUndefined(options.ignoreDefault) && options.ignoreDefault) {
             tokens = [];
@@ -94,7 +94,7 @@ export function es3Poly(options:IEs3RollupOptions = {}) {
         if (doReplace && code) {
             theString = new MagicString(code);
             for (let idx in tokens) {
-                let keyword:IEs3Keyword = tokens[idx];
+                let keyword:IEs5Keyword = tokens[idx];
                 if (keyword && !isIgnore(id, keyword, isTransform)) {
                     try {
                         if (_replaceToken(keyword, code, theString, entry)) {
@@ -145,7 +145,7 @@ export function es3Poly(options:IEs3RollupOptions = {}) {
     }
 
     return {
-        name: "ai-rollup-es3poly",
+        name: "ai-rollup-es5poly",
         renderChunk(code:string, chunk:any) {
             return doTransformAndCheck(code, chunk.filename, "renderChunk", false);
         },

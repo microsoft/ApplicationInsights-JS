@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed } from "../../../src/applicationinsights-core-js"
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined } from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
 import { _InternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
@@ -521,7 +521,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     []);
 
                 Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
-                Assert.ok(CoreUtils.isNullOrUndefined(channelPlugin3._nextPlugin));
+                Assert.ok(isNullOrUndefined(channelPlugin3._nextPlugin));
                 const channelControls = appInsightsCore.getTransmissionControls();
                 Assert.ok(channelControls.length === 2);
                 Assert.ok(channelControls[0].length === 2);
@@ -554,7 +554,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
                 Assert.ok(channelPlugin2._nextPlugin === channelPlugin3);
-                Assert.ok(CoreUtils.isNullOrUndefined(channelPlugin3._nextPlugin));
+                Assert.ok(isNullOrUndefined(channelPlugin3._nextPlugin));
                 const channelControls = appInsightsCore.getTransmissionControls();
                 Assert.ok(channelControls.length === 1);
                 Assert.ok(channelControls[0].length === 3);
@@ -654,16 +654,16 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         this.testCase({
             name: 'newId tests length',
             test: () => {
-                _checkNewId(5, CoreUtils.newId(5), "Test the previous length");
-                _checkNewId(10, CoreUtils.newId(10), "Test the double the previous length");
-                _checkNewId(22, CoreUtils.newId(), "Test new default length");
-                _checkNewId(99, CoreUtils.newId(99), "Test 99 character == 74.25 bytes");
-                _checkNewId(200, CoreUtils.newId(200), "Test 200 character == 150 bytes");
+                _checkNewId(5, newId(5), "Test the previous length");
+                _checkNewId(10, newId(10), "Test the double the previous length");
+                _checkNewId(22, newId(), "Test new default length");
+                _checkNewId(99, newId(99), "Test 99 character == 74.25 bytes");
+                _checkNewId(200, newId(200), "Test 200 character == 150 bytes");
 
                 // Check the id is not zero filled ("A") based on the an int32 === 5 base64 bytes (plus 2 bits)
-                let newId = CoreUtils.newId();
-                Assert.notEqual("AAAAAAAAAAAAAAAA", newId.substring(0, 16), "Make sure that [" + newId + "] value is not zero filled (generally -- it is randomly possible)")
-                Assert.notEqual("AAAAAAAAAAAAAAAA", newId.substring(5), "Make sure that [" + newId + "] value is not zero filled (generally -- it is randomly possible)")
+                let theNewId = newId();
+                Assert.notEqual("AAAAAAAAAAAAAAAA", theNewId.substring(0, 16), "Make sure that [" + theNewId + "] value is not zero filled (generally -- it is randomly possible)")
+                Assert.notEqual("AAAAAAAAAAAAAAAA", theNewId.substring(5), "Make sure that [" + theNewId + "] value is not zero filled (generally -- it is randomly possible)")
             }
         });
 
@@ -682,12 +682,12 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 mwcRandomSeed();
 
                 for (let lp = 0; lp < 10000; lp ++) {
-                    let newId = CoreUtils.newId();
-                    if (map[newId]) {
-                        Assert.ok(false, "[" + newId + "] was duplicated...")
+                    let theNewId = newId();
+                    if (map[theNewId]) {
+                        Assert.ok(false, "[" + theNewId + "] was duplicated...")
                     }
 
-                    map[newId] = true;
+                    map[theNewId] = true;
                 }
 
                 mwcRandomSeed(1);
@@ -715,12 +715,12 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.notEqual(722346555, random32(), "Make sure that the mwcRandom was being called - step 3");
 
                 for (let lp = 0; lp < 10000; lp ++) {
-                    let newId = CoreUtils.newId();
-                    if (map[newId]) {
-                        Assert.ok(false, "[" + newId + "] was duplicated...")
+                    let theNewId = newId();
+                    if (map[theNewId]) {
+                        Assert.ok(false, "[" + theNewId + "] was duplicated...")
                     }
 
-                    map[newId] = true;
+                    map[theNewId] = true;
                 }
 
                 // Reset the seed and re-check the expected result
@@ -738,7 +738,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let runs = 1000000;
 
                 for (let lp = 0; lp < runs; lp++) {
-                    const bucket = CoreUtils.randomValue(numBuckets-1);
+                    const bucket = randomValue(numBuckets-1);
                     buckets[bucket] ++;
                 }
 
@@ -780,7 +780,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 for (let lp = 0; lp < runs; lp++) {
                     // Need to use floor otherwise the bucket is defined as a float as the index
-                    const bucket = Math.floor((CoreUtils.random32() / MaxInt32) * numBuckets);
+                    const bucket = Math.floor((random32() / MaxInt32) * numBuckets);
                     buckets[bucket] ++;
                 }
 
@@ -822,7 +822,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 for (let lp = 0; lp < runs; lp++) {
                     // Need to use floor otherwise the bucket is defined as a float as the index
-                    const bucket = Math.floor((CoreUtils.mwcRandom32() / MaxInt32) * numBuckets);
+                    const bucket = Math.floor((mwcRandom32() / MaxInt32) * numBuckets);
                     buckets[bucket] ++;
                 }
 

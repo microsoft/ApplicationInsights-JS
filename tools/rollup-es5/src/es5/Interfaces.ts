@@ -10,12 +10,12 @@ export interface INamedGroups {
 }
 
 /**
- * Identifies the checks to apply as part of the es3Check() rollup plugin
+ * Identifies the checks to apply as part of the es5Check() rollup plugin
  */
-export interface IEs3CheckKeyword {
+export interface IEs5CheckKeyword {
     /**
-     * These RegEx's are used to identify the presence of keywords (code) that should not exist (for es3Check()) or
-     * should be attempted to be replaced (es3Poly()).
+     * These RegEx's are used to identify the presence of keywords (code) that should not exist (for es5Check()) or
+     * should be attempted to be replaced (es5Poly()).
      */
     funcNames: RegExp[],
 
@@ -38,15 +38,15 @@ export interface IEs3CheckKeyword {
     ignoreFuncMatch?:Array<string|RegExp>,
 
     /**
-     * The prefix added to any reported error, defaults to "Invalid ES3 function"
+     * The prefix added to any reported error, defaults to "Invalid IE/ES5 function"
      */
     errorTitle?:string
 }
  
 /**
- * Identifies the checks and replacement values to apply as part of the es3Poly() rollup plugin
+ * Identifies the checks and replacement values to apply as part of the es5Poly() rollup plugin
  */
-export interface IEs3Keyword extends IEs3CheckKeyword {
+export interface IEs5Keyword extends IEs5CheckKeyword {
     /**
      * The RegEx used to match and extract the function details, don't use named groups (?&lt;name&gt;....); the "s" flag or
      * positive or negative lookbehind (?&lt;=....); (?<!....) unless you build environment supports them. The application insights
@@ -73,15 +73,15 @@ export interface IEs3Keyword extends IEs3CheckKeyword {
     replace: string,
 
     /**
-     * The prefix added to any reported error, defaults to "Invalid ES3 function"
+     * The prefix added to any reported error, defaults to "Invalid IE/ES5 function"
      */
     errorTitle?:string
 }
 
 /**
- * Identifies the optional options to be passed to the es3Poly() rollup plugin
+ * Identifies the optional options to be passed to the es5Poly() rollup plugin
  */
-export interface IEs3RollupOptions {
+export interface IEs5RollupOptions {
     /**
      * Only perform check pass, do not replace.
      * Default: false
@@ -103,13 +103,13 @@ export interface IEs3RollupOptions {
      * Provides additional keyword replacement definitions that will be process as part of the plugin, when ignoreDefault is
      * false these are appended after the default values, and when true these are the only values used
      */
-    keywords?:IEs3Keyword[]        // Optional extra keywords
+    keywords?:IEs5Keyword[]        // Optional extra keywords
 }
 
 /**
- * Identifies the optional options to be passed to the es3Check() rollup plugin
+ * Identifies the optional options to be passed to the es5Check() rollup plugin
  */
-export interface IEs3CheckRollupOptions {
+export interface IEs5CheckRollupOptions {
     /**
      * Identifies whether the default keyword definitions should be ignored or included
      * Default: false -- Include the default values
@@ -120,11 +120,11 @@ export interface IEs3CheckRollupOptions {
      * Provides additional keyword check definitions that will be process as part of the plugin, when ignoreDefault is
      * false these are appended after the default values, and when true these are the only values used
      */
-    keywords?:IEs3CheckKeyword[]
+    keywords?:IEs5CheckKeyword[]
 }
 
 /**
- * Identifies the optional options to be passed to the es3Check() rollup plugin
+ * Identifies the optional options to be passed to the es5Check() rollup plugin
  */
 export interface IImportCheckRollupOptions {
     /**

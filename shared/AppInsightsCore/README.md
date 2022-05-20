@@ -6,6 +6,13 @@
 
 Core SDK layer for next version of application insights javascript SDK.
 
+## Beta Release Breaking changes
+
+- Removed ES3 / IE8 Support
+- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
+
+See [Breaking Changes](./BETA_BREAKING_CHANGES.md)
+
 ## Build & Test:
 - Install: `$ npm install`
 - Build: `$ npm run build`

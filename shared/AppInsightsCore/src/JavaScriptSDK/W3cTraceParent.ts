@@ -1,7 +1,7 @@
+import { isArray, isString, strTrim } from "@nevware21/ts-utils";
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
-import { isArray, isString, strTrim } from "./HelperFuncs";
 
 // using {0,16} for leading and trailing whitespace just to constrain the possible runtime of a random string
 const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]*)?$/;

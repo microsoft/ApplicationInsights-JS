@@ -2,7 +2,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
 import minify from 'rollup-plugin-minify-es';
-import { es3Poly, es3Check } from "@microsoft/applicationinsights-rollup-es3";
+import { es5Poly, es5Check } from "@microsoft/applicationinsights-rollup-es5";
 
 const packageJson = require("./package.json");
 const version = packageJson.version;
@@ -39,8 +39,8 @@ const browserUmdRollupConfigFactory = (isProduction) => {
         values: replaceValues
       }),
       nodeResolve(),
-      es3Poly(),
-      es3Check()
+      es5Poly(),
+      es5Check()
     ]
   };
 
@@ -84,8 +84,8 @@ const moduleRollupConfigFactory = (format, isProduction) => {
         values: replaceValues
       }),
       nodeResolve(),
-      es3Poly(),
-      es3Check()
+      es5Poly(),
+      es5Check()
     ]
   };
 

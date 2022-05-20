@@ -4,7 +4,7 @@
 import { IInternal } from "@microsoft/applicationinsights-common";
 import { ITelemetryConfig } from "../Interfaces/ITelemetryConfig";
 
-const Version = "#version#";
+const Version = "2.8.5";
 
 export class Internal implements IInternal {
 

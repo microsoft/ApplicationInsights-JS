@@ -9,15 +9,13 @@ import { Snippet } from "./Initialization";
 // Exports available from the Cdn bundles
 // ----------------------------------------------------------------------------------------------------
 export {
-    Initialization as ApplicationInsights, Snippet,
-    Telemetry
+    Initialization as ApplicationInsights, Snippet
 } from "./Initialization";
 export {
     LoggingSeverity,
     PerfEvent,
     PerfManager,
     doPerf,
-    CoreUtils,
     newId,
     newGuid,
     random32,
@@ -34,7 +32,6 @@ export {
 } from "@microsoft/applicationinsights-core-js";
 
 export {
-    Util,
     RequestHeaders,
     DisabledPropertyName,
     DEFAULT_BREEZE_ENDPOINT,

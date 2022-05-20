@@ -1,12 +1,11 @@
-import { IAppInsightsDeprecated } from "../../../src/ApplicationInsightsDeprecated";
 import { ApplicationInsightsContainer } from "../../../src/ApplicationInsightsContainer";
 import { IApplicationInsights, Snippet } from "../../../src/Initialization";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { createSnippetV5 } from "./testSnippet";
-import { hasOwnProperty, isNotNullOrUndefined, ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
-import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders, Util } from "@microsoft/applicationinsights-common";
+import { hasOwnProperty, isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 
@@ -72,12 +71,12 @@ export class SnippetInitializationTests extends AITestClass {
     private successSpy: SinonSpy;
     private loggingSpy: SinonSpy;
     private isFetchPolyfill:boolean = false;
-    private sessionPrefix: string = Util.newId();
+    private sessionPrefix: string = newId();
     private trackSpy: SinonSpy;
     private envelopeConstructorSpy: SinonSpy;
 
-    constructor(emulateEs3: boolean) {
-        super("SnippetInitializationTests", emulateEs3);
+    constructor(emulateIe: boolean) {
+        super("SnippetInitializationTests", emulateIe);
     }
 
     // Add any new snippet configurations to this map
@@ -110,7 +109,7 @@ export class SnippetInitializationTests extends AITestClass {
                 test: () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
                     Assert.ok(theSnippet, 'ApplicationInsights SDK exists');
-                    Assert.ok(!(theSnippet as IAppInsightsDeprecated).downloadAndSetup, "The [" + snippetName + "] snippet should NOT have the downloadAndSetup"); // has legacy method
+                    Assert.ok(!(theSnippet as any).downloadAndSetup, "The [" + snippetName + "] snippet should NOT have the downloadAndSetup"); // has legacy method
                 }
             });
 
@@ -505,8 +504,8 @@ export class SnippetInitializationTests extends AITestClass {
             ].concat(this.asserts(1))
         });
 
-        if (!this.isEmulatingEs3) {
-            // If we are emulating ES3 then XHR is not hooked
+        if (!this.isEmulatingIe) {
+            // If we are emulating IE then XHR is not hooked
             this.testCaseAsync({
                 name: "TelemetryContext: auto collection of ajax requests",
                 stepDelay: 100,
@@ -523,7 +522,7 @@ export class SnippetInitializationTests extends AITestClass {
         }
         
         let global = getGlobal();
-        if (global && global.fetch && !this.isEmulatingEs3) {
+        if (global && global.fetch && !this.isEmulatingIe) {
             this.testCaseAsync({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
                 stepDelay: 5000,
@@ -830,7 +829,8 @@ export class SnippetInitializationTests extends AITestClass {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 const context = (theSnippet.context) as TelemetryContext;
                 const authSpy: SinonSpy = this.sandbox.spy(context.user, 'setAuthenticatedUserContext');
-                const cookieSpy: SinonSpy = this.sandbox.spy(Util, 'setCookie');
+                let cookieMgr = theSnippet.getCookieMgr();
+                const cookieSpy: SinonSpy = this.sandbox.spy(cookieMgr, 'set');
 
                 // Act
                 context.user.setAuthenticatedUserContext('10002', 'account567');

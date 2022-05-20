@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 // @skip-file-minify
 
-import { Util } from "@microsoft/applicationinsights-common";
+import { getIEVersion } from "@microsoft/applicationinsights-core-js";
 
 const BG_INFO = "#F0F6FF",
     BG_ERROR = "#FEF0F1",
@@ -15,7 +15,7 @@ const BG_INFO = "#F0F6FF",
     BORDER_GREY_160 = "1px solid #605E5C",
     BORDER_GREY_60 = "1px solid #B3B0AD";
 
-console.log(Util.getIEVersion());
+console.log(getIEVersion());
 
 export const tempStyle = (prefix: string) => `
   .${prefix}-dbg-lgr-dashboard {
@@ -57,7 +57,7 @@ export const tempStyle = (prefix: string) => `
     font-family: monospace;
     font-size: 16px;
     overflow-y: scroll;
-    overflow-x: ${(Util.getIEVersion()) ? "scroll" : "hidden"};
+    overflow-x: ${(getIEVersion()) ? "scroll" : "hidden"};
     border: ${BORDER_GREY_160};
     border-radius: 2px;
   }
@@ -66,7 +66,7 @@ export const tempStyle = (prefix: string) => `
     outline: 2px solid black;
   }
 
-  ${Util.getIEVersion() && Util.getIEVersion() < 9
+  ${getIEVersion() && getIEVersion() < 9
         ? ""
         : `.${prefix}-dbg-lgr .tree-root div::before {
       content: '';
@@ -111,7 +111,7 @@ export const tempStyle = (prefix: string) => `
     background-color: ${TEXT_MATCHED};
   }
 
-  ${Util.getIEVersion() && Util.getIEVersion() < 9
+  ${getIEVersion() && getIEVersion() < 9
         ? ""
         : `.${prefix}-dbg-lgr .expandable.open::before {
       content: '[-] ';
@@ -218,7 +218,7 @@ export const tempStyle = (prefix: string) => `
     border-radius: 2px;
   }
 
-  ${Util.getIEVersion() && Util.getIEVersion() < 9
+  ${getIEVersion() && getIEVersion() < 9
         ? ""
         : `.${prefix}-dbg-lgr-dashboard .filterlist-input::after {
       content: '';
@@ -254,7 +254,7 @@ export const tempStyle = (prefix: string) => `
     padding: 3px 8px;
     height: 32px;
     width: 100%;
-    ${(Util.getIEVersion()) ? "" : "box-sizing: border-box;"}
+    ${(getIEVersion()) ? "" : "box-sizing: border-box;"}
   }
 
   .${prefix}-dbg-lgr-dashboard .filterlist-toggle:focus {
@@ -289,14 +289,14 @@ export const tempStyle = (prefix: string) => `
     border-radius: 2px;
     vertical-align: middle;
     margin-right: 8px;
-    ${(Util.getIEVersion()) ? "" : "box-sizing: border-box;"}
+    ${(getIEVersion()) ? "" : "box-sizing: border-box;"}
   }
 
   .${prefix}-dbg-lgr-dashboard .checkbox.on {
     background-color: #0078D4;
   }
 
-  ${Util.getIEVersion() && Util.getIEVersion() < 9
+  ${getIEVersion() && getIEVersion() < 9
         ? ""
         : `.${prefix}-dbg-lgr-dashboard .checkbox.on::after {
       content: '';
@@ -317,7 +317,7 @@ export const tempStyle = (prefix: string) => `
     border: ${BORDER_GREY_160};
   }
 
-  ${Util.getIEVersion() && Util.getIEVersion() < 9
+  ${getIEVersion() && getIEVersion() < 9
         ? ""
         : `@media only screen and (max-width: 600px) {
       .${prefix}-dbg-lgr {
@@ -332,7 +332,7 @@ export const tempStyle = (prefix: string) => `
 export const permStyle = (prefix: string) => `
   .${prefix}-debug-bin-container {
     position: fixed;
-    ${Util.getIEVersion() && Util.getIEVersion() < 9
+    ${getIEVersion() && getIEVersion() < 9
         ? `width: 100%;
       height: 100%;
       top: 0;
@@ -362,7 +362,7 @@ export const permStyle = (prefix: string) => `
     transition: 2s color linear;
     cursor: pointer;
     transition: .2s width ease-in-out, .2s height ease-in-out;
-    ${(Util.getIEVersion()) ? "" : "box-sizing: border-box;"}
+    ${(getIEVersion()) ? "" : "box-sizing: border-box;"}
   }
 
   .${prefix}-debug-bin-parent.active {
@@ -411,7 +411,7 @@ export const permStyle = (prefix: string) => `
     transition: 2s transform linear, 0s 2s font-weight linear;
   }
 
-  ${Util.getIEVersion() && Util.getIEVersion() < 9
+  ${getIEVersion() && getIEVersion() < 9
         ? ""
         : `.${prefix}-debug-bin-parent.notify::after {
       content: " (!)";
@@ -424,7 +424,7 @@ export const permStyle = (prefix: string) => `
     transition: 0s transform linear, 0s font-weight linear;
   }
 
-  ${Util.getIEVersion() && Util.getIEVersion() < 9
+  ${getIEVersion() && getIEVersion() < 9
         ? ""
         : `.${prefix}-debug-bin-parent:focus > span::before,
     .${prefix}-debug-bin-parent:hover > span::before,

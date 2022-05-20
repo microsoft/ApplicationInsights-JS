@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Util } from "@microsoft/applicationinsights-common";
 import {
-    arrForEach, arrIndexOf, hasOwnProperty, isFunction, isObject, isString, isSymbol, objKeys
+    arrForEach, arrIndexOf, getIEVersion, hasOwnProperty, isArray, isError, isFunction, isObject, isString, isSymbol, objKeys
 } from "@microsoft/applicationinsights-core-js";
 import { strShimPrototype } from "@microsoft/applicationinsights-shims";
 
@@ -227,7 +226,7 @@ function _toString(value: any) {
 export function getTargetKeys(target: any, excludedKeys: string[], includeFunctions: boolean) {
     let keys: string[] = objKeys(target);
 
-    if (!Util.isArray(target)) {
+    if (!isArray(target)) {
         try {
             if (Object[strGetOwnPropertyNames]) {
                 // We need to use this for built in objects such as Error which don't return their values via objKeys because they are not enumerable for example
@@ -273,8 +272,8 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         thingsReferenced = [];
     }
 
-    let isObj = isObject(target) || Util.isError(target);
-    let isErr = target["baseType"] === "ExceptionData" || Util.isError(target);
+    let isObj = isObject(target) || isError(target);
+    let isErr = target["baseType"] === "ExceptionData" || isError(target);
 
     const children: HTMLElement[] = [];
 
@@ -332,7 +331,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             builder.className = "empty";
             builder.innerText = `<circular (${key}) - "${getTargetName(targetValue)}">`;
             children.push(builder);
-        } else if (targetValue !== null && (isObject(targetValue) || Util.isError(targetValue))) {
+        } else if (targetValue !== null && (isObject(targetValue) || isError(targetValue))) {
             thingsReferenced.push(target);
             let formatted = formatLogElements(targetValue, null, key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
             thingsReferenced.pop();
@@ -393,7 +392,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
     let currentLine = document.createElement("span");
     if (isObj || children.length) {
         innerText = `${key ? key : "obj"}: `;
-        if (Util.isArray(target)) {
+        if (isArray(target)) {
             innerText += `[${getTargetKeys(target, excludeKeys, includeFunctions).length}]`;
         } else {
             let targetName = getTargetName(target);
@@ -437,7 +436,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         }
         const openHandler = (evt: Event, forceState?: boolean) => {
             evt.stopPropagation();
-            if (Util.getIEVersion()) {
+            if (getIEVersion()) {
                 focusHandler(evt, target, level, excludeKeys, includeFunctions);
             }
             if (forceState !== undefined && openState === forceState) {

@@ -1,10 +1,8 @@
+import { strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import {
-    ITelemetryItem, AppInsightsCore,
-    IPlugin, IConfiguration, DiagnosticLogger
-} from "@microsoft/applicationinsights-core-js";
+import {  DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString } from "../../../src/Telemetry/Common/DataSanitizer";
 
-import { DataSanitizer } from "../../../src/Telemetry/Common/DataSanitizer";
 
 export class ApplicationInsightsTests extends AITestClass {
     logger = new DiagnosticLogger();
@@ -21,16 +19,16 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'DataSanitizerTests: messages are well processed.',
             test: () => {
                 // const define
-                const MAX_MESSAGE_LENGTH = DataSanitizer.MAX_MESSAGE_LENGTH;
+                const MAX_MESSAGE_LENGTH = DataSanitizerValues.MAX_MESSAGE_LENGTH;
                
                 // use cases
                 const messageShort: String = "hi";
-                const messageLong = new Array(MAX_MESSAGE_LENGTH + 1).join('abc');
+                const messageLong = strRepeat("abc", MAX_MESSAGE_LENGTH + 1);
                 
                 // Assert
-                Assert.equal(messageShort.length, DataSanitizer.sanitizeMessage(this.logger, messageShort).length);
-                Assert.notEqual(messageLong.length, DataSanitizer.sanitizeMessage(this.logger, messageLong).length);
-                Assert.equal(MAX_MESSAGE_LENGTH, DataSanitizer.sanitizeMessage(this.logger, messageLong).length);
+                Assert.equal(messageShort.length, dataSanitizeMessage(this.logger, messageShort).length);
+                Assert.notEqual(messageLong.length, dataSanitizeMessage(this.logger, messageLong).length);
+                Assert.equal(MAX_MESSAGE_LENGTH, dataSanitizeMessage(this.logger, messageLong).length);
             }
         });
 
@@ -39,22 +37,22 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // const define
                 const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
-                const MAX_MESSAGE_LENGTH = DataSanitizer.MAX_MESSAGE_LENGTH;
+                const MAX_MESSAGE_LENGTH = DataSanitizerValues.MAX_MESSAGE_LENGTH;
                 
                 // use cases
                 const messageShort: String = "hi";
-                const messageLong = new Array(MAX_MESSAGE_LENGTH + 2).join('a');
+                const messageLong = strRepeat("a", MAX_MESSAGE_LENGTH + 2);
 
                 // Act
-                DataSanitizer.sanitizeMessage(this.logger, messageShort);
+                dataSanitizeMessage(this.logger, messageShort);
                 Assert.ok(loggerStub.notCalled);
                 Assert.equal(0, loggerStub.callCount);
 
-                DataSanitizer.sanitizeMessage(this.logger, messageLong);
+                dataSanitizeMessage(this.logger, messageLong);
                 Assert.ok(loggerStub.calledOnce);
                 Assert.equal(1, loggerStub.callCount);
 
-                DataSanitizer.sanitizeMessage(this.logger, messageLong);
+                dataSanitizeMessage(this.logger, messageLong);
                 Assert.ok(loggerStub.calledTwice);
                 Assert.equal(2, loggerStub.callCount);
 
@@ -65,22 +63,24 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCase({
             name: 'DataSanitizerTests: messages are fully logged through console',
             test: () => {
-                const saniMsgSpy = this.sandbox.spy(DataSanitizer, "sanitizeMessage");
+                const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
 
                 // const define
-                const MAX_MESSAGE_LENGTH = DataSanitizer.MAX_MESSAGE_LENGTH;
+                const MAX_MESSAGE_LENGTH = DataSanitizerValues.MAX_MESSAGE_LENGTH;
                
                 // use cases
                 const messageShort: String = "hi";
-                const messageLong = new Array(MAX_MESSAGE_LENGTH + 1).join('a');
+                const messageLong = strRepeat("a", MAX_MESSAGE_LENGTH + 1);
 
-                const msgShortResult = DataSanitizer.sanitizeMessage(this.logger, messageShort);
-                Assert.ok(saniMsgSpy.returned(msgShortResult));
+                Assert.equal(messageShort, dataSanitizeMessage(this.logger, messageShort));
+                Assert.ok(loggerStub.notCalled);
+                Assert.equal(0, loggerStub.callCount);
 
-                const msgLongResult = DataSanitizer.sanitizeMessage(this.logger, messageLong);
-                Assert.ok(saniMsgSpy.returned(msgLongResult));
+                Assert.equal(messageLong.substring(0, MAX_MESSAGE_LENGTH), dataSanitizeMessage(this.logger, messageLong));
+                Assert.ok(loggerStub.calledOnce);
+                Assert.equal(1, loggerStub.callCount);
 
-                saniMsgSpy.restore();
+                loggerStub.restore();
             }
         });
 
@@ -89,16 +89,16 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'DataSanitizerTest: strings are well processed',
             test: () => {
                 // const define
-                const MAX_STRING_LENGTH = DataSanitizer.MAX_STRING_LENGTH;
+                const MAX_STRING_LENGTH = DataSanitizerValues.MAX_STRING_LENGTH;
                
                 // use cases
                 const strShort: String = "hi";
-                const strLong = new Array(MAX_STRING_LENGTH + 2).join('a');
+                const strLong = strRepeat("a", MAX_STRING_LENGTH + 2);
                 
                 // Assert
-                Assert.equal(strShort.length, DataSanitizer.sanitizeString(this.logger, strShort).length);
-                Assert.notEqual(strLong.length, DataSanitizer.sanitizeString(this.logger, strLong).length);
-                Assert.equal(MAX_STRING_LENGTH, DataSanitizer.sanitizeString(this.logger, strLong).length);
+                Assert.equal(strShort.length, dataSanitizeString(this.logger, strShort).length);
+                Assert.notEqual(strLong.length, dataSanitizeString(this.logger, strLong).length);
+                Assert.equal(MAX_STRING_LENGTH, dataSanitizeString(this.logger, strLong).length);
             }
         });
 
@@ -107,22 +107,22 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // const define
                 const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
-                const MAX_STRING_LENGTH = DataSanitizer.MAX_STRING_LENGTH;
+                const MAX_STRING_LENGTH = DataSanitizerValues.MAX_STRING_LENGTH;
                 
                 // use cases
                 const strShort: String = "hi";
-                const strLong = new Array(MAX_STRING_LENGTH + 2).join('a');
+                const strLong = strRepeat("a", MAX_STRING_LENGTH + 2);
 
                 // Act
-                DataSanitizer.sanitizeString(this.logger, strShort);
+                dataSanitizeString(this.logger, strShort);
                 Assert.ok(loggerStub.notCalled);
                 Assert.equal(0, loggerStub.callCount);
 
-                DataSanitizer.sanitizeString(this.logger, strLong);
+                dataSanitizeString(this.logger, strLong);
                 Assert.ok(loggerStub.calledOnce);
                 Assert.equal(1, loggerStub.callCount);
 
-                DataSanitizer.sanitizeString(this.logger, strLong);
+                dataSanitizeString(this.logger, strLong);
                 Assert.ok(loggerStub.calledTwice);
                 Assert.equal(2, loggerStub.callCount);
 
@@ -133,22 +133,24 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCase({
             name: 'DataSanitizerTests: strings are fully logged through console',
             test: () => {
-                const saniStrSpy = this.sandbox.spy(DataSanitizer, "sanitizeString");
+                const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
 
                 // const define
-                const MAX_STRING_LENGTH = DataSanitizer.MAX_STRING_LENGTH;
+                const MAX_STRING_LENGTH = DataSanitizerValues.MAX_STRING_LENGTH;
                
                 // use cases
                 const strShort: String = "hi";
-                const strLong = new Array(MAX_STRING_LENGTH + 2).join('a');
+                const strLong = strRepeat("a", MAX_STRING_LENGTH + 2);
 
-                const strShortResult = DataSanitizer.sanitizeString(this.logger, strShort);
-                Assert.ok(saniStrSpy.returned(strShortResult));
+                Assert.equal(strShort, dataSanitizeString(this.logger, strShort));
+                Assert.ok(loggerStub.notCalled);
+                Assert.equal(0, loggerStub.callCount);
 
-                const strLongResult = DataSanitizer.sanitizeString(this.logger, strLong);
-                Assert.ok(saniStrSpy.returned(strLongResult));
+                Assert.equal(strLong.substring(0, MAX_STRING_LENGTH), dataSanitizeString(this.logger, strLong));
+                Assert.ok(loggerStub.calledOnce);
+                Assert.equal(1, loggerStub.callCount);
 
-                saniStrSpy.restore();
+                loggerStub.restore();
             }
         });
 
@@ -157,16 +159,16 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'DataSanitizerTest: names are well processed',
             test: () => {
                 // const define
-                const MAX_NAME_LENGTH = DataSanitizer.MAX_NAME_LENGTH;
+                const MAX_NAME_LENGTH = DataSanitizerValues.MAX_NAME_LENGTH;
                
                 // use cases
                 const nameShort: String = "hi";
-                const nameLong = new Array(MAX_NAME_LENGTH + 2).join('a');
+                const nameLong = strRepeat("a", MAX_NAME_LENGTH + 2);
                 
                 // Assert
-                Assert.equal(nameShort.length, DataSanitizer.sanitizeKey(this.logger, nameShort).length);
-                Assert.notEqual(nameLong.length, DataSanitizer.sanitizeKey(this.logger, nameLong).length);
-                Assert.equal(MAX_NAME_LENGTH, DataSanitizer.sanitizeKey(this.logger, nameLong).length);
+                Assert.equal(nameShort.length, dataSanitizeKey(this.logger, nameShort).length);
+                Assert.notEqual(nameLong.length, dataSanitizeKey(this.logger, nameLong).length);
+                Assert.equal(MAX_NAME_LENGTH, dataSanitizeKey(this.logger, nameLong).length);
             }
         });
 
@@ -175,22 +177,22 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // const define
                 const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
-                const MAX_NAME_LENGTH = DataSanitizer.MAX_NAME_LENGTH;
+                const MAX_NAME_LENGTH = DataSanitizerValues.MAX_NAME_LENGTH;
                 
                 // use cases
                 const nameShort: String = "hi";
-                const nameLong = new Array(MAX_NAME_LENGTH + 2).join('a');
+                const nameLong = strRepeat("a", MAX_NAME_LENGTH + 2);
 
                 // Act
-                DataSanitizer.sanitizeKey(this.logger, nameShort);
+                dataSanitizeKey(this.logger, nameShort);
                 Assert.ok(loggerStub.notCalled);
                 Assert.equal(0, loggerStub.callCount);
 
-                DataSanitizer.sanitizeKey(this.logger, nameLong);
+                dataSanitizeKey(this.logger, nameLong);
                 Assert.ok(loggerStub.calledOnce);
                 Assert.equal(1, loggerStub.callCount);
 
-                DataSanitizer.sanitizeKey(this.logger, nameLong);
+                dataSanitizeKey(this.logger, nameLong);
                 Assert.ok(loggerStub.calledTwice);
                 Assert.equal(2, loggerStub.callCount);
 
@@ -201,22 +203,23 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCase({
             name: 'DataSanitizerTests: names are fully logged through console',
             test: () => {
-                const saniStrSpy = this.sandbox.spy(DataSanitizer, "sanitizeKey");
+                const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
 
                 // const define
-                const MAX_NAME_LENGTH = DataSanitizer.MAX_NAME_LENGTH;
+                const MAX_NAME_LENGTH = DataSanitizerValues.MAX_NAME_LENGTH;
                
                 // use cases
                 const nameShort: String = "hi";
-                const nameLong = new Array(MAX_NAME_LENGTH + 2).join('a');
+                const nameLong = strRepeat("a", MAX_NAME_LENGTH + 2);
 
-                const nameShortResult = DataSanitizer.sanitizeKey(this.logger, nameShort);
-                Assert.ok(saniStrSpy.returned(nameShortResult));
+                Assert.equal(nameShort, dataSanitizeKey(this.logger, nameShort));
+                Assert.ok(loggerStub.notCalled);
 
-                const nameLongResult = DataSanitizer.sanitizeKey(this.logger, nameLong);
-                Assert.ok(saniStrSpy.returned(nameLongResult));
+                Assert.equal(nameLong.substring(0, MAX_NAME_LENGTH), dataSanitizeKey(this.logger, nameLong));
+                Assert.ok(loggerStub.calledOnce);
+                Assert.equal(1, loggerStub.callCount);
 
-                saniStrSpy.restore();
+                loggerStub.restore();
             }
         });
 
@@ -228,17 +231,17 @@ export class ApplicationInsightsTests extends AITestClass {
 
                 // use cases
                 const inputShort: String = "hi";
-                const inputLong = new Array(MAX_INPUT_LENGTH + 2).join('a');
+                const inputLong = strRepeat("a", MAX_INPUT_LENGTH + 2);
                 
                 // Assert
-                Assert.equal(inputShort.length, DataSanitizer.sanitizeInput(this.logger, inputShort, MAX_INPUT_LENGTH, 0).length);
-                Assert.notEqual(inputLong.length, DataSanitizer.sanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0).length);
-                Assert.equal(MAX_INPUT_LENGTH, DataSanitizer.sanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0).length);
+                Assert.equal(inputShort.length, dataSanitizeInput(this.logger, inputShort, MAX_INPUT_LENGTH, 0).length);
+                Assert.notEqual(inputLong.length, dataSanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0).length);
+                Assert.equal(MAX_INPUT_LENGTH, dataSanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0).length);
             }
         });
 
         this.testCase({
-            name: 'DataSanitizerTests: throrwInternal function is called correctly in sanitizeInput function',
+            name: 'DataSanitizerTests: throwInternal function is called correctly in sanitizeInput function',
             test: () => {
                 // const define
                 const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
@@ -246,18 +249,18 @@ export class ApplicationInsightsTests extends AITestClass {
                 
                 // use cases
                 const inputShort: String = "hi";
-                const inputLong = new Array(MAX_INPUT_LENGTH + 2).join('a');
+                const inputLong = strRepeat("a", MAX_INPUT_LENGTH + 2);
 
                 // Act
-                DataSanitizer.sanitizeInput(this.logger, inputShort, MAX_INPUT_LENGTH, 0);
+                dataSanitizeInput(this.logger, inputShort, MAX_INPUT_LENGTH, 0);
                 Assert.ok(loggerStub.notCalled);
                 Assert.equal(0, loggerStub.callCount);
 
-                DataSanitizer.sanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0);
+                dataSanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0);
                 Assert.ok(loggerStub.calledOnce);
                 Assert.equal(1, loggerStub.callCount);
 
-                DataSanitizer.sanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0);
+                dataSanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0);
                 Assert.ok(loggerStub.calledTwice);
                 Assert.equal(2, loggerStub.callCount);
 
@@ -268,24 +271,25 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCase({
             name: 'DataSanitizerTests: inputs are fully logged through console',
             test: () => {
-                const saniStrSpy = this.sandbox.spy(DataSanitizer, "sanitizeInput");
+                const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
 
                 // const define
                 const MAX_INPUT_LENGTH = 1024;
                
                 // use cases
                 const inputShort: String = "hi";
-                const inputLong = new Array(MAX_INPUT_LENGTH + 2).join('a');
+                const inputLong = strRepeat("a", MAX_INPUT_LENGTH + 2);
 
-                const inputShortResult = DataSanitizer.sanitizeInput(this.logger, inputShort, MAX_INPUT_LENGTH, 0);
-                Assert.ok(saniStrSpy.returned(inputShortResult));
+                Assert.equal(inputShort, dataSanitizeInput(this.logger, inputShort, MAX_INPUT_LENGTH, 0));
+                Assert.ok(loggerStub.notCalled);
+                Assert.equal(0, loggerStub.callCount);
 
-                const inputLongResult = DataSanitizer.sanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0);
-                Assert.ok(saniStrSpy.returned(inputLongResult));
+                Assert.equal(inputLong.substring(0, MAX_INPUT_LENGTH), dataSanitizeInput(this.logger, inputLong, MAX_INPUT_LENGTH, 0));
+                Assert.ok(loggerStub.calledOnce);
+                Assert.equal(1, loggerStub.callCount);
 
-                saniStrSpy.restore();
+                loggerStub.restore();
             }
         });
     }
-
 }

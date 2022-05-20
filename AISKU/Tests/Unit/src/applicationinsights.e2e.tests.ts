@@ -2,8 +2,8 @@ import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, Exc
 import { SinonSpy } from 'sinon';
 import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry } from '@microsoft/applicationinsights-common';
-import { AppInsightsCore, ITelemetryItem, getGlobal } from "@microsoft/applicationinsights-core-js";
+import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry } from '@microsoft/applicationinsights-common';
+import { AppInsightsCore, ITelemetryItem, getGlobal, newId } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 
 
@@ -35,7 +35,7 @@ export class ApplicationInsightsTests extends AITestClass {
     private successSpy: SinonSpy;
     private loggingSpy: SinonSpy;
     private userSpy: SinonSpy;
-    private _sessionPrefix: string = Util.newId();
+    private _sessionPrefix: string = newId();
     private trackSpy: SinonSpy;
     private envelopeConstructorSpy: SinonSpy;
 
@@ -922,7 +922,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Setup
                 const context = (this._ai.context) as TelemetryContext;
                 const authSpy: SinonSpy = this.sandbox.spy(context.user, 'setAuthenticatedUserContext');
-                const cookieSpy: SinonSpy = this.sandbox.spy(Util, 'setCookie');
+                let cookieMgr = this._ai.getCookieMgr();
+                const cookieSpy: SinonSpy = this.sandbox.spy(cookieMgr, 'set');
 
                 // Act
                 context.user.setAuthenticatedUserContext('10002', 'account567');

@@ -4,6 +4,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { objCreateFn } from "@microsoft/applicationinsights-shims";
+import { arrForEach, arrIndexOf, isFunction, isNullOrUndefined, objFreeze, throwError } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
@@ -32,10 +33,7 @@ import { createCookieMgr } from "./CookieMgr";
 import { createUniqueNamespace } from "./DataCacheHelper";
 import { getDebugListener } from "./DbgExtensionUtils";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import {
-    arrForEach, arrIndexOf, getCfgValue, getSetValue, isFunction, isNullOrUndefined, objExtend, objFreeze, proxyFunctionAs, proxyFunctions,
-    throwError, toISOString
-} from "./HelperFuncs";
+import { getCfgValue, getSetValue, objExtend, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
 import { STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EXTENSIONS, STR_EXTENSION_CONFIG } from "./InternalConstants";
 import { PerfManager, getGblPerfMgr } from "./PerfManager";
 import {

@@ -2,6 +2,7 @@
 // // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { arrForEach, dumpObj } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import {
@@ -10,8 +11,7 @@ import {
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { BaseTelemetryPlugin } from "./BaseTelemetryPlugin";
 import { _throwInternal } from "./DiagnosticLogger";
-import { dumpObj } from "./EnvUtils";
-import { arrForEach, getExceptionName } from "./HelperFuncs";
+import { getExceptionName } from "./HelperFuncs";
 
 interface _IInternalTelemetryInitializerHandler {
     id: number;

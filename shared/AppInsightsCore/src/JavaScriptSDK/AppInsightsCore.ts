@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { isNullOrUndefined, throwError } from "@nevware21/ts-utils";
 import { eEventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
@@ -10,7 +11,6 @@ import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { BaseCore } from "./BaseCore";
 import { DiagnosticLogger } from "./DiagnosticLogger";
-import { isNullOrUndefined, throwError } from "./HelperFuncs";
 import { NotificationManager } from "./NotificationManager";
 import { doPerf } from "./PerfManager";
 

@@ -167,7 +167,6 @@ export {
     IConfiguration,
     AppInsightsCore,
     IAppInsightsCore,
-    CoreUtils,
     ITelemetryItem,
     ILoadedPlugin,
     arrForEach,

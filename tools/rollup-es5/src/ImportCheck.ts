@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IImportCheckRollupOptions, IEs3CheckRollupOptions } from "./es3/Interfaces";
-import { es3Check } from "./es3/Es3Check";
+import { IImportCheckRollupOptions, IEs5CheckRollupOptions } from "./es5/Interfaces";
+import { es5Check } from "./es5/Es5Check";
 
 function _escapeRegEx(str:string) {
     return str.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
 }
 
 export function importCheck(options:IImportCheckRollupOptions = {}) {
-    let checkOptions:IEs3CheckRollupOptions = {
+    let checkOptions:IEs5CheckRollupOptions = {
         ignoreDefault: true,
         keywords: []
     };
@@ -39,7 +39,7 @@ export function importCheck(options:IImportCheckRollupOptions = {}) {
         }
     }
 
-    let plugin = es3Check(checkOptions);
+    let plugin = es5Check(checkOptions);
     plugin.name = "ai-rollup-importcheck";
 
     return plugin

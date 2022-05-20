@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 "use strict"
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { dumpObj, isFunction, isUndefined } from "@nevware21/ts-utils";
 import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { getDebugExt } from "./DbgExtensionUtils";
-import { dumpObj, getConsole, getJSON, hasJSON } from "./EnvUtils";
-import { getCfgValue, isFunction, isUndefined } from "./HelperFuncs";
+import { getConsole, getJSON, hasJSON } from "./EnvUtils";
+import { getCfgValue } from "./HelperFuncs";
 import { STR_EMPTY, STR_ERROR_TO_CONSOLE, STR_WARN_TO_CONSOLE } from "./InternalConstants";
 
 /**

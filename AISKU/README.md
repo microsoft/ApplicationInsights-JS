@@ -22,10 +22,18 @@
 Application Insights SDK is a package that combines commonly used packages for Web scenarios.
 Refer to [our GitHub page](https://github.com/microsoft/applicationinsights-js) for more details on getting started.
 
+## Beta Release Breaking changes
+
+- Removed ES3 / IE8 Support
+- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
+
+See [Breaking Changes](./BETA_BREAKING_CHANGES.md)
+
 ## CDN Version Release Summary (with Size tracking)
 
 | Version | Full Size | Raw Minified | GZip Size
 |---------|-----------|--------------|-------------
+| &lt;v3 beta&gt;  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/beta/ai.3-beta.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/beta/ai.3-beta.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/beta/ai.3-beta.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/beta/ai.3-beta.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | &lt;nightly&gt;  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.2-nightly.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.2-nightly.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.2-nightly.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.2-nightly.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | 2.8.6:  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.6.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.6.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.6.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.6.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | 2.8.5:  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.5.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.5.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.5.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.5.min.js.svg?compression=gzip&softmax=30000&max=35000)

@@ -25,8 +25,8 @@
       "shouldPublish": true
     },
     {
-      "packageName": "@microsoft/applicationinsights-rollup-es3",
-      "projectFolder": "tools/rollup-es3",
+      "packageName": "@microsoft/applicationinsights-rollup-es5",
+      "projectFolder": "tools/rollup-es5",
       "shouldPublish": true
     },
     {

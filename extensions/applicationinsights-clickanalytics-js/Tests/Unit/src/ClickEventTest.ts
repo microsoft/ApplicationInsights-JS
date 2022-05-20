@@ -3,7 +3,7 @@
  */
 
  import { Assert, AITestClass } from "@microsoft/ai-test-framework";
- import { Util, IConfig } from "@microsoft/applicationinsights-common";
+ import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger} from '@microsoft/applicationinsights-core-js';
 import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from '../../../src/ClickAnalyticsPlugin';
 import { PageAction } from "../../../src/events/PageAction";
@@ -17,13 +17,13 @@ import { sanitizeUrl } from "../../../src/DataCollector";
 
 export class ClickEventTest extends AITestClass {
     public testInitialize() {
-        if (Util.canUseLocalStorage()) {
+        if (utlCanUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
 
     public testCleanup() {
-        if (Util.canUseLocalStorage()) {
+        if (utlCanUseLocalStorage()) {
             window.localStorage.clear();
         }
     }

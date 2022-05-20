@@ -8,7 +8,7 @@ import {
 import { getGlobal, objCreateFn, throwTypeError } from "./Helpers";
 
 // Most of these functions have been directly shamelessly "lifted" from the https://github.com/@microsoft/tslib and
-// modified to be ES3 compatible and applying several minification and tree-shaking techniques so that Application Insights
+// modified to be ES5 compatible and applying several minification and tree-shaking techniques so that Application Insights
 // can successfully use TypeScript "importHelpers" which imports tslib during compilation but it will use these at runtime
 // Which is also why all of the functions have not been included as Application Insights currently doesn't use or require
 // them.

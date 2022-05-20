@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, CoreUtils, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId, _legacyCookieMgr } from "../../../src/applicationinsights-core-js"
+import { AppInsightsCore, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId } from "../../../src/applicationinsights-core-js"
 import { _InternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 
@@ -10,8 +10,8 @@ export class CookieManagerTests extends AITestClass {
     };
     private _testCookies = {};
 
-    constructor(emulateEs3: boolean) {
-        super("CookieManagerTests", emulateEs3);
+    constructor(emulateIe: boolean) {
+        super("CookieManagerTests", emulateIe);
     }
 
     public testInitialize() {
@@ -185,7 +185,7 @@ export class CookieManagerTests extends AITestClass {
                 let maxAge = 42 * 24 * 60 * 60;
                 manager.set(newKey, newValue, maxAge);
                 Assert.equal(newValue, manager.get(newKey));
-                if (this.isEmulatingEs3) {
+                if (this.isEmulatingIe) {
                     Assert.equal(newValue + "; expires=Thu, 12 Feb 1970 00:00:00 GMT; path=/", this._testCookies[newKey]);
                 } else {
                     Assert.equal(newValue + "; expires=Thu, 12 Feb 1970 00:00:00 GMT; max-age=" + maxAge + "; path=/", this._testCookies[newKey]);
@@ -198,7 +198,7 @@ export class CookieManagerTests extends AITestClass {
 
                 manager.set(newKey, newValue + "; expires=Thu, 12 Feb 2170 00:00:00 GMT", maxAge);
                 Assert.equal(newValue, manager.get(newKey));
-                if (this.isEmulatingEs3) {
+                if (this.isEmulatingIe) {
                     Assert.equal(newValue + "; expires=Thu, 12 Feb 2170 00:00:00 GMT; path=/", this._testCookies[newKey]);
                 } else {
                     Assert.equal(newValue + "; expires=Thu, 12 Feb 2170 00:00:00 GMT; max-age=" + maxAge + "; path=/", this._testCookies[newKey]);
@@ -393,38 +393,6 @@ export class CookieManagerTests extends AITestClass {
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
                 Assert.equal(undefined, this._testCookies[newKey]);
-            }
-        });        
-
-
-        this.testCase({
-            name: "CookieManager: validate setting _canUseCookies correctly enables or blocks cookie usage",
-            test: () => {
-                CoreUtils._canUseCookies = undefined;
-                // initialize the global cookie manager
-                let globalMgr = _legacyCookieMgr();
-                Assert.equal(true, globalMgr.isEnabled());
-                Assert.equal(true, globalMgr.isEnabled());
-                CoreUtils._canUseCookies = false;
-                Assert.equal(false, globalMgr.isEnabled());
-                CoreUtils._canUseCookies = true;
-                Assert.equal(true, globalMgr.isEnabled());
-
-                let core = new AppInsightsCore();
-                let manager = core.getCookieMgr();
-                manager.setEnabled(true);
-                Assert.equal(true, manager.isEnabled());
-                CoreUtils._canUseCookies = false;
-                Assert.equal(false, manager.isEnabled());
-
-                manager.setEnabled(false);
-                CoreUtils._canUseCookies = true;
-                Assert.equal(true, globalMgr.isEnabled());
-                Assert.equal(false, manager.isEnabled());
-
-                manager.setEnabled(true);
-                Assert.equal(true, globalMgr.isEnabled());
-                Assert.equal(true, manager.isEnabled());
             }
         });        
     }

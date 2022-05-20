@@ -1,9 +1,9 @@
 {
-    "name": "@microsoft/applicationinsights-rollup-es3",
+    "name": "@microsoft/applicationinsights-rollup-es5",
     "author": "Microsoft Application Insights Team",
-    "version": "1.1.3",
-    "description": "Microsoft Application Insights JavaScript SDK - Rollup Plugin for ES3 support",
-    "homepage": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/tools/rollup-es3",
+    "version": "1.0.0",
+    "description": "Microsoft Application Insights JavaScript SDK - Rollup Plugin for IE/ES5 support",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/tools/rollup-es5",
     "keywords": [
         "azure",
         "cloud",
@@ -11,18 +11,18 @@
         "application insights",
         "rollup",
         "rollup-plugin",
-        "es3"
+        "es5"
     ],
-    "main": "dist/node/applicationinsights-rollup-es3.min.js",
-    "module": "dist/esm/applicationinsights-rollup-es3.min.js",
-    "types": "types/applicationinsights-rollup-es3.d.ts",
+    "main": "dist/node/applicationinsights-rollup-es5.min.js",
+    "module": "dist/esm/applicationinsights-rollup-es5.min.js",
+    "types": "types/applicationinsights-rollup-es5.d.ts",
     "scripts": {
         "clean": "grunt clean",
         "build": "npm run build:esm && npm run build:bundle",
-        "build:esm": "grunt rollupes3",
+        "build:esm": "grunt rollupes5",
         "build:bundle": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
-        "test": "grunt rollupes3test",
+        "test": "grunt rollupes5test",
         "lint": "tslint -p tsconfig.json"
     },
     "repository": {

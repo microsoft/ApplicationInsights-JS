@@ -410,10 +410,10 @@ module.exports = function (grunt) {
                                         },
                                         testHttp: false
                                     },
-            "rollupes3":            { 
+            "rollupes5":            { 
                                         autoMinify: false,
-                                        path: "./tools/rollup-es3",
-                                        unitTestName: "es3rolluptests.js",
+                                        path: "./tools/rollup-es5",
+                                        unitTestName: "es5rolluptests.js",
                                         testHttp: false
                                     },
             "shims":                {
@@ -613,7 +613,7 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-connect');
         grunt.loadNpmTasks('grunt-string-replace');
         grunt.loadTasks('./tools/grunt-tasks');
-        grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
+        grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
 
         grunt.registerTask("core", tsBuildActions("core"));
         grunt.registerTask("core-min", minTasks("core"));
@@ -681,8 +681,8 @@ module.exports = function (grunt) {
         grunt.registerTask("aichannel-mintest", tsTestActions("aichannel", true));
 
         grunt.registerTask("rollupuglify", tsBuildActions("rollupuglify"));
-        grunt.registerTask("rollupes3", tsBuildActions("rollupes3").concat(["ts:rollupes3-tests", "qunit:rollupes3"]));
-        grunt.registerTask("rollupes3test", [ "ts:rollupes3-tests", "qunit:rollupes3" ]);
+        grunt.registerTask("rollupes5", tsBuildActions("rollupes5").concat(["ts:rollupes5-tests", "qunit:rollupes5"]));
+        grunt.registerTask("rollupes5test", [ "ts:rollupes5-tests", "qunit:rollupes5" ]);
 
         grunt.registerTask("shims", tsBuildActions("shims").concat(["ts:shims-tests", "qunit:shims"]));
         grunt.registerTask("shimstest", ["ts:shims-tests", "qunit:shims"]);

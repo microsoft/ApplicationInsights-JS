@@ -50,8 +50,8 @@ export class AjaxTests extends AITestClass {
     private _ajax:AjaxMonitor = null;
     private _context:any = {};
 
-    constructor(name?: string, emulateEs3?: boolean) {
-        super(name, emulateEs3);
+    constructor(name?: string, emulateIe?: boolean) {
+        super(name, emulateIe);
         this.assertNoEvents = true;
         this.assertNoHooks = true;
     }
@@ -2152,8 +2152,8 @@ export class AjaxPerfTrackTests extends AITestClass {
     private _perfEntries: PerformanceEntry[];
     private _context:any;
 
-    constructor(name?: string, emulateEs3?: boolean) {
-        super(name, emulateEs3);
+    constructor(name?: string, emulateIe?: boolean) {
+        super(name, emulateIe);
         this.assertNoEvents = true;
         this.assertNoHooks = true;
         this.useFakeServer = false;
@@ -2744,8 +2744,8 @@ export class AjaxFrozenTests extends AITestClass {
     private _ajax:AjaxMonitor;
     private _context:any;
 
-    constructor(name?: string, emulateEs3?: boolean) {
-        super(name, emulateEs3);
+    constructor(name?: string, emulateIe?: boolean) {
+        super(name, emulateIe);
         this.assertNoEvents = true;
         this.assertNoHooks = true;
 

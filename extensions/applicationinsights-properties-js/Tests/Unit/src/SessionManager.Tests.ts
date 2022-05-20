@@ -9,8 +9,8 @@ export class SessionManagerTests extends AITestClass {
     private core: AppInsightsCore;
     private _cookies: { [name: string ]: string } = {};
 
-    constructor(emulateEs3: boolean) {
-        super("SessionManagerTests", emulateEs3);
+    constructor(emulateIe: boolean) {
+        super("SessionManagerTests", emulateIe);
     }
 
     public testInitialize() {

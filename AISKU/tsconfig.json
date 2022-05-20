@@ -4,7 +4,7 @@
     "inlineSources": true,
     "noImplicitAny": true,
     "module": "es6",
-    "target": "es3",
+    "target": "es5",
     "moduleResolution": "Node",
     "alwaysStrict": true,
     "suppressImplicitAnyIndexErrors": true,

@@ -83,9 +83,9 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
     let valueTrunc : String;
     if (value) {
         maxLength = maxLength ? maxLength : DataSanitizerValues.MAX_STRING_LENGTH; // in case default parameters dont work
-        value = strTrim(value);
-        if (value.toString().length > maxLength) {
-            valueTrunc = value.toString().substring(0, maxLength);
+        value = strTrim(value.toString());
+        if (value.length > maxLength) {
+            valueTrunc = value.substring(0, maxLength);
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.StringValueTooLong,
@@ -176,7 +176,7 @@ export function dataSanitizeId(logger: IDiagnosticLogger, id: string): string {
 export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _eInternalMessageId) {
     let inputTrunc : String;
     if (input) {
-        input = strTrim(input);
+        input = strTrim(input.toString());
         if (input.length > maxLength) {
             inputTrunc = input.substring(0, maxLength);
             _throwInternal(logger,
@@ -195,93 +195,3 @@ export function dsPadNumber(num: number) {
     const s = "00" + num;
     return s.substr(s.length - 3);
 }
-
-export interface IDataSanitizer {
-    /**
-     * Max length allowed for custom names.
-     */
-    MAX_NAME_LENGTH: number;
-
-     /**
-      * Max length allowed for Id field in page views.
-      */
-    MAX_ID_LENGTH: number;
- 
-     /**
-      * Max length allowed for custom values.
-      */
-    MAX_PROPERTY_LENGTH: number;
- 
-     /**
-      * Max length allowed for names
-      */
-    MAX_STRING_LENGTH: number;
- 
-     /**
-      * Max length allowed for url.
-      */
-    MAX_URL_LENGTH: number;
- 
-     /**
-      * Max length allowed for messages.
-      */
-    MAX_MESSAGE_LENGTH: number;
- 
-     /**
-      * Max length allowed for exceptions.
-      */
-    MAX_EXCEPTION_LENGTH: number;
- 
-    sanitizeKeyAndAddUniqueness: (logger: IDiagnosticLogger, key: any, map: any) => string;
- 
-    sanitizeKey: (logger: IDiagnosticLogger, name: any) => string;
- 
-    sanitizeString: (logger: IDiagnosticLogger, value: any, maxLength?: number) => string;
- 
-    sanitizeUrl: (logger: IDiagnosticLogger, url: any) => string;
- 
-    sanitizeMessage: (logger: IDiagnosticLogger, message: any) => string;
- 
-    sanitizeException: (logger: IDiagnosticLogger, exception: any) => string;
- 
-    sanitizeProperties: (logger: IDiagnosticLogger, properties: any) => any;
- 
-    sanitizeMeasurements: (logger: IDiagnosticLogger, measurements: any) => any;
- 
-    sanitizeId: (logger: IDiagnosticLogger, id: string) => string;
- 
-    sanitizeInput: (logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _eInternalMessageId) => any;
-
-    padNumber: (num: number) => string;
- 
-    /**
-     * helper method to trim strings (IE8 does not implement String.prototype.trim)
-     */
-    trim: (str: any) => string;
-}
-
-/**
- * Provides the DataSanitizer functions within the previous namespace.
- */
-export const DataSanitizer: IDataSanitizer = {
-    MAX_NAME_LENGTH: DataSanitizerValues.MAX_NAME_LENGTH,
-    MAX_ID_LENGTH: DataSanitizerValues.MAX_ID_LENGTH,
-    MAX_PROPERTY_LENGTH: DataSanitizerValues.MAX_PROPERTY_LENGTH,
-    MAX_STRING_LENGTH: DataSanitizerValues.MAX_STRING_LENGTH,
-    MAX_URL_LENGTH: DataSanitizerValues.MAX_URL_LENGTH,
-    MAX_MESSAGE_LENGTH: DataSanitizerValues.MAX_MESSAGE_LENGTH,
-    MAX_EXCEPTION_LENGTH: DataSanitizerValues.MAX_EXCEPTION_LENGTH,
-
-    sanitizeKeyAndAddUniqueness: dataSanitizeKeyAndAddUniqueness,
-    sanitizeKey: dataSanitizeKey,
-    sanitizeString: dataSanitizeString,
-    sanitizeUrl: dataSanitizeUrl,
-    sanitizeMessage: dataSanitizeMessage,
-    sanitizeException: dataSanitizeException,
-    sanitizeProperties: dataSanitizeProperties,
-    sanitizeMeasurements: dataSanitizeMeasurements,
-    sanitizeId: dataSanitizeId,
-    sanitizeInput: dataSanitizeInput,
-    padNumber: dsPadNumber,
-    trim: strTrim
-};

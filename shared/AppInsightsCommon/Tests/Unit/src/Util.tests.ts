@@ -1,7 +1,9 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { UrlHelper, CorrelationIdHelper, Util } from "../../../src/Util";
 import { ICorrelationConfig } from "../../../src/Interfaces/ICorrelationConfig";
-import { strStartsWith } from "@microsoft/applicationinsights-core-js";
+import { getIEVersion, strStartsWith, uaDisallowsSameSiteNone } from "@microsoft/applicationinsights-core-js";
+import { correlationIdCanIncludeCorrelationHeader } from "../../../src/Util";
+import { createDomEvent } from "../../../src/DomHelperFuncs";
+import { urlParseFullHost, urlParseHost, urlParseUrl } from "../../../src/UrlHelperFuncs";
 
 export class UtilTests extends AITestClass {
     private testRegexLists = (config: ICorrelationConfig, exp: boolean, host: string) => {
@@ -9,7 +11,7 @@ export class UtilTests extends AITestClass {
         if (!strStartsWith(host, "http")) {
             requestUrl = "https://" + host;
         }
-        Assert.equal(exp, CorrelationIdHelper.canIncludeCorrelationHeader(config, requestUrl, "not used"), host);
+        Assert.equal(exp, correlationIdCanIncludeCorrelationHeader(config, requestUrl, "not used"), host);
     };
 
     public testInitialize() {
@@ -23,7 +25,7 @@ export class UtilTests extends AITestClass {
             test: () => {
                 const origEvent = (window as any).Event;
                 (window as any).Event = {};
-                const event = Util.createDomEvent('something');
+                const event = createDomEvent('something');
                 Assert.equal('something', event.type);
                 (window as any).Event = origEvent;
             }
@@ -38,7 +40,7 @@ export class UtilTests extends AITestClass {
                 let passed;
                 let match;
                 try {
-                    const host = UrlHelper.parseUrl("https://portal.azure.com/some/endpoint").host.toLowerCase();
+                    const host = urlParseUrl("https://portal.azure.com/some/endpoint").host.toLowerCase();
                     passed = true;
                     match = host === "portal.azure.com";
                 } catch (e) {
@@ -55,100 +57,100 @@ export class UtilTests extends AITestClass {
         this.testCase({
             name: "UrlHelper: parseHost should return correct host name",
             test: () => {
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com/some/endpoint"));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com"));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com/"));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com/"));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint"));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com"));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com/"));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com/"));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com/some/endpoint", false));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com", false));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com/", false));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint", false));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com", false));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com/", false));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com/", false));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com/some/endpoint", true));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com", true));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com/", true));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint", true));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com", true));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com/", true));
 
                 // Check with port included
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com:9999/some/endpoint"));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com:9999"));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com:9999/"));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/"));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com:9999/some/endpoint"));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com:9999"));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com:9999/"));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/"));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com:9999/some/endpoint", false));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com:9999", false));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com:9999/", false));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", false));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com:9999/some/endpoint", false));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com:9999", false));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com:9999/", false));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", false));
 
-                Assert.equal("portal.azure.com:9999", UrlHelper.parseHost("https://portal.azure.com:9999/some/endpoint", true));
-                Assert.equal("bing.com:9999", UrlHelper.parseHost("http://www.bing.com:9999", true));
-                Assert.equal("bing.com:9999", UrlHelper.parseHost("https://www2.bing.com:9999/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com:9999", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", true));
+                Assert.equal("portal.azure.com:9999", urlParseHost("https://portal.azure.com:9999/some/endpoint", true));
+                Assert.equal("bing.com:9999", urlParseHost("http://www.bing.com:9999", true));
+                Assert.equal("bing.com:9999", urlParseHost("https://www2.bing.com:9999/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com:9999", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", true));
 
                 // Check with default ports present
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("http://portal.azure.com:80/some/endpoint", true));
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com:443/some/endpoint", true));
-                Assert.equal("portal.azure.com:80", UrlHelper.parseHost("https://portal.azure.com:80/some/endpoint", true));
-                Assert.equal("portal.azure.com:443", UrlHelper.parseHost("http://portal.azure.com:443/some/endpoint", true));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com:80", true));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com:443/", true));
-                Assert.equal("bing.com:80", UrlHelper.parseHost("https://www.bing.com:80", true));
-                Assert.equal("bing.com:443", UrlHelper.parseHost("http://www2.bing.com:443/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:80/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com:443", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com:80", UrlHelper.parseHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+                Assert.equal("portal.azure.com", urlParseHost("http://portal.azure.com:80/some/endpoint", true));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com:443/some/endpoint", true));
+                Assert.equal("portal.azure.com:80", urlParseHost("https://portal.azure.com:80/some/endpoint", true));
+                Assert.equal("portal.azure.com:443", urlParseHost("http://portal.azure.com:443/some/endpoint", true));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com:80", true));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com:443/", true));
+                Assert.equal("bing.com:80", urlParseHost("https://www.bing.com:80", true));
+                Assert.equal("bing.com:443", urlParseHost("http://www2.bing.com:443/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com:443", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com:80", urlParseHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
             }
         });
 
         this.testCase({
             name: "UrlHelper: parseFullHost should return correct host name",
             test: () => {
-                Assert.equal("portal.azure.com", UrlHelper.parseFullHost("https://portal.azure.com/some/endpoint"));
-                Assert.equal("www.bing.com", UrlHelper.parseFullHost("http://www.bing.com"));
-                Assert.equal("www2.bing.com", UrlHelper.parseFullHost("https://www2.bing.com/"));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", UrlHelper.parseFullHost("http://wwW2.p.r.e.f.i.x.bing.com/"));
+                Assert.equal("portal.azure.com", urlParseFullHost("https://portal.azure.com/some/endpoint"));
+                Assert.equal("www.bing.com", urlParseFullHost("http://www.bing.com"));
+                Assert.equal("www2.bing.com", urlParseFullHost("https://www2.bing.com/"));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com/"));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseFullHost("https://portal.azure.com/some/endpoint", false));
-                Assert.equal("www.bing.com", UrlHelper.parseFullHost("http://www.bing.com", false));
-                Assert.equal("www2.bing.com", UrlHelper.parseFullHost("https://www2.bing.com/", false));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", UrlHelper.parseFullHost("http://wwW2.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("portal.azure.com", urlParseFullHost("https://portal.azure.com/some/endpoint", false));
+                Assert.equal("www.bing.com", urlParseFullHost("http://www.bing.com", false));
+                Assert.equal("www2.bing.com", urlParseFullHost("https://www2.bing.com/", false));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com/", false));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseFullHost("https://portal.azure.com/some/endpoint", true));
-                Assert.equal("www.bing.com", UrlHelper.parseFullHost("http://www.bing.com", true));
-                Assert.equal("www2.bing.com", UrlHelper.parseFullHost("https://www2.bing.com/", true));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", UrlHelper.parseFullHost("http://wwW2.p.r.e.f.i.x.bing.com/", true));
+                Assert.equal("portal.azure.com", urlParseFullHost("https://portal.azure.com/some/endpoint", true));
+                Assert.equal("www.bing.com", urlParseFullHost("http://www.bing.com", true));
+                Assert.equal("www2.bing.com", urlParseFullHost("https://www2.bing.com/", true));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com/", true));
 
                 // Check with port included
-                Assert.equal("portal.azure.com", UrlHelper.parseFullHost("https://portal.azure.com:9999/some/endpoint"));
-                Assert.equal("www.bing.com", UrlHelper.parseFullHost("http://www.bing.com:9999"));
-                Assert.equal("www2.bing.com", UrlHelper.parseFullHost("https://www2.bing.com:9999/"));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", UrlHelper.parseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/"));
+                Assert.equal("portal.azure.com", urlParseFullHost("https://portal.azure.com:9999/some/endpoint"));
+                Assert.equal("www.bing.com", urlParseFullHost("http://www.bing.com:9999"));
+                Assert.equal("www2.bing.com", urlParseFullHost("https://www2.bing.com:9999/"));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/"));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseFullHost("https://portal.azure.com:9999/some/endpoint", false));
-                Assert.equal("www.bing.com", UrlHelper.parseFullHost("http://www.bing.com:9999", false));
-                Assert.equal("www2.bing.com", UrlHelper.parseFullHost("https://www2.bing.com:9999/", false));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", UrlHelper.parseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", false));
+                Assert.equal("portal.azure.com", urlParseFullHost("https://portal.azure.com:9999/some/endpoint", false));
+                Assert.equal("www.bing.com", urlParseFullHost("http://www.bing.com:9999", false));
+                Assert.equal("www2.bing.com", urlParseFullHost("https://www2.bing.com:9999/", false));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", false));
 
-                Assert.equal("portal.azure.com:9999", UrlHelper.parseFullHost("https://portal.azure.com:9999/some/endpoint", true));
-                Assert.equal("www.bing.com:9999", UrlHelper.parseFullHost("http://www.bing.com:9999", true));
-                Assert.equal("www2.bing.com:9999", UrlHelper.parseFullHost("https://www2.bing.com:9999/", true));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com:9999", UrlHelper.parseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", true));
+                Assert.equal("portal.azure.com:9999", urlParseFullHost("https://portal.azure.com:9999/some/endpoint", true));
+                Assert.equal("www.bing.com:9999", urlParseFullHost("http://www.bing.com:9999", true));
+                Assert.equal("www2.bing.com:9999", urlParseFullHost("https://www2.bing.com:9999/", true));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com:9999", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", true));
 
                 // Check with default ports present
-                Assert.equal("portal.azure.com", UrlHelper.parseFullHost("http://portal.azure.com:80/some/endpoint", true));
-                Assert.equal("portal.azure.com", UrlHelper.parseFullHost("https://portal.azure.com:443/some/endpoint", true));
-                Assert.equal("portal.azure.com:80", UrlHelper.parseFullHost("https://portal.azure.com:80/some/endpoint", true));
-                Assert.equal("portal.azure.com:443", UrlHelper.parseFullHost("http://portal.azure.com:443/some/endpoint", true));
-                Assert.equal("www.bing.com", UrlHelper.parseFullHost("http://www.bing.com:80", true));
-                Assert.equal("www2.bing.com", UrlHelper.parseFullHost("https://www2.bing.com:443/", true));
-                Assert.equal("www.bing.com:80", UrlHelper.parseFullHost("https://www.bing.com:80", true));
-                Assert.equal("www2.bing.com:443", UrlHelper.parseFullHost("http://www2.bing.com:443/", true));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", UrlHelper.parseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:80/", true));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", UrlHelper.parseFullHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com:443", UrlHelper.parseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
-                Assert.equal("wwW2.p.r.e.f.i.x.bing.com:80", UrlHelper.parseFullHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+                Assert.equal("portal.azure.com", urlParseFullHost("http://portal.azure.com:80/some/endpoint", true));
+                Assert.equal("portal.azure.com", urlParseFullHost("https://portal.azure.com:443/some/endpoint", true));
+                Assert.equal("portal.azure.com:80", urlParseFullHost("https://portal.azure.com:80/some/endpoint", true));
+                Assert.equal("portal.azure.com:443", urlParseFullHost("http://portal.azure.com:443/some/endpoint", true));
+                Assert.equal("www.bing.com", urlParseFullHost("http://www.bing.com:80", true));
+                Assert.equal("www2.bing.com", urlParseFullHost("https://www2.bing.com:443/", true));
+                Assert.equal("www.bing.com:80", urlParseFullHost("https://www.bing.com:80", true));
+                Assert.equal("www2.bing.com:443", urlParseFullHost("http://www2.bing.com:443/", true));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com:443", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
+                Assert.equal("wwW2.p.r.e.f.i.x.bing.com:80", urlParseFullHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
             }
         });
 
@@ -214,38 +216,38 @@ export class UtilTests extends AITestClass {
                     correlationHeaderDomains: ["azure.com", "prefix.bing.com", "*.microsoft.com"]
                 } as ICorrelationConfig
 
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://azure.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://azure.com:80", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://azure.com", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://azure.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://azure.com:8000", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://azure.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://azure.com:80", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://azure.com", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "http://azure.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://azure.com:8000", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://monitor.azure.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://monitor.azure.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://monitor.azure.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://monitor.azure.com:443", "example.com"));
 
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://prefix.bing.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com:80", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com:8000", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "http://prefix.bing.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com:80", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com:8000", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://ignore.microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://ignore.microsoft.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://ignore.microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://ignore.microsoft.com:80", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://ignore.microsoft.com:8080", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://ignore.microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://ignore.microsoft.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://ignore.microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://ignore.microsoft.com:80", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://ignore.microsoft.com:8080", "example.com"));
 
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://something.microsoft.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:80", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:8000", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "http://something.microsoft.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:80", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:8000", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:80", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:8000", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:80", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:8000", "example.com"));
             }
         });
 
@@ -258,40 +260,40 @@ export class UtilTests extends AITestClass {
                     correlationHeaderDomains: ["azure.com", "prefix.bing.com", "*.microsoft.com:8080"]
                 } as ICorrelationConfig
 
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://azure.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://azure.com:80", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://azure.com", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://azure.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://azure.com:8000", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://azure.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://azure.com:80", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://azure.com", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "http://azure.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://azure.com:8000", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://monitor.azure.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://monitor.azure.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://monitor.azure.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://monitor.azure.com:443", "example.com"));
 
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://prefix.bing.com:443", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com:80", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com:8000", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "http://prefix.bing.com:443", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com:80", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com:8000", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://ignore.microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://ignore.microsoft.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://ignore.microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://ignore.microsoft.com:80", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://ignore.microsoft.com:8080", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://ignore.microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://ignore.microsoft.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://ignore.microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://ignore.microsoft.com:80", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://ignore.microsoft.com:8080", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://something.microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:80", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:8000", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:8080", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://something.microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:80", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:8000", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:8080", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:80", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:8000", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:8080", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:80", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:8000", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:8080", "example.com"));
             }
         });
 
@@ -304,30 +306,30 @@ export class UtilTests extends AITestClass {
                     correlationHeaderDomains: ["azure.com", "prefix.bing.com", "*.microsoft.com", "example.com"]
                 } as ICorrelationConfig
 
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://example.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://example.com:80", "example.com"));
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://example.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://example.com:8000", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://example.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://example.com:8080", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://example.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://example.com:80", "example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://example.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://example.com:8000", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://example.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://example.com:8080", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://monitor.azure.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://monitor.azure.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://monitor.azure.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://monitor.azure.com:443", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://prefix.bing.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://prefix.bing.com:80", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://prefix.bing.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://prefix.bing.com:80", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://something.microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://something.microsoft.com:80", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://something.microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://something.microsoft.com:80", "example.com"));
 
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "http://microsoft.com:443", "example.com"));
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "https://microsoft.com:80", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://microsoft.com:443", "example.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "https://microsoft.com:80", "example.com"));
             }
         });
 
@@ -429,11 +431,11 @@ export class UtilTests extends AITestClass {
                 ];
 
                 for (let lp = 0; lp < excludeValues.length; lp++) {
-                    Assert.equal(true, Util.disallowsSameSiteNone(excludeValues[lp]), excludeValues[lp]);
+                    Assert.equal(true, uaDisallowsSameSiteNone(excludeValues[lp]), excludeValues[lp]);
                 }
 
                 for (let lp = 0; lp < acceptValues.length; lp++) {
-                    Assert.equal(false, Util.disallowsSameSiteNone(acceptValues[lp]), acceptValues[lp]);
+                    Assert.equal(false, uaDisallowsSameSiteNone(acceptValues[lp]), acceptValues[lp]);
                 }
             }
         });
@@ -526,32 +528,32 @@ export class UtilTests extends AITestClass {
                 ];
 
                 for (let lp = 0; lp < notIEValues.length; lp++) {
-                    let ieVersion = Util.getIEVersion(notIEValues[lp]);
+                    let ieVersion = getIEVersion(notIEValues[lp]);
                     Assert.equal(null, ieVersion, "Not IE: " + notIEValues[lp]);
                 }
 
-                Assert.equal(7, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 6.0)"));
-                Assert.equal(7, Util.getIEVersion("Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 6.0; en-US)"));
-                Assert.equal(7, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; WOW64; Trident/4.0;)"));
-                Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)"));
-                Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)"));
-                Assert.equal(8, Util.getIEVersion("Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)"));
-                Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (Compatible; MSIE 8.0; Windows NT 5.2; Trident/6.0)"));
-                Assert.equal(9, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.0)"));
-                Assert.equal(9, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)"));
-                Assert.equal(10, Util.getIEVersion("Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"));
-                Assert.equal(10, Util.getIEVersion("Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2)"));
-                Assert.equal(11, Util.getIEVersion("Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko"));
-                Assert.equal(11, Util.getIEVersion("Mozilla/5.0 (Windows NT 6.2; Trident/7.0; rv:11.0) like Gecko"));
-                Assert.equal(11, Util.getIEVersion("Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"));
-                Assert.equal(11, Util.getIEVersion("Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko"));
-                Assert.equal(11, Util.getIEVersion("Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"));
+                Assert.equal(7, getIEVersion("Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 6.0)"));
+                Assert.equal(7, getIEVersion("Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 6.0; en-US)"));
+                Assert.equal(7, getIEVersion("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; WOW64; Trident/4.0;)"));
+                Assert.equal(8, getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)"));
+                Assert.equal(8, getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)"));
+                Assert.equal(8, getIEVersion("Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)"));
+                Assert.equal(8, getIEVersion("Mozilla/4.0 (Compatible; MSIE 8.0; Windows NT 5.2; Trident/6.0)"));
+                Assert.equal(9, getIEVersion("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.0)"));
+                Assert.equal(9, getIEVersion("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)"));
+                Assert.equal(10, getIEVersion("Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"));
+                Assert.equal(10, getIEVersion("Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2)"));
+                Assert.equal(11, getIEVersion("Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko"));
+                Assert.equal(11, getIEVersion("Mozilla/5.0 (Windows NT 6.2; Trident/7.0; rv:11.0) like Gecko"));
+                Assert.equal(11, getIEVersion("Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"));
+                Assert.equal(11, getIEVersion("Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko"));
+                Assert.equal(11, getIEVersion("Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"));
 
                 const origDocMode = document['documentMode'];
                 document['documentMode'] = 11;
  
-                Assert.equal(11, Util.getIEVersion("Mozilla/4.0 (Compatible; MSIE 8.0; Windows NT 5.2; Trident/6.0)"));
-                Assert.equal(11, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.2; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E)"));
+                Assert.equal(11, getIEVersion("Mozilla/4.0 (Compatible; MSIE 8.0; Windows NT 5.2; Trident/6.0)"));
+                Assert.equal(11, getIEVersion("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.2; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E)"));
 
                 // restore documentMode
                 document['documentMode'] = origDocMode;

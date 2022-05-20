@@ -6,13 +6,9 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
-    AnalyticsPluginIdentifier, BreezeChannelIdentifier, ConfigurationManager, ConnectionStringParser, ContextTagKeys, CorrelationIdHelper,
-    CtxTagKeys, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Data, DataSanitizer, DateTimeUtils, DisabledPropertyName,
-    DistributedTracingModes, Envelope, Event, Exception, Extensions, FieldType, HttpMethod, IAppInsights, IAutoExceptionTelemetry, IConfig,
-    ICorrelationIdHelper, IDataSanitizer, IDateTimeUtils, IDependencyTelemetry, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry,
-    IPageViewPerformanceTelemetry, IPageViewTelemetry, IPropertiesPlugin, IRequestHeaders, ITelemetryContext as Common_ITelemetryContext,
-    ITraceTelemetry, IUrlHelper, IUtil, Metric, PageView, PageViewPerformance, ProcessLegacy, PropertiesPluginIdentifier,
-    RemoteDependencyData, RequestHeaders, SampleRate, SeverityLevel, TelemetryItemCreator, Trace, UrlHelper, Util, parseConnectionString
+    DEFAULT_BREEZE_PATH, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry, IExceptionTelemetry,
+    IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPropertiesPlugin, IRequestHeaders,
+    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IAppInsightsCore, IChannelControls, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
@@ -20,13 +16,14 @@ import {
     ITelemetryUnloadState, UnloadHandler, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener,
     arrForEach, arrIndexOf, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined,
     isReactNative, isString, mergeEvtNamespace, objForEachKey, proxyAssign, proxyFunctions, removePageHideEventListener,
-    removePageUnloadEventListener, throwError
+    removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     DependencyListenerFunction, IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { arrAppend, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import {
     STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
     STR_POLL_INTERNAL_LOGS, STR_SET_AUTHENTICATED_USER_CONTEXT, STR_SNIPPET, STR_START_TRACK_EVENT, STR_START_TRACK_PAGE,
@@ -34,7 +31,7 @@ import {
     STR_TRACK_PAGE_VIEW, STR_TRACK_TRACE
 } from "./InternalConstants";
 
-export { IUtil, ICorrelationIdHelper, IUrlHelper, IDateTimeUtils, IRequestHeaders };
+export { IRequestHeaders };
 
 let _internalSdkSrc: string;
 
@@ -57,7 +54,7 @@ export interface Snippet {
 }
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
-    appInsights: ApplicationInsights;
+    appInsights: AnalyticsPlugin;
     flush: (async?: boolean) => void;
     onunloadFlush: (async?: boolean) => void;
     getSender: () => Sender;
@@ -99,57 +96,6 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
      */
     addUnloadCb(handler: UnloadHandler): void;
 }
-
-// Re-exposing the Common classes as Telemetry, the list was taken by reviewing the generated code for the build while using
-// the previous configuration :-
-// import * as Common from "@microsoft/applicationinsights-common"
-// export const Telemetry = Common;
-
-let fieldType = {
-    Default: FieldType.Default,
-    Required: FieldType.Required,
-    Array: FieldType.Array,
-    Hidden: FieldType.Hidden
-};
-
-/**
- * Telemetry type classes, e.g. PageView, Exception, etc
- */
-export const Telemetry = {
-    __proto__: null as any,
-    PropertiesPluginIdentifier,
-    BreezeChannelIdentifier,
-    AnalyticsPluginIdentifier,
-    Util,
-    CorrelationIdHelper,
-    UrlHelper,
-    DateTimeUtils,
-    ConnectionStringParser,
-    FieldType: fieldType,
-    RequestHeaders,
-    DisabledPropertyName,
-    ProcessLegacy,
-    SampleRate,
-    HttpMethod,
-    DEFAULT_BREEZE_ENDPOINT,
-    Envelope,
-    Event,
-    Exception,
-    Metric,
-    PageView,
-    RemoteDependencyData,
-    Trace,
-    PageViewPerformance,
-    Data,
-    SeverityLevel,
-    ConfigurationManager,
-    ContextTagKeys,
-    DataSanitizer: DataSanitizer as IDataSanitizer,
-    TelemetryItemCreator,
-    CtxTagKeys,
-    Extensions,
-    DistributedTracingModes
-};
 
 /**
  * Application Insights API
@@ -207,7 +153,7 @@ export class Initialization implements IApplicationInsights {
 
             _self.snippet = snippet;
             _self.config = config;
-            _getSKUDefaults();
+            _getSKUDefaults(config);
 
             _self.flush = (async: boolean = true) => {
                 doPerf(_core, () => "AISKU.flush", () => {
@@ -232,14 +178,15 @@ export class Initialization implements IApplicationInsights {
             };
         
             _self.loadAppInsights = (legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights => {
+                if (legacyMode) {
+                    throwUnsupported("Legacy Mode is no longer supported")
+                }
+
                 function _updateSnippetProperties(snippet: Snippet) {
                     if (snippet) {
                         let snippetVer = "";
                         if (!isNullOrUndefined(_snippetVersion)) {
                             snippetVer += _snippetVersion;
-                        }
-                        if (legacyMode) {
-                            snippetVer += ".lg";
                         }
         
                         if (_self.context && _self.context.internal) {
@@ -257,19 +204,9 @@ export class Initialization implements IApplicationInsights {
                         });
                     }
                 }
-        
-                // dont allow additional channels/other extensions for legacy mode; legacy mode is only to allow users to switch with no code changes!
-                if (legacyMode && _self.config.extensions && _self.config.extensions.length > 0) {
-                    throwError("Extensions not allowed in legacy mode");
-                }
-        
+
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
-                    const extensions: any[] = [];
-        
-                    extensions.push(_sender);
-                    extensions.push(properties);
-                    extensions.push(dependencies);
-                    extensions.push(_self.appInsights);
+                    const extensions = arrAppend([], [ _sender, properties, dependencies, _self.appInsights]);
         
                     // initialize core
                     _core.initialize(_self.config, extensions, logger, notificationManager);
@@ -355,12 +292,15 @@ export class Initialization implements IApplicationInsights {
                     };
         
                     let added = false;
-                    let excludePageUnloadEvents = appInsightsInstance.appInsights.config.disablePageUnloadEvents;
+                    let analyticsPlugin = appInsightsInstance.appInsights;
+                    let theConfig = analyticsPlugin.config;
+
+                    let excludePageUnloadEvents = theConfig.disablePageUnloadEvents;
                     if (!_houseKeepingNamespace) {
                         _houseKeepingNamespace = mergeEvtNamespace(_evtNamespace, _core.evtNamespace && _core.evtNamespace());
                     }
 
-                    if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload) {
+                    if (!theConfig.disableFlushOnBeforeUnload) {
                         // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
                         // As just hooking the window does not always fire (on chrome) for page navigation's.
                         if (addPageUnloadEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace)) {
@@ -375,14 +315,14 @@ export class Initialization implements IApplicationInsights {
                         // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
                         // log the failure in this case
                         if (!added && !isReactNative()) {
-                            _throwInternal(appInsightsInstance.appInsights.core.logger,
+                            _throwInternal(analyticsPlugin.core.logger,
                                 eLoggingSeverity.CRITICAL,
                                 _eInternalMessageId.FailedToAddHandlerForOnBeforeUnload,
                                 "Could not add handler for beforeunload and pagehide");
                         }
                     }
         
-                    if (!added && !appInsightsInstance.appInsights.config.disableFlushOnUnload) {
+                    if (!added && !theConfig.disableFlushOnUnload) {
                         // If we didn't add the normal set then attempt to add the pagehide and visibilitychange only
                         addPageHideEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace);
                     }
@@ -445,9 +385,9 @@ export class Initialization implements IApplicationInsights {
             ]);
        
 
-            function _getSKUDefaults() {
-                _self.config.diagnosticLogInterval =
-                    _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
+            function _getSKUDefaults(config: IConfiguration & IConfig) {
+                config.diagnosticLogInterval =
+                    config.diagnosticLogInterval && config.diagnosticLogInterval > 0 ? config.diagnosticLogInterval : 10000;
             }
         
             // Using a function to support the dynamic adding / removal of plugins, so this will always return the current value
@@ -648,6 +588,7 @@ export class Initialization implements IApplicationInsights {
      * Initialize this instance of ApplicationInsights
      * @returns {IApplicationInsights}
      * @memberof Initialization
+     * @param legacyMode - MUST always be false, it is no longer supported from v3.x onwards
      */
     public loadAppInsights(legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -778,21 +719,21 @@ export class Initialization implements IApplicationInsights {
             let url = sdkSrc.toLowerCase();
             if (url) {
                 let src = "";
-                for (let idx = 0; idx < cdns.length; idx++) {
-                    if (url.indexOf(cdns[idx]) !== -1) {
+                arrForEach(cdns, (value, idx) => {
+                    if (strIndexOf(url, value) !== -1) {
                         src = "cdn" + (idx + 1);
-                        if (url.indexOf("/scripts/") === -1) {
-                            if (url.indexOf("/next/") !== -1) {
+                        if (strIndexOf(url, "/scripts/") === -1) {
+                            if (strIndexOf(url, "/next/") !== -1) {
                                 src += "-next";
-                            } else if (url.indexOf("/beta/") !== -1) {
+                            } else if (strIndexOf(url, "/beta/") !== -1) {
                                 src += "-beta";
                             }
                         }
 
                         _internalSdkSrc = src + (isModule ? ".mod" : "");
-                        break;
+                        return -1;
                     }
-                }
+                });
             }
         } catch (e) {
             // eslint-disable-next-line no-empty
