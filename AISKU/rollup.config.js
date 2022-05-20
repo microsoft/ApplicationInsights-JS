@@ -45,6 +45,12 @@ const browserRollupConfigFactory = (isProduction, libVersion = '2', format = 'um
       freeze: false,
       sourcemap: true
     },
+    treeshake: {
+      propertyReadSideEffects: false,
+      moduleSideEffects: false,
+      tryCatchDeoptimization: false,
+      correctVarValueBeforeDeclaration: false
+    },
     plugins: [
       dynamicRemove(),
       replace({
@@ -94,7 +100,13 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       name: "Microsoft.ApplicationInsights",
       extend: true,
       freeze: false,
-      sourcemap: true,
+      sourcemap: true    
+    },
+    treeshake: {
+      propertyReadSideEffects: false,
+      moduleSideEffects: false,
+      tryCatchDeoptimization: false,
+      correctVarValueBeforeDeclaration: false
     },
     plugins: [
       dynamicRemove(),
