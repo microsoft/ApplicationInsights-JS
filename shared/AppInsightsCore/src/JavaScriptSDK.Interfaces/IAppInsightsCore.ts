@@ -14,6 +14,7 @@ import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./IT
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
+import { IDistributedTraceContext } from "./IDistributedTraceContext";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
@@ -160,4 +161,14 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @returns - true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
      */
     flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number): boolean | void;
+
+    /**
+     * Gets the current distributed trace context for this instance if available
+     */
+    getTraceCtx(): IDistributedTraceContext | null | undefined;
+
+    /**
+     * Sets the current distributed trace context for this instance if available
+     */
+    setTraceCtx(newTraceCtx: IDistributedTraceContext | null | undefined): void;
 }

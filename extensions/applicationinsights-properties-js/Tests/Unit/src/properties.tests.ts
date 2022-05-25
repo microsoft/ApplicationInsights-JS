@@ -4,7 +4,7 @@ import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../../src/Interfaces/ITelemetryConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
 import { TelemetryTrace } from "../../../src/Context/TelemetryTrace";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { createTraceParent, formatTraceParent, IConfig } from "@microsoft/applicationinsights-common";
 
 export class PropertiesTests extends AITestClass {
     private properties: PropertiesPlugin;
@@ -569,6 +569,131 @@ export class PropertiesTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Validate telemetrycontext fetches from traceparent meta-tag",
+            test: () => {
+                let traceParent = createTraceParent();
+                let traceParentTag = document.createElement("meta");
+                traceParentTag.name = "traceparent";
+                traceParentTag.content = formatTraceParent(traceParent);
+
+                try {
+                    document.head.appendChild(traceParentTag);
+
+                    let context = new TelemetryContext(this.core, this.getTelemetryConfig(true));
+                    QUnit.assert.equal(undefined, context.telemetryTrace.parentID, "No ParentId should have been set");
+    
+                    context = new TelemetryContext(this.core, this.getTelemetryConfig(false));
+                    QUnit.assert.equal(traceParent.spanId, context.telemetryTrace.parentID, "No ParentId should have been set");
+                } finally {
+                    document.head.removeChild(traceParentTag);
+                }
+            }
+        });
+
+        this.testCase({
+            name: "Validate telemetrycontext fetches from Request-Id meta-tag without trailing '.'",
+            test: () => {
+                let requestId = createTraceParent();
+                let requestTag = document.createElement("meta");
+                requestTag.name = "Request-Id";
+                requestTag.content = "|" + requestId.traceId + "." + requestId.spanId;
+
+                try {
+                    document.head.appendChild(requestTag);
+
+                    let context = new TelemetryContext(this.core, this.getTelemetryConfig(true));
+                    QUnit.assert.equal(undefined, context.telemetryTrace.parentID, "No ParentId should have been set");
+    
+                    context = new TelemetryContext(this.core, this.getTelemetryConfig(false));
+                    QUnit.assert.equal(requestId.spanId, context.telemetryTrace.parentID, "No ParentId should have been set");
+                } finally {
+                    document.head.removeChild(requestTag);
+                }
+            }
+        });
+
+        this.testCase({
+            name: "Validate telemetrycontext fetches from Request-Id meta-tag with trailing '.'",
+            test: () => {
+                let requestId = createTraceParent();
+                let requestTag = document.createElement("meta");
+                requestTag.name = "Request-Id";
+                requestTag.content = "|" + requestId.traceId + "." + requestId.spanId + ".";
+
+                try {
+                    document.head.appendChild(requestTag);
+
+                    let context = new TelemetryContext(this.core, this.getTelemetryConfig(true));
+                    QUnit.assert.equal(undefined, context.telemetryTrace.parentID, "No ParentId should have been set");
+    
+                    context = new TelemetryContext(this.core, this.getTelemetryConfig(false));
+                    QUnit.assert.equal(requestId.spanId, context.telemetryTrace.parentID, "No ParentId should have been set");
+                } finally {
+                    document.head.removeChild(requestTag);
+                }
+            }
+        });
+
+        this.testCase({
+            name: "Validate telemetrycontext fetches from traceparent meta-tag with a Request-Id metaTag",
+            test: () => {
+                let traceParent = createTraceParent();
+                let requestId = createTraceParent();
+                let traceParentTag = document.createElement("meta");
+                traceParentTag.name = "traceparent";
+                traceParentTag.content = formatTraceParent(traceParent);
+
+                let requestTag = document.createElement("meta");
+                requestTag.name = "Request-Id";
+                requestTag.content = "|" + requestId.traceId + "." + requestId.spanId + ".";
+
+                try {
+                    document.head.appendChild(traceParentTag);
+                    document.head.appendChild(requestTag);
+
+                    let context = new TelemetryContext(this.core, this.getTelemetryConfig(true));
+                    QUnit.assert.equal(undefined, context.telemetryTrace.parentID, "No ParentId should have been set");
+    
+                    context = new TelemetryContext(this.core, this.getTelemetryConfig(false));
+                    QUnit.assert.equal(traceParent.spanId, context.telemetryTrace.parentID, "No ParentId should have been set");
+                } finally {
+                    document.head.removeChild(traceParentTag);
+                    document.head.removeChild(requestTag);
+                }
+            }
+        });
+
+        this.testCase({
+            name: "Validate telemetrycontext fetches from Request-Id meta-tag with an invalid traceparent metaTag",
+            test: () => {
+                let traceParent = createTraceParent();
+                traceParent.version = "ff";  // Make the traceparent invalid
+                let requestId = createTraceParent();
+                let traceParentTag = document.createElement("meta");
+                traceParentTag.name = "traceparent";
+                traceParentTag.content = formatTraceParent(traceParent);
+
+                let requestTag = document.createElement("meta");
+                requestTag.name = "Request-Id";
+                requestTag.content = "|" + requestId.traceId + "." + requestId.spanId + ".";
+
+                try {
+                    document.head.appendChild(traceParentTag);
+                    document.head.appendChild(requestTag);
+
+                    let context = new TelemetryContext(this.core, this.getTelemetryConfig(true));
+                    QUnit.assert.equal(undefined, context.telemetryTrace.parentID, "No ParentId should have been set");
+    
+                    context = new TelemetryContext(this.core, this.getTelemetryConfig(false));
+                    QUnit.assert.equal(requestId.spanId, context.telemetryTrace.parentID, "No ParentId should have been set");
+                } finally {
+                    document.head.removeChild(traceParentTag);
+                    document.head.removeChild(requestTag);
+                }
+            }
+        });
+
+        this.testCase({
             name: "validate telemetrycontext cleanup sets empty extensions to undefined",
             test: () => {
                 // setup
@@ -675,7 +800,7 @@ export class PropertiesTests extends AITestClass {
         };
     }
 
-    private getTelemetryConfig(): ITelemetryConfig {
+    private getTelemetryConfig(disableTraceParent: boolean = true): ITelemetryConfig {
         return {
             instrumentationKey: () => "",
             accountId: () => "",
@@ -691,7 +816,9 @@ export class PropertiesTests extends AITestClass {
             sessionCookiePostfix: () => "",
             userCookiePostfix: () => "",
             idLength: () => 22,
-            getNewId: () => this._getNewId
+            getNewId: () => this._getNewId,
+            disableTraceParent: () => disableTraceParent,
+            distributedTraceCtx: () => null
         }
     }
 }

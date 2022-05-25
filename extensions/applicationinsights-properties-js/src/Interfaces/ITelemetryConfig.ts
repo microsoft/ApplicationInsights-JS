@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDistributedTraceContext } from "@microsoft/applicationinsights-core-js";
+
 export interface ITelemetryConfig {
     instrumentationKey: () => string;
     accountId: () => string;
@@ -17,4 +19,6 @@ export interface ITelemetryConfig {
     userCookiePostfix: () => string;
     idLength: () => number;
     getNewId: () => (idLength?: number) => string;
+    disableTraceParent: () => boolean;
+    distributedTraceCtx: () => IDistributedTraceContext;
 }

@@ -3,7 +3,8 @@
 export {
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper,
     IDateTimeUtils, DateTimeUtils, dateTimeUtilsNow, dateTimeUtilsDuration,
-    IUrlHelper, UrlHelper, isInternalApplicationInsightsEndpoint
+    IUrlHelper, UrlHelper, isInternalApplicationInsightsEndpoint,
+    createDistributedTraceContextFromTrace
 } from "./Util";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
 export { FieldType } from "./Enums";

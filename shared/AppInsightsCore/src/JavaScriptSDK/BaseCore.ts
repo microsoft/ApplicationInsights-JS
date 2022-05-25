@@ -40,6 +40,7 @@ import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnl
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { strAddNotificationListener, strDisabled, strEventsDiscarded, strEventsSendRequest, strEventsSent, strRemoveNotificationListener, strTeardown } from "./InternalConstants";
+import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
@@ -151,6 +152,7 @@ export class BaseCore implements IAppInsightsCore {
         let _evtNamespace: string;
         let _unloadHandlers: IUnloadHandlerContainer;
         let _debugListener: INotificationListener | null;
+        let _traceCtx: IDistributedTraceContext | null | undefined;
 
         /**
          * Internal log poller
@@ -453,6 +455,14 @@ export class BaseCore implements IAppInsightsCore {
 
             _self.flush = _flushChannels;
         
+            _self.getTraceCtx = (): IDistributedTraceContext | null | undefined => {
+                return _traceCtx;
+            };
+
+            _self.setTraceCtx = (traceCtx: IDistributedTraceContext): void => {
+                _traceCtx = traceCtx;
+            };
+
             // Create the addUnloadCb
             proxyFunctionAs(_self, "addUnloadCb", () => _unloadHandlers, "add");
 
@@ -480,6 +490,7 @@ export class BaseCore implements IAppInsightsCore {
                 _internalLogsEventName = null;
                 _evtNamespace = createUniqueNamespace("AIBaseCore", true);
                 _unloadHandlers = createUnloadHandlerContainer();
+                _traceCtx = null;
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
@@ -884,6 +895,21 @@ export class BaseCore implements IAppInsightsCore {
      * @returns - true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
      */
     public flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+    
+    /**
+     * Gets the current distributed trace context for this instance if available
+     */
+    public getTraceCtx(): IDistributedTraceContext | null | undefined {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Sets the current distributed trace context for this instance if available
+     */
+    public setTraceCtx(newTracectx: IDistributedTraceContext): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

@@ -4,9 +4,9 @@
  */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { ITelemetryItem, IProcessTelemetryContext, IAppInsightsCore, isString, objKeys, hasWindow, _InternalLogMessage, setValue, getSetValue } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IProcessTelemetryContext, IAppInsightsCore, isString, objKeys, hasWindow, _InternalLogMessage, setValue, getSetValue, getDocument, getPerformance, isArray, strTrim, strStartsWith, strEndsWith } from "@microsoft/applicationinsights-core-js";
 import { Session, _SessionManager } from "./Context/Session";
-import { Extensions, IOperatingSystem, ITelemetryTrace, IWeb, CtxTagKeys, PageView, IApplication, IDevice, ILocation, IUserContext, IInternal, ISession } from "@microsoft/applicationinsights-common";
+import { Extensions, IOperatingSystem, ITelemetryTrace, IWeb, CtxTagKeys, PageView, IApplication, IDevice, ILocation, IUserContext, IInternal, ISession, ITraceParent, isValidTraceId, isValidSpanId, createTraceParent, findW3cTraceParent } from "@microsoft/applicationinsights-common";
 import { Application } from "./Context/Application";
 import { Device } from "./Context/Device";
 import { Internal } from "./Context/Internal";
@@ -53,7 +53,17 @@ export class TelemetryContext implements IPropTelemetryContext {
                 _self.device = new Device();
                 _self.location = new Location();
                 _self.user = new User(defaultConfig, core);
-                _self.telemetryTrace = new TelemetryTrace(undefined, undefined, undefined, logger);
+                let parentId = undefined;
+                if (!defaultConfig.disableTraceParent()) {
+                    let traceParent = findW3cTraceParent();
+                    if (!traceParent) {
+                        traceParent = _findRequestId();
+                    }
+                    if (traceParent) {
+                        parentId = traceParent.spanId;
+                    }
+                }
+                _self.telemetryTrace = new TelemetryTrace(undefined, parentId, undefined, logger);
                 _self.session = new Session();
             }
 
@@ -168,6 +178,67 @@ export class TelemetryContext implements IPropTelemetryContext {
                     _removeEmpty(ext, Extensions.AppExt);
                     _removeEmpty(ext, Extensions.TraceExt);
                 }
+            }
+
+            function _findRequestId(): ITraceParent {
+                let traceParent: ITraceParent;
+                let doc = getDocument();
+                if (doc) {
+                    // Look for a meta-tag called "Request-Id"
+                    traceParent = _parseRequestId(_getRequestIdValue(doc.querySelectorAll("meta")).content);
+                }
+
+                if (!traceParent) {
+                    let perf = getPerformance();
+                    if (perf) {
+                        // Try looking for a server-timing header
+                        let navPerf = perf.getEntriesByType("navigation") || [];
+                        traceParent = _parseRequestId(_getRequestIdValue((navPerf.length > 0 ? navPerf[0] : {} as any).serverTiming).description);
+                    }
+                }
+
+                return traceParent;
+            }
+
+            function _getRequestIdValue(values: any) {
+                if (values) {
+                    for (var i = 0; i < values.length; i++) {
+                        var value = values[i] as any;
+                        if (value.name) {
+                            if(value.name === "Request-Id") {
+                                return value;
+                            }
+                        }
+                    }
+                }
+
+                return {};
+            }
+
+            function _parseRequestId(value: string): ITraceParent {
+                if (value) {
+                    if (isArray(value)) {
+                        value = value[0] || "";
+                    }
+
+                    if (value && isString(value)) {
+                        value = strTrim(value);
+                        if (strStartsWith(value, "|")) {
+                            let idx = value.indexOf(".");
+                            if (idx != -1) {
+                                let traceId = value.substring(1, idx);
+                                let spanId = value.substring(idx + 1);
+                                if (strEndsWith(spanId, ".")) {
+                                    spanId = spanId.substring(0, spanId.length - 1);
+                                }
+                                if (isValidTraceId(traceId) && isValidSpanId(spanId)) {
+                                    return createTraceParent(traceId, spanId);
+                                }
+                            }
+                        }
+                    }
+                }
+                return null;
             }
         });
     }

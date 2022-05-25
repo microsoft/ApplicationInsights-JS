@@ -75,3 +75,4 @@ export { createUniqueNamespace } from "./JavaScriptSDK/DataCacheHelper";
 export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./JavaScriptSDK/UnloadHandlerContainer";
 export { ITelemetryUpdateState } from "./JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+export { IDistributedTraceContext } from "./JavaScriptSDK.Interfaces/IDistributedTraceContext";

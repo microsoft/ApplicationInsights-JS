@@ -7,10 +7,10 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, IConfiguration, isNullOrUndefined,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, eLoggingSeverity, _eInternalMessageId, getNavigator,
-    ITelemetryPluginChain, objForEachKey, getSetValue, _logInternalMessage
+    ITelemetryPluginChain, objForEachKey, getSetValue, _logInternalMessage, IProcessTelemetryUnloadContext, ITelemetryUnloadState, isFunction, IDistributedTraceContext
 } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from "./TelemetryContext";
-import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName } from "@microsoft/applicationinsights-common";
+import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName, createDistributedTraceContextFromTrace } from "@microsoft/applicationinsights-common";
 import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 
@@ -32,7 +32,9 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
             sessionCookiePostfix: () => undefined,
             userCookiePostfix: () => undefined,
             idLength: () => 22,
-            getNewId: () => null
+            getNewId: () => null,
+            disableTraceParent: () => true,
+            distributedTraceCtx: () => null
         };
         
         return defaultConfig;
@@ -48,6 +50,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
 
         let _breezeChannel: IPlugin; // optional. If exists, grab appId from it
         let _extensionConfig: ITelemetryConfig;
+        let _distributedTraceCtx: IDistributedTraceContext;
 
         dynamicProto(PropertiesPlugin, this, (_self, _base) => {
 
@@ -58,10 +61,12 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 const defaultConfig: ITelemetryConfig = PropertiesPlugin.getDefaultConfig();
                 _extensionConfig = _extensionConfig || {} as ITelemetryConfig;
                 objForEachKey(defaultConfig, (field, value) => {
-                    _extensionConfig[field] = () => ctx.getConfig(identifier, field, value());
+                    _extensionConfig[field] = () => ctx.getConfig(identifier, field, value() as any);
                 });
     
                 _self.context = new TelemetryContext(core, _extensionConfig);
+                _distributedTraceCtx = _extensionConfig.distributedTraceCtx() || createDistributedTraceContextFromTrace(_self.context.telemetryTrace, core.getTraceCtx());
+                core.setTraceCtx(_distributedTraceCtx);
                 _breezeChannel = getExtensionByName(extensions, BreezeChannelIdentifier);
                 _self.context.appId = () => _breezeChannel ? _breezeChannel["_appId"] : null;
 
@@ -106,6 +111,16 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                     }
     
                     _self.processNext(event, itemCtx);
+                }
+            };
+
+            _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
+                let core = (unloadCtx || {} as any).core();
+                if (core && isFunction(core.getTraceCtx)) {
+                    let traceCtx = core.getTraceCtx();
+                    if (traceCtx === _distributedTraceCtx) {
+                        core.setTraceCtx(null);
+                    }
                 }
             };
     

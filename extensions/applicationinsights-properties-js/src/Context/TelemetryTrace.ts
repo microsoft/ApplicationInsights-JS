@@ -9,6 +9,7 @@ export class TelemetryTrace implements ITelemetryTrace {
     public traceID: string;
     public parentID: string;
     public traceState: ITraceState;
+    public traceFlags: number;
     public name: string;
 
     constructor(id?: string, parentId?: string, name?: string, logger?: IDiagnosticLogger) {
