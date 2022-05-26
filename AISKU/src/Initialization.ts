@@ -189,8 +189,8 @@ export class Initialization implements IApplicationInsights {
             _core = new AppInsightsCore();
             _self.core = _core;
 
-        
-            if (!config.connectionString && !config.disableIkeyDeprecationMessage) {
+            let isErrMessageDisabled = isNullOrUndefined(config.disableIkeyDeprecationMessage)? true:config.disableIkeyDeprecationMessage;
+            if (!config.connectionString && !isErrMessageDisabled) {
                 _throwInternal(_core.logger,
                     eLoggingSeverity.CRITICAL,
                     _eInternalMessageId.InstrumentationKeyDeprecation,

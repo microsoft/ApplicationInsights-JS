@@ -368,7 +368,7 @@ export interface IConfig {
     eventsLimitInMem?: number;
       /**
      * [Optional] Disable iKey deprecation error message.
-     * @defaultValue undefined
+     * @defaultValue true
      */
        disableIkeyDeprecationMessage?: boolean;
 }
