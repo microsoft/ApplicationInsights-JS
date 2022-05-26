@@ -326,6 +326,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | customHeaders | `[{header: string, value: string}]` | undefined | [Optional] The ability for the user to provide extra headers when using a custom endpoint. customHeaders will not be added on browser shutdown moment when beacon sender is used. And adding custom headers is not supported on IE9 or earlier.
 | convertUndefined | `any` | undefined | [Optional] Provide user an option to convert undefined field to user defined value.
 | eventsLimitInMem | number | 10000 | [Optional] The number of events that can be kept in memory before the SDK starts to drop events when not using Session Storage (the default).
+| disableIkeyDeprecationMessage | boolean | undefined | [Optional]  Disable instrumentation Key deprecation error message. If true, error message will NOT be sent. **Note: instrumentation key support will end soon**, see aka.ms/IkeyMigrate for more details.
 
 ### ICookieMgrConfig
 
