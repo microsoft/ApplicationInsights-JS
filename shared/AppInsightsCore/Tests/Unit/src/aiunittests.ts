@@ -7,6 +7,7 @@ import { EventHelperTests } from "./EventHelper.Tests";
 import { LoggingEnumTests } from "./LoggingEnum.Tests";
 import { DynamicTests } from "./Dynamic.Tests";
 import { EventsDiscardedReasonTests } from "./EventsDiscardedReason.Tests";
+import { W3cTraceParentTests } from "./W3cTraceParentTests";
 
 export function runTests() {
     new DynamicTests().registerTests();
@@ -18,4 +19,5 @@ export function runTests() {
     new EventHelperTests().registerTests();
     new LoggingEnumTests().registerTests();
     new EventsDiscardedReasonTests().registerTests();
+    new W3cTraceParentTests().registerTests();
 }

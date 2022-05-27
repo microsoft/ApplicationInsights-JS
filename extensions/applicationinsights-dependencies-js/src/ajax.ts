@@ -5,17 +5,18 @@ import {
     RequestHeaders, CorrelationIdHelper, createTelemetryItem, ICorrelationConfig,
     RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
     IConfig, ITelemetryContext, PropertiesPluginIdentifier, eDistributedTracingModes, IRequestContext, isInternalApplicationInsightsEndpoint,
-    eRequestHeaders, formatTraceParent, createTraceParent
+    eRequestHeaders, formatTraceParent, createTraceParent, createDistributedTraceContextFromTrace
 } from "@microsoft/applicationinsights-common";
 import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, eLoggingSeverity, _eInternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
     IInstrumentHooksCallbacks, objForEachKey, generateW3CId, getIEVersion, dumpObj, ICustomProperties, isXhrSupported, eventOn,
-    mergeEvtNamespace, createUniqueNamespace, createProcessTelemetryContext, _throwInternal
+    mergeEvtNamespace, createUniqueNamespace, createProcessTelemetryContext, _throwInternal, IDistributedTraceContext, getExceptionName, IDiagnosticLogger
 } from "@microsoft/applicationinsights-core-js";
 import { ajaxRecord, IAjaxRecordResponse } from "./ajaxRecord";
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { DependencyListenerFunction, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler } from "./DependencyListener";
 
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
@@ -25,6 +26,11 @@ const strTrackDependencyDataInternal = "trackDependencyDataInternal"; // Using s
 
 // Using a global value so that to handle same iKey with multiple app insights instances (mostly for testing)
 let _markCount: number = 0;
+
+interface _IInternalDependencyListenerHandler {
+    id: number;
+    fn: DependencyListenerFunction;
+}
 
 /** @Ignore */
 function _supportsFetch(): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
@@ -132,11 +138,47 @@ function _indexOf(value:string, match:string):number {
     return -1;
 }
 
+function _processDependencyListeners(listeners: _IInternalDependencyListenerHandler[], core: IAppInsightsCore, ajaxData: ajaxRecord, xhr: XMLHttpRequest, input?: Request | string, init?: RequestInit): void {
+    var initializersCount = listeners.length;
+    if (initializersCount > 0) {
+        let details: IDependencyListenerDetails = {
+            core: core,
+            xhr: xhr,
+            input: input,
+            init: init,
+            traceId: ajaxData.traceID,
+            spanId: ajaxData.spanID,
+            traceFlags: ajaxData.traceFlags
+        };
+    
+        for (var i = 0; i < initializersCount; ++i) {
+            var dependencyListener = listeners[i];
+            if (dependencyListener && dependencyListener.fn) {
+                try {
+                    dependencyListener.fn.call(null, details);
+                } catch (e) {
+                    let core = details.core;
+                    _throwInternal(
+                        core && core.logger,
+                        eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.TelemetryInitializerFailed,
+                        "Dependency listener [#" + i + "] failed: " + getExceptionName(e),
+                        { exception: dumpObj(e) }, true);
+                }
+            }
+        }
+
+        ajaxData.traceID = details.traceId;
+        ajaxData.spanID = details.spanId;
+        ajaxData.traceFlags = details.traceFlags;
+    }
+}
+
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
 }
 
-export interface IDependenciesPlugin {
+export interface IDependenciesPlugin extends IDependencyListenerContainer {
     /**
      * Logs dependency call
      * @param dependencyData dependency data object
@@ -219,6 +261,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _excludeRequestFromAutoTrackingPatterns: string[] | RegExp[];
         let _addRequestContext: (requestContext?: IRequestContext) => ICustomProperties;
         let _evtNamespace: string | string[];
+        let _dependencyListenerId: number;
+        let _dependencyListeners: _IInternalDependencyListenerHandler[];
 
         dynamicProto(AjaxMonitor, this, (_self, _base) => {
             let _addHook = _base._addHook;
@@ -250,6 +294,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             _self.includeCorrelationHeaders = (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
                 // Test Hook to allow the overriding of the location host
                 let currentWindowHost = _self["_currentWindowHost"] || _currentWindowHost;
+
+                _processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init);
+
                 if (input) { // Fetch
                     if (CorrelationIdHelper.canIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (!init) {
@@ -274,7 +321,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             }
                         }
                         if (_isUsingW3CHeaders) {
-                            const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, 0x01));
+                            let traceFlags = ajaxData.traceFlags;
+                            if (isNullOrUndefined(traceFlags)) {
+                                traceFlags = 0x01;
+                            }
+
+                            const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, traceFlags));
                             init.headers.set(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
                             if (_enableRequestHeaderTracking) {
                                 ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
@@ -300,7 +352,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             }
                         }
                         if (_isUsingW3CHeaders) {
-                            const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, 0x01));
+                            let traceFlags = ajaxData.traceFlags;
+                            if (isNullOrUndefined(traceFlags)) {
+                                traceFlags = 0x01;
+                            }
+
+                            const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, traceFlags));
                             xhr.setRequestHeader(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
                             if (_enableRequestHeaderTracking) {
                                 ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
@@ -347,6 +404,28 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ++_trackAjaxAttempts;
             }
 
+            _self.addDependencyListener = (dependencyListener: DependencyListenerFunction): IDependencyListenerHandler => {
+                let theInitializer = {
+                    id: _dependencyListenerId++,
+                    fn: dependencyListener
+                };
+
+                _dependencyListeners.push(theInitializer);
+
+                let handler: IDependencyListenerHandler = {
+                    remove: () => {
+                        arrForEach(_dependencyListeners, (initializer, idx) => {
+                            if (initializer.id === theInitializer.id) {
+                                _dependencyListeners.splice(idx, 1);
+                                return -1;
+                            }
+                        });
+                    }
+                }
+    
+                return handler;
+            };
+        
             function _initDefaults() {
                 let location = getLocation();
                 _fetchInitialized = false;      // fetch monitoring initialized
@@ -370,6 +449,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _excludeRequestFromAutoTrackingPatterns = null
                 _addRequestContext = null;
                 _evtNamespace = null;
+                _dependencyListenerId = 0;
+                _dependencyListeners = [];
             }
 
             function _populateDefaults(config: IConfiguration) {
@@ -681,11 +762,28 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     && ajaxValidation;
             }
 
+            function _getDistributedTraceCtx(): IDistributedTraceContext {
+                let distributedTraceCtx: IDistributedTraceContext = null;
+                if (_self.core && _self.core.getTraceCtx) {
+                    distributedTraceCtx = _self.core.getTraceCtx(false);
+                }
+
+                // Fall back
+                if (!distributedTraceCtx && _context && _context.telemetryTrace) {
+                    distributedTraceCtx = createDistributedTraceContextFromTrace(_context.telemetryTrace);
+                }
+
+                return distributedTraceCtx;
+            }
+
             function _openHandler(xhr: XMLHttpRequestInstrumented, method: string, url: string, async: boolean) {
-                const traceID = (_context && _context.telemetryTrace && _context.telemetryTrace.traceID) || generateW3CId();
+                let distributedTraceCtx: IDistributedTraceContext = _getDistributedTraceCtx();
+
+                const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
                 const spanID = generateW3CId().substr(0, 16);
 
                 const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
+                ajaxData.traceFlags = distributedTraceCtx && distributedTraceCtx.getTraceFlags();
                 ajaxData.method = method;
                 ajaxData.requestUrl = url;
                 ajaxData.xhrMonitoringState.openDone = true;
@@ -921,10 +1019,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
-                const traceID = (_context && _context.telemetryTrace && _context.telemetryTrace.traceID) || generateW3CId();
+                let distributedTraceCtx: IDistributedTraceContext = _getDistributedTraceCtx();
+
+                const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
                 const spanID = generateW3CId().substr(0, 16);
 
-                const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
+                let ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
+                ajaxData.traceFlags = distributedTraceCtx && distributedTraceCtx.getTraceFlags();
                 ajaxData.requestSentTime = dateTimeUtilsNow();
                 ajaxData.errorStatusText = _enableAjaxErrorStatusText;
 
@@ -1068,6 +1169,17 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
     public includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Add an ajax listener which is called just prior to the request being sent and before the correlation headers are added, to allow you
+     * to access the headers and modify the values used to generate the distributed tracing correlation headers.
+     * @param dependencyListener - The Telemetry Initializer function
+     * @returns - A IDependencyListenerHandler to enable the initializer to be removed
+     */
+    public addDependencyListener(dependencyListener: DependencyListenerFunction): IDependencyListenerHandler {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     /**

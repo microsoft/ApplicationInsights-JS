@@ -7,7 +7,7 @@ import {
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign, proxyFunctions,
     arrForEach, isString, isFunction, isNullOrUndefined, isArray, throwError, ICookieMgr, addPageUnloadEventListener, addPageHideEventListener,
     createUniqueNamespace, ITelemetryPlugin, IPlugin, ILoadedPlugin, UnloadHandler, removePageUnloadEventListener, removePageHideEventListener,
-    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal, arrIndexOf
+    ITelemetryInitializerHandler, ITelemetryUnloadState, mergeEvtNamespace, _throwInternal, arrIndexOf, IDistributedTraceContext
 } from "@microsoft/applicationinsights-core-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -23,6 +23,7 @@ import {
     IPropertiesPlugin, DistributedTracingModes, PropertiesPluginIdentifier, BreezeChannelIdentifier, AnalyticsPluginIdentifier,
     ITelemetryContext as Common_ITelemetryContext, parseConnectionString
 } from "@microsoft/applicationinsights-common"
+import { DependencyListenerFunction, IDependencyListenerHandler } from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
 
 export { IUtil, ICorrelationIdHelper, IUrlHelper, IDateTimeUtils, IRequestHeaders };
 
@@ -413,7 +414,8 @@ export class Initialization implements IApplicationInsights {
             ]);
 
             proxyFunctions(_self, _getCurrentDependencies, [
-                "trackDependencyData"
+                "trackDependencyData",
+                "addDependencyListener"
             ]);
 
             proxyFunctions(_self, _core, [
@@ -423,7 +425,8 @@ export class Initialization implements IApplicationInsights {
                 "getPlugin",
                 "addPlugin",
                 "evtNamespace",
-                "addUnloadCb"
+                "addUnloadCb",
+                "getTraceCtx"
             ]);
 
             proxyFunctions(_self, () => {
@@ -440,6 +443,7 @@ export class Initialization implements IApplicationInsights {
                     _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
             }
         
+            // Using a function to support the dynamic adding / removal of plugins, so this will always return the current value
             function _getCurrentDependencies() {
                 return dependencies;
             }
@@ -714,6 +718,25 @@ export class Initialization implements IApplicationInsights {
      */
     public addUnloadCb(handler: UnloadHandler): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Add an ajax listener which is called just prior to the request being sent and before the correlation headers are added, to allow you
+     * to access the headers and modify the values used to generate the distributed tracing correlation headers. (added in v2.8.4)
+     * @param dependencyListener - The Telemetry Initializer function
+     * @returns - A IDependencyListenerHandler to enable the initializer to be removed
+     */
+    public addDependencyListener(dependencyListener: DependencyListenerFunction): IDependencyListenerHandler {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Gets the current distributed trace context for this instance if available
+     */
+    public getTraceCtx(): IDistributedTraceContext | null | undefined {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 }
 

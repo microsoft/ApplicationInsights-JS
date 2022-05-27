@@ -1,5 +1,7 @@
-import { generateW3CId, getDocument, getPerformance, isArray, isString, strTrim } from "@microsoft/applicationinsights-core-js";
-import { ITraceParent } from "./Interfaces/ITraceParent";
+import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
+import { generateW3CId } from "./CoreUtils";
+import { findMetaTag, findNamedServerTiming, getDocument, getPerformance } from "./EnvUtils";
+import { isArray, isString, strTrim } from "./HelperFuncs";
 
 // using {0,16} for leading and trailing whitespace just to constrain the possible runtime of a random string
 const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]*)?$/;
@@ -36,21 +38,6 @@ function _formatFlags(value: number): string {
     }
 
     return result;
-}
-
-function _getTraceParentValue(values: any) {
-    if (values) {
-        for (var i = 0; i < values.length; i++) {
-            var value = values[i] as any;
-            if (value.name) {
-                if(value.name === "traceparent") {
-                    return value;
-                }
-            }
-        }
-    }
-
-    return {};
 }
 
 /**
@@ -199,20 +186,10 @@ export function formatTraceParent(value: ITraceParent) {
  * @returns
  */
 export function findW3cTraceParent(): ITraceParent {
-    let traceParent: ITraceParent;
-    let doc = getDocument();
-    if (doc) {
-        // Look for a meta-tag called "traceparent"
-        traceParent = parseTraceParent(_getTraceParentValue(doc.querySelectorAll("meta")).content);
-    }
-
+    const name = "traceparent";
+    let traceParent: ITraceParent = parseTraceParent(findMetaTag(name));
     if (!traceParent) {
-        let perf = getPerformance();
-        if (perf) {
-            // Try looking for a server-timing header
-            let navPerf = perf.getEntriesByType("navigation") || [];
-            traceParent = parseTraceParent(_getTraceParentValue((navPerf.length > 0 ? navPerf[0] : {} as any).serverTiming).description);
-        }
+        traceParent = parseTraceParent(findNamedServerTiming(name))
     }
 
     return traceParent;

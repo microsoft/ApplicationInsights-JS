@@ -1,11 +1,13 @@
 ﻿import { SinonStub } from "sinon";
 import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { AjaxMonitor } from "../../../src/ajax";
-import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext } from "@microsoft/applicationinsights-common";
+import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext, formatTraceParent, createTraceParent } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId,
-    getPerformance, getGlobalInst, getGlobal
+    getPerformance, getGlobalInst, getGlobal, generateW3CId
 } from "@microsoft/applicationinsights-core-js";
+import { IDependencyListenerDetails } from "../../../src/DependencyListener";
+import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework/dist-esm/src/AITestClass";
 
 interface IFetchArgs {
     input: RequestInfo,
@@ -1878,6 +1880,105 @@ export class AjaxTests extends AITestClass {
                 (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
             }
         })
+
+        this.testCase({
+            name: "Ajax DependencyListener: traceparent should use the default trace and span id's",
+            test: () => {
+                let allDetails: IDependencyListenerDetails[] = [];
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+
+                let traceId: string;
+                let spanId: string;
+
+                this._ajax.addDependencyListener((details: IDependencyListenerDetails) => {
+                    traceId = details.traceId;
+                    spanId = details.spanId;
+                    allDetails.push(details);
+                });
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                this._ajax["_currentWindowHost"] = "www.example.com";
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                var spy = this.sandbox.spy(xhr, "setRequestHeader");
+                xhr.open("GET", "http://www.example.com");
+                xhr.send();
+
+                const expectedRequestId = "|" + traceId + "." + spanId;
+                const expectedTraceParent = formatTraceParent(createTraceParent(traceId, spanId, 0x01));
+
+                // Assert that the AI header was not included
+                Assert.equal(true, spy.calledWith(RequestHeaders.requestIdHeader, expectedRequestId)); // AI
+                Assert.equal(expectedRequestId, (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.requestIdHeader], "Validate the actual header sent");
+
+                // Assert that the W3C header is included
+                Assert.equal(true, spy.calledWith(RequestHeaders.traceParentHeader, expectedTraceParent)); // W3C
+                Assert.equal(expectedTraceParent, (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.traceParentHeader], "Validate the actual header sent");
+
+                // Emulate response
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+            }
+        })
+
+        this.testCase({
+            name: "Ajax DependencyListener: traceparent should use the trace and span id's from listener values",
+            test: () => {
+                let allDetails: IDependencyListenerDetails[] = [];
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+
+                const traceId = generateW3CId();
+                const spanId = generateW3CId().substr(0, 16);
+                const expectedRequestId = "|" + traceId + "." + spanId;
+                const expectedTraceParent = formatTraceParent(createTraceParent(traceId, spanId, 0x00));
+
+                this._ajax.addDependencyListener((details: IDependencyListenerDetails) => {
+                    details.traceId = traceId;
+                    details.spanId = spanId;
+                    details.traceFlags = 0x00;    
+                    allDetails.push(details);
+                });
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                this._ajax["_currentWindowHost"] = "www.example.com";
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                var spy = this.sandbox.spy(xhr, "setRequestHeader");
+                xhr.open("GET", "http://www.example.com");
+                xhr.send();
+
+                // Assert that the AI header was not included
+                Assert.equal(true, spy.calledWith(RequestHeaders.requestIdHeader, expectedRequestId)); // AI
+                Assert.equal(expectedRequestId, (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.requestIdHeader], "Validate the actual header sent");
+
+                // Assert that the W3C header is included
+                Assert.equal(true, spy.calledWith(RequestHeaders.traceParentHeader, expectedTraceParent)); // W3C
+                Assert.equal(expectedTraceParent, (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.traceParentHeader], "Validate the actual header sent");
+
+                // Emulate response
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+            }
+        })
+
     }
 
     private testAjaxSuccess(responseCode: number, success: boolean) {

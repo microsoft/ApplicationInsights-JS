@@ -237,6 +237,7 @@ export class ajaxRecord {
 
     public traceID: string;
     public spanID: string;
+    public traceFlags?: number;
 
     constructor(traceID: string, spanID: string, logger: IDiagnosticLogger) {
         let self = this;

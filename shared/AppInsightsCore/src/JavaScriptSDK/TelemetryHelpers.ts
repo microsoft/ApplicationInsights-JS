@@ -11,6 +11,9 @@ import { createElmNodeData } from "./DataCacheHelper";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
+import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
 
 const strDoUnload = "_doUnload";
 export interface IPluginState {
@@ -93,11 +96,15 @@ export function sortPlugins<T = IPlugin>(plugins:T[]) {
     // Sort by priority
     return plugins.sort((extA, extB) => {
         let result = 0;
-        let bHasProcess = isFunction(extB[strProcessTelemetry]);
-        if (isFunction(extA[strProcessTelemetry])) {
-            result = bHasProcess ? extA[strPriority] - extB[strPriority] : 1;
-        } else if (bHasProcess) {
-            result = -1;
+        if (extB) {
+            let bHasProcess = isFunction(extB[strProcessTelemetry]);
+            if (isFunction(extA[strProcessTelemetry])) {
+                result = bHasProcess ? extA[strPriority] - extB[strPriority] : 1;
+            } else if (bHasProcess) {
+                result = -1;
+            }
+        } else {
+            result = extA ? 1 : -1;
         }
 
         return result;
@@ -132,4 +139,49 @@ export function unloadComponents(components: any | IUnloadableComponent[], unloa
     }
 
     return _doUnload();
+}
+
+
+/**
+ * Creates a IDistributedTraceContext which optionally also "sets" the value on a parent
+ * @param parentCtx - An optional parent distributed trace instance
+ * @returns A new IDistributedTraceContext instance that uses an internal temporary object
+ */
+export function createDistributedTraceContext(parentCtx?: IDistributedTraceContext): IDistributedTraceContext {
+    let trace: ITraceParent = {} as ITraceParent;
+
+    return {
+        getName: (): string => {
+            return (trace as any).name;
+        },
+        setName: (newValue: string): void => {
+            parentCtx && parentCtx.setName(newValue);
+            (trace as any).name = newValue;
+        },
+        getTraceId: (): string => {
+            return trace.traceId;
+        },
+        setTraceId: (newValue: string): void => {
+            parentCtx && parentCtx.setTraceId(newValue);
+            if (isValidTraceId(newValue)) {
+                trace.traceId = newValue
+            }
+        },
+        getSpanId: (): string => {
+            return trace.spanId;
+        },
+        setSpanId: (newValue: string): void => {
+            parentCtx && parentCtx.setSpanId(newValue);
+            if (isValidSpanId(newValue)) {
+                trace.spanId = newValue
+            }
+        },
+        getTraceFlags: (): number => {
+            return trace.traceFlags;
+        },
+        setTraceFlags: (newTraceFlags?: number): void => {
+            parentCtx && parentCtx.setTraceFlags(newTraceFlags);
+            trace.traceFlags = newTraceFlags
+        }
+    };
 }

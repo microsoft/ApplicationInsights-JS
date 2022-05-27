@@ -7,10 +7,10 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, IConfiguration, isNullOrUndefined,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, eLoggingSeverity, _eInternalMessageId, getNavigator,
-    ITelemetryPluginChain, objForEachKey, getSetValue, _logInternalMessage
+    ITelemetryPluginChain, objForEachKey, getSetValue, _logInternalMessage, IProcessTelemetryUnloadContext, ITelemetryUnloadState, isFunction, IDistributedTraceContext, ILoadedPlugin
 } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from "./TelemetryContext";
-import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName } from "@microsoft/applicationinsights-common";
+import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName, createDistributedTraceContextFromTrace } from "@microsoft/applicationinsights-common";
 import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 
@@ -46,10 +46,13 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
     constructor() {
         super();
 
-        let _breezeChannel: IPlugin; // optional. If exists, grab appId from it
         let _extensionConfig: ITelemetryConfig;
+        let _distributedTraceCtx: IDistributedTraceContext;
+        let _previousTraceCtx: IDistributedTraceContext;
 
         dynamicProto(PropertiesPlugin, this, (_self, _base) => {
+
+            _initDefaults();
 
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
                 _base.initialize(config, core, extensions, pluginChain);
@@ -58,12 +61,17 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 const defaultConfig: ITelemetryConfig = PropertiesPlugin.getDefaultConfig();
                 _extensionConfig = _extensionConfig || {} as ITelemetryConfig;
                 objForEachKey(defaultConfig, (field, value) => {
-                    _extensionConfig[field] = () => ctx.getConfig(identifier, field, value());
+                    _extensionConfig[field] = () => ctx.getConfig(identifier, field, value() as any);
                 });
     
                 _self.context = new TelemetryContext(core, _extensionConfig);
-                _breezeChannel = getExtensionByName(extensions, BreezeChannelIdentifier);
-                _self.context.appId = () => _breezeChannel ? _breezeChannel["_appId"] : null;
+                _previousTraceCtx = core.getTraceCtx(false);
+                _distributedTraceCtx = createDistributedTraceContextFromTrace(_self.context.telemetryTrace, _previousTraceCtx);
+                core.setTraceCtx(_distributedTraceCtx);
+                _self.context.appId = () => {
+                    let breezeChannel = core.getPlugin<IPlugin>(BreezeChannelIdentifier);
+                    return breezeChannel ? breezeChannel.plugin["_appId"] : null;
+                }
 
                 // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class
                 _self["_extConfig"] = _extensionConfig;
@@ -108,7 +116,25 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                     _self.processNext(event, itemCtx);
                 }
             };
+
+            _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
+                let core = (unloadCtx || {} as any).core();
+                if (core && core.getTraceCtx) {
+                    let traceCtx = core.getTraceCtx(false);
+                    if (traceCtx === _distributedTraceCtx) {
+                        core.setTraceCtx(_previousTraceCtx);
+                    }
+                }
+
+                _initDefaults();
+            };
     
+            function _initDefaults() {
+                _extensionConfig = null;
+                _distributedTraceCtx = null;
+                _previousTraceCtx = null;
+            }
+
             function _processTelemetryInternal(evt: ITelemetryItem, itemCtx: IProcessTelemetryContext) {
                 // Set Part A fields
                 getSetValue(evt, "tags", []);
