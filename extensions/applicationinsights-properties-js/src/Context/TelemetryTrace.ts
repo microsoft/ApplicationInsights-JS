@@ -16,12 +16,11 @@ export class TelemetryTrace implements ITelemetryTrace {
         const _self = this;
         _self.traceID = id || generateW3CId();
         _self.parentID = parentId;
-        _self.name = name;
         let location = getLocation();
         if (!name && location && location.pathname) {
-            _self.name = location.pathname;
+            name = location.pathname;
         }
 
-        _self.name = dataSanitizeString(logger, _self.name);
+        _self.name = dataSanitizeString(logger, name);
     }
 }

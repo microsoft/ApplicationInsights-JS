@@ -4,7 +4,7 @@
  */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { ITelemetryItem, IProcessTelemetryContext, IAppInsightsCore, isString, objKeys, hasWindow, _InternalLogMessage, setValue, getSetValue } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IProcessTelemetryContext, IAppInsightsCore, isString, objKeys, hasWindow, _InternalLogMessage, setValue, getSetValue, IDistributedTraceContext } from "@microsoft/applicationinsights-core-js";
 import { Session, _SessionManager } from "./Context/Session";
 import { Extensions, IOperatingSystem, ITelemetryTrace, IWeb, CtxTagKeys, PageView, IApplication, IDevice, ILocation, IUserContext, IInternal, ISession } from "@microsoft/applicationinsights-common";
 import { Application } from "./Context/Application";
@@ -40,7 +40,7 @@ export class TelemetryContext implements IPropTelemetryContext {
     public appId: () => string;
     public getSessionId: () => string;
 
-    constructor(core: IAppInsightsCore, defaultConfig: ITelemetryConfig) {
+    constructor(core: IAppInsightsCore, defaultConfig: ITelemetryConfig, previousTraceCtx?: IDistributedTraceContext) {
         let logger = core.logger
         this.appId = () => null;
         this.getSessionId = () => null;
@@ -53,7 +53,16 @@ export class TelemetryContext implements IPropTelemetryContext {
                 _self.device = new Device();
                 _self.location = new Location();
                 _self.user = new User(defaultConfig, core);
-                _self.telemetryTrace = new TelemetryTrace(undefined, undefined, undefined, logger);
+
+                let traceId: string;
+                let parentId: string;
+                let name: string;
+                if (previousTraceCtx) {
+                    traceId = previousTraceCtx.getTraceId();
+                    parentId = previousTraceCtx.getSpanId();
+                    name = previousTraceCtx.getName();
+                }
+                _self.telemetryTrace = new TelemetryTrace(traceId, parentId, name, logger);
                 _self.session = new Session();
             }
 

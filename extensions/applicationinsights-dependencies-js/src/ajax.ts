@@ -12,7 +12,7 @@ import {
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
     IInstrumentHooksCallbacks, objForEachKey, generateW3CId, getIEVersion, dumpObj, ICustomProperties, isXhrSupported, eventOn,
-    mergeEvtNamespace, createUniqueNamespace, createProcessTelemetryContext, _throwInternal, IDistributedTraceContext, getExceptionName, IDiagnosticLogger
+    mergeEvtNamespace, createUniqueNamespace, createProcessTelemetryContext, _throwInternal, IDistributedTraceContext, getExceptionName,
 } from "@microsoft/applicationinsights-core-js";
 import { ajaxRecord, IAjaxRecordResponse } from "./ajaxRecord";
 import dynamicProto from "@microsoft/dynamicproto-js";
@@ -446,7 +446,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _disableAjaxTracking = false;
                 _disableFetchTracking = false;
         
-                _excludeRequestFromAutoTrackingPatterns = null
+                _excludeRequestFromAutoTrackingPatterns = null;
                 _addRequestContext = null;
                 _evtNamespace = null;
                 _dependencyListenerId = 0;

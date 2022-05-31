@@ -1,6 +1,6 @@
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
-import { findMetaTag, findNamedServerTiming, getDocument, getPerformance } from "./EnvUtils";
+import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
 import { isArray, isString, strTrim } from "./HelperFuncs";
 
 // using {0,16} for leading and trailing whitespace just to constrain the possible runtime of a random string

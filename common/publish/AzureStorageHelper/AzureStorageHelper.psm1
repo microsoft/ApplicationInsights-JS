@@ -397,7 +397,7 @@ Function Get-VersionDetails (
 Function Get-FileVersion (
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[\w\d\-\+]+\.?[\d\-\+]*)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json|zip)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[\w\d\-\+]+\.?[\w\d\-\+]*)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json|zip)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
     $contentType = $jsContentType
 

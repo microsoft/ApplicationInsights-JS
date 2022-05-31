@@ -7,10 +7,10 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, IConfiguration, isNullOrUndefined,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, eLoggingSeverity, _eInternalMessageId, getNavigator,
-    ITelemetryPluginChain, objForEachKey, getSetValue, _logInternalMessage, IProcessTelemetryUnloadContext, ITelemetryUnloadState, isFunction, IDistributedTraceContext, ILoadedPlugin
+    ITelemetryPluginChain, objForEachKey, getSetValue, _logInternalMessage, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IDistributedTraceContext
 } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from "./TelemetryContext";
-import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName, createDistributedTraceContextFromTrace } from "@microsoft/applicationinsights-common";
+import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, createDistributedTraceContextFromTrace } from "@microsoft/applicationinsights-common";
 import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 
@@ -64,14 +64,14 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                     _extensionConfig[field] = () => ctx.getConfig(identifier, field, value() as any);
                 });
     
-                _self.context = new TelemetryContext(core, _extensionConfig);
                 _previousTraceCtx = core.getTraceCtx(false);
+                _self.context = new TelemetryContext(core, _extensionConfig, _previousTraceCtx);
                 _distributedTraceCtx = createDistributedTraceContextFromTrace(_self.context.telemetryTrace, _previousTraceCtx);
                 core.setTraceCtx(_distributedTraceCtx);
                 _self.context.appId = () => {
                     let breezeChannel = core.getPlugin<IPlugin>(BreezeChannelIdentifier);
                     return breezeChannel ? breezeChannel.plugin["_appId"] : null;
-                }
+                };
 
                 // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class
                 _self["_extConfig"] = _extensionConfig;
