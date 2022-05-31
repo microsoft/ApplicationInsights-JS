@@ -13,9 +13,15 @@ export interface ITelemetryTrace {
     parentID?: string;
 
     /**
+     * @deprecated Never Used
      * Trace state
      */
     traceState?: ITraceState;
+
+    /**
+     * An integer representation of the W3C TraceContext trace-flags. https://www.w3.org/TR/trace-context/#trace-flags
+     */
+    traceFlags?: number;
 
     /**
      * Name

@@ -41,7 +41,8 @@ export {
     getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
     isReactNative, getConsole, dumpObj, isIE, getIEVersion, isSafari,
-    setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported
+    setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported,
+    findMetaTag, findNamedServerTiming
 } from "./JavaScriptSDK/EnvUtils";
 export {
     getGlobal,
@@ -75,3 +76,8 @@ export { createUniqueNamespace } from "./JavaScriptSDK/DataCacheHelper";
 export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./JavaScriptSDK/UnloadHandlerContainer";
 export { ITelemetryUpdateState } from "./JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+export { IDistributedTraceContext } from "./JavaScriptSDK.Interfaces/IDistributedTraceContext";
+export { ITraceParent } from "./JavaScriptSDK.Interfaces/ITraceParent";
+export {
+    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
+} from "./JavaScriptSDK/W3cTraceParent";

@@ -411,3 +411,48 @@ export function isXhrSupported(): boolean {
 
     return isSupported;
 }
+
+function _getNamedValue(values: any, name: string) {
+    if (values) {
+        for (var i = 0; i < values.length; i++) {
+            var value = values[i] as any;
+            if (value.name) {
+                if(value.name === name) {
+                    return value;
+                }
+            }
+        }
+    }
+
+    return {};
+}
+
+/**
+ * Helper function to fetch the named meta-tag from the page.
+ * @param name
+ */
+export function findMetaTag(name: string): any {
+    let doc = getDocument();
+    if (doc && name) {
+        // Look for a meta-tag
+        return _getNamedValue(doc.querySelectorAll("meta"), name).content;
+    }
+
+    return null;
+}
+
+/**
+ * Helper function to fetch the named server timing value from the page response (first navigation event).
+ * @param name
+ */
+export function findNamedServerTiming(name: string): any {
+    let value: any;
+    let perf = getPerformance();
+    if (perf) {
+        // Try looking for a server-timing header
+        let navPerf = perf.getEntriesByType("navigation") || [];
+        value = _getNamedValue((navPerf.length > 0 ? navPerf[0] : {} as any).serverTiming, name).description;
+    }
+
+    return value;
+}

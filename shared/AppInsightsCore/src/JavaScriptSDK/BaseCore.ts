@@ -14,7 +14,7 @@ import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotification
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
-import { initializePlugins, sortPlugins, _getPluginState } from "./TelemetryHelpers";
+import { createDistributedTraceContext, initializePlugins, sortPlugins, _getPluginState } from "./TelemetryHelpers";
 import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { getGblPerfMgr, PerfManager } from "./PerfManager";
@@ -40,6 +40,7 @@ import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnl
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { strAddNotificationListener, strDisabled, strEventsDiscarded, strEventsSendRequest, strEventsSent, strRemoveNotificationListener, strTeardown } from "./InternalConstants";
+import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
@@ -151,6 +152,7 @@ export class BaseCore implements IAppInsightsCore {
         let _evtNamespace: string;
         let _unloadHandlers: IUnloadHandlerContainer;
         let _debugListener: INotificationListener | null;
+        let _traceCtx: IDistributedTraceContext | null;
 
         /**
          * Internal log poller
@@ -453,6 +455,18 @@ export class BaseCore implements IAppInsightsCore {
 
             _self.flush = _flushChannels;
         
+            _self.getTraceCtx = (createNew?: boolean): IDistributedTraceContext | null => {
+                if (!_traceCtx) {
+                    _traceCtx = createDistributedTraceContext();
+                }
+
+                return _traceCtx;
+            };
+
+            _self.setTraceCtx = (traceCtx: IDistributedTraceContext): void => {
+                _traceCtx = traceCtx || null;
+            };
+
             // Create the addUnloadCb
             proxyFunctionAs(_self, "addUnloadCb", () => _unloadHandlers, "add");
 
@@ -480,6 +494,7 @@ export class BaseCore implements IAppInsightsCore {
                 _internalLogsEventName = null;
                 _evtNamespace = createUniqueNamespace("AIBaseCore", true);
                 _unloadHandlers = createUnloadHandlerContainer();
+                _traceCtx = null;
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
@@ -884,6 +899,22 @@ export class BaseCore implements IAppInsightsCore {
      * @returns - true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
      */
     public flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+    
+    /**
+     * Gets the current distributed trace context for this instance if available
+     * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to true
+     */
+    public getTraceCtx(createNew?: boolean): IDistributedTraceContext | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Sets the current distributed trace context for this instance if available
+     */
+    public setTraceCtx(newTracectx: IDistributedTraceContext): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

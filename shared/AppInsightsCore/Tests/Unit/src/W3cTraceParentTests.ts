@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { ITraceParent } from "../../../src/Interfaces/ITraceParent";
-import { formatTraceParent, isSampledFlag, isValidSpanId, isValidTraceId, isValidTraceParent, parseTraceParent } from "../../../src/W3cTraceParent";
+import { ITraceParent } from "../../../src/JavaScriptSDK.Interfaces/ITraceParent";
+import { formatTraceParent, isSampledFlag, isValidSpanId, isValidTraceId, isValidTraceParent, parseTraceParent } from "../../../src/JavaScriptSDK/W3cTraceParent";
 
 export class W3cTraceParentTests extends AITestClass {
 

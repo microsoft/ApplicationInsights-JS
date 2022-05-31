@@ -9,18 +9,18 @@ export class TelemetryTrace implements ITelemetryTrace {
     public traceID: string;
     public parentID: string;
     public traceState: ITraceState;
+    public traceFlags: number;
     public name: string;
 
     constructor(id?: string, parentId?: string, name?: string, logger?: IDiagnosticLogger) {
         const _self = this;
         _self.traceID = id || generateW3CId();
         _self.parentID = parentId;
-        _self.name = name;
         let location = getLocation();
         if (!name && location && location.pathname) {
-            _self.name = location.pathname;
+            name = location.pathname;
         }
 
-        _self.name = dataSanitizeString(logger, _self.name);
+        _self.name = dataSanitizeString(logger, name);
     }
 }
