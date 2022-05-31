@@ -3,7 +3,8 @@
 export {
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper,
     IDateTimeUtils, DateTimeUtils, dateTimeUtilsNow, dateTimeUtilsDuration,
-    IUrlHelper, UrlHelper, isInternalApplicationInsightsEndpoint
+    IUrlHelper, UrlHelper, isInternalApplicationInsightsEndpoint,
+    createDistributedTraceContextFromTrace
 } from "./Util";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
 export { FieldType } from "./Enums";
@@ -59,17 +60,16 @@ export { ITelemetryTrace, ITraceState } from "./Interfaces/Context/ITelemetryTra
 export { IRequestContext } from "./Interfaces/IRequestContext";
 export { eDistributedTracingModes, DistributedTracingModes } from "./Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
-export { isBeaconsSupported as isBeaconApiSupported } from "@microsoft/applicationinsights-core-js"
+export {
+    isBeaconsSupported as isBeaconApiSupported,
+    ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
+} from "@microsoft/applicationinsights-core-js"
 export { createDomEvent } from "./DomHelperFuncs";
 export {
     utlDisableStorage, utlEnableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage,
     utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage
 } from "./StorageHelperFuncs";
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./UrlHelperFuncs";
-export { ITraceParent } from "./Interfaces/ITraceParent";
-export {
-    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
-} from "./W3cTraceParent";
 
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";

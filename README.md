@@ -260,11 +260,12 @@ appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 
 ## Configuration
 
-Most configuration fields are named such that they can be defaulted to falsey. All fields are optional except for `instrumentationKey`.
+Most configuration fields are named such that they can be defaulted to falsey. All fields are optional except for `instrumentationKey` or a `connectionString` containing the instrumentation key.
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| instrumentationKey | string<br>[**Required**]| null | Instrumentation key that you obtained from the Azure Portal. |
+| instrumentationKey | string<br>[**Required if `connectionString` not supplied**]| null | Instrumentation key that you obtained from the Azure Portal. |
+| connectionString | string<br>[**Require if `instrumentationKey` not supplied**] | null | The Connection string that you obtained from the Azure portal |
 | accountId | string | null | An optional account id, if your app groups users into accounts. No spaces, commas, semicolons, equals, or vertical bars |
 | sessionRenewalMs | numeric | 1800000 | A session is logged if the user is inactive for this amount of time in milliseconds. Default is 30 minutes |
 | sessionExpirationMs | numeric | 86400000 | A session is logged if it has continued for this amount of time in milliseconds. Default is 24 hours |
@@ -326,6 +327,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | customHeaders | `[{header: string, value: string}]` | undefined | [Optional] The ability for the user to provide extra headers when using a custom endpoint. customHeaders will not be added on browser shutdown moment when beacon sender is used. And adding custom headers is not supported on IE9 or earlier.
 | convertUndefined | `any` | undefined | [Optional] Provide user an option to convert undefined field to user defined value.
 | eventsLimitInMem | number | 10000 | [Optional] The number of events that can be kept in memory before the SDK starts to drop events when not using Session Storage (the default).
+| disableIkeyDeprecationMessage | boolean | true | [Optional]  Disable instrumentation Key deprecation error message. If true, error message will NOT be sent. **Note: instrumentation key support will end soon**, see aka.ms/IkeyMigrate for more details.
 
 ### ICookieMgrConfig
 

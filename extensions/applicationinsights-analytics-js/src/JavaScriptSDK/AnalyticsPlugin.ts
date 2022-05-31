@@ -9,7 +9,7 @@ import {
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
     IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault, createDomEvent,
-    strNotSpecified, isCrossOriginError, utlDisableStorage, utlEnableStorage, dataSanitizeString
+    strNotSpecified, isCrossOriginError, utlDisableStorage, utlEnableStorage, dataSanitizeString, createDistributedTraceContextFromTrace
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -20,7 +20,7 @@ import {
     isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, ICookieMgr, safeGetCookieMgr,
     TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentEvent, IInstrumentCallDetails, eventOn, eventOff,
     mergeEvtNamespace, createUniqueNamespace, ITelemetryInitializerHandler, throwError, isUndefined, hasWindow, createProcessTelemetryContext,
-    ITelemetryUnloadState, IProcessTelemetryUnloadContext
+    ITelemetryUnloadState, IProcessTelemetryUnloadContext, IDistributedTraceContext
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -736,6 +736,26 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
             }
 
+            function _getDistributedTraceCtx(): IDistributedTraceContext {
+                let distributedTraceCtx: IDistributedTraceContext = null;
+                if (_self.core && _self.core.getTraceCtx) {
+                    distributedTraceCtx = _self.core.getTraceCtx(false);
+                }
+                
+                if (!distributedTraceCtx) {
+                    // Fallback when using an older Core and PropertiesPlugin
+                    let properties = _self.core.getPlugin<PropertiesPlugin>(PropertiesPluginIdentifier);
+                    if (properties) {
+                        let context = properties.plugin.context;
+                        if (context) {
+                            distributedTraceCtx = createDistributedTraceContextFromTrace(context.telemetryTrace);
+                        }
+                    }
+                }
+
+                return distributedTraceCtx;
+            }
+
             /**
              * Create a custom "locationchange" event which is triggered each time the history object is changed
              */
@@ -757,20 +777,16 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
 
                     if (_enableAutoRouteTracking) {
-                        let properties = _self.core.getPlugin<PropertiesPlugin>(PropertiesPluginIdentifier);
-
-                        if (properties) {
-                            let context = properties.plugin.context;
-                            if (context && context.telemetryTrace) {
-                                context.telemetryTrace.traceID = generateW3CId();
-                                let traceLocationName = "_unknown_";
-                                if (locn && locn.pathname) {
-                                    traceLocationName = locn.pathname + (locn.hash || "");
-                                }
-
-                                // This populates the ai.operation.name which has a maximum size of 1024 so we need to sanitize it
-                                context.telemetryTrace.name = dataSanitizeString(_self.diagLog(), traceLocationName);
+                        let distributedTraceCtx = _getDistributedTraceCtx();
+                        if (distributedTraceCtx) {
+                            distributedTraceCtx.setTraceId(generateW3CId());
+                            let traceLocationName = "_unknown_";
+                            if (locn && locn.pathname) {
+                                traceLocationName = locn.pathname + (locn.hash || "");
                             }
+
+                            // This populates the ai.operation.name which has a maximum size of 1024 so we need to sanitize it
+                            distributedTraceCtx.setName(dataSanitizeString(_self.diagLog(), traceLocationName));
                         }
 
                         setTimeout(((uri: string) => {

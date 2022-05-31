@@ -9,8 +9,8 @@ import {
     dateNow, uaDisallowsSameSiteNone, disableCookies as coreDisableCookies,
     canUseCookies as coreCanUseCookies, getCookie as coreGetCookie,
     setCookie as coreSetCookie, deleteCookie as coreDeleteCookie,
-    isBeaconsSupported,
-    arrIndexOf
+    isBeaconsSupported, arrIndexOf, IDistributedTraceContext,
+    isValidTraceId, isValidSpanId
 } from "@microsoft/applicationinsights-core-js";
 import { eRequestHeaders, RequestHeaders } from "./RequestResponseHeaders";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
@@ -20,6 +20,7 @@ import { stringToBoolOrDefault, msToTimeSpan, isCrossOriginError, getExtensionBy
 import { strNotSpecified } from "./Constants";
 import { utlCanUseLocalStorage, utlCanUseSessionStorage, utlDisableStorage, utlGetSessionStorage, utlGetSessionStorageKeys, utlGetLocalStorage, utlRemoveSessionStorage, utlRemoveStorage, utlSetSessionStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 import { urlGetAbsoluteUrl, urlGetCompleteUrl, urlGetPathName, urlParseFullHost, urlParseHost, urlParseUrl } from "./UrlHelperFuncs";
+import { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
 
 // listing only non-geo specific locations
 const _internalEndpoints: string[] = [
@@ -489,3 +490,49 @@ export const DateTimeUtils: IDateTimeUtils = {
     Now: dateTimeUtilsNow,
     GetDuration: dateTimeUtilsDuration
 };
+
+
+/**
+ * Creates a IDistributedTraceContext from an optional telemetryTrace
+ * @param telemetryTrace - The telemetryTrace instance that is being wrapped
+ * @param parentCtx - An optional parent distributed trace instance, almost always undefined as this scenario is only used in the case of multiple property handlers.
+ * @returns A new IDistributedTraceContext instance that is backed by the telemetryTrace or temporary object
+ */
+export function createDistributedTraceContextFromTrace(telemetryTrace?: ITelemetryTrace, parentCtx?: IDistributedTraceContext): IDistributedTraceContext {
+    let trace: ITelemetryTrace = telemetryTrace || {};
+
+    return {
+        getName: (): string => {
+            return trace.name;
+        },
+        setName: (newValue: string): void => {
+            parentCtx && parentCtx.setName(newValue);
+            trace.name = newValue;
+        },
+        getTraceId: (): string => {
+            return trace.traceID;
+        },
+        setTraceId: (newValue: string): void => {
+            parentCtx && parentCtx.setTraceId(newValue);
+            if (isValidTraceId(newValue)) {
+                trace.traceID = newValue
+            }
+        },
+        getSpanId: (): string => {
+            return trace.parentID;
+        },
+        setSpanId: (newValue: string): void => {
+            parentCtx && parentCtx.setSpanId(newValue);
+            if (isValidSpanId(newValue)) {
+                trace.parentID = newValue
+            }
+        },
+        getTraceFlags: (): number => {
+            return trace.traceFlags;
+        },
+        setTraceFlags: (newTraceFlags?: number): void => {
+            parentCtx && parentCtx.setTraceFlags(newTraceFlags);
+            trace.traceFlags = newTraceFlags
+        }
+    };
+}
