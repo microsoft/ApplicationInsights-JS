@@ -1,11 +1,28 @@
 # Releases
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
+## 2.8.4 (Jun 1st, 2022)
+
+
+- Updates React Plugin to v3.3.4 (with v2.8.4 as dependency) -- using React 17
+- Updates React Native Plugin to 2.5.34 (with v2.8.4 as dependency)
+- Updates Chrome Debug Extension to 0.3.4
+
+### Changelog
+
+- #198 Run-time Telemetry initializers for Ajax requests
+- #176 Single Page Application Page View Tracking
+- #1776 How to modify traceflag in traceparent header?
+- #1846 Task 7496325: Add Distributed tracing population for the properties for the core
+- #1838 [master] Task 14447552: Fix Component Governance vulnerabilities
+- #1841 Adding Microsoft SECURITY.MD
+- #1845 add readme for ikey error messge
+- #1840 add disableIkeyMessage config
 
 ## 2.8.3 (May 3rd, 2022)
 
-- Updates React Plugin to v3.3.3 (with v2.8.2 as dependency) -- using React 17
-- Updates React Native Plugin to 2.5.3 (with v2.8.2 as dependency)
+- Updates React Plugin to v3.3.3 (with v2.8.3 as dependency) -- using React 17
+- Updates React Native Plugin to 2.5.3 (with v2.8.3 as dependency)
 - Updates Chrome Debug Extension to 0.3.3
 
 This release has been manually validated to work with IE8 both directly and by extending the provided classes. While the previous version 2.8.2 also fully supported IE8 it did not handle classes extending the all of Core classes correctly in multiple cases. If you need to support IE8 it is strongly advised that you upgrade to, validate and use this version.
@@ -20,8 +37,8 @@ This release has been manually validated to work with IE8 both directly and by e
 
 ## 2.8.2 (May 2nd, 2022)
 
-- Updates React Plugin to v3.3.2 (with v2.8.1 as dependency) -- using React 17
-- Updates React Native Plugin to 2.5.2 (with v2.8.1 as dependency)
+- Updates React Plugin to v3.3.2 (with v2.8.2 as dependency) -- using React 17
+- Updates React Native Plugin to 2.5.2 (with v2.8.2 as dependency)
 - Updates Chrome Debug Extension to 0.3.2
 
 This patch release restores complete ES3 support (broken in 2.8.0) and IE8 support (broken eariler via dynamicProto()) for the Sdk.
