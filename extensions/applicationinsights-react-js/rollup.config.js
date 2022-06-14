@@ -69,12 +69,15 @@ const browserRollupConfigFactory = isProduction => {
     browserRollupConfig.plugins.push(
       uglify({
         ie8: true,
+        ie: true,
         toplevel: true,
         compress: {
+          ie: true,
           passes:3,
           unsafe: true
         },
         output: {
+          ie: true,
           preamble: banner,
           webkit:true
         }
@@ -122,12 +125,15 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.plugins.push(
       uglify({
         ie8: true,
+        ie: true,
         toplevel: true,
         compress: {
+          ie: true,
           passes:3,
           unsafe: true
         },
         output: {
+          ie: true,
           preamble: banner,
           webkit:true
         }
