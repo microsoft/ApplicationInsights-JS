@@ -5,7 +5,50 @@ import { Snippet } from "./Initialization";
 import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
 
-export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
+// ----------------------------------------------------------------------------------------------------
+// Exports available from the Cdn bundles
+// ----------------------------------------------------------------------------------------------------
+export {
+    Initialization as ApplicationInsights, Snippet,
+    Telemetry
+} from "./Initialization";
+export {
+    LoggingSeverity,
+    PerfEvent,
+    PerfManager,
+    doPerf,
+    CoreUtils,
+    newId,
+    newGuid,
+    random32,
+    randomValue,
+    generateW3CId,
+    findW3cTraceParent,
+    findMetaTag,
+    mergeEvtNamespace,
+    eventOn,
+    eventOff,
+    addEventHandler,
+    removeEventHandler,
+    isBeaconsSupported
+} from "@microsoft/applicationinsights-core-js";
+
+export {
+    Util,
+    RequestHeaders,
+    DisabledPropertyName,
+    DEFAULT_BREEZE_ENDPOINT,
+    SeverityLevel,
+    DistributedTracingModes,
+    PropertiesPluginIdentifier,
+    BreezeChannelIdentifier,
+    AnalyticsPluginIdentifier
+} from "@microsoft/applicationinsights-common";
+
+// ----------------------------------------------------------------------------------------------------
+// End of Exports available from the Cdn bundles
+// ----------------------------------------------------------------------------------------------------
+
 
 function _logWarn(aiName:string, message:string) {
     // TODO: Find better place to warn to console when SDK initialization fails
