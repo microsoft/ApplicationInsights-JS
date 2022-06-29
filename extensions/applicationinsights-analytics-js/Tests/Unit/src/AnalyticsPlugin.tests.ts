@@ -382,7 +382,9 @@ export class AnalyticsPluginTests extends AITestClass {
                     "trackPageView",
                     "trackPageViewPerformance",
                     "startTrackPage",
-                    "stopTrackPage"
+                    "stopTrackPage",
+                    "startTrackEvent",
+                    "stopTrackEvent"
                 ];
                 while (members.length) {
                     leTest(members.pop());
@@ -392,6 +394,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
         this.addGenericTests();
         this.addStartStopTrackPageTests();
+        this.addStartStopTrackEventTests()
         this.addTrackExceptionTests();
         this.addOnErrorTests();
         this.addTrackMetricTests();
@@ -1289,6 +1292,81 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // Test
                 Assert.equal(100, trackStub.callCount, "core.track was called 100 times for sending 100 metrics");
+            }
+        });
+    }
+
+    private addStartStopTrackEventTests() {
+        const testValues = {
+            name: "testStopTrack",
+            properties: {
+                "property1": "5",
+                "property2": "10",
+                "refUri": "test.com"
+            },
+            measurements: {
+                "measurement": 300
+            }
+        };
+
+        this.testCase({
+            name: "TelemetryContex: empty Start/StopTrackEvent should only have duration properties",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                this.sandbox.stub(core, "getTransmissionControls");
+                const appInsights = new AnalyticsPlugin();
+                this.onDone(() => {
+                    appInsights.teardown();
+                });
+
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const trackStub = this.sandbox.stub(appInsights.core, "track");
+                this.clock.tick(5);
+
+                // act
+                appInsights.startTrackEvent(testValues.name);
+                this.clock.tick(5);
+                appInsights.stopTrackEvent(testValues.name);
+                Assert.ok(trackStub.calledOnce, "single event tracking stopped");
+
+                // verify
+                const telemetry = trackStub.args[0][0];
+                Assert.equal(testValues.name,telemetry.baseData.name);
+                Assert.deepEqual({ "duration": "5"},telemetry.baseData.properties);
+                Assert.equal(undefined, telemetry.baseData.measurements.measurement);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContex: Start/StopTrackEvent capture correct properties and measurements",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                this.sandbox.stub(core, "getTransmissionControls");
+                const appInsights = new AnalyticsPlugin();
+                this.onDone(() => {
+                    appInsights.teardown();
+                });
+
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const trackStub = this.sandbox.stub(appInsights.core, "track");
+                this.clock.tick(5);
+
+                // act
+                appInsights.startTrackEvent(testValues.name);
+                this.clock.tick(5);
+                appInsights.stopTrackEvent(testValues.name,testValues.properties,testValues.measurements);
+                Assert.ok(trackStub.calledOnce, "single event tracking stopped");
+
+                // verify
+                const telemetry = trackStub.args[0][0];
+                Assert.equal(testValues.name,telemetry.baseData.name);
+                Assert.equal(testValues.properties.property1,telemetry.baseData.properties.property1);
+                Assert.equal(testValues.properties.property2, telemetry.baseData.properties.property2);
+                Assert.equal(testValues.properties.refUri, telemetry.baseData.properties.refUri);
+                Assert.equal("5", telemetry.baseData.properties.duration);
+                Assert.equal(testValues.measurements.measurement, telemetry.baseData.measurements.measurement);
             }
         });
     }
