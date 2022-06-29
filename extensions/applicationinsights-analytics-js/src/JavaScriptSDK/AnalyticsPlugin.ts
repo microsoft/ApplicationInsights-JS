@@ -202,7 +202,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              */
             _self.stopTrackEvent = (name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
                 try {
-                    _eventTracking.stop(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
+                    _eventTracking.stop(name, undefined, properties, measurements);
                 } catch (e) {
                     _throwInternal(eLoggingSeverity.CRITICAL,
                         _eInternalMessageId.StopTrackEventFailed,
@@ -562,13 +562,17 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     
                     _eventTracking = new Timing(_self.diagLog(), "trackEvent");
                     _eventTracking.action =
-                        (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }) => {
+                        (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
                             if (!properties) {
                                 properties = {};
                             }
+
+                            if (!measurements) {
+                                measurements = {};
+                            }
     
                             properties[durationProperty] = duration.toString();
-                            _self.trackEvent({ name, properties } as IEventTelemetry);
+                            _self.trackEvent({ name, properties, measurements } as IEventTelemetry);
                         }
     
                     // initialize page view timing
