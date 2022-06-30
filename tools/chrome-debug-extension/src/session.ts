@@ -3,24 +3,18 @@
 
 import FileSaver from "file-saver";
 import _ from "lodash";
-
+import { MessageSource } from "./Enums";
+import { LogEntry } from "./LogEntry";
 import { IFilterSettings } from "./components/IFilterSettings";
 import { IConfiguration, ISpecialFieldNames } from "./configuration/IConfiguration";
-import {
-    getCondensedDetails,
-    getDynamicFieldValue,
-    getEventType,
-    getFieldValueAsString,
-    getSessionId,
-    ICounts
-} from "./dataSources/dataHelpers";
-import { createDataSource } from "./dataSources/dataSources";
 import { DataEventType, IDataEvent } from "./dataSources/IDataEvent";
 import { IDataSource } from "./dataSources/IDataSource";
-import { MessageSource } from "./Enums";
+import {
+    ICounts, getCondensedDetails, getDynamicFieldValue, getEventType, getFieldValueAsString, getSessionId
+} from "./dataSources/dataHelpers";
+import { createDataSource } from "./dataSources/dataSources";
 import { makeRegex } from "./helpers";
 import { IMessage } from "./interfaces/IMessage";
-import { LogEntry } from "./LogEntry";
 
 export class Session {
     public onFilteredDataChanged: undefined | ((filterSettings: IFilterSettings) => void);
@@ -100,8 +94,9 @@ export class Session {
                 for (const singleEvent of this._rawData) {
                     // Remove any previous saved / cached condensedDetails
                     delete singleEvent.condensedDetails;
-                    if (singleEvent.sessionNumber) {
-                        const sessionNumber = Number.parseInt(singleEvent.sessionNumber, 10);
+                    const sessionNo = singleEvent.sessionNumber;
+                    if (sessionNo) {
+                        const sessionNumber = Number.parseInt(sessionNo, 10);
                         const sessionId = getSessionId(singleEvent, this.configuration);
                         if (sessionId && !isNaN(sessionNumber)) {
                             this._sessionMap.set(sessionId, sessionNumber);

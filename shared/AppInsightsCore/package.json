@@ -23,10 +23,13 @@
         "build:browser": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
         "test": "grunt coreunittest",
+        "mintest": "grunt core-mintest",
         "perftest": "grunt coreperftest",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Core Javascript SDK\"",
-        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt core-min",
+        "ai-restore": "grunt core-restore"
     },
     "repository": {
         "type": "git",

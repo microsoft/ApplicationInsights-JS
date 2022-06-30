@@ -1,9 +1,9 @@
 /**
- * ReactPlugin.ts
- * @copyright Microsoft 2019
- */
-import { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
+* ReactPlugin.ts
+* @copyright Microsoft 2019
+*/
 import ReactPlugin from "./ReactPlugin";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 export type AIReactCustomEvent<T> = Dispatch<SetStateAction<T>>;
 

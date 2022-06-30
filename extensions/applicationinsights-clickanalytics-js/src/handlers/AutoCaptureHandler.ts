@@ -1,16 +1,16 @@
 /**
- * @copyright Microsoft 2020
- */
+* @copyright Microsoft 2020
+*/
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IDiagnosticLogger, getWindow, getDocument, isNullOrUndefined, IProcessTelemetryUnloadContext, ITelemetryUnloadState,
-    mergeEvtNamespace, createUniqueNamespace, eventOn, eventOff
+    IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, createUniqueNamespace, eventOff, eventOn, getDocument,
+    getWindow, isNullOrUndefined, mergeEvtNamespace
 } from "@microsoft/applicationinsights-core-js";
-import { IAutoCaptureHandler, IPageActionOverrideValues, IClickAnalyticsConfiguration } from "../Interfaces/Datamodel"
-import { isRightClick, isLeftClick, isKeyboardEnter, isKeyboardSpace, isMiddleClick, isElementDnt } from "../common/Utils";
-import { ActionType } from "../Enums";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
+import { ActionType } from "../Enums";
+import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IPageActionOverrideValues } from "../Interfaces/Datamodel";
+import { isElementDnt, isKeyboardEnter, isKeyboardSpace, isLeftClick, isMiddleClick, isRightClick } from "../common/Utils";
 import { PageAction } from "../events/PageAction";
 
 const clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };

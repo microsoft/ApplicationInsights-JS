@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// @duplicate of https://github.com/microsoft/ApplicationInsights-node.js/blob/develop/Library/ConnectionStringParser.ts
-
-import { ConnectionString, ConnectionStringKey } from "./Interfaces/ConnectionString";
-import { DEFAULT_BREEZE_ENDPOINT } from "./Constants";
 import { arrReduce, objKeys } from "@microsoft/applicationinsights-core-js";
+import { DEFAULT_BREEZE_ENDPOINT } from "./Constants";
+import { ConnectionString, ConnectionStringKey } from "./Interfaces/ConnectionString";
 
 const _FIELDS_SEPARATOR = ";";
 const _FIELD_KEY_VALUE_SEPARATOR = "=";

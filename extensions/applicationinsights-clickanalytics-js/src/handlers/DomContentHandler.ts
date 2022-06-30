@@ -1,15 +1,13 @@
 /**
- * @copyright Microsoft 2020
- */
+* @copyright Microsoft 2020
+*/
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    removeInvalidElements,
-    walkUpDomChainWithElementValidation,
-    extend, isValueAssigned
-} from "../common/Utils";
-import { IDiagnosticLogger, eLoggingSeverity, getDocument, isNullOrUndefined, hasDocument, _throwInternal, _eInternalMessageId } from "@microsoft/applicationinsights-core-js";
+    IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getDocument, hasDocument, isNullOrUndefined, objExtend
+} from "@microsoft/applicationinsights-core-js";
 import { IClickAnalyticsConfiguration, IContent, IContentHandler } from "../Interfaces/Datamodel";
+import { isValueAssigned, removeInvalidElements, walkUpDomChainWithElementValidation } from "../common/Utils";
 
 const MAX_CONTENTNAME_LENGTH = 200;
 
@@ -64,16 +62,16 @@ export class DomContentHandler implements IContentHandler {
                     } else {
                         // traverse up the DOM to find the closest parent with data-* tag defined
                         //contentElement = walkUpDomChainWithElementValidation(element, _self._isTracked, dataTagPrefix);
-                        elementContent = extend(elementContent, _populateElementContent(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));
+                        elementContent = objExtend(elementContent, _populateElementContent(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));
                     }
                 } else {
-                    elementContent = extend(elementContent, _populateElementContentwithDataTag(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));
+                    elementContent = objExtend(elementContent, _populateElementContentwithDataTag(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));
                 }
 
                 removeInvalidElements(elementContent);
 
                 if (parentDataTagPrefix) {
-                    elementContent = extend(elementContent, _getParentDetails(element, elementContent, dataTagPrefix, aiBlobAttributeTag ));
+                    elementContent = objExtend(elementContent, _getParentDetails(element, elementContent, dataTagPrefix, aiBlobAttributeTag ));
                 }
         
                 return elementContent;

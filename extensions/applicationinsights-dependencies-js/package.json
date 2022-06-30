@@ -18,9 +18,12 @@
         "build:browser": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt depstest",
+        "mintest": "grunt deps-mintest",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights XHR dependencies plugin\"",
-        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt deps-min",
+        "ai-restore": "grunt deps-restore"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

@@ -14,9 +14,12 @@
         "build:browser": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt clickanalyticstests",
+        "mintest": "grunt clickanalytics-mintests",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js 'Microsoft.ApplicationInsights'",
-        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt clickanalytics-min",
+        "ai-restore": "grunt clickanalytics-restore"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

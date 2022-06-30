@@ -1,15 +1,17 @@
 /**
- * @copyright Microsoft 2020
- */
+* @copyright Microsoft 2020
+*/
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    isValueAssigned, extend
-} from "../common/Utils";
-import * as DataCollector from "../DataCollector";
-import { IDiagnosticLogger, getLocation, hasWindow, IUnloadableComponent, IProcessTelemetryUnloadContext, ITelemetryUnloadState } from "@microsoft/applicationinsights-core-js";
-import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler, ICoreData, IPageActionTelemetry } from "../Interfaces/Datamodel";
+    IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IUnloadableComponent, getLocation, hasWindow, objExtend
+} from "@microsoft/applicationinsights-core-js";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
+import { getPageName, getUri } from "../DataCollector";
+import {
+    IClickAnalyticsConfiguration, IContentHandler, ICoreData, IOverrideValues, IPageActionTelemetry, IPageTags
+} from "../Interfaces/Datamodel";
+import { isValueAssigned } from "../common/Utils";
 
 export class WebEvent implements IUnloadableComponent {
 
@@ -56,10 +58,10 @@ export class WebEvent implements IUnloadableComponent {
 
             _self.setBasicProperties = (event: IPageActionTelemetry, overrideValues: IOverrideValues) => {
                 if (!isValueAssigned(event.name)) {
-                    event.pageName = DataCollector.getPageName(_self._config, overrideValues);
+                    event.pageName = getPageName(_self._config, overrideValues);
                 }
                 if (!isValueAssigned(event.uri) && hasWindow) {
-                    event.uri = DataCollector.getUri(_self._config, getLocation());
+                    event.uri = getUri(_self._config, getLocation());
                 }
             };
         
@@ -93,10 +95,10 @@ export class WebEvent implements IUnloadableComponent {
                 // Prepare the pageTags object that is mostly the same for all events.  Event specific pageTags will be added inside event constructors.
                
                 if (_self._pageTagsCallback) {
-                    _self._pageTags = extend(true, _self._pageTags, _self._pageTagsCallback());
+                    _self._pageTags = objExtend(true, _self._pageTags, _self._pageTagsCallback());
                 }
                 if (isValueAssigned(overrideValues.pageTags)) {
-                    _self._pageTags = extend(true, _self._pageTags, overrideValues.pageTags);
+                    _self._pageTags = objExtend(true, _self._pageTags, overrideValues.pageTags);
                 }
                 // If metadata is present add it to pageTags property
                 if (_self._metaTags) {

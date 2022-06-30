@@ -2,45 +2,48 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { objCreateFn } from "@microsoft/applicationinsights-shims";
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain } from "./ProcessTelemetryContext";
-import { createDistributedTraceContext, initializePlugins, sortPlugins, _getPluginState } from "./TelemetryHelpers";
-import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
-import { getGblPerfMgr, PerfManager } from "./PerfManager";
-import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
-import { createCookieMgr } from "./CookieMgr";
-import {
-    arrForEach, isNullOrUndefined, getSetValue, setValue, isNotTruthy, isFunction, objExtend, objFreeze, proxyFunctionAs, proxyFunctions, throwError,
-    toISOString,
-    arrIndexOf
-} from "./HelperFuncs";
-import { strExtensionConfig, strIKey } from "./Constants";
-import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import { getDebugListener } from "./DbgExtensionUtils";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ChannelControllerPriority, createChannelControllerPlugin, createChannelQueues, IChannelController, IInternalChannelController, _IInternalChannels } from "./ChannelController";
-import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
-import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
-import { createUniqueNamespace } from "./DataCacheHelper";
-import { createUnloadHandlerContainer, IUnloadHandlerContainer, UnloadHandler } from "./UnloadHandlerContainer";
-import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
-import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
+import { objCreateFn } from "@microsoft/applicationinsights-shims";
+import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { strAddNotificationListener, strDisabled, strEventsDiscarded, strEventsSendRequest, strEventsSent, strRemoveNotificationListener, strTeardown } from "./InternalConstants";
+import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
+import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
+import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
+import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
+import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
+import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
+import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
+import {
+    ChannelControllerPriority, IChannelController, IInternalChannelController, _IInternalChannels, createChannelControllerPlugin,
+    createChannelQueues
+} from "./ChannelController";
+import { createCookieMgr } from "./CookieMgr";
+import { createUniqueNamespace } from "./DataCacheHelper";
+import { getDebugListener } from "./DbgExtensionUtils";
+import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
+import {
+    arrForEach, arrIndexOf, getCfgValue, getSetValue, isFunction, isNullOrUndefined, objExtend, objFreeze, proxyFunctionAs, proxyFunctions,
+    throwError, toISOString
+} from "./HelperFuncs";
+import { STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EXTENSIONS, STR_EXTENSION_CONFIG } from "./InternalConstants";
+import { PerfManager, getGblPerfMgr } from "./PerfManager";
+import {
+    createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain
+} from "./ProcessTelemetryContext";
+import { _getPluginState, createDistributedTraceContext, initializePlugins, sortPlugins } from "./TelemetryHelpers";
+import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
+import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
@@ -72,6 +75,7 @@ function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number,
 
     // Extension validation
     arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
+        // Check for ext.initialize
         if (isNullOrUndefined(ext) || isNullOrUndefined(ext.initialize)) {
             throwError(strValidationError);
         }
@@ -116,11 +120,11 @@ function _isPluginPresent(thePlugin: IPlugin, plugins: IPlugin[]) {
 
 function _createDummyNotificationManager(): INotificationManager {
     return objCreateFn({
-        [strAddNotificationListener]: (listener: INotificationListener) => { },
-        [strRemoveNotificationListener]: (listener: INotificationListener) => { },
-        [strEventsSent]: (events: ITelemetryItem[]) => { },
-        [strEventsDiscarded]: (events: ITelemetryItem[], reason: number) => { },
-        [strEventsSendRequest]: (sendReason: number, isAsync: boolean) => { }
+        addNotificationListener: (listener: INotificationListener) => { },
+        removeNotificationListener: (listener: INotificationListener) => { },
+        eventsSent: (events: ITelemetryItem[]) => { },
+        eventsDiscarded: (events: ITelemetryItem[], reason: number) => { },
+        eventsSendRequest: (sendReason: number, isAsync: boolean) => { }
     });
 }
 
@@ -134,6 +138,7 @@ export class BaseCore implements IAppInsightsCore {
 
     constructor() {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
+        let _config: IConfiguration;
         let _isInitialized: boolean;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
@@ -166,6 +171,7 @@ export class BaseCore implements IAppInsightsCore {
 
             _self.isInitialized = () => _isInitialized;
 
+            // Creating the self.initialize = ()
             _self.initialize = (config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
                 if (_isUnloading) {
                     throwError(strSdkUnloadingError);
@@ -176,7 +182,10 @@ export class BaseCore implements IAppInsightsCore {
                     throwError("Core should not be initialized more than once");
                 }
 
-                if (!config || isNullOrUndefined(config.instrumentationKey)) {
+                _config = config || {};
+                _self.config = _config;
+
+                if (isNullOrUndefined(config.instrumentationKey)) {
                     throwError("Please provide instrumentation key");
                 }
 
@@ -184,29 +193,28 @@ export class BaseCore implements IAppInsightsCore {
 
                 // For backward compatibility only
                 _self[strNotificationManager] = notificationManager;
-                _self.config = config || {};
 
-                _initDebugListener(config);
-                _initPerfManager(config);
+                _initDebugListener();
+                _initPerfManager();
 
-                config.extensions = isNullOrUndefined(config.extensions) ? [] : config.extensions;
-        
                 // add notification to the extensions in the config so other plugins can access it
-                _initExtConfig(config);
+                _initExtConfig();
 
                 if (logger) {
                     _self.logger = logger;
                 }
 
+                let cfgExtensions = getSetValue(_config, STR_EXTENSIONS, []);
+
                 // Extension validation
                 _configExtensions = [];
-                _configExtensions.push(...extensions, ...config.extensions);
-                _channelConfig = (config||{}).channels;
+                _configExtensions.push(...extensions, ...cfgExtensions);
+                _channelConfig = getSetValue(_config, STR_CHANNELS, []);
 
-                _initPluginChain(config, null);
+                _initPluginChain(null);
 
                 if (!_channelQueue || _channelQueue.length === 0) {
-                    throwError("No channels available");
+                    throwError("No " + STR_CHANNELS + " available");
                 }
         
                 _isInitialized = true;
@@ -226,13 +234,13 @@ export class BaseCore implements IAppInsightsCore {
         
             _self.track = (telemetryItem: ITelemetryItem) => {
                 // setup default iKey if not passed in
-                setValue(telemetryItem, strIKey, _self.config.instrumentationKey, null, isNotTruthy);
+                telemetryItem.iKey = telemetryItem.iKey || _config.instrumentationKey;
 
                 // add default timestamp if not passed in
-                setValue(telemetryItem, "time", toISOString(new Date()), null, isNotTruthy);
+                telemetryItem.time = telemetryItem.time || toISOString(new Date());
 
                 // Common Schema 4.0
-                setValue(telemetryItem, "ver", "4.0", null, isNullOrUndefined);
+                telemetryItem.ver = telemetryItem.ver || "4.0";
         
                 if (!_isUnloading && _self.isInitialized()) {
                     // Process the telemetry plugin chain
@@ -263,9 +271,9 @@ export class BaseCore implements IAppInsightsCore {
              * called.
              * @param {INotificationListener} listener - An INotificationListener object.
              */
-            _self[strAddNotificationListener] = (listener: INotificationListener): void => {
+            _self.addNotificationListener = (listener: INotificationListener): void => {
                 if (_notificationManager) {
-                    _notificationManager[strAddNotificationListener](listener);
+                    _notificationManager.addNotificationListener(listener);
                 }
             };
         
@@ -273,15 +281,15 @@ export class BaseCore implements IAppInsightsCore {
              * Removes all instances of the listener.
              * @param {INotificationListener} listener - INotificationListener to remove.
              */
-            _self[strRemoveNotificationListener] = (listener: INotificationListener): void => {
+            _self.removeNotificationListener = (listener: INotificationListener): void => {
                 if (_notificationManager) {
-                    _notificationManager[strRemoveNotificationListener](listener);
+                    _notificationManager.removeNotificationListener(listener);
                 }
             }
         
             _self.getCookieMgr = (): ICookieMgr => {
                 if (!_cookieManager) {
-                    _cookieManager = createCookieMgr(_self.config, _self.logger);
+                    _cookieManager = createCookieMgr(_config, _self.logger);
                 }
 
                 return _cookieManager;
@@ -293,8 +301,11 @@ export class BaseCore implements IAppInsightsCore {
 
             _self.getPerfMgr = (): IPerfManager => {
                 if (!_perfManager && !_cfgPerfManager) {
-                    if (_self.config && _self.config.enablePerfMgr && isFunction(_self.config.createPerfMgr)) {
-                        _cfgPerfManager = _self.config.createPerfMgr(_self, _self.getNotifyMgr());
+                    if (getCfgValue(_config.enablePerfMgr)) {
+                        let createPerfMgr = getCfgValue(_config.createPerfMgr);
+                        if (isFunction(createPerfMgr)) {
+                            _cfgPerfManager = createPerfMgr(_self, _self.getNotifyMgr());
+                        }
                     }
                 }
 
@@ -326,7 +337,7 @@ export class BaseCore implements IAppInsightsCore {
             _self.pollInternalLogs = (eventName?: string): number => {
                 _internalLogsEventName = eventName || null;
 
-                let interval = _self.config.diagnosticLogInterval;
+                let interval: number = getCfgValue(_config.diagnosticLogInterval);
                 if (!interval || !(interval > 0)) {
                     interval = 10000;
                 }
@@ -423,7 +434,7 @@ export class BaseCore implements IAppInsightsCore {
                     updateState.added = [plugin];
 
                     // Re-Initialize the plugin chain
-                    _initPluginChain(_self.config, updateState);
+                    _initPluginChain(updateState);
                     addCb && addCb(true);
                 }
 
@@ -474,8 +485,9 @@ export class BaseCore implements IAppInsightsCore {
                 _isInitialized = false;
 
                 // Use a default logger so initialization errors are not dropped on the floor with full logging
-                _self.config = objExtend(true, {}, defaultInitConfig);
-                _self.logger = new DiagnosticLogger(_self.config);
+                _config = objExtend(true, {}, defaultInitConfig);
+                _self.config = _config;
+                _self.logger = new DiagnosticLogger(_config);
                 _self._extensions = [];
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
@@ -498,11 +510,11 @@ export class BaseCore implements IAppInsightsCore {
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
-                return createProcessTelemetryContext(_getPluginChain(), _self.config, _self);
+                return createProcessTelemetryContext(_getPluginChain(), _config, _self);
             }
 
             // Initialize or Re-initialize the plugins
-            function _initPluginChain(config: IConfiguration, updateState: ITelemetryUpdateState | null) {
+            function _initPluginChain(updateState: ITelemetryUpdateState | null) {
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
             
@@ -513,7 +525,7 @@ export class BaseCore implements IAppInsightsCore {
                 let allExtensions = theExtensions.all;
 
                 // Initialize the Channel Queues and the channel plugins first
-                _channelQueue = objFreeze(createChannelQueues(_channelConfig, allExtensions, config, _self));
+                _channelQueue = objFreeze(createChannelQueues(_channelConfig, allExtensions, _self));
                 if (_channelControl) {
                     // During add / remove of a plugin this may get called again, so don't re-add if already present
                     // But we also want the controller as the last, so remove if already present
@@ -542,7 +554,7 @@ export class BaseCore implements IAppInsightsCore {
                 _self._extensions = sortPlugins(allExtensions);
 
                 // Initialize the controls
-                _channelControl.initialize(config, _self, allExtensions);
+                _channelControl.initialize(_config, _self, allExtensions);
                 
                 initializePlugins(_createTelCtx(), allExtensions);
 
@@ -574,11 +586,11 @@ export class BaseCore implements IAppInsightsCore {
                     theExt = {
                         plugin: thePlugin as T,
                         setEnabled: (enabled: boolean) => {
-                            _getPluginState(thePlugin)[strDisabled] = !enabled;
+                            _getPluginState(thePlugin)[STR_DISABLED] = !enabled;
                         },
                         isEnabled: () => {
                             let pluginState = _getPluginState(thePlugin);
-                            return !pluginState[strTeardown] && !pluginState[strDisabled];
+                            return !pluginState.teardown && !pluginState[STR_DISABLED];
                         },
                         remove: (isAsync: boolean = true, removeCb?: (removed?: boolean) => void): void => {
                             let pluginsToRemove: IPlugin[] = [thePlugin];
@@ -590,7 +602,7 @@ export class BaseCore implements IAppInsightsCore {
                             _removePlugins(pluginsToRemove, unloadState, (removed) => {
                                 if (removed) {
                                     // Re-Initialize the plugin chain
-                                    _initPluginChain(_self.config, {
+                                    _initPluginChain({
                                         reason: TelemetryUpdateReason.PluginRemoved,
                                         removed: pluginsToRemove
                                     });
@@ -615,7 +627,7 @@ export class BaseCore implements IAppInsightsCore {
                         extensions.push(_telemetryInitializerPlugin);
                     }
 
-                    _pluginChain = createTelemetryProxyChain(sortPlugins(extensions), _self.config, _self);
+                    _pluginChain = createTelemetryProxyChain(sortPlugins(extensions), _config, _self);
                 }
 
                 return _pluginChain;
@@ -624,7 +636,7 @@ export class BaseCore implements IAppInsightsCore {
             function _removePlugins(thePlugins: IPlugin[], unloadState: ITelemetryUnloadState, removeComplete: (removed: boolean) => void) {
 
                 if (thePlugins && thePlugins.length > 0) {
-                    let unloadChain = createTelemetryProxyChain(thePlugins, _self.config, _self);
+                    let unloadChain = createTelemetryProxyChain(thePlugins, _config, _self);
                     let unloadCtx = createProcessTelemetryUnloadContext(unloadChain, _self);
 
                     unloadCtx.onComplete(() => {
@@ -676,7 +688,7 @@ export class BaseCore implements IAppInsightsCore {
                     arrForEach(queue, (logMessage: _InternalLogMessage) => {
                         const item: ITelemetryItem = {
                             name: _internalLogsEventName ? _internalLogsEventName : "InternalMessageId: " + logMessage.messageId,
-                            iKey: _self.config.instrumentationKey,
+                            iKey: getCfgValue(_config.instrumentationKey),
                             time: toISOString(new Date()),
                             baseType: _InternalLogMessage.dataType,
                             baseData: { message: logMessage.message }
@@ -697,34 +709,37 @@ export class BaseCore implements IAppInsightsCore {
                 return true;
             }
 
-            function _initDebugListener(config: IConfiguration) {
+            function _initDebugListener() {
+                let disableDbgExt = getCfgValue(_config.disableDbgExt);
 
-                if (config.disableDbgExt === true && _debugListener) {
+                if (disableDbgExt === true && _debugListener) {
                     // Remove any previously loaded debug listener
-                    _notificationManager[strRemoveNotificationListener](_debugListener);
+                    _notificationManager.removeNotificationListener(_debugListener);
                     _debugListener = null;
                 }
 
-                if (_notificationManager && !_debugListener && config.disableDbgExt !== true) {
-                    _debugListener = getDebugListener(config);
-                    _notificationManager[strAddNotificationListener](_debugListener);
+                if (_notificationManager && !_debugListener && disableDbgExt !== true) {
+                    _debugListener = getDebugListener(_config);
+                    _notificationManager.addNotificationListener(_debugListener);
                 }
             }
 
-            function _initPerfManager(config: IConfiguration) {
-                if (!config.enablePerfMgr && _cfgPerfManager) {
+            function _initPerfManager() {
+                let enablePerfMgr = getCfgValue(_config.enablePerfMgr);
+
+                if (!enablePerfMgr && _cfgPerfManager) {
                     // Remove any existing config based performance manager
                     _cfgPerfManager = null;
                 }
 
-                if (config.enablePerfMgr) {
+                if (enablePerfMgr) {
                     // Set the performance manager creation function if not defined
-                    setValue(_self.config, "createPerfMgr", _createPerfManager);
+                    getSetValue(_config, STR_CREATE_PERF_MGR, _createPerfManager);
                 }
             }
 
-            function _initExtConfig(config: IConfiguration) {
-                let extConfig = getSetValue(config, strExtensionConfig);
+            function _initExtConfig() {
+                let extConfig = getSetValue(_config, STR_EXTENSION_CONFIG, {});
                 extConfig.NotificationManager = _notificationManager;
             }
 

@@ -4,8 +4,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, _eInternalMessageId, eLoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction,
-    newId, dumpObj, getExceptionName, dateNow, safeGetLogger, _throwInternal
+    IAppInsightsCore, ICookieMgr, IDiagnosticLogger, _eInternalMessageId, _throwInternal, dateNow, dumpObj, eLoggingSeverity,
+    getExceptionName, isFunction, newId, safeGetCookieMgr, safeGetLogger
 } from "@microsoft/applicationinsights-core-js";
 
 const cookieNameConst = "ai_session";

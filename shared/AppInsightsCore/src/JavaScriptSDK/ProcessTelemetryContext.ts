@@ -2,21 +2,25 @@
 // Licensed under the MIT License.
 "use strict";
 
+import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import {
+    GetExtCfgMergeType, IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
+} from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { GetExtCfgMergeType, IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { safeGetLogger, _throwInternal } from "./DiagnosticLogger";
-import { arrForEach, isArray, isFunction, isNullOrUndefined, isObject, isUndefined, objExtend, objForEachKey, objFreeze, objKeys, proxyFunctions } from "./HelperFuncs";
-import { doPerf } from "./PerfManager";
-import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { dumpObj } from "./EnvUtils";
-import { strCore, strDisabled, strEmpty, strIsInitialized, strTeardown, strUpdate } from "./InternalConstants";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
+import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
+import { dumpObj } from "./EnvUtils";
+import {
+    arrForEach, isArray, isFunction, isNullOrUndefined, isObject, isUndefined, objExtend, objForEachKey, objFreeze, objKeys, proxyFunctions
+} from "./HelperFuncs";
+import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
+import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";
 
 const strTelemetryPluginChain = "TelemetryPluginChain";
@@ -423,13 +427,13 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
         itemCtx.setNext(nextProxy);
 
         if (plugin) {
-            doPerf(itemCtx[strCore](), () => identifier + ":" + name, () => {
+            doPerf(itemCtx.core(), () => identifier + ":" + name, () => {
                 // Mark this component as having run
                 hasRunContext[chainId] = true;
 
                 try {
                     // Set a flag on the next plugin so we know if it was attempted to be executed
-                    let nextId = nextProxy ? nextProxy._id : strEmpty;
+                    let nextId = nextProxy ? nextProxy._id : STR_EMPTY;
                     if (nextId) {
                         hasRunContext[nextId] = false;
                     }
@@ -468,7 +472,7 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
             }
 
             let pluginState = _getPluginState(plugin);
-            if (pluginState.teardown || pluginState[strDisabled]) {
+            if (pluginState.teardown || pluginState[STR_DISABLED]) {
                 return false;
             }
 
@@ -500,15 +504,15 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
             let hasRun = false;
             if (plugin) {
                 let pluginState = _getPluginState(plugin);
-                let pluginCore = plugin[strCore] || pluginState.core;
+                let pluginCore = plugin[STR_CORE] || pluginState.core;
                 // Only teardown the plugin if it was initialized by the current core (i.e. It's not a shared plugin)
-                if (plugin && (!pluginCore || pluginCore === unloadCtx[strCore]()) && !pluginState[strTeardown]) {
+                if (plugin && (!pluginCore || pluginCore === unloadCtx.core()) && !pluginState.teardown) {
                     // Handle plugins that don't extend from the BaseTelemetryPlugin
-                    pluginState[strCore] = null;
-                    pluginState[strTeardown] = true;
-                    pluginState[strIsInitialized] = false;
+                    pluginState.core = null;
+                    pluginState.teardown = true;
+                    pluginState.isInitialized = false;
     
-                    if (plugin[strTeardown] && plugin[strTeardown](unloadCtx, unloadState) === true) {
+                    if (plugin.teardown && plugin.teardown(unloadCtx, unloadState) === true) {
                         // plugin told us that it was going to (or has) call unloadCtx.processNext()
                         hasRun = true;
                     }
@@ -531,11 +535,11 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
             let hasRun = false;
             if (plugin) {
                 let pluginState = _getPluginState(plugin);
-                let pluginCore = plugin[strCore] || pluginState.core;
+                let pluginCore = plugin[STR_CORE] || pluginState.core;
 
                 // Only update the plugin if it was initialized by the current core (i.e. It's not a shared plugin)
-                if (plugin && (!pluginCore || pluginCore === updateCtx[strCore]()) && !pluginState[strTeardown]) {
-                    if (plugin[strUpdate] && plugin[strUpdate](updateCtx, updateState) === true) {
+                if (plugin && (!pluginCore || pluginCore === updateCtx.core()) && !pluginState.teardown) {
+                    if (plugin.update && plugin.update(updateCtx, updateState) === true) {
                         // plugin told us that it was going to (or has) call unloadCtx.processNext()
                         hasRun = true;
                     }

@@ -3,11 +3,12 @@
 
 import { ObjDefineProperty } from "@microsoft/applicationinsights-shims";
 import { normalizeJsName } from "./HelperFuncs";
+import { STR_EMPTY } from "./InternalConstants";
 import { newId } from "./RandomHelper";
 
 const _objDefineProperty = ObjDefineProperty;
 
-const version = "2.8.4";
+const version = "#version#";
 let instanceName = "." + newId(6);
 let _dataUid = 0;
 
@@ -67,13 +68,13 @@ function _getCache(data: IDataCache, target: Node) {
 }
 
 export function createUniqueNamespace(name: string, includeVersion: boolean = false): string {
-    return normalizeJsName(name + (_dataUid++) + (includeVersion ? "." + version : "") + instanceName);
+    return normalizeJsName(name + (_dataUid++) + (includeVersion ? "." + version : STR_EMPTY) + instanceName);
 }
 
 export function createElmNodeData(name?: string) {
 
     let data = {
-        id: createUniqueNamespace("_aiData-" + (name || "") + "." + version),
+        id: createUniqueNamespace("_aiData-" + (name || STR_EMPTY) + "." + version),
         accept: function (target: any) {
             return _canAcceptData(target);
         },

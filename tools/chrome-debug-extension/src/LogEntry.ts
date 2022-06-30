@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isBoolean, isNumber, isObject, isString, objToString } from "@microsoft/applicationinsights-core-js";
-import { makeRegex, traverseAndReplace, toggleClassName, MAX_DEPTH, formatLogElements, getTargetName, getTargetKeys } from "./helpers";
 import { Util } from "@microsoft/applicationinsights-common";
+import { isBoolean, isNumber, isObject, isString, objToString } from "@microsoft/applicationinsights-core-js";
+import { MAX_DEPTH, formatLogElements, getTargetKeys, getTargetName, makeRegex, toggleClassName, traverseAndReplace } from "./helpers";
 
 export class LogEntry {
     isKeep: () => boolean;
@@ -95,4 +95,3 @@ export class LogEntry {
         }
     }
 }
-

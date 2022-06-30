@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
-import dynamicProto from "@microsoft/dynamicproto-js";
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { arrForEach, arrIndexOf } from "./HelperFuncs";
-import { strAddNotificationListener, strEventsDiscarded, strEventsSendRequest, strEventsSent, strPerfEvent, strRemoveNotificationListener } from "./InternalConstants";
+import { STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT } from "./InternalConstants";
 
 function _runListeners(listeners: INotificationListener[], name: string, isAsync: boolean, callback: (listener: INotificationListener) => void) {
     arrForEach(listeners, (listener) => {
@@ -35,7 +35,7 @@ export class NotificationManager implements INotificationManager {
         let perfEvtsSendAll = !!(config ||{}).perfEvtsSendAll;
 
         dynamicProto(NotificationManager, this, (_self) => {
-            _self[strAddNotificationListener] = (listener: INotificationListener): void => {
+            _self.addNotificationListener = (listener: INotificationListener): void => {
                 _self.listeners.push(listener);
             };
 
@@ -43,7 +43,7 @@ export class NotificationManager implements INotificationManager {
              * Removes all instances of the listener.
              * @param {INotificationListener} listener - AWTNotificationListener to remove.
              */
-            _self[strRemoveNotificationListener] = (listener: INotificationListener): void => {
+            _self.removeNotificationListener = (listener: INotificationListener): void => {
                 let index: number = arrIndexOf(_self.listeners, listener);
                 while (index > -1) {
                     _self.listeners.splice(index, 1);
@@ -55,9 +55,9 @@ export class NotificationManager implements INotificationManager {
              * Notification for events sent.
              * @param {ITelemetryItem[]} events - The array of events that have been sent.
              */
-            _self[strEventsSent] = (events: ITelemetryItem[]): void => {
-                _runListeners(_self.listeners, strEventsSent, true, (listener) => {
-                    listener[strEventsSent](events);
+            _self.eventsSent = (events: ITelemetryItem[]): void => {
+                _runListeners(_self.listeners, STR_EVENTS_SENT, true, (listener) => {
+                    listener.eventsSent(events);
                 });
             };
 
@@ -67,9 +67,9 @@ export class NotificationManager implements INotificationManager {
              * @param {number} reason           - The reason for which the SDK discarded the events. The EventsDiscardedReason
              * constant should be used to check the different values.
              */
-            _self[strEventsDiscarded] = (events: ITelemetryItem[], reason: number): void => {
-                _runListeners(_self.listeners, strEventsDiscarded, true, (listener) => {
-                    listener[strEventsDiscarded](events, reason);
+            _self.eventsDiscarded = (events: ITelemetryItem[], reason: number): void => {
+                _runListeners(_self.listeners, STR_EVENTS_DISCARDED, true, (listener) => {
+                    listener.eventsDiscarded(events, reason);
                 });
             };
 
@@ -78,22 +78,22 @@ export class NotificationManager implements INotificationManager {
              * @param {number} sendReason - The reason why the event batch is being sent.
              * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
              */
-            _self[strEventsSendRequest] = (sendReason: number, isAsync: boolean): void => {
-                _runListeners(_self.listeners, strEventsSendRequest, isAsync, (listener) => {
-                    listener[strEventsSendRequest](sendReason, isAsync);
+            _self.eventsSendRequest = (sendReason: number, isAsync: boolean): void => {
+                _runListeners(_self.listeners, STR_EVENTS_SEND_REQUEST, isAsync, (listener) => {
+                    listener.eventsSendRequest(sendReason, isAsync);
                 });
             };
 
-            _self[strPerfEvent] = (perfEvent?: IPerfEvent): void => {
+            _self.perfEvent = (perfEvent?: IPerfEvent): void => {
                 if (perfEvent) {
 
                     // Send all events or only parent events
                     if (perfEvtsSendAll || !perfEvent.isChildEvt()) {
-                        _runListeners(_self.listeners, strPerfEvent, false, (listener) => {
+                        _runListeners(_self.listeners, STR_PERF_EVENT, false, (listener) => {
                             if (perfEvent.isAsync) {
-                                setTimeout(() => listener[strPerfEvent](perfEvent), 0);
+                                setTimeout(() => listener.perfEvent(perfEvent), 0);
                             } else {
-                                listener[strPerfEvent](perfEvent);
+                                listener.perfEvent(perfEvent);
                             }
                         });
                     }

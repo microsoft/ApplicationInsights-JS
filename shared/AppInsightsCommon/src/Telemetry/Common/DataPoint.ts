@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDataPoint } from "../../Interfaces/Contracts/IDataPoint";
-import { ISerializable } from "../../Interfaces/Telemetry/ISerializable";
 import { FieldType } from "../../Enums";
 import { DataPointType } from "../../Interfaces/Contracts/DataPointType";
+import { IDataPoint } from "../../Interfaces/Contracts/IDataPoint";
+import { ISerializable } from "../../Interfaces/Telemetry/ISerializable";
 
 export class DataPoint implements IDataPoint, ISerializable {
 

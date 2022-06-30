@@ -263,3 +263,6 @@ aicore.tests.d.ts
 ai.tests.d.ts
 /.vs
 /index.html
+
+# Generated Constant File
+**/__DynamicConstants.ts

@@ -15,6 +15,7 @@
         "rebuild": "npm run build",
         "testx": "rush test --verbose",
         "test": "node common/scripts/install-run-rush.js test --verbose",
+        "mintest": "node common/scripts/install-run-rush.js mintest --verbose",
         "lint": "node common/scripts/install-run-rush.js lint --verbose",
         "perftest": "node common/scripts/install-run-rush.js perftest --verbose",
         "rollupes3": "grunt rollupes3",
@@ -23,7 +24,9 @@
         "setVersion": "node ./tools/release-tools/setVersion.js",
         "purge": "node common/scripts/install-run-rush.js purge",
         "fullClean": "git clean -xdf && npm install && rush update --recheck --full",
-        "fullCleanBuild": "npm run fullClean && npm run rebuild"
+        "fullCleanBuild": "npm run fullClean && npm run rebuild",
+        "ai-min": "node common/scripts/install-run-rush.js ai-min",
+        "ai-restore": "node common/scripts/install-run-rush.js ai-restore"
     },
     "repository": {
         "type": "git",

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { getCrypto, getMsCrypto, isIE }  from "./EnvUtils";
+import { getCrypto, getMsCrypto, isIE } from "./EnvUtils";
 import { dateNow } from "./HelperFuncs";
-import { strEmpty } from "./InternalConstants";
+import { STR_EMPTY } from "./InternalConstants";
 
 const UInt32Mask = 0x100000000;
 const MaxUInt32 = 0xffffffff;
@@ -128,7 +128,7 @@ export function newId(maxLength = 22): string {
     // Start with an initial random number, consuming the value in reverse byte order
     let number = random32() >>> 0;  // Make sure it's a +ve number
     let chars = 0;
-    let result = strEmpty;
+    let result = STR_EMPTY;
     while (result.length < maxLength) {
         chars ++;
         result += base64chars.charAt(number & 0x3F);
@@ -143,4 +143,3 @@ export function newId(maxLength = 22): string {
 
     return result;
 }
-

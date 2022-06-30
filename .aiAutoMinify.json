@@ -1,0 +1,64 @@
+{
+    "pkgs": {
+        "@microsoft/applicationinsights-core-js": {
+            "constEnums": [
+                "CallbackType",
+                "eEventsDiscardedReason",
+                "eLoggingSeverity",
+                "_eInternalMessageId",
+                "SendRequestReason",
+                "TelemetryUnloadReason",
+                "TelemetryUpdateReason",
+                "GetExtCfgMergeType"
+            ]
+        },
+        "@microsoft/applicationinsights-perfmarkmeasure-js": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-common": {
+            "constEnums": [
+                "eStorageType",
+                "FieldType",
+                "eDistributedTracingModes",
+                "eRequestHeaders",
+                "DataPointType",
+                "DependencyKind",
+                "DependencySourceType",
+                "eSeverityLevel",
+                "DataSanitizerValues"
+            ]
+        },
+        "@microsoft/applicationinsights-properties-js": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-dependencies-js": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-debugplugin-js": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-channel-js": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-react-native": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-clickanalytics-js": {
+            "constEnums": [
+                "_eExtendedInternalMessageId"
+            ]
+        },
+        "@microsoft/applicationinsights-web-basic": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-analytics-js": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-web": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-react-js": {
+            "constEnums": []
+        }
+    }
+}

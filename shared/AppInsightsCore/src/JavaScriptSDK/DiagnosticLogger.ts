@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 "use strict"
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
-import { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { hasJSON, getJSON, getConsole, dumpObj } from "./EnvUtils";
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
+import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { getDebugExt } from "./DbgExtensionUtils";
-import { strEmpty } from "./InternalConstants";
+import { dumpObj, getConsole, getJSON, hasJSON } from "./EnvUtils";
+import { getCfgValue, isFunction, isUndefined } from "./HelperFuncs";
+import { STR_EMPTY, STR_ERROR_TO_CONSOLE, STR_WARN_TO_CONSOLE } from "./InternalConstants";
 
 /**
  * For user non actionable traces use AI Internal prefix.
@@ -26,15 +26,12 @@ const AiUserActionablePrefix = "AI: ";
  */
 const AIInternalMessagePrefix = "AITR_";
 
-const strErrorToConsole = "errorToConsole";
-const strWarnToConsole = "warnToConsole";
-
 function _sanitizeDiagnosticText(text: string) {
     if (text) {
-        return "\"" + text.replace(/\"/g, strEmpty) + "\"";
+        return "\"" + text.replace(/\"/g, STR_EMPTY) + "\"";
     }
 
-    return strEmpty;
+    return STR_EMPTY;
 }
 
 function _logToConsole(func: string, message: string) {
@@ -65,14 +62,14 @@ export class _InternalLogMessage{
             (isUserAct ? AiUserActionablePrefix : AiNonUserActionablePrefix) +
             msgId;
 
-        let strProps:string = strEmpty;
+        let strProps:string = STR_EMPTY;
         if (hasJSON()) {
             strProps = getJSON().stringify(properties);
         }
 
         const diagnosticText =
-            (msg ? " message:" + _sanitizeDiagnosticText(msg) : strEmpty) +
-            (properties ? " props:" + _sanitizeDiagnosticText(strProps) : strEmpty);
+            (msg ? " message:" + _sanitizeDiagnosticText(msg) : STR_EMPTY) +
+            (properties ? " props:" + _sanitizeDiagnosticText(strProps) : STR_EMPTY);
 
         _self.message += diagnosticText;
     }
@@ -94,25 +91,28 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         /**
          * Count of internal messages sent
          */
-        let _messageCount = 0;
+        let _messageCount: number = 0;
 
         /**
          * Holds information about what message types were already logged to console or sent to server.
          */
         let _messageLogged: { [msg: number]: boolean } = {};
 
+        let _loggingLevelConsole: number;
+        let _loggingLevelTelemetry: number;
+        let _maxInternalMessageLimit: number;
+        let _enableDebugExceptions: boolean;
+
         dynamicProto(DiagnosticLogger, this, (_self) => {
-            if (isNullOrUndefined(config)) {
-                config = {};
-            }
+            _setDefaultsFromConfig(config || {});
 
-            _self.consoleLoggingLevel = () => _getConfigValue("loggingLevelConsole", 0);
+            _self.consoleLoggingLevel = () => _loggingLevelConsole;
             
-            _self.telemetryLoggingLevel = () => _getConfigValue("loggingLevelTelemetry", 1);
+            _self.telemetryLoggingLevel = () => _loggingLevelTelemetry;
 
-            _self.maxInternalMessageLimit = () => _getConfigValue("maxMessageLimit", 25);
+            _self.maxInternalMessageLimit = () => _maxInternalMessageLimit;
 
-            _self.enableDebugExceptions = () => _getConfigValue("enableDebugExceptions", false);
+            _self.enableDebugExceptions = () => _enableDebugExceptions;
             
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
@@ -122,30 +122,29 @@ export class DiagnosticLogger implements IDiagnosticLogger {
             _self.throwInternal = (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => {
                 const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
 
-                if (_self.enableDebugExceptions()) {
+                if (_enableDebugExceptions) {
                     throw dumpObj(message);
                 } else {
                     // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
-                    let logFunc = severity === eLoggingSeverity.CRITICAL ? strErrorToConsole : strWarnToConsole;
+                    let logFunc = severity === eLoggingSeverity.CRITICAL ? STR_ERROR_TO_CONSOLE : STR_WARN_TO_CONSOLE;
 
                     if (!isUndefined(message.message)) {
-                        const logLevel = _self.consoleLoggingLevel();
                         if (isUserAct) {
                             // check if this message type was already logged to console for this page view and if so, don't log it again
                             const messageKey: number = +message.messageId;
 
-                            if (!_messageLogged[messageKey] && logLevel >= severity) {
+                            if (!_messageLogged[messageKey] && _loggingLevelConsole >= severity) {
                                 _self[logFunc](message.message);
                                 _messageLogged[messageKey] = true;
                             }
                         } else {
                             // Only log traces if the console Logging Level is >= the throwInternal severity level
-                            if (logLevel >= severity) {
+                            if (_loggingLevelConsole >= severity) {
                                 _self[logFunc](message.message);
                             }
                         }
 
-                        _self.logInternalMessage(severity, message);
+                        _logInternalMessage(severity, message);
                     } else {
                         _debugExtMsg("throw" + (severity === eLoggingSeverity.CRITICAL ? "Critical" : "Warning"), message);
                     }
@@ -183,7 +182,9 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              * @param severity {LoggingSeverity} - The severity of the log message
              * @param message {_InternalLogMessage} - The message to log.
              */
-            _self.logInternalMessage = (severity: LoggingSeverity, message: _InternalLogMessage): void => {
+            _self.logInternalMessage = _logInternalMessage;
+            
+            function _logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
                 if (_areInternalMessagesThrottled()) {
                     return;
                 }
@@ -201,14 +202,14 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
                 if (logMessage) {
                     // Push the event in the internal queue
-                    if (severity <= _self.telemetryLoggingLevel()) {
+                    if (severity <= _loggingLevelTelemetry) {
                         _self.queue.push(message);
                         _messageCount++;
                         _debugExtMsg((severity === eLoggingSeverity.CRITICAL ? "error" : "warn"), message);
                     }
 
                     // When throttle limit reached, send a special event
-                    if (_messageCount === _self.maxInternalMessageLimit()) {
+                    if (_messageCount === _maxInternalMessageLimit) {
                         const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                         const throttleMessage = new _InternalLogMessage(_eInternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
                         _self.queue.push(throttleMessage);
@@ -219,23 +220,21 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                         }
                     }
                 }
-            };
+            }
 
-            function _getConfigValue<T>(name: keyof IConfiguration, defValue: T): T {
-                let value = config[name] as T;
-                if (!isNullOrUndefined(value)) {
-                    return value;
-                }
-
-                return defValue;
+            function _setDefaultsFromConfig(config: IConfiguration) {
+                _loggingLevelConsole = getCfgValue(config.loggingLevelConsole, 0);
+                _loggingLevelTelemetry = getCfgValue(config.loggingLevelTelemetry, 1)
+                _maxInternalMessageLimit = getCfgValue(config.maxMessageLimit, 25);
+                _enableDebugExceptions =  getCfgValue(config.enableDebugExceptions, false);
             }
 
             function _areInternalMessagesThrottled(): boolean {
-                return _messageCount >= _self.maxInternalMessageLimit();
+                return _messageCount >= _maxInternalMessageLimit;
             }
 
             function _debugExtMsg(name: string, data: any) {
-                let dbgExt = getDebugExt(config);
+                let dbgExt = getDebugExt(config || {});
                 if (dbgExt && dbgExt.diagLog) {
                     dbgExt.diagLog(name, data);
                 }
@@ -335,7 +334,7 @@ function _getLogger(logger: IDiagnosticLogger) {
  * @param message {_InternalLogMessage} - The log message.
  */
 export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
-    (logger || new DiagnosticLogger()).throwInternal(severity, msgId, msg, properties, isUserAct);
+    _getLogger(logger).throwInternal(severity, msgId, msg, properties, isUserAct);
 }
 
 /**
