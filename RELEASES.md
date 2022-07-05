@@ -1,11 +1,28 @@
 # Releases
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
+
+## 2.8.5 (Jul 6th, 2022)
+
+- Updates React Plugin to v3.3.5 (with v2.8.5 as dependency) -- using React 17
+- Updates React Native Plugin to 2.5.5 (with v2.8.5 as dependency)
+- Updates Chrome Debug Extension to 0.3.5
+
+### Changelog
+
+- #1636 [BUG] measurements not being sent when using stopTrackEvent(name, properties, measurements);
+- #1857 [BUG] CDN Packaging is not exposing the internal tools (CoreUtils / Telemetry / etc)
+  - This was caused by the updated tree-shaking component that we used, fixing this has increased the CDN payload but it provides backward compatibility again
+- #1852 [BUG] Snippet initialization with IE8 fails with minified code (works with un-minified code)
+  - This was specific to IE8 usages
+- #1076 Refactor code to provide better tree shaking and minification of generated code
+  - Final stage which provides automatic name crunching, however, because of the fix for #1857 the CDN package size does not show the full effect of this improvement
+- #1860 Address Component Governance issues
+
 ## 2.8.4 (Jun 1st, 2022)
 
-
 - Updates React Plugin to v3.3.4 (with v2.8.4 as dependency) -- using React 17
-- Updates React Native Plugin to 2.5.34 (with v2.8.4 as dependency)
+- Updates React Native Plugin to 2.5.4 (with v2.8.4 as dependency)
 - Updates Chrome Debug Extension to 0.3.4
 
 ### Changelog
