@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 "use strict";
 
-import {
-    getGlobal, strShimUndefined, strShimObject, strShimPrototype
-} from "@microsoft/applicationinsights-shims";
-import { strEmpty } from "./InternalConstants";
+import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import { isString, isUndefined, strContains } from "./HelperFuncs";
+import { STR_EMPTY } from "./InternalConstants";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
 declare var XDomainRequest: any;
@@ -297,7 +295,7 @@ export function isIE() {
     if (nav && (nav.userAgent !== _navUserAgentCheck || _isTrident === null)) {
         // Added to support test mocking of the user agent
         _navUserAgentCheck = nav.userAgent;
-        let userAgent = (_navUserAgentCheck || strEmpty).toLowerCase();
+        let userAgent = (_navUserAgentCheck || STR_EMPTY).toLowerCase();
         _isTrident = (strContains(userAgent, strMsie) || strContains(userAgent, strTrident));
     }
 
@@ -310,10 +308,10 @@ export function isIE() {
 export function getIEVersion(userAgentStr: string = null): number {
     if (!userAgentStr) {
         let navigator = getNavigator() || ({} as Navigator);
-        userAgentStr = navigator ? (navigator.userAgent || strEmpty).toLowerCase() : strEmpty;
+        userAgentStr = navigator ? (navigator.userAgent || STR_EMPTY).toLowerCase() : STR_EMPTY;
     }
 
-    var ua = (userAgentStr || strEmpty).toLowerCase();
+    var ua = (userAgentStr || STR_EMPTY).toLowerCase();
     // Also check for documentMode in case X-UA-Compatible meta tag was included in HTML.
     if (strContains(ua, strMsie)) {
         let doc = getDocument() || {} as Document;
@@ -333,7 +331,7 @@ export function getIEVersion(userAgentStr: string = null): number {
  */
 export function dumpObj(object: any): string {
     const objectTypeDump: string = Object[strShimPrototype].toString.call(object);
-    let propertyValueDump: string = strEmpty;
+    let propertyValueDump: string = STR_EMPTY;
     if (objectTypeDump === "[object Error]") {
         propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
     } else if (hasJSON()) {
@@ -346,10 +344,10 @@ export function dumpObj(object: any): string {
 export function isSafari(userAgentStr ?: string) {
     if (!userAgentStr || !isString(userAgentStr)) {
         let navigator = getNavigator() || ({} as Navigator);
-        userAgentStr = navigator ? (navigator.userAgent || strEmpty).toLowerCase() : strEmpty;
+        userAgentStr = navigator ? (navigator.userAgent || STR_EMPTY).toLowerCase() : STR_EMPTY;
     }
 
-    var ua = (userAgentStr || strEmpty).toLowerCase();
+    var ua = (userAgentStr || STR_EMPTY).toLowerCase();
     return (ua.indexOf("safari") >= 0);
 }
 

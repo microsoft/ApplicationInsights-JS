@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IPageViewPerfData } from "../Interfaces/Contracts/IPageViewPerfData";
+import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { strNotSpecified } from "../Constants";
 import { FieldType } from "../Enums";
+import { IPageViewPerfData } from "../Interfaces/Contracts/IPageViewPerfData";
+import { IPageViewPerformanceTelemetry } from "../Interfaces/IPageViewPerformanceTelemetry";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from "./Common/DataSanitizer";
-import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
-import { IPageViewPerformanceTelemetry } from "../Interfaces/IPageViewPerformanceTelemetry";
-import { strNotSpecified } from "../Constants";
-
 
 export class PageViewPerformance implements IPageViewPerfData, ISerializable {
 

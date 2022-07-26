@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { strNotSpecified } from "../Constants";
+import { FieldType } from "../Enums";
 import { IEventData } from "../Interfaces/Contracts/IEventData";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
-import { dataSanitizeString, dataSanitizeProperties, dataSanitizeMeasurements } from "./Common/DataSanitizer";
-import { FieldType } from "../Enums";
-import { strNotSpecified } from "../Constants";
-import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
 
 export class Event implements IEventData, ISerializable {
     public static envelopeType = "Microsoft.ApplicationInsights.{0}.Event";

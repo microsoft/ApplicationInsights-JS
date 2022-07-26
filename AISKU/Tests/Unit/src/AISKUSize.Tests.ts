@@ -4,7 +4,10 @@ import * as pako from "pako";
 import { Snippet } from "../../../src/Initialization";
 
 export class AISKUSizeCheck extends AITestClass {
-    private readonly MAX_DEFLATE_SIZE = 44;
+    private readonly MAX_RAW_SIZE = 118;
+    private readonly MAX_BUNDLE_SIZE = 118;
+    private readonly MAX_RAW_DEFLATE_SIZE = 46;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 47;
     private readonly rawFilePath = "../dist/applicationinsights-web.min.js";
     private readonly prodFilePath = "../browser/ai.2.min.js";
 
@@ -50,6 +53,8 @@ export class AISKUSizeCheck extends AITestClass {
     
     private _checkFileSize(isProd: boolean): void {
         let _filePath = isProd? this.prodFilePath : this.rawFilePath;
+        let _maxFullSize = isProd ? this.MAX_BUNDLE_SIZE : this.MAX_RAW_SIZE;
+        let _maxDeflateSize = isProd ? this.MAX_BUNDLE_DEFLATE_SIZE : this.MAX_RAW_DEFLATE_SIZE;
         let postfix  = isProd? "" : "-raw";
         let fileName = _filePath.split("..")[2];
         this.testCase({
@@ -63,8 +68,10 @@ export class AISKUSizeCheck extends AITestClass {
                         return;
                     } else {
                         return response.text().then(text => {
-                            let size = Math.ceil((pako.deflate(text).length/1024) * 100) / 100.0;
-                            Assert.ok(size <= this.MAX_DEFLATE_SIZE ,`max ${this.MAX_DEFLATE_SIZE} KB, current deflate size is: ${size} KB`);
+                            let size = Math.ceil((text.length/1024) * 100) / 100.0;
+                            Assert.ok(size <= _maxFullSize, `max ${_maxFullSize} KB, current deflate size is: ${size} KB`);
+                            let deflateSize = Math.ceil((pako.deflate(text).length/1024) * 100) / 100.0;
+                            Assert.ok(deflateSize <= _maxDeflateSize ,`max ${_maxDeflateSize} KB, current deflate size is: ${deflateSize} KB`);
                         }).catch((error: Error) => {
                             Assert.ok(false, `AISKU${postfix} response error: ${error}`);
                         });

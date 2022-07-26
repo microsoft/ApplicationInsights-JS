@@ -1,29 +1,25 @@
-import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from "./Interfaces";
-import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from "./SendBuffer";
+import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    DependencyEnvelopeCreator, EventEnvelopeCreator,
-    ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
-    PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
-} from "./EnvelopeCreator";
-import { Serializer } from "./Serializer"; // todo move to channel
-import {
-    DisabledPropertyName, RequestHeaders, IEnvelope, PageView, Event,
-    Trace, Exception, Metric, PageViewPerformance, RemoteDependencyData,
-    IChannelControlsAI, IConfig, ProcessLegacy, BreezeChannelIdentifier,
-    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage,
-    ISample
+    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IChannelControlsAI,
+    IConfig, IEnvelope, ISample, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate,
+    Trace, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage
 } from "@microsoft/applicationinsights-common";
 import {
-    ITelemetryItem, IProcessTelemetryContext, IConfiguration,
-    _eInternalMessageId, eLoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
-    getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, objKeys,
-    isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported, isArray, createUniqueNamespace, mergeEvtNamespace,
-    IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal, _warnToConsole
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, IDiagnosticLogger, INotificationManager, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, SendRequestReason, _eInternalMessageId,
+    _throwInternal, _warnToConsole, arrForEach, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion,
+    getJSON, getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace,
+    objForEachKey, objKeys, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
-import { createOfflineListener, IOfflineListener } from "./Offline";
-import { Sample } from "./TelemetryProcessors/Sample"
-import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
+    PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
+} from "./EnvelopeCreator";
+import { IBackendResponse, ISenderConfig, XDomainRequest as IXDomainRequest } from "./Interfaces";
+import { IOfflineListener, createOfflineListener } from "./Offline";
+import { ArraySendBuffer, ISendBuffer, SessionStorageSendBuffer } from "./SendBuffer";
+import { Serializer } from "./Serializer";
+import { Sample } from "./TelemetryProcessors/Sample";
 
 const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 
@@ -45,9 +41,12 @@ function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
 }
 
 function _getDefaultAppInsightsChannelConfig(): ISenderConfig {
+    let defaultValue: string;
+    let defaultCustomHeaders: [{header: string, value: string}];
+
     // set default values
     return {
-        endpointUrl: () => "https://dc.services.visualstudio.com/v2/track",
+        endpointUrl: () => DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH,
         emitLineDelimitedJson: () => false,
         maxBatchInterval: () => 15000,
         maxBatchSizeInBytes: () => 102400,  // 100kb
@@ -58,11 +57,11 @@ function _getDefaultAppInsightsChannelConfig(): ISenderConfig {
         disableXhr: () => false,
         onunloadDisableFetch: () => false,
         onunloadDisableBeacon: () => false,
-        instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
-        namePrefix: () => undefined,
+        instrumentationKey: () => defaultValue,  // Channel doesn't need iKey, it should be set already
+        namePrefix: () => defaultValue,
         samplingPercentage: () => 100,
-        customHeaders: () => undefined,
-        convertUndefined: () => undefined,
+        customHeaders: () => defaultCustomHeaders,
+        convertUndefined: () => defaultValue,
         eventsLimitInMem: () => 10000
     }
 }
@@ -279,6 +278,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
             _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
+                let diagLogger = itemCtx.diagLog();
                 
                 try {
                     // if master off switch is set, don't send any data
@@ -289,13 +289,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     // validate input
                     if (!telemetryItem) {
-                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
                         return;
                     }
         
                     // validate event
                     if (telemetryItem.baseData && !telemetryItem.baseType) {
-                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
                         return;
                     }
         
@@ -306,14 +306,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     // ensure a sender was constructed
                     if (!_self._sender) {
-                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender was not initialized");
                         return;
                     }
                   
                     // check if this item should be sampled in, else add sampleRate tag
                     if (!_isSampledIn(telemetryItem)) {
                         // Item is sampled out, do not send it
-                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
+                        _throwInternal(diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
                             "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
                         return;
                     } else {
@@ -324,9 +324,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     // construct an envelope that Application Insights endpoint can understand
                     // if ikey of telemetry is provided and not empty, envelope will use this iKey instead of senderConfig iKey
                     let defaultEnvelopeIkey = telemetryItem.iKey || _self._senderConfig.instrumentationKey();
-                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, itemCtx.diagLog(), convertUndefined);
+                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, diagLogger, convertUndefined);
                     if (!aiEnvelope) {
-                        _throwInternal(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
                     }
         
@@ -337,12 +337,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             try {
                                 if (callBack && callBack(aiEnvelope) === false) {
                                     doNotSendItem = true;
-                                    _warnToConsole(itemCtx.diagLog(), "Telemetry processor check returns false");
+                                    _warnToConsole(diagLogger, "Telemetry processor check returns false");
                                 }
                             } catch (e) {
                                 // log error but dont stop executing rest of the telemetry initializers
                                 // doNotSendItem = true;
-                                _throwInternal(itemCtx.diagLog(),
+                                _throwInternal(diagLogger,
                                     eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
                                     { exception: dumpObj(e) }, true);
                             }
@@ -372,7 +372,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _setupTimer();
         
                 } catch (e) {
-                    _throwInternal(itemCtx.diagLog(),
+                    _throwInternal(diagLogger,
                         eLoggingSeverity.WARNING,
                         _eInternalMessageId.FailedAddingTelemetryToBuffer,
                         "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + getExceptionName(e),
@@ -462,8 +462,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * partial success handler
              */
             _self._onPartialSuccess = (payload: string[], results: IBackendResponse) => {
-                const failed = [];
-                const retry = [];
+                const failed: string[] = [];
+                const retry: string[] = [];
         
                 // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
                 const errors = results.errors.reverse();
@@ -686,7 +686,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                 // append Sdk-Context request header only in case of breeze endpoint
                 if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
-                    xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
+                    xhr.setRequestHeader(RequestHeaders[eRequestHeaders.sdkContextHeader], RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest]);
                 }
 
                 arrForEach(objKeys(_headers), (headerName) => {
@@ -748,7 +748,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
                 // append Sdk-Context request header only in case of breeze endpoint
                 if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
-                    requestHeaders.append(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
+                    requestHeaders.append(RequestHeaders[eRequestHeaders.sdkContextHeader], RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest]);
                 }
                 
                 arrForEach(objKeys(_headers), (headerName) => {

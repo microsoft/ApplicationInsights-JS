@@ -3,6 +3,7 @@
 import { createElmNodeData, createUniqueNamespace } from "./DataCacheHelper";
 import { getDocument, getWindow } from "./EnvUtils";
 import { arrForEach, arrIndexOf, isArray, objForEachKey, objKeys } from "./HelperFuncs";
+import { STR_EMPTY } from "./InternalConstants";
 
 // Added to help with minfication
 const strOnPrefix = "on";
@@ -46,7 +47,7 @@ const eventNamespace = /^([^.]*)(?:\.(.+)|)/
 
 function _normalizeNamespace(name: string) {
     if (name && name.replace) {
-        return name.replace(/^\s*\.*|\.*\s*$/g, "");
+        return name.replace(/^\s*\.*|\.*\s*$/g, STR_EMPTY);
     }
 
     return name;
@@ -54,9 +55,9 @@ function _normalizeNamespace(name: string) {
 
 function _getEvtNamespace(eventName: string | undefined, evtNamespace?: string | string[] | null): IEventDetails {
     if (evtNamespace) {
-        let theNamespace: string = "";
+        let theNamespace: string = STR_EMPTY;
         if (isArray(evtNamespace)) {
-            theNamespace = "";
+            theNamespace = STR_EMPTY;
             arrForEach(evtNamespace, (name) => {
                 name = _normalizeNamespace(name);
                 if (name) {
@@ -77,15 +78,15 @@ function _getEvtNamespace(eventName: string | undefined, evtNamespace?: string |
             }
 
             // We may only have the namespace and not an eventName
-            eventName = (eventName || "") + theNamespace;
+            eventName = (eventName || STR_EMPTY) + theNamespace;
         }
     }
 
-    let parsedEvent: any[] = (eventNamespace.exec(eventName || "") || []);
+    let parsedEvent: any[] = (eventNamespace.exec(eventName || STR_EMPTY) || []);
 
     return {
         type: parsedEvent[1],
-        ns: ((parsedEvent[2] || "").replace(rRemoveEmptyNs, ".").replace(rRemoveTrailingEmptyNs, "").split(".").sort()).join(".")
+        ns: ((parsedEvent[2] || STR_EMPTY).replace(rRemoveEmptyNs, ".").replace(rRemoveTrailingEmptyNs, STR_EMPTY).split(".").sort()).join(".")
     };
 }
 
@@ -113,7 +114,7 @@ export function __getRegisteredEvents(target: any, eventName?: string, evtNamesp
             if (!evtName.type || evtName.type === value.evtName.type) {
                 if (!evtName.ns || evtName.ns === evtName.ns) {
                     theEvents.push({
-                        name: value.evtName.type + (value.evtName.ns ? "." + value.evtName.ns : ""),
+                        name: value.evtName.type + (value.evtName.ns ? "." + value.evtName.ns : STR_EMPTY),
                         handler: value.handler
                     });
                 }

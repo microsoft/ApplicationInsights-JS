@@ -9,7 +9,7 @@ export {
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
 export { FieldType } from "./Enums";
 export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
-export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, strNotSpecified } from "./Constants";
+export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified } from "./Constants";
 export { IData as AIData } from "./Interfaces/Contracts/IData";
 export { IBase as AIBase } from "./Interfaces/Contracts/IBase";
 export { ISerializable } from "./Interfaces/Telemetry/ISerializable";

@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web",
-    "version": "2.8.4",
+    "version": "2.8.5",
     "description": "Microsoft Application Insights JavaScript SDK - Web",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -20,10 +20,13 @@
         "build:snippet": "grunt snippetvnext",
         "rebuild": "npm run build",
         "test": "grunt aiskuunittests",
+        "mintest": "grunt aisku-mintests",
         "perftest": "grunt aiskuperf",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../scripts/dtsgen.js 'Microsoft.ApplicationInsights'",
         "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt aisku-min",
+        "ai-restore": "grunt aisku-restore",
         "nightwatch:chrome": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env chrome",
         "nightwatch:firefox": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env firefox",
         "nightwatch:edge": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env edge",
@@ -66,12 +69,12 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.6",
         "@microsoft/applicationinsights-shims": "2.0.1",
-        "@microsoft/applicationinsights-analytics-js": "2.8.4",
-        "@microsoft/applicationinsights-channel-js": "2.8.4",
-        "@microsoft/applicationinsights-common": "2.8.4",
-        "@microsoft/applicationinsights-core-js": "2.8.4",
-        "@microsoft/applicationinsights-dependencies-js": "2.8.4",
-        "@microsoft/applicationinsights-properties-js": "2.8.4"
+        "@microsoft/applicationinsights-analytics-js": "2.8.5",
+        "@microsoft/applicationinsights-channel-js": "2.8.5",
+        "@microsoft/applicationinsights-common": "2.8.5",
+        "@microsoft/applicationinsights-core-js": "2.8.5",
+        "@microsoft/applicationinsights-dependencies-js": "2.8.5",
+        "@microsoft/applicationinsights-properties-js": "2.8.5"
     },
     "license": "MIT"
 }

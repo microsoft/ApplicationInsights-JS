@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BaseTelemetryPlugin, IConfiguration, arrForEach,
-    IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage,
-    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls,
-    objForEachKey, isFunction, dateNow, isArray, isUndefined, getDebugExt, arrIndexOf
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfiguration, IInstrumentCallDetails, IPerfEvent, IPlugin,
+    IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain, InstrumentFunc, InstrumentorHooksCallback, arrForEach, arrIndexOf,
+    dateNow, getDebugExt, isArray, isFunction, isUndefined, objForEachKey
 } from "@microsoft/applicationinsights-core-js";
 import { Dashboard } from "./components/Dashboard";
+import { DebugBin, DebugBinParent } from "./components/debugBins";
 import { getTargetName } from "./components/helpers";
 import { permStyle } from "./components/styleNodeSrc";
-import { DebugBin, DebugBinParent } from "./components/debugBins";
-import dynamicProto from "@microsoft/dynamicproto-js";
 import { IDebugPluginConfig } from "./interfaces/IDebugPluginConfig";
 
 interface IDebugConfig {

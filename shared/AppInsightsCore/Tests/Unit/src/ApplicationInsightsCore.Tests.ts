@@ -234,19 +234,13 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
 
-                const logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
-
                 // Test precondition
-                Assert.ok(logInternalSpy.notCalled, 'PRE: No internal logging performed yet');
                 Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No logging recorded');
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Test Error");
 
                 // Test postcondition
-                Assert.ok(logInternalSpy.calledOnce, 'POST: Logging success');
-                Assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
-                Assert.ok(logInternalSpy.args[0][1].message.indexOf('Test Error') !== -1, "Correct message logged");
                 Assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
                 Assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Test Error') !== -1, "Correct message logged");
                 Assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
@@ -262,18 +256,15 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 appInsightsCore.logger = new DiagnosticLogger();
 
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
-                const logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
 
                 // Verify precondition
-                Assert.ok(logInternalSpy.notCalled, 'PRE: No internal logging performed yet');
                 Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No internal logging performed yet');
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Some message");
 
                 // Test postcondition
-                Assert.ok(logInternalSpy.calledOnce, 'POST: Logging success');
-                Assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
+                Assert.equal(1, appInsightsCore.logger.queue.length, 'POST: Logging success');
                 Assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "POST: Correct messageId logged");
 
                 // Logging same error doesn't duplicate
@@ -440,25 +431,18 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     }, [channelPlugin]
                 );
 
-                const aiSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
-                const dummySpy = this.sandbox.spy(dummyCore.logger, 'logInternalMessage');
-
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
 
                 // Test precondition
                 Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No internal logging performed yet');
-                Assert.ok(aiSpy.notCalled, "PRE: messageId not yet logged");
                 Assert.equal(0, dummyCore.logger.queue.length, 'PRE: No dummy logging');
-                Assert.ok(dummySpy.notCalled, "PRE: No dummy messageId logged");
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Test Error");
 
                 // Test postcondition
                 Assert.equal(1, appInsightsCore.logger.queue.length, 'POST: Logging success');
-                Assert.ok(aiSpy.called, "POST: Correct messageId logged");
                 Assert.equal(0, dummyCore.logger.queue.length, 'POST: No dummy logging');
-                Assert.ok(dummySpy.notCalled, "POST: No dummy messageId logged");
             }
         });
 
@@ -1015,6 +999,6 @@ class TrackPlugin implements IPlugin {
     }
 
     public processTelemetry(evt: ITelemetryItem) {
-        this._nextPlugin.processTelemetry(evt);
+        this._nextPlugin?.processTelemetry(evt);
     }
 }

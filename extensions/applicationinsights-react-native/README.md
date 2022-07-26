@@ -1,55 +1,26 @@
-# Microsoft Application Insights JavaScript SDK - React Native Plugin
+# Microsoft Application Insights React Native Plugin
 
-React Native Plugin for the Application Insights Javascript SDK
+*******************
 
-## Getting Started
->**This plugin relies on [`react-native-device-info`](https://github.com/rebeccahughes/react-native-device-info). You must install and link this package. Keep `react-native-device-info` up-to-date to collect the latest device names using your app.**
+:exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation:
 
-```zsh
-npm install --save @microsoft/applicationinsights-react-native @microsoft/applicationinsights-web
-npm install --save react-native-device-info
-react-native link react-native-device-info
-```
+# The current development repo location of the [React-Native Plugin Repo has moved here](https://github.com/microsoft/applicationinsights-react-native) - (for v2.5.6 or greater) 
 
-## Initializing the Plugin
-To use this plugin, you only need to construct the plugin and add it as an `extension` to your existing Application Insights instance.
-```ts
-import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { ReactNativePlugin } from '@microsoft/applicationinsights-react-native';
+## Please refer to the new repo for usage instructions, and open issues there.
 
-var RNPlugin = new ReactNativePlugin();
-var appInsights = new ApplicationInsights({
-    config: {
-        instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-        extensions: [RNPlugin]
-    }
-});
-appInsights.loadAppInsights();
-```
+- All code History was moved to the new repo
 
-## Requirements
-You must be using a version `>=2.0.0` of `@microsoft/applicationinsights-web`. This plugin will only work in react-native apps, e.g. it will not work with `expo`.
+:exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation:
 
-## Device Information Collected
-By default, this plugin automatically collects
- - **Unique Device ID** (also known as Installation ID)
- - **Device Model Name** (iPhone XS, etc.)
- - **Device Type** (Handset, Tablet, etc.)
+*******************
 
-## Contributing
+### Where is the source code for the previous version
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.microsoft.com.
+For historical purposes the previous code for the angular plugin has been archived in the [reactjs-legacy branch to review all previous code and documentation](https://github.com/microsoft/ApplicationInsights-JS/tree/reactnative-legacy/extensions/applicationinsights-react-native) branch.
 
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+No further changes are scheduled or expected, any and all changes will occur in the [new repo](https://github.com/microsoft/applicationinsights-react-native) only.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+### Links
 
-## License
-
-[MIT](LICENSE)
+- [New Repo](https://github.com/microsoft/applicationinsights-react-native)
+- [v2.5.5 Readme](https://github.com/microsoft/ApplicationInsights-JS/tree/reactnative-legacy/extensions/applicationinsights-react-native/README.md)

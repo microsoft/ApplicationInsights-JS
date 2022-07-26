@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 import _ from "lodash";
-import { isArray, isString, normalizeJsName } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, isArray, isString, normalizeJsName } from "@microsoft/applicationinsights-core-js";
+import {
+    DynamicValueConverter, IConfiguration, IDataEventTypeCondition, IDynamicField, ISpecialFieldNames
+} from "../configuration/IConfiguration";
 import { defaultDataEventTypes, defaultExcludeFromCondensedList, defaultSessionId } from "../configuration/defaultConfiguration";
-import { DynamicValueConverter, IConfiguration, IDataEventTypeCondition, IDynamicField, ISpecialFieldNames } from "../configuration/IConfiguration";
 import { DataEventType, IDataEvent } from "./IDataEvent";
 
 let _regExpMap: { [key: string]: RegExp } = {};
@@ -77,10 +79,11 @@ export function getCondensedDetails(dataEvent: IDataEvent, configuration: IConfi
         // Construct
         dataEvent.condensedDetails = JSON.parse(JSON.stringify((dataEvent||{}).data || {}));
 
-        if (configuration && configuration.fieldsToExcludeFromCondensedList) {
-            for (const toExclude of configuration.fieldsToExcludeFromCondensedList) {
+        var excludeFields = (configuration || {}).fieldsToExcludeFromCondensedList;
+        if (excludeFields) {
+            arrForEach(excludeFields, (toExclude) => {
                 _.unset(dataEvent.condensedDetails, toExclude);
-            }
+            });
         } else {
             for (const toExclude of defaultExcludeFromCondensedList) {
                 _.unset(dataEvent.condensedDetails, toExclude);

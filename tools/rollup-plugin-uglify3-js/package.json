@@ -42,6 +42,6 @@
         "tslib": "*"
     },
     "dependencies": {
-        "uglify-js": "^3.11.0"
+        "uglify-js": "3.16.0"
     }
 }

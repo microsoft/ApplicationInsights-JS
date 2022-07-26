@@ -6,15 +6,14 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _gblCookieMgr } from "./CookieMgr";
-import { getPerformance, isIE }  from "./EnvUtils";
-import {
-    arrForEach, arrIndexOf, arrMap, arrReduce, dateNow, hasOwnProperty,
-    isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof,
-    isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
-} from "./HelperFuncs";
+import { getPerformance, isIE } from "./EnvUtils";
 import { addEventHandler, attachEvent, detachEvent } from "./EventHelpers";
-import { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./RandomHelper";
-import { strEmpty } from "./InternalConstants";
+import {
+    arrForEach, arrIndexOf, arrMap, arrReduce, dateNow, hasOwnProperty, isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined,
+    isNumber, isObject, isString, isTypeof, isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
+} from "./HelperFuncs";
+import { STR_EMPTY } from "./InternalConstants";
+import { mwcRandom32, mwcRandomSeed, newId, random32, randomValue } from "./RandomHelper";
 
 let _cookieMgrs: ICookieMgr[] = null;
 let _canUseCookies: boolean;    // legacy supported config
@@ -68,7 +67,7 @@ export function generateW3CId(): string {
     const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
 
     // rfc4122 version 4 UUID without dashes and with lowercase letters
-    let oct = strEmpty, tmp;
+    let oct = STR_EMPTY, tmp;
     for (let a = 0; a < 4; a++) {
         tmp = random32();
         oct +=

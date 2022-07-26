@@ -1183,7 +1183,7 @@ class TestSamplingPlugin implements ITelemetryPlugin {
         data.sampled = true;
 
         if (!this.isSampledOut) {
-            this.nextPlugin.processTelemetry(env);
+            this.nextPlugin?.processTelemetry(env);
         }
     }
 
@@ -1254,7 +1254,7 @@ class TestChannelPlugin implements IChannelControls {
         this.events.push(env);
 
         // Just calling processTelemetry as this is the original design of the Plugins (as opposed to the newer processNext())
-        this._nextPlugin.processTelemetry(env);
+        this._nextPlugin?.processTelemetry(env);
     }
 }
 

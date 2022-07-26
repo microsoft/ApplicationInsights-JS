@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "2.8.4",
+    "version": "2.8.5",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -14,9 +14,12 @@
         "build:browser": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
         "test": "grunt aiskuliteunittests",
+        "mintest": "grunt aiskulite-mintests",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../scripts/dtsgen.js 'Microsoft.ApplicationInsights'",
-        "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt aiskulite-min",
+        "ai-restore": "grunt aiskulite-restore"
     },
     "repository": {
         "type": "git",
@@ -51,9 +54,9 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.6",
         "@microsoft/applicationinsights-shims": "2.0.1",
-        "@microsoft/applicationinsights-common": "2.8.4",
-        "@microsoft/applicationinsights-channel-js": "2.8.4",
-        "@microsoft/applicationinsights-core-js": "2.8.4"
+        "@microsoft/applicationinsights-common": "2.8.5",
+        "@microsoft/applicationinsights-channel-js": "2.8.5",
+        "@microsoft/applicationinsights-core-js": "2.8.5"
     },
     "license": "MIT"
 }

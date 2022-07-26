@@ -13,6 +13,16 @@
         },
         {
             "commandKind": "bulk",
+            "name": "mintest",
+            "summary": "Run all tests for all packages using the ai-minify for the source",
+            "description": "Runs tests for all projects using the ai-minify for the source",
+            "safeForSimultaneousRushProcesses": false,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
             "name": "perftest",
             "summary": "Run all performance based tests for all packages",
             "description": "Runs performance tests for all projects",
@@ -41,6 +51,26 @@
             "summary": "Run all build for all packages",
             "name": "rebuild",
             "allowWarningsInSuccessfulBuild": true
-        }  
+        },
+        {
+            "commandKind": "bulk",
+            "name": "ai-min",
+            "summary": "Run all ai-minify tasks for all packages",
+            "description": "Runs ai-minify tasks for all projects",
+            "safeForSimultaneousRushProcesses": false,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "ai-restore",
+            "summary": "Run all restore tasks for all packages to unminify the files",
+            "description": "Runs all restore tasks for all projects to unminify the files",
+            "safeForSimultaneousRushProcesses": false,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        }
     ]
 }

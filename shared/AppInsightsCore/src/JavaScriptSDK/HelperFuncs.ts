@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import {
-    strShimUndefined, strShimObject, strShimFunction, throwTypeError,
-    ObjClass, ObjProto, ObjAssign, ObjHasOwnProperty, ObjDefineProperty, strShimPrototype
+    ObjAssign, ObjClass, ObjDefineProperty, ObjHasOwnProperty, ObjProto, strShimFunction, strShimObject, strShimPrototype, strShimUndefined,
+    throwTypeError
 } from "@microsoft/applicationinsights-shims";
-import { strEmpty } from "./InternalConstants";
+import { STR_EMPTY } from "./InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 
@@ -519,7 +519,7 @@ export function arrReduce<T, R>(arr: T[], callbackfn: (previousValue: T | R, cur
 export function strTrim(str: any): string {
     if (str) {
         // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
-        str = (_strTrim && str[cStrTrim]) ? str[cStrTrim]() : (str.replace ? str.replace(/^\s+|\s+$/g, "") : str);
+        str = (_strTrim && str[cStrTrim]) ? str[cStrTrim]() : (str.replace ? str.replace(/^\s+|\s+$/g, STR_EMPTY) : str);
     }
     
     return str;
@@ -648,7 +648,7 @@ export function getExceptionName(object: any): string {
         return object.name;
     }
 
-    return strEmpty;
+    return STR_EMPTY;
 }
 
 /**
@@ -695,6 +695,15 @@ export function getSetValue<T, K extends keyof T>(target: T, field: K, defValue?
     }
 
     return theValue;
+}
+
+/**
+ * Get the mapped config value, if null or undefined any supplied defaultValue will be returned.
+ * @param field - The name of the field as the named enum value (number) or the string name.
+ * @param defaultValue - The default value to return if the config field is not present, null or undefined.
+ */
+export function getCfgValue<V>(theValue: V, defaultValue?: V): V {
+    return !isNullOrUndefined(theValue) ? theValue : defaultValue;
 }
 
 export function isNotTruthy(value: any) {

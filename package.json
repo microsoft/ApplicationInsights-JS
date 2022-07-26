@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "2.8.4",
+    "version": "2.8.5",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -15,6 +15,7 @@
         "rebuild": "npm run build",
         "testx": "rush test --verbose",
         "test": "node common/scripts/install-run-rush.js test --verbose",
+        "mintest": "node common/scripts/install-run-rush.js mintest --verbose",
         "lint": "node common/scripts/install-run-rush.js lint --verbose",
         "perftest": "node common/scripts/install-run-rush.js perftest --verbose",
         "rollupes3": "grunt rollupes3",
@@ -23,7 +24,9 @@
         "setVersion": "node ./tools/release-tools/setVersion.js",
         "purge": "node common/scripts/install-run-rush.js purge",
         "fullClean": "git clean -xdf && npm install && rush update --recheck --full",
-        "fullCleanBuild": "npm run fullClean && npm run rebuild"
+        "fullCleanBuild": "npm run fullClean && npm run rebuild",
+        "ai-min": "node common/scripts/install-run-rush.js ai-min",
+        "ai-restore": "node common/scripts/install-run-rush.js ai-restore"
     },
     "repository": {
         "type": "git",
@@ -36,7 +39,7 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "@microsoft/rush": "^5.70.0",
+        "@microsoft/rush": "^5.75.0",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@typescript-eslint/eslint-plugin": "^4.28.0",

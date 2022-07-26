@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { arrForEach, isFunction } from "./HelperFuncs";
-import { strCore, strDoTeardown, strIsInitialized, strPriority, strProcessTelemetry, strSetNextPlugin, strTeardown } from "./InternalConstants";
-import { createElmNodeData } from "./DataCacheHelper";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
+import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
+import { createElmNodeData } from "./DataCacheHelper";
+import { arrForEach, isFunction } from "./HelperFuncs";
+import { STR_CORE, STR_PRIORITY, STR_PROCESS_TELEMETRY } from "./InternalConstants";
 import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
 
-const strDoUnload = "_doUnload";
 export interface IPluginState {
     core?: IAppInsightsCore;
     isInitialized?: boolean;
@@ -47,18 +46,18 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
         let thePlugin = proxy.getPlugin();
         if (thePlugin) {
             if (lastPlugin &&
-                    isFunction(lastPlugin[strSetNextPlugin]) &&
-                    isFunction(thePlugin[strProcessTelemetry])) {
+                    isFunction(lastPlugin.setNextPlugin) &&
+                    isFunction(thePlugin.processTelemetry)) {
                 // Set this plugin as the next for the previous one
-                lastPlugin[strSetNextPlugin](thePlugin);
+                lastPlugin.setNextPlugin(thePlugin);
             }
 
             let isInitialized = false;
-            if (isFunction(thePlugin[strIsInitialized])) {
-                isInitialized = thePlugin[strIsInitialized]();
+            if (isFunction(thePlugin.isInitialized)) {
+                isInitialized = thePlugin.isInitialized();
             } else {
                 pluginState = _getPluginState(thePlugin);
-                isInitialized = pluginState[strIsInitialized];
+                isInitialized = pluginState.isInitialized;
             }
 
             if (!isInitialized) {
@@ -72,7 +71,7 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
 
     // Now initialize the plugins
     arrForEach(initPlugins, thePlugin => {
-        let core = processContext.core();
+        let core = processContext[STR_CORE]();
 
         thePlugin.initialize(
             processContext.getCfg(),
@@ -83,12 +82,12 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
         pluginState = _getPluginState(thePlugin);
 
         // Only add the core to the state if the plugin didn't set it (doesn't extent from BaseTelemetryPlugin)
-        if (!thePlugin[strCore] && !pluginState[strCore]) {
-            pluginState[strCore] = core;
+        if (!thePlugin[STR_CORE] && !pluginState[STR_CORE]) {
+            pluginState[STR_CORE] = core;
         }
 
-        pluginState[strIsInitialized] = true;
-        delete pluginState[strTeardown];
+        pluginState.isInitialized = true;
+        delete pluginState.teardown;
     });
 }
 
@@ -97,9 +96,9 @@ export function sortPlugins<T = IPlugin>(plugins:T[]) {
     return plugins.sort((extA, extB) => {
         let result = 0;
         if (extB) {
-            let bHasProcess = isFunction(extB[strProcessTelemetry]);
-            if (isFunction(extA[strProcessTelemetry])) {
-                result = bHasProcess ? extA[strPriority] - extB[strPriority] : 1;
+            let bHasProcess = isFunction(extB[STR_PROCESS_TELEMETRY]);
+            if (isFunction(extA[STR_PROCESS_TELEMETRY])) {
+                result = bHasProcess ? extA[STR_PRIORITY] - extB[STR_PRIORITY] : 1;
             } else if (bHasProcess) {
                 result = -1;
             }
@@ -128,7 +127,7 @@ export function unloadComponents(components: any | IUnloadableComponent[], unloa
         while (idx < components.length) {
             let component = components[idx++];
             if (component) {
-                let func = component[strDoUnload] || component[strDoTeardown];
+                let func = component._doUnload || component._doTeardown;
                 if (isFunction(func)) {
                     if (func.call(component, unloadCtx, unloadState, _doUnload) === true) {
                         return true;

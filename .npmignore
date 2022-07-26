@@ -5,7 +5,15 @@
 
 # ... but these files
 !/package.json
+!/CODE_OF_CONDUCT.md
+!/CONTRIBUTING.md
 !/README.md
+!/SECURITY.md
+!/SUPPORT.md
+!/NOTICE
+!/PRIVACY
+!/LICENSE
+!/LICENSE.TXT
 !/API-reference.md
 !/bundle/ai.module.*
 !/dist/ai.js

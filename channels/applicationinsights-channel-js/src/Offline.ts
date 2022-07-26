@@ -1,4 +1,6 @@
-import { getWindow, getDocument, getNavigator, isUndefined, isNullOrUndefined, createUniqueNamespace, mergeEvtNamespace, eventOn, eventOff } from "@microsoft/applicationinsights-core-js";
+import {
+    createUniqueNamespace, eventOff, eventOn, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined, mergeEvtNamespace
+} from "@microsoft/applicationinsights-core-js";
 
 export interface IOfflineListener {
     isOnline: () => boolean;

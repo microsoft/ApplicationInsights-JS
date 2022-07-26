@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    dateTimeUtilsDuration, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
+    IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, dateTimeUtilsDuration
 } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, IDiagnosticLogger, eLoggingSeverity,
-    _eInternalMessageId, getDocument, getLocation, arrForEach, isNullOrUndefined, getExceptionName, dumpObj, IProcessTelemetryUnloadContext, ITelemetryUnloadState, _throwInternal
+    IAppInsightsCore, IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
+    arrForEach, dumpObj, eLoggingSeverity, getDocument, getExceptionName, getLocation, isNullOrUndefined
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
-import dynamicProto from "@microsoft/dynamicproto-js";
 
 /**
  * Internal interface to pass appInsights object to subcomponents without coupling
@@ -134,7 +134,7 @@ export class PageViewManager {
                             customProperties = {};
                         }
         
-                        customProperties["duration"] = customDuration;
+                        customProperties.duration = customDuration;
                     }
                     // case 2
                     appInsights.sendPageViewInternal(
@@ -166,13 +166,13 @@ export class PageViewManager {
                             if (!pageViewPerformance.isValid && !pageViewSent) {
                                 // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
                                 // That's the best value we can get that makes sense.
-                                customProperties["duration"] = customDuration;
+                                customProperties.duration = customDuration;
                                 appInsights.sendPageViewInternal(
                                     pageView,
                                     customProperties);
                             } else {
                                 if (!pageViewSent) {
-                                    customProperties["duration"] = pageViewPerformance.durationMs;
+                                    customProperties.duration = pageViewPerformance.durationMs;
                                     appInsights.sendPageViewInternal(
                                         pageView,
                                         customProperties);
@@ -188,7 +188,7 @@ export class PageViewManager {
                             // with the maximum duration limit. Otherwise, keep waiting until performance timings are ready
                             processed = true;
                             if (!pageViewSent) {
-                                customProperties["duration"] = maxDurationLimit;
+                                customProperties.duration = maxDurationLimit;
                                 appInsights.sendPageViewInternal(
                                     pageView,
                                     customProperties
