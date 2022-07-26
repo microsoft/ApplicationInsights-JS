@@ -396,26 +396,6 @@ module.exports = function (grunt) {
                                         path: "./extensions/applicationinsights-properties-js",
                                         unitTestName: "prop.tests.js"
                                     },
-            "react":                {
-                                        autoMinify: false,
-                                        path: "./extensions/applicationinsights-react-js",
-                                        cfg: {
-                                            src: [
-                                                "./extensions/applicationinsights-react-js/src/index.ts"
-                                            ]
-                                        },
-                                        unitTestName: "reactplugin.tests.js"
-                                    },
-            "reactnative":          { 
-                                        autoMinify: false,
-                                        path: "./extensions/applicationinsights-react-native",
-                                        cfg: {
-                                            src: [
-                                                "./extensions/applicationinsights-react-native/src/**/*.ts"
-                                            ]
-                                        },
-                                        unitTestName: "reactnativeplugin.tests.js"
-                                    },
     
             // Tools
             "rollupuglify":         {
@@ -670,7 +650,7 @@ module.exports = function (grunt) {
         grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
 
         grunt.registerTask("test", ["connect", "ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
-        grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
+        grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests"]);
 
         grunt.registerTask("perfmarkmeasure", tsBuildActions("perfmarkmeasure"));
         grunt.registerTask("perfmarkmeasure-min", minTasks("perfmarkmeasure"));
@@ -683,18 +663,6 @@ module.exports = function (grunt) {
         grunt.registerTask("properties-restore", restoreTasks("properties"));
         grunt.registerTask("propertiestests", tsTestActions("properties"));
         grunt.registerTask("properties-mintests", tsTestActions("properties", true));
-
-        grunt.registerTask("react", tsBuildActions("react"));
-        grunt.registerTask("react-min", minTasks("react"));
-        grunt.registerTask("react-restore", restoreTasks("react"));
-        grunt.registerTask("reacttests", tsTestActions("react"));
-        grunt.registerTask("react-mintests", tsTestActions("react", true));
-
-        grunt.registerTask("reactnative", tsBuildActions("reactnative"));
-        grunt.registerTask("reactnative-min", minTasks("reactnative"));
-        grunt.registerTask("reactnative-restore", restoreTasks("reactnative"));
-        grunt.registerTask("reactnativetests", tsTestActions("reactnative"));
-        grunt.registerTask("reactnative-mintests", tsTestActions("reactnative", true));
 
         grunt.registerTask("deps", tsBuildActions("deps"));
         grunt.registerTask("deps-min", minTasks("deps"));
