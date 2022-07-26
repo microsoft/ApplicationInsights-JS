@@ -80,16 +80,6 @@
       "shouldPublish": true
     },
     {
-      "packageName": "@microsoft/applicationinsights-react-js",
-      "projectFolder": "extensions/applicationinsights-react-js",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-react-native",
-      "projectFolder": "extensions/applicationinsights-react-native",
-      "shouldPublish": true
-    },
-    {
       "packageName": "@microsoft/applicationinsights-channel-js",
       "projectFolder": "channels/applicationinsights-channel-js",
       "shouldPublish": true

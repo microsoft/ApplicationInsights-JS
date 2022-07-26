@@ -390,7 +390,7 @@ As part of changes being introduced in version 2.6.0 we are deprecating and remo
 
 By default, this SDK will **not** handle state based route changing that occurs in single page applications. To enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to your setup configuration.
 
-Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK. It will also accomplish route change tracking for you, as well as collect [other React specific telemetry](./extensions/applicationinsights-react-js).
+Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK. It will also accomplish route change tracking for you, as well as collect [other React specific telemetry](https://github.com/microsoft/applicationinsights-react-js).
 
 ## Source Map Support
 
@@ -415,10 +415,11 @@ This version comes with the bare minimum amount of features and functionalities 
 ## Available extensions for the SDK
 
 
-| Extensions |
-|---------------|
-| [React](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-js)|
-| [React Native](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-native)|
+| Extensions    | NPM Version 
+|---------------|-------------
+| [Angular](https://github.com/microsoft/applicationinsights-angularplugin-js) | [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-angularplugin-js.svg)](https://www.npmjs.com/package/@microsoft/applicationinsights-angularplugin-js)
+| [React](https://github.com/microsoft/applicationinsights-react-js) | [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-react-js.svg)](https://www.npmjs.com/package/@microsoft/applicationinsights-react-js)
+| [React Native](https://github.com/microsoft/applicationinsights-react-native) | [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-react-native.svg)](https://www.npmjs.com/package/@microsoft/applicationinsights-react-native)
 
 ## Upgrading from the old Version of Application Insights
 
