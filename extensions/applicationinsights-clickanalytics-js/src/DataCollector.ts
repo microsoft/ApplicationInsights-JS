@@ -1,13 +1,10 @@
 /**
- * @copyright Microsoft 2020
- */
+* @copyright Microsoft 2020
+*/
 
-import {
-    getLocation, getDocument, getWindow, hasDocument, isFunction
-} from "@microsoft/applicationinsights-core-js";
-import { findClosestAnchor, isValueAssigned } from "./common/Utils";
+import { getDocument, getLocation, getWindow, hasDocument, isFunction } from "@microsoft/applicationinsights-core-js";
 import { IClickAnalyticsConfiguration, IOverrideValues } from "./Interfaces/Datamodel";
-
+import { findClosestAnchor, isValueAssigned } from "./common/Utils";
 
 var clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };
 

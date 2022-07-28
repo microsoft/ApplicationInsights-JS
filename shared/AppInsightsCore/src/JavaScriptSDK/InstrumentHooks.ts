@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails, InstrumentorHooksCallback
-} from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
 import { strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
-import { hasOwnProperty, _getObjProto } from "./HelperFuncs";
+import {
+    IInstrumentCallDetails, IInstrumentHook, IInstrumentHooks, IInstrumentHooksCallbacks, InstrumentorHooksCallback
+} from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
 import { getGlobalInst } from "./EnvUtils";
-import { createElmNodeData } from "./DataCacheHelper";
+import { _getObjProto, hasOwnProperty } from "./HelperFuncs";
 
 const aiInstrumentHooks = "_aiHooks";
 
@@ -276,4 +275,3 @@ export function InstrumentEvent(target: any, evtName: string, callbacks: IInstru
 
     return null;
 }
-

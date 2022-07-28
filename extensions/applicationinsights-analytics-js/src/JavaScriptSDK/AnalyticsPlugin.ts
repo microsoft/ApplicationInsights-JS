@@ -1,39 +1,31 @@
 /**
- * ApplicationInsights.ts
- * @copyright Microsoft 2018
- */
+* ApplicationInsights.ts
+* @copyright Microsoft 2018
+*/
 
-import {
-    IConfig, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
-    createTelemetryItem, Metric, Exception, eSeverityLevel, Trace, IDependencyTelemetry,
-    IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault, createDomEvent,
-    strNotSpecified, isCrossOriginError, utlDisableStorage, utlEnableStorage, dataSanitizeString, createDistributedTraceContextFromTrace
-} from "@microsoft/applicationinsights-common";
-
-import {
-    IPlugin, IConfiguration, IAppInsightsCore,
-    BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
-    eLoggingSeverity, _eInternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory, getLocation, objForEachKey,
-    isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, ICookieMgr, safeGetCookieMgr,
-    TelemetryInitializerFunction, hasHistory, strUndefined, objDefineAccessors, InstrumentEvent, IInstrumentCallDetails, eventOn, eventOff,
-    mergeEvtNamespace, createUniqueNamespace, ITelemetryInitializerHandler, throwError, isUndefined, hasWindow, createProcessTelemetryContext,
-    ITelemetryUnloadState, IProcessTelemetryUnloadContext, IDistributedTraceContext
-} from "@microsoft/applicationinsights-core-js";
-import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
-import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import dynamicProto from "@microsoft/dynamicproto-js";
-
-// For types only
+import {
+    AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
+    IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
+    IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
+    PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
+    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, stringToBoolOrDefault, utlDisableStorage,
+    utlEnableStorage
+} from "@microsoft/applicationinsights-common";
+import {
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext, IInstrumentCallDetails,
+    IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach, createProcessTelemetryContext,
+    createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory,
+    getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace,
+    objDefineAccessors, objForEachKey, safeGetCookieMgr, strUndefined, throwError
+} from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
+import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
+import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { Timing } from "./Timing";
 
-"use strict";
-
-const durationProperty: string = "duration";
 const strEvent = "event";
 
 function _dispatchEvent(target:EventTarget, evnt: Event) {
@@ -109,7 +101,7 @@ function _updateStorageUsage(extConfig: IConfig) {
 }
 
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.8.4"; // Not currently used anywhere
+    public static Version = "#version#"; // Not currently used anywhere
 
     public static getDefaultConfig = _getDefaultConfig;
 
@@ -202,7 +194,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              */
             _self.stopTrackEvent = (name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
                 try {
-                    _eventTracking.stop(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
+                    _eventTracking.stop(name, undefined, properties, measurements);
                 } catch (e) {
                     _throwInternal(eLoggingSeverity.CRITICAL,
                         _eInternalMessageId.StopTrackEventFailed,
@@ -562,13 +554,17 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     
                     _eventTracking = new Timing(_self.diagLog(), "trackEvent");
                     _eventTracking.action =
-                        (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }) => {
+                        (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
                             if (!properties) {
                                 properties = {};
                             }
     
-                            properties[durationProperty] = duration.toString();
-                            _self.trackEvent({ name, properties } as IEventTelemetry);
+                            if (!measurements) {
+                                measurements = {};
+                            }
+    
+                            properties.duration = duration.toString();
+                            _self.trackEvent({ name, properties, measurements } as IEventTelemetry);
                         }
     
                     // initialize page view timing
@@ -579,7 +575,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         if (isNullOrUndefined(properties)) {
                             properties = {};
                         }
-                        properties[durationProperty] = duration.toString();
+                        properties.duration = duration.toString();
     
                         let pageViewItem: IPageViewTelemetry = {
                             name,
@@ -761,9 +757,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              */
             function _addHistoryListener(extConfig: IConfig, win: Window, history: History, locn: Location) {
 
+                let namePrefix = extConfig.namePrefix || "";
+
                 function _popstateHandler() {
                     if (_enableAutoRouteTracking) {
-                        _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "locationchange"));
+                        _dispatchEvent(win, createDomEvent(namePrefix + "locationchange"));
                     }
                 }
 
@@ -801,8 +799,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         ns: _evtNamespace,
                         rsp: () => {
                             if (_enableAutoRouteTracking) {
-                                _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "pushState"));
-                                _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "locationchange"));
+                                _dispatchEvent(win, createDomEvent(namePrefix + "pushState"));
+                                _dispatchEvent(win, createDomEvent(namePrefix + "locationchange"));
                             }
                         }
                     }, true));
@@ -811,14 +809,14 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         ns: _evtNamespace,
                         rsp: () => {
                             if (_enableAutoRouteTracking) {
-                                _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "replaceState"));
-                                _dispatchEvent(win, createDomEvent(extConfig.namePrefix + "locationchange"));
+                                _dispatchEvent(win, createDomEvent(namePrefix + "replaceState"));
+                                _dispatchEvent(win, createDomEvent(namePrefix + "locationchange"));
                             }
                         }
                     }, true));
 
-                    eventOn(win, extConfig.namePrefix + "popstate", _popstateHandler, _evtNamespace);
-                    eventOn(win, extConfig.namePrefix + "locationchange", _locationChangeHandler, _evtNamespace);
+                    eventOn(win, namePrefix + "popstate", _popstateHandler, _evtNamespace);
+                    eventOn(win, namePrefix + "locationchange", _locationChangeHandler, _evtNamespace);
 
                     _historyListenerAdded = true;
                 }
@@ -852,7 +850,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
-             * @param severity {LoggingSeverity} - The severity of the log message
+             * @param severity {eLoggingSeverity} - The severity of the log message
              * @param message {_InternalLogMessage} - The log message.
              */
             function _throwInternal(severity: eLoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void {

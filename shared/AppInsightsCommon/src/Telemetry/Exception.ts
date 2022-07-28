@@ -1,18 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IStackFrame } from "../Interfaces/Contracts/IStackFrame";
+import {
+    IDiagnosticLogger, arrForEach, arrMap, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, strTrim
+} from "@microsoft/applicationinsights-core-js";
+import { strNotSpecified } from "../Constants";
+import { FieldType } from "../Enums";
 import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";
 import { IExceptionDetails } from "../Interfaces/Contracts/IExceptionDetails";
-import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
-import { dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
-import { FieldType } from "../Enums";
+import { IStackFrame } from "../Interfaces/Contracts/IStackFrame";
 import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
-import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction } from "@microsoft/applicationinsights-core-js";
 import {
-    IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal, IAutoExceptionTelemetry, IStackDetails
+    IAutoExceptionTelemetry, IExceptionDetailsInternal, IExceptionInternal, IExceptionStackFrameInternal, IStackDetails
 } from "../Interfaces/IExceptionTelemetry";
-import { strNotSpecified } from "../Constants";
+import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import {
+    dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString
+} from "./Common/DataSanitizer";
 
 const NoMethod = "<no_method>";
 const strError = "error";

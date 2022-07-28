@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { ITelemetryItem } from "./ITelemetryItem";
-import { IConfiguration } from "./IConfiguration";
 import { IAppInsightsCore } from "./IAppInsightsCore";
+import { IConfiguration } from "./IConfiguration";
 import { IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "./IProcessTelemetryContext";
+import { ITelemetryItem } from "./ITelemetryItem";
 import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";

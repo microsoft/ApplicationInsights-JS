@@ -33,7 +33,7 @@ export function createDataSource(configuration: IConfiguration): IDataSource {
         if (isArray(configuration.dataSourceUrls)) {
             urls = configuration.dataSourceUrls as string[];
         } else if (isString(configuration.dataSourceUrls)) {
-            urls = [configuration.dataSourceUrls];
+            urls = [configuration.dataSourceUrls] as string[];
         }
 
         if (!urls || urls.length === 0) {

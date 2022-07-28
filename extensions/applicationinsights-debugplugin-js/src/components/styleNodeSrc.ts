@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+// @skip-file-minify
 
 import { Util } from "@microsoft/applicationinsights-common";
 

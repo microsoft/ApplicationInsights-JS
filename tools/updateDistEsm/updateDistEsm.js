@@ -238,6 +238,54 @@ function removeDynamicProtoStubs(orgSrc, src, theString, inputFile) {
     return src;
 }
 
+function fixIEDynamicProtoUsage(orgSrc, src, theString) {
+    // find all "dynamicProto(<classname>," usages
+    // Then find all "class <classname> " usages and append a static variable after the name
+
+    const dynamicProtoUsage = /dynamicProto\s*\(\s*(\w*)\s*,/g;
+    let matches = dynamicProtoUsage.exec(orgSrc);
+    while (matches != null) {
+        let className = matches[1].trim();
+
+        let hasProperty = new RegExp("^\\s*" + className + "\\.\\w+\\s*", "gm");
+        let hasPropertyMatches = hasProperty.exec(src);
+        if (!hasPropertyMatches) {
+
+            if (orgSrc.indexOf(" return " + className + ";") === -1) {
+                throw "return " + className + "; -- doesn't exist!!! -- " + orgSrc;
+            }
+    
+            let classRegEx = new RegExp("^\\s*return\\s+" + className + ";", "gm");
+            let classMatches = classRegEx.exec(orgSrc);
+            if (!classMatches) {
+                throw ('Unable to locate class definition for "' + className + '" using ' + classRegEx + ' detected from -- ' + matches[0] + ' -- ' + classMatches + " in \n" + orgSrc);
+            }
+    
+            let newClass = 
+                "\n    // This is a workaround for an IE8 bug when using dynamicProto() with classes that don't have any" + 
+                "\n    // non-dynamic functions or static properties/functions when using uglify-js to minify the resulting code." +
+                "\n    // this will be removed when ES3 support is dropped." + 
+                "\n    " + className + ".__ieDyn=1;" + 
+                "\n" + classMatches[0];
+    
+            var idx = orgSrc.indexOf(classMatches[0]);
+            if (idx !== -1) {
+                console.log(`Replacing [${classMatches[0]}] with [${newClass}]`);
+                theString.overwrite(idx, idx + classMatches[0].length, newClass);
+                src = src.replace(classMatches[0], newClass);
+            }
+
+        } else {
+            console.log("dynamicProto class has property or function -- " + hasProperty + " found " + hasPropertyMatches[0]);
+        }
+
+        // Find next
+        matches = dynamicProtoUsage.exec(orgSrc);
+    }
+
+    return src;
+}
+
 const updateDistEsmFiles = (
     replaceValues,
     banner,
@@ -265,6 +313,8 @@ const updateDistEsmFiles = (
             src = replaceTsLibImports(orgSrc, src, theString);
             src = replaceTsLibStarImports(orgSrc, src, theString);
         }
+
+        src = fixIEDynamicProtoUsage(orgSrc, src, theString);
 
         // Replace the header
         Object.keys(replaceValues).forEach((value) => {

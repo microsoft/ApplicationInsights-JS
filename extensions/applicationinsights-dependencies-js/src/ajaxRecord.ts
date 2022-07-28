@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dataSanitizeUrl, dateTimeUtilsDuration, IDependencyTelemetry, urlGetAbsoluteUrl, urlGetCompleteUrl, msToTimeSpan } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, objKeys, arrForEach, isNumber, isString, normalizeJsName, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    IDependencyTelemetry, dataSanitizeUrl, dateTimeUtilsDuration, msToTimeSpan, urlGetAbsoluteUrl, urlGetCompleteUrl
+} from "@microsoft/applicationinsights-common";
+import {
+    IDiagnosticLogger, arrForEach, isNumber, isString, normalizeJsName, objForEachKey, objKeys
+} from "@microsoft/applicationinsights-core-js";
+import { STR_DURATION, STR_PROPERTIES } from "./InternalConstants";
 
 export interface IAjaxRecordResponse {
     statusText: string,
@@ -13,8 +18,6 @@ export interface IAjaxRecordResponse {
     responseText?: string,
     response?: Object
 }
-
-let strProperties = "properties";
 
 /** @ignore */
 function _calcPerfDuration(resourceEntry:PerformanceResourceTiming, start:string, end:string) {
@@ -76,7 +79,7 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
     */
 
     let resourceEntry = ajaxData.perfTiming;
-    let props = dependency[strProperties] || {};
+    let props = dependency.properties || {};
     let propsSet = 0;
     let strName = "name";
     let strStart = "Start";
@@ -86,7 +89,6 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
     let strRedirect = "redirect";
     let strRequest = "request";
     let strResponse = "response";
-    let strDuration = "duration";
     let strStartTime = "startTime";
     let strDomainLookupStart = strDomainLookup + strStart;
     let strDomainLookupEnd = strDomainLookup + strEnd;
@@ -127,12 +129,12 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
         propsSet |= _setPerfDuration(props, "sentRequest", resourceEntry, strRequestStart, strResponseEnd);
 
         // PerfTotal / Duration
-        let duration = resourceEntry[strDuration];
+        let duration = resourceEntry.duration;
         if (!duration) {
             duration = _calcPerfDuration(resourceEntry, strStartTime, strResponseEnd) || 0;
         }
 
-        propsSet |= _setPerfValue(props, strDuration, duration);
+        propsSet |= _setPerfValue(props, STR_DURATION, duration);
         propsSet |= _setPerfValue(props, "perfTotal", duration);
 
         var serverTiming = resourceEntry[strServerTiming];
@@ -167,7 +169,7 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
     }
 
     if (propsSet) {
-        dependency[strProperties] = props;
+        dependency.properties = props;
     }
 }
 
@@ -296,7 +298,7 @@ export class ajaxRecord {
                     success: (+(self.status)) >= 200 && (+(self.status)) < 400,
                     responseCode: (+(self.status)),
                     method: self.method,
-                    [strProperties]: { HttpMethod: self.method }
+                    [STR_PROPERTIES]: { HttpMethod: self.method }
                 } as IDependencyTelemetry;
 
                 if (self.requestSentTime) {
@@ -310,8 +312,8 @@ export class ajaxRecord {
         
                 if (enableRequestHeaderTracking) {
                     if (objKeys(self.requestHeaders).length > 0) {
-                        dependency[strProperties] = dependency[strProperties] || {};
-                        dependency[strProperties].requestHeaders = self.requestHeaders;
+                        let props = dependency.properties = dependency.properties || {};
+                        props.requestHeaders = self.requestHeaders;
                     }
                 }
         
@@ -327,19 +329,19 @@ export class ajaxRecord {
         
                         if (response.headerMap) {
                             if (objKeys(response.headerMap).length > 0) {
-                                dependency[strProperties] = dependency[strProperties] || {};
-                                dependency[strProperties].responseHeaders = response.headerMap;
+                                let props = dependency.properties = dependency.properties || {};
+                                props.responseHeaders = response.headerMap;
                             }
                         }
         
                         if (self.errorStatusText && self.status >= 400) {
                             const responseType = response.type;
-                            dependency[strProperties] = dependency[strProperties] || {};
+                            let props = dependency.properties = dependency.properties || {};
                             if (responseType === "" || responseType === "text") {
-                                dependency[strProperties][strResponseText] = response[strResponseText] ? response.statusText + " - " + response[strResponseText] : response.statusText;
+                                props.responseText = response.responseText ? response.statusText + " - " + response[strResponseText] : response.statusText;
                             }
                             if (responseType === "json") {
-                                dependency[strProperties][strResponseText] = response.response ? response.statusText + " - " + JSON.stringify(response.response) : response.statusText;
+                                props.responseText = response.response ? response.statusText + " - " + JSON.stringify(response.response) : response.statusText;
                             }
                         }
                     }
@@ -365,4 +367,3 @@ export class ajaxRecord {
         return null;
     }
 }
-

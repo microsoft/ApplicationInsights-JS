@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { IUserContext, utlRemoveStorage } from "@microsoft/applicationinsights-common";
+import {
+    IAppInsightsCore, ICookieMgr, _eInternalMessageId, _throwInternal, eLoggingSeverity, newId, safeGetCookieMgr, safeGetLogger, toISOString
+} from "@microsoft/applicationinsights-core-js";
 import { ITelemetryConfig } from "../Interfaces/ITelemetryConfig";
-import { utlRemoveStorage, IUserContext } from "@microsoft/applicationinsights-common";
-import { _eInternalMessageId, eLoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, safeGetLogger, newId, toISOString, _throwInternal } from "@microsoft/applicationinsights-core-js";
-
 
 function _validateUserInput(id: string): boolean {
     // Validate:

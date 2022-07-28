@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-dependencies-js",
-    "version": "2.8.4",
+    "version": "2.8.5",
     "description": "Microsoft Application Insights XHR dependencies plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -18,9 +18,12 @@
         "build:browser": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt depstest",
+        "mintest": "grunt deps-mintest",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights XHR dependencies plugin\"",
-        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt deps-min",
+        "ai-restore": "grunt deps-restore"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
@@ -50,8 +53,8 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.6",
         "@microsoft/applicationinsights-shims": "2.0.1",
-        "@microsoft/applicationinsights-core-js": "2.8.4",
-        "@microsoft/applicationinsights-common": "2.8.4"
+        "@microsoft/applicationinsights-core-js": "2.8.5",
+        "@microsoft/applicationinsights-common": "2.8.5"
     },
     "license": "MIT"
 }

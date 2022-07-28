@@ -1,7 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+//  @skip-file-minify
 
 import { createEnumStyle } from "../JavaScriptSDK.Enums/EnumHelperFuncs";
+
+const FAILED = "Failed";
+const FAILED_MONITOR_AJAX = FAILED + "MonitorAjax";
+const TRACK = "Track";
+const START = "Start";
+const STOP = "Stop";
+const EVENT = "Event";
+const AUTH_CONTEXT = "AuthContext";
+const EXCEPTION = "Exception";
+const LOCAL = "Local";
+const SESSION = "Session";
+const STORAGE = "Storage";
+const BROWSER = "Browser";
+const CANNOT = "Cannot";
+const BUFFER = "Buffer";
+const INSTRUMENTATION_KEY = "InstrumentationKey";
 
 export const enum eLoggingSeverity {
     /**
@@ -114,91 +131,90 @@ export const enum _eInternalMessageId {
  */
 export const _InternalMessageId = createEnumStyle<typeof _eInternalMessageId>({
     // Non user actionable
-    BrowserDoesNotSupportLocalStorage: _eInternalMessageId.BrowserDoesNotSupportLocalStorage,
-    BrowserCannotReadLocalStorage: _eInternalMessageId.BrowserCannotReadLocalStorage,
-    BrowserCannotReadSessionStorage: _eInternalMessageId.BrowserCannotReadSessionStorage,
-    BrowserCannotWriteLocalStorage: _eInternalMessageId.BrowserCannotWriteLocalStorage,
-    BrowserCannotWriteSessionStorage: _eInternalMessageId.BrowserCannotWriteSessionStorage,
-    BrowserFailedRemovalFromLocalStorage: _eInternalMessageId.BrowserFailedRemovalFromLocalStorage,
-    BrowserFailedRemovalFromSessionStorage: _eInternalMessageId.BrowserFailedRemovalFromSessionStorage,
-    CannotSendEmptyTelemetry: _eInternalMessageId.CannotSendEmptyTelemetry,
+    [BROWSER + "DoesNotSupport" + LOCAL + STORAGE as "BrowserDoesNotSupportLocalStorage"]: _eInternalMessageId.BrowserDoesNotSupportLocalStorage,
+    [BROWSER + CANNOT + "Read" + LOCAL + STORAGE as "BrowserCannotReadLocalStorage"]: _eInternalMessageId.BrowserCannotReadLocalStorage,
+    [BROWSER + CANNOT + "Read" + SESSION + STORAGE as "BrowserCannotReadSessionStorage"]: _eInternalMessageId.BrowserCannotReadSessionStorage,
+    [BROWSER + CANNOT + "Write" + LOCAL + STORAGE as "BrowserCannotWriteLocalStorage"]: _eInternalMessageId.BrowserCannotWriteLocalStorage,
+    [BROWSER + CANNOT + "Write" + SESSION + STORAGE as "BrowserCannotWriteSessionStorage"]: _eInternalMessageId.BrowserCannotWriteSessionStorage,
+    [BROWSER + FAILED + "RemovalFrom" + LOCAL + STORAGE as "BrowserFailedRemovalFromLocalStorage"]: _eInternalMessageId.BrowserFailedRemovalFromLocalStorage,
+    [BROWSER + FAILED + "RemovalFrom" + SESSION + STORAGE as "BrowserFailedRemovalFromSessionStorage"]: _eInternalMessageId.BrowserFailedRemovalFromSessionStorage,
+    [CANNOT + "SendEmptyTelemetry" as "CannotSendEmptyTelemetry"]: _eInternalMessageId.CannotSendEmptyTelemetry,
     ClientPerformanceMathError: _eInternalMessageId.ClientPerformanceMathError,
-    ErrorParsingAISessionCookie: _eInternalMessageId.ErrorParsingAISessionCookie,
+    ["ErrorParsingAI" + SESSION + "Cookie" as "ErrorParsingAISessionCookie"]: _eInternalMessageId.ErrorParsingAISessionCookie,
     ErrorPVCalc: _eInternalMessageId.ErrorPVCalc,
-    ExceptionWhileLoggingError: _eInternalMessageId.ExceptionWhileLoggingError,
-    FailedAddingTelemetryToBuffer: _eInternalMessageId.FailedAddingTelemetryToBuffer,
-    FailedMonitorAjaxAbort: _eInternalMessageId.FailedMonitorAjaxAbort,
-    FailedMonitorAjaxDur: _eInternalMessageId.FailedMonitorAjaxDur,
-    FailedMonitorAjaxOpen: _eInternalMessageId.FailedMonitorAjaxOpen,
-    FailedMonitorAjaxRSC: _eInternalMessageId.FailedMonitorAjaxRSC,
-    FailedMonitorAjaxSend: _eInternalMessageId.FailedMonitorAjaxSend,
-    FailedMonitorAjaxGetCorrelationHeader: _eInternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
-    FailedToAddHandlerForOnBeforeUnload: _eInternalMessageId.FailedToAddHandlerForOnBeforeUnload,
-    FailedToSendQueuedTelemetry: _eInternalMessageId.FailedToSendQueuedTelemetry,
-    FailedToReportDataLoss: _eInternalMessageId.FailedToReportDataLoss,
-    FlushFailed: _eInternalMessageId.FlushFailed,
+    [EXCEPTION + "WhileLoggingError" as "ExceptionWhileLoggingError"]: _eInternalMessageId.ExceptionWhileLoggingError,
+    [FAILED + "AddingTelemetryTo" + BUFFER as "FailedAddingTelemetryToBuffer"]: _eInternalMessageId.FailedAddingTelemetryToBuffer,
+    [FAILED_MONITOR_AJAX + "Abort" as "FailedMonitorAjaxAbort"]: _eInternalMessageId.FailedMonitorAjaxAbort,
+    [FAILED_MONITOR_AJAX + "Dur" as "FailedMonitorAjaxDur"]: _eInternalMessageId.FailedMonitorAjaxDur,
+    [FAILED_MONITOR_AJAX + "Open" as "FailedMonitorAjaxOpen"]: _eInternalMessageId.FailedMonitorAjaxOpen,
+    [FAILED_MONITOR_AJAX + "RSC" as "FailedMonitorAjaxRSC"]: _eInternalMessageId.FailedMonitorAjaxRSC,
+    [FAILED_MONITOR_AJAX + "Send" as "FailedMonitorAjaxSend"]: _eInternalMessageId.FailedMonitorAjaxSend,
+    [FAILED_MONITOR_AJAX + "GetCorrelationHeader" as "FailedMonitorAjaxGetCorrelationHeader"]: _eInternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
+    [FAILED + "ToAddHandlerForOnBeforeUnload" as "FailedToAddHandlerForOnBeforeUnload"]: _eInternalMessageId.FailedToAddHandlerForOnBeforeUnload,
+    [FAILED + "ToSendQueuedTelemetry" as "FailedToSendQueuedTelemetry"]: _eInternalMessageId.FailedToSendQueuedTelemetry,
+    [FAILED + "ToReportDataLoss" as "FailedToReportDataLoss"]: _eInternalMessageId.FailedToReportDataLoss,
+    ["Flush" + FAILED as "FlushFailed"]: _eInternalMessageId.FlushFailed,
     MessageLimitPerPVExceeded: _eInternalMessageId.MessageLimitPerPVExceeded,
     MissingRequiredFieldSpecification: _eInternalMessageId.MissingRequiredFieldSpecification,
     NavigationTimingNotSupported: _eInternalMessageId.NavigationTimingNotSupported,
     OnError: _eInternalMessageId.OnError,
-    SessionRenewalDateIsZero: _eInternalMessageId.SessionRenewalDateIsZero,
+    [SESSION + "RenewalDateIsZero" as "SessionRenewalDateIsZero"]: _eInternalMessageId.SessionRenewalDateIsZero,
     SenderNotInitialized: _eInternalMessageId.SenderNotInitialized,
-    StartTrackEventFailed: _eInternalMessageId.StartTrackEventFailed,
-    StopTrackEventFailed: _eInternalMessageId.StopTrackEventFailed,
-    StartTrackFailed: _eInternalMessageId.StartTrackFailed,
-    StopTrackFailed: _eInternalMessageId.StopTrackFailed,
+    [START + TRACK + EVENT + FAILED as "StartTrackEventFailed"]: _eInternalMessageId.StartTrackEventFailed,
+    [STOP + TRACK + EVENT + FAILED as "StopTrackEventFailed"]: _eInternalMessageId.StopTrackEventFailed,
+    [START + TRACK + FAILED as "StartTrackFailed"]: _eInternalMessageId.StartTrackFailed,
+    [STOP + TRACK + FAILED as "StopTrackFailed"]: _eInternalMessageId.StopTrackFailed,
     TelemetrySampledAndNotSent: _eInternalMessageId.TelemetrySampledAndNotSent,
-    TrackEventFailed: _eInternalMessageId.TrackEventFailed,
-    TrackExceptionFailed: _eInternalMessageId.TrackExceptionFailed,
-    TrackMetricFailed: _eInternalMessageId.TrackMetricFailed,
-    TrackPVFailed: _eInternalMessageId.TrackPVFailed,
-    TrackPVFailedCalc: _eInternalMessageId.TrackPVFailedCalc,
-    TrackTraceFailed: _eInternalMessageId.TrackTraceFailed,
-    TransmissionFailed: _eInternalMessageId.TransmissionFailed,
-    FailedToSetStorageBuffer: _eInternalMessageId.FailedToSetStorageBuffer,
-    FailedToRestoreStorageBuffer: _eInternalMessageId.FailedToRestoreStorageBuffer,
+    [TRACK + EVENT + FAILED as "TrackEventFailed"]: _eInternalMessageId.TrackEventFailed,
+    [TRACK + EXCEPTION + FAILED as "TrackExceptionFailed"]: _eInternalMessageId.TrackExceptionFailed,
+    [TRACK + "Metric" + FAILED as "TrackMetricFailed"]: _eInternalMessageId.TrackMetricFailed,
+    [TRACK + "PV" + FAILED as "TrackPVFailed"]: _eInternalMessageId.TrackPVFailed,
+    [TRACK + "PV" + FAILED + "Calc" as "TrackPVFailedCalc"]: _eInternalMessageId.TrackPVFailedCalc,
+    [TRACK + "Trace" + FAILED as "TrackTraceFailed"]: _eInternalMessageId.TrackTraceFailed,
+    ["Transmission" + FAILED as "TransmissionFailed"]: _eInternalMessageId.TransmissionFailed,
+    [FAILED + "ToSet" + STORAGE + BUFFER as "FailedToSetStorageBuffer"]: _eInternalMessageId.FailedToSetStorageBuffer,
+    [FAILED + "ToRestore" + STORAGE + BUFFER as "FailedToRestoreStorageBuffer"]: _eInternalMessageId.FailedToRestoreStorageBuffer,
     InvalidBackendResponse: _eInternalMessageId.InvalidBackendResponse,
-    FailedToFixDepricatedValues: _eInternalMessageId.FailedToFixDepricatedValues,
+    [FAILED + "ToFixDepricatedValues" as "FailedToFixDepricatedValues"]: _eInternalMessageId.FailedToFixDepricatedValues,
     InvalidDurationValue: _eInternalMessageId.InvalidDurationValue,
     TelemetryEnvelopeInvalid: _eInternalMessageId.TelemetryEnvelopeInvalid,
     CreateEnvelopeError: _eInternalMessageId.CreateEnvelopeError,
 
     // User actionable
-    CannotSerializeObject: _eInternalMessageId.CannotSerializeObject,
-    CannotSerializeObjectNonSerializable: _eInternalMessageId.CannotSerializeObjectNonSerializable,
+    [CANNOT + "SerializeObject" as "CannotSerializeObject"]: _eInternalMessageId.CannotSerializeObject,
+    [CANNOT + "SerializeObjectNonSerializable" as "CannotSerializeObjectNonSerializable"]: _eInternalMessageId.CannotSerializeObjectNonSerializable,
     CircularReferenceDetected: _eInternalMessageId.CircularReferenceDetected,
-    ClearAuthContextFailed: _eInternalMessageId.ClearAuthContextFailed,
-    ExceptionTruncated: _eInternalMessageId.ExceptionTruncated,
+    ["Clear" + AUTH_CONTEXT + FAILED as "ClearAuthContextFailed"]: _eInternalMessageId.ClearAuthContextFailed,
+    [EXCEPTION + "Truncated" as "ExceptionTruncated"]: _eInternalMessageId.ExceptionTruncated,
     IllegalCharsInName: _eInternalMessageId.IllegalCharsInName,
     ItemNotInArray: _eInternalMessageId.ItemNotInArray,
     MaxAjaxPerPVExceeded: _eInternalMessageId.MaxAjaxPerPVExceeded,
     MessageTruncated: _eInternalMessageId.MessageTruncated,
     NameTooLong: _eInternalMessageId.NameTooLong,
     SampleRateOutOfRange: _eInternalMessageId.SampleRateOutOfRange,
-    SetAuthContextFailed: _eInternalMessageId.SetAuthContextFailed,
-    SetAuthContextFailedAccountName: _eInternalMessageId.SetAuthContextFailedAccountName,
+    ["Set" + AUTH_CONTEXT + FAILED as "SetAuthContextFailed"]: _eInternalMessageId.SetAuthContextFailed,
+    ["Set" + AUTH_CONTEXT + FAILED + "AccountName" as "SetAuthContextFailedAccountName"]: _eInternalMessageId.SetAuthContextFailedAccountName,
     StringValueTooLong: _eInternalMessageId.StringValueTooLong,
     StartCalledMoreThanOnce: _eInternalMessageId.StartCalledMoreThanOnce,
     StopCalledWithoutStart: _eInternalMessageId.StopCalledWithoutStart,
-    TelemetryInitializerFailed: _eInternalMessageId.TelemetryInitializerFailed,
+    ["TelemetryInitializer" + FAILED as "TelemetryInitializerFailed"]: _eInternalMessageId.TelemetryInitializerFailed,
     TrackArgumentsNotSpecified: _eInternalMessageId.TrackArgumentsNotSpecified,
     UrlTooLong: _eInternalMessageId.UrlTooLong,
-    SessionStorageBufferFull: _eInternalMessageId.SessionStorageBufferFull,
-    CannotAccessCookie: _eInternalMessageId.CannotAccessCookie,
+    [SESSION + STORAGE + BUFFER + "Full" as "SessionStorageBufferFull"]: _eInternalMessageId.SessionStorageBufferFull,
+    [CANNOT + "AccessCookie" as "CannotAccessCookie"]: _eInternalMessageId.CannotAccessCookie,
     IdTooLong: _eInternalMessageId.IdTooLong,
     InvalidEvent: _eInternalMessageId.InvalidEvent,
-    FailedMonitorAjaxSetRequestHeader: _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
-    SendBrowserInfoOnUserInit: _eInternalMessageId.SendBrowserInfoOnUserInit,
-    PluginException: _eInternalMessageId.PluginException,
-    NotificationException: _eInternalMessageId.NotificationException,
+    [FAILED_MONITOR_AJAX + "SetRequestHeader" as "FailedMonitorAjaxSetRequestHeader"]: _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
+    ["Send" + BROWSER + "InfoOnUserInit" as "SendBrowserInfoOnUserInit"]: _eInternalMessageId.SendBrowserInfoOnUserInit,
+    ["Plugin" + EXCEPTION as "PluginException"]: _eInternalMessageId.PluginException,
+    ["Notification" + EXCEPTION as "NotificationException"]: _eInternalMessageId.NotificationException,
     SnippetScriptLoadFailure: _eInternalMessageId.SnippetScriptLoadFailure,
-    InvalidInstrumentationKey: _eInternalMessageId.InvalidInstrumentationKey,
-    CannotParseAiBlobValue: _eInternalMessageId.CannotParseAiBlobValue,
+    ["Invalid" + INSTRUMENTATION_KEY as "InvalidInstrumentationKey"]: _eInternalMessageId.InvalidInstrumentationKey,
+    [CANNOT + "ParseAiBlobValue" as "CannotParseAiBlobValue"]: _eInternalMessageId.CannotParseAiBlobValue,
     InvalidContentBlob: _eInternalMessageId.InvalidContentBlob,
-    TrackPageActionEventFailed: _eInternalMessageId.TrackPageActionEventFailed,
-    FailedAddingCustomDefinedRequestContext: _eInternalMessageId.FailedAddingCustomDefinedRequestContext,
-    InMemoryStorageBufferFull: _eInternalMessageId.InMemoryStorageBufferFull,
-    InstrumentationKeyDeprecation: _eInternalMessageId.InstrumentationKeyDeprecation
-
+    [TRACK + "PageAction" + EVENT + FAILED as "TrackPageActionEventFailed"]: _eInternalMessageId.TrackPageActionEventFailed,
+    [FAILED + "AddingCustomDefinedRequestContext" as "FailedAddingCustomDefinedRequestContext"]: _eInternalMessageId.FailedAddingCustomDefinedRequestContext,
+    ["InMemory" + STORAGE + BUFFER + "Full" as "InMemoryStorageBufferFull"]: _eInternalMessageId.InMemoryStorageBufferFull,
+    [INSTRUMENTATION_KEY + "Deprecation" as "InstrumentationKeyDeprecation"]: _eInternalMessageId.InstrumentationKeyDeprecation
 });
 export type _InternalMessageId = number | _eInternalMessageId;

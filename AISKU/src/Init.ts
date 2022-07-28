@@ -1,11 +1,54 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Snippet } from "./Initialization";
-import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
+import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
+import { Snippet } from "./Initialization";
 
-export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
+// ----------------------------------------------------------------------------------------------------
+// Exports available from the Cdn bundles
+// ----------------------------------------------------------------------------------------------------
+export {
+    Initialization as ApplicationInsights, Snippet,
+    Telemetry
+} from "./Initialization";
+export {
+    LoggingSeverity,
+    PerfEvent,
+    PerfManager,
+    doPerf,
+    CoreUtils,
+    newId,
+    newGuid,
+    random32,
+    randomValue,
+    generateW3CId,
+    findW3cTraceParent,
+    findMetaTag,
+    mergeEvtNamespace,
+    eventOn,
+    eventOff,
+    addEventHandler,
+    removeEventHandler,
+    isBeaconsSupported
+} from "@microsoft/applicationinsights-core-js";
+
+export {
+    Util,
+    RequestHeaders,
+    DisabledPropertyName,
+    DEFAULT_BREEZE_ENDPOINT,
+    SeverityLevel,
+    DistributedTracingModes,
+    PropertiesPluginIdentifier,
+    BreezeChannelIdentifier,
+    AnalyticsPluginIdentifier
+} from "@microsoft/applicationinsights-common";
+
+// ----------------------------------------------------------------------------------------------------
+// End of Exports available from the Cdn bundles
+// ----------------------------------------------------------------------------------------------------
+
 
 function _logWarn(aiName:string, message:string) {
     // TODO: Find better place to warn to console when SDK initialization fails
@@ -33,7 +76,7 @@ try {
 
                 // overwrite snippet with full appInsights
                 // only initiaize if required and detected snippet version is >= 2 or not defined
-                if ((snippet.version >= 2.0 && (_window[aiName] as any).initialize) || snippet.version === undefined ) {
+                if ((snippet.version >= 2 && (_window[aiName] as any).initialize) || snippet.version === undefined ) {
                     ApplicationInsightsContainer.getAppInsights(snippet, snippet.version);
                 }
             }

@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IMessageData } from "../Interfaces/Contracts/IMessageData";
-import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
-import { dataSanitizeMessage, dataSanitizeProperties, dataSanitizeMeasurements } from "./Common/DataSanitizer";
-import { FieldType } from "../Enums";
-import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
 import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 import { strNotSpecified } from "../Constants";
+import { FieldType } from "../Enums";
+import { IMessageData } from "../Interfaces/Contracts/IMessageData";
+import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
+import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import { dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties } from "./Common/DataSanitizer";
 
 export class Trace implements IMessageData, ISerializable {
 

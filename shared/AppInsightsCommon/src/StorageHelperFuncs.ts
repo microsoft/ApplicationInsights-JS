@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dumpObj, getExceptionName, getGlobal, getGlobalInst, IDiagnosticLogger, isNullOrUndefined, eLoggingSeverity, objForEachKey, _eInternalMessageId, _throwInternal } from "@microsoft/applicationinsights-core-js";
+import {
+    IDiagnosticLogger, _eInternalMessageId, _throwInternal, dumpObj, eLoggingSeverity, getExceptionName, getGlobal, getGlobalInst,
+    isNullOrUndefined, objForEachKey
+} from "@microsoft/applicationinsights-core-js";
 import { StorageType } from "./Enums";
 
 let _canUseLocalStorage: boolean = undefined;
