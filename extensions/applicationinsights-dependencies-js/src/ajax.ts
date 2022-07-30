@@ -23,7 +23,6 @@ const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
 const strAjaxData = "ajaxData";
 const strFetch = "fetch";
-const strTrackDependencyDataInternal = "trackDependencyDataInternal"; // Using string to help with minification
 
 // Using a global value so that to handle same iKey with multiple app insights instances (mostly for testing)
 let _markCount: number = 0;
@@ -292,7 +291,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             };
 
             _self.trackDependencyData = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }) => {
-                _self[strTrackDependencyDataInternal](dependency, properties);
+                _self.trackDependencyDataInternal(dependency, properties);
             }
 
             _self.includeCorrelationHeaders = (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
@@ -378,7 +377,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 return undefined;
             }
 
-            _self[strTrackDependencyDataInternal] = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
+            _self.trackDependencyDataInternal = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
                 if (_maxAjaxCallsPerView === -1 || _trackAjaxAttempts < _maxAjaxCallsPerView) {
                     // Hack since expected format in w3c mode is |abc.def.
                     // Non-w3c format is |abc.def
@@ -789,7 +788,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
                 const spanID = generateW3CId().substr(0, 16);
 
-                const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
+                const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog](), _self.core?.getTraceCtx());
                 ajaxData.traceFlags = distributedTraceCtx && distributedTraceCtx.getTraceFlags();
                 ajaxData.method = method;
                 ajaxData.requestUrl = url;
@@ -906,7 +905,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             if (properties !== undefined) {
                                 dependency.properties = {...dependency.properties, ...properties};
                             }
-                            _self[strTrackDependencyDataInternal](dependency);
+                            _self.trackDependencyDataInternal(dependency, null, ajaxData.getPartAProps());
                         } else {
                             _reportXhrError(null, {
                                 requestSentTime: ajaxData.requestSentTime,
@@ -1031,7 +1030,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
                 const spanID = generateW3CId().substr(0, 16);
 
-                let ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
+                let ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog](), _self.core?.getTraceCtx());
                 ajaxData.traceFlags = distributedTraceCtx && distributedTraceCtx.getTraceFlags();
                 ajaxData.requestSentTime = dateTimeUtilsNow();
                 ajaxData.errorStatusText = _enableAjaxErrorStatusText;
@@ -1126,7 +1125,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         if (properties !== undefined) {
                             dependency.properties = {...dependency.properties, ...properties};
                         }
-                        _self[strTrackDependencyDataInternal](dependency);
+                        _self.trackDependencyDataInternal(dependency, null, ajaxData.getPartAProps());
                     } else {
                         _reportFetchError(_eInternalMessageId.FailedMonitorAjaxDur, null,
                             {
