@@ -557,7 +557,7 @@ export class AITestClass {
     }
         
     protected onDone(cleanupFn: VoidFunction) {
-        if (cleanupFn) {
+        if (cleanupFn && this._onDoneFuncs) {
             this._onDoneFuncs.push(cleanupFn);
         }
     }
@@ -892,14 +892,17 @@ export class AITestClass {
     }
 
     private _testFinishedCleanup() {
-        this._onDoneFuncs.forEach((fn) => {
-            try {
-                fn();
-            } catch (e) {
-                // Do nothing during cleanup
-            }
-        });
+        let doneFuncs = this._onDoneFuncs;
         this._onDoneFuncs = [];
+        if (doneFuncs) {
+            doneFuncs.forEach((fn) => {
+                try {
+                    fn();
+                } catch (e) {
+                    // Do nothing during cleanup
+                }
+            });
+        }
 
         this.testFinishedCleanup();
     }
