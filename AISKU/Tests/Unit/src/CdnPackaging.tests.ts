@@ -12,6 +12,7 @@ const enum CdnFormat {
 }
 
 export class CdnPackagingChecks extends AITestClass {
+    private readonly currentVer = "2.8.5";
 
     public testInitialize() {
     }
@@ -46,15 +47,15 @@ export class CdnPackagingChecks extends AITestClass {
     }
 
     private checkFullPackaging(): void {
-        this._checkPackaging("../browser/ai.2.js", CdnFormat.Umd);
-        this._checkPackaging("../browser/ai.2.gbl.js", CdnFormat.Gbl);
-        this._checkPackaging("../browser/ai.2.cjs.js", CdnFormat.CommonJs);
+        this._checkPackaging(`../browser/ai.${this.currentVer[0]}.js`, CdnFormat.Umd);
+        this._checkPackaging(`../browser/ai.${this.currentVer[0]}.gbl.js`, CdnFormat.Gbl);
+        this._checkPackaging(`../browser/ai.${this.currentVer[0]}.cjs.js`, CdnFormat.CommonJs);
     }
 
     private addMinifiedPackaging(): void {
-        this._checkPackaging("../browser/ai.2.min.js", CdnFormat.Umd);
-        this._checkPackaging("../browser/ai.2.gbl.min.js", CdnFormat.Gbl);
-        this._checkPackaging("../browser/ai.2.cjs.min.js", CdnFormat.CommonJs);
+        this._checkPackaging(`../browser/ai.${this.currentVer[0]}.min.js`, CdnFormat.Umd);
+        this._checkPackaging(`../browser/ai.${this.currentVer[0]}.gbl.min.js`, CdnFormat.Gbl);
+        this._checkPackaging(`../browser/ai.${this.currentVer[0]}.cjs.min.js`, CdnFormat.CommonJs);
     }
     
     private _validateExpectedExports(theExports: any) {
