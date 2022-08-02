@@ -1,5 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { ITraceParent } from "../../../src/JavaScriptSDK.Interfaces/ITraceParent";
+import { generateW3CId, newGuid } from "../../../src/JavaScriptSDK/CoreUtils";
+import { dateNow } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { random32, randomValue } from "../../../src/JavaScriptSDK/RandomHelper";
 import { formatTraceParent, isSampledFlag, isValidSpanId, isValidTraceId, isValidTraceParent, parseTraceParent } from "../../../src/JavaScriptSDK/W3cTraceParent";
 
 export class W3cTraceParentTests extends AITestClass {
@@ -205,6 +208,84 @@ export class W3cTraceParentTests extends AITestClass {
                     traceFlags: 0
                 } as ITraceParent));
             }
+        });
+
+        this.testCase({
+            name: "org generate guid timings",
+            useFakeTimers: false,
+            test: () => {
+                let maxAttempts = 3;
+                let orgTotal = -1;
+                do {
+                    let start = dateNow();
+                    for (let lp = 0; lp < 10000; lp++) {
+                        let newId = generateW3CId();
+                    }
+    
+                    orgTotal = dateNow() - start;
+                    maxAttempts--;
+                    // Virtualized test servers are slooooow, so try and perform a couple of tests before failing
+                } while (orgTotal >= 300 && maxAttempts > 0);
+
+                Assert.ok(orgTotal < 300, "Total time for org generateW3cID = " + JSON.stringify({
+                    orgTotal
+                }));
+            }
+        });
+
+        this.testCase({
+            name: "Validate generation",
+            useFakeTimers: false,
+            test: () => {
+                let key1 = generateW3CId();
+                let key2 = generateW3CId();
+
+                Assert.notEqual(key1, key2, "Make sure they are not the same");
+                Assert.equal(32, key1.length, "Key1 length: " + key1);
+                Assert.equal(32, key2.length, "Key2 length: " + key2);
+
+                Assert.equal("4", key1[12]);
+                Assert.equal("4", key2[12]);
+            }
+        });
+
+        this.testCase({
+            name: "generate newGuid timings",
+            useFakeTimers: false,
+            test: () => {
+                let maxAttempts = 3;
+                let guidTotal = -1;
+                do {
+                    let start = dateNow();
+                    for (let lp = 0; lp < 10000; lp++) {
+                        let newId = newGuid();
+                    }
+
+                    guidTotal = dateNow() - start;
+                    maxAttempts--;
+                    // Virtualized test servers are slooooow, so try and perform a couple of tests before failing
+                } while (guidTotal >= 300 && maxAttempts > 0);
+
+                Assert.ok(guidTotal < 300, "Total time for org newGuid = " + JSON.stringify({
+                    guidTotal
+                }));
+            }
+        });
+
+        this.testCase({
+            name: "Validate newGuid",
+            useFakeTimers: false,
+            test: () => {
+                let key1 = newGuid();
+                let key2 = newGuid();
+
+                Assert.notEqual(key1, key2, "Make sure they are not the same");
+                Assert.equal(36, key1.length, "Key1 length: " + key1);
+                Assert.equal(36, key2.length, "Key2 length: " + key2);
+ 
+                Assert.equal("4", key1[14]);
+                Assert.equal("4", key2[14]);
+           }
         });
     }
 }
