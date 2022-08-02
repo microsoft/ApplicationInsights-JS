@@ -9,9 +9,12 @@ export class AISKUSizeCheck extends AITestClass {
     private readonly MAX_RAW_DEFLATE_SIZE = 46;
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 47;
     private readonly rawFilePath = "../dist/applicationinsights-web.min.js";
-    private readonly prodFilePath = "../browser/ai.2.min.js";
+    // Automatically updated by version scripts
+    private readonly currentVer = "2.8.5";
+    private readonly prodFilePath = `../browser/ai.${this.currentVer[0]}.min.js`;
 
     public testInitialize() {
+
     }
 
     public testFinishedCleanup(): void {
