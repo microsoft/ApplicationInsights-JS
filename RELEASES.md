@@ -2,6 +2,19 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.6 (Aug 2nd, 2022)
+
+- React plugin is now located and released from [it's own repo](https://github.com/microsoft/applicationinsights-react-js)
+- React Native plugin is now located and released from [it's own repo](https://github.com/microsoft/applicationinsights-react-native)
+- Updates Chrome Debug Extension to 0.3.6
+
+### Changelog
+
+- #1862 [BUG] Remote Dependency requests don't "always" have the correct ai.operation.id tag (page view race condition)
+- #1870 [BUG] Performance improvements when calling newGuid multiple times (like 10,000)
+- #1865 Update and add legal compliance notices and license terms
+- #1866 Remove React-JS and React-Native code from this repo
+
 ## 2.8.5 (Jul 6th, 2022)
 
 - Updates React Plugin to v3.3.5 (with v2.8.5 as dependency) -- using React 17

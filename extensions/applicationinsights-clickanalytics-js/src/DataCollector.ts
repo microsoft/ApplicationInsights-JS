@@ -132,6 +132,15 @@ export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Loca
     var url = location.protocol + "//" + (location.hostname || location.host) +         // location.hostname is not supported on Opera and Opera for Android
         (isValueAssigned(location.port) ? ":" + location.port : "") +
         location.pathname;
+        
+    if (!!config.urlCollectHash) { // false by default
+        url += (isValueAssigned(location.hash)? location.hash : "");
+    }
+
+    if (!!config.urlCollectQuery) { // false by default
+        url += (isValueAssigned(location.search)? location.search : "");
+    }
+
     return url;
 }
 

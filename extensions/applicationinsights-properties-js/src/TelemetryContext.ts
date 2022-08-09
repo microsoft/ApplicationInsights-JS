@@ -10,7 +10,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, _InternalLogMessage, getSetValue, hasWindow,
-    isString, objKeys, setValue
+    isNullOrUndefined, isString, objKeys, setValue
 } from "@microsoft/applicationinsights-core-js";
 import { Application } from "./Context/Application";
 import { Device } from "./Context/Device";
@@ -145,9 +145,9 @@ export class TelemetryContext implements IPropTelemetryContext {
                 let telemetryTrace = _self.telemetryTrace;
                 if (telemetryTrace) {
                     const extTrace = getSetValue(getSetValue(evt, strExt), Extensions.TraceExt, { traceID: undefined, parentID: undefined } as ITelemetryTrace);
-                    setValue(extTrace, "traceID", telemetryTrace.traceID, isString);
-                    setValue(extTrace, "name", telemetryTrace.name, isString);
-                    setValue(extTrace, "parentID", telemetryTrace.parentID, isString);
+                    setValue(extTrace, "traceID", telemetryTrace.traceID, isString, isNullOrUndefined);
+                    setValue(extTrace, "name", telemetryTrace.name, isString, isNullOrUndefined);
+                    setValue(extTrace, "parentID", telemetryTrace.parentID, isString, isNullOrUndefined);
                 }
             };
         

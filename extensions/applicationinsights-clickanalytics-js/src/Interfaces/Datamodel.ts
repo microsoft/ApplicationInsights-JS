@@ -43,6 +43,14 @@ export interface IClickAnalyticsConfiguration {
      * Default will be false
      */
     dropInvalidEvents?: boolean;
+    /**
+    * Enables the logging of values after a "#" character of the URL. Default is "false."
+    */
+    urlCollectHash?: boolean;
+    /**
+    * Enables the logging of the query string of the URL. Default is "false."
+    */
+    urlCollectQuery?: boolean;
 }
 
 /**
