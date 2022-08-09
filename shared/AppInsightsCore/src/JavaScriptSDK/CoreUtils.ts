@@ -20,15 +20,11 @@ let _canUseCookies: boolean;    // legacy supported config
 
 // Added to help with minfication
 export const Undefined = strShimUndefined;
-export function newGuid(): string {
-    function randomHexDigit() {
-        return randomValue(15); // Get a random value from 0..15
-    }
 
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(GuidRegex, (c) => {
-        const r = (randomHexDigit() | 0), v = (c === "x" ? r : r & 0x3 | 0x8);
-        return v.toString(16);
-    });
+export function newGuid(): string {
+    const uuid = generateW3CId();
+
+    return uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-" + uuid.substring(12, 16) + "-" + uuid.substring(16, 20) + "-" + uuid.substring(20);
 }
 
 /**

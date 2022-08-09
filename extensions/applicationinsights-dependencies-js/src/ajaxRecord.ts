@@ -3,10 +3,10 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IDependencyTelemetry, dataSanitizeUrl, dateTimeUtilsDuration, msToTimeSpan, urlGetAbsoluteUrl, urlGetCompleteUrl
+    Extensions, IDependencyTelemetry, dataSanitizeUrl, dateTimeUtilsDuration, msToTimeSpan, urlGetAbsoluteUrl, urlGetCompleteUrl
 } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, arrForEach, isNumber, isString, normalizeJsName, objForEachKey, objKeys
+    IDiagnosticLogger, IDistributedTraceContext, arrForEach, isNullOrUndefined, isNumber, isString, normalizeJsName, objForEachKey, objKeys
 } from "@microsoft/applicationinsights-core-js";
 import { STR_DURATION, STR_PROPERTIES } from "./InternalConstants";
 
@@ -17,6 +17,12 @@ export interface IAjaxRecordResponse {
     type?: string,
     responseText?: string,
     response?: Object
+}
+
+interface ITraceCtx {
+    traceId: string;
+    spanId: string;
+    traceFlags: number;
 }
 
 /** @ignore */
@@ -237,11 +243,27 @@ export class ajaxRecord {
     // <summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
     public clientFailure: number;
 
+    /**
+     * The traceId to use for the dependency call
+     */
     public traceID: string;
+
+    /**
+     * The spanId to use for the dependency call
+     */
     public spanID: string;
+
+    /**
+     * The traceFlags to use for the dependency call
+     */
     public traceFlags?: number;
 
-    constructor(traceID: string, spanID: string, logger: IDiagnosticLogger) {
+    /**
+     * The trace context to use for reporting the remote dependency call
+     */
+    public eventTraceCtx: ITraceCtx;
+
+    constructor(traceId: string, spanId: string, logger: IDiagnosticLogger, traceCtx?: IDistributedTraceContext) {
         let self = this;
         let _logger: IDiagnosticLogger = logger;
         let strResponseText = "responseText";
@@ -269,8 +291,19 @@ export class ajaxRecord {
         self.xhrMonitoringState = new XHRMonitoringState();
         self.clientFailure = 0;
 
-        self.traceID = traceID;
-        self.spanID = spanID;
+        self.traceID = traceId;
+        self.spanID = spanId;
+        self.traceFlags = traceCtx?.getTraceFlags();
+
+        if (traceCtx) {
+            self.eventTraceCtx = {
+                traceId: traceCtx.getTraceId(),
+                spanId: traceCtx.getSpanId(),
+                traceFlags: traceCtx.getTraceFlags()
+            };
+        } else {
+            self.eventTraceCtx = null;
+        }
 
         dynamicProto(ajaxRecord, self, (self) => {
             self.getAbsoluteUrl= () => {
@@ -349,6 +382,25 @@ export class ajaxRecord {
         
                 return dependency;
             }
+
+            self.getPartAProps = () => {
+                let partA: { [key: string]: any } = null;
+
+                let traceCtx = self.eventTraceCtx;
+                if (traceCtx && (traceCtx.traceId || traceCtx.spanId)) {
+                    partA = {};
+                    let traceExt = partA[Extensions.TraceExt] = {
+                        traceID: traceCtx.traceId,
+                        parentID: traceCtx.spanId
+                    } as  { [key: string]: any };
+
+                    if (!isNullOrUndefined(traceCtx.traceFlags)) {
+                        traceExt.traceFlags = traceCtx.traceFlags;
+                    }
+                }
+
+                return partA
+            };
         });
     }
 
@@ -363,6 +415,11 @@ export class ajaxRecord {
     }
 
     public CreateTrackItem(ajaxType:string, enableRequestHeaderTracking:boolean, getResponse:() => IAjaxRecordResponse):IDependencyTelemetry {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public getPartAProps(): { [key: string]: any } {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

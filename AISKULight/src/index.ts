@@ -34,16 +34,16 @@ export class ApplicationInsights {
 
         dynamicProto(ApplicationInsights, this, (_self) => {
             _self.config = config;
-            _self.getSKUDefaults();
-
+            
             _initialize();
-    
+            
             _self.initialize = _initialize;
-        
+            
             _self.getSKUDefaults = () => {
                 _self.config.diagnosticLogInterval =
                 _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
             };
+            _self.getSKUDefaults();
         
             proxyFunctions(_self, core, [
                 "track",
@@ -64,10 +64,10 @@ export class ApplicationInsights {
                 extensions.push(appInsightsChannel);
         
                 // initialize core
-                core.initialize(this.config, extensions);
+                core.initialize(_self.config, extensions);
         
                 // initialize extensions
-                appInsightsChannel.initialize(this.config, core, extensions);
+                appInsightsChannel.initialize(_self.config, core, extensions);
         
                 core.pollInternalLogs();
             }

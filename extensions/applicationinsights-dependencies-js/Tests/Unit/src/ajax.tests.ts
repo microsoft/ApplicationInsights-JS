@@ -29,12 +29,16 @@ function hookFetch<T>(executor: (resolve: (value?: T | PromiseLike<T>) => void, 
 }
 
 function hookTrackDependencyInternal(ajaxMonitor: AjaxMonitor) {
-    let orgInternalDependency: (dependency: IDependencyTelemetry, properties?: { [key: string]: any }) => void = ajaxMonitor["trackDependencyDataInternal"];
-    let dependencyArgs: IDependencyTelemetry[] = [];
+    let orgInternalDependency: (dependency: IDependencyTelemetry, properties?: { [key: string]: any }, sysProperties?: { [key: string]: any }) => void = ajaxMonitor["trackDependencyDataInternal"];
+    let dependencyArgs: { dependency: IDependencyTelemetry, sysProperties?: { [key: string]: any } }[] = [];
 
-    ajaxMonitor["trackDependencyDataInternal"] = function (dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
+    ajaxMonitor["trackDependencyDataInternal"] = function (dependency: IDependencyTelemetry, properties?: { [key: string]: any }, sysProperties?: { [key: string]: any }) {
         let orgArguments = arguments;
-        dependencyArgs.push({ ...dependency});
+        dependencyArgs.push({
+            dependency,
+            sysProperties
+        });
+
         orgInternalDependency.apply(ajaxMonitor, orgArguments);
     };
 
@@ -110,7 +114,7 @@ export class AjaxTests extends AITestClass {
 
                 Assert.equal(6, dependencyFields.length, "trackDependencyDataInternal should have been called");
                 for (let lp = 0; lp < 6; lp++) {
-                    Assert.ok(dependencyFields[lp].startTime, `startTime ${lp} was specified before trackDependencyDataInternal was called`);
+                    Assert.ok(dependencyFields[lp].dependency.startTime, `startTime ${lp} was specified before trackDependencyDataInternal was called`);
                 }
             }
         });
@@ -145,8 +149,8 @@ export class AjaxTests extends AITestClass {
 
                 Assert.equal(2, trackSpy.callCount, "Track has been called 2 times");
                 Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal should have been called");
-                Assert.ok(dependencyFields[0].startTime, "startTime 0 was specified before trackDependencyDataInternal was called")
-                Assert.ok(dependencyFields[1].startTime, "startTime 1 was specified before trackDependencyDataInternal was called")
+                Assert.ok(dependencyFields[0].dependency.startTime, "startTime 0 was specified before trackDependencyDataInternal was called")
+                Assert.ok(dependencyFields[1].dependency.startTime, "startTime 1 was specified before trackDependencyDataInternal was called")
 
                 Assert.equal(false, throwSpy.called, "We should not have thrown an internal error -- yet");
             }
@@ -285,6 +289,60 @@ export class AjaxTests extends AITestClass {
                 Assert.equal("Ajax", data.type, "request is Ajax type");
                 Assert.equal("ajax context", data.properties.test, "xhr request's request context is added when customer configures addRequestContext.");
                 Assert.equal(200, data.properties.xhrStatus, "xhr object properties are captured");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: Track changing the traceId / SpanId still sends the original traceId / SpanId for any ajax requests.",
+            useFakeServer: true,
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                let coreConfig: IConfiguration & IConfig = { 
+                    instrumentationKey: "", 
+                    disableAjaxTracking: false
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                let traceCtx = appInsightsCore.getTraceCtx();
+                let expectedTraceId = generateW3CId();
+                let expectedSpanId = generateW3CId().substring(0, 16);
+                traceCtx!.setTraceId(expectedTraceId);
+                traceCtx!.setSpanId(expectedSpanId);
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                // change the traceId
+                let newExpectedTraceId = generateW3CId();
+                let newExpectedSpanId = generateW3CId().substring(0, 16);
+
+                traceCtx!.setTraceId(newExpectedTraceId);
+                traceCtx!.setSpanId(newExpectedSpanId);
+
+                // Emulate response
+                (<any>xhr).respond(200, {}, "");
+
+                Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(200, {}, "");
+                Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called again");
+
+                Assert.equal(expectedTraceId, dependencyFields[0].sysProperties!.trace.traceID, "Check first traceId");
+                Assert.equal(newExpectedTraceId, dependencyFields[1].sysProperties!.trace.traceID, "Check first traceId");
+
+                Assert.equal(expectedSpanId, dependencyFields[0].sysProperties!.trace.parentID, "Check first spanId");
+                Assert.equal(newExpectedSpanId, dependencyFields[1].sysProperties!.trace.parentID, "Check first spanId");
             }
         });
 
@@ -717,7 +775,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal("Fetch", data.type, "request is Fetch type");
                     Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
-                    Assert.ok(dependencyFields[0].startTime, "startTime was specified before trackDependencyDataInternal was called")
+                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called")
                     testContext.testDone();
                 }, () => {
                     Assert.ok(false, "fetch failed!");
@@ -766,14 +824,16 @@ export class AjaxTests extends AITestClass {
                     Assert.equal("Fetch", data.type, "request is Fetch type");
                     Assert.equal(false, throwSpy.called, "We should not have failed internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
-                    Assert.ok(dependencyFields[0].startTime, "startTime was specified before trackDependencyDataInternal was called")
+                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                    Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
 
                     fetch(undefined, null).then(() => {
                         // Assert
                         Assert.ok(fetchSpy.calledTwice, "createFetchRecord called once after using fetch");
                         Assert.equal(false, throwSpy.called, "We should still not have failed internally");
                         Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called");
-                        Assert.ok(dependencyFields[1].startTime, "startTime was specified before trackDependencyDataInternal was called");
+                        Assert.ok(dependencyFields[1].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                        Assert.equal(undefined, dependencyFields[1].sysProperties, "no system properties");
                         testContext.testDone();
                     }, () => {
                         Assert.ok(false, "fetch failed!");
@@ -785,6 +845,76 @@ export class AjaxTests extends AITestClass {
                 });
             }]
         });
+
+        this.testCaseAsync({
+            name: "Fetch: instrumentation handles invalid / missing request or url with traceId",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+                let expectedTraceId = generateW3CId();
+                let expectedSpanId = generateW3CId().substring(0, 16);
+                traceCtx!.setTraceId(expectedTraceId);
+                traceCtx!.setSpanId(expectedSpanId);
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch(null, {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.equal(false, throwSpy.called, "We should not have failed internally");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                    Assert.equal(expectedTraceId, dependencyFields[0].sysProperties!.trace.traceID, "system properties traceId");
+                    Assert.equal(expectedSpanId, dependencyFields[0].sysProperties!.trace.parentID, "system properties spanId");
+
+                    fetch(undefined, null).then(() => {
+                        // Assert
+                        Assert.ok(fetchSpy.calledTwice, "createFetchRecord called once after using fetch");
+                        Assert.equal(false, throwSpy.called, "We should still not have failed internally");
+                        Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called");
+                        Assert.ok(dependencyFields[1].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                        Assert.equal(expectedTraceId, dependencyFields[1].sysProperties!.trace.traceID, "system properties traceId");
+                        Assert.equal(expectedSpanId, dependencyFields[1].sysProperties!.trace.parentID, "system properties spanId");
+                        testContext.testDone();
+                    }, () => {
+                        Assert.ok(false, "fetch failed!");
+                        testContext.testDone();
+                    });
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+
 
         this.testCase({
             name: "Fetch: fetch keeps custom headers",

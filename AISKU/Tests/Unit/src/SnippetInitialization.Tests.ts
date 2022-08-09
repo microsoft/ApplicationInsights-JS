@@ -864,10 +864,12 @@ export class SnippetInitializationTests extends AITestClass {
             // Setup Sinon stuff
             const appInsights = (snippet as any).appInsights;
             this.onDone(() => {
-                if (snippet["unload"]) {
-                    snippet["unload"](false);
-                } else if (snippet["appInsightsNew"]) {
-                    snippet["appInsightsNew"].unload(false);
+                if (snippet) {
+                    if (snippet["unload"]) {
+                        snippet["unload"](false);
+                    } else if (snippet["appInsightsNew"]) {
+                        snippet["appInsightsNew"].unload(false);
+                    }
                 }
             });
 

@@ -10,6 +10,7 @@ import { PageAction } from "../../../src/events/PageAction";
 import { DomContentHandler } from '../../../src/handlers/DomContentHandler';
 import { IPageActionOverrideValues } from '../../../src/Interfaces/Datamodel'
 import { mergeConfig } from "../../../src/common/Utils";
+import { sanitizeUrl } from "../../../src/DataCollector";
 
 
 
@@ -1050,6 +1051,59 @@ export class ClickEventTest extends AITestClass {
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(false, spy.called);
+            }
+        });
+
+        this.testCase({
+            name: "Test sanitizeUrl",
+            test: () => {
+                let fakeLocation1 = null;
+                let fakeLocation2 = {
+                    protocol:"https:",
+                    hostname:"www.test.com",
+                    host:"www.test.com",
+                    port:"3000",
+                    pathname:"/path",
+                    hash:"#test",
+                    search:"?q=search&rlz=1C1CHBF"
+                } as any;
+                let fakeLocation3 = {
+                    protocol:"https:",
+                    host:"www.test.com",
+                    port:"",
+                    pathname:"",
+                    hash:"",
+                    search:"?q=search&rlz=1C1CHBF"
+                } as any;
+
+                const config1 = {
+                    urlCollectHash: true,
+                    urlCollectQuery: true
+                };
+                const config2 = {
+                    urlCollectHash: false,
+                    urlCollectQuery: false
+                };
+                const config3 = {
+                    urlCollectHash:false,
+                    urlCollectQuery: true
+                };
+
+                
+                let url1 = sanitizeUrl(config1, fakeLocation1);
+                Assert.equal(null, url1);
+
+                let url2 = sanitizeUrl(config2, fakeLocation2);
+                Assert.equal("https://www.test.com:3000/path", url2);
+
+                let url3 = sanitizeUrl(config1,fakeLocation2);
+                Assert.equal("https://www.test.com:3000/path#test?q=search&rlz=1C1CHBF", url3);
+
+                let url4 = sanitizeUrl(config3, fakeLocation3);
+                Assert.equal("https://www.test.com?q=search&rlz=1C1CHBF", url4);
+
+                let url5 = sanitizeUrl(config1, fakeLocation3);
+                Assert.equal("https://www.test.com?q=search&rlz=1C1CHBF", url5);
             }
         });
     }
