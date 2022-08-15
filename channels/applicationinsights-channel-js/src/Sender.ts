@@ -928,10 +928,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * @param statusCode
              */
             function _isRetriable(statusCode: number): boolean {
-                return statusCode === 408 // Timeout
+                return statusCode === 401 // Unauthorized
+                    || statusCode === 403 // Forbidden
+                    || statusCode === 408 // Timeout
                     || statusCode === 429 // Too many requests.
                     || statusCode === 500 // Internal server error.
-                    || statusCode === 503; // Service unavailable.
+                    || statusCode === 502 // Bad Gateway.
+                    || statusCode === 503 // Service unavailable.
+                    || statusCode === 504; // Gateway timeout.
             }
         
             function _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
