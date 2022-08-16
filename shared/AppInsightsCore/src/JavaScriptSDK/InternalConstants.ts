@@ -24,3 +24,5 @@ export const STR_ERROR_TO_CONSOLE = "errorToConsole";
 export const STR_WARN_TO_CONSOLE = "warnToConsole";
 
 export const STR_GET_PERF_MGR = "getPerfMgr";
+
+export const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
