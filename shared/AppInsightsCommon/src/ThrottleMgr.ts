@@ -1,12 +1,11 @@
-import { IthrottleDate, IthrottleLocalStorageObj, IthrottleMgrConfig, IThrottleMsgKey, IthrottleResult } from "../JavaScriptSDK.Interfaces/IThrottleMgr";
-import { utlGetLocalStorage, utlSetLocalStorage, utlCanUseLocalStorage } from "../../../AppInsightsCommon/src";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { safeGetLogger, _throwInternal } from "./DiagnosticLogger";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { isNullOrUndefined } from "./HelperFuncs";
-import { THROTTLE_STORAGE_PREFIX } from "./InternalConstants";
-import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import {
+    IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, isNullOrUndefined, safeGetLogger, strTrim
+} from "@microsoft/applicationinsights-core-js";
+import { IThrottleMsgKey } from "./Enums";
+import { IthrottleDate, IthrottleLocalStorageObj, IthrottleMgrConfig, IthrottleResult } from "./Interfaces/IThrottleMgr";
+import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 
+const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
 
 
 export class ThrottleMgr {
@@ -162,7 +161,7 @@ export class ThrottleMgr {
             try {
                 let date = obj.date
                 let val = date.year + "-" + date.month +"-" + date.day + "." + obj.count;
-                utlSetLocalStorage(logger, storageName, val.trim());
+                utlSetLocalStorage(logger, storageName, strTrim(val));
                 return true;
             } catch (e) {
                 // eslint-disable-next-line no-empty

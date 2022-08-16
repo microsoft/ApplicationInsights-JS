@@ -6,6 +6,7 @@ export {
     IUrlHelper, UrlHelper, isInternalApplicationInsightsEndpoint,
     createDistributedTraceContextFromTrace
 } from "./Util";
+export { ThrottleMgr } from "./ThrottleMgr";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
 export { FieldType } from "./Enums";
 export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
@@ -58,7 +59,8 @@ export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 export { IUser, IUserContext } from "./Interfaces/Context/IUser";
 export { ITelemetryTrace, ITraceState } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
-export { eDistributedTracingModes, DistributedTracingModes } from "./Enums";
+export { IthrottleDate, IthrottleLocalStorageObj, IthrottleMgrConfig, IthrottleResult} from "./Interfaces/IThrottleMgr";
+export { eDistributedTracingModes, DistributedTracingModes, IThrottleMsgKey } from "./Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
     isBeaconsSupported as isBeaconApiSupported,

@@ -1,7 +1,4 @@
-export const enum IThrottleMsgKey {
-    ikeyDeprecate = "ikey",
-    cdnDeprecate = "cdn"
-}
+import { IThrottleMsgKey } from "../Enums";
 
 /**
  * Identifies limit number/percentage of items sent per time
