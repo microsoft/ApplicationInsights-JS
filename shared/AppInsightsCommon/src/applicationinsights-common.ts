@@ -59,7 +59,7 @@ export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 export { IUser, IUserContext } from "./Interfaces/Context/IUser";
 export { ITelemetryTrace, ITraceState } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
-export { IthrottleDate, IthrottleLocalStorageObj, IthrottleMgrConfig, IthrottleResult} from "./Interfaces/IThrottleMgr";
+export { IthrottleLocalStorageObj, IthrottleMgrConfig, IthrottleResult} from "./Interfaces/IThrottleMgr";
 export { eDistributedTracingModes, DistributedTracingModes, IThrottleMsgKey } from "./Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
