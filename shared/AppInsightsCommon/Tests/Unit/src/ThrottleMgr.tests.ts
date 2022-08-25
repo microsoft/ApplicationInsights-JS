@@ -41,8 +41,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        sentPercentage: 50,
-                        maxSentNumber: 100
+                        sendPercentage: 50,
+                        maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 2,
@@ -71,8 +71,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        sentPercentage: 100,
-                        maxSentNumber:1
+                        sendPercentage: 100,
+                        maxSendNumber:1
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 3,
@@ -124,8 +124,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        sentPercentage: 50,
-                        maxSentNumber: 100
+                        sendPercentage: 50,
+                        maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 3,
@@ -155,8 +155,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        sentPercentage: 50,
-                        maxSentNumber: 100
+                        sendPercentage: 50,
+                        maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 3,
@@ -186,8 +186,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        sentPercentage: 50,
-                        maxSentNumber: 100
+                        sendPercentage: 50,
+                        maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
@@ -225,8 +225,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        sentPercentage: 50,
-                        maxSentNumber: 100
+                        sendPercentage: 50,
+                        maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 3,
@@ -263,8 +263,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        sentPercentage: 50,
-                        maxSentNumber: 100
+                        sendPercentage: 50,
+                        maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 5,
@@ -295,8 +295,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        sentPercentage: 50,
-                        maxSentNumber: 100
+                        sendPercentage: 50,
+                        maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
@@ -326,8 +326,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: IThrottleMsgKey.ikeyDeprecate,
                     disabled: false,
                     limit: {
-                        sentPercentage: 100,
-                        maxSentNumber:1
+                        sendPercentage: 100,
+                        maxSendNumber:1
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
@@ -374,8 +374,8 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: IThrottleMsgKey.ikeyDeprecate,
                     disabled: false,
                     limit: {
-                        sentPercentage: 100,
-                        maxSentNumber:1
+                        sendPercentage: 100,
+                        maxSendNumber:1
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,

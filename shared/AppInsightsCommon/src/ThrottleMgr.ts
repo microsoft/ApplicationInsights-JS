@@ -49,7 +49,7 @@ export class ThrottleMgr {
             try {
                 if (canThrottle && !_isTriggered) {
                     // take the min number between maxSentNumber and sentPercentage
-                    number = Math.min(Math.floor(_config.limit.sentPercentage * (_localStorageObj.count + 1) / 100), _config.limit.maxSentNumber);
+                    number = Math.min(Math.floor(_config.limit.sendPercentage * (_localStorageObj.count + 1) / 100), _config.limit.maxSendNumber);
                     _localStorageObj.count = 0;
                     throttled = true;
                     _isTriggered = true;
@@ -68,7 +68,7 @@ export class ThrottleMgr {
             return {
                 isThrottled: throttled,
                 throttleNum: number
-            } as IthrottleResult
+            } as IthrottleResult;
         }
         
         function _initConfig() {
@@ -86,13 +86,13 @@ export class ThrottleMgr {
                 monthInterval: configMgr.interval?.monthInterval || 3,
                 dayInterval : configMgr.interval?.dayInterval || 28,
                 maxTimesPerMonth: configMgr.interval?.maxTimesPerMonth || 1
-            }
+            };
             _config.interval = interval;
             let limit = {
-                sentPercentage: configMgr.limit?.sentPercentage || 100,
+                sendPercentage: configMgr.limit?.sendPercentage || 100,
                 // dafault: every time sent only 1 event
-                maxSentNumber: configMgr.limit?.maxSentNumber || 1
-            }
+                maxSendNumber: configMgr.limit?.maxSendNumber || 1
+            };
             _config.limit = limit;
             _localStorageName = _getLocalStorageName(_config.msgKey, _namePrefix);
             if (_canUseLocalStorage && _localStorageName) {

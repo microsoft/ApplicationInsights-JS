@@ -10,13 +10,13 @@ export interface IThrottleLimit {
      * In %, for example: 20 means 20%
      * Default: 100
      */
-    sentPercentage?: number;
+    sendPercentage?: number;
 
     /**
      * Identifies limit number of items per time
      * Default: 1
      */
-    maxSentNumber?: number;
+    maxSendNumber?: number;
 }
 
 /**
