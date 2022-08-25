@@ -218,9 +218,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace("Sender"), core.evtNamespace && core.evtNamespace());
                 _offlineListener = createOfflineListener(_evtNamespace);
 
+                // TODO v3.x: Change the ISenderConfig to not be function calls
                 const defaultConfig = _getDefaultAppInsightsChannelConfig();
                 objForEachKey(defaultConfig, (field, value) => {
-                    _self._senderConfig[field] = () => ctx.getConfig(identifier, field, value());
+                    _self._senderConfig[field] = () => {
+                        let theValue = ctx.getConfig(identifier, field, value())
+                        if (!theValue && field === "endpointUrl") {
+                            // Use the default value (handles empty string in the configuration)
+                            theValue = value();
+                        }
+                        return theValue;
+                    }
                 });
         
                 _self._buffer = (_self._senderConfig.enableSessionStorageBuffer() && utlCanUseSessionStorage())
