@@ -84,4 +84,11 @@ export interface IPlugin {
      * Plugin version (available in data.properties.version in common schema)
      */
     readonly version?: string;
+
+    /**
+     * The App Insights core to use for backward compatibility.
+     * Therefore the interface will be able to access the core without needing to cast to "any".
+     * [optional] any 3rd party plugins which are already implementing this interface don't fail to compile.
+     */
+    core?: IAppInsightsCore
 }
