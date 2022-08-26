@@ -366,11 +366,20 @@ export interface IConfig {
      * [Optional] The number of events that can be kept in memory before the SDK starts to drop events. By default, this is 10,000.
      */
     eventsLimitInMem?: number;
-      /**
+
+    /**
      * [Optional] Disable iKey deprecation error message.
      * @defaultValue true
      */
-       disableIkeyDeprecationMessage?: boolean;
+    disableIkeyDeprecationMessage?: boolean;
+
+    /**
+     * [Optional] Flag to indicate whether the internal looking endpoints should be automatically
+     * added to the `excludeRequestFromAutoTrackingPatterns` collection. (defaults to true).
+     * This flag exists as the provided regex is generic and may unexpectedly match a domain that
+     * should not be excluded.
+     */
+    addIntEndpoints?: boolean;
 }
 
 export class ConfigurationManager {

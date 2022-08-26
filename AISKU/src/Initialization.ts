@@ -18,7 +18,9 @@ import {
     isReactNative, isString, mergeEvtNamespace, objForEachKey, proxyAssign, proxyFunctions, removePageHideEventListener,
     removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
-import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
+import {
+    AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, IDependenciesPlugin, IDependencyInitializerHandler
+} from "@microsoft/applicationinsights-dependencies-js";
 import {
     DependencyListenerFunction, IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
@@ -362,7 +364,8 @@ export class Initialization implements IApplicationInsights {
 
             proxyFunctions(_self, _getCurrentDependencies, [
                 STR_TRACK_DEPENDENCY_DATA,
-                "addDependencyListener"
+                "addDependencyListener",
+                "addDependencyInitializer"
             ]);
 
             proxyFunctions(_self, _core, [
@@ -676,6 +679,18 @@ export class Initialization implements IApplicationInsights {
      */
     public addDependencyListener(dependencyListener: DependencyListenerFunction): IDependencyListenerHandler {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Add an dependency telemetry initializer callback function to allow populating additional properties or drop the request.
+     * It is called after the dependency call has completed and any available performance details are available. A dependency
+     * initializer is similar to the TelemetryInitializer function but it allows you to block the reporting of the dependency
+     * request so that it doesn't count against the `maxAjaxCallsPerView`.
+     * @param dependencyInitializer - The Dependency Telemetry Initializer function
+     * @returns - A IDependencyInitializerHandler to enable the initializer to be removed
+     */
+    public addDependencyInitializer(dependencyInitializer: DependencyInitializerFunction): IDependencyInitializerHandler {
         return null;
     }
 

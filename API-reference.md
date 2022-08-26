@@ -196,6 +196,73 @@ Adds a telemetry initializer to the collection. Telemetry initializers will be c
 before the telemetry item is pushed for sending.
 If one of the telemetry initializers returns false or throws an error, then the telemetry item will not be sent.
 
+### addDependencyListener
+
+```ts
+public addDependencyListener(dependencyListener: (dependencyDetails: IDependencyListenerDetails) => void): IDependencyListenerHandler;
+
+// Example Usage
+let handler = appInsights.addDependencyListener((details) => {
+    // You have complete access to the xhr instance
+    // details.xhr: XMLHttpRequest;
+
+    // Or if a fetch request you have complete access to the input and init objects
+    // details.input: Request | string;
+    // details.init: RequestInit;
+
+    // Access or change the W3C traceId that will be added to the outbound request
+    details.traceId = "";
+
+    // Access or change the W3C spanId that will be added to the outbound request
+    details.spanId = "";
+
+    // Access or change the W3C traceflags that will be added to the outbound request
+    details.traceFlags = 1;
+
+    // Add additional context values (any) that can be used by other listeners and is
+    // also passed to any dependency initializers
+    details.context.someValue = 1234;
+});
+
+// [Optional] Remove the dependency initializer
+handler.remove();
+```
+
+A dependency listener is a callback function that allows you to perform additional manipulation of the request details before the request is performed.
+
+This includes :-
+
+- Complete access to either the XMLHttpRequest instance or the fetch API `input` and `init` arguments.
+- Ability to get/set the properties used to generate the W3C `traceparent` header (`traceId`, `spanId, `traceFlags)
+- Set values in the object context container for other listeners called after the current one, as well as this context object is also made available to all dependency initializers.
+
+### addDependencyInitializer
+
+```ts
+public addDependencyInitializer(dependencyInitializer: (item: IDependencyInitializerDetails) => boolean | void): IDependencyInitializerHandler
+
+// Example Usage
+let handler = appInsights.addDependencyInitializer((details) => {
+    details.item.xxxx = "";   // item is the telemetry event "before" it's been processed
+
+    // [Optional] To stop any event from being reported you can
+    // return false;
+});
+
+
+// [Optional] Remove the dependency initializer
+handler.remove();
+```
+
+A Dependency Initializer is very similar to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
+
+The differences between a telemetry initializer and a dependency initializer are :-
+- A Dependency Initializer is called "before" the event is processed by the pipeline, as such it will NOT (yet) contain the automatically populated properties that are applied later;
+- When a dependency initializer returns `false` to drop the event the event does NOT count against the `maxAjaxCallsPerView` as this blocks the event call from being tracked, and while returning `false` from a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) will also stop the event from being reported because this is further down the processing pipeline the dependency event IS counted against the `maxAjaxCallsPerView` limit.
+- It has access to an optional "context" `{ [key: string]: any }` object that is also available to the Dependency Listeners. This allows a listener to add additional details to the context (before the XHR/fetch request is sent), and the initializer will be called after the request has completed.
+
+The input argument to `addDependencyInitializer` is a callback that takes a [`IDependencyInitializerDetails`](./extensions/applicationinsights-dependencies-js/src/DependencyInitializer.ts) as an argument and returns a `boolean` or `void`. If returning `false`, the dependency event is not sent, else it proceeds to the next dependency initializer, if any, or is sent to processing pipeline to be sent to the telemetry collection endpoint.
+
 ### getSender
 
 ```ts
