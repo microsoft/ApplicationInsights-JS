@@ -247,6 +247,18 @@
         "@rushstack/node-core-library": "3.51.1"
       }
     },
+    "node_modules/@microsoft/api-extractor/node_modules/typescript": {
+      "version": "4.7.4",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz",
+      "integrity": "sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==",
+      "bin": {
+        "tsc": "bin/tsc",
+        "tsserver": "bin/tsserver"
+      },
+      "engines": {
+        "node": ">=4.2.0"
+      }
+    },
     "node_modules/@microsoft/dynamicproto-js": {
       "version": "1.1.6",
       "resolved": "https://registry.npmjs.org/@microsoft/dynamicproto-js/-/dynamicproto-js-1.1.6.tgz",
@@ -2051,9 +2063,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.230",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.230.tgz",
-      "integrity": "sha512-3pwjAK0qHSDN9+YAF4fJknsSruP7mpjdWzUSruIJD/JCH77pEh0SorEyb3xVaKkfwk2tzjOt2D8scJ0KAdfXLA=="
+      "version": "1.4.232",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.232.tgz",
+      "integrity": "sha512-nd+FW8xHjM+PxNWG44nKnwHaBDdVpJUZuI2sS2JJPt/QpdombnmoCRWEEQNnzaktdIQhsNWdD+dlqxwO8Bn99g=="
     },
     "node_modules/emojis-list": {
       "version": "3.0.0",
@@ -5197,9 +5209,9 @@
       "integrity": "sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA=="
     },
     "node_modules/typescript": {
-      "version": "4.7.4",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz",
-      "integrity": "sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==",
+      "version": "4.8.2",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.2.tgz",
+      "integrity": "sha512-C0I1UsrrDHo2fYI5oaCGbSejwX4ch+9Y5jTQELvovfmFkK3HHSZJB8MSJcWLmCUBzQBchCrZ9rMRV6GuNrvGtw==",
       "bin": {
         "tsc": "bin/tsc",
         "tsserver": "bin/tsserver"
@@ -5617,6 +5629,13 @@
         "semver": "~7.3.0",
         "source-map": "~0.6.1",
         "typescript": "~4.7.4"
+      },
+      "dependencies": {
+        "typescript": {
+          "version": "4.7.4",
+          "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz",
+          "integrity": "sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ=="
+        }
       }
     },
     "@microsoft/api-extractor-model": {
@@ -7053,9 +7072,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "electron-to-chromium": {
-      "version": "1.4.230",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.230.tgz",
-      "integrity": "sha512-3pwjAK0qHSDN9+YAF4fJknsSruP7mpjdWzUSruIJD/JCH77pEh0SorEyb3xVaKkfwk2tzjOt2D8scJ0KAdfXLA=="
+      "version": "1.4.232",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.232.tgz",
+      "integrity": "sha512-nd+FW8xHjM+PxNWG44nKnwHaBDdVpJUZuI2sS2JJPt/QpdombnmoCRWEEQNnzaktdIQhsNWdD+dlqxwO8Bn99g=="
     },
     "emojis-list": {
       "version": "3.0.0",
@@ -9453,9 +9472,9 @@
       "integrity": "sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA=="
     },
     "typescript": {
-      "version": "4.7.4",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz",
-      "integrity": "sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ=="
+      "version": "4.8.2",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.2.tgz",
+      "integrity": "sha512-C0I1UsrrDHo2fYI5oaCGbSejwX4ch+9Y5jTQELvovfmFkK3HHSZJB8MSJcWLmCUBzQBchCrZ9rMRV6GuNrvGtw=="
     },
     "uglify-es": {
       "version": "3.3.9",

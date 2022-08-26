@@ -23,6 +23,19 @@
 
 > ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights). For Node.js instrumentation reference this [repository](https://github.com/microsoft/ApplicationInsights-node.js). 
 
+## Beta (v3.x) Release Breaking changes
+
+As part of the beta development we intend to stop adding additional features (enhancements) to the v2.x releases.
+
+Development has started on the next major release which is occurring on the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) branch, this includes nightly automatic build and releases.
+
+Some of the major changes include
+
+- Removed ES3 / IE8 Support
+- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
+
+See the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) for the current documented set of breaking changes, all feedback on excessive breaks are welcome current release target is early (1st quarter) 2023.
+
 ## Getting Started
 
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
@@ -257,6 +270,25 @@ appInsights.trackTrace({message: 'This message will use a telemetry initializer'
 appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this is executed
 appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 ```
+
+### Dependency Listeners
+
+A [dependency listener is a callback function](./API-reference.md#addDependencyListener) that allows you to perform additional manipulation of the request details before the request is performed.
+
+This includes :-
+
+- Complete access to either the XMLHttpRequest instance or the fetch API `input` and `init` arguments.
+- Ability to get/set the properties used to generate the W3C `traceparent` header (`traceId`, `spanId, `traceFlags)
+- Set values in the object context container for other listeners called after the current one, as well as this context object is also made available to all dependency initializers.
+
+### Dependency Initializers
+
+A [Dependency Initializer is very similar](./API-reference.md#addDependencyInitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
+
+The differences between a telemetry initializer and a dependency initializer are :-
+- A Dependency Initializer is called "before" the event is processed by the pipeline, as such it will NOT (yet) contain the automatically populated properties that are applied later;
+- When a dependency initializer returns `false` to drop the event the event does NOT count against the `maxAjaxCallsPerView` as this blocks the event call from being tracked, and while returning `false` from a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) will also stop the event from being reported because this is further down the processing pipeline the dependency event IS counted against the `maxAjaxCallsPerView` limit.
+- It has access to an optional "context" `{ [key: string]: any }` object that is also available to the Dependency Listeners. This allows a listener to add additional details to the context (before the XHR/fetch request is sent), and the initializer will be called after the request has completed.
 
 ## Configuration
 

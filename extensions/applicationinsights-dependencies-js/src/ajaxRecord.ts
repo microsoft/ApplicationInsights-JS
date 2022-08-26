@@ -263,6 +263,11 @@ export class ajaxRecord {
      */
     public eventTraceCtx: ITraceCtx;
 
+    /**
+     * The listener assigned context values that will be passed to any dependency initializer
+     */
+    public context?: { [key: string]: any };
+
     constructor(traceId: string, spanId: string, logger: IDiagnosticLogger, traceCtx?: IDistributedTraceContext) {
         let self = this;
         let _logger: IDiagnosticLogger = logger;
