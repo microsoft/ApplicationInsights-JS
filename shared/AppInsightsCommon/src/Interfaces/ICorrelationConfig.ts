@@ -60,4 +60,12 @@ export interface ICorrelationConfig {
      * Default is undefined.
      */
     addRequestContext?: (requestContext?: IRequestContext) => ICustomProperties;
+
+    /**
+     * [Optional] Flag to indicate whether the internal looking endpoints should be automatically
+     * added to the `excludeRequestFromAutoTrackingPatterns` collection. (defaults to true).
+     * This flag exists as the provided regex is generic and may unexpectedly match a domain that
+     * should not be excluded.
+     */
+    addIntEndpoints?: boolean;
 }
