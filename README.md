@@ -23,6 +23,10 @@
 
 ## Beta (v3.x) Release Breaking changes
 
+As part of the beta development we intend to stop adding additional features (enhancements) to the v2.x releases.
+
+Some of the major changes include
+
 - Removed ES3 / IE8 Support
 - Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
 
