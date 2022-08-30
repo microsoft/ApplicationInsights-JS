@@ -51,6 +51,19 @@ Some of the major changes include
 
 See the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) for the current documented set of breaking changes, all feedback on excessive breaks are welcome current release target is early (1st quarter) 2023.
 
+## Beta (v3.x) Release Breaking changes
+
+As part of the beta development we intend to stop adding additional features (enhancements) to the v2.x releases.
+
+Development has started on the next major release which is occurring on the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) branch, this includes nightly automatic build and releases.
+
+Some of the major changes include
+
+- Removed ES3 / IE8 Support
+- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
+
+See the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) for the current documented set of breaking changes, all feedback on excessive breaks are welcome current release target is early (1st quarter) 2023.
+
 ## Getting Started
 
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
