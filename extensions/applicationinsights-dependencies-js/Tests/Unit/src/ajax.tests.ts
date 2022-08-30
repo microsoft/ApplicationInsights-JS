@@ -4,7 +4,7 @@ import { AjaxMonitor } from "../../../src/ajax";
 import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext, formatTraceParent, createTraceParent } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId,
-    getPerformance, getGlobalInst, getGlobal, generateW3CId
+    getPerformance, getGlobalInst, getGlobal, generateW3CId, arrForEach
 } from "@microsoft/applicationinsights-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
 import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework/dist-esm/src/AITestClass";
@@ -190,6 +190,160 @@ export class AjaxTests extends AITestClass {
 
                 // assert
                 Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: Validate that internal endpoints are not automatically instrumented",
+            useFakeServer: true,
+            test: () => {
+                const endpointUrls = [
+                    "https://browser.aria.pipe.microsoft.com/Collector/3.0/?qsp-true",
+                    "https://browser.events.data.microsoft.com/OneCollector/1.0",
+                    "https://self.pipe.aria.microsoft.com/Collector/3.0/",
+                    "https://blah.events.data.microsoft.com/OneCollector/1.0/",
+                    "https://self.pipe.aria.int.microsoft.com/Collector/3.0/",
+                    "https://collector.azure.domain/Collector/3.0/",
+                    "https://collector.azure.microsoft.domain/Collector/3.0/",
+                    "https://collector.azure.microsoft.domain/OneCollector/1.0/",
+                    "https://self.pipe.aria.int.microsoft.com/Collector/3.0/",
+                    "https://collector.azure.cn/OneCollector/1.0/"
+                ];
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                arrForEach(endpointUrls, (endpointUrl) => {
+                    // act
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", endpointUrl);
+
+                    // assert
+                    Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+                });
+            }
+        });
+
+
+        this.testCase({
+            name: "Ajax: Validate that internal endpoints are instrumented if disabled",
+            useFakeServer: true,
+            test: () => {
+                const endpointUrls = [
+                    "https://browser.aria.pipe.microsoft.com/Collector/3.0/?qsp-true",
+                    "https://browser.events.data.microsoft.com/OneCollector/1.0",
+                    "https://self.pipe.aria.microsoft.com/Collector/3.0/",
+                    "https://blah.events.data.microsoft.com/OneCollector/1.0/",
+                    "https://self.pipe.aria.int.microsoft.com/Collector/3.0/",
+                    "https://collector.azure.domain/Collector/3.0/",
+                    "https://collector.azure.microsoft.domain/Collector/3.0/",
+                    "https://collector.azure.microsoft.domain/OneCollector/1.0/",
+                    "https://self.pipe.aria.int.microsoft.com/Collector/3.0/",
+                    "https://collector.azure.cn/OneCollector/1.0/"
+                ];
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = {
+                    instrumentationKey: "",
+                    disableAjaxTracking: false,
+                    addIntEndpoints: false
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                arrForEach(endpointUrls, (endpointUrl) => {
+                    // act
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", endpointUrl);
+
+                    // assert
+                    var ajaxData = (<any>xhr).ajaxData;
+                    Assert.equal(endpointUrl, ajaxData.requestUrl, "RequestUrl is collected correctly");
+                });
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: Validate dependency initializer",
+            useFakeServer: true,
+            test: () => {
+                let initializerCalled = false;
+                this._ajax = new AjaxMonitor();
+                this._ajax.addDependencyInitializer((details) => {
+                    let props = details.item.properties = details.item.properties || {};
+                    props.initializer = { called: true };
+                    initializerCalled = true;
+                });
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = {
+                    instrumentationKey: "",
+                    disableAjaxTracking: false,
+                    addIntEndpoints: false
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+
+                Assert.equal(0, trackSpy.callCount, "Track has not been called");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                var ajaxData = (<any>xhr).ajaxData;
+                Assert.equal("http://microsoft.com", ajaxData.requestUrl, "RequestUrl is collected correctly");
+
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(200, {}, "");
+
+                Assert.ok(initializerCalled, "Initializer was not called");
+
+                // assert
+                Assert.ok(!(<any>xhr).ajaxData, "The ajax data should have been removed");
+                Assert.equal(1, trackSpy.callCount, "Track has been called");
+                Assert.equal(true, trackSpy.args[0][0].baseData.properties.initializer.called, "The value set in the initializer was added");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: Validate dependency initializer returning false to drop the request",
+            useFakeServer: true,
+            test: () => {
+                let initializerCalled = false;
+                this._ajax = new AjaxMonitor();
+                this._ajax.addDependencyInitializer((details) => {
+                    initializerCalled = true;
+                    return false;
+                });
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = {
+                    instrumentationKey: "",
+                    disableAjaxTracking: false,
+                    addIntEndpoints: false
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+
+                Assert.equal(0, trackSpy.callCount, "Track has not been called");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                var ajaxData = (<any>xhr).ajaxData;
+                Assert.equal("http://microsoft.com", ajaxData.requestUrl, "RequestUrl is collected correctly");
+
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(200, {}, "");
+
+                Assert.ok(initializerCalled, "Initializer was not called");
+
+                // assert
+                Assert.ok(!(<any>xhr).ajaxData, "The ajax data should have been removed");
+                Assert.equal(0, trackSpy.callCount, "Track has not been called");
             }
         });
 
@@ -574,6 +728,110 @@ export class AjaxTests extends AITestClass {
             }]
         });
 
+        const endpointUrls = [
+            "https://browser.aria.pipe.microsoft.com/Collector/3.0/?qsp-true",
+            "https://browser.events.data.microsoft.com/OneCollector/1.0",
+            "https://self.pipe.aria.microsoft.com/Collector/3.0/",
+            "https://blah.events.data.microsoft.com/OneCollector/1.0/",
+            "https://self.pipe.aria.int.microsoft.com/Collector/3.0/",
+            "https://collector.azure.domain/Collector/3.0/",
+            "https://collector.azure.microsoft.domain/Collector/3.0/",
+            "https://collector.azure.microsoft.domain/OneCollector/1.0/",
+            "https://self.pipe.aria.int.microsoft.com/Collector/3.0/",
+            "https://collector.azure.cn/OneCollector/1.0/"
+        ];
+
+        arrForEach(endpointUrls, (endpointUrl) => {
+
+            this.testCaseAsync({
+                name: "Fetch: internal url fetch isn't tracked [" + endpointUrl + "]",
+                stepDelay: 10,
+                autoComplete: false,
+                timeOut: 10000,
+                steps: [ (testContext) => {
+                    hookFetch((resolve) => {
+                        AITestClass.orgSetTimeout(function() {
+                            resolve({
+                                headers: new Headers(),
+                                ok: true,
+                                body: null,
+                                bodyUsed: false,
+                                redirected: false,
+                                status: 200,
+                                statusText: "Hello",
+                                trailer: null,
+                                type: "basic",
+                                url: endpointUrl
+                            });
+                        }, 0);
+                    });
+    
+                    this._ajax = new AjaxMonitor();
+                    let appInsightsCore = new AppInsightsCore();
+                    let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                    appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                    let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+    
+                    // Act
+                    Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                    fetch(endpointUrl, {method: "post" }).then(() => {
+                        // Assert
+                        Assert.ok(fetchSpy.notCalled, "The request was not tracked");
+                        testContext.testDone();
+                    }, () => {
+                        Assert.ok(false, "fetch failed!");
+                        testContext.testDone();
+                    });
+                }]
+            });
+    
+            this.testCaseAsync({
+                name: "Fetch: internal url using fetch is tracked [" + endpointUrl + "]",
+                stepDelay: 10,
+                autoComplete: false,
+                timeOut: 10000,
+                steps: [ (testContext) => {
+                    hookFetch((resolve) => {
+                        AITestClass.orgSetTimeout(function() {
+                            resolve({
+                                headers: new Headers(),
+                                ok: true,
+                                body: null,
+                                bodyUsed: false,
+                                redirected: false,
+                                status: 200,
+                                statusText: "Hello",
+                                trailer: null,
+                                type: "basic",
+                                url: endpointUrl
+                            });
+                        }, 0);
+                    });
+    
+                    this._ajax = new AjaxMonitor();
+                    let appInsightsCore = new AppInsightsCore();
+                    let coreConfig = {
+                        instrumentationKey: "",
+                        disableFetchTracking: false,
+                        addIntEndpoints: false
+                    };
+                    appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                    let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+    
+                    // Act
+                    Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                    fetch(endpointUrl, {method: "post" }).then(() => {
+                        // Assert
+                        Assert.ok(fetchSpy.called, "The request was tracked");
+                        testContext.testDone();
+                    }, () => {
+                        Assert.ok(false, "fetch failed!");
+                        testContext.testDone();
+                    });
+                }]
+            });
+        });
+
         this.testCaseAsync({
             name: "Fetch: fetch with disabled flag isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
             stepDelay: 10,
@@ -776,6 +1034,115 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called")
+                    testContext.testDone();
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: fetch addDependencyInitializer adding context",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                let initializerCalled = false;
+                this._ajax = new AjaxMonitor();
+                this._ajax.addDependencyInitializer((details) => {
+                    let props = details.item.properties = details.item.properties || {};
+                    props.initializer = { called: true };
+                    initializerCalled = true;
+                });
+
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                    Assert.ok(initializerCalled, "Initializer was called");
+                    Assert.equal(true, data.properties.initializer.called, "The value set in the initializer was added");
+                    testContext.testDone();
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: fetch addDependencyInitializer drops the event",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                let initializerCalled = false;
+                this._ajax = new AjaxMonitor();
+                this._ajax.addDependencyInitializer((details) => {
+                    initializerCalled = true;
+                    return false;
+                });
+
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // Assert
+                    Assert.ok(initializerCalled, "Initializer was not called");
+                    Assert.ok(fetchSpy.notCalled, "track was not called");
                     testContext.testDone();
                 }, () => {
                     Assert.ok(false, "fetch failed!");
@@ -2107,8 +2474,7 @@ export class AjaxTests extends AITestClass {
                 // Emulate response
                 (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
             }
-        })
-
+        });
     }
 
     private testAjaxSuccess(responseCode: number, success: boolean) {
