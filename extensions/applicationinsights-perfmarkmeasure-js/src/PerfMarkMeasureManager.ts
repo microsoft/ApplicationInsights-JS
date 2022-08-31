@@ -123,7 +123,7 @@ export class PerfMarkMeasureManager extends PerfManager {
     /**
      * Create a new event and start timing, the manager may return null/undefined to indicate that it does not
      * want to monitor this source event.
-     * @param src The source name of the event
+     * @param src - The source name of the event
      * @param payloadDetails - An optional callback function to fetch the payload details for the event.
      * @param isAsync - Is the event occurring from a async event
      */
@@ -134,7 +134,7 @@ export class PerfMarkMeasureManager extends PerfManager {
 
     /**
      * Complete the perfEvent and fire any notifications.
-     * @param perfEvent Fire the event which will also complete the passed event
+     * @param perfEvent - Fire the event which will also complete the passed event
      */
     public fire(perfEvent: IPerfEvent): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

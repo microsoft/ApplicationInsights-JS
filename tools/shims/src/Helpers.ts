@@ -51,7 +51,7 @@ export function throwTypeError(message: string): never {
  * Creates an object that has the specified prototype, and that optionally contains specified properties. This helper exists to avoid adding a polyfil
  * for older browsers that do not define Object.create eg. ES5 only, IE8 just in case any page checks for presence/absence of the prototype implementation.
  * Note: For consistency this will not use the Object.create implementation if it exists as this would cause a testing requirement to test with and without the implementations
- * @param obj Object to use as a prototype. May be null
+ * @param obj - Object to use as a prototype. May be null
  */
 export function objCreateFn(obj: any): any {
     var func = ObjCreate;

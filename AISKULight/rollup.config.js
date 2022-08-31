@@ -65,7 +65,7 @@ const browserRollupConfigFactory = (isProduction, libV = '2') => {
     browserRollupConfig.output.file = `browser/aib.${libV}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {
@@ -116,7 +116,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.output.file = `dist/applicationinsights-web-basic.min.js`;
     nodeRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {

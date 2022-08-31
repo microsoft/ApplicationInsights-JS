@@ -70,7 +70,7 @@ const browserRollupConfigFactory = (isProduction, libVersion, format = 'umd', po
     browserRollupConfig.output.file = `browser/ai.dbg.${libVersion}${postfix}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {
@@ -121,7 +121,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.output.file = `dist/${outputName}.min.js`;
     nodeRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {

@@ -31,9 +31,9 @@ export function _getPluginState(plugin: IPlugin): IPluginState {
 /**
  * Initialize the queue of plugins
  * @param plugins - The array of plugins to initialize and setting of the next plugin
- * @param config The current config for the instance
- * @param core THe current core instance
- * @param extensions The extensions
+ * @param config - The current config for the instance
+ * @param core - THe current core instance
+ * @param extensions - The extensions
  */
 export function initializePlugins(processContext: IProcessTelemetryContext, extensions: IPlugin[]) {
 
@@ -42,12 +42,11 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
     let lastPlugin: ITelemetryPlugin = null;
     let proxy: ITelemetryPluginChain = processContext.getNext();
     let pluginState: IPluginState;
+
     while (proxy) {
         let thePlugin = proxy.getPlugin();
         if (thePlugin) {
-            if (lastPlugin &&
-                    isFunction(lastPlugin.setNextPlugin) &&
-                    isFunction(thePlugin.processTelemetry)) {
+            if (lastPlugin && lastPlugin.setNextPlugin && thePlugin.processTelemetry) {
                 // Set this plugin as the next for the previous one
                 lastPlugin.setNextPlugin(thePlugin);
             }
@@ -71,7 +70,7 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
 
     // Now initialize the plugins
     arrForEach(initPlugins, thePlugin => {
-        let core = processContext[STR_CORE]();
+        let core = processContext.core();
 
         thePlugin.initialize(
             processContext.getCfg(),
@@ -96,8 +95,8 @@ export function sortPlugins<T = IPlugin>(plugins:T[]) {
     return plugins.sort((extA, extB) => {
         let result = 0;
         if (extB) {
-            let bHasProcess = isFunction(extB[STR_PROCESS_TELEMETRY]);
-            if (isFunction(extA[STR_PROCESS_TELEMETRY])) {
+            let bHasProcess = extB[STR_PROCESS_TELEMETRY];
+            if (extA[STR_PROCESS_TELEMETRY]) {
                 result = bHasProcess ? extA[STR_PRIORITY] - extB[STR_PRIORITY] : 1;
             } else if (bHasProcess) {
                 result = -1;

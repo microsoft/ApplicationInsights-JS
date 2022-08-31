@@ -72,9 +72,9 @@ export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements I
                             // doNotSendItem = true;
                             _throwInternal(
                                 itemCtx.diagLog(),
-                                eLoggingSeverity.CRITICAL,
+                                eLoggingSeverity.WARNING,
                                 _eInternalMessageId.TelemetryInitializerFailed,
-                                "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
+                                "Telemetry initializer failed: " + getExceptionName(e),
                                 { exception: dumpObj(e) }, true);
                         }
                     }

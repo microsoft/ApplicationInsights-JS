@@ -1,14 +1,12 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { AppInsightsCore, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId, objExtend } from "../../../src/applicationinsights-core-js"
-import { _InternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
+import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 
 export class CookieManagerTests extends AITestClass {
-    private _cookieMgrCfg: ICookieMgrConfig = {};
-    private _config: IConfiguration = {
-        cookieCfg: this._cookieMgrCfg
-    };
-    private _testCookies = {};
+    private _cookieMgrCfg: ICookieMgrConfig;
+    private _config: IConfiguration;
+    private _testCookies;
 
     constructor(emulateIe: boolean) {
         super("CookieManagerTests", emulateIe);
@@ -17,6 +15,7 @@ export class CookieManagerTests extends AITestClass {
     public testInitialize() {
         let _self = this;
         super.testInitialize();
+        _self._testCookies = {};
         _self._cookieMgrCfg = {
             getCookie: (name) => {
                 let theValue = _self._testCookies[name] || "";
@@ -29,7 +28,9 @@ export class CookieManagerTests extends AITestClass {
                 delete _self._testCookies[name]
             }
         }
-        _self._config.cookieCfg = _self._cookieMgrCfg;
+        _self._config = {
+            cookieCfg: _self._cookieMgrCfg
+        };
     }
 
     public testCleanup() {
@@ -489,6 +490,161 @@ export class CookieManagerTests extends AITestClass {
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
                 Assert.equal(undefined, this._testCookies[newKey]);
+            }
+        });        
+
+        this.testCase({
+            name: "CookieManager: set cookie domain on the core config and update using updateCfg()",
+            test: () => {
+
+                let core = new AppInsightsCore();
+                core.initialize({
+                    instrumentationKey: "testiKey",
+                    cookieDomain: "MyDomain.com",
+                    cookieCfg: this._cookieMgrCfg
+                }, [new ChannelPlugin()]);
+
+                let manager = core.getCookieMgr();
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                manager.set(newKey, newValue);
+                Assert.equal(newValue, manager.get(newKey));
+                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+
+                manager.del(newKey);
+                Assert.equal("", manager.get(newKey));
+                Assert.equal(undefined, this._testCookies[newKey]);
+
+                // Update the root cookie Domain using the core update function while there is a cookieCfg.domain
+                // The cookieCfg.domain overrides the root domain
+                core.updateCfg({
+                    cookieDomain: "MyDomain2.com"
+                });
+
+                let newKey2 = "test2." + newId();
+                let newValue2 = newId();
+                manager.set(newKey2, newValue2);
+                Assert.equal(newValue2, manager.get(newKey2));
+                Assert.equal(newValue2 + "; domain=MyDomain.com; path=/", this._testCookies[newKey2]);
+
+                manager.del(newKey2);
+                Assert.equal("", manager.get(newKey2));
+                Assert.equal(undefined, this._testCookies[newKey2]);
+
+                // Update the cookie Domain using the core update function without a cookieCfg.domain
+                core.config.cookieCfg!.domain = undefined;
+
+                core.updateCfg({
+                    cookieDomain: "MyDomain3.com"
+                });
+
+                let newKey3 = "test3." + newId();
+                let newValue3 = newId();
+                manager.set(newKey3, newValue3);
+                Assert.equal(newValue3, manager.get(newKey3));
+                Assert.equal(newValue3 + "; domain=MyDomain3.com; path=/", this._testCookies[newKey3]);
+
+                manager.del(newKey3);
+                Assert.equal("", manager.get(newKey3));
+                Assert.equal(undefined, this._testCookies[newKey3]);
+
+                // Set the "domain" from the cookieMgr config -- this should override the domain used
+                core.config.cookieCfg!.domain = "CfgCookieDomain.com";
+
+                // Update the cookie Domain using the core update function, this will also cause the notifications to occur synchronously
+                core.updateCfg({
+                    cookieDomain: "RootDomain3.com"
+                });
+
+                let newKey4 = "test3." + newId();
+                let newValue4 = newId();
+                manager.set(newKey4, newValue4);
+                Assert.equal(newValue4, manager.get(newKey4));
+                Assert.equal(newValue4 + "; domain=CfgCookieDomain.com; path=/", this._testCookies[newKey4]);
+
+                manager.del(newKey4);
+                Assert.equal("", manager.get(newKey4));
+                Assert.equal(undefined, this._testCookies[newKey4]);
+            }
+        });        
+
+        this.testCase({
+            name: "CookieManager: set cookie domain at the root config using updateCfg()",
+            test: () => {
+
+                let core = new AppInsightsCore();
+                core.initialize({
+                    instrumentationKey: "testiKey",
+                    cookieDomain: "MyDomain.com",
+                    cookieCfg: this._cookieMgrCfg
+                }, [new ChannelPlugin()]);
+
+                let manager = core.getCookieMgr();
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                manager.set(newKey, newValue);
+                Assert.equal(newValue, manager.get(newKey));
+                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+
+                manager.del(newKey);
+                Assert.equal("", manager.get(newKey));
+                Assert.equal(undefined, this._testCookies[newKey]);
+
+                // Update the root cookie Domain using the core update function while there is a cookieCfg.domain
+                // The cookieCfg.domain overrides the root domain
+                core.updateCfg({
+                    cookieDomain: "MyDomain2.com"
+                });
+
+                let newKey2 = "test2." + newId();
+                let newValue2 = newId();
+                manager.set(newKey2, newValue2);
+                Assert.equal(newValue2, manager.get(newKey2));
+                Assert.equal(newValue2 + "; domain=MyDomain.com; path=/", this._testCookies[newKey2]);
+
+                manager.del(newKey2);
+                Assert.equal("", manager.get(newKey2));
+                Assert.equal(undefined, this._testCookies[newKey2]);
+
+                core.updateCfg({
+                    cookieDomain: "MyDomain3.com",
+                    cookieCfg: {
+                        // Update the cookie Domain using the core update function without a cookieCfg.domain
+                        domain: undefined
+                    }
+                });
+
+                let newKey3 = "test3." + newId();
+                let newValue3 = newId();
+                manager.set(newKey3, newValue3);
+                Assert.equal(newValue3, manager.get(newKey3));
+                Assert.equal(newValue3 + "; domain=MyDomain3.com; path=/", this._testCookies[newKey3]);
+
+                manager.del(newKey3);
+                Assert.equal("", manager.get(newKey3));
+                Assert.equal(undefined, this._testCookies[newKey3]);
+
+                // Update the cookie Domain using the core update function, this will also cause the notifications to occur synchronously
+                core.updateCfg({
+                    cookieDomain: "RootDomain3.com",
+                    cookieCfg: {
+                        // Set the "domain" from the cookieMgr config -- this should override the domain used
+                        domain: "CfgCookieDomain.com"
+                    }
+                });
+
+                let newKey4 = "test3." + newId();
+                let newValue4 = newId();
+                manager.set(newKey4, newValue4);
+                Assert.equal(newValue4, manager.get(newKey4));
+                Assert.equal(newValue4 + "; domain=CfgCookieDomain.com; path=/", this._testCookies[newKey4]);
+
+                manager.del(newKey4);
+                Assert.equal("", manager.get(newKey4));
+                Assert.equal(undefined, this._testCookies[newKey4]);
+
             }
         });
     }

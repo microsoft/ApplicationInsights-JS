@@ -2,7 +2,7 @@ import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined } from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
-import { _InternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { _eInternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 
 const AIInternalMessagePrefix = "AITR_";
@@ -232,7 +232,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", loggingLevelTelemetry: 999 }, [channelPlugin]);
 
-                const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
+                const messageId = _eInternalMessageId.CannotAccessCookie; // can be any id
 
                 // Test precondition
                 Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No logging recorded');
@@ -255,7 +255,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
 
-                const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
+                const messageId = _eInternalMessageId.CannotAccessCookie; // can be any id
 
                 // Verify precondition
                 Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No internal logging performed yet');
@@ -431,7 +431,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     }, [channelPlugin]
                 );
 
-                const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
+                const messageId = _eInternalMessageId.CannotAccessCookie; // can be any id
 
                 // Test precondition
                 Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No internal logging performed yet');

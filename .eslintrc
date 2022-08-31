@@ -28,6 +28,7 @@
         "no-const-assign": "error",
         "comma-dangle": [ "error", "never" ],                       // Enabled for auto fixing
         "security/detect-object-injection": "off",                  // Suppress Warning -- need to Review Later
+        "security/detect-non-literal-fs-filename": "off",           // This was causing a bunch of false positive matches for dynamic config "watch" function
         "@typescript-eslint/ban-types": "off",
         "@typescript-eslint/no-unused-vars": [ "warn", { "vars": "all", "args": "none", "argsIgnorePattern": "^_", "ignoreRestSiblings": true } ],
         "@typescript-eslint/triple-slash-reference": "off",

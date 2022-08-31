@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
+import { IConfigDefaults } from "../Config/IConfigDefaults";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IConfiguration } from "./IConfiguration";
 import { IDiagnosticLogger } from "./IDiagnosticLogger";
@@ -11,11 +12,11 @@ import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
 
-export const enum GetExtCfgMergeType {
-    None = 0,
-    MergeDefaultOnly = 1,
-    MergeDefaultFromRootOrDefault = 2,
-}
+// export const enum GetExtCfgMergeType {
+//     None = 0,
+//     MergeDefaultOnly = 1,
+//     MergeDefaultFromRootOrDefault = 2,
+// }
 
 export interface IBaseProcessingContext {
     /**
@@ -36,14 +37,14 @@ export interface IBaseProcessingContext {
     /**
      * Gets the named extension config
      */
-    getExtCfg: <T>(identifier: string, defaultValue?: T | any, mergeDefault?: GetExtCfgMergeType) => T;
+    getExtCfg: <T>(identifier: string, defaultValue?: IConfigDefaults<T>) => T;
 
     /**
      * Gets the named config from either the named identifier extension or core config if neither exist then the
      * default value is returned
-     * @param identifier The named extension identifier
-     * @param field The config field name
-     * @param defaultValue The default value to return if no defined config exists
+     * @param identifier - The named extension identifier
+     * @param field - The config field name
+     * @param defaultValue - The default value to return if no defined config exists
      */
     getConfig: (identifier: string, field: string, defaultValue?: number | string | boolean | string[] | RegExp[] | Function) => number | string | boolean | string[] | RegExp[] | Function;
 

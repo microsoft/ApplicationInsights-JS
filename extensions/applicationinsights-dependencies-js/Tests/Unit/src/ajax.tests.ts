@@ -3,7 +3,7 @@ import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework
 import { AjaxMonitor } from "../../../src/ajax";
 import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext, formatTraceParent, createTraceParent } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId,
+    AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _eInternalMessageId,
     getPerformance, getGlobalInst, getGlobal, generateW3CId, arrForEach
 } from "@microsoft/applicationinsights-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
@@ -109,7 +109,7 @@ export class AjaxTests extends AITestClass {
 
                 Assert.equal(5, trackSpy.callCount, "Track has still only been called 5 times");
                 Assert.equal(true, throwSpy.called, "We should have thrown an internal error");
-                Assert.equal(_InternalMessageId.MaxAjaxPerPVExceeded, throwSpy.args[0][1], "Reported error should be max exceeded");
+                Assert.equal(_eInternalMessageId.MaxAjaxPerPVExceeded, throwSpy.args[0][1], "Reported error should be max exceeded");
                 Assert.equal(true, throwSpy.args[0][2].indexOf("ajax per page view limit") !== -1, "Reported error should be contain text describing the issue");
 
                 Assert.equal(6, dependencyFields.length, "trackDependencyDataInternal should have been called");

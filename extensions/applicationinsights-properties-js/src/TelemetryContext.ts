@@ -20,7 +20,7 @@ import { Session, _SessionManager } from "./Context/Session";
 import { TelemetryTrace } from "./Context/TelemetryTrace";
 import { User } from "./Context/User";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
-import { ITelemetryConfig } from "./Interfaces/ITelemetryConfig";
+import { IPropertiesConfig } from "./Interfaces/IPropertiesConfig";
 
 const strExt = "ext";
 const strTags = "tags";
@@ -29,6 +29,10 @@ function _removeEmpty(target: any, name: string) {
     if (target && target[name] && objKeys(target[name]).length === 0) {
         delete target[name];
     }
+}
+
+function _nullResult(): string {
+    return null;
 }
 
 export class TelemetryContext implements IPropTelemetryContext {
@@ -46,12 +50,12 @@ export class TelemetryContext implements IPropTelemetryContext {
     public appId: () => string;
     public getSessionId: () => string;
 
-    constructor(core: IAppInsightsCore, defaultConfig: ITelemetryConfig, previousTraceCtx?: IDistributedTraceContext) {
+    constructor(core: IAppInsightsCore, defaultConfig: IPropertiesConfig, previousTraceCtx?: IDistributedTraceContext) {
         let logger = core.logger
-        this.appId = () => null;
-        this.getSessionId = () => null;
 
         dynamicProto(TelemetryContext, this, (_self) => {
+            _self.appId = _nullResult;
+            _self.getSessionId = _nullResult;
             _self.application = new Application();
             _self.internal = new Internal(defaultConfig);
             if (hasWindow()) {

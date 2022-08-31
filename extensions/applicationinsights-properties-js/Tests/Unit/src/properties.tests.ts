@@ -1,10 +1,11 @@
 ﻿import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim, ITelemetryPlugin, IChannelControls } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../../src/PropertiesPlugin";
-import { ITelemetryConfig } from "../../../src/Interfaces/ITelemetryConfig";
+import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
 import { TelemetryTrace } from "../../../src/Context/TelemetryTrace";
 import { IConfig } from "@microsoft/applicationinsights-common";
+import { TestChannelPlugin } from "./TestChannelPlugin";
 
 export class PropertiesTests extends AITestClass {
     private properties: PropertiesPlugin;
@@ -94,11 +95,11 @@ export class PropertiesTests extends AITestClass {
                         }
                     }
                 }, this.core, []);
-                const config: ITelemetryConfig = this.properties['_extConfig'];
-                Assert.equal(15, config.samplingPercentage(), 'Extension configs can be set via root config (number)');
-                Assert.equal('abc', config.accountId(), 'Extension configs can be set via root config (string)');
-                Assert.equal(88888, config.sessionExpirationMs(), 'Root config does not override extensionConfig field when both are present')
-                Assert.notEqual(99999, config.sessionExpirationMs(), 'extensionConfig overrides root config field when both are present');
+                const config: IPropertiesConfig = this.properties['_extConfig'];
+                Assert.equal(15, config.samplingPercentage, 'Extension configs can be set via root config (number)');
+                Assert.equal('abc', config.accountId, 'Extension configs can be set via root config (string)');
+                Assert.equal(88888, config.sessionExpirationMs, 'Root config does not override extensionConfig field when both are present')
+                Assert.notEqual(99999, config.sessionExpirationMs, 'extensionConfig overrides root config field when both are present');
             }
 
         });
@@ -519,10 +520,14 @@ export class PropertiesTests extends AITestClass {
         this.testCase({
             name: "Validate telemetrycontext sets up web extension properties on TelemetryItem",
             test: () => {
-                // setup
-                this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
-                let context = new TelemetryContext(this.core, this.getTelemetryConfig());
+                let config = this.getEmptyConfig();
+                config.extensionConfig!.AppInsightsPropertiesPlugin = this.getTelemetryConfig();
+
+                // setup
+                this.properties.initialize(config, this.core, []);
+
+                let context = new TelemetryContext(this.core, config.extensionConfig!.AppInsightsPropertiesPlugin);
                 context.web = {
                     domain: "www.bing.com",
                     userConsent: true,
@@ -571,8 +576,12 @@ export class PropertiesTests extends AITestClass {
         this.testCase({
             name: "validate telemetrycontext cleanup sets empty extensions to undefined",
             test: () => {
+
+                let config = this.getEmptyConfig();
+                config.extensionConfig!.AppInsightsPropertiesPlugin = this.getTelemetryConfig();
+
                 // setup
-                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+                this.properties.initialize(config, this.core, []);
 
                 const telemetyItem: ITelemetryItem = {
                     name: "test",
@@ -607,7 +616,7 @@ export class PropertiesTests extends AITestClass {
                 }
 
                 // act
-                const telemetrycontext = new TelemetryContext(this.core, this.getTelemetryConfig());
+                const telemetrycontext = new TelemetryContext(this.core, config.extensionConfig!.AppInsightsPropertiesPlugin);
                 telemetrycontext.cleanUp(telemetyItem);
 
                 // verify
@@ -649,7 +658,7 @@ export class PropertiesTests extends AITestClass {
     private getEmptyConfig(): IConfiguration {
         return {
             instrumentationKey: 'key',
-
+            extensions: [ new TestChannelPlugin() ],
             extensionConfig: {
                 AppInsightsPropertiesPlugin: {
                     accountId: null,
@@ -675,23 +684,23 @@ export class PropertiesTests extends AITestClass {
         };
     }
 
-    private getTelemetryConfig(): ITelemetryConfig {
+    private getTelemetryConfig(): IPropertiesConfig {
         return {
-            instrumentationKey: () => "",
-            accountId: () => "",
-            sessionRenewalMs: () => 1000,
-            samplingPercentage: () => 0,
-            sessionExpirationMs: () => 1000,
-            cookieDomain: () => null,
-            sdkExtension: () => "",
-            isBrowserLinkTrackingEnabled: () => true,
-            appId: () => "",
-            getSessionId: () => "",
-            namePrefix: () => "",
-            sessionCookiePostfix: () => "",
-            userCookiePostfix: () => "",
-            idLength: () => 22,
-            getNewId: () => this._getNewId
+            instrumentationKey: "",
+            accountId: "",
+            sessionRenewalMs: 1000,
+            samplingPercentage: 0,
+            sessionExpirationMs: 1000,
+            cookieDomain: null,
+            sdkExtension: "",
+            isBrowserLinkTrackingEnabled: true,
+            appId: "",
+            getSessionId: "",
+            namePrefix: "",
+            sessionCookiePostfix: "",
+            userCookiePostfix: "",
+            idLength: 22,
+            getNewId: this._getNewId
         }
     }
 }

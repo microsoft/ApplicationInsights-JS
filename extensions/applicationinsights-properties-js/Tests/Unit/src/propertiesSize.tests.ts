@@ -2,7 +2,7 @@ import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import * as pako from "pako";
 
 export class PropertiesExtensionSizeCheck extends AITestClass {
-    private readonly MAX_DEFLATE_SIZE = 15;
+    private readonly MAX_DEFLATE_SIZE = 16;
     private readonly rawFilePath = "../dist/applicationinsights-properties-js.min.js";
     private readonly proFilePath = "../browser/applicationinsights-properties-js.min.js";
 

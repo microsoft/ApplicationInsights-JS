@@ -1,13 +1,15 @@
 import { ApplicationInsightsContainer } from "../../../src/ApplicationInsightsContainer";
-import { IApplicationInsights, Snippet } from "../../../src/Initialization";
+import { IApplicationInsights } from "../../../src/IApplicationInsights";
+import { Snippet } from "../../../src/Snippet";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { createSnippetV5 } from "./testSnippet";
-import { hasOwnProperty, isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
+import { objHasOwnProperty } from "@nevware21/ts-utils";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
@@ -190,16 +192,16 @@ export class SnippetInitializationTests extends AITestClass {
                 test: () => {
                     let preSnippet = snippetCreator(getSnippetConfig(this.sessionPrefix));
                     _expectedBeforeProperties.forEach(property => {
-                        Assert.ok(hasOwnProperty(preSnippet, property), `${property} has property`);
+                        Assert.ok(objHasOwnProperty(preSnippet, property), `${property} has property`);
                         Assert.ok(isNotNullOrUndefined(preSnippet[property]), `${property} exists`);
                     });
                     _expectedAfterProperties.forEach(property => {
-                        Assert.ok(!hasOwnProperty(preSnippet, property), `${property} does not exist`);
+                        Assert.ok(!objHasOwnProperty(preSnippet, property), `${property} does not exist`);
                     });
 
                     let theSnippet = this._initializeSnippet(preSnippet) as any;
                     _expectedAfterProperties.forEach(property => {
-                        Assert.ok(hasOwnProperty(theSnippet, property) , `${property} exists`);
+                        Assert.ok(objHasOwnProperty(theSnippet, property) , `${property} exists`);
                         Assert.notEqual('function', typeof theSnippet[property], `${property} is not a function`);
                     });
 

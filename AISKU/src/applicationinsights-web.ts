@@ -1,8 +1,6 @@
-export {
-    IApplicationInsights,
-    Snippet,
-    Initialization as ApplicationInsights
-} from "./Initialization";
+export { Snippet } from "./Snippet";
+export { IApplicationInsights } from "./IApplicationInsights";
+export { AppInsightsSku as ApplicationInsights } from "./AISku";
 
 export { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 
@@ -13,7 +11,6 @@ export {
     IAppInsightsCore,
     LoggingSeverity,
     eLoggingSeverity,
-    _InternalMessageId,
     _eInternalMessageId,
     ITelemetryItem,
     ITelemetryPlugin,
@@ -32,8 +29,7 @@ export {
     ICustomProperties,
     INotificationManager,
     IProcessTelemetryContext,
-    Tags,
-    BaseCore
+    Tags
 } from "@microsoft/applicationinsights-core-js";
 export {
     IConfig,

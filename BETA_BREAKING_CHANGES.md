@@ -4,9 +4,9 @@
 
 Previous internal polyfills for JavaScript features that are supported by ES5 but not at least IE8 have been removed.
 
-The SDK still uses internal polyfills for ES5 features that are not supported by IE9+, it will also start to use JavaScript object accessors (get / set) and object defineProperties, both of which cannot be polyfilled so for IE8 support you will need to either transpile the source code (not supported) or continue to use the latest v2.x (Supported).
+The SDK still uses internal polyfills for ES5 features that are not supported by IE9-11, it will also start to use JavaScript object accessors (get / set) and object defineProperties, both of which cannot be polyfilled so for IE8 support you will need to either transpile the source code (not supported) or continue to use the latest v2.x (Supported).
 
-The SDK now uses [Object.defineProperty](https://caniuse.com/?search=defineProperty) and therefore support is limited to runtimes (or good polyfills) that can correctly implement this functionality. Without this the SDK will not function correctly.
+The SDK now uses [Object.defineProperty](https://caniuse.com/?search=defineProperty) and therefore support is limited to runtimes correctly implement this functionality. Without this the SDK will not function correctly.
 
 ## Behavior changes
 
@@ -154,14 +154,20 @@ The previously exported namespaced globals have been replaced with a reduced set
 All previously `@deprecated` marked functions and the legacy "global" cookie handling functions
 #### Exported Globals (NPM)
 
+- BaseCore
+  - Use `AppInsightsCore` (`AppInsightsCore` and `BaseCore` are now merged)
 - ICoreUtils; CoreUtils
   - See the replacements documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
 - IEventHelper; EventHelper
   - See the replacements documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
 - EnumMap, createEnumMap
   - Removed as not used internally, use the ts-utils support versions if required
+-`hasOwnProperty()`
+  - use `objHasOwnProperty()`
 
 ##### Removed no replacement
+
+__Functions__
 
 - disableCookies
 - canUseCookies
@@ -169,6 +175,10 @@ All previously `@deprecated` marked functions and the legacy "global" cookie han
 - setCookie
 - deleteCookie
 - _legacyCookieMgr
+
+__Classes__
+
+- `BaseCore`
 
 ## Browser Support
 

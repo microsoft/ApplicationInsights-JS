@@ -73,7 +73,7 @@ const browserRollupConfigFactory = (isProduction, libVersion = '2', format = 'um
     browserRollupConfig.output.file = `browser/ai.${libVersion}${postfix}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {
@@ -130,7 +130,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.output.file = `dist/applicationinsights-web.min.js`;
     nodeRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {

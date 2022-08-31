@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
+
 export interface ICookieMgr {
 
     /**
@@ -48,6 +50,12 @@ export interface ICookieMgr {
      * @returns - True if the cookie was marked for deletion otherwise false (Because cookie usage is not available)
      */
     purge(name: string, path?: string): boolean;
+
+    /**
+     * Optional Callback hook to allow the diagnostic logger to update it's configuration
+     * @param updateState
+     */
+    update?(updateState: ITelemetryUpdateState): void;
 }
 
 /**

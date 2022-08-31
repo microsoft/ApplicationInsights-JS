@@ -70,7 +70,7 @@ const browserRollupConfigFactory = isProduction => {
     browserRollupConfig.output.file = `browser/${outputName}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {
@@ -127,7 +127,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.output.file = `dist/${outputName}.min.js`;
     nodeRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {

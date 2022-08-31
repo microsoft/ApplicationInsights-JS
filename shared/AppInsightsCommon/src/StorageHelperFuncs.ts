@@ -25,7 +25,7 @@ function _getLocalStorageObject(): Storage {
 /**
  * Tests storage object (localStorage or sessionStorage) to verify that it is usable
  * More details here: https://mathiasbynens.be/notes/localstorage-pattern
- * @param storageType Type of storage
+ * @param storageType - Type of storage
  * @return {Storage} Returns storage object verified that it is usable
  */
 function _getVerifiedStorageObject(storageType: StorageType): Storage {

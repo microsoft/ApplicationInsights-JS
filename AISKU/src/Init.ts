@@ -3,14 +3,15 @@
 
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
-import { Snippet } from "./Initialization";
+import { Snippet } from "./Snippet";
 
 // ----------------------------------------------------------------------------------------------------
 // Exports available from the Cdn bundles
 // ----------------------------------------------------------------------------------------------------
 export {
-    Initialization as ApplicationInsights, Snippet
-} from "./Initialization";
+    AppInsightsSku as ApplicationInsights
+} from "./AISku";
+export { Snippet };
 export {
     LoggingSeverity,
     PerfEvent,

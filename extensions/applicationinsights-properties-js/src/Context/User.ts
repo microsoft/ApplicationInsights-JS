@@ -4,9 +4,11 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IUserContext, utlRemoveStorage } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, ICookieMgr, _eInternalMessageId, _throwInternal, eLoggingSeverity, newId, safeGetCookieMgr, safeGetLogger, toISOString
+    IAppInsightsCore, ICookieMgr, _eInternalMessageId, _throwInternal, eLoggingSeverity, newId, onConfigChange, safeGetCookieMgr,
+    safeGetLogger, toISOString
 } from "@microsoft/applicationinsights-core-js";
-import { ITelemetryConfig } from "../Interfaces/ITelemetryConfig";
+import { objDefineProp } from "@nevware21/ts-utils";
+import { IPropertiesConfig } from "../Interfaces/IPropertiesConfig";
 
 function _validateUserInput(id: string): boolean {
     // Validate:
@@ -30,7 +32,7 @@ export class User implements IUserContext {
     /**
      * The telemetry configuration.
      */
-    public config: ITelemetryConfig;
+    public readonly config: IPropertiesConfig;
 
     /**
      * The user ID.
@@ -67,32 +69,72 @@ export class User implements IUserContext {
      */
     public isUserCookieSet = false;
 
-    constructor(config: ITelemetryConfig, core: IAppInsightsCore) {
+    constructor(config: IPropertiesConfig, core: IAppInsightsCore) {
         let _logger = safeGetLogger(core);
         let _cookieManager: ICookieMgr = safeGetCookieMgr(core);
-        let _storageNamePrefix: () => string;
+        let _storageNamePrefix: string;
 
         dynamicProto(User, this, (_self) => {
-            _self.config = config;
-            const userCookiePostfix = (_self.config.userCookiePostfix && _self.config.userCookiePostfix()) ? _self.config.userCookiePostfix() : "";
-            _storageNamePrefix = () => User.userCookieName + userCookiePostfix;
-            
-            // get userId or create new one if none exists
-            const cookie = _cookieManager.get(_storageNamePrefix());
-            if (cookie) {
-                _self.isNewUser = false;
-                const params = cookie.split(User.cookieSeparator);
-                if (params.length > 0) {
-                    _self.id = params[0];
-                    // we already have a cookie
-                    _self.isUserCookieSet = !!_self.id;
+            // Define _self.config
+            objDefineProp(_self, "config", {
+                configurable: true,
+                enumerable: true,
+                get: () => config
+            });
+
+            onConfigChange(config, () => {
+
+                const userCookiePostfix = config.userCookiePostfix || "";
+                _storageNamePrefix = User.userCookieName + userCookiePostfix;
+    
+                // get userId or create new one if none exists
+                const cookie = _cookieManager.get(_storageNamePrefix);
+                if (cookie) {
+                    _self.isNewUser = false;
+                    const params = cookie.split(User.cookieSeparator);
+                    if (params.length > 0) {
+                        _self.id = params[0];
+                        // we already have a cookie
+                        _self.isUserCookieSet = !!_self.id;
+                    }
                 }
-            }
+
+                if (!_self.id) {
+                    _self.id = _generateNewId();
+                    const newCookie = _generateNewCookie(_self.id);
+    
+                    _setUserCookie(newCookie.join(User.cookieSeparator));
+    
+                    // If we have an config.namePrefix() + ai_session in local storage this means the user actively removed our cookies.
+                    // We should respect their wishes and clear ourselves from local storage
+                    const name = (config.namePrefix || "") + "ai_session";
+                    utlRemoveStorage(_logger, name);
+                }
+    
+                // We still take the account id from the ctor param for backward compatibility.
+                // But if the the customer set the accountId through the newer setAuthenticatedUserContext API, we will override it.
+                _self.accountId = config.accountId || undefined;
+    
+                // Get the auth user id and account id from the cookie if exists
+                // Cookie is in the pattern: <authenticatedId>|<accountId>
+                let authCookie = _cookieManager.get(User.authUserCookieName);
+                if (authCookie) {
+                    authCookie = decodeURI(authCookie);
+                    const authCookieString = authCookie.split(User.cookieSeparator);
+                    if (authCookieString[0]) {
+                        _self.authenticatedId = authCookieString[0];
+                    }
+    
+                    if (authCookieString.length > 1 && authCookieString[1]) {
+                        _self.accountId = authCookieString[1];
+                    }
+                }
+            });
 
             function _generateNewId() {
-                let theConfig = (config || {}) as ITelemetryConfig;
-                let getNewId = (theConfig.getNewId ? theConfig.getNewId() : null) || newId;
-                let id = getNewId(theConfig.idLength ? config.idLength() : 22);
+                let theConfig = (config || {}) as IPropertiesConfig;
+                let getNewId = theConfig.getNewId || newId;
+                let id = getNewId(theConfig.idLength ? config.idLength : 22);
                 return id;
             }
 
@@ -109,38 +151,7 @@ export class User implements IUserContext {
                 // set it to 365 days from now
                 // 365 * 24 * 60 * 60 = 31536000
                 const oneYear = 31536000;
-                _self.isUserCookieSet = _cookieManager.set(_storageNamePrefix(), cookie, oneYear);
-            }
-
-            if (!_self.id) {
-                _self.id = _generateNewId();
-                const newCookie = _generateNewCookie(_self.id);
-
-                _setUserCookie(newCookie.join(User.cookieSeparator));
-
-                // If we have an config.namePrefix() + ai_session in local storage this means the user actively removed our cookies.
-                // We should respect their wishes and clear ourselves from local storage
-                const name = config.namePrefix && config.namePrefix() ? config.namePrefix() + "ai_session" : "ai_session";
-                utlRemoveStorage(_logger, name);
-            }
-
-            // We still take the account id from the ctor param for backward compatibility.
-            // But if the the customer set the accountId through the newer setAuthenticatedUserContext API, we will override it.
-            _self.accountId = config.accountId ? config.accountId() : undefined;
-
-            // Get the auth user id and account id from the cookie if exists
-            // Cookie is in the pattern: <authenticatedId>|<accountId>
-            let authCookie = _cookieManager.get(User.authUserCookieName);
-            if (authCookie) {
-                authCookie = decodeURI(authCookie);
-                const authCookieString = authCookie.split(User.cookieSeparator);
-                if (authCookieString[0]) {
-                    _self.authenticatedId = authCookieString[0];
-                }
-
-                if (authCookieString.length > 1 && authCookieString[1]) {
-                    _self.accountId = authCookieString[1];
-                }
+                _self.isUserCookieSet = _cookieManager.set(_storageNamePrefix, cookie, oneYear);
             }
 
             _self.setAuthenticatedUserContext = (authenticatedUserId: string, accountId?: string, storeInCookie = false) => {
@@ -196,8 +207,8 @@ export class User implements IUserContext {
     /**
     * Sets the authenticated user id and the account id in this session.
     *
-    * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
-    * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
+    * @param authenticatedUserId - {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+    * @param accountId - {string} - An optional string to represent the account associated with the authenticated user.
     */
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

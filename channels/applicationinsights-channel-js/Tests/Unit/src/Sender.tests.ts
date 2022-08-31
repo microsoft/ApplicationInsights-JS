@@ -3,7 +3,7 @@ import { Sender } from "../../../src/Sender";
 import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _InternalMessageId, LoggingSeverity, getGlobalInst, getGlobal } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, LoggingSeverity, getGlobalInst, getGlobal, safeGetLogger } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends AITestClass {
     private _sender: Sender;
@@ -48,10 +48,10 @@ export class SenderTests extends AITestClass {
                     }, new AppInsightsCore(), []
                 );
 
-                QUnit.assert.equal(123, this._sender._senderConfig.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
-                QUnit.assert.equal('https://example.com', this._sender._senderConfig.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
-                QUnit.assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
-                QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
+                QUnit.assert.equal(123, this._sender._senderConfig.maxBatchInterval, 'Channel config can be set from root config (maxBatchInterval)');
+                QUnit.assert.equal('https://example.com', this._sender._senderConfig.endpointUrl, 'Channel config can be set from root config (endpointUrl)');
+                QUnit.assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes, 'Channel config does not equal root config option if extensionConfig field is also set');
+                QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes, 'Channel config prioritizes extensionConfig over root config');
             }
         });
 
@@ -73,10 +73,10 @@ export class SenderTests extends AITestClass {
                     }, new AppInsightsCore(), []
                 );
 
-                QUnit.assert.equal(123, this._sender._senderConfig.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
-                QUnit.assert.equal(DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH, this._sender._senderConfig.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
-                QUnit.assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
-                QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
+                QUnit.assert.equal(123, this._sender._senderConfig.maxBatchInterval, 'Channel config can be set from root config (maxBatchInterval)');
+                QUnit.assert.equal(DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH, this._sender._senderConfig.endpointUrl, 'Channel config can be set from root config (endpointUrl)');
+                QUnit.assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes, 'Channel config does not equal root config option if extensionConfig field is also set');
+                QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes, 'Channel config prioritizes extensionConfig over root config');
             }
         });
 
@@ -590,7 +590,7 @@ export class SenderTests extends AITestClass {
                         "name": "Event Name"
                     }
                 };
-                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, safeGetLogger(null));
 
                 const baseData = appInsightsEnvelope.data.baseData;
 
@@ -1304,7 +1304,7 @@ export class SenderTests extends AITestClass {
             test: () => {
                 let appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
-                let messageId: _InternalMessageId = _InternalMessageId.InvalidInstrumentationKey;
+                let messageId: _eInternalMessageId = _eInternalMessageId.InvalidInstrumentationKey;
                 this._sender.initialize(
                     {
                         instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333',
@@ -1325,7 +1325,7 @@ export class SenderTests extends AITestClass {
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
-                messageId = _InternalMessageId.InvalidInstrumentationKey;
+                messageId = _eInternalMessageId.InvalidInstrumentationKey;
                 this._sender.initialize(
                     {
                         instrumentationKey: '1aa11111bbbb1ccc8dddeeeeffff3333',
@@ -1348,7 +1348,7 @@ export class SenderTests extends AITestClass {
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
-                messageId = _InternalMessageId.InvalidInstrumentationKey;
+                messageId = _eInternalMessageId.InvalidInstrumentationKey;
                 this._sender.initialize(
                     {
                         instrumentationKey: 'abc',
@@ -1371,7 +1371,7 @@ export class SenderTests extends AITestClass {
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
-                messageId = _InternalMessageId.InvalidInstrumentationKey;
+                messageId = _eInternalMessageId.InvalidInstrumentationKey;
                 this._sender.initialize(
                     {
                         instrumentationKey: '',
@@ -1394,7 +1394,7 @@ export class SenderTests extends AITestClass {
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
-                messageId = _InternalMessageId.InvalidInstrumentationKey;
+                messageId = _eInternalMessageId.InvalidInstrumentationKey;
                 this._sender.initialize(
                     {
                         instrumentationKey: 'abc',

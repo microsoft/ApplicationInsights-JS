@@ -9,12 +9,13 @@ import {
     eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICustomProperties, IDistributedTraceContext, IInstrumentCallDetails,
-    IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain, InstrumentFunc, InstrumentProto,
-    _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace, deepFreeze, dumpObj,
-    eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
-    isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, objForEachKey, strPrototype, strTrim
+    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,
+    IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
+    InstrumentFunc, InstrumentProto, _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace,
+    dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
+    isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
+import { objFreeze } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
 import {
     DependencyListenerFunction, IDependencyHandler, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler
@@ -215,7 +216,7 @@ export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
 
 const BLOB_CORE = "*.blob.core.";
 
-export const DfltAjaxCorrelationHeaderExDomains = deepFreeze([
+export const DfltAjaxCorrelationHeaderExDomains = objFreeze([
     BLOB_CORE + "windows.net",
     BLOB_CORE + "chinacloudapi.cn",
     BLOB_CORE + "cloudapi.de",
@@ -230,7 +231,7 @@ const _internalExcludeEndpoints = [
 export interface IDependenciesPlugin extends IDependencyListenerContainer {
     /**
      * Logs dependency call
-     * @param dependencyData dependency data object
+     * @param dependencyData - dependency data object
      */
     trackDependencyData(dependency: IDependencyTelemetry): void;
 }
@@ -239,51 +240,35 @@ export interface IInstrumentationRequirements extends IDependenciesPlugin {
     includeCorrelationHeaders: (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any;
 }
 
-function _getDefaultConfig(): ICorrelationConfig {
-    const config: ICorrelationConfig = {
-        maxAjaxCallsPerView: 500,
-        disableAjaxTracking: false,
-        disableFetchTracking: false,
-        excludeRequestFromAutoTrackingPatterns: undefined,
-        disableCorrelationHeaders: false,
-        distributedTracingMode: eDistributedTracingModes.AI_AND_W3C,
-        correlationHeaderExcludedDomains: DfltAjaxCorrelationHeaderExDomains,
-        correlationHeaderDomains: undefined,
-        correlationHeaderExcludePatterns: undefined,
-        appId: undefined,
-        enableCorsCorrelation: false,
-        enableRequestHeaderTracking: false,
-        enableResponseHeaderTracking: false,
-        enableAjaxErrorStatusText: false,
-        enableAjaxPerfTracking: false,
-        maxAjaxPerfLookupAttempts: 3,
-        ajaxPerfLookupDelay: 25,
-        ignoreHeaders:[
-            "Authorization",
-            "X-API-Key",
-            "WWW-Authenticate"],
-        addRequestContext: undefined,
-        addIntEndpoints: true
-    }
-    return config;
-}
-
-function _getEmptyConfig(): ICorrelationConfig {
-    let emptyConfig = _getDefaultConfig();
-    objForEachKey(emptyConfig, (value) => {
-        emptyConfig[value] = undefined;
-    });
-
-    return emptyConfig;
-}
+const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
+    maxAjaxCallsPerView: 500,
+    disableAjaxTracking: false,
+    disableFetchTracking: false,
+    excludeRequestFromAutoTrackingPatterns: undefined,
+    disableCorrelationHeaders: false,
+    distributedTracingMode: eDistributedTracingModes.AI_AND_W3C,
+    correlationHeaderExcludedDomains: DfltAjaxCorrelationHeaderExDomains,
+    correlationHeaderDomains: undefined,
+    correlationHeaderExcludePatterns: undefined,
+    appId: undefined,
+    enableCorsCorrelation: false,
+    enableRequestHeaderTracking: false,
+    enableResponseHeaderTracking: false,
+    enableAjaxErrorStatusText: false,
+    enableAjaxPerfTracking: false,
+    maxAjaxPerfLookupAttempts: 3,
+    ajaxPerfLookupDelay: 25,
+    ignoreHeaders:[
+        "Authorization",
+        "X-API-Key",
+        "WWW-Authenticate"],
+    addRequestContext: undefined,
+    addIntEndpoints: true
+});
 
 export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlugin, IInstrumentationRequirements, IDependencyListenerContainer {
 
     public static identifier: string = "AjaxDependencyPlugin";
-
-    public static getDefaultConfig = _getDefaultConfig;
-
-    public static getEmptyConfig = _getEmptyConfig;
 
     public identifier: string = AjaxMonitor.identifier;
 
@@ -294,7 +279,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _fetchInitialized: boolean;      // fetch monitoring initialized
         let _xhrInitialized: boolean;        // XHR monitoring initialized
         let _currentWindowHost: string;
-        let _config: ICorrelationConfig;
+        let _extensionConfig: ICorrelationConfig;
         let _enableRequestHeaderTracking: boolean;
         let _enableAjaxErrorStatusText: boolean;
         let _trackAjaxAttempts: number;
@@ -314,6 +299,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _dependencyHandlerId: number;
         let _dependencyListeners: _IInternalDependencyHandler<DependencyListenerFunction>[];
         let _dependencyInitializers: _IInternalDependencyHandler<DependencyInitializerFunction>[];
+        let _ignoreHeaders: string[];
+        let _maxAjaxPerfLookupAttempts: number;
+        let _ajaxPerfLookupDelay: number;
+        let _distributedTracingMode: eDistributedTracingModes;
+        let _appId: string;
 
         dynamicProto(AjaxMonitor, this, (_self, _base) => {
             let _addHook = _base._addHook;
@@ -349,7 +339,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init);
 
                 if (input) { // Fetch
-                    if (correlationIdCanIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
+                    if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (!init) {
                             init = {};
                         }
@@ -365,7 +355,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
                             }
                         }
-                        const appId: string = _config.appId ||(_context && _context.appId());
+                        const appId: string = _appId ||(_context && _context.appId());
                         if (appId) {
                             headers.set(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
                             if (_enableRequestHeaderTracking) {
@@ -390,7 +380,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                     return init;
                 } else if (xhr) { // XHR
-                    if (correlationIdCanIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
+                    if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (_isUsingAIHeaders) {
                             const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
                             xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestIdHeader], id);
@@ -398,7 +388,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
                             }
                         }
-                        const appId = _config.appId || (_context && _context.appId());
+                        const appId = _appId || (_context && _context.appId());
                         if (appId) {
                             xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
                             if (_enableRequestHeaderTracking) {
@@ -430,8 +420,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     // Hack since expected format in w3c mode is |abc.def.
                     // Non-w3c format is |abc.def
                     // @todo Remove if better solution is available, e.g. handle in portal
-                    if ((_config.distributedTracingMode === eDistributedTracingModes.W3C
-                        || _config.distributedTracingMode === eDistributedTracingModes.AI_AND_W3C)
+                    if ((_distributedTracingMode === eDistributedTracingModes.W3C
+                        || _distributedTracingMode === eDistributedTracingModes.AI_AND_W3C)
                         && typeof dependency.id === "string" && dependency.id[dependency.id.length - 1] !== "."
                     ) {
                         dependency.id += ".";
@@ -471,7 +461,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _fetchInitialized = false;      // fetch monitoring initialized
                 _xhrInitialized = false;        // XHR monitoring initialized
                 _currentWindowHost = location && location.host && location.host.toLowerCase();
-                _config = AjaxMonitor.getEmptyConfig();
+                _extensionConfig = null;
                 _enableRequestHeaderTracking = false;
                 _enableAjaxErrorStatusText = false;
                 _trackAjaxAttempts = 0;
@@ -492,41 +482,47 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _dependencyHandlerId = 0;
                 _dependencyListeners = [];
                 _dependencyInitializers = [];
+                _ignoreHeaders = null;
+                _maxAjaxPerfLookupAttempts = 1;
+                _ajaxPerfLookupDelay = 1;
+                _distributedTracingMode = eDistributedTracingModes.AI_AND_W3C;
+                _appId = null;
             }
 
             function _populateDefaults(config: IConfiguration) {
-                let ctx = createProcessTelemetryContext(null, config, _self.core);
-
-                // Reset to the empty config
-                _config = _getEmptyConfig();
-                const defaultConfig = _getDefaultConfig();
-                objForEachKey(defaultConfig, (field, value) => {
-                    _config[field] = ctx.getConfig(AjaxMonitor.identifier, field, value);
-                });
+                _self._addHook(onConfigChange(config, (details) => {
+                    let config = details.cfg;
+                    let ctx = createProcessTelemetryContext(null, config, _self.core);
+                    _extensionConfig = ctx.getExtCfg(AjaxMonitor.identifier, _defaultConfig);
     
-                let distributedTracingMode = _config.distributedTracingMode;
-                _enableRequestHeaderTracking = _config.enableRequestHeaderTracking;
-                _enableAjaxErrorStatusText = _config.enableAjaxErrorStatusText;
-                _enableAjaxPerfTracking = _config.enableAjaxPerfTracking;
-                _maxAjaxCallsPerView = _config.maxAjaxCallsPerView;
-                _enableResponseHeaderTracking = _config.enableResponseHeaderTracking;
-                _excludeRequestFromAutoTrackingPatterns = [].concat(_config.excludeRequestFromAutoTrackingPatterns || [], _config.addIntEndpoints !== false ? _internalExcludeEndpoints : []);
-                _addRequestContext = _config.addRequestContext;
+                    _distributedTracingMode = _extensionConfig.distributedTracingMode;
+                    _enableRequestHeaderTracking = _extensionConfig.enableRequestHeaderTracking;
+                    _enableAjaxErrorStatusText = _extensionConfig.enableAjaxErrorStatusText;
+                    _enableAjaxPerfTracking = _extensionConfig.enableAjaxPerfTracking;
+                    _maxAjaxCallsPerView = _extensionConfig.maxAjaxCallsPerView;
+                    _enableResponseHeaderTracking = _extensionConfig.enableResponseHeaderTracking;
+                    _excludeRequestFromAutoTrackingPatterns = [].concat(_extensionConfig.excludeRequestFromAutoTrackingPatterns || [], _extensionConfig.addIntEndpoints !== false ? _internalExcludeEndpoints : []);
+                    _addRequestContext = _extensionConfig.addRequestContext;
 
-                _isUsingAIHeaders = distributedTracingMode === eDistributedTracingModes.AI || distributedTracingMode === eDistributedTracingModes.AI_AND_W3C;
-                _isUsingW3CHeaders = distributedTracingMode === eDistributedTracingModes.AI_AND_W3C || distributedTracingMode === eDistributedTracingModes.W3C;
+                    _isUsingAIHeaders = _distributedTracingMode === eDistributedTracingModes.AI || _distributedTracingMode === eDistributedTracingModes.AI_AND_W3C;
+                    _isUsingW3CHeaders = _distributedTracingMode === eDistributedTracingModes.AI_AND_W3C || _distributedTracingMode === eDistributedTracingModes.W3C;
 
-                if (_enableAjaxPerfTracking) {
-                    let iKey = config.instrumentationKey || "unkwn";
-                    if (iKey.length > 5) {
-                        _markPrefix = AJAX_MONITOR_PREFIX + iKey.substring(iKey.length - 5) + ".";
-                    } else {
-                        _markPrefix = AJAX_MONITOR_PREFIX + iKey + ".";
+                    if (_enableAjaxPerfTracking) {
+                        let iKey = config.instrumentationKey || "unkwn";
+                        if (iKey.length > 5) {
+                            _markPrefix = AJAX_MONITOR_PREFIX + iKey.substring(iKey.length - 5) + ".";
+                        } else {
+                            _markPrefix = AJAX_MONITOR_PREFIX + iKey + ".";
+                        }
                     }
-                }
 
-                _disableAjaxTracking = !!_config.disableAjaxTracking;
-                _disableFetchTracking = !!_config.disableFetchTracking;
+                    _disableAjaxTracking = !!_extensionConfig.disableAjaxTracking;
+                    _disableFetchTracking = !!_extensionConfig.disableFetchTracking;
+                    _maxAjaxPerfLookupAttempts = _extensionConfig.maxAjaxPerfLookupAttempts;
+                    _ajaxPerfLookupDelay = _extensionConfig.ajaxPerfLookupDelay;
+                    _ignoreHeaders = _extensionConfig.ignoreHeaders;
+                    _appId = _extensionConfig.appId;
+                }));
             }
 
             function _populateContext() {
@@ -539,8 +535,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             // discard the header if it's defined as ignoreHeaders in ICorrelationConfig
             function _canIncludeHeaders(header: string) {
                 let rlt = true;
-                if (header || _config.ignoreHeaders) {
-                    arrForEach(_config.ignoreHeaders,(key => {
+                if (header || _ignoreHeaders) {
+                    arrForEach(_ignoreHeaders, (key => {
                         if (key.toLowerCase() === header.toLowerCase()) {
                             rlt = false;
                             return -1;
@@ -1001,9 +997,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             function _findPerfResourceEntry(initiatorType:string, ajaxData:ajaxRecord, trackCallback:() => void, reportError:(e:any) => void): void {
                 let perfMark = ajaxData.perfMark;
                 let performance = getPerformance();
-
-                let maxAttempts = _config.maxAjaxPerfLookupAttempts;
-                let retryDelay = _config.ajaxPerfLookupDelay;
+                let maxAttempts = _maxAjaxPerfLookupAttempts;
+                let retryDelay = _ajaxPerfLookupDelay;
                 let requestUrl = ajaxData.requestUrl;
                 let attempt = 0;
                 (function locateResourceTiming() {
@@ -1233,7 +1228,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
     /**
      * Logs dependency call
-     * @param dependencyData dependency data object
+     * @param dependencyData - dependency data object
      */
     public trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1270,7 +1265,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
      * Protected function to allow sub classes the chance to add additional properties to the dependency event
      * before it's sent. This function calls track, so sub-classes must call this function after they have
      * populated their properties.
-     * @param dependencyData dependency data object
+     * @param dependencyData - dependency data object
      */
     protected trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

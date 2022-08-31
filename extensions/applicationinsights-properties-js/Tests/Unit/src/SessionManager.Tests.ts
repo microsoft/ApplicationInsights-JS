@@ -65,10 +65,10 @@ export class SessionManagerTests extends AITestClass {
 
                 var sessionPrefix = newId();
                 var config = {
-                    namePrefix: () => sessionPrefix,
-                    sessionExpirationMs: () => undefined,
-                    sessionRenewalMs: () => undefined,
-                    cookieDomain: () => undefined
+                    namePrefix: sessionPrefix,
+                    sessionExpirationMs: undefined,
+                    sessionRenewalMs: undefined,
+                    cookieDomain: undefined
 
                 };
                 // Setup
@@ -93,11 +93,11 @@ export class SessionManagerTests extends AITestClass {
 
                 var sessionPrefix = newId();
                 var config = {
-                    namePrefix: () => sessionPrefix,
-                    sessionCookiePostfix: () => "testSessionCookieNamePostfix",
-                    sessionExpirationMs: () => undefined,
-                    sessionRenewalMs: () => undefined,
-                    cookieDomain: () => undefined
+                    namePrefix: sessionPrefix,
+                    sessionCookiePostfix: "testSessionCookieNamePostfix",
+                    sessionExpirationMs: undefined,
+                    sessionRenewalMs: undefined,
+                    cookieDomain: undefined
 
                 };
                 // Setup
@@ -122,10 +122,10 @@ export class SessionManagerTests extends AITestClass {
             test: () => {
                 var sessionPrefix = newId();
                 var config = {
-                    namePrefix: () => sessionPrefix,
-                    sessionExpirationMs: () => 30 * 60 * 1000,
-                    sessionRenewalMs: () => 24 * 60 * 60 * 1000,
-                    cookieDomain: () => undefined
+                    namePrefix: sessionPrefix,
+                    sessionExpirationMs: 30 * 60 * 1000,
+                    sessionRenewalMs: 24 * 60 * 60 * 1000,
+                    cookieDomain: undefined
                 };
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
@@ -153,10 +153,10 @@ export class SessionManagerTests extends AITestClass {
             test: () => {
                 var sessionPrefix = newId();
                 var config = {
-                    namePrefix: () => sessionPrefix,
-                    sessionExpirationMs: () => 5000,
-                    sessionRenewalMs: () => 24 * 60 * 60 * 1000,
-                    cookieDomain: () => undefined
+                    namePrefix: sessionPrefix,
+                    sessionExpirationMs: 5000,
+                    sessionRenewalMs: 24 * 60 * 60 * 1000,
+                    cookieDomain: undefined
                 };
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
@@ -212,10 +212,10 @@ export class SessionManagerTests extends AITestClass {
             test: () => {
                 var sessionPrefix = newId();
                 var config = {
-                    namePrefix: () => sessionPrefix,
-                    sessionExpirationMs: () => 86400000,
-                    sessionRenewalMs: () => 5000,
-                    cookieDomain: () => undefined
+                    namePrefix: sessionPrefix,
+                    sessionExpirationMs: 86400000,
+                    sessionRenewalMs: 5000,
+                    cookieDomain: undefined
                 };
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
@@ -270,10 +270,10 @@ export class SessionManagerTests extends AITestClass {
             test: () => {
                 var sessionPrefix = newId();
                 var config = {
-                    namePrefix: () => sessionPrefix,
-                    sessionExpirationMs: () => 30 * 60 * 1000,
-                    sessionRenewalMs: () => 24 * 60 * 60 * 1000,
-                    cookieDomain: () => undefined
+                    namePrefix: sessionPrefix,
+                    sessionExpirationMs: 30 * 60 * 1000,
+                    sessionRenewalMs: 24 * 60 * 60 * 1000,
+                    cookieDomain: undefined
                 };
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
@@ -316,10 +316,10 @@ export class SessionManagerTests extends AITestClass {
             test: () => {
                 var sessionPrefix = newId();
                 var config = {
-                    namePrefix: () => sessionPrefix,
-                    sessionExpirationMs: () => 5000,
-                    sessionRenewalMs: () => 24 * 60 * 60 * 1000,
-                    cookieDomain: () => undefined
+                    namePrefix: sessionPrefix,
+                    sessionExpirationMs: 5000,
+                    sessionRenewalMs: 24 * 60 * 60 * 1000,
+                    cookieDomain: undefined
                 };
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid

@@ -69,15 +69,15 @@ function _sendMessage(type: MessageType, msgSource: MessageSource, name: string,
 let _notificationListener: INotificationListener = {
     /**
      * [Optional] A function called when events are sent.
-     * @param {ITelemetryItem[]} events - The array of events that have been sent.
+     * @param events - The array of events that have been sent.
      */
     eventsSent: (theEvents: ITelemetryItem[]) => {
         _sendMessage(MessageType.Notification, MessageSource.EventSentNotification, "Notification:eventsSent", theEvents);
     },
     /**
      * [Optional] A function called when events are discarded.
-     * @param {ITelemetryItem[]} events - The array of events that have been discarded.
-     * @param {number} reason           - The reason for discarding the events. The EventsDiscardedReason
+     * @param events - The array of events that have been discarded.
+     * @param reason - The reason for discarding the events. The EventsDiscardedReason
      * constant should be used to check the different values.
      */
     eventsDiscarded: (events: ITelemetryItem[], reason: number) => {
@@ -89,8 +89,8 @@ let _notificationListener: INotificationListener = {
 
     /**
      * [Optional] A function called when the events have been requested to be sent to the sever.
-     * @param {number} sendReason - The reason why the event batch is being sent.
-     * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
+     * @param sendReason - The reason why the event batch is being sent.
+     * @param isAsync - A flag which identifies whether the requests are being sent in an async or sync manner.
      */
     eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
         _sendMessage(MessageType.Notification, MessageSource.EventsSendNotification, "Notification:eventsSendRequest", {

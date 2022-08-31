@@ -284,7 +284,7 @@ function _getErrorType(errorType: any) {
 
 /**
  * Formats the provided errorObj for display and reporting, it may be a String, Object, integer or undefined depending on the browser.
- * @param errorObj The supplied errorObj
+ * @param errorObj - The supplied errorObj
  */
 export function _formatErrorCode(errorObj:any) {
     if (errorObj) {

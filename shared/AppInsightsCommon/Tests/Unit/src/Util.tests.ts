@@ -61,11 +61,18 @@ export class UtilTests extends AITestClass {
                 Assert.equal("bing.com", urlParseHost("http://www.bing.com"));
                 Assert.equal("bing.com", urlParseHost("https://www2.bing.com/"));
                 Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com/"));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW21.p.r.e.f.i.x.bing.com/"));
 
                 Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint", false));
                 Assert.equal("bing.com", urlParseHost("http://www.bing.com", false));
                 Assert.equal("bing.com", urlParseHost("https://www2.bing.com/", false));
                 Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("bing.com", urlParseHost("https://www21.bing.com/", false));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW21.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("bing.com", urlParseHost("https://www54321.bing.com/", false));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW54321.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("www654321.bing.com", urlParseHost("https://www654321.bing.com/", false));
+                Assert.equal("wwW654321.p.r.e.f.i.x.bing.com", urlParseHost("http://wwW654321.p.r.e.f.i.x.bing.com/", false));
 
                 Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint", true));
                 Assert.equal("bing.com", urlParseHost("http://www.bing.com", true));

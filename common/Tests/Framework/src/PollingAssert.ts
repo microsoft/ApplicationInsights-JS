@@ -5,10 +5,10 @@ import { ITestContext } from "./TestCase";
 export class PollingAssert {
     /**
     * Starts polling assertion function for a period of time after which it's considered failed.
-    * @param {() => boolean} assertionFunctionReturnsBoolean - funciton returning true if condition passes and false if condition fails. Assertion will be done on this function's result.
-    * @param {string} assertDescription - message shown with the assertion
-    * @param {number} timeoutSeconds - timeout in seconds after which assertion fails
-    * @param {number} pollIntervalMs - polling interval in milliseconds
+    * @param assertionFunctionReturnsBoolean - funciton returning true if condition passes and false if condition fails. Assertion will be done on this function's result.
+    * @param assertDescription - message shown with the assertion
+    * @param timeoutSeconds - timeout in seconds after which assertion fails
+    * @param pollIntervalMs - polling interval in milliseconds
     * @returns {(nextTestStep) => void} callback which will be invoked by the AITestClass
     */
     public static createPollingAssert(assertionFunctionReturnsBoolean: (testContext?: ITestContext) => boolean, assertDescription: string, timeoutSeconds: number = 30, pollIntervalMs: number = 500): (testContext: ITestContext, nextTestStep: () => void) => void {

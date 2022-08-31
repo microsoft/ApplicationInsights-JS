@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IInternal } from "@microsoft/applicationinsights-common";
-import { ITelemetryConfig } from "../Interfaces/ITelemetryConfig";
+import { IPropertiesConfig } from "../Interfaces/IPropertiesConfig";
 
 const Version = "2.8.5";
 
@@ -36,7 +36,8 @@ export class Internal implements IInternal {
     /**
      * Constructs a new instance of the internal telemetry data class.
      */
-    constructor(config: ITelemetryConfig) {
-        this.sdkVersion = (config.sdkExtension && config.sdkExtension() ? config.sdkExtension() + "_" : "") + "javascript:" + Version;
+    constructor(config: IPropertiesConfig) {
+        let prefix =  config.sdkExtension;
+        this.sdkVersion = (prefix ? prefix + "_" : "") + "javascript:" + Version;
     }
 }

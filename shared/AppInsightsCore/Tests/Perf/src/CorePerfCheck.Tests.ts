@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _InternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 import { isObject, isPlainObject, isString, objForEachKey, objKeys, optimizeObject, setValue } from "../../../src/JavaScriptSDK/HelperFuncs";
 

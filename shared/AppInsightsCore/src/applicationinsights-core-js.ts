@@ -5,18 +5,18 @@ export { IChannelControls, MinChannelPriorty } from "./JavaScriptSDK.Interfaces/
 export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetryPlugin";
 export { IAppInsightsCore, ILoadedPlugin } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
 export { ITelemetryItem, ICustomProperties, Tags } from "./JavaScriptSDK.Interfaces/ITelemetryItem";
-export { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, GetExtCfgMergeType } from "./JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+export { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "./JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 export { INotificationListener } from "./JavaScriptSDK.Interfaces/INotificationListener";
 export { ITelemetryPluginChain } from "./JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger";
 export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails } from "./JavaScriptSDK.Interfaces/IInstrumentHooks";
 export { IUnloadableComponent } from "./JavaScriptSDK.Interfaces/IUnloadableComponent";
+export { IUnloadHook, ILegacyUnloadHook } from "./JavaScriptSDK.Interfaces/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
-export { BaseCore } from "./JavaScriptSDK/BaseCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
 export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./JavaScriptSDK/RandomHelper";
 export {
@@ -30,11 +30,11 @@ export {
 
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
-    objForEachKey, strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,
+    strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,
     arrReduce, arrMap, strTrim, objKeys, objDefineAccessors, throwError, isSymbol,
     isNotTruthy, isTruthy, objFreeze, objSeal, objToString, objDeepFreeze as deepFreeze,
     getInst as getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, hasNavigator, getNavigator, hasHistory,
-    getHistory, dumpObj
+    getHistory, dumpObj, asString, objForEachKey
 } from "@nevware21/ts-utils";
 export { EnumValue, createEnumStyle, createValueMap } from "./JavaScriptSDK.Enums/EnumHelperFuncs";
 export {
@@ -68,7 +68,7 @@ export {
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
 } from "./JavaScriptSDK/ProcessTelemetryContext";
 export { initializePlugins, sortPlugins, unloadComponents } from "./JavaScriptSDK/TelemetryHelpers";
-export { _InternalMessageId, _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
+export { _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs, InstrumentEvent } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";
 export {
@@ -86,3 +86,12 @@ export { ITraceParent } from "./JavaScriptSDK.Interfaces/ITraceParent";
 export {
     createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
 } from "./JavaScriptSDK/W3cTraceParent";
+
+// Dynamic Config definitions
+export { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./Config/IConfigDefaults";
+export { IDynamicConfigHandler } from "./Config/IDynamicConfigHandler";
+export { IDynamicPropertyHandler } from "./Config/IDynamicPropertyHandler";
+export { IWatchDetails, IWatcherHandler, WatcherFunction } from "./Config/IDynamicWatcher";
+export { applyDefaults } from "./Config/ConfigDefaults";
+export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
+export { getDynamicConfigHandler } from "./Config/DynamicSupport";

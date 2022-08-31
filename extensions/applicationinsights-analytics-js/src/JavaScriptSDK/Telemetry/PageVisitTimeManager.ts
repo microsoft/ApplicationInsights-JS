@@ -16,7 +16,7 @@ export class PageVisitTimeManager {
 
     /**
      * Creates a new instance of PageVisitTimeManager
-     * @param pageVisitTimeTrackingHandler Delegate that will be called to send telemetry data to AI (when trackPreviousPageVisit is called)
+     * @param pageVisitTimeTrackingHandler - Delegate that will be called to send telemetry data to AI (when trackPreviousPageVisit is called)
      * @returns {}
      */
     constructor(logger: IDiagnosticLogger, pageVisitTimeTrackingHandler: (pageName: string, pageUrl: string, pageVisitTime: number) => void) {
@@ -40,7 +40,7 @@ export class PageVisitTimeManager {
         
             /**
              * Stops timing of current page (if exists) and starts timing for duration of visit to pageName
-             * @param pageName Name of page to begin timing visit duration
+             * @param pageName - Name of page to begin timing visit duration
              * @returns {PageVisitData} Page visit data (including duration) of pageName from last call to start or restart, if exists. Null if not.
              */
             function restartPageVisitTimer(pageName: string, pageUrl: string) {
@@ -119,8 +119,8 @@ export class PageVisitTimeManager {
 
     /**
     * Tracks the previous page visit time telemetry (if exists) and starts timing of new page visit time
-    * @param currentPageName Name of page to begin timing for visit duration
-    * @param currentPageUrl Url of page to begin timing for visit duration
+    * @param currentPageName - Name of page to begin timing for visit duration
+    * @param currentPageUrl - Url of page to begin timing for visit duration
     */
     public trackPreviousPageVisit(currentPageName: string, currentPageUrl: string): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

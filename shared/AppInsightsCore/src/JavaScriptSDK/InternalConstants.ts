@@ -5,6 +5,7 @@
 // Note: DON'T Export these const from the package as we are still targeting IE/ES5 this will export a mutable variables that someone could change ###
 // ###################################################################################################################################################
 
+export const UNDEFINED_VALUE: any = undefined;
 export const STR_EMPTY = "";
 export const STR_CHANNELS = "channels";
 export const STR_CORE = "core";
@@ -24,3 +25,7 @@ export const STR_ERROR_TO_CONSOLE = "errorToConsole";
 export const STR_WARN_TO_CONSOLE = "warnToConsole";
 
 export const STR_GET_PERF_MGR = "getPerfMgr";
+export const STR_DOMAIN = "domain";
+export const STR_PATH = "path";
+
+export const STR_NOT_DYNAMIC_ERROR = "Not dynamic - ";
