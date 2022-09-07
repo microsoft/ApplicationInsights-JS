@@ -2,6 +2,22 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.7 (Sept 7th, 2022)
+
+- Updates Chrome Debug Extension to 0.3.7
+
+### Changelog
+
+- #1863 [BUG]urlCollectQuery not work for applicationinsights-clickanalytics-js
+  - #1874 Add clickanalytics plugin url config back
+- #1875 [BUG] error thrown using basic version + NPM setup
+  - fix(AISKULight): call getSKUDefaults after it's defined, change this
+- #1878 [JS SDK] Update Retry logic to handle additional response codes
+- #1890 [BUG] Behavior difference for an empty endpointUrl when upgrading from v1 to v2
+- #1895 Fix incorrect disableFetchTracking documentation
+- #1887 maxAjaxCallsPerView doesn't account for filtering by TelemetryInitializer
+  - adds addDependencyInitializer()
+
 ## 2.8.6 (Aug 2nd, 2022)
 
 - React plugin is now located and released from [it's own repo](https://github.com/microsoft/applicationinsights-react-js)
