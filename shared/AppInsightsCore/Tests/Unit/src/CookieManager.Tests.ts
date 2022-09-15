@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, CoreUtils, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId, _legacyCookieMgr } from "../../../src/applicationinsights-core-js"
+import { AppInsightsCore, CoreUtils, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId, objExtend, _legacyCookieMgr } from "../../../src/applicationinsights-core-js"
 import { _InternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 
@@ -396,7 +396,6 @@ export class CookieManagerTests extends AITestClass {
             }
         });        
 
-
         this.testCase({
             name: "CookieManager: validate setting _canUseCookies correctly enables or blocks cookie usage",
             test: () => {
@@ -427,6 +426,102 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(true, manager.isEnabled());
             }
         });        
+
+        this.testCase({
+            name: "CookieManager: validate ignore Cookies empty setting",
+            test: () => {
+
+                let cookieCfg: ICookieMgrConfig = objExtend(true, {}, this._cookieMgrCfg);
+                cookieCfg.ignoreCookies = [];
+
+                let core = new AppInsightsCore();
+                core.initialize({
+                    instrumentationKey: "testiKey",
+                    cookieDomain: "MyDomain.com",
+                    cookieCfg: cookieCfg
+                }, [new ChannelPlugin()]);
+
+                let manager = core.getCookieMgr();
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                manager.set(newKey, newValue);
+                Assert.equal(newValue, manager.get(newKey));
+                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+
+                manager.del(newKey);
+                Assert.equal("", manager.get(newKey));
+                Assert.equal(undefined, this._testCookies[newKey]);
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: validate ignore Cookies with a single cookie",
+            test: () => {
+
+                let cookieCfg: ICookieMgrConfig = objExtend(true, {}, this._cookieMgrCfg);
+                cookieCfg.ignoreCookies = [ "testCookie" ];
+
+                let core = new AppInsightsCore();
+                core.initialize({
+                    instrumentationKey: "testiKey",
+                    cookieDomain: "MyDomain.com",
+                    cookieCfg: cookieCfg
+                }, [new ChannelPlugin()]);
+
+                let manager = core.getCookieMgr();
+
+                this._testCookies["testCookie"] = "test value";
+                Assert.equal("", manager.get("testCookie"), "Check that it can't read the cookie value");
+
+                manager.set("testCookie", "new value");
+                Assert.equal("test value", this._testCookies["testCookie"], "The value was not overwritten");
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                manager.set(newKey, newValue);
+                Assert.equal(newValue, manager.get(newKey));
+                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+
+                manager.del(newKey);
+                Assert.equal("", manager.get(newKey));
+                Assert.equal(undefined, this._testCookies[newKey]);
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: validate blocked Cookies with a single cookie",
+            test: () => {
+
+                let cookieCfg: ICookieMgrConfig = objExtend(true, {}, this._cookieMgrCfg);
+                cookieCfg.blockedCookies = [ "testCookie" ];
+
+                let core = new AppInsightsCore();
+                core.initialize({
+                    instrumentationKey: "testiKey",
+                    cookieDomain: "MyDomain.com",
+                    cookieCfg: cookieCfg
+                }, [new ChannelPlugin()]);
+
+                let manager = core.getCookieMgr();
+
+                this._testCookies["testCookie"] = "test value";
+                Assert.equal("test value", manager.get("testCookie"), "Check that it can't read the cookie value");
+
+                manager.set("testCookie", "new value");
+                Assert.equal("test value", this._testCookies["testCookie"], "The value was not overwritten");
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                manager.set(newKey, newValue);
+                Assert.equal(newValue, manager.get(newKey));
+                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+
+                manager.del(newKey);
+                Assert.equal("", manager.get(newKey));
+                Assert.equal(undefined, this._testCookies[newKey]);
+            }
+        });
     }
 }
 
