@@ -71,15 +71,16 @@ export interface ICookieMgrConfig {
     path?: string;
 
     /**
-     * Specify the cookies names to be ignored, this is a simple mechanism to cause any cookie with the provided names
-     * to never be read or written. They may still be explicitly purged or deleted.
+     * Specify the cookie name(s) to be ignored, this will cause any matching cookie name to never be read or written.
+     * They may still be explicitly purged or deleted. You do not need to repeat the name in the `blockedCookies`
+     * configuration.(Since v2.8.8)
      */
     ignoreCookies?: string[];
 
     /**
-     * Specify the cookies names to never be written, this is a simple mechanism to cause any cookie with the provided
-     * names to never be created or updated, they will still be read unless also included in the ignoreCookies and may
-     * still be explicitly purged or deleted. If not provided defaults to the same list provided in ignoreCookies.
+     * Specify the cookie name(s) to never be written, this will cause any cookie name to never be created or updated,
+     * they will still be read unless also included in the ignoreCookies and may still be explicitly purged or deleted.
+     * If not provided defaults to the same list provided in ignoreCookies. (Since v2.8.8)
      */
     blockedCookies?: string[];
 
