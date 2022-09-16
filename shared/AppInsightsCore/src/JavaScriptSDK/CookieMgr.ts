@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import {
-    arrForEach, dumpObj, getDocument, getNavigator, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objForEachKey,
+    arrForEach, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objForEachKey,
     strEndsWith, strTrim
 } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
@@ -82,6 +82,24 @@ function _createCookieMgrConfig(rootConfig: IConfiguration): ICookieMgrConfig {
     return cookieMgrCfg;
 }
 
+function _isIgnoredCookie(cookieMgrCfg: ICookieMgrConfig, name: string) {
+    if (name && cookieMgrCfg && isArray(cookieMgrCfg.ignoreCookies)) {
+        return cookieMgrCfg.ignoreCookies.indexOf(name) !== -1;
+    }
+
+    return false;
+}
+
+function _isBlockedCookie(cookieMgrCfg: ICookieMgrConfig, name: string) {
+    if (name && cookieMgrCfg && isArray(cookieMgrCfg.blockedCookies)) {
+        if (cookieMgrCfg.blockedCookies.indexOf(name) !== -1) {
+            return true;
+        }
+    }
+
+    return _isIgnoredCookie(cookieMgrCfg, name);
+}
+
 /**
  * Helper to return the ICookieMgr from the core (if not null/undefined) or a default implementation
  * associated with the configuration or a legacy default.
@@ -139,7 +157,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;
-            if (_isMgrEnabled(cookieMgr)) {
+            if (_isMgrEnabled(cookieMgr) && !_isBlockedCookie(cookieMgrConfig, name)) {
                 let values: any = {};
                 let theValue = strTrim(value || STR_EMPTY);
                 let idx = theValue.indexOf(";");
@@ -199,7 +217,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         },
         get: (name: string): string => {
             let value = STR_EMPTY
-            if (_isMgrEnabled(cookieMgr)) {
+            if (_isMgrEnabled(cookieMgr) && !_isIgnoredCookie(cookieMgrConfig, name)) {
                 value = (cookieMgrConfig.getCookie || _getCookieValue)(name);
             }
 
