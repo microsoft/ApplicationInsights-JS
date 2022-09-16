@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import {
-    arrForEach, dumpObj, getDocument, getNavigator, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objForEachKey,
+    arrForEach, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objForEachKey,
     strEndsWith, strTrim
 } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
