@@ -158,6 +158,9 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
             } else if (window && window["opera"] && errorObj[strMessage]) {
                 // Opera
                 details = _getOperaStack(errorObj.message);
+            } else if (errorObj["reason"] && errorObj.reason[strStack]) {
+                // UnhandledPromiseRejection
+                details = _convertStackObj(errorObj.reason[strStack]);
             } else if (isString(errorObj)) {
                 details = _convertStackObj(errorObj);
             } else {
