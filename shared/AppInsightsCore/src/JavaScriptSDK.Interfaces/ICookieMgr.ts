@@ -71,6 +71,20 @@ export interface ICookieMgrConfig {
     path?: string;
 
     /**
+     * Specify the cookie name(s) to be ignored, this will cause any matching cookie name to never be read or written.
+     * They may still be explicitly purged or deleted. You do not need to repeat the name in the `blockedCookies`
+     * configuration.(Since v2.8.8)
+     */
+    ignoreCookies?: string[];
+
+    /**
+     * Specify the cookie name(s) to never be written, this will cause any cookie name to never be created or updated,
+     * they will still be read unless also included in the ignoreCookies and may still be explicitly purged or deleted.
+     * If not provided defaults to the same list provided in ignoreCookies. (Since v2.8.8)
+     */
+    blockedCookies?: string[];
+
+    /**
      * Hook function to fetch the named cookie value.
      * @param name - The name of the cookie
      */
