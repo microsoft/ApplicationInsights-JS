@@ -12,6 +12,8 @@ module.exports = function (grunt) {
         "./src/InternalConstants.ts"
     ];
 
+    const throttleConfigVer = getthrottleConfigVersion();
+
     function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
         replace(/"/g, '\\"').
@@ -44,6 +46,20 @@ module.exports = function (grunt) {
             }
         };
     }
+
+    function getthrottleConfigVersion() {
+        let version = "";
+        try {
+            let throttleConfig = grunt.file.readJSON("./AISKU/throttle/throttleConfig.json");
+            let configVer= throttleConfig["version"];
+            version = "." + configVer;
+
+        } catch (e) {
+            console.log("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
+        }
+        return version;
+    }
+   
 
     function _createRegEx(str) {
         // Converts a string into a global regex, escaping any special characters
@@ -599,6 +615,14 @@ module.exports = function (grunt) {
             },
             'string-replace': {
                 'generate-snippet': generateNewSnippet()
+            },
+            copy: {
+                throttleConfig: {
+                    files: [
+                        { src: "./AISKU/throttle/throttleConfig.json", dest: `./AISKU/browser/throttleConfig${throttleConfigVer}.json` },
+                        { src: "./AISKU/throttle/throttleConfig.json", dest: "./AISKU/browser/throttleConfig.json"}
+                    ]
+                }
             }
         }));
     
@@ -612,8 +636,11 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-qunit');
         grunt.loadNpmTasks('grunt-contrib-connect');
         grunt.loadNpmTasks('grunt-string-replace');
+        grunt.loadNpmTasks('grunt-contrib-copy');
+    
         grunt.loadTasks('./tools/grunt-tasks');
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
+        
 
         grunt.registerTask("core", tsBuildActions("core"));
         grunt.registerTask("core-min", minTasks("core"));
