@@ -12,7 +12,8 @@ module.exports = function (grunt) {
         "./src/InternalConstants.ts"
     ];
 
-    const throttleConfigVer = getthrottleConfigVersion();
+    const throttleConfigVer = getthrottleConfigVersion(false);
+    const throttleConfigMajorVer = getthrottleConfigVersion(true);
 
     function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
@@ -47,12 +48,15 @@ module.exports = function (grunt) {
         };
     }
 
-    function getthrottleConfigVersion() {
+    function getthrottleConfigVersion(isMajorVer) {
         let version = "";
         try {
-            let throttleConfig = grunt.file.readJSON("./AISKU/throttle/throttleConfig.json");
+            let throttleConfig = grunt.file.readJSON("./tools/throttle/throttleConfig.json");
             let configVer= throttleConfig["version"];
             version = "." + configVer;
+            if (isMajorVer) {
+                version = "." + configVer.split(".")[0];
+            }
 
         } catch (e) {
             console.log("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
@@ -619,8 +623,8 @@ module.exports = function (grunt) {
             copy: {
                 throttleConfig: {
                     files: [
-                        { src: "./AISKU/throttle/throttleConfig.json", dest: `./AISKU/browser/throttleConfig${throttleConfigVer}.json` },
-                        { src: "./AISKU/throttle/throttleConfig.json", dest: "./AISKU/browser/throttleConfig.json"}
+                        { src: "./tools/throttle/throttleConfig.json", dest: `./tools/throttle/browser/throttleConfig${throttleConfigVer}.json` },
+                        { src: "./tools/throttle/throttleConfig.json", dest: `./tools/throttle/browser/throttleConfig${throttleConfigMajorVer}.json`}
                     ]
                 }
             }
