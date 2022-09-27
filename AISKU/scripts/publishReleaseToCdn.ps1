@@ -66,7 +66,6 @@ Function GetReleaseFiles (
 
     Write-Log "Adding files";
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.integrity.json" $true
-    AddReleaseFile $files $jsSdkSrcDir "throttleConfig.json" $true
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.js"
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.js.map"
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js"
