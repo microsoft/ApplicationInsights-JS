@@ -623,8 +623,8 @@ module.exports = function (grunt) {
             copy: {
                 throttleConfig: {
                     files: [
-                        { src: "./tools/throttle/throttleConfig.json", dest: `./tools/throttle/browser/throttleConfig${throttleConfigVer}.json` },
-                        { src: "./tools/throttle/throttleConfig.json", dest: `./tools/throttle/browser/throttleConfig${throttleConfigMajorVer}.json`}
+                        { src: "./tools/throttle/throttleConfig.json", dest: `./tools/throttle/browser/ai.throttle${throttleConfigVer}.cfg.json` },
+                        { src: "./tools/throttle/throttleConfig.json", dest: `./tools/throttle/browser/ai.throttle${throttleConfigMajorVer}.cfg.json`}
                     ]
                 }
             }
