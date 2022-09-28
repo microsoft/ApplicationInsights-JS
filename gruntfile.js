@@ -51,7 +51,7 @@ module.exports = function (grunt) {
     function getthrottleConfigVersion(isMajorVer) {
         let version = "";
         try {
-            let throttleConfig = grunt.file.readJSON("./tools/throttle/throttleConfig.json");
+            let throttleConfig = grunt.file.readJSON("./tools/throttle/package.json");
             let configVer= throttleConfig["version"];
             version = "." + configVer;
             if (isMajorVer) {

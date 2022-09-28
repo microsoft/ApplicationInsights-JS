@@ -55,7 +55,7 @@ Function Get-AllVersionFiles(
     [system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]] $files,
     [string] $storagePath
 ) {
-    Get-VersionFiles $files "$storagePath/ext" "ai.throttle." $null
+    Get-VersionFiles $files "$storagePath" "ai.throttle." $null
 }
 
 $Error.Clear()

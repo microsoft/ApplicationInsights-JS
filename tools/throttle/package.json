@@ -1,0 +1,16 @@
+{
+    "name": "applicationinsights-web-throttle",
+    "description":" Application Insights JavaScript SDK - Web Throttle Config",
+    "version": "0.0.0",
+    "copyright": "(c) Microsoft and contributors. All rights reserved.",
+    "author": "Microsoft Application Insights Team",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/microsoft/ApplicationInsights-JS.git"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/issues"
+    },
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme"
+}

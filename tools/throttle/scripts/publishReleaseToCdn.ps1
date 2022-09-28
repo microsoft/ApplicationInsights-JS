@@ -65,7 +65,7 @@ Function GetReleaseFiles (
     $files = New-Object 'system.collections.generic.dictionary[string,string]'
 
     Write-Log "Adding files";
-    AddReleaseFile $files $jsSdkSrcDir "ai.throttle.$version.json"
+    AddReleaseFile $files $jsSdkSrcDir "ai.throttle.$version.cfg.json"
     return $files
 }
 
@@ -110,23 +110,23 @@ Write-Log "---------------------------------------------------------------------
 # Publish the full versioned files to all release folders
 if ($version.type -eq "release") {
     # Normal publishing deployment
-    PublishFiles $releaseFiles "beta/ext" $cacheControl1Year $contentType $overwrite
-    PublishFiles $releaseFiles "next/ext" $cacheControl1Year $contentType $overwrite
-    PublishFiles $releaseFiles "scripts/b/ext" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite
 }
 elseif ($version.type -eq "rc") {
-    PublishFiles $releaseFiles "beta/ext" $cacheControl1Year $contentType $overwrite
-    PublishFiles $releaseFiles "next/ext" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
 }
 elseif ($version.type -eq "dev" -or $version.type -eq "beta" -or $version.type -eq "nightly") {
     # Publish to release type folder folder
-    PublishFiles $releaseFiles "$($version.type)/ext" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
 }
 else {
     # Upload to the test container rather than the supplied one
     $global:connectDetails.testOnly = $true
     $global:connectDetails.storeContainer = "tst"
-    PublishFiles $releaseFiles "$($version.type)/ext" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
 }
 
 Write-Log "======================================================================"

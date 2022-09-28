@@ -1,6 +1,5 @@
 {
     "name":"ThrottleConfig",
-    "version": "0.0.0",
     "description":" Application Insights JavaScript SDK - Web Throttle Config",
     "copyright": "(c) Microsoft and contributors. All rights reserved.",
     "author": "Microsoft Application Insights Team",

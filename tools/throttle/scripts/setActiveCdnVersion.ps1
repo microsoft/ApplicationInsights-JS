@@ -128,20 +128,19 @@ Write-Log "=====================================================================
 # List the files for each container
 $files = New-Object 'system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]'
 
-$storePath = "$container/ext"
+$storePath = "$container"
 if ($container -eq "public") {
-    $storePath = "scripts/b/ext"
+    $storePath = "scripts/b"
 } elseif ($container -ne "beta" -and $container -ne "next" -and $container -ne "dev" -and $container -ne "nightly") {
     $global:connectDetails.testOnly = $true
-    $global:connectDetails.storeContainer = "tst/ext"
+    $global:connectDetails.storeContainer = "tst"
 }
 
 Get-VersionFiles $files $storePath "ai.throttle." $activeVersion
 
 if ($files.ContainsKey($activeVersion) -ne $true) {
     Write-LogFailure "Version [$activeVersion] does not appear to be deployed to [$container]"
-} elseif ($files[$activeVersion].Count -ne 12 -and
-        $files[$activeVersion].Count -ne 13) {          # Since 2.6.5
+} elseif ($files[$activeVersion].Count -ne 1) {          # Since 2.6.5
     Write-LogFailure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
 }
 
