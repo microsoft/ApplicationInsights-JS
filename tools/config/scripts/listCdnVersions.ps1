@@ -1,12 +1,13 @@
 param (
-    [string] $releaseFrom = $null,                      # The root path for where to find the files to be released
+    [string] $container = $null,                        # Identify the container that you want to check blank == all
     [string] $storeContainer = "cdn",                   # Identifies the destination storage account container
     [string] $cdnStorePath = "cdnstoragename",          # Identifies the target Azure Storage account (by name)
     [string] $subscriptionId = $null,                   # Identifies the target Azure Subscription Id (if not encoded in the cdnStorePath)
     [string] $resourceGroup = $null,                    # Identifies the target Azure Subscription Resource Group (if not encoded in the cdnStorePath)
     [string] $sasToken = $null,                         # The SAS Token to use rather than using or attempting to login
     [string] $logPath = $null,                          # The location where logs should be written
-    [switch] $overwrite = $false,                       # Overwrite any existing files   
+    [switch] $showFiles = $false,                       # Show the individual files with details as well
+    [switch] $activeOnly = $false,                      # Only show the active (deployed) versions
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
     [switch] $cdn = $false                              # (No longer used -- kept for now for backward compatibility)
 )
@@ -24,18 +25,16 @@ $global:connectDetails.sasToken = $sasToken
 $global:connectDetails.storageContext = $null
 $global:connectDetails.testOnly = $testOnly
 
-$global:cacheValue = $null
-
 Function Write-LogParams 
 {
     $logDir = Get-LogPath
 
+    Write-Log "Container         : $container"
     Write-Log "Storage Container : $storeContainer"
     Write-Log "Store Path        : $($global:connectDetails.cdnStorePath)"
-    Write-Log "Overwrite         : $overwrite"
-    Write-Log "Test Mode         : $testOnly"
-    Write-Log "SourcePath        : $jsSdkDir"
     Write-Log "Log Path          : $logDir"
+    Write-Log "Show Files        : $showFiles"
+    Write-Log "Test Mode         : $testOnly"
     
     if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -eq $true) {
         Write-Log "Mode      : User-Credentials"
@@ -44,45 +43,34 @@ Function Write-LogParams
     }
 }
 
-Function GetReleaseFiles (
-    [hashtable] $verDetails
-)
+Function Validate-Params
 {
-    $version = $verDetails.full
-    Write-Log "Version   : $($verDetails.full)"
-    Write-Log "  Number  : $($verDetails.ver)"
-    Write-Log "  Type    : $($verDetails.type)"
-    Write-Log "  BldNum  : $($verDetails.bldNum)"
-
-    # check if the minified dir exists
-    $jsSdkSrcDir = Join-Path $jssdkDir -ChildPath "browser\";
-
-    if (-Not (Test-Path $jsSdkSrcDir)) {
-        Write-LogWarning "'$jsSdkSrcDir' directory doesn't exist. Compile JSSDK first.";
-        exit
+    # Validate parameters
+    if ([string]::IsNullOrWhiteSpace($container) -ne $true -and "beta","next","public", "dev", "nightly" -NotContains $container) {
+        Write-LogFailure "[$($container)] is not a valid value, must be beta, next or public"
     }
-
-    $files = New-Object 'system.collections.generic.dictionary[string,string]'
-
-    Write-Log "Adding files";
-    AddReleaseFile $files $jsSdkSrcDir "ai.throttle.$version.cfg.json"
-    return $files
 }
+
+Function Get-AllVersionFiles(
+    [system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]] $files,
+    [string] $storagePath
+) {
+    Get-VersionFiles $files "$storagePath" "ai.config." $null
+}
+
+$Error.Clear()
 
 #-----------------------------------------------------------------------------
 # Start of Script
 #-----------------------------------------------------------------------------
-Set-LogPath $logPath "publishReleaseCdnLog"
-
-$jsSdkDir = $releaseFrom
-if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
-    $jsSdkDir = Split-Path (Split-Path $MyInvocation.MyCommand.Path) -Parent
-}
-
-$cacheControl1Year = "public, max-age=31536000, immutable, no-transform";
-$contentType = "text/javascript; charset=utf-8";
-
+Set-LogPath $logPath, "listCdnVersionsLog"
 Write-LogParams
+Validate-Params
+
+# Don't try and list anything if any errors have been logged
+if (Get-HasErrors -eq $true) {
+    exit 2
+}
 
 # You will need to at least have the AzureRM module installed
 InstallRequiredModules
@@ -96,37 +84,31 @@ if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -eq $true) {
 }
 
 Write-Log "======================================================================"
+# List the files for each container
+$files = New-Object 'system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]'
 
-$version = GetPackageVersion $jsSdkDir
 
-$releaseFiles = GetReleaseFiles $version      # Get the versioned files only
-if ($null -eq $releaseFiles -or $releaseFiles.Count -eq 0) {
-    Write-LogFailure "Unable to find any release files"
+# Get the public files (scripts/b)
+if ([string]::IsNullOrWhiteSpace($container) -eq $true) {
+    Get-AllVersionFiles $files "scripts/b"
+    Get-AllVersionFiles $files "beta"
+    Get-AllVersionFiles $files "next"
+    Get-AllVersionFiles $files "dev"
+    Get-AllVersionFiles $files "nightly"
 }
 
-Write-Log "Release Files : $($releaseFiles.Count)"
-Write-Log "----------------------------------------------------------------------"
+if ([string]::IsNullOrWhiteSpace($container) -ne $true) {
+    if ($container -eq "public") {
+        Get-AllVersionFiles $files "scripts/b"
+    } elseif ($container -eq "beta" -or $container -eq "next" -or $container -eq "dev" -or $container -eq "nightly") {
+        Get-AllVersionFiles $files "$container"
+    } else {
+        $global:connectDetails.testOnly = $true
+        $global:connectDetails.storeContainer = "tst"
+        Get-AllVersionFiles $files "$container"
+    }
+}
 
-# Publish the full versioned files to all release folders
-if ($version.type -eq "release") {
-    # Normal publishing deployment
-    PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
-    PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
-    PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite
-}
-elseif ($version.type -eq "rc") {
-    PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
-    PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
-}
-elseif ($version.type -eq "dev" -or $version.type -eq "beta" -or $version.type -eq "nightly") {
-    # Publish to release type folder folder
-    PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
-}
-else {
-    # Upload to the test container rather than the supplied one
-    $global:connectDetails.testOnly = $true
-    $global:connectDetails.storeContainer = "tst"
-    PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
-}
+ListVersions $files $activeOnly $showFiles
 
 Write-Log "======================================================================"

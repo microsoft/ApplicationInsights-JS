@@ -12,8 +12,8 @@ module.exports = function (grunt) {
         "./src/InternalConstants.ts"
     ];
 
-    const throttleConfigVer = getthrottleConfigVersion(false);
-    const throttleConfigMajorVer = getthrottleConfigVersion(true);
+    const configVer = getConfigVersion(false);
+    const configMajorVer = getConfigVersion(true);
 
     function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
@@ -48,11 +48,11 @@ module.exports = function (grunt) {
         };
     }
 
-    function getthrottleConfigVersion(isMajorVer) {
+    function getConfigVersion(isMajorVer) {
         let version = "";
         try {
-            let throttleConfig = grunt.file.readJSON("./tools/throttle/package.json");
-            let configVer= throttleConfig["version"];
+            let config = grunt.file.readJSON("./tools/config/package.json");
+            let configVer= config["version"];
             version = "." + configVer;
             if (isMajorVer) {
                 version = "." + configVer.split(".")[0];
@@ -621,10 +621,10 @@ module.exports = function (grunt) {
                 'generate-snippet': generateNewSnippet()
             },
             copy: {
-                throttleConfig: {
+                config: {
                     files: [
-                        { src: "./tools/throttle/throttleConfig.json", dest: `./tools/throttle/browser/ai.throttle${throttleConfigVer}.cfg.json` },
-                        { src: "./tools/throttle/throttleConfig.json", dest: `./tools/throttle/browser/ai.throttle${throttleConfigMajorVer}.cfg.json`}
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configVer}.cfg.json` },
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configMajorVer}.cfg.json`}
                     ]
                 }
             }

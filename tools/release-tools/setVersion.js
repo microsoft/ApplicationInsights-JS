@@ -377,7 +377,7 @@ function shouldProcess(name) {
         return updateDefPkgs;
     }
 
-    if (name.indexOf("tools/throttle") !== -1) {
+    if (name.indexOf("tools/config") !== -1) {
         return updateDefPkgs;
     }
 

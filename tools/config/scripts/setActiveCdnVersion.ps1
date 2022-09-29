@@ -136,7 +136,7 @@ if ($container -eq "public") {
     $global:connectDetails.storeContainer = "tst"
 }
 
-Get-VersionFiles $files $storePath "ai.throttle." $activeVersion
+Get-VersionFiles $files $storePath "ai.config." $activeVersion
 
 if ($files.ContainsKey($activeVersion) -ne $true) {
     Write-LogFailure "Version [$activeVersion] does not appear to be deployed to [$container]"
