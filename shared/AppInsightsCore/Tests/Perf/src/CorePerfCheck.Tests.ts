@@ -72,7 +72,7 @@ export class CorePerfCheckTests extends AITestClass {
                     if (isPlainObject(testObject)) {
                         checks++;
                     }
-                }, 50, iterations, 0.00001);
+                }, 65, iterations, 0.00001);
 
                 Assert.equal(iterations * duration.attempts, checks, "Make sure we hit all of them");
             }

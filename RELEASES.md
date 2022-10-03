@@ -2,6 +2,17 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.8 (Oct 3rd, 2022)
+
+- Updates Chrome Debug Extension to 0.3.8
+
+### Changelog
+
+- #1679 [BUG] enableUnhandledPromiseRejectionTracking shows no error trace
+  - #1900 [Task]15465575: add getErrorstackObj from reason.stack
+- #1901 [Feature] Add option to block the creation and usage of the cookies by name
+- #1904 Fixed release notes, previously used a deprecated file.
+
 ## 2.8.7 (Sept 7th, 2022)
 
 - Updates Chrome Debug Extension to 0.3.7
