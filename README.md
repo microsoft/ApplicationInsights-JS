@@ -690,7 +690,8 @@ It is expected that most users will be using the `Public` URL, however, it is al
 
 ## Release Notes
 
-[Changelist](./CHANGELIST.md)
+- [Releases](https://github.com/microsoft/ApplicationInsights-JS/releases)
+- [Changelist Notes](./RELEASES.md)
 
 
 ### Beta Breaking Changes
