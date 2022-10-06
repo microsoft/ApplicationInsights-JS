@@ -47,7 +47,7 @@ const eventNamespace = /^([^.]*)(?:\.(.+)|)/
 
 function _normalizeNamespace(name: string) {
     if (name && name.replace) {
-        return name.replace(/^\s*\.*|\.*\s*$/g, STR_EMPTY);
+        return name.replace(/^[\s\.]+|(?=[\s\.])[\.\s]+$/g, STR_EMPTY);
     }
 
     return name;
