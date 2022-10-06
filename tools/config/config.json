@@ -7,13 +7,13 @@
         "default": {
             "msgKey": 0,
             "limit": {
-                "sendPercentage": 1,
-                "maxSendNumber": 10
+                "sendPercentage": 0,
+                "maxSendNumber": 0
             },
             "interval": {
-                "monthInterval": 3,
-                "dayInterval": 28,
-                "maxTimesPerMonth": 1
+                "monthInterval": 100,
+                "dayInterval": 100,
+                "maxTimesPerMonth": 0
             }
         },
         "config": {
