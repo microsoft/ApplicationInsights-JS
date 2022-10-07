@@ -15,6 +15,11 @@ export interface FakeXMLHttpRequest extends XMLHttpRequest {
     respond: (status: number, headers: any, body: string) => void;
 }
 
+export interface IFetchArgs {
+    input: RequestInfo,
+    init: RequestInit
+}
+
 function _getObjName(target:any, unknownValue?:string) {
     if (target.hasOwnProperty("prototype")) {
         // Look like a prototype
@@ -76,6 +81,7 @@ export class AITestClass {
     protected clock: any;
     public sandbox: SinonSandbox;
     public fakeServerAutoRespond: boolean = false;
+    public fakeFetchAutoRespond: boolean = false;
     public isEmulatingEs3: boolean;
 
     /**
@@ -93,10 +99,12 @@ export class AITestClass {
 
     /** Turns on/off sinon's fake implementation of XMLHttpRequest. On by default. */
     private _useFakeServer: boolean = true;
+    private _useFakeFetch: boolean = false;
     private _moduleName: string;
     private _xhr: any;
     private _xhrOrgSend: any;
     private _xhrRequests: FakeXMLHttpRequest[] = [];
+    private _fetchRequests: IFetchArgs[] = [];
     private _orgNavigator: any;
     private _orgPerformance: any;
     private _beaconHooks: any[] = [];
@@ -127,6 +135,19 @@ export class AITestClass {
             this._unhookXhr();
         } else if (value && AITestClass.currentTestInfo) {
             this._hookXhr();
+        }
+    }
+
+    get useFakeFetch(): boolean {
+        return this._useFakeFetch;
+    }
+
+    set useFakeFetch(value: boolean) {
+        this._useFakeFetch = value;
+        if (!value) {
+            this._unhookFetch();
+        } else if (value && AITestClass.currentTestInfo) {
+            this._hookFetch();
         }
     }
 
@@ -215,6 +236,15 @@ export class AITestClass {
 
             if (useFakeServer) {
                 self._hookXhr();
+            }
+
+            let useFakeFetch = testInfo.useFakeFetch;
+            if (useFakeFetch === undefined) {
+                useFakeFetch = self.useFakeFetch;
+            }
+
+            if (useFakeFetch && !self.isEmulatingEs3) {
+                self._hookFetch();
             }
 
             if (testInfo.useFakeTimers) {
@@ -910,12 +940,12 @@ export class AITestClass {
     /** Called when the test is completed. */
     private _testCompleted(failed?: boolean) {
         this._unhookXhr();
+        this._unhookFetch();
 
         if (this.clock) {
             this.clock.restore();
             this.clock = null;
         }
-
 
         if (this._orgCrypto && window.crypto !== this._orgCrypto) {
             this.setCrypto(this._orgCrypto);
@@ -1038,11 +1068,7 @@ export class AITestClass {
         this._restoreObject(this._orgObjectFuncs);
         this._orgObjectFuncs = null;
 
-        if (this._orgFetch) {
-            let global = window as any;
-            global.fetch = this._orgFetch;
-            this._orgFetch = null;
-        }
+        this._unhookFetch();
     }
 
     private _emulateEs3() {
@@ -1112,6 +1138,58 @@ export class AITestClass {
         }
     }
 
+    private _hookFetch() {
+        let _self = this;
+        if (!this._orgFetch) {
+            let global = window as any;
+            this._orgFetch = global.fetch;
+            _self._fetchRequests = [];
+            global.fetch = function(input: RequestInfo, init?: RequestInit) {
+                let theFetch = this;
+                _self._fetchRequests.push({
+                    input,
+                    init
+                });
+
+                let theArguments = arguments;
+                let autoRespond = _self.fakeFetchAutoRespond;
+                if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.fakeFetchAutoRespond !== undefined) {
+                    autoRespond = AITestClass.currentTestInfo.fakeFetchAutoRespond;
+                }
+
+                if (autoRespond) {
+                    return new Promise((resolve, reject) => {
+                        AITestClass.orgSetTimeout && AITestClass.orgSetTimeout(() => {
+                            if (AITestClass.currentTestInfo) {
+                                let theResponse = {
+                                    itemsReceived: 1,
+                                    itemsAccepted: 1,
+                                    errors: [] as any[],
+                                    appId: "00000000-0000-0000-0000-000000000000"
+                                };
+                                resolve(new Response(JSON.stringify(theResponse), {
+                                    headers: [],
+                                    status: 200,
+                                    statusText: "Ok"
+                                }));
+                            }
+                        }, 5);
+                    });
+                }
+                
+                return _self._orgFetch.apply(theFetch, theArguments);
+            };
+        }
+    }
+
+    private _unhookFetch() {
+        if (this._orgFetch) {
+            let global = window as any;
+            global.fetch = this._orgFetch;
+            this._orgFetch = null;
+        }
+    }
+    
     private _assertNoEvents(target: any, targetName: string): void {
         let failed = false;
         _getAllAiDataKeys(target, (name, value) => {

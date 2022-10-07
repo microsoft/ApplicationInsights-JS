@@ -5,7 +5,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { createSnippetV5 } from "./testSnippet";
-import { hasOwnProperty, isNotNullOrUndefined, ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { dumpObj, hasOwnProperty, isNotNullOrUndefined, ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders, Util } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
@@ -904,7 +904,7 @@ export class SnippetInitializationTests extends AITestClass {
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {
-                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+                Assert.ok(false, "[warning thrown]: " + dumpObj(this.loggingSpy.args.pop()));
             }
         }
     }

@@ -519,7 +519,7 @@ export function arrReduce<T, R>(arr: T[], callbackfn: (previousValue: T | R, cur
 export function strTrim(str: any): string {
     if (str) {
         // For Performance try and use the native instance, using string lookup of the function to easily pass the ES3 build checks and minification
-        str = (_strTrim && str[cStrTrim]) ? str[cStrTrim]() : (str.replace ? str.replace(/^\s+|\s+$/g, STR_EMPTY) : str);
+        str = (_strTrim && str[cStrTrim]) ? str[cStrTrim]() : (str.replace ? str.replace(/^\s+|(?=\s)\s+$/g, STR_EMPTY) : str);
     }
     
     return str;

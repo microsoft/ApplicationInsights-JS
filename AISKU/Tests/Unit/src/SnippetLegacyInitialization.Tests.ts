@@ -5,7 +5,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { createLegacySnippet } from "./testLegacySnippet";
 import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { hasOwnProperty, isNotNullOrUndefined } from "@microsoft/applicationinsights-core-js";
+import { dumpObj, hasOwnProperty, isNotNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 
 function getBasicLegacySnippetConfig() {
     return {
@@ -342,7 +342,7 @@ export class SnippetLegacyInitializationTests extends AITestClass {
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {
-                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+                Assert.ok(false, "[warning thrown]: " + dumpObj(this.loggingSpy.args.pop()));
             }
         }
     }
