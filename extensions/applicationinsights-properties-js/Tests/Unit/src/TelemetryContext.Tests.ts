@@ -1,11 +1,13 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, DiagnosticLogger, createCookieMgr } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, createDynamicConfig } from "@microsoft/applicationinsights-core-js";
 import { _SessionManager } from "../../../src/Context/Session";
 import { TelemetryContext } from "../../../src/TelemetryContext";
-import { ITelemetryConfig } from "../../../src/Interfaces/ITelemetryConfig";
+import { IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { TestChannelPlugin } from "./TestChannelPlugin";
 
 export class TelemetryContextTests extends AITestClass {
     private core: AppInsightsCore;
+    private _config: IConfiguration;
     private _cookies: { [name: string ]: string } = {};
 
     constructor(emulateIe?: boolean) {
@@ -14,16 +16,24 @@ export class TelemetryContextTests extends AITestClass {
 
     public testInitialize() {
         let _self = this;
-        _self._cookies = {};
-        _self.core = new AppInsightsCore();
-        _self.core.logger = new DiagnosticLogger();
-        _self.core.setCookieMgr(createCookieMgr({
+        _self._config = createDynamicConfig({
+            instrumentationKey: "Test-iKey",
+            disableInstrumentationKeyValidation: true,
+            extensions: [ new TestChannelPlugin() ],
+            extensionConfig: {
+                AppInsightsPropertiesPlugin: {}
+            },
             cookieCfg: {
                 setCookie: (name: string, value: string) => {},
                 getCookie: (name: string) => { return ""; },
                 delCookie: (name: string) => {}
             }
-        }, _self.core.logger))
+        }, null).cfg;
+
+        _self._cookies = {};
+        _self.core = new AppInsightsCore();
+        _self.core.initialize(_self._config, []);
+        _self.core.logger = _self.core.logger;
     }
 
     public testCleanup() {
@@ -34,8 +44,7 @@ export class TelemetryContextTests extends AITestClass {
         this.testCase({
             name: 'TelemetryContext: applyOperationContext - default',
             test: () => {
-
-                let context = new TelemetryContext(this.core, {} as ITelemetryConfig);
+                let context = new TelemetryContext(this.core, this._config.extensionConfig!.AppInsightsPropertiesPlugin);
                 let theEvent = {} as any;
 
                 context.applyOperationContext(theEvent);
@@ -50,7 +59,7 @@ export class TelemetryContextTests extends AITestClass {
             name: 'TelemetryContext: applyOperationContext - does not override traceId',
             test: () => {
 
-                let context = new TelemetryContext(this.core, {} as ITelemetryConfig);
+                let context = new TelemetryContext(this.core, this._config.extensionConfig!.AppInsightsPropertiesPlugin);
                 let theEvent = {
                     ext: {
                         trace: {
@@ -73,7 +82,7 @@ export class TelemetryContextTests extends AITestClass {
             name: 'TelemetryContext: applyOperationContext - does not override parentID',
             test: () => {
 
-                let context = new TelemetryContext(this.core, {} as ITelemetryConfig);
+                let context = new TelemetryContext(this.core, this._config.extensionConfig!.AppInsightsPropertiesPlugin);
                 let theEvent = {
                     ext: {
                         trace: {
@@ -96,7 +105,7 @@ export class TelemetryContextTests extends AITestClass {
             name: 'TelemetryContext: applyOperationContext - does not override traceId and parentID',
             test: () => {
 
-                let context = new TelemetryContext(this.core, {} as ITelemetryConfig);
+                let context = new TelemetryContext(this.core, this._config.extensionConfig!.AppInsightsPropertiesPlugin);
                 let theEvent = {
                     ext: {
                         trace: {

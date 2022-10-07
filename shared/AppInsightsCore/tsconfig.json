@@ -13,14 +13,15 @@
     "alwaysStrict": true,
     "skipDefaultLibCheck": true,
     "declaration": true,
-    "declarationDir": "shared/AppInsightsCore/types",
+    "declarationDir": "./types",
     "outDir": "./dist-esm",
-    "rootDir": "shared/AppInsightsCore/src",
+    "rootDir": "./src",
     "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true
   },
   "include": [
     "./src/applicationinsights-core-js.ts",
+    "./src/Config/**/*.ts",
     "./src/JavaScriptSDK/**/*.ts",
     "./src/JavaScriptSDK.Enums/**/*.ts",
     "./src/JavaScriptSDK.Interfaces/**/*.ts"

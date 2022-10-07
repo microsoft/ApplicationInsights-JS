@@ -3,13 +3,15 @@
 "use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { arrForEach, isArray, isFunction, isNullOrUndefined } from "@nevware21/ts-utils";
+import { arrAppend, arrForEach, dumpObj, isFunction } from "@nevware21/ts-utils";
+import { createDynamicConfig } from "../Config/DynamicConfig";
+import { IConfigDefaults } from "../Config/IConfigDefaults";
+import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IInstrumentHook } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
 import {
     IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
 } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
@@ -18,7 +20,9 @@ import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetr
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { proxyFunctionAs, setValue } from "./HelperFuncs";
+import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { _throwInternal } from "./DiagnosticLogger";
+import { isNotNullOrUndefined, proxyFunctionAs } from "./HelperFuncs";
 import { STR_EXTENSION_CONFIG } from "./InternalConstants";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext
@@ -26,6 +30,11 @@ import {
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 
 let strGetPlugin = "getPlugin";
+
+const defaultValues: IConfigDefaults<IConfiguration> = {
+    [STR_EXTENSION_CONFIG]: { isVal: isNotNullOrUndefined, v: []}
+};
+
 
 /**
  * BaseTelemetryPlugin provides a basic implementation of the ITelemetryPlugin interface so that plugins
@@ -109,7 +118,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
         let _rootCtx: IProcessTelemetryContext; // Used as the root context, holding the current config and initialized core
         let _nextPlugin: ITelemetryPlugin | ITelemetryPluginChain; // Used for backward compatibility where plugins don't call the main pipeline
         let _unloadHandlerContainer: IUnloadHandlerContainer;
-        let _hooks: IInstrumentHook[];
+        let _hooks: Array<ILegacyUnloadHook| IUnloadHook>;
 
         _initDefaults();
 
@@ -146,9 +155,14 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                         let oldHooks = _hooks;
                         _hooks = [];
 
-                        // Remove all instrumentation hooks
+                        // Remove all registered unload hooks
                         arrForEach(oldHooks, (fn) => {
-                            fn.rm();
+                            // allow either rm or remove callback function
+                            try{
+                                ((fn as IUnloadHook).rm || (fn as ILegacyUnloadHook).remove).call(fn);
+                            } catch (e) {
+                                _throwInternal(theUnloadCtx.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, "Unloading:" + dumpObj(e));
+                            }
                         });
 
                         if (result === true) {
@@ -201,13 +215,9 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                 return result;
             };
         
-            _self._addHook = (hooks: IInstrumentHook | IInstrumentHook[]) => {
+            _self._addHook = (hooks: IUnloadHook | IUnloadHook[] | ILegacyUnloadHook | ILegacyUnloadHook[]) => {
                 if (hooks) {
-                    if (isArray(hooks)) {
-                        _hooks = _hooks.concat(hooks);
-                    } else {
-                        _hooks.push(hooks);
-                    }
+                    arrAppend(_hooks, hooks);
                 }
             };
 
@@ -267,10 +277,8 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
         }
 
         function _setDefaults(config: IConfiguration, core: IAppInsightsCore, pluginChain: ITelemetryPluginChain) {
-            if (config) {
-                // Make sure the extensionConfig exists
-                setValue(config, STR_EXTENSION_CONFIG, [], null, isNullOrUndefined);
-            }
+            // Make sure the extensionConfig exists and the config is dynamic
+            createDynamicConfig(config, defaultValues, core.logger);
     
             if (!pluginChain && core) {
                 // Get the first plugin from the core
@@ -339,7 +347,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
      * Add this hook so that it is automatically removed during unloading
      * @param hooks - The single hook or an array of IInstrumentHook objects
      */
-    protected _addHook(hooks: IInstrumentHook | IInstrumentHook[]): void {
+    protected _addHook(hooks: IUnloadHook | IUnloadHook[] | ILegacyUnloadHook | ILegacyUnloadHook[]): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

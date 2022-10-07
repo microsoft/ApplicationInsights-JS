@@ -1,8 +1,8 @@
-import { IProcessTelemetryUnloadContext } from "./IProcessTelemetryContext";
-import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+import { IProcessTelemetryUnloadContext } from "./IProcessTelemetryContext";
+import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 
 export interface IUnloadableComponent {
     /**

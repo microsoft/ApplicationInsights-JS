@@ -41,8 +41,30 @@
     </ul>
     Note: The send attempt will fail, but you should see the outbound network attempt. If not debug the code and find out why!
 </div>
-
+<div>
+    <textarea id="log" style="width:45%; min-height: 400px;"></textarea>
+    <textarea id="cfg" style="width:50%; min-height: 400px;"></textarea>
 </div>
+</div>
+
+<script>
+    var _message = {
+        log: "", 
+        cfg: ""
+    };
+
+    function logMessage(message, dest) {
+        var dateTime = new Date().toLocaleString();
+        var target = dest || "log";
+        var elm = document.getElementById(target);
+        _message[target] = dateTime + ": " + message + "\n" + (_message[target] ||"");
+        if (_message[target].length > 4096) {
+            _message[target] = _message[target].substring(0, 4090) + "...\n";
+        }
+
+        elm.innerHTML = _message[target];
+    }
+</script>
 
 <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> -->
 
@@ -95,10 +117,29 @@
             enableRequestHeaderTracking: true,
             enableResponseHeaderTracking: true
         }
-    });    
+    });
 
+    appInsights.onCfgChange(function (details) {
+        logMessage("onCfgChange 1 - called");
+
+        logMessage("endpointUrl: " + details.cfg.endpointUrl);
+    });
+
+    appInsights.onCfgChange(function (details) {
+        logMessage("onCfgChange 2 - called");
+
+        logMessage("instrumentationKey: " + details.cfg.instrumentationKey);
+    });
+
+    appInsights.onCfgChange(function (details) {
+        logMessage(JSON.stringify(details.cfg, null, 4), "cfg");
+        logMessage("onCfgChange 3 - called", "cfg");
+    });
+
+    
     appInsights.loadAppInsights();
     appInsights.trackPageView();    
+
 
     //$.ajax({
     //    url: "https://www.mocky.io/v2/5185415ba171ea3a00704eed",

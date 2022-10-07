@@ -15,6 +15,8 @@ import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IDistributedTraceContext } from "./IDistributedTraceContext";
+import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
+import { WatcherFunction } from "../Config/IDynamicWatcher";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
@@ -86,13 +88,13 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * Adds a notification listener. The SDK calls methods on the listener when an appropriate notification is raised.
      * The added plugins must raise notifications. If the plugins do not implement the notifications, then no methods will be
      * called.
-     * @param {INotificationListener} listener - An INotificationListener object.
+     * @param listener - An INotificationListener object.
      */
     addNotificationListener?(listener: INotificationListener): void;
 
     /**
      * Removes all instances of the listener.
-     * @param {INotificationListener} listener - INotificationListener to remove.
+     * @param listener - INotificationListener to remove.
      */
     removeNotificationListener?(listener: INotificationListener): void;
 
@@ -101,7 +103,7 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @param telemetryInitializer - The Telemetry Initializer function
      * @returns - A ITelemetryInitializerHandler to enable the initializer to be removed
      */
-    addTelemetryInitializer(telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler | void;
+    addTelemetryInitializer(telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler;
 
     pollInternalLogs?(eventName?: string): number;
 
@@ -141,6 +143,15 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, doAsync?: boolean, addCb?: (added?: boolean) => void): void;
   
     /**
+     * Update the configuration used and broadcast the changes to all loaded plugins, this does NOT support updating, adding or removing
+     * any the plugins (extensions or channels). It will notify each plugin (if supported) that the configuration has changed but it will
+     * not remove or add any new plugins, you need to call addPlugin or getPlugin(identifier).remove();
+     * @param newConfig - The new configuration is apply
+     * @param mergeExisting - Should the new configuration merge with the existing or just replace it. Default is to merge.
+     */
+    updateCfg<T extends IConfiguration = IConfiguration>(newConfig: T, mergeExisting?: boolean): void;
+
+    /**
      * Returns the unique event namespace that should be used when registering events
      */
     evtNamespace(): string;
@@ -150,6 +161,12 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @param handler - the handler
      */
     addUnloadCb(handler: UnloadHandler): void;
+
+    /**
+     * Add this hook so that it is automatically removed during unloading
+     * @param hooks - The single hook or an array of IInstrumentHook objects
+     */
+    addUnloadHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook> | ILegacyUnloadHook | ILegacyUnloadHook[] | Iterator<ILegacyUnloadHook>): void;
 
     /**
      * Flush and send any batched / cached data immediately
@@ -172,4 +189,12 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * Sets the current distributed trace context for this instance if available
      */
     setTraceCtx(newTraceCtx: IDistributedTraceContext | null | undefined): void;
+
+    /**
+     * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
+     * handler will be recalled.
+     * @param handler
+     * @returns A watcher handler instance that can be used to remove itself when being unloaded
+     */
+    onCfgChange<T extends IConfiguration = IConfiguration>(handler: WatcherFunction<T>): IUnloadHook;
 }

@@ -185,13 +185,13 @@ interface SinonFakeTimers {
     /**
      * Simulate the user changing the system clock while your program is running. It changes the 'now' timestamp
      * without affecting timers, intervals or immediates.
-     * @param now The new 'now' in unix milliseconds
+     * @param now - The new 'now' in unix milliseconds
      */
     setSystemTime(now: number): void;
     /**
      * Simulate the user changing the system clock while your program is running. It changes the 'now' timestamp
      * without affecting timers, intervals or immediates.
-     * @param now The new 'now' as a JavaScript Date
+     * @param now - The new 'now' as a JavaScript Date
      */
     setSystemTime(date: Date): void;
 }

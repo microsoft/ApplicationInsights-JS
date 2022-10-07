@@ -4,7 +4,6 @@
 import { EnumCls, createEnum, createTypeMap } from "@nevware21/ts-utils";
 
 export declare type EnumValue<E = any> = EnumCls<E>;
-// export declare type EnumMap<E = any, I = E> = EnumNameMap<E, I>;
 
 /**
  * Create an enum style object which has both the key => value and value => key mappings

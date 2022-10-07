@@ -1,19 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ObjAssign, ObjClass, ObjHasOwnProperty, ObjProto, strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
+import { ObjAssign, ObjClass, strShimFunction } from "@microsoft/applicationinsights-shims";
 import {
-    arrForEach, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isObject, isString, isUndefined, objDeepFreeze,
-    objDefineAccessors, objForEachKey, objHasOwnProperty, strIndexOf, throwUnsupported
+    arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isObject, isString, isUndefined,
+    objDeepFreeze, objDefineAccessors, objForEachKey as objForEachKey21, objHasOwn, objHasOwnProperty, strIndexOf
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "./InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 
 // Added to help with minification
-const cString = "String";
-const cObject = "Object";
-const strToISOString = "toISOString";
-const strMap = "map";
 const strToString = "toString";
 const strGetPrototypeOf = "getPrototypeOf";
 
@@ -23,11 +19,7 @@ const strGetPrototypeOf = "getPrototypeOf";
   */
 const strConstructor = "constructor";
 
-const DateProto = Date[strShimPrototype];
-const _dateToISOString = DateProto[strToISOString] || _polyfillRequired("Date", strToISOString);
-const _objToString = ObjProto[strToString] || _polyfillRequired(cObject, strToString);
-
-const _fnToString = ObjHasOwnProperty[strToString] || _polyfillRequired(cString, strToString);
+const _fnToString = ObjClass[strToString];
 // Cache what this browser reports as the object function constructor (as a string)
 const _objFunctionString = _fnToString.call(ObjClass);
 
@@ -35,17 +27,7 @@ const rCamelCase = /-([a-z])/g;
 const rNormalizeInvalid = /([^\w\d_$])/g;
 const rLeadingNumeric = /^(\d+[\w\d_$])/;
 
-function _polyfillRequired(object:string, name: string): any {
-    return function() {
-        throwUnsupported("Polyfill required for [" + name + "]");
-    }
-}
-
-export let _getObjProto = Object[strGetPrototypeOf] || _polyfillRequired(cObject, strGetPrototypeOf);
-
-export function objToString(obj: any) {
-    return _objToString.call(obj);
-}
+export let _getObjProto = Object[strGetPrototypeOf];
 
 export function isNotUndefined<T>(value: T): value is T {
     return !isUndefined(value);
@@ -60,7 +42,7 @@ export function isNotNullOrUndefined<T>(value: T): value is T {
  * normalizes the name so that it would. This method does not identify or change any keywords
  * meaning that if you pass in a known keyword the same value will be returned.
  * This is a simplified version
- * @param name The name to validate
+ * @param name - The name to validate
  */
 export function normalizeJsName(name: string): string {
     let value = name;
@@ -79,6 +61,14 @@ export function normalizeJsName(name: string): string {
 
     return value;
 }
+
+/**
+ * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a
+ * performance optimization to avoid the creation of a new array for large objects
+ * @param target - The target object to find and process the keys
+ * @param callbackfn - The function to call with the details
+ */
+export const objForEachKey = objForEachKey21;
 
 /**
  * A simple wrapper (for minification support) to check if the value contains the search string.
@@ -108,7 +98,7 @@ export function isPlainObject(value: any): boolean {
             result = true;
         } else {
             // Objects that have a prototype are plain only if they were created using the Object global (native) function
-            if (proto[strConstructor] && ObjHasOwnProperty.call(proto, strConstructor)) {
+            if (proto[strConstructor] && objHasOwnProperty(proto, strConstructor)) {
                 proto = proto[strConstructor];
             }
 
@@ -123,7 +113,7 @@ export function isPlainObject(value: any): boolean {
  * Convert a date to I.S.O. format in IE8
  */
 export function toISOString(date: Date) {
-    return _dateToISOString.call(date);
+    return date && date.toISOString() || "";
 }
 
 export const deepFreeze: <T>(obj: T) => T = objDeepFreeze;
@@ -195,15 +185,6 @@ export function getSetValue<T, K extends keyof T>(target: T, field: K, defValue?
     return theValue;
 }
 
-/**
- * Get the mapped config value, if null or undefined any supplied defaultValue will be returned.
- * @param field - The name of the field as the named enum value (number) or the string name.
- * @param defaultValue - The default value to return if the config field is not present, null or undefined.
- */
-export function getCfgValue<V>(theValue: V, defaultValue?: V): V {
-    return !isNullOrUndefined(theValue) ? theValue : defaultValue;
-}
-
 function _createProxyFunction<S>(source: S | (() => S), funcName: (keyof S)) {
     let srcFunc: () => S = null;
     let src: S = null;
@@ -253,7 +234,7 @@ export function proxyAssign<T, S>(target: T, source: S, chkSet?: (name: string, 
                         target[field as string] = _createProxyFunction(source, field);
                     }
                 } else if (!chkSet || chkSet(field, false, source, target)) {
-                    if (objHasOwnProperty(target, field)) {
+                    if (objHasOwn(target, field)) {
                         // Remove any previous instance property
                         delete (target as any)[field];
                     }
@@ -316,7 +297,7 @@ export function proxyFunctions<T, S>(target: T, source: S | (() => S), functions
 /**
  * Simpler helper to create a dynamic class that implements the interface and populates the values with the defaults.
  * Only instance properties (hasOwnProperty) values are copied from the defaults to the new instance
- * @param defaults Simple helper
+ * @param defaults - Simple helper
  */
 export function createClassFromInterface<T>(defaults?: T) {
     return class {
@@ -385,7 +366,7 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
         let isArgArray = isArray(arg);
         let isArgObj = isObject(arg);
         for (let prop in arg) {
-            let propOk = (isArgArray && (prop in arg)) || (isArgObj && (ObjHasOwnProperty.call(arg, prop)));
+            let propOk = (isArgArray && (prop in arg)) || (isArgObj && objHasOwn(arg, prop));
             if (!propOk) {
                 continue;
             }
@@ -421,3 +402,5 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
 
     return extended;
 }
+
+export const asString = asString21;

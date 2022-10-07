@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, arrIndexOf, getIEVersion, hasOwnProperty, isArray, isError, isFunction, isObject, isString, isSymbol, objKeys } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, arrIndexOf, getIEVersion, isArray, isError, isFunction, isObject, isString, isSymbol, objKeys } from "@microsoft/applicationinsights-core-js";
 import { strShimPrototype } from "@microsoft/applicationinsights-shims";
+import { objHasOwnProperty } from "@nevware21/ts-utils";
 
 const strConstructor = "constructor";
 const strGetOwnPropertyNames = "getOwnPropertyNames";
@@ -201,7 +202,7 @@ export function getTargetName(target: any) {
             return target.name;
         }
 
-        if (hasOwnProperty(target, strShimPrototype)) {
+        if (objHasOwnProperty(target, strShimPrototype)) {
             // Look like a prototype
             return target.name || "";
         }

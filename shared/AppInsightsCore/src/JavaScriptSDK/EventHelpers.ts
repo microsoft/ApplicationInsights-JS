@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { arrForEach, arrIndexOf, getDocument, getWindow, isArray, objForEachKey, objKeys } from "@nevware21/ts-utils";
+import { arrForEach, arrIndexOf, getDocument, getWindow, isArray, objKeys } from "@nevware21/ts-utils";
 import { createElmNodeData, createUniqueNamespace } from "./DataCacheHelper";
+import { objForEachKey } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
 // Added to help with minfication
@@ -46,7 +47,7 @@ const eventNamespace = /^([^.]*)(?:\.(.+)|)/
 
 function _normalizeNamespace(name: string) {
     if (name && name.replace) {
-        return name.replace(/^\s*\.*|\.*\s*$/g, STR_EMPTY);
+        return name.replace(/^[\s\.]+|(?=[\s\.])[\.\s]+$/g, STR_EMPTY);
     }
 
     return name;
@@ -216,13 +217,13 @@ export function mergeEvtNamespace(theNamespace: string, namespaces?: string | st
 
 /**
  * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
- * @param obj Object to add the event too.
- * @param eventName String that specifies any of the standard DHTML Events without "on" prefix, if may also include an optional (dot "." prefixed)
+ * @param obj - Object to add the event too.
+ * @param eventName - String that specifies any of the standard DHTML Events without "on" prefix, if may also include an optional (dot "." prefixed)
  * namespaces "click" "click.mynamespace" in addition to specific namespaces.
- * @param handlerRef Pointer that specifies the function to call when event fires
+ * @param handlerRef - Pointer that specifies the function to call when event fires
  * @param evtNamespace - [Optional] Additional namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace,
  * if the eventName also includes a namespace the namespace(s) are merged into a single namespace
- * @param useCapture [Optional] Defaults to false
+ * @param useCapture - [Optional] Defaults to false
  * @returns True if the function was bound successfully to the event, otherwise false
  */
 export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNamespace?: string | string[] | null, useCapture: boolean = false) {
@@ -253,15 +254,15 @@ export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNam
 
 /**
  * Removes an event handler for the specified event
- * @param Object to remove the event from
- * @param eventName {string} - The name of the event, with optional namespaces or just the namespaces,
+ * @param Object - to remove the event from
+ * @param eventName - {string} - The name of the event, with optional namespaces or just the namespaces,
  * such as "click", "click.mynamespace" or ".mynamespace"
- * @param handlerRef {any} - The callback function that needs to be removed from the given event, when using a
+ * @param handlerRef - {any} - The callback function that needs to be removed from the given event, when using a
  * namespace (with or without a qualifying event) this may be null to remove all previously attached event handlers
  * otherwise this will only remove events with this specific handler.
  * @param evtNamespace - [Optional] Additional namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace,
  * if the eventName also includes a namespace the namespace(s) are merged into a single namespace
- * @param useCapture [Optional] Defaults to false
+ * @param useCapture - [Optional] Defaults to false
  */
 export function eventOff<T>(target: T, eventName: string, handlerRef: any, evtNamespace?: string | string[] | null, useCapture: boolean = false) {
     if (target) {
@@ -290,10 +291,10 @@ export function eventOff<T>(target: T, eventName: string, handlerRef: any, evtNa
 
 /**
  * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
- * @param obj Object to add the event too.
- * @param eventNameWithoutOn String that specifies any of the standard DHTML Events without "on" prefix and optional (dot "." prefixed) namespaces "click" "click.mynamespace".
- * @param handlerRef Pointer that specifies the function to call when event fires
- * @param useCapture [Optional] Defaults to false
+ * @param obj - Object to add the event too.
+ * @param eventNameWithoutOn - String that specifies any of the standard DHTML Events without "on" prefix and optional (dot "." prefixed) namespaces "click" "click.mynamespace".
+ * @param handlerRef - Pointer that specifies the function to call when event fires
+ * @param useCapture - [Optional] Defaults to false
  * @returns True if the function was bound successfully to the event, otherwise false
  */
 export function attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
@@ -302,13 +303,13 @@ export function attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
 
 /**
  * Removes an event handler for the specified event
- * @param Object to remove the event from
- * @param eventNameWithoutOn {string} - The name of the event, with optional namespaces or just the namespaces,
+ * @param Object - to remove the event from
+ * @param eventNameWithoutOn - {string} - The name of the event, with optional namespaces or just the namespaces,
  * such as "click", "click.mynamespace" or ".mynamespace"
- * @param handlerRef {any} - The callback function that needs to be removed from the given event, when using a
+ * @param handlerRef - {any} - The callback function that needs to be removed from the given event, when using a
  * namespace (with or without a qualifying event) this may be null to remove all previously attached event handlers
  * otherwise this will only remove events with this specific handler.
- * @param useCapture [Optional] Defaults to false
+ * @param useCapture - [Optional] Defaults to false
  */
 export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
     eventOff(obj, eventNameWithoutOn, handlerRef, null, useCapture);
@@ -316,8 +317,8 @@ export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
 
 /**
  * Trys to add an event handler for the specified event to the window, body and document
- * @param eventName {string} - The name of the event
- * @param callback {any} - The callback function that needs to be executed for the given event
+ * @param eventName - {string} - The name of the event
+ * @param callback - {any} - The callback function that needs to be executed for the given event
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @return {boolean} - true if the handler was successfully added
  */
@@ -339,9 +340,9 @@ export function addEventHandler(eventName: string, callback: any, evtNamespace?:
 
 /**
  * Trys to remove event handler(s) for the specified event/namespace to the window, body and document
- * @param eventName {string} - The name of the event, with optional namespaces or just the namespaces,
+ * @param eventName - {string} - The name of the event, with optional namespaces or just the namespaces,
  * such as "click", "click.mynamespace" or ".mynamespace"
- * @param callback {any} - - The callback function that needs to be removed from the given event, when using a
+ * @param callback - {any} - - The callback function that needs to be removed from the given event, when using a
  * namespace (with or without a qualifying event) this may be null to remove all previously attached event handlers
  * otherwise this will only remove events with this specific handler.
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
@@ -361,8 +362,8 @@ export function removeEventHandler(eventName: string, callback: any, evtNamespac
 
 /**
  * Bind the listener to the array of events
- * @param events An string array of event names to bind the listener to
- * @param listener The event callback to call when the event is triggered
+ * @param events - An string array of event names to bind the listener to
+ * @param listener - The event callback to call when the event is triggered
  * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @returns true - when at least one of the events was registered otherwise false
@@ -385,8 +386,8 @@ function _addEventListeners(events: string[], listener: any, excludeEvents?: str
 
 /**
  * Bind the listener to the array of events
- * @param events An string array of event names to bind the listener to
- * @param listener The event callback to call when the event is triggered
+ * @param events - An string array of event names to bind the listener to
+ * @param listener - The event callback to call when the event is triggered
  * @param excludeEvents - [Optional] An array of events that should not be hooked (if possible), unless no other events can be.
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @returns true - when at least one of the events was registered otherwise false
@@ -408,8 +409,8 @@ export function addEventListeners(events: string[], listener: any, excludeEvents
 
 /**
  * Remove the listener from the array of events
- * @param events An string array of event names to bind the listener to
- * @param listener The event callback to call when the event is triggered
+ * @param events - An string array of event names to bind the listener to
+ * @param listener - The event callback to call when the event is triggered
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  */
 export function removeEventListeners(events: string[], listener: any, evtNamespace?: string | string[]) {

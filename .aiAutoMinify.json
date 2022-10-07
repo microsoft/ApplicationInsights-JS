@@ -8,8 +8,7 @@
                 "_eInternalMessageId",
                 "SendRequestReason",
                 "TelemetryUnloadReason",
-                "TelemetryUpdateReason",
-                "GetExtCfgMergeType"
+                "TelemetryUpdateReason"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {

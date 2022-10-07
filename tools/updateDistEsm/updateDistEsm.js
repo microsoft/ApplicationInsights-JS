@@ -262,9 +262,8 @@ function fixIEDynamicProtoUsage(orgSrc, src, theString) {
             }
     
             let newClass = 
-                "\n    // This is a workaround for an IE8 bug when using dynamicProto() with classes that don't have any" + 
+                "\n    // This is a workaround for an IE bug when using dynamicProto() with classes that don't have any" + 
                 "\n    // non-dynamic functions or static properties/functions when using uglify-js to minify the resulting code." +
-                "\n    // this will be removed when ES3 support is dropped." + 
                 "\n    " + className + ".__ieDyn=1;" + 
                 "\n" + classMatches[0];
     

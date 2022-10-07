@@ -1,7 +1,7 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { AnalyticsPluginIdentifier, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DisabledPropertyName, DistributedTracingModes, PropertiesPluginIdentifier, RequestHeaders, SeverityLevel } from "@microsoft/applicationinsights-common";
 import { addEventHandler, eventOff, eventOn, generateW3CId, LoggingSeverity, mergeEvtNamespace, objForEachKey, removeEventHandler, strUndefined } from "@microsoft/applicationinsights-core-js";
-import { Snippet } from "../../../src/Initialization";
+import { Snippet } from "../../../src/Snippet";
 
 declare var define;
 

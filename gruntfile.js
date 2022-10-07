@@ -586,7 +586,7 @@ module.exports = function (grunt) {
                     },
                     options: {
                         sourceMap: false,
-                        ie8: true,
+                        ie8: false,
                         compress: {
                           passes:3,
                           unsafe: true,

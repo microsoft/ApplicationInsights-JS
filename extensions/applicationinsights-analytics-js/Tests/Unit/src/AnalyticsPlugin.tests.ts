@@ -117,7 +117,6 @@ export class AnalyticsPluginTests extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const properties = new PropertiesPlugin();
-                properties.context = { telemetryTrace: { traceID: 'not set', name: 'name not set' } } as any;
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
                 let evtNamespace = (appInsights as any)._evtNamespace;
 
@@ -135,6 +134,9 @@ export class AnalyticsPluginTests extends AITestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel, properties]);
+
+                properties.context.telemetryTrace.traceID = 'not set';
+                properties.context.telemetryTrace.name = 'name not set';
 
                 registeredEvents = __getRegisteredEvents(window, null, evtNamespace);
                 Assert.equal(2, registeredEvents.length, "Two Events should be registered");
@@ -178,7 +180,6 @@ export class AnalyticsPluginTests extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const properties = new PropertiesPlugin();
-                properties.context = { telemetryTrace: { traceID: 'not set', name: 'name not set' } } as any;
                 appInsights['_prevUri'] = "firstUri";
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
 
@@ -191,6 +192,9 @@ export class AnalyticsPluginTests extends AITestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel, properties]);
+                properties.context.telemetryTrace.traceID = 'not set';
+                properties.context.telemetryTrace.name = 'name not set';
+
                 window.dispatchEvent(createDomEvent('locationchange'));
                 this.clock.tick(200);
 
@@ -225,7 +229,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const properties = new PropertiesPlugin();
-                properties.context = { telemetryTrace: { traceID: 'not set', parentID: undefined} } as any;
+
                 this.sandbox.stub(appInsights, 'trackPageView');
 
                 this.onDone(() => {
@@ -236,7 +240,11 @@ export class AnalyticsPluginTests extends AITestClass {
                 core.initialize({
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
-                } as IConfig & IConfiguration, [appInsights, channel]);
+                } as IConfig & IConfiguration, [appInsights, channel, properties]);
+
+                properties.context.telemetryTrace.traceID = 'not set';
+                properties.context.telemetryTrace.parentID = undefined;
+
                 window.dispatchEvent(createDomEvent('locationchange'));
 
                 // Assert
@@ -345,16 +353,15 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.equal(12, appInsights.config.samplingPercentage);
                 Assert.notEqual('aaa', appInsights.config.accountId);
                 Assert.equal('def', appInsights.config.accountId);
-                Assert.equal('instrumentation_key', (appInsights['config'] as IConfiguration).instrumentationKey);
+                //Assert.equal('instrumentation_key', (appInsights['config'] as IConfiguration).instrumentationKey);
                 Assert.equal(30 * 60 * 1000, appInsights.config.sessionRenewalMs);
                 Assert.equal(24 * 60 * 60 * 1000, appInsights.config.sessionExpirationMs);
 
-                let extConfig = (core.config as IConfiguration).extensionConfig[AnalyticsPluginIdentifier] as IConfig;
+                let extConfig = core.config.extensionConfig![AnalyticsPluginIdentifier] as IConfig;
                 Assert.equal('instrumentation_key', core.config.instrumentationKey);
                 Assert.equal(12, extConfig.samplingPercentage);
                 Assert.notEqual('aaa', extConfig.accountId);
                 Assert.equal('def', extConfig.accountId);
-                Assert.equal('instrumentation_key', (extConfig as any).instrumentationKey);
                 Assert.equal(30 * 60 * 1000, extConfig.sessionRenewalMs);
                 Assert.equal(24 * 60 * 60 * 1000, extConfig.sessionExpirationMs);
             }
@@ -365,8 +372,7 @@ export class AnalyticsPluginTests extends AITestClass {
             test: () => {
                 // setup
                 const appInsights = new AnalyticsPlugin();
-                // the assert test will only see config as part of an object member if it has been initialized. Not sure how it worked before
-                appInsights.config = {};
+
                 const leTest = (name) => {
                     // assert
                     Assert.ok(name in appInsights, name + " exists");

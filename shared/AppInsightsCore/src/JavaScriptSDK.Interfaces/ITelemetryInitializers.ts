@@ -1,8 +1,9 @@
 import { ITelemetryItem } from "./ITelemetryItem";
+import { ILegacyUnloadHook } from "./IUnloadHook";
 
 export declare type TelemetryInitializerFunction = <T extends ITelemetryItem>(item: T) => boolean | void;
 
-export interface ITelemetryInitializerHandler {
+export interface ITelemetryInitializerHandler extends ILegacyUnloadHook {
     remove(): void;
 }
 

@@ -70,7 +70,7 @@ abstract class BaseSendBuffer {
         dynamicProto(BaseSendBuffer, this, (_self) => {
 
             _self.enqueue = (payload: string) => {
-                if (_self.count() >= config.eventsLimitInMem()) {
+                if (_self.count() >= config.eventsLimitInMem) {
                     // sent internal log only once per page view
                     if (!_bufferFullMessageSent) {
                         _throwInternal(logger,
@@ -97,7 +97,7 @@ abstract class BaseSendBuffer {
                     size += _buffer[lp].length;
                 }
 
-                if (!config.emitLineDelimitedJson()) {
+                if (!config.emitLineDelimitedJson) {
                     size += 2;
                 }
 
@@ -115,7 +115,7 @@ abstract class BaseSendBuffer {
 
             _self.batchPayloads = (payload: string[]): string => {
                 if (payload && payload.length > 0) {
-                    const batch = config.emitLineDelimitedJson() ?
+                    const batch = config.emitLineDelimitedJson ?
                         payload.join("\n") :
                         "[" + payload.join(",") + "]";
         
@@ -286,7 +286,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
             function _getBuffer(key: string): string[] {
                 let prefixedKey = key;
                 try {
-                    prefixedKey = config.namePrefix && config.namePrefix() ? config.namePrefix() + "_" + prefixedKey : prefixedKey;
+                    prefixedKey = config.namePrefix ? config.namePrefix + "_" + prefixedKey : prefixedKey;
                     const bufferJson = utlGetSessionStorage(logger, prefixedKey);
                     if (bufferJson) {
                         let buffer: string[] = getJSON().parse(bufferJson);
@@ -312,7 +312,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
             function _setBuffer(key: string, buffer: string[]) {
                 let prefixedKey = key;
                 try {
-                    prefixedKey = config.namePrefix && config.namePrefix() ? config.namePrefix() + "_" + prefixedKey : prefixedKey;
+                    prefixedKey = config.namePrefix ? config.namePrefix + "_" + prefixedKey : prefixedKey;
                     const bufferJson = JSON.stringify(buffer);
                     utlSetSessionStorage(logger, prefixedKey, bufferJson);
                 } catch (e) {

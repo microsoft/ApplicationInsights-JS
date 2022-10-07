@@ -5,20 +5,21 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { IConfig } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, IConfiguration, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin, UnloadHandler, _InternalMessageId,
-    _eInternalMessageId, isNullOrUndefined, proxyFunctions, throwError
+    AppInsightsCore, IConfiguration, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin, UnloadHandler, _eInternalMessageId,
+    isNullOrUndefined, proxyFunctions, throwError
 } from "@microsoft/applicationinsights-core-js";
+import { objDefineProp } from "@nevware21/ts-utils";
 
 /**
  * @export
  * @class ApplicationInsights
  */
 export class ApplicationInsights {
-    public config: IConfiguration & IConfig;
+    public readonly config: IConfiguration & IConfig;
 
     /**
      * Creates an instance of ApplicationInsights.
-     * @param {IConfiguration & IConfig} config
+     * @param config
      * @memberof ApplicationInsights
      */
     constructor(config: IConfiguration & IConfig) {
@@ -33,7 +34,13 @@ export class ApplicationInsights {
         }
 
         dynamicProto(ApplicationInsights, this, (_self) => {
-            _self.config = config;
+
+            // Define _self.config
+            objDefineProp(_self, "config", {
+                configurable: true,
+                enumerable: true,
+                get: () => config
+            });
             
             _initialize();
             
@@ -86,7 +93,7 @@ export class ApplicationInsights {
     /**
      * Send a manually constructed custom event
      *
-     * @param {ITelemetryItem} item
+     * @param item
      * @memberof ApplicationInsights
      */
     public track(item: ITelemetryItem) {
@@ -95,7 +102,7 @@ export class ApplicationInsights {
 
     /**
      * Immediately send all batched telemetry
-     * @param {boolean} [async=true]
+     * @param [async=true]
      * @memberof ApplicationInsights
      */
     public flush(async: boolean = true) {
@@ -172,7 +179,6 @@ export {
     arrForEach,
     SendRequestReason,
     _eInternalMessageId,
-    _InternalMessageId,
     isNullOrUndefined,
     throwError,
     proxyFunctions,

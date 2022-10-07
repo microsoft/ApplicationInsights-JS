@@ -6,32 +6,34 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
-    DEFAULT_BREEZE_PATH, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry, IExceptionTelemetry,
-    IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPropertiesPlugin, IRequestHeaders,
-    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, parseConnectionString
+    DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry,
+    IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders, ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry,
+    PropertiesPluginIdentifier, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, IAppInsightsCore, IChannelControls, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
-    IDistributedTraceContext, ILoadedPlugin, INotificationManager, IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin,
-    ITelemetryUnloadState, UnloadHandler, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener,
-    arrForEach, arrIndexOf, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined,
-    isReactNative, isString, mergeEvtNamespace, objForEachKey, proxyAssign, proxyFunctions, removePageHideEventListener,
-    removePageUnloadEventListener
+    AppInsightsCore, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
+    IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin, ITelemetryInitializerHandler,
+    ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId,
+    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, arrForEach, arrIndexOf, createDynamicConfig, createUniqueNamespace,
+    doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
+    objForEachKey, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
-    AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, IDependenciesPlugin, IDependencyInitializerHandler
+    AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, IDependencyInitializerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
 import {
     DependencyListenerFunction, IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { arrAppend, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
+import { arrAppend, objDefineProp, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
+import { IApplicationInsights } from "./IApplicationInsights";
 import {
     STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
     STR_POLL_INTERNAL_LOGS, STR_SET_AUTHENTICATED_USER_CONTEXT, STR_SNIPPET, STR_START_TRACK_EVENT, STR_START_TRACK_PAGE,
     STR_STOP_TRACK_EVENT, STR_STOP_TRACK_PAGE, STR_TRACK_DEPENDENCY_DATA, STR_TRACK_EVENT, STR_TRACK_EXCEPTION, STR_TRACK_METRIC,
     STR_TRACK_PAGE_VIEW, STR_TRACK_TRACE
 } from "./InternalConstants";
+import { Snippet } from "./Snippet";
 
 export { IRequestHeaders };
 
@@ -43,60 +45,20 @@ const _ignoreUpdateSnippetProperties = [
     STR_SNIPPET, "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults"
 ];
 
-/**
- *
- * @export
- * @interface Snippet
- */
-export interface Snippet {
-    config: IConfiguration & IConfig;
-    queue?: Array<() => void>;
-    sv?: string;
-    version?: number;
-}
+const UNDEFINED_VALUE: undefined = undefined;
 
-export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
-    appInsights: AnalyticsPlugin;
-    flush: (async?: boolean) => void;
-    onunloadFlush: (async?: boolean) => void;
-    getSender: () => Sender;
-    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
-    clearAuthenticatedUserContext(): void;
+// We need to include all properties that we only reference that we want to be dynamically updatable here
+// So they are converted even when not specified in the passed configuration
+const defaultConfigValues: IConfigDefaults<IConfiguration> = {
+    connectionString: UNDEFINED_VALUE,
+    endpointUrl: UNDEFINED_VALUE,
+    instrumentationKey: UNDEFINED_VALUE,
+    diagnosticLogInterval: { isVal: _chkDiagLevel, v: 10000 }
+};
 
-    /**
-     * Unload and Tear down the SDK and any initialized plugins, after calling this the SDK will be considered
-     * to be un-initialized and non-operational, re-initializing the SDK should only be attempted if the previous
-     * unload call return `true` stating that all plugins reported that they also unloaded, the recommended
-     * approach is to create a new instance and initialize that instance.
-     * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
-     * to successfully remove any global references or they may just be completing the unload process asynchronously.
-     */
-    unload(isAsync?: boolean, unloadComplete?: () => void): void;
-
-    /**
-     * Find and return the (first) plugin with the specified identifier if present
-     * @param pluginIdentifier
-     */
-    getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
-  
-    /**
-     * Add a new plugin to the installation
-     * @param plugin - The new plugin to add
-     * @param replaceExisting - should any existing plugin be replaced
-     * @param doAsync - Should the add be performed asynchronously
-     */
-    addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, doAsync: boolean, addCb?: (added?: boolean) => void): void;
-  
-    /**
-     * Returns the unique event namespace that should be used when registering events
-     */
-    evtNamespace(): string;
-  
-    /**
-     * Add a handler that will be called when the SDK is being unloaded
-     * @param handler - the handler
-     */
-    addUnloadCb(handler: UnloadHandler): void;
+function _chkDiagLevel(value: number) {
+    // Make sure we have a value > 0
+    return value && value > 0;
 }
 
 /**
@@ -104,7 +66,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
  * @class Initialization
  * @implements {IApplicationInsights}
  */
-export class Initialization implements IApplicationInsights {
+export class AppInsightsSku implements IApplicationInsights {
     public snippet: Snippet;
     public config: IConfiguration & IConfig;
     public appInsights: ApplicationInsights;
@@ -120,22 +82,30 @@ export class Initialization implements IApplicationInsights {
         let _evtNamespace: string;
         let _houseKeepingNamespace: string | string[];
         let _core: IAppInsightsCore;
-    
-        dynamicProto(Initialization, this, (_self) => {
+        let _config: IConfiguration & IConfig;
+
+        dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
 
+            objDefineProp(_self, "config", {
+                enumerable: true,
+                configurable: true,
+                get: function() {
+                    return _config;
+                },
+                set: function(newValue: IConfiguration) {
+                    if (_core) {
+                        _core.config = newValue;
+                    }
+                }
+            });
+            
             // initialize the queue and config in case they are undefined
             _snippetVersion = "" + (snippet.sv || snippet.version || "");
             snippet.queue = snippet.queue || [];
             snippet.version = snippet.version || 2.0; // Default to new version
-            let config: IConfiguration & IConfig = snippet.config || ({} as any);
-
-            if (config.connectionString) {
-                const cs = parseConnectionString(config.connectionString);
-                const ingest = cs.ingestionendpoint;
-                config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : config.endpointUrl; // only add /v2/track when from connectionstring
-                config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
-            }
+            let cfgHandler: IDynamicConfigHandler<IConfiguration & IConfig> = createDynamicConfig(snippet.config || ({} as any), defaultConfigValues);
+            _config = cfgHandler.cfg;
 
             _self.appInsights = new AnalyticsPlugin();
 
@@ -145,8 +115,19 @@ export class Initialization implements IApplicationInsights {
             _core = new AppInsightsCore();
             _self.core = _core;
 
-            let isErrMessageDisabled = isNullOrUndefined(config.disableIkeyDeprecationMessage)? true:config.disableIkeyDeprecationMessage;
-            if (!config.connectionString && !isErrMessageDisabled) {
+            // Will get recalled if any referenced values are changed
+            _addUnloadHook(onConfigChange(cfgHandler, () => {
+                if (_config.connectionString) {
+                    const cs = parseConnectionString(_config.connectionString);
+                    const ingest = cs.ingestionendpoint;
+                    _config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : _config.endpointUrl; // only add /v2/track when from connectionstring
+                    _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
+                }
+            }));
+
+            // Outside of the onConfigChange as we only want to do this once
+            let isErrMessageDisabled = isNullOrUndefined(_config.disableIkeyDeprecationMessage) ? true : _config.disableIkeyDeprecationMessage;
+            if (!_config.connectionString && !isErrMessageDisabled) {
                 _throwInternal(_core.logger,
                     eLoggingSeverity.CRITICAL,
                     _eInternalMessageId.InstrumentationKeyDeprecation,
@@ -154,8 +135,6 @@ export class Initialization implements IApplicationInsights {
             }
 
             _self.snippet = snippet;
-            _self.config = config;
-            _getSKUDefaults(config);
 
             _self.flush = (async: boolean = true) => {
                 doPerf(_core, () => "AISKU.flush", () => {
@@ -201,7 +180,9 @@ export class Initialization implements IApplicationInsights {
                                     !isFunction(value) &&
                                     field && field[0] !== "_" &&                                // Don't copy "internal" values
                                     arrIndexOf(_ignoreUpdateSnippetProperties, field) === -1) {
-                                snippet[field as string] = value;
+                                if (snippet[field] !== value) {
+                                    snippet[field as string] = value;
+                                }
                             }
                         });
                     }
@@ -213,8 +194,9 @@ export class Initialization implements IApplicationInsights {
                     // initialize core
                     _core.initialize(_self.config, extensions, logger, notificationManager);
                     _self.context = properties.context;
-                    if (_internalSdkSrc && _self.context) {
-                        _self.context.internal.sdkSrc = _internalSdkSrc;
+                    let sdkSrc = _findSdkSourceFile();
+                    if (sdkSrc && _self.context) {
+                        _self.context.internal.sdkSrc = sdkSrc;
                     }
                     _updateSnippetProperties(_self.snippet);
         
@@ -297,37 +279,43 @@ export class Initialization implements IApplicationInsights {
                     let analyticsPlugin = appInsightsInstance.appInsights;
                     let theConfig = analyticsPlugin.config;
 
-                    let excludePageUnloadEvents = theConfig.disablePageUnloadEvents;
                     if (!_houseKeepingNamespace) {
                         _houseKeepingNamespace = mergeEvtNamespace(_evtNamespace, _core.evtNamespace && _core.evtNamespace());
                     }
 
-                    if (!theConfig.disableFlushOnBeforeUnload) {
-                        // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
-                        // As just hooking the window does not always fire (on chrome) for page navigation's.
-                        if (addPageUnloadEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace)) {
-                            added = true;
+                    // Will be recalled if any referenced config properties change
+                    _addUnloadHook(onConfigChange(_config, () => {
+                        // As we could get recalled, remove any previously registered event handlers first
+                        _removePageEventHandlers();
+
+                        let excludePageUnloadEvents = theConfig.disablePageUnloadEvents;
+                        if (!theConfig.disableFlushOnBeforeUnload) {
+                            // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
+                            // As just hooking the window does not always fire (on chrome) for page navigation's.
+                            if (addPageUnloadEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace)) {
+                                added = true;
+                            }
+            
+                            // We also need to hook the pagehide and visibilitychange events as not all versions of Safari support load/unload events.
+                            if (addPageHideEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace)) {
+                                added = true;
+                            }
+            
+                            // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
+                            // log the failure in this case
+                            if (!added && !isReactNative()) {
+                                _throwInternal(analyticsPlugin.core.logger,
+                                    eLoggingSeverity.CRITICAL,
+                                    _eInternalMessageId.FailedToAddHandlerForOnBeforeUnload,
+                                    "Could not add handler for beforeunload and pagehide");
+                            }
                         }
-        
-                        // We also need to hook the pagehide and visibilitychange events as not all versions of Safari support load/unload events.
-                        if (addPageHideEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace)) {
-                            added = true;
+
+                        if (!added && !theConfig.disableFlushOnUnload) {
+                            // If we didn't add the normal set then attempt to add the pagehide and visibilitychange only
+                            addPageHideEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace);
                         }
-        
-                        // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
-                        // log the failure in this case
-                        if (!added && !isReactNative()) {
-                            _throwInternal(analyticsPlugin.core.logger,
-                                eLoggingSeverity.CRITICAL,
-                                _eInternalMessageId.FailedToAddHandlerForOnBeforeUnload,
-                                "Could not add handler for beforeunload and pagehide");
-                        }
-                    }
-        
-                    if (!added && !theConfig.disableFlushOnUnload) {
-                        // If we didn't add the normal set then attempt to add the pagehide and visibilitychange only
-                        addPageHideEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace);
-                    }
+                    }));
                 }
             };
         
@@ -336,15 +324,22 @@ export class Initialization implements IApplicationInsights {
             };
 
             _self.unload = (isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void => {
-                _self.onunloadFlush(isAsync);
+                let unloadDone = false;
 
-                // Remove any registered event handlers
-                if (_houseKeepingNamespace) {
-                    removePageUnloadEventListener(null, _houseKeepingNamespace);
-                    removePageHideEventListener(null, _houseKeepingNamespace);
+                function _unloadCallback(unloadState: ITelemetryUnloadState) {
+                    if (!unloadDone) {
+                        unloadDone = true;
+
+                        _initDefaults();
+                        unloadComplete && unloadComplete(unloadState);
+                    }
                 }
 
-                _core.unload && _core.unload(isAsync, unloadComplete, cbTimeout);
+                _self.onunloadFlush(isAsync);
+
+                _removePageEventHandlers();
+
+                _core.unload && _core.unload(isAsync, _unloadCallback, cbTimeout);
             };
         
             proxyFunctions(_self, _self.appInsights, [
@@ -376,7 +371,9 @@ export class Initialization implements IApplicationInsights {
                 "addPlugin",
                 STR_EVT_NAMESPACE,
                 "addUnloadCb",
-                "getTraceCtx"
+                "getTraceCtx",
+                "updateCfg",
+                "onCfgChange"
             ]);
 
             proxyFunctions(_self, () => {
@@ -386,12 +383,6 @@ export class Initialization implements IApplicationInsights {
                 STR_SET_AUTHENTICATED_USER_CONTEXT,
                 STR_CLEAR_AUTHENTICATED_USER_CONTEXT
             ]);
-       
-
-            function _getSKUDefaults(config: IConfiguration & IConfig) {
-                config.diagnosticLogInterval =
-                    config.diagnosticLogInterval && config.diagnosticLogInterval > 0 ? config.diagnosticLogInterval : 10000;
-            }
         
             // Using a function to support the dynamic adding / removal of plugins, so this will always return the current value
             function _getCurrentDependencies() {
@@ -405,6 +396,18 @@ export class Initialization implements IApplicationInsights {
                 properties = null;
                 _sender = null;
                 _snippetVersion = null;
+            }
+
+            function _removePageEventHandlers() {
+                // Remove any registered event handlers
+                if (_houseKeepingNamespace) {
+                    removePageUnloadEventListener(null, _houseKeepingNamespace);
+                    removePageHideEventListener(null, _houseKeepingNamespace);
+                }
+            }
+
+            function _addUnloadHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook>) {
+                _core.addUnloadHook(hooks);
             }
         });
     }
@@ -421,8 +424,8 @@ export class Initialization implements IApplicationInsights {
 
     /**
      * Log a user action or other occurrence.
-     * @param {IEventTelemetry} event
-     * @param {ICustomProperties} [customProperties]
+     * @param event
+     * @param [customProperties]
      * @memberof Initialization
      */
     public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
@@ -431,7 +434,7 @@ export class Initialization implements IApplicationInsights {
 
     /**
      * Logs that a page, or similar container was displayed to the user.
-     * @param {IPageViewTelemetry} pageView
+     * @param pageView
      * @memberof Initialization
      */
     public trackPageView(pageView?: IPageViewTelemetry) {
@@ -440,7 +443,7 @@ export class Initialization implements IApplicationInsights {
 
     /**
      * Log a bag of performance information via the customProperties field.
-     * @param {IPageViewPerformanceTelemetry} pageViewPerformance
+     * @param pageViewPerformance
      * @memberof Initialization
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
@@ -449,8 +452,8 @@ export class Initialization implements IApplicationInsights {
 
     /**
      * Log an exception that you have caught.
-     * @param {IExceptionTelemetry} exception
-     * @param {{[key: string]: any}} customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
+     * @param exception
+     * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @memberof Initialization
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
@@ -460,7 +463,7 @@ export class Initialization implements IApplicationInsights {
     /**
      * Manually send uncaught exception telemetry. This method is automatically triggered
      * on a window.onerror event.
-     * @param {IAutoExceptionTelemetry} exception
+     * @param exception
      * @memberof Initialization
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
@@ -469,8 +472,8 @@ export class Initialization implements IApplicationInsights {
 
     /**
      * Log a diagnostic scenario such entering or leaving a function.
-     * @param {ITraceTelemetry} trace
-     * @param {ICustomProperties} [customProperties]
+     * @param trace
+     * @param [customProperties]
      * @memberof Initialization
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
@@ -487,8 +490,8 @@ export class Initialization implements IApplicationInsights {
      * If you take measurements frequently, you can reduce the telemetry bandwidth by
      * aggregating multiple measurements and sending the resulting average and modifying
      * the `sampleCount` field of {@link IMetricTelemetry}.
-     * @param {IMetricTelemetry} metric input object argument. Only `name` and `average` are mandatory.
-     * @param {ICustomProperties} [customProperties]
+     * @param metric - input object argument. Only `name` and `average` are mandatory.
+     * @param [customProperties]
      * @memberof Initialization
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
@@ -498,7 +501,7 @@ export class Initialization implements IApplicationInsights {
      * Starts the timer for tracking a page load time. Use this instead of `trackPageView` if you want to control when the page view timer starts and stops,
      * but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call `stopTrackPage` to log the end of the page view
      * and send the event.
-     * @param name A string that idenfities this item, unique within this HTML document. Defaults to the document title.
+     * @param name - A string that idenfities this item, unique within this HTML document. Defaults to the document title.
      */
     public startTrackPage(name?: string): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -530,8 +533,9 @@ export class Initialization implements IApplicationInsights {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void): ITelemetryInitializerHandler | void {
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void): ITelemetryInitializerHandler {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     // Properties Plugin
@@ -540,9 +544,9 @@ export class Initialization implements IApplicationInsights {
      * Set the authenticated user id and the account id. Used for identifying a specific signed-in user. Parameters must not contain whitespace or ,;=|
      *
      * The method will only set the `authenticatedUserId` and `accountId` in the current page view. To set them for the whole session, you should set `storeInCookie = true`
-     * @param {string} authenticatedUserId
-     * @param {string} [accountId]
-     * @param {boolean} [storeInCookie=false]
+     * @param authenticatedUserId
+     * @param [accountId]
+     * @param [storeInCookie=false]
      */
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -559,7 +563,7 @@ export class Initialization implements IApplicationInsights {
 
     /**
      * Log a dependency call (e.g. ajax)
-     * @param {IDependencyTelemetry} dependency
+     * @param dependency
      * @memberof Initialization
      */
     public trackDependencyData(dependency: IDependencyTelemetry): void {
@@ -570,7 +574,7 @@ export class Initialization implements IApplicationInsights {
 
     /**
      * Manually trigger an immediate send of all telemetry still in the buffer.
-     * @param {boolean} [async=true]
+     * @param [async=true]
      * @memberof Initialization
      */
     public flush(async: boolean = true) {
@@ -580,7 +584,7 @@ export class Initialization implements IApplicationInsights {
     /**
      * Manually trigger an immediate send of all telemetry still in the buffer using beacon Sender.
      * Fall back to xhr sender if beacon is not supported.
-     * @param {boolean} [async=true]
+     * @param [async=true]
      * @memberof Initialization
      */
     public onunloadFlush(async: boolean = true) {
@@ -601,7 +605,7 @@ export class Initialization implements IApplicationInsights {
     /**
      * Overwrite the lazy loaded fields of global window snippet to contain the
      * actual initialized API methods
-     * @param {Snippet} snippet
+     * @param snippet
      * @memberof Initialization
      */
     public updateSnippetDefinitions(snippet: Snippet) {
@@ -656,6 +660,15 @@ export class Initialization implements IApplicationInsights {
     }
 
     /**
+     * Update the configuration used and broadcast the changes to all loaded plugins
+     * @param newConfig - The new configuration is apply
+     * @param mergeExisting - Should the new configuration merge with the existing or just replace it. Default is to merge.
+     */
+    public updateCfg<T extends IConfiguration = IConfiguration>(newConfig: T, mergeExisting?: boolean): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
      * Returns the unique event namespace that should be used
      */
     public evtNamespace(): string {
@@ -701,10 +714,26 @@ export class Initialization implements IApplicationInsights {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
+
+    /**
+     * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
+     * handler will be recalled.
+     * @param handler
+     * @returns A watcher handler instance that can be used to remove itself when being unloaded
+     */
+    public onCfgChange(handler: WatcherFunction<IConfiguration>): IUnloadHook {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
 }
 
 // tslint:disable-next-line
-(function () {
+export function _findSdkSourceFile() {
+    if (_internalSdkSrc) {
+        // Use the cached value
+        return _internalSdkSrc;
+    }
+
     let sdkSrc = null;
     let isModule = false;
     let cdns: string[] = [
@@ -753,5 +782,10 @@ export class Initialization implements IApplicationInsights {
         } catch (e) {
             // eslint-disable-next-line no-empty
         }
+
+        // Cache the found value so we don't have to look it up again
+        _internalSdkSrc = sdkSrc;
     }
-})();
+
+    return _internalSdkSrc;
+}

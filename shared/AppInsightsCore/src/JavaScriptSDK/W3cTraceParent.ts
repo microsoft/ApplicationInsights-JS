@@ -2,9 +2,10 @@ import { isArray, isString, strTrim } from "@nevware21/ts-utils";
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
+import { STR_EMPTY } from "./InternalConstants";
 
 // using {0,16} for leading and trailing whitespace just to constrain the possible runtime of a random string
-const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]*)?$/;
+const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]{1,64})?$/i;
 const DEFAULT_VERSION = "00";
 const INVALID_VERSION = "ff";
 const INVALID_TRACE_ID = "00000000000000000000000000000000";
@@ -13,7 +14,7 @@ const SAMPLED_FLAG = 0x01;
 
 function _isValid(value: string, len: number, invalidValue?: string): boolean {
     if (value && value.length === len && value !== invalidValue) {
-        return !!value.match(/^[\da-f]*$/);
+        return !!value.match(/^[\da-f]*$/i);
     }
 
     return false;
@@ -90,9 +91,9 @@ export function parseTraceParent(value: string): ITraceParent {
     }
 
     return {
-        version: match[1],
-        traceId: match[2],
-        spanId: match[3],
+        version: (match[1] || STR_EMPTY).toLowerCase(),
+        traceId: (match[2] || STR_EMPTY).toLowerCase(),
+        spanId: (match[3] || STR_EMPTY).toLowerCase(),
         traceFlags: parseInt(match[4], 16)
     }
 }
@@ -175,7 +176,7 @@ export function formatTraceParent(value: ITraceParent) {
         }
 
         // Format as version 00
-        return `${version}-${_formatValue(value.traceId, 32, INVALID_TRACE_ID)}-${_formatValue(value.spanId, 16, INVALID_SPAN_ID)}-${flags}`;
+        return `${version.toLowerCase()}-${_formatValue(value.traceId, 32, INVALID_TRACE_ID).toLowerCase()}-${_formatValue(value.spanId, 16, INVALID_SPAN_ID).toLowerCase()}-${flags.toLowerCase()}`;
     }
 
     return "";

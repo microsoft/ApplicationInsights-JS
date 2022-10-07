@@ -50,7 +50,7 @@ const generateBackground = (isProduction) => {
         browserRollupConfig.output.file = `browser/scripts/background.min.js`;
         browserRollupConfig.plugins.push(
             uglify({
-                ie8: true,
+                ie8: false,
                 ie: true,
                 toplevel: true,
                 compress: {
@@ -109,7 +109,7 @@ const generatePopup = (isProduction) => {
         browserRollupConfig.output.file = `browser/scripts/popup.min.js`;
         browserRollupConfig.plugins.push(
             uglify({
-                ie8: true,
+                ie8: false,
                 ie: true,
                 toplevel: true,
                 compress: {
@@ -152,7 +152,7 @@ const generateContentLoad = () => {
                 values: replaceValues
             }),
             uglify({
-                ie8: true,
+                ie8: false,
                 ie: true,
                 toplevel: true,
                 compress: {
@@ -197,7 +197,7 @@ const generatePageHelper = () => {
                 values: replaceValues
             }),
             uglify({
-                ie8: true,
+                ie8: false,
                 ie: true,
                 toplevel: true,
                 compress: {

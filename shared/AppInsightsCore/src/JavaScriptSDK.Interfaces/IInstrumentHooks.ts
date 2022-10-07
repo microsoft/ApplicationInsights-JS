@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IUnloadHook } from "./IUnloadHook";
+
 /**
  * A callback function that will be called for the wrapped instrumentation function
  * before the original function is executed.
@@ -43,7 +45,7 @@ export interface IInstrumentHooksCallbacks {
 /**
  * The holder of the specific instance callback
  */
-export interface IInstrumentHook {
+export interface IInstrumentHook extends IUnloadHook {
     /** Unique Id for this callback on the hooked method */
     id: number;
 

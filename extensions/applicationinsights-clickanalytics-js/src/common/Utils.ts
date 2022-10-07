@@ -3,9 +3,8 @@
 * File containing utility functions.
 */
 
-import {
-    _InternalMessageId, _eInternalMessageId, arrForEach, createEnumStyle, hasDocument, hasOwnProperty, isNullOrUndefined, objExtend
-} from "@microsoft/applicationinsights-core-js";
+import { _eInternalMessageId, arrForEach, hasDocument, isNullOrUndefined, objExtend } from "@microsoft/applicationinsights-core-js";
+import { objHasOwn } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration } from "../Interfaces/Datamodel";
 
 const DEFAULT_DONOT_TRACK_TAG = "ai-dnt";
@@ -16,15 +15,6 @@ export const enum _eExtendedInternalMessageId {
     CannotParseAiBlobValue = 101,
     InvalidContentBlob = 102,
     TrackPageActionEventFailed = 103
-}
-
-export const _ExtendedInternalMessageId = {
-    ..._InternalMessageId,
-    ...createEnumStyle<typeof _eExtendedInternalMessageId>({
-        CannotParseAiBlobValue: _eExtendedInternalMessageId.CannotParseAiBlobValue,
-        InvalidContentBlob: _eExtendedInternalMessageId.InvalidContentBlob,
-        TrackPageActionEventFailed: _eExtendedInternalMessageId.TrackPageActionEventFailed
-    })
 }
 
 export type _ExtendedInternalMessageId = number | _eExtendedInternalMessageId | _eInternalMessageId;
@@ -39,7 +29,7 @@ export type _ExtendedInternalMessageId = number | _eExtendedInternalMessageId | 
 export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyticsConfiguration, attributeNamesExpectedObjects: Array<string>): void {
     removeInvalidElements(overrideConfig);
     for (var i in attributeNamesExpectedObjects) {
-        if (hasOwnProperty(attributeNamesExpectedObjects, i)) {
+        if (objHasOwn(attributeNamesExpectedObjects, i)) {
             var objectName = attributeNamesExpectedObjects[i];
             if (typeof overrideConfig[objectName] === "object") {
                 removeInvalidElements(overrideConfig[objectName]);
@@ -53,7 +43,7 @@ export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyti
 /**
  * Finds attributes in object which are invalid
  * and deletes them. useful in override config
- * @param object Input object
+ * @param object - Input object
  */
 export function removeInvalidElements(object: Object): void {
     /// Because the config object 'callback' contains only functions,

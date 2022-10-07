@@ -248,7 +248,7 @@ export class DomContentHandler implements IContentHandler {
             /**
              * Gets the default content name.
              * @param element - An html element
-             * @param useDefaultContentNameOrId -Flag indicating if an element is market PII.
+             * @param useDefaultContentNameOrId - Flag indicating if an element is market PII.
              * @returns Content name
              */
             function _getDefaultContentName(element: any, useDefaultContentName: boolean) {

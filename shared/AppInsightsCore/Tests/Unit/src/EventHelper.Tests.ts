@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { addEventHandler, addEventListeners, createUniqueNamespace, removeEventHandler } from "../../../src/applicationinsights-core-js";
-import { _InternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { _eInternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 import { mergeEvtNamespace, __getRegisteredEvents } from "../../../src/JavaScriptSDK/EventHelpers";
 

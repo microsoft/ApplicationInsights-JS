@@ -2,12 +2,17 @@
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { arrForEach, arrIndexOf } from "@nevware21/ts-utils";
+import { createDynamicConfig } from "../Config/DynamicConfig";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT } from "./InternalConstants";
+
+const defaultValues = {
+    perfEvtsSendAll: false
+};
 
 function _runListeners(listeners: INotificationListener[], name: string, isAsync: boolean, callback: (listener: INotificationListener) => void) {
     arrForEach(listeners, (listener) => {
@@ -32,7 +37,13 @@ export class NotificationManager implements INotificationManager {
     listeners: INotificationListener[] = [];
 
     constructor(config?: IConfiguration) {
-        let perfEvtsSendAll = !!(config ||{}).perfEvtsSendAll;
+        let perfEvtsSendAll: boolean;
+        
+        let cfgHandler = createDynamicConfig(config, defaultValues);
+
+        cfgHandler.watch((details) => {
+            perfEvtsSendAll = !!details.cfg.perfEvtsSendAll;
+        });
 
         dynamicProto(NotificationManager, this, (_self) => {
             _self.addNotificationListener = (listener: INotificationListener): void => {
@@ -41,7 +52,7 @@ export class NotificationManager implements INotificationManager {
 
             /**
              * Removes all instances of the listener.
-             * @param {INotificationListener} listener - AWTNotificationListener to remove.
+             * @param listener - AWTNotificationListener to remove.
              */
             _self.removeNotificationListener = (listener: INotificationListener): void => {
                 let index: number = arrIndexOf(_self.listeners, listener);
@@ -53,7 +64,7 @@ export class NotificationManager implements INotificationManager {
 
             /**
              * Notification for events sent.
-             * @param {ITelemetryItem[]} events - The array of events that have been sent.
+             * @param events - The array of events that have been sent.
              */
             _self.eventsSent = (events: ITelemetryItem[]): void => {
                 _runListeners(_self.listeners, STR_EVENTS_SENT, true, (listener) => {
@@ -63,8 +74,8 @@ export class NotificationManager implements INotificationManager {
 
             /**
              * Notification for events being discarded.
-             * @param {ITelemetryItem[]} events - The array of events that have been discarded by the SDK.
-             * @param {number} reason           - The reason for which the SDK discarded the events. The EventsDiscardedReason
+             * @param events - The array of events that have been discarded by the SDK.
+             * @param reason - The reason for which the SDK discarded the events. The EventsDiscardedReason
              * constant should be used to check the different values.
              */
             _self.eventsDiscarded = (events: ITelemetryItem[], reason: number): void => {
@@ -75,8 +86,8 @@ export class NotificationManager implements INotificationManager {
 
             /**
              * [Optional] A function called when the events have been requested to be sent to the sever.
-             * @param {number} sendReason - The reason why the event batch is being sent.
-             * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
+             * @param sendReason - The reason why the event batch is being sent.
+             * @param isAsync - A flag which identifies whether the requests are being sent in an async or sync manner.
              */
             _self.eventsSendRequest = (sendReason: number, isAsync: boolean): void => {
                 _runListeners(_self.listeners, STR_EVENTS_SEND_REQUEST, isAsync, (listener) => {
@@ -104,7 +115,7 @@ export class NotificationManager implements INotificationManager {
     
     /**
      * Adds a notification listener.
-     * @param {INotificationListener} listener - The notification listener to be added.
+     * @param listener - The notification listener to be added.
      */
     addNotificationListener(listener: INotificationListener): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -112,7 +123,7 @@ export class NotificationManager implements INotificationManager {
 
     /**
      * Removes all instances of the listener.
-     * @param {INotificationListener} listener - AWTNotificationListener to remove.
+     * @param listener - AWTNotificationListener to remove.
      */
     removeNotificationListener(listener: INotificationListener): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -120,7 +131,7 @@ export class NotificationManager implements INotificationManager {
 
     /**
      * Notification for events sent.
-     * @param {ITelemetryItem[]} events - The array of events that have been sent.
+     * @param events - The array of events that have been sent.
      */
     eventsSent(events: ITelemetryItem[]): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -128,8 +139,8 @@ export class NotificationManager implements INotificationManager {
 
     /**
      * Notification for events being discarded.
-     * @param {ITelemetryItem[]} events - The array of events that have been discarded by the SDK.
-     * @param {number} reason           - The reason for which the SDK discarded the events. The EventsDiscardedReason
+     * @param events - The array of events that have been discarded by the SDK.
+     * @param reason - The reason for which the SDK discarded the events. The EventsDiscardedReason
      * constant should be used to check the different values.
      */
     eventsDiscarded(events: ITelemetryItem[], reason: number): void {
@@ -138,8 +149,8 @@ export class NotificationManager implements INotificationManager {
 
     /**
      * [Optional] A function called when the events have been requested to be sent to the sever.
-     * @param {number} sendReason - The reason why the event batch is being sent.
-     * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
+     * @param sendReason - The reason why the event batch is being sent.
+     * @param isAsync - A flag which identifies whether the requests are being sent in an async or sync manner.
      */
     eventsSendRequest?(sendReason: number, isAsync: boolean): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

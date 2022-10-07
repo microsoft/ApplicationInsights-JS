@@ -2,15 +2,17 @@
 // Licensed under the MIT License.
 "use strict";
 
-import {
-    arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isObject, isUndefined, objForEachKey, objFreeze, objKeys
-} from "@nevware21/ts-utils";
+import { arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objFreeze, objKeys } from "@nevware21/ts-utils";
+import { _applyDefaultValue, applyDefaults } from "../Config/ConfigDefaults";
+import { createDynamicConfig } from "../Config/DynamicConfig";
+import { IConfigDefaults } from "../Config/IConfigDefaults";
+import { IDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import {
-    GetExtCfgMergeType, IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
+    IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
 } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
@@ -18,7 +20,7 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
-import { objExtend, proxyFunctions } from "./HelperFuncs";
+import { objForEachKey, proxyFunctions } from "./HelperFuncs";
 import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
 import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";
@@ -47,7 +49,7 @@ interface IInternalContext<T extends IBaseProcessingContext> {
     ctx: T
 }
 
-function _getNextProxyStart<T, C = IConfiguration>(proxy: ITelemetryPluginChain, core: IAppInsightsCore, startAt: IPlugin): ITelemetryPluginChain {
+function _getNextProxyStart(proxy: ITelemetryPluginChain, core: IAppInsightsCore, startAt: IPlugin): ITelemetryPluginChain {
     while (proxy) {
         if (proxy.getPlugin() === startAt) {
             return proxy;
@@ -63,16 +65,20 @@ function _getNextProxyStart<T, C = IConfiguration>(proxy: ITelemetryPluginChain,
 /**
  * @ignore
  * @param telemetryChain
- * @param config
+ * @param dynamicConfig
  * @param core
  * @param startAt - Identifies the next plugin to execute, if null there is no "next" plugin and if undefined it should assume the start of the chain
  * @returns
  */
-function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain: ITelemetryPluginChain, config: IConfiguration, core: IAppInsightsCore, startAt?: IPlugin): IInternalContext<T> {
+function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain: ITelemetryPluginChain, dynamicConfig: IDynamicConfigHandler<IConfiguration>, core: IAppInsightsCore, startAt?: IPlugin): IInternalContext<T> {
     // We have a special case where we want to start execution from this specific plugin
     // or we simply reuse the existing telemetry plugin chain (normal execution case)
     let _nextProxy: ITelemetryPluginChain | null = null;  // By Default set as no next plugin
     let _onComplete: OnCompleteCallback[] = [];
+
+    if (!dynamicConfig) {
+        dynamicConfig = createDynamicConfig({}, null, core.logger);
+    }
 
     if (startAt !== null) {
         // There is no next element (null) vs not defined (undefined) so use the full chain
@@ -86,12 +92,12 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
                 return core
             },
             diagLog: () => {
-                return safeGetLogger(core, config);
+                return safeGetLogger(core, dynamicConfig.cfg);
             },
             getCfg: () => {
-                return config;
+                return dynamicConfig.cfg;
             },
-            getExtCfg: _getExtCfg,
+            getExtCfg: _resolveExtCfg,
             getConfig: _getConfig,
             hasNext: () => {
                 return !!_nextProxy;
@@ -145,54 +151,61 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
         return nextProxy;
     }
 
-    function _getExtCfg<T>(identifier: string, defaultValue: T|any = {}, mergeDefault: GetExtCfgMergeType = GetExtCfgMergeType.None) {
-        let theConfig: T;
-        if (config) {
-            let extConfig = config.extensionConfig;
-            if (extConfig && identifier) {
-                theConfig = extConfig[identifier];
+    function _getExtCfg<T>(identifier: string, createIfMissing: boolean) {
+        let idCfg: T = null;
+        if (dynamicConfig.cfg && identifier) {
+            let extCfg = dynamicConfig.cfg.extensionConfig;
+            if (!extCfg && createIfMissing) {
+                dynamicConfig.set(dynamicConfig.cfg, "extensionConfig", {});
+                extCfg = dynamicConfig.cfg.extensionConfig;
+            }
+            
+            if (extCfg) {
+                idCfg = extCfg[identifier];
+                if (!idCfg && createIfMissing) {
+                    dynamicConfig.set(extCfg, identifier, {});
+                    idCfg = extCfg[identifier];
+                }
             }
         }
 
-        if (!theConfig) {
-            // Just use the defaults
-            theConfig = defaultValue as T;
-        } else if (isObject(defaultValue)) {
-            if (mergeDefault !== GetExtCfgMergeType.None) {
-                // Merge the defaults and configured values
-                let newConfig = objExtend(true, defaultValue, theConfig);
+        return idCfg;
+    }
 
-                if (config && mergeDefault === GetExtCfgMergeType.MergeDefaultFromRootOrDefault) {
-                    // Enumerate over the defaultValues and if not already populated attempt to
-                    // find a value from the root config
-                    objForEachKey(defaultValue, (field) => {
-                        // for each unspecified field, set the default value
-                        if (isNullOrUndefined(newConfig[field])) {
-                            let cfgValue = config[field];
-                            if (!isNullOrUndefined(cfgValue)) {
-                                newConfig[field] = cfgValue;
-                            }
-                        }
-                    });
+    function _resolveExtCfg<T>(identifier: string, defaultValues: IConfigDefaults<T>): T {
+        let newConfig: T = _getExtCfg(identifier, true);
+
+        if (defaultValues) {
+            // Enumerate over the defaultValues and if not already populated attempt to
+            // find a value from the root config or use the default value
+            objForEachKey(defaultValues, (field, defaultValue) => {
+                // for each unspecified field, set the default value
+                if (isNullOrUndefined(newConfig[field])) {
+                    let cfgValue = dynamicConfig.cfg[field];
+                    if (cfgValue || !isNullOrUndefined(cfgValue)) {
+                        newConfig[field] = cfgValue;
+                    }
                 }
 
-                theConfig = newConfig;
-            }
+                _applyDefaultValue(newConfig, field, defaultValue);
+            });
         }
 
-        return theConfig;
+        return applyDefaults(newConfig, defaultValues);
     }
 
     function _getConfig(identifier:string, field: string, defaultValue: number | string | boolean | string[] | RegExp[] | Function = false) {
         let theValue;
-        let extConfig = _getExtCfg(identifier, null);
-        if (extConfig && !isNullOrUndefined(extConfig[field])) {
+        let extConfig: T = _getExtCfg(identifier, false);
+        let rootConfig = dynamicConfig.cfg;
+
+        if (extConfig && (extConfig[field] || !isNullOrUndefined(extConfig[field]))) {
             theValue = extConfig[field];
-        } else if (config && !isNullOrUndefined(config[field])) {
-            theValue = config[field];
+        } else if (rootConfig[field] || !isNullOrUndefined(rootConfig[field])) {
+            theValue = rootConfig[field];
         }
 
-        return !isNullOrUndefined(theValue) ? theValue : defaultValue;
+        return (theValue || !isNullOrUndefined(theValue)) ? theValue : defaultValue;
     }
 
     function _iterateChain<T extends ITelemetryPlugin = ITelemetryPlugin>(cb: (plugin: T) => void) {
@@ -217,24 +230,28 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
  * @param core - The current core instance
  * @param startAt - Identifies the next plugin to execute, if null there is no "next" plugin and if undefined it should assume the start of the chain
  */
-export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginChain | null, config: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryContext {
+export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginChain | null, cfg: IConfiguration, core:IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryContext {
+    let config = createDynamicConfig(cfg);
     let internalContext: IInternalContext<IProcessTelemetryContext> = _createInternalContext<IProcessTelemetryContext>(telemetryChain, config, core, startAt);
     let context = internalContext.ctx;
 
     function _processNext(env: ITelemetryItem) {
         let nextPlugin: ITelemetryPluginChain = internalContext._next();
-        // Run the next plugin which will call "processNext()"
-        nextPlugin && nextPlugin.processTelemetry(env, context);
+
+        if (nextPlugin) {
+            // Run the next plugin which will call "processNext()"
+            nextPlugin.processTelemetry(env, context);
+        }
 
         return !nextPlugin;
     }
 
     function _createNew(plugins: IPlugin[] | ITelemetryPluginChain | null = null, startAt?: IPlugin) {
         if (isArray(plugins)) {
-            plugins = createTelemetryProxyChain(plugins, config, core, startAt);
+            plugins = createTelemetryProxyChain(plugins, config.cfg, core, startAt);
         }
 
-        return createProcessTelemetryContext(plugins || context.getNext(), config, core, startAt);
+        return createProcessTelemetryContext(plugins || context.getNext(), config.cfg, core, startAt);
     }
 
     context.processNext = _processNext;
@@ -251,7 +268,7 @@ export function createProcessTelemetryContext(telemetryChain: ITelemetryPluginCh
  * @param startAt - Identifies the next plugin to execute, if null there is no "next" plugin and if undefined it should assume the start of the chain
  */
 export function createProcessTelemetryUnloadContext(telemetryChain: ITelemetryPluginChain, core: IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryUnloadContext {
-    let config = core.config || {};
+    let config = createDynamicConfig(core.config);
     let internalContext: IInternalContext<IProcessTelemetryUnloadContext> = _createInternalContext<IProcessTelemetryUnloadContext>(telemetryChain, config, core, startAt);
     let context = internalContext.ctx;
 
@@ -264,7 +281,7 @@ export function createProcessTelemetryUnloadContext(telemetryChain: ITelemetryPl
 
     function _createNew(plugins: IPlugin[] | ITelemetryPluginChain = null, startAt?: IPlugin): IProcessTelemetryUnloadContext {
         if (isArray(plugins)) {
-            plugins = createTelemetryProxyChain(plugins, config, core, startAt);
+            plugins = createTelemetryProxyChain(plugins, config.cfg, core, startAt);
         }
 
         return createProcessTelemetryUnloadContext(plugins || context.getNext(), core, startAt);
@@ -284,7 +301,7 @@ export function createProcessTelemetryUnloadContext(telemetryChain: ITelemetryPl
  * @param startAt - Identifies the next plugin to execute, if null there is no "next" plugin and if undefined it should assume the start of the chain
  */
 export function createProcessTelemetryUpdateContext(telemetryChain: ITelemetryPluginChain, core: IAppInsightsCore, startAt?: IPlugin): IProcessTelemetryUpdateContext {
-    let config = core.config || {};
+    let config = createDynamicConfig(core.config);
     let internalContext: IInternalContext<IProcessTelemetryUpdateContext> = _createInternalContext<IProcessTelemetryUpdateContext>(telemetryChain, config, core, startAt);
     let context = internalContext.ctx;
 
@@ -298,7 +315,7 @@ export function createProcessTelemetryUpdateContext(telemetryChain: ITelemetryPl
 
     function _createNew(plugins: IPlugin[] | ITelemetryPluginChain = null, startAt?: IPlugin) {
         if (isArray(plugins)) {
-            plugins = createTelemetryProxyChain(plugins, config, core, startAt);
+            plugins = createTelemetryProxyChain(plugins, config.cfg, core, startAt);
         }
 
         return createProcessTelemetryUpdateContext(plugins || context.getNext(), core, startAt);
@@ -568,8 +585,8 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
      */
     public getCfg: () => IConfiguration;
 
-    public getExtCfg: <T>(identifier:string, defaultValue?:T|any) => T;
-                        
+    public getExtCfg: <T>(identifier:string, defaultValue?: IConfigDefaults<T>) => T;
+
     public getConfig: (identifier:string, field: string, defaultValue?: number | string | boolean | string[] | RegExp[] | Function) => number | string | boolean | string[] | RegExp[] | Function;
 
     /**

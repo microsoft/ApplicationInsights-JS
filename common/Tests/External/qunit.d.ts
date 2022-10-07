@@ -171,9 +171,9 @@ interface QUnitAssert {
 	* objects, such that { key: value } is equal to { key: value }. For non-scalar values, 
 	* identity will be disregarded by deepEqual.
 	*
-	* @param actual Object or Expression being tested
-	* @param expected Known comparison value
-	* @param message A short description of the assertion
+	* @param actual - Object or Expression being tested
+	* @param expected - Known comparison value
+	* @param message - A short description of the assertion
 	*/
 	deepEqual(actual: any, expected: any, message?: string): any;
 
@@ -185,9 +185,9 @@ interface QUnitAssert {
 	* When it fails, both actual and expected values are displayed in the test result, 
 	* in addition to a given message.
 	* 
-	* @param actual Expression being tested
-	* @param expected Known comparison value
-	* @param message A short description of the assertion
+	* @param actual - Expression being tested
+	* @param expected - Known comparison value
+	* @param message - A short description of the assertion
 	*/
 	equal(actual: any, expected: any, message?: string): any;
 
@@ -199,9 +199,9 @@ interface QUnitAssert {
 	* value of objects, such that { key: value } is equal to { key: value }. For non-scalar 
 	* values, identity will be disregarded by notDeepEqual.
 	* 
-	* @param actual Object or Expression being tested
-	* @param expected Known comparison value
-	* @param message A short description of the assertion
+	* @param actual - Object or Expression being tested
+	* @param expected - Known comparison value
+	* @param message - A short description of the assertion
 	*/
 	notDeepEqual(actual: any, expected: any, message?: string): any;
 
@@ -213,9 +213,9 @@ interface QUnitAssert {
 	* otherwise, it fails. When it fails, both actual and expected values are displayed 
 	* in the test result, in addition to a given message.
 	* 
-	* @param actual Expression being tested
-	* @param expected Known comparison value
-	* @param message A short description of the assertion
+	* @param actual - Expression being tested
+	* @param expected - Known comparison value
+	* @param message - A short description of the assertion
 	*/
 	notEqual(actual: any, expected: any, message?: string): any;
 
@@ -231,9 +231,9 @@ interface QUnitAssert {
 	* passes: any; otherwise, it fails. When it fails, both actual and expected values are 
 	* displayed in the test result, in addition to a given message.
 	* 
-	* @param actual Expression being tested
-	* @param expected Known comparison value
-	* @param message A short description of the assertion
+	* @param actual - Expression being tested
+	* @param expected - Known comparison value
+	* @param message - A short description of the assertion
 	*/
 	notStrictEqual(actual: any, expected: any, message?: string): any;
 
@@ -245,8 +245,8 @@ interface QUnitAssert {
 	* evaluates to true, the assertion passes; otherwise, it fails. If a second message 
 	* argument is provided, it will be displayed in place of the result.
 	* 
-	* @param state Expression being tested
-	* @param message A short description of the assertion
+	* @param state - Expression being tested
+	* @param message - A short description of the assertion
 	*/
 	ok(state: any, message?: string): any;
 
@@ -256,9 +256,9 @@ interface QUnitAssert {
 	* The strictEqual() assertion provides the most rigid comparison of type and value with 
 	* the strict equality operator (===)
 	* 
-	* @param actual Expression being tested
-	* @param expected Known comparison value
-	* @param message A short description of the assertion
+	* @param actual - Expression being tested
+	* @param expected - Known comparison value
+	* @param message - A short description of the assertion
 	*/
 	strictEqual(actual: any, expected: any, message?: string): any;
 
@@ -268,15 +268,15 @@ interface QUnitAssert {
 	* When testing code that is expected to throw an exception based on a specific set of 
 	* circumstances, use throws() to catch the error object for testing and comparison.
 	* 
-	* @param block Function to execute
-	* @param expected Error Object to compare
-	* @param message A short description of the assertion
+	* @param block - Function to execute
+	* @param expected - Error Object to compare
+	* @param message - A short description of the assertion
 	*/
 	throws(block: () => any, expected: any, message?: string): any;
 
 	/**
-	* @param block Function to execute
-	* @param message A short description of the assertion
+	* @param block - Function to execute
+	* @param message - A short description of the assertion
 	*/
 	throws(block: () => any, message?: string): any;
 }
@@ -289,7 +289,7 @@ interface QUnitStatic extends QUnitAssert{
 	*
 	* When your async test has multiple exit points, call start() for the corresponding number of stop() increments.
 	* 
-	* @param decrement Optional argument to merge multiple start() calls into one. Use with multiple corrsponding stop() calls.
+	* @param decrement - Optional argument to merge multiple start() calls into one. Use with multiple corrsponding stop() calls.
 	*/
 	start(decrement?: number): any;
 
@@ -300,7 +300,7 @@ interface QUnitStatic extends QUnitAssert{
 	*
 	* On Blackberry 5.0, window.stop is a native read-only function. If you deal with that browser, use QUnit.stop() instead, which will work anywhere.
 	*
-	* @param decrement Optional argument to merge multiple stop() calls into one. Use with multiple corrsponding start() calls.
+	* @param decrement - Optional argument to merge multiple stop() calls into one. Use with multiple corrsponding start() calls.
 	*/
 	stop(increment? : number): any;
 	
@@ -312,14 +312,14 @@ interface QUnitStatic extends QUnitAssert{
 	* QUnit.begin() is called once before running any tests. (a better would've been QUnit.start, 
 	* but thats already in use elsewhere and can't be changed.)
 	*
-	* @param callback Callback to execute
+	* @param callback - Callback to execute
 	*/
 	begin(callback: () => any): any;
 
 	/**
 	* Register a callback to fire whenever the test suite ends.
 	*
-	* @param callback Callback to execute.
+	* @param callback - Callback to execute.
 	*/
 	done(callback: (details: DoneCallbackObject) => any): any;
 
@@ -329,35 +329,35 @@ interface QUnitStatic extends QUnitAssert{
 	* This is one of several callbacks QUnit provides. Its intended for integration scenarios like 
 	* PhantomJS or Jenkins. The properties of the details argument are listed below as options.
 	*
-	* @param callback Callback to execute.
+	* @param callback - Callback to execute.
 	*/
 	log(callback: (details: LogCallbackObject) => any): any;
 
 	/**
 	* Register a callback to fire whenever a module ends.
 	*
-	* @param callback Callback to execute.
+	* @param callback - Callback to execute.
 	*/
 	moduleDone(callback: (details: ModuleDoneCallbackObject) => any): any;
 
 	/**
 	* Register a callback to fire whenever a module begins.
 	*
-	* @param callback Callback to execute.
+	* @param callback - Callback to execute.
 	*/
 	moduleStart(callback: (details: ModuleStartCallbackObject) => any): any;
 
 	/**
 	* Register a callback to fire whenever a test ends.
 	*
-	* @param callback Callback to execute.
+	* @param callback - Callback to execute.
 	*/
 	testDone(callback: (details: TestDoneCallbackObject) => any): any;
 
 	/**
 	* Register a callback to fire whenever a test begins.
 	*
-	* @param callback Callback to execute.
+	* @param callback - Callback to execute.
 	*/
 	testStart(callback: (details: TestStartCallbackObject) => any): any;
 	
@@ -377,9 +377,9 @@ interface QUnitStatic extends QUnitAssert{
 	* For testing asynchronous code, asyncTest will automatically stop the test runner 
 	* and wait for your code to call start() to continue.
 	*
-	* @param name Title of unit being tested
-	* @param expected Number of assertions in this test
-	* @param test Function to close over assertions
+	* @param name - Title of unit being tested
+	* @param expected - Number of assertions in this test
+	* @param test - Function to close over assertions
 	*/
 	asyncTest(name: string, expected: number, test: () => any): any;
 
@@ -389,8 +389,8 @@ interface QUnitStatic extends QUnitAssert{
 	* For testing asynchronous code, asyncTest will automatically stop the test runner 
 	* and wait for your code to call start() to continue.
 	*
-	* @param name Title of unit being tested
-	* @param test Function to close over assertions
+	* @param name - Title of unit being tested
+	* @param test - Function to close over assertions
 	*/
 	asyncTest(name: string, test: () => any): any;
 
@@ -401,7 +401,7 @@ interface QUnitStatic extends QUnitAssert{
 	* expect( number ) to register an expected count. If the number of assertions 
 	* run does not match the expected count, the test will fail.
 	*
-	* @param amount Number of assertions in this test.
+	* @param amount - Number of assertions in this test.
 	*/
 	expect(amount: number): any;
 
@@ -412,8 +412,8 @@ interface QUnitStatic extends QUnitAssert{
 	* The test names will all be preceded by the module name in the test results. 
 	* You can then use that module name to select tests to run.
 	*
-	* @param name Label for this group of tests
-	* @param lifecycle Callbacks to run before and after each test
+	* @param name - Label for this group of tests
+	* @param lifecycle - Callbacks to run before and after each test
 	*/
 	module(name: string, lifecycle?: LifecycleObject): any;
 
@@ -425,15 +425,15 @@ interface QUnitStatic extends QUnitAssert{
 	* If you are avoiding using any of QUnit's globals, you can use the assert 
 	* argument instead.
 	* 
-	* @param title Title of unit being tested
-	* @param expected Number of assertions in this test
-	* @param test Function to close over assertions
+	* @param title - Title of unit being tested
+	* @param expected - Number of assertions in this test
+	* @param test - Function to close over assertions
 	*/
 	test(title: string, expected: number, test: (assert: QUnitAssert) => any): any;
 
 	/**
-	* @param title Title of unit being tested
-	* @param test Function to close over assertions
+	* @param title - Title of unit being tested
+	* @param test - Function to close over assertions
 	*/
 	test(title: string, test: (assert: QUnitAssert) => any): any;
 
@@ -466,9 +466,9 @@ interface QUnitStatic extends QUnitAssert{
 * objects, such that { key: value } is equal to { key: value }. For non-scalar values, 
 * identity will be disregarded by deepEqual.
 *
-* @param actual Object or Expression being tested
-* @param expected Known comparison value
-* @param message A short description of the assertion
+* @param actual - Object or Expression being tested
+* @param expected - Known comparison value
+* @param message - A short description of the assertion
 */
 declare function deepEqual(actual: any, expected: any, message?: string): any;
 
@@ -480,9 +480,9 @@ declare function deepEqual(actual: any, expected: any, message?: string): any;
 * When it fails, both actual and expected values are displayed in the test result, 
 * in addition to a given message.
 * 
-* @param actual Expression being tested
-* @param expected Known comparison value
-* @param message A short description of the assertion
+* @param actual - Expression being tested
+* @param expected - Known comparison value
+* @param message - A short description of the assertion
 */
 declare function equal(actual: any, expected: any, message?: string): any;
 
@@ -494,9 +494,9 @@ declare function equal(actual: any, expected: any, message?: string): any;
 * value of objects, such that { key: value } is equal to { key: value }. For non-scalar 
 * values, identity will be disregarded by notDeepEqual.
 * 
-* @param actual Object or Expression being tested
-* @param expected Known comparison value
-* @param message A short description of the assertion
+* @param actual - Object or Expression being tested
+* @param expected - Known comparison value
+* @param message - A short description of the assertion
 */
 declare function notDeepEqual(actual: any, expected: any, message?: string): any;
 
@@ -508,9 +508,9 @@ declare function notDeepEqual(actual: any, expected: any, message?: string): any
 * otherwise, it fails. When it fails, both actual and expected values are displayed 
 * in the test result, in addition to a given message.
 * 
-* @param actual Expression being tested
-* @param expected Known comparison value
-* @param message A short description of the assertion
+* @param actual - Expression being tested
+* @param expected - Known comparison value
+* @param message - A short description of the assertion
 */
 declare function notEqual(actual: any, expected: any, message?: string): any;
 
@@ -522,9 +522,9 @@ declare function notEqual(actual: any, expected: any, message?: string): any;
 * passes; otherwise, it fails. When it fails, both actual and expected values are 
 * displayed in the test result, in addition to a given message.
 * 
-* @param actual Expression being tested
-* @param expected Known comparison value
-* @param message A short description of the assertion
+* @param actual - Expression being tested
+* @param expected - Known comparison value
+* @param message - A short description of the assertion
 */
 declare function notStrictEqual(actual: any, expected: any, message?: string): any;
 
@@ -536,8 +536,8 @@ declare function notStrictEqual(actual: any, expected: any, message?: string): a
 * evaluates to true, the assertion passes; otherwise, it fails. If a second message 
 * argument is provided, it will be displayed in place of the result.
 * 
-* @param state Expression being tested
-* @param message A short description of the assertion
+* @param state - Expression being tested
+* @param message - A short description of the assertion
 */
 declare function ok(state: any, message?: string): any;
 
@@ -547,9 +547,9 @@ declare function ok(state: any, message?: string): any;
 * The strictEqual() assertion provides the most rigid comparison of type and value with 
 * the strict equality operator (===)
 * 
-* @param actual Expression being tested
-* @param expected Known comparison value
-* @param message A short description of the assertion
+* @param actual - Expression being tested
+* @param expected - Known comparison value
+* @param message - A short description of the assertion
 */
 declare function strictEqual(actual: any, expected: any, message?: string): any;
 
@@ -559,15 +559,15 @@ declare function strictEqual(actual: any, expected: any, message?: string): any;
 * When testing code that is expected to throw an exception based on a specific set of 
 * circumstances, use throws() to catch the error object for testing and comparison.
 * 
-* @param block Function to execute
-* @param expected Error Object to compare
-* @param message A short description of the assertion
+* @param block - Function to execute
+* @param expected - Error Object to compare
+* @param message - A short description of the assertion
 */
 declare function throws(block: () => any, expected: any, message?: string): any;
 
 /**
-* @param block Function to execute
-* @param message A short description of the assertion
+* @param block - Function to execute
+* @param message - A short description of the assertion
 */
 declare function throws(block: () => any, message?: string): any;
 
@@ -578,7 +578,7 @@ declare function throws(block: () => any, message?: string): any;
 *
 * When your async test has multiple exit points, call start() for the corresponding number of stop() increments.
 * 
-* @param decrement Optional argument to merge multiple start() calls into one. Use with multiple corrsponding stop() calls.
+* @param decrement - Optional argument to merge multiple start() calls into one. Use with multiple corrsponding stop() calls.
 */
 declare function start(decrement?: number): any;
 
@@ -589,7 +589,7 @@ declare function start(decrement?: number): any;
 *
 * On Blackberry 5.0, window.stop is a native read-only function. If you deal with that browser, use QUnit.stop() instead, which will work anywhere.
 *
-* @param decrement Optional argument to merge multiple stop() calls into one. Use with multiple corrsponding start() calls.
+* @param decrement - Optional argument to merge multiple stop() calls into one. Use with multiple corrsponding start() calls.
 */
 declare function stop(increment? : number): any;
 	
@@ -601,14 +601,14 @@ declare function stop(increment? : number): any;
 * QUnit.begin() is called once before running any tests. (a better would've been QUnit.start, 
 * but thats already in use elsewhere and can't be changed.)
 *
-* @param callback Callback to execute
+* @param callback - Callback to execute
 */
 declare function begin(callback: () => any): any;
 
 /**
 * Register a callback to fire whenever the test suite ends.
 *
-* @param callback Callback to execute.
+* @param callback - Callback to execute.
 */
 declare function done(callback: (details: DoneCallbackObject) => any): any;
 
@@ -618,35 +618,35 @@ declare function done(callback: (details: DoneCallbackObject) => any): any;
 * This is one of several callbacks QUnit provides. Its intended for integration scenarios like 
 * PhantomJS or Jenkins. The properties of the details argument are listed below as options.
 *
-* @param callback Callback to execute.
+* @param callback - Callback to execute.
 */
 declare function log(callback: (details: LogCallbackObject) => any): any;
 
 /**
 * Register a callback to fire whenever a module ends.
 *
-* @param callback Callback to execute.
+* @param callback - Callback to execute.
 */
 declare function moduleDone(callback: (details: ModuleDoneCallbackObject) => any): any;
 
 /**
 * Register a callback to fire whenever a module begins.
 *
-* @param callback Callback to execute.
+* @param callback - Callback to execute.
 */
 declare function moduleStart(callback: (name: string) => any): any;
 
 /**
 * Register a callback to fire whenever a test ends.
 *
-* @param callback Callback to execute.
+* @param callback - Callback to execute.
 */
 declare function testDone(callback: (details: TestDoneCallbackObject) => any): any;
 
 /**
 * Register a callback to fire whenever a test begins.
 *
-* @param callback Callback to execute.
+* @param callback - Callback to execute.
 */
 declare function testStart(callback: (details: TestStartCallbackObject) => any): any;
 	
@@ -658,9 +658,9 @@ declare function testStart(callback: (details: TestStartCallbackObject) => any):
 * For testing asynchronous code, asyncTest will automatically stop the test runner 
 * and wait for your code to call start() to continue.
 *
-* @param name Title of unit being tested
-* @param expected Number of assertions in this test
-* @param test Function to close over assertions
+* @param name - Title of unit being tested
+* @param expected - Number of assertions in this test
+* @param test - Function to close over assertions
 */
 declare function asyncTest(name: string, expected?: any, test?: () => any): any;
 
@@ -670,8 +670,8 @@ declare function asyncTest(name: string, expected?: any, test?: () => any): any;
 * For testing asynchronous code, asyncTest will automatically stop the test runner 
 * and wait for your code to call start() to continue.
 *
-* @param name Title of unit being tested
-* @param test Function to close over assertions
+* @param name - Title of unit being tested
+* @param test - Function to close over assertions
 */
 declare function asyncTest(name: string, test: () => any): any;
 
@@ -682,7 +682,7 @@ declare function asyncTest(name: string, test: () => any): any;
 * expect( number ) to register an expected count. If the number of assertions 
 * run does not match the expected count, the test will fail.
 *
-* @param amount Number of assertions in this test.
+* @param amount - Number of assertions in this test.
 */
 declare function expect(amount: number): any;
 
@@ -697,15 +697,15 @@ declare function expect(amount: number): any;
 * If you are avoiding using any of QUnit's globals, you can use the assert 
 * argument instead.
 * 
-* @param title Title of unit being tested
-* @param expected Number of assertions in this test
-* @param test Function to close over assertions
+* @param title - Title of unit being tested
+* @param expected - Number of assertions in this test
+* @param test - Function to close over assertions
 */
 declare function test(title: string, expected: number, test: (assert?: QUnitAssert) => any): any;
 
 /**
-* @param title Title of unit being tested
-* @param test Function to close over assertions
+* @param title - Title of unit being tested
+* @param test - Function to close over assertions
 */
 declare function test(title: string, test: (assert?: QUnitAssert) => any): any;
 

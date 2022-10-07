@@ -44,7 +44,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.output.file = `${distPath}node/${outputName}.min.js`;
     nodeRollupConfig.plugins.push(
       uglify({
-        ie8: true,
+        ie8: false,
         ie: true,
         toplevel: true,
         compress: {
@@ -93,7 +93,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
     if (format != "esm") {
       moduleRollupConfig.plugins.push(
         uglify({
-          ie8: true,
+          ie8: false,
           ie: true,
           toplevel: true,
           compress: {
@@ -111,7 +111,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
     } else {
       moduleRollupConfig.plugins.push(
         minify({
-          ie8: true,
+          ie8: false,
           ie: true,
           toplevel: true,
           compress: {

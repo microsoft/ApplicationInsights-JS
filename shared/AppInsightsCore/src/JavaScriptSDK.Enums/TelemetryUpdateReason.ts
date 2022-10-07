@@ -13,7 +13,7 @@ export const enum TelemetryUpdateReason {
     /**
      * The configuration has ben updated or changed
      */
-    //ConfigurationChanged = 0x01,
+    ConfigurationChanged = 0x01,
 
     /**
      * One or more plugins have been added

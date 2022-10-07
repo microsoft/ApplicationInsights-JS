@@ -2,10 +2,10 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import * as pako from "pako";
 
 export class AISKULightSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 70;
-    private readonly MAX_BUNDLE_SIZE = 70;
-    private readonly MAX_RAW_DEFLATE_SIZE = 28;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 28;
+    private readonly MAX_RAW_SIZE = 72;
+    private readonly MAX_BUNDLE_SIZE = 72;
+    private readonly MAX_RAW_DEFLATE_SIZE = 30;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 30;
     private readonly rawFilePath = "../dist/applicationinsights-web-basic.min.js";
     private readonly prodFilePath = "../browser/aib.2.min.js";
 
@@ -36,7 +36,7 @@ export class AISKULightSizeCheck extends AITestClass {
         let _filePath = isProd? this.prodFilePath : this.rawFilePath;
         let _maxFullSize = isProd ? this.MAX_BUNDLE_SIZE : this.MAX_RAW_SIZE;
         let _maxDeflateSize = isProd ? this.MAX_BUNDLE_DEFLATE_SIZE : this.MAX_RAW_DEFLATE_SIZE;
-        let postfix  = isProd? "" : "-raw";
+        let postfix  = isProd? " (prod)" : " (dist)";
         let fileName = _filePath.split("..")[2];
         this.testCase({
             name: `Test AISKULight${postfix} deflate size`,

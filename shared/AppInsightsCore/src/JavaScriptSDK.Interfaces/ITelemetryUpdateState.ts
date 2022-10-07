@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
-//import { IConfiguration } from "./IConfiguration";
+import { IConfiguration } from "./IConfiguration";
 import { IPlugin } from "./ITelemetryPlugin";
 
 export interface ITelemetryUpdateState {
@@ -13,14 +13,24 @@ export interface ITelemetryUpdateState {
     reason: TelemetryUpdateReason;
 
     /**
-     * If this is a configuration update this was the previous configuration that was used
+     * This is a new active configuration that should be used
      */
-    //prvCfg?: IConfiguration,
+    cfg?: IConfiguration,
 
     /**
-     * If this is a configuration update is the new configuration that is being used
+     * The detected changes
      */
-    //newCfg?: IConfiguration,
+    oldCfg?: IConfiguration,
+
+     /**
+     * If this is a configuration update this was the previous configuration that was used
+     */
+    newConfig?: IConfiguration,
+
+    /**
+     * Was the new config requested to be merged with the existing config
+     */
+    merge?: boolean,
 
     /**
      * This holds a collection of plugins that have been added (if the reason identifies that one or more plugins have been added)
@@ -30,5 +40,5 @@ export interface ITelemetryUpdateState {
     /**
      * This holds a collection of plugins that have been removed (if the reason identifies that one or more plugins have been removed)
      */
-     removed?: IPlugin[]
+    removed?: IPlugin[]
 }

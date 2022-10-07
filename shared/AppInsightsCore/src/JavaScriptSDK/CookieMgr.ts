@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import {
-    arrForEach, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objForEachKey,
-    strEndsWith, strTrim
+    arrForEach, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objDeepFreeze,
+    objForEachKey, strEndsWith, strTrim
 } from "@nevware21/ts-utils";
+import { applyDefaults } from "../Config/ConfigDefaults";
+import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
+import { IConfigDefaults } from "../Config/IConfigDefaults";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
@@ -12,13 +15,12 @@ import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger
 import { _throwInternal } from "./DiagnosticLogger";
 import { getLocation, isIE } from "./EnvUtils";
 import { dateNow, getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
-import { STR_EMPTY } from "./InternalConstants";
+import { STR_DOMAIN, STR_EMPTY, STR_PATH, UNDEFINED_VALUE } from "./InternalConstants";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
 const strCookie = "cookie";
 const strExpires = "expires";
-const strEnabled = "enabled";
 const strIsCookieUseDisabled = "isCookieUseDisabled";
 const strDisableCookiesUsage = "disableCookiesUsage";
 const strConfigCookieMgr = "_ckMgr";
@@ -30,6 +32,29 @@ let _doc = getDocument();
 let _cookieCache = {};
 let _globalCookieConfig = {};
 
+// `isCookieUseDisabled` is deprecated, so explicitly casting as a key of IConfiguration to avoid typing error
+// when both isCookieUseDisabled and disableCookiesUsage are used disableCookiesUsage will take precedent, which is
+// why its listed first
+
+const defaultConfig: IConfigDefaults<ICookieMgrConfig> = objDeepFreeze({
+    [STR_DOMAIN]: { fb: "cookieDomain", dfVal: isNotNullOrUndefined },
+    path: { fb: "cookiePath", dfVal: isNotNullOrUndefined },
+    enabled: UNDEFINED_VALUE
+});
+
+/**
+ * Set the supported dynamic config values as undefined (or an empty object) so that
+ * any listeners will be informed of any changes.
+ * Explicitly NOT including the deprecated `isCookieUseDisabled` as we don't want to support
+ * the v1 deprecated field as dynamic for updates
+ */
+const rootDefaultConfig = {
+    cookieCfg: {},
+    cookieDomain: UNDEFINED_VALUE,
+    cookiePath: UNDEFINED_VALUE,
+    [strDisableCookiesUsage]: UNDEFINED_VALUE
+};
+
 /**
  * @ignore
  * DO NOT USE or export from the module, this is exposed as public to support backward compatibility of previous static utility methods only.
@@ -39,7 +64,7 @@ let _globalCookieConfig = {};
  * Example, if you are using a shared component that is also using Application Insights you will affect their cookie handling.
  * @param logger - The DiagnosticLogger to use for reporting errors.
  */
-export function _gblCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
+function _gblCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
     // Stash the global instance against the BaseCookieMgr class
     let inst = createCookieMgr[strConfigCookieMgr] || _globalCookieConfig[strConfigCookieMgr];
     if (!inst) {
@@ -58,28 +83,6 @@ function _isMgrEnabled(cookieMgr: ICookieMgr) {
     }
 
     return true;
-}
-
-function _createCookieMgrConfig(rootConfig: IConfiguration): ICookieMgrConfig {
-    let cookieMgrCfg = rootConfig.cookieCfg = rootConfig.cookieCfg || {};
-
-    // Sets the values from the root config if not already present on the cookieMgrCfg
-    setValue(cookieMgrCfg, "domain", rootConfig.cookieDomain, isNotNullOrUndefined, isNullOrUndefined);
-    setValue(cookieMgrCfg, "path", rootConfig.cookiePath || "/", null, isNullOrUndefined);
-    if (isNullOrUndefined(cookieMgrCfg[strEnabled])) {
-        // Set the enabled from the provided setting or the legacy root values
-        let cookieEnabled: boolean;
-        if (!isUndefined(rootConfig[strIsCookieUseDisabled])) {
-            cookieEnabled = !rootConfig[strIsCookieUseDisabled];
-        }
-        if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
-            cookieEnabled = !rootConfig[strDisableCookiesUsage];
-        }
-
-        cookieMgrCfg[strEnabled] = cookieEnabled;
-    }
-
-    return cookieMgrCfg;
 }
 
 function _isIgnoredCookie(cookieMgrCfg: ICookieMgrConfig, name: string) {
@@ -114,7 +117,7 @@ export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration
         cookieMgr = core.getCookieMgr();
     } else if (config) {
         let cookieCfg = config.cookieCfg;
-        if (cookieCfg[strConfigCookieMgr]) {
+        if (cookieCfg && cookieCfg[strConfigCookieMgr]) {
             cookieMgr = cookieCfg[strConfigCookieMgr];
         } else {
             cookieMgr = createCookieMgr(config);
@@ -130,12 +133,56 @@ export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration
 }
 
 export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
-    let cookieMgrConfig = _createCookieMgrConfig(rootConfig || _globalCookieConfig);
+    let cookieMgrConfig: ICookieMgrConfig;
+    let _path: string;
+    let _domain: string;
 
-    let _path = cookieMgrConfig.path || "/";
-    let _domain = cookieMgrConfig.domain;
     // Explicitly checking against false, so that setting to undefined will === true
-    let _enabled = cookieMgrConfig[strEnabled] !== false;
+    let _enabled: boolean;
+    let _getCookieFn: (name: string) => string;
+    let _setCookieFn: (name: string, cookieValue: string) => void;
+    let _delCookieFn: (name: string, cookieValue: string) => void;
+
+    // Make sure the root config is dynamic as it may be the global config
+    rootConfig = createDynamicConfig(rootConfig || _globalCookieConfig, null, logger).cfg;
+
+    // Will get recalled if the referenced configuration is changed
+    onConfigChange(rootConfig, (details) => {
+
+        // Make sure the root config has all of the the defaults to the root config to ensure they are dynamic
+        applyDefaults(details.cfg, rootDefaultConfig);
+
+        // Create and apply the defaults to the cookieCfg element
+        cookieMgrConfig = applyDefaults(details.cfg.cookieCfg, defaultConfig);
+        let isEnabled = cookieMgrConfig.enabled;
+        if (isNullOrUndefined(isEnabled)) {
+            // Set the enabled from the provided setting or the legacy root values
+            let cookieEnabled: boolean;
+
+            // This field is deprecated and dynamic updates will not be fully supported
+            if (!isUndefined(rootConfig[strIsCookieUseDisabled])) {
+                cookieEnabled = !rootConfig[strIsCookieUseDisabled];
+            }
+
+            // If this value is defined it takes precedent over the above
+            if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
+                cookieEnabled = !rootConfig[strDisableCookiesUsage];
+            }
+
+            // Not setting the cookieMgrConfig.enabled as that will update (set) the global dynamic config
+            // So future "updates" then may not be as expected
+            isEnabled = cookieEnabled;
+        }
+
+        _path = cookieMgrConfig.path || "/";
+        _domain = cookieMgrConfig.domain;
+        // Explicitly checking against false, so that setting to undefined will === true
+        _enabled = isEnabled !== false;
+
+        _getCookieFn = cookieMgrConfig.getCookie || _getCookieValue;
+        _setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
+        _delCookieFn = cookieMgrConfig.delCookie || _setCookieValue;
+    }, logger);
 
     let cookieMgr: ICookieMgr = {
         isEnabled: () => {
@@ -167,7 +214,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 }
 
                 // Only update domain if not already present (isUndefined) and the value is truthy (not null, undefined or empty string)
-                setValue(values, "domain",  domain || _domain, isTruthy, isUndefined);
+                setValue(values, STR_DOMAIN,  domain || _domain, isTruthy, isUndefined);
             
                 if (!isNullOrUndefined(maxAgeSec)) {
                     const _isIE = isIE();
@@ -206,10 +253,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                     }
                 }
             
-                setValue(values, "path", path || _path, null, isUndefined);
+                setValue(values, STR_PATH, path || _path, null, isUndefined);
             
-                let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
-                setCookieFn(name, _formatCookieValue(theValue, values));
+                //let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
+                _setCookieFn(name, _formatCookieValue(theValue, values));
                 result = true;
             }
 
@@ -218,7 +265,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         get: (name: string): string => {
             let value = STR_EMPTY
             if (_isMgrEnabled(cookieMgr) && !_isIgnoredCookie(cookieMgrConfig, name)) {
-                value = (cookieMgrConfig.getCookie || _getCookieValue)(name);
+                value = _getCookieFn(name);
             }
 
             return value;
@@ -237,7 +284,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (areCookiesSupported(logger)) {
                 // Setting the expiration date in the past immediately removes the cookie
                 let values = {
-                    ["path"]: path ? path : "/",
+                    [STR_PATH]: path ? path : "/",
                     [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
                 }
 
@@ -246,8 +293,8 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                     values["max-age"] = "0"
                 }
 
-                let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
-                delCookie(name, _formatCookieValue(STR_EMPTY, values));
+                // let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
+                _delCookieFn(name, _formatCookieValue(STR_EMPTY, values));
                 result = true;
             }
 
@@ -258,7 +305,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     // Associated this cookie manager with the config
     cookieMgr[strConfigCookieMgr] = cookieMgr;
     
-    return cookieMgr
+    return cookieMgr;
 }
 
 /*

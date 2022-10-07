@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 import { strShimUndefined } from "@microsoft/applicationinsights-shims";
+import { strSubstr, strSubstring } from "@nevware21/ts-utils";
 import { getPerformance } from "./EnvUtils";
 import { dateNow } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
@@ -13,7 +14,7 @@ export const Undefined = strShimUndefined;
 export function newGuid(): string {
     const uuid = generateW3CId();
 
-    return uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-" + uuid.substring(12, 16) + "-" + uuid.substring(16, 20) + "-" + uuid.substring(20);
+    return strSubstring(uuid, 0, 8) + "-" + strSubstring(uuid, 8, 12) + "-" + strSubstring(uuid, 12, 16) + "-" + strSubstring(uuid, 16, 20) + "-" + strSubstring(uuid, 20);
 }
 
 /**
@@ -39,7 +40,7 @@ export function strEndsWith(value: string, search: string) {
     if (value && search) {
         let len = value.length;
         let start = len - search.length;
-        return value.substring(start >= 0 ? start : 0, len) === search;
+        return strSubstring(value, start >= 0 ? start : 0, len) === search;
     }
 
     return false;
@@ -68,5 +69,5 @@ export function generateW3CId(): string {
 
     // "Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively"
     const clockSequenceHi = hexValues[8 + (random32() & 0x03) | 0];
-    return oct.substr(0, 8) + oct.substr(9, 4) + "4" + oct.substr(13, 3) + clockSequenceHi + oct.substr(16, 3) + oct.substr(19, 12);
+    return strSubstr(oct, 0, 8) + strSubstr(oct, 9, 4) + "4" + strSubstr(oct, 13, 3) + clockSequenceHi +strSubstr(oct, 16, 3) + strSubstr(oct, 19, 12);
 }

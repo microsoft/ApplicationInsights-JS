@@ -512,9 +512,9 @@ export class AITestClass {
 
     /**
      * Sends a JSON response to the provided request.
-     * @param request The request to respond to.
-     * @param data Data to respond with.
-     * @param errorCode Optional error code to send with the request, default is 200
+     * @param request - The request to respond to.
+     * @param data - Data to respond with.
+     * @param errorCode - Optional error code to send with the request, default is 200
      */
     public sendJsonResponse(request: SinonFakeXMLHttpRequest, data: any, errorCode?: number) {
         if (errorCode === undefined) {

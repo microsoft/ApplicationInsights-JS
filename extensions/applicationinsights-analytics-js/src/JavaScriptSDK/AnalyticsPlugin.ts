@@ -13,14 +13,15 @@ import {
     utlEnableStorage
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext, IInstrumentCallDetails,
-    IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain,
-    ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach, createProcessTelemetryContext,
-    createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory,
-    getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace,
-    objDefineAccessors, objForEachKey, safeGetCookieMgr, strUndefined, throwError
+    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
+    IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
+    ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
+    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, generateW3CId, getDocument,
+    getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined,
+    mergeEvtNamespace, objDefineAccessors, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { objDeepFreeze, objDefineProp } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -50,42 +51,35 @@ function _getReason(error: any) {
 
 const MinMilliSeconds = 60000;
 
-function _configMilliseconds(value: number, defValue: number) {
+const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
+    sessionRenewalMs: { set: _chkConfigMilliseconds, v:30 * 60 * 1000 },
+    sessionExpirationMs: { set: _chkConfigMilliseconds, v: 24 * 60 * 60 * 1000 },
+    disableExceptionTracking: { set: stringToBoolOrDefault },
+    autoTrackPageVisitTime: { set: stringToBoolOrDefault },
+    overridePageViewDuration: { set: stringToBoolOrDefault },
+    enableUnhandledPromiseRejectionTracking: { set:  stringToBoolOrDefault },
+    autoUnhandledPromiseInstrumented: false,
+    samplingPercentage: { isVal: _chkSampling, v: 100 },
+    isStorageUseDisabled: { set: stringToBoolOrDefault },
+    isBrowserLinkTrackingEnabled: { set: stringToBoolOrDefault },
+    enableAutoRouteTracking: { set: stringToBoolOrDefault },
+    namePrefix: "",
+    enableDebug: { set: stringToBoolOrDefault },
+    disableFlushOnBeforeUnload: { set: stringToBoolOrDefault },
+    disableFlushOnUnload: { set: stringToBoolOrDefault, fb: "disableFlushOnBeforeUnload" }
+});
+
+function _chkConfigMilliseconds(value: number, defValue: number): number {
     value = value || defValue;
     if (value < MinMilliSeconds) {
         value = MinMilliSeconds;
     }
 
-    return value;
+    return +value;
 }
 
-function _getDefaultConfig(config?: IConfig): IConfig {
-    if (!config) {
-        config = {};
-    }
-
-    // set default values
-    config.sessionRenewalMs = _configMilliseconds(config.sessionRenewalMs, 30 * 60 * 1000);
-    config.sessionExpirationMs = _configMilliseconds(config.sessionExpirationMs, 24 * 60 * 60 * 1000);
-    config.disableExceptionTracking = stringToBoolOrDefault(config.disableExceptionTracking);
-    config.autoTrackPageVisitTime = stringToBoolOrDefault(config.autoTrackPageVisitTime);
-    config.overridePageViewDuration = stringToBoolOrDefault(config.overridePageViewDuration);
-    config.enableUnhandledPromiseRejectionTracking = stringToBoolOrDefault(config.enableUnhandledPromiseRejectionTracking);
-
-    if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
-        config.samplingPercentage = 100;
-    }
-
-    config.isStorageUseDisabled = stringToBoolOrDefault(config.isStorageUseDisabled);
-    config.isBrowserLinkTrackingEnabled = stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
-    config.enableAutoRouteTracking = stringToBoolOrDefault(config.enableAutoRouteTracking);
-    config.namePrefix = config.namePrefix || "";
-
-    config.enableDebug = stringToBoolOrDefault(config.enableDebug);
-    config.disableFlushOnBeforeUnload = stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
-    config.disableFlushOnUnload = stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
-
-    return config;
+function _chkSampling(value: number) {
+    return !isNaN(value) && value > 0 && value <= 100;
 }
 
 function _updateStorageUsage(extConfig: IConfig) {
@@ -103,11 +97,9 @@ function _updateStorageUsage(extConfig: IConfig) {
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
     public static Version = "#version#"; // Not currently used anywhere
 
-    public static getDefaultConfig = _getDefaultConfig;
-
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
-    public config: IConfig;
+    public readonly config: IConfig;
     public queue: Array<() => void>;
     public autoRoutePVDelay = 500; // ms; Time to wait after a route change before triggering a pageview to allow DOM changes to take place
 
@@ -127,6 +119,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _autoExceptionInstrumented: boolean;
         let _enableUnhandledPromiseRejectionTracking: boolean;
         let _autoUnhandledPromiseInstrumented: boolean;
+        let _extConfig: IConfig;
+        let _autoTrackPageVisitTime: boolean;
 
         // Counts number of trackAjax invocations.
         // By default we only monitor X ajax call per view to avoid too much load.
@@ -205,7 +199,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * @description Log a diagnostic message
-             * @param {ITraceTelemetry} trace
+             * @param trace
              * @param ICustomProperties.
              * @memberof ApplicationInsights
              */
@@ -233,8 +227,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * use the name and average fields of {@link IMetricTelemetry}. If you take measurements
              * frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements
              * and sending the resulting average at intervals
-             * @param {IMetricTelemetry} metric input object argument. Only name and average are mandatory.
-             * @param {{[key: string]: any}} customProperties additional data used to filter metrics in the
+             * @param metric - input object argument. Only name and average are mandatory.
+             * @param } customProperties additional data used to filter metrics in the
              * portal. Defaults to empty.
              * @memberof ApplicationInsights
              */
@@ -259,8 +253,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * Logs that a page or other item was viewed.
-             * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
-             * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
+             * @param IPageViewTelemetry - The string you used as the name in startTrackPage. Defaults to the document title.
+             * @param customProperties - Additional data used to filter events and metrics. Defaults to empty.
              * If a user wants to provide duration for pageLoad, it'll have to be in pageView.properties.duration
              */
             _self.trackPageView = (pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) => {
@@ -268,7 +262,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     let inPv = pageView || {};
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
         
-                    if (_self.config.autoTrackPageVisitTime) {
+                    if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
                     }
                 } catch (e) {
@@ -282,9 +276,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * Create a page view telemetry item and send it to the SDK pipeline through the core.track API
-             * @param pageView Page view item to be sent
-             * @param properties Custom properties (Part C) that a user can add to the telemetry item
-             * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
+             * @param pageView - Page view item to be sent
+             * @param properties - Custom properties (Part C) that a user can add to the telemetry item
+             * @param systemProperties - System level properties (Part A) that a user can add to the telemetry item
              */
             _self.sendPageViewInternal = (pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
                 let doc = getDocument();
@@ -346,7 +340,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * Starts the timer for tracking a page load time. Use this instead of `trackPageView` if you want to control when the page view timer starts and stops,
              * but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call `stopTrackPage` to log the end of the page view
              * and send the event.
-             * @param name A string that idenfities this item, unique within this HTML document. Defaults to the document title.
+             * @param name - A string that idenfities this item, unique within this HTML document. Defaults to the document title.
              */
             _self.startTrackPage = (name?: string) => {
                 try {
@@ -387,7 +381,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
                     _pageTracking.stop(name, url, properties, measurement);
         
-                    if (_self.config.autoTrackPageVisitTime) {
+                    if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(name, url);
                     }
                 } catch (e) {
@@ -430,8 +424,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             /**
              * Log an exception you have caught.
              *
-             * @param {IExceptionTelemetry} exception   Object which contains exception to be sent
-             * @param {{[key: string]: any}} customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
+             * @param exception -   Object which contains exception to be sent
+             * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
              *
              * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
              * @memberof ApplicationInsights
@@ -454,7 +448,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * @description Custom error handler for Application Insights Analytics
-             * @param {IAutoExceptionTelemetry} exception
+             * @param exception
              * @memberof ApplicationInsights
              */
             _self._onerror = (exception: IAutoExceptionTelemetry): void => {
@@ -509,7 +503,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
             };
 
-            _self.addTelemetryInitializer = (telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler | void => {
+            _self.addTelemetryInitializer = (telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler => {
                 if (_self.core) {
                     // Just add to the core
                     return _self.core.addTelemetryInitializer(telemetryInitializer);
@@ -543,15 +537,12 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         _preInitTelemetryInitializers = null;
                     }
     
-                    let extConfig = _populateDefaults(config);
-                    _updateStorageUsage(extConfig);
+                    _populateDefaults(config);
     
                     _pageViewPerformanceManager = new PageViewPerformanceManager(_self.core);
-                    _pageViewManager = new PageViewManager(this, extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
+                    _pageViewManager = new PageViewManager(this, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
                     _pageVisitTimeManager = new PageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime))
-            
-                    _updateBrowserLinkTracking(extConfig, config);
-    
+
                     _eventTracking = new Timing(_self.diagLog(), "trackEvent");
                     _eventTracking.action =
                         (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
@@ -588,8 +579,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
     
                     if (hasWindow()) {
-                        _updateExceptionTracking(extConfig);
-                        _updateLocationChange(extConfig);
+                        _updateExceptionTracking();
+                        _updateLocationChange();
                     }
     
                 } catch (e) {
@@ -608,35 +599,27 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             };
             
             function _populateDefaults(config: IConfiguration) {
-                let ctx = createProcessTelemetryContext(null, config, _self.core);
                 let identifier = _self.identifier;
+                let core = _self.core;
 
-                // load default values if specified
-                const defaults: IConfig = _getDefaultConfig(config);
-                let extConfig = _self.config = ctx.getExtCfg<IConfig>(identifier);
+                _self._addHook(onConfigChange(config, () => {
+                    let ctx = createProcessTelemetryContext(null, config, core);
+                    _extConfig = ctx.getExtCfg(identifier, defaultValues);
 
-                if (defaults !== undefined) {
-                    objForEachKey(defaults, (field, value) => {
-                        // for each unspecified field, set the default value
-                        extConfig[field] = ctx.getConfig(identifier, field, value);
-                        if (extConfig[field] === undefined) {
-                            extConfig = value;
-                        }
-                    });
-                }
+                    _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
 
-                return extConfig;
-            }
+                    _updateStorageUsage(_extConfig);
 
-            function _updateBrowserLinkTracking(extConfig: IConfig, config: IConfig) {
-                _isBrowserLinkTrackingEnabled = extConfig.isBrowserLinkTrackingEnabled || config.isBrowserLinkTrackingEnabled;
-                _addDefaultTelemetryInitializers();
+                    // _updateBrowserLinkTracking
+                    _isBrowserLinkTrackingEnabled = _extConfig.isBrowserLinkTrackingEnabled;
+                    _addDefaultTelemetryInitializers();
+                }));
             }
 
             /**
              * Log a page visit time
              * @param    pageName    Name of page
-             * @param    pageVisitDuration Duration of visit to the page in milleseconds
+             * @param    pageVisitDuration Duration of visit to the page in milliseconds
              */
             function trackPageVisitTime(pageName: string, pageUrl: string, pageVisitTime: number) {
                 let properties = { PageName: pageName, PageUrl: pageUrl };
@@ -667,7 +650,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         return true;
                     }
 
-                    _self.addTelemetryInitializer(dropBrowserLinkRequests);
+                    _self._addHook(_self.addTelemetryInitializer(dropBrowserLinkRequests));
                     _browserLinkInitializerAdded = true;
                 }
             }
@@ -684,52 +667,56 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _self.core.track(telemetryItem);
             }
 
-            function _updateExceptionTracking(extConfig: IConfig) {
+            function _updateExceptionTracking() {
                 let _window = getWindow();
                 let locn = getLocation(true);
 
-                _disableExceptionTracking = extConfig.disableExceptionTracking;
+                _self._addHook(onConfigChange(_extConfig, () => {
+                    _disableExceptionTracking = _extConfig.disableExceptionTracking;
 
-                if (!_disableExceptionTracking && !_autoExceptionInstrumented && !extConfig.autoExceptionInstrumented) {
-                    // We want to enable exception auto collection and it has not been done so yet
-                    _addHook(InstrumentEvent(_window, "onerror", {
-                        ns: _evtNamespace,
-                        rsp: (callDetails: IInstrumentCallDetails, message, url, lineNumber, columnNumber, error) => {
-                            if (!_disableExceptionTracking && callDetails.rslt !== true) {
-                                _self._onerror(Exception.CreateAutoException(
-                                    message,
-                                    url,
-                                    lineNumber,
-                                    columnNumber,
-                                    error,
-                                    callDetails.evt
-                                ));
+                    if (!_disableExceptionTracking && !_autoExceptionInstrumented && !_extConfig.autoExceptionInstrumented) {
+                        // We want to enable exception auto collection and it has not been done so yet
+                        _addHook(InstrumentEvent(_window, "onerror", {
+                            ns: _evtNamespace,
+                            rsp: (callDetails: IInstrumentCallDetails, message, url, lineNumber, columnNumber, error) => {
+                                if (!_disableExceptionTracking && callDetails.rslt !== true) {
+                                    _self._onerror(Exception.CreateAutoException(
+                                        message,
+                                        url,
+                                        lineNumber,
+                                        columnNumber,
+                                        error,
+                                        callDetails.evt
+                                    ));
+                                }
                             }
-                        }
-                    }, false));
+                        }, false));
 
-                    _autoExceptionInstrumented = true;
-                }
+                        _autoExceptionInstrumented = true;
+                    }
+                }));
 
-                _addUnhandledPromiseRejectionTracking(extConfig, _window, locn);
+                _addUnhandledPromiseRejectionTracking(_window, locn);
             }
 
-            function _updateLocationChange(extConfig: IConfig) {
+            function _updateLocationChange() {
                 let win = getWindow();
                 let locn = getLocation(true);
 
-                _enableAutoRouteTracking = extConfig.enableAutoRouteTracking === true;
+                _self._addHook(onConfigChange(_extConfig, () => {
+                    _enableAutoRouteTracking = _extConfig.enableAutoRouteTracking === true;
 
-                /**
-                 * Create a custom "locationchange" event which is triggered each time the history object is changed
-                 */
-                if (win && _enableAutoRouteTracking && hasHistory()) {
-                    let _history = getHistory();
+                    /**
+                     * Create a custom "locationchange" event which is triggered each time the history object is changed
+                     */
+                    if (win && _enableAutoRouteTracking && !_historyListenerAdded && hasHistory()) {
+                        let _history = getHistory();
 
-                    if (isFunction(_history.pushState) && isFunction(_history.replaceState) && typeof Event !== strUndefined) {
-                        _addHistoryListener(extConfig, win, _history, locn);
+                        if (isFunction(_history.pushState) && isFunction(_history.replaceState) && typeof Event !== strUndefined) {
+                            _addHistoryListener(win, _history, locn);
+                        }
                     }
-                }
+                }));
             }
 
             function _getDistributedTraceCtx(): IDistributedTraceContext {
@@ -755,9 +742,13 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             /**
              * Create a custom "locationchange" event which is triggered each time the history object is changed
              */
-            function _addHistoryListener(extConfig: IConfig, win: Window, history: History, locn: Location) {
+            function _addHistoryListener(win: Window, history: History, locn: Location) {
+                if (_historyListenerAdded) {
+                    return;
+                }
 
-                let namePrefix = extConfig.namePrefix || "";
+                // Name Prefix is only referenced during the initial initialization and cannot be changed afterwards
+                let namePrefix = _extConfig.namePrefix || "";
 
                 function _popstateHandler() {
                     if (_enableAutoRouteTracking) {
@@ -794,64 +785,65 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 }
 
-                if (!_historyListenerAdded) {
-                    _addHook(InstrumentEvent(history, "pushState", {
-                        ns: _evtNamespace,
-                        rsp: () => {
-                            if (_enableAutoRouteTracking) {
-                                _dispatchEvent(win, createDomEvent(namePrefix + "pushState"));
-                                _dispatchEvent(win, createDomEvent(namePrefix + "locationchange"));
-                            }
+                _addHook(InstrumentEvent(history, "pushState", {
+                    ns: _evtNamespace,
+                    rsp: () => {
+                        if (_enableAutoRouteTracking) {
+                            _dispatchEvent(win, createDomEvent(namePrefix + "pushState"));
+                            _dispatchEvent(win, createDomEvent(namePrefix + "locationchange"));
                         }
-                    }, true));
-    
-                    _addHook(InstrumentEvent(history, "replaceState", {
-                        ns: _evtNamespace,
-                        rsp: () => {
-                            if (_enableAutoRouteTracking) {
-                                _dispatchEvent(win, createDomEvent(namePrefix + "replaceState"));
-                                _dispatchEvent(win, createDomEvent(namePrefix + "locationchange"));
-                            }
+                    }
+                }, true));
+
+                _addHook(InstrumentEvent(history, "replaceState", {
+                    ns: _evtNamespace,
+                    rsp: () => {
+                        if (_enableAutoRouteTracking) {
+                            _dispatchEvent(win, createDomEvent(namePrefix + "replaceState"));
+                            _dispatchEvent(win, createDomEvent(namePrefix + "locationchange"));
                         }
-                    }, true));
+                    }
+                }, true));
 
-                    eventOn(win, namePrefix + "popstate", _popstateHandler, _evtNamespace);
-                    eventOn(win, namePrefix + "locationchange", _locationChangeHandler, _evtNamespace);
+                eventOn(win, namePrefix + "popstate", _popstateHandler, _evtNamespace);
+                eventOn(win, namePrefix + "locationchange", _locationChangeHandler, _evtNamespace);
 
-                    _historyListenerAdded = true;
-                }
+                _historyListenerAdded = true;
             }
 
-            function _addUnhandledPromiseRejectionTracking(extConfig: IConfig, _window: Window, _location: Location) {
-                _enableUnhandledPromiseRejectionTracking = extConfig.enableUnhandledPromiseRejectionTracking === true;
+            function _addUnhandledPromiseRejectionTracking(_window: Window, _location: Location) {
+                _self._addHook(onConfigChange(_extConfig, () => {
 
-                if (_enableUnhandledPromiseRejectionTracking && !_autoUnhandledPromiseInstrumented) {
-                    // We want to enable exception auto collection and it has not been done so yet
-                    _addHook(InstrumentEvent(_window, "onunhandledrejection", {
-                        ns: _evtNamespace,
-                        rsp: (callDetails: IInstrumentCallDetails, error: PromiseRejectionEvent) => {
-                            if (_enableUnhandledPromiseRejectionTracking && callDetails.rslt !== true) { // handled could be typeof function
-                                _self._onerror(Exception.CreateAutoException(
-                                    _getReason(error),
-                                    _location ? _location.href : "",
-                                    0,
-                                    0,
-                                    error,
-                                    callDetails.evt
-                                ));
+                    _enableUnhandledPromiseRejectionTracking = _extConfig.enableUnhandledPromiseRejectionTracking === true;
+                    _autoExceptionInstrumented = _autoExceptionInstrumented || _extConfig.autoUnhandledPromiseInstrumented;
+
+                    if (_enableUnhandledPromiseRejectionTracking && !_autoUnhandledPromiseInstrumented) {
+                        // We want to enable exception auto collection and it has not been done so yet
+                        _addHook(InstrumentEvent(_window, "onunhandledrejection", {
+                            ns: _evtNamespace,
+                            rsp: (callDetails: IInstrumentCallDetails, error: PromiseRejectionEvent) => {
+                                if (_enableUnhandledPromiseRejectionTracking && callDetails.rslt !== true) { // handled could be typeof function
+                                    _self._onerror(Exception.CreateAutoException(
+                                        _getReason(error),
+                                        _location ? _location.href : "",
+                                        0,
+                                        0,
+                                        error,
+                                        callDetails.evt
+                                    ));
+                                }
                             }
-                        }
-                    }, false));
-    
-                    _autoUnhandledPromiseInstrumented = true;
-                    extConfig.autoUnhandledPromiseInstrumented = _autoUnhandledPromiseInstrumented;
-                }
+                        }, false));
+        
+                        _extConfig.autoUnhandledPromiseInstrumented = _autoUnhandledPromiseInstrumented = true;
+                    }
+                }));
             }
 
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
-             * @param severity {eLoggingSeverity} - The severity of the log message
-             * @param message {_InternalLogMessage} - The log message.
+             * @param severity - {eLoggingSeverity} - The severity of the log message
+             * @param msgId - {_eInternalLogMessage} - The log message.
              */
             function _throwInternal(severity: eLoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void {
                 _self.diagLog().throwInternal(severity, msgId, msg, properties, isUserAct);
@@ -872,6 +864,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _autoExceptionInstrumented = false;
                 _enableUnhandledPromiseRejectionTracking = false;
                 _autoUnhandledPromiseInstrumented = false;
+                _autoTrackPageVisitTime = false;
 
                 // Counts number of trackAjax invocations.
                 // By default we only monitor X ajax call per view to avoid too much load.
@@ -884,6 +877,14 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _prevUri = location && location.href || "";
                 _currUri = null;
                 _evtNamespace = null;
+                _extConfig = null;
+
+                // Define _self.config
+                objDefineProp(_self, "config", {
+                    configurable: true,
+                    enumerable: true,
+                    get: () => _extConfig
+                });
             }
         
             // For backward compatibility
@@ -930,7 +931,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @description Log a diagnostic message
-     * @param {ITraceTelemetry} trace
+     * @param trace
      * @param ICustomProperties.
      * @memberof ApplicationInsights
      */
@@ -944,8 +945,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * use the name and average fields of {@link IMetricTelemetry}. If you take measurements
      * frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements
      * and sending the resulting average at intervals
-     * @param {IMetricTelemetry} metric input object argument. Only name and average are mandatory.
-     * @param {{[key: string]: any}} customProperties additional data used to filter metrics in the
+     * @param metric - input object argument. Only name and average are mandatory.
+     * @param } customProperties additional data used to filter metrics in the
      * portal. Defaults to empty.
      * @memberof ApplicationInsights
      */
@@ -955,8 +956,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Logs that a page or other item was viewed.
-     * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
-     * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
+     * @param IPageViewTelemetry - The string you used as the name in startTrackPage. Defaults to the document title.
+     * @param customProperties - Additional data used to filter events and metrics. Defaults to empty.
      * If a user wants to provide duration for pageLoad, it'll have to be in pageView.properties.duration
      */
     public trackPageView(pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) {
@@ -965,9 +966,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Create a page view telemetry item and send it to the SDK pipeline through the core.track API
-     * @param pageView Page view item to be sent
-     * @param properties Custom properties (Part C) that a user can add to the telemetry item
-     * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
+     * @param pageView - Page view item to be sent
+     * @param properties - Custom properties (Part C) that a user can add to the telemetry item
+     * @param systemProperties - System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -995,7 +996,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * Starts the timer for tracking a page load time. Use this instead of `trackPageView` if you want to control when the page view timer starts and stops,
      * but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call `stopTrackPage` to log the end of the page view
      * and send the event.
-     * @param name A string that idenfities this item, unique within this HTML document. Defaults to the document title.
+     * @param name - A string that idenfities this item, unique within this HTML document. Defaults to the document title.
      */
     public startTrackPage(name?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1026,8 +1027,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     /**
      * Log an exception you have caught.
      *
-     * @param {IExceptionTelemetry} exception   Object which contains exception to be sent
-     * @param {{[key: string]: any}} customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
+     * @param exception -   Object which contains exception to be sent
+     * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
      *
      * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
      * @memberof ApplicationInsights
@@ -1038,15 +1039,16 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @description Custom error handler for Application Insights Analytics
-     * @param {IAutoExceptionTelemetry} exception
+     * @param exception
      * @memberof ApplicationInsights
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void): ITelemetryInitializerHandler | void {
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void): ITelemetryInitializerHandler {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {

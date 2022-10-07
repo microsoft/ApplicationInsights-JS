@@ -1,4 +1,4 @@
-import { ApplicationInsights, IApplicationInsights, LoggingSeverity, _InternalMessageId } from '../../../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights, LoggingSeverity, _eInternalMessageId } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { AITestClass, Assert, PollingAssert } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
@@ -85,7 +85,7 @@ export class SanitizerE2ETests extends AITestClass {
                 .concat(() => {
                     Assert.ok(this.loggingSpy.called);
                     Assert.equal(LoggingSeverity.WARNING, this.loggingSpy.args[0][0]);
-                    Assert.equal(_InternalMessageId.StringValueTooLong, this.loggingSpy.args[0][1]);
+                    Assert.equal(_eInternalMessageId.StringValueTooLong, this.loggingSpy.args[0][1]);
                 })
         })
 

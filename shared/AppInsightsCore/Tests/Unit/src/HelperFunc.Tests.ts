@@ -1,8 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _InternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 import { normalizeJsName, objExtend, _getObjProto, isPlainObject, dateNow } from "../../../src/JavaScriptSDK/HelperFuncs";
-import { BaseCore } from "../../../src/JavaScriptSDK/BaseCore";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { isArray, isObject, objKeys, strEndsWith, strStartsWith } from "@nevware21/ts-utils";
 import { dumpObj } from "../../../src/applicationinsights-core-js";
@@ -282,7 +281,6 @@ export class HelperFuncTests extends AITestClass {
                 Assert.equal(false, isPlainObject(null));
                 Assert.equal(true, isPlainObject({}));
                 Assert.equal(true, isPlainObject(Object.create(null)));
-                Assert.equal(false, isPlainObject(new BaseCore()));
                 Assert.equal(false, isPlainObject(new AppInsightsCore()));
                 Assert.equal(false, isPlainObject(dateNow()));
                 Assert.equal(false, isPlainObject([]));
@@ -304,8 +302,7 @@ export class HelperFuncTests extends AITestClass {
                 Assert.equal(false, isObject(null), "null");
                 Assert.equal(true, isObject({}), "{}");
                 Assert.equal(true, isObject(Object.create(null)), "Object.create");
-                Assert.equal(true, isObject(new BaseCore()), "BaseCore");
-                Assert.equal(true, isObject(new AppInsightsCore()), "AppInsightsCpre");
+                Assert.equal(true, isObject(new AppInsightsCore()), "AppInsightsCore");
                 Assert.equal(false, isObject(dateNow()), "dateNow");
                 Assert.equal(true, isObject([]), "[]");
                 Assert.equal(false, isObject(true), "true");

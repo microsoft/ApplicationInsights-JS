@@ -1,7 +1,7 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
 import * as pako from "pako";
-import { Snippet } from "../../../src/Initialization";
+import { Snippet } from "../../../src/Snippet";
 
 export class AISKUSizeCheck extends AITestClass {
     private readonly MAX_RAW_SIZE = 118;
@@ -58,7 +58,7 @@ export class AISKUSizeCheck extends AITestClass {
         let _filePath = isProd? this.prodFilePath : this.rawFilePath;
         let _maxFullSize = isProd ? this.MAX_BUNDLE_SIZE : this.MAX_RAW_SIZE;
         let _maxDeflateSize = isProd ? this.MAX_BUNDLE_DEFLATE_SIZE : this.MAX_RAW_DEFLATE_SIZE;
-        let postfix  = isProd? "" : "-raw";
+        let postfix  = isProd? " (prod)" : " (dist)";
         let fileName = _filePath.split("..")[2];
         this.testCase({
             name: `Test AISKU${postfix} deflate size`,
