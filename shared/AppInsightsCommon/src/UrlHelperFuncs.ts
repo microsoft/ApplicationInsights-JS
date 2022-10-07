@@ -67,7 +67,7 @@ export function urlGetCompleteUrl(method: string, absoluteUrl: string) {
 export function urlParseHost(url: string, inclPort?: boolean) {
     let fullHost = urlParseFullHost(url, inclPort) || "";
     if (fullHost) {
-        const match = fullHost.match(/(www[0-9]?\.)?(.[^/:]+)(\:[\d]+)?/i);
+        const match = fullHost.match(/(www\d{0,5}\.)?([^\/:]{1,256})(:\d{1,20})?/i);
         if (match != null && match.length > 3 && isString(match[2]) && match[2].length > 0) {
             return match[2] + (match[3] || "");
         }
@@ -79,7 +79,7 @@ export function urlParseHost(url: string, inclPort?: boolean) {
 export function urlParseFullHost(url: string, inclPort?: boolean) {
     let result = null;
     if (url) {
-        const match = url.match(/(\w*):\/\/(.[^/:]+)(\:[\d]+)?/i);
+        const match = url.match(/(\w{1,150}):\/\/([^\/:]{1,256})(:\d{1,20})?/i);
         if (match != null && match.length > 2 && isString(match[2]) && match[2].length > 0) {
             result = match[2] || "";
             if (inclPort && match.length > 2) {

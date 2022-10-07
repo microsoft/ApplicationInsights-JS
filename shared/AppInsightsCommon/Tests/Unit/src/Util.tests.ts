@@ -2,6 +2,7 @@ import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { UrlHelper, CorrelationIdHelper, Util } from "../../../src/Util";
 import { ICorrelationConfig } from "../../../src/Interfaces/ICorrelationConfig";
 import { strStartsWith } from "@microsoft/applicationinsights-core-js";
+import { urlParseHost } from "../../../src/UrlHelperFuncs";
 
 export class UtilTests extends AITestClass {
     private testRegexLists = (config: ICorrelationConfig, exp: boolean, host: string) => {
@@ -55,50 +56,57 @@ export class UtilTests extends AITestClass {
         this.testCase({
             name: "UrlHelper: parseHost should return correct host name",
             test: () => {
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com/some/endpoint"));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com"));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com/"));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com/"));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint"));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com"));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com/"));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com/"));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW21.p.r.e.f.i.x.bing.com/"));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com/some/endpoint", false));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com", false));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com/", false));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint", false));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com", false));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com/", false));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("bing.com", urlParseHost("https://www21.bing.com/", false));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW21.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("bing.com", urlParseHost("https://www54321.bing.com/", false));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW54321.p.r.e.f.i.x.bing.com/", false));
+                Assert.equal("www654321.bing.com", urlParseHost("https://www654321.bing.com/", false));
+                Assert.equal("wwW654321.p.r.e.f.i.x.bing.com", urlParseHost("http://wwW654321.p.r.e.f.i.x.bing.com/", false));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com/some/endpoint", true));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com", true));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com/", true));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint", true));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com", true));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com/", true));
 
                 // Check with port included
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com:9999/some/endpoint"));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com:9999"));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com:9999/"));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/"));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com:9999/some/endpoint"));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com:9999"));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com:9999/"));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/"));
 
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com:9999/some/endpoint", false));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com:9999", false));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com:9999/", false));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", false));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com:9999/some/endpoint", false));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com:9999", false));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com:9999/", false));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", false));
 
-                Assert.equal("portal.azure.com:9999", UrlHelper.parseHost("https://portal.azure.com:9999/some/endpoint", true));
-                Assert.equal("bing.com:9999", UrlHelper.parseHost("http://www.bing.com:9999", true));
-                Assert.equal("bing.com:9999", UrlHelper.parseHost("https://www2.bing.com:9999/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com:9999", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", true));
+                Assert.equal("portal.azure.com:9999", urlParseHost("https://portal.azure.com:9999/some/endpoint", true));
+                Assert.equal("bing.com:9999", urlParseHost("http://www.bing.com:9999", true));
+                Assert.equal("bing.com:9999", urlParseHost("https://www2.bing.com:9999/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com:9999", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:9999/", true));
 
                 // Check with default ports present
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("http://portal.azure.com:80/some/endpoint", true));
-                Assert.equal("portal.azure.com", UrlHelper.parseHost("https://portal.azure.com:443/some/endpoint", true));
-                Assert.equal("portal.azure.com:80", UrlHelper.parseHost("https://portal.azure.com:80/some/endpoint", true));
-                Assert.equal("portal.azure.com:443", UrlHelper.parseHost("http://portal.azure.com:443/some/endpoint", true));
-                Assert.equal("bing.com", UrlHelper.parseHost("http://www.bing.com:80", true));
-                Assert.equal("bing.com", UrlHelper.parseHost("https://www2.bing.com:443/", true));
-                Assert.equal("bing.com:80", UrlHelper.parseHost("https://www.bing.com:80", true));
-                Assert.equal("bing.com:443", UrlHelper.parseHost("http://www2.bing.com:443/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:80/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com", UrlHelper.parseHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com:443", UrlHelper.parseHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
-                Assert.equal("p.r.e.f.i.x.bing.com:80", UrlHelper.parseHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+                Assert.equal("portal.azure.com", urlParseHost("http://portal.azure.com:80/some/endpoint", true));
+                Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com:443/some/endpoint", true));
+                Assert.equal("portal.azure.com:80", urlParseHost("https://portal.azure.com:80/some/endpoint", true));
+                Assert.equal("portal.azure.com:443", urlParseHost("http://portal.azure.com:443/some/endpoint", true));
+                Assert.equal("bing.com", urlParseHost("http://www.bing.com:80", true));
+                Assert.equal("bing.com", urlParseHost("https://www2.bing.com:443/", true));
+                Assert.equal("bing.com:80", urlParseHost("https://www.bing.com:80", true));
+                Assert.equal("bing.com:443", urlParseHost("http://www2.bing.com:443/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com:443", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
+                Assert.equal("p.r.e.f.i.x.bing.com:80", urlParseHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
             }
         });
 
