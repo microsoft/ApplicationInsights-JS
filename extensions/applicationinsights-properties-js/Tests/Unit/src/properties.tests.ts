@@ -1,5 +1,5 @@
 ﻿import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim, ITelemetryPlugin, IChannelControls } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim, ITelemetryPlugin, IChannelControls, random32 } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
@@ -168,10 +168,14 @@ export class PropertiesTests extends AITestClass {
 
         this.testCase({
             name: "ai_user cookie is set with acq date and year expiration",
+            useFakeTimers: true,
             test: () => {
                 // setup
                 var actualCookieName: string;
                 var actualCookieValue: string;
+
+                // Just move the time forward a random amount of time so that the cookie time is different for different test runs
+                this.clock.tick(random32());
 
                 var newIdStub = this.sandbox.stub(this as any, "_getNewId").callsFake(() => "newId");
                 var getCookieStub = this.sandbox.stub(this as any, "_getCookie").callsFake(() =>"");

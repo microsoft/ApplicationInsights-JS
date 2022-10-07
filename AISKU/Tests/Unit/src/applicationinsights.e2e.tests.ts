@@ -80,7 +80,6 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
             });
 
-
             // Setup Sinon stuff
             const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
             this.errorSpy = this.sandbox.spy(sender, '_onError');
@@ -974,7 +973,7 @@ export class ApplicationInsightsTests extends AITestClass {
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {
-                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+                Assert.ok(false, "[warning thrown]: " + dumpObj(this.loggingSpy.args.pop()));
             }
         }
     }
