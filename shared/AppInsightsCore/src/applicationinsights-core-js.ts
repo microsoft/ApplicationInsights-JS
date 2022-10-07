@@ -68,7 +68,7 @@ export {
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
 } from "./JavaScriptSDK/ProcessTelemetryContext";
 export { initializePlugins, sortPlugins, unloadComponents } from "./JavaScriptSDK/TelemetryHelpers";
-export { _eInternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
+export { _eInternalMessageId, _InternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs, InstrumentEvent } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";
 export {

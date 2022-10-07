@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { _eInternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../JavaScriptSDK/DiagnosticLogger";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
 
@@ -41,7 +41,7 @@ export interface IDiagnosticLogger {
      * @param severity - {LoggingSeverity} - The severity of the log message
      * @param message - {_InternalLogMessage} - The log message.
      */
-    throwInternal(severity: LoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void;
+    throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void;
 
     /**
      * This will write a warning to the console if possible
