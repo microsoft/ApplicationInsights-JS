@@ -4,7 +4,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { dumpObj, isFunction, isUndefined } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../Config/DynamicConfig";
-import { LoggingSeverity, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -66,9 +66,9 @@ export class _InternalLogMessage{
     public static dataType: string = "MessageData";
 
     public message: string;
-    public messageId: _eInternalMessageId;
+    public messageId: _InternalMessageId;
 
-    constructor(msgId: _eInternalMessageId, msg: string, isUserAct = false, properties?: Object) {
+    constructor(msgId: _InternalMessageId, msg: string, isUserAct = false, properties?: Object) {
         let _self = this;
 
         _self.messageId = msgId;
@@ -133,7 +133,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              * @param severity - {LoggingSeverity} - The severity of the log message
              * @param message - {_InternalLogMessage} - The log message.
              */
-            _self.throwInternal = (severity: LoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct = false) => {
+            _self.throwInternal = (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => {
                 const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
 
                 if (_enableDebugExceptions) {
@@ -302,7 +302,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
      * @param severity - {LoggingSeverity} - The severity of the log message
      * @param message - {_InternalLogMessage} - The log message.
      */
-    public throwInternal(severity: LoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct = false) {
+    public throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -356,7 +356,7 @@ function _getLogger(logger: IDiagnosticLogger) {
  * @param severity - {LoggingSeverity} - The severity of the log message
  * @param message - {_InternalLogMessage} - The log message.
  */
-export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct = false) {
+export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
     _getLogger(logger).throwInternal(severity, msgId, msg, properties, isUserAct);
 }
 
