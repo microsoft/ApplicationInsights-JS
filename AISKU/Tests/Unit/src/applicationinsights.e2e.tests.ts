@@ -3,7 +3,7 @@ import { SinonSpy } from 'sinon';
 import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry } from '@microsoft/applicationinsights-common';
-import { AppInsightsCore, ITelemetryItem, getGlobal } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, ITelemetryItem, getGlobal, dumpObj } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 
 
@@ -79,7 +79,6 @@ export class ApplicationInsightsTests extends AITestClass {
             this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
                 Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
             });
-
 
             // Setup Sinon stuff
             const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
@@ -973,7 +972,7 @@ export class ApplicationInsightsTests extends AITestClass {
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {
-                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+                Assert.ok(false, "[warning thrown]: " + dumpObj(this.loggingSpy.args.pop()));
             }
         }
     }

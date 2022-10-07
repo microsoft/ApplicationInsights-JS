@@ -7,6 +7,9 @@ export class TestCase {
     useFakeServer?: boolean;
     fakeServerAutoRespond?: boolean;
 
+    useFakeFetch?: boolean;
+    fakeFetchAutoRespond?: boolean;
+
     useFakeTimers?: boolean;
 
     /** Test case method */
@@ -54,6 +57,9 @@ export interface TestCaseAsync {
 
     useFakeServer?: boolean;
     fakeServerAutoRespond?: boolean;
+
+    useFakeFetch?: boolean;
+    fakeFetchAutoRespond?: boolean;
 
     useFakeTimers?: boolean;
 
