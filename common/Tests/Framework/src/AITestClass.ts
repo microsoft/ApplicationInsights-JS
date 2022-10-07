@@ -82,7 +82,7 @@ export class AITestClass {
     public sandbox: SinonSandbox;
     public fakeServerAutoRespond: boolean = false;
     public fakeFetchAutoRespond: boolean = false;
-    public isEmulatingEs3: boolean;
+    public isEmulatingIe: boolean;
 
     /**
      * Automatically assert that all registered events have been removed
@@ -243,7 +243,7 @@ export class AITestClass {
                 useFakeFetch = self.useFakeFetch;
             }
 
-            if (useFakeFetch && !self.isEmulatingEs3) {
+            if (useFakeFetch && !self.isEmulatingIe) {
                 self._hookFetch();
             }
 

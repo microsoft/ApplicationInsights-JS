@@ -9,7 +9,7 @@ import { isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@mic
 import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
-import { objHasOwnProperty } from "@nevware21/ts-utils";
+import { dumpObj, objHasOwnProperty } from "@nevware21/ts-utils";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
