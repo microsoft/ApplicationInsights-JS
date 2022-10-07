@@ -18,7 +18,7 @@ export class ApplicationInsightsFetchTests extends ApplicationInsightsTests {
             disableXhr: true,               // Disable XHR support
             enableRequestHeaderTracking: true,
             enableResponseHeaderTracking: true,
-            maxBatchInterval: 2500,
+            maxBatchInterval: 500,
             disableExceptionTracking: false,
             namePrefix: sessionPrefix,
             enableCorsCorrelation: true,
@@ -26,5 +26,15 @@ export class ApplicationInsightsFetchTests extends ApplicationInsightsTests {
             samplingPercentage: 50,
             convertUndefined: "test-value"
         };
+    }
+
+    public testInitialize() {
+        super.testInitialize();
+
+        // Use the fake server for fetch tests as multiple test runs are causing timeout issues
+        // this.useFakeServer = true;
+        // this.fakeServerAutoRespond = true;
+        this.useFakeFetch = true;
+        this.fakeFetchAutoRespond = true;
     }
 }
