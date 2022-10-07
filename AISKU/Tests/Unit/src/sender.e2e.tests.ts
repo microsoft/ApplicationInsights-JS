@@ -1,7 +1,7 @@
 import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { Util } from '@microsoft/applicationinsights-common';
-import { getJSON } from '@microsoft/applicationinsights-core-js';
+import { dumpObj, getJSON } from '@microsoft/applicationinsights-core-js';
 import { SinonSpy } from 'sinon';
 import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
 
@@ -174,7 +174,7 @@ export class SenderE2ETests extends AITestClass {
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {
-                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+                Assert.ok(false, "[warning thrown]: " + dumpObj(this.loggingSpy.args.pop()));
             }
         }
     }
