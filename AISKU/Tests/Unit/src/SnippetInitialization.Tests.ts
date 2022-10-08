@@ -9,7 +9,7 @@ import { isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@mic
 import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
-import { objHasOwnProperty } from "@nevware21/ts-utils";
+import { dumpObj, objHasOwnProperty } from "@nevware21/ts-utils";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
@@ -906,7 +906,7 @@ export class SnippetInitializationTests extends AITestClass {
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {
-                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+                Assert.ok(false, "[warning thrown]: " + dumpObj(this.loggingSpy.args.pop()));
             }
         }
     }
