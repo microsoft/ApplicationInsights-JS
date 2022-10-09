@@ -1,0 +1,49 @@
+{
+    "name":"Application Insights Config",
+    "description":" Application Insights JavaScript SDK - Web Config",
+    "copyright": "(c) Microsoft and contributors. All rights reserved.",
+    "author": "Microsoft Application Insights Team",
+    "throttleConfig": {
+        "default": {
+            "msgKey": 0,
+            "limit": {
+                "sendPercentage": 0,
+                "maxSendNumber": 0
+            },
+            "interval": {
+                "monthInterval": 100,
+                "dayInterval": 100,
+                "maxTimesPerMonth": 0
+            }
+        },
+        "config": {
+            "ikeyDeprecation": {
+                "msgKey": 1,
+                "limit": {
+                    "sendPercentage": 1,
+                    "maxSendNumber": 10
+                },
+                "interval": {
+                    "monthInterval": 3,
+                    "dayInterval": 28,
+                    "maxTimesPerMonth": 1
+                }
+             },
+            "cdnDeprecation": {
+                "ikeyDeprecation": {
+                    "msgKey": 2,
+                    "limit": {
+                        "sendPercentage": 1,
+                        "maxSendNumber": 10
+                    },
+                    "interval": {
+                        "monthInterval": 3,
+                        "dayInterval": 28,
+                        "maxTimesPerMonth": 1
+                    }
+                }
+            }
+        }
+    }
+}
+   
