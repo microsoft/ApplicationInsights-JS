@@ -43,15 +43,25 @@ export interface IDependencyListenerDetails {
 
     /**
      * An integer representation of the W3C TraceContext trace-flags.
-    * https://www.w3.org/TR/trace-context/#trace-flags
-    */
+     * https://www.w3.org/TR/trace-context/#trace-flags
+     */
     traceFlags?: number;
+
+    /**
+     * [Optional] Context that the application can assign that will also be passed to any dependency initializer
+     */
+    context?: { [key: string]: any };
 }
 
+/**
+ * The function that will get called when the ajax request is about to occur.
+ */
 export declare type DependencyListenerFunction = (dependencyDetails: IDependencyListenerDetails) => void;
 
-export interface IDependencyListenerHandler {
+export interface IDependencyHandler {
     remove(): void;
+}
+export interface IDependencyListenerHandler extends IDependencyHandler {
 }
 
 export interface IDependencyListenerContainer {

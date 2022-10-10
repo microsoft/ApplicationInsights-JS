@@ -2,7 +2,7 @@ import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
 import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
-import { Exception, CtxTagKeys, Util } from "@microsoft/applicationinsights-common";
+import { Exception, CtxTagKeys, Util, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _InternalMessageId, LoggingSeverity, getGlobalInst, getGlobal } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends AITestClass {
@@ -50,6 +50,31 @@ export class SenderTests extends AITestClass {
 
                 QUnit.assert.equal(123, this._sender._senderConfig.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
                 QUnit.assert.equal('https://example.com', this._sender._senderConfig.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
+                QUnit.assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
+                QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Validate empty endpointURL falls back to the default",
+            test: () => {
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: '',
+                        maxBatchSizeInBytes: 654,
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 456
+                            }
+                        }
+
+                    }, new AppInsightsCore(), []
+                );
+
+                QUnit.assert.equal(123, this._sender._senderConfig.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
+                QUnit.assert.equal(DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH, this._sender._senderConfig.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
                 QUnit.assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
                 QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
             }
@@ -699,7 +724,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(baseData.ver);
                 QUnit.assert.equal(2, baseData.ver);
 
-                QUnit.assert.equal("javascript:2.8.6", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                QUnit.assert.equal("javascript:2.8.8", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
             }
         })
 

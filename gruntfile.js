@@ -12,6 +12,9 @@ module.exports = function (grunt) {
         "./src/InternalConstants.ts"
     ];
 
+    const configVer = getConfigVersion(false);
+    const configMajorVer = getConfigVersion(true);
+
     function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
         replace(/"/g, '\\"').
@@ -44,6 +47,23 @@ module.exports = function (grunt) {
             }
         };
     }
+
+    function getConfigVersion(isMajorVer) {
+        let version = "";
+        try {
+            let config = grunt.file.readJSON("./tools/config/package.json");
+            let configVer= config["version"];
+            version = "." + configVer;
+            if (isMajorVer) {
+                version = "." + configVer.split(".")[0];
+            }
+
+        } catch (e) {
+            console.log("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
+        }
+        return version;
+    }
+   
 
     function _createRegEx(str) {
         // Converts a string into a global regex, escaping any special characters
@@ -126,7 +146,7 @@ module.exports = function (grunt) {
     // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
     // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
     // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions=["2.8.1"];
+    const perfTestVersions=["2.8.8"];
 
     function buildConfig(modules) {
         var buildCmds = {
@@ -599,6 +619,14 @@ module.exports = function (grunt) {
             },
             'string-replace': {
                 'generate-snippet': generateNewSnippet()
+            },
+            copy: {
+                config: {
+                    files: [
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configVer}.cfg.json` },
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configMajorVer}.cfg.json`}
+                    ]
+                }
             }
         }));
     
@@ -612,8 +640,11 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-qunit');
         grunt.loadNpmTasks('grunt-contrib-connect');
         grunt.loadNpmTasks('grunt-string-replace');
+        grunt.loadNpmTasks('grunt-contrib-copy');
+    
         grunt.loadTasks('./tools/grunt-tasks');
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
+        
 
         grunt.registerTask("core", tsBuildActions("core"));
         grunt.registerTask("core-min", minTasks("core"));

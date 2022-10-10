@@ -84,5 +84,30 @@ export class ExceptionTests extends AITestClass {
                 // Assert.deepEqual(stackFrame, stackFrameConverted);
             }
         });
+
+        this.testCase({
+            name: "StackFrame: ErrorStack can be exported from reason object of errorObj",
+            test: () => {
+                let errObj = {
+                    reason:{
+                        message: "message",
+                        stack: "TypeError: undefined\n at Function.assign(<file>)"
+                    }
+                };
+                let errDetail = {
+                    src: "TypeError: undefined\n at Function.assign(<file>)",
+                    obj:["TypeError: undefined"," at Function.assign(<file>)"]
+                };
+                let exception = Exception.CreateAutoException("message",
+                    "url",
+                    9,
+                    0,
+                    errObj
+                );
+
+                Assert.ok(exception.stackDetails);
+                Assert.deepEqual(exception.stackDetails, errDetail);
+            }
+        });
     }
 }
