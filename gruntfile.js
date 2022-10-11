@@ -12,6 +12,9 @@ module.exports = function (grunt) {
         "./src/InternalConstants.ts"
     ];
 
+    const configVer = getConfigVersion(false);
+    const configMajorVer = getConfigVersion(true);
+
     function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
         replace(/"/g, '\\"').
@@ -44,6 +47,23 @@ module.exports = function (grunt) {
             }
         };
     }
+
+    function getConfigVersion(isMajorVer) {
+        let version = "";
+        try {
+            let config = grunt.file.readJSON("./tools/config/package.json");
+            let configVer= config["version"];
+            version = "." + configVer;
+            if (isMajorVer) {
+                version = "." + configVer.split(".")[0];
+            }
+
+        } catch (e) {
+            console.log("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
+        }
+        return version;
+    }
+   
 
     function _createRegEx(str) {
         // Converts a string into a global regex, escaping any special characters
@@ -599,6 +619,14 @@ module.exports = function (grunt) {
             },
             'string-replace': {
                 'generate-snippet': generateNewSnippet()
+            },
+            copy: {
+                config: {
+                    files: [
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configVer}.cfg.json` },
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configMajorVer}.cfg.json`}
+                    ]
+                }
             }
         }));
     
@@ -612,6 +640,8 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-qunit');
         grunt.loadNpmTasks('grunt-contrib-connect');
         grunt.loadNpmTasks('grunt-string-replace');
+        grunt.loadNpmTasks('grunt-contrib-copy');
+    
         grunt.loadTasks('./tools/grunt-tasks');
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
 
