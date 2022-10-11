@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { asString, dumpObj, isArray, isDefined, isNullOrUndefined, isObject, objHasOwn } from "@nevware21/ts-utils";
+import { asString, isArray, isDefined, isNullOrUndefined, isObject, objHasOwn } from "@nevware21/ts-utils";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { isPlainObject, objForEachKey } from "../JavaScriptSDK/HelperFuncs";
-import { STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
-import { CFG_HANDLER_LINK, _cfgDeepCopy, throwInvalidAccess } from "./DynamicSupport";
-import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./IConfigDefaults";
+import { isPlainObject } from "../JavaScriptSDK/HelperFuncs";
+import { _cfgDeepCopy } from "./DynamicSupport";
+import { IConfigCheckFn, IConfigDefaultCheck, IConfigSetFn } from "./IConfigDefaults";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 
 function _getDefault<C, T>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: C, cfgDefaults: IConfigDefaultCheck<C, C[keyof C]>): C[keyof C] {
@@ -58,12 +57,7 @@ function _getDefault<C, T>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: 
  * @param name
  * @param defaultValue
  */
-export function _applyDefaultValue<T extends IConfiguration, C>(theConfig: C, name: string, defaultValue: C[keyof C] | IConfigDefaultCheck<C, C[keyof C], T>) {
-    let dynamicHandler: IDynamicConfigHandler<T> = theConfig[CFG_HANDLER_LINK];
-    if (!dynamicHandler) {
-        throwInvalidAccess(STR_NOT_DYNAMIC_ERROR + dumpObj(theConfig));
-    }
-
+export function _applyDefaultValue<T extends IConfiguration, C>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: C, name: string, defaultValue: C[keyof C] | IConfigDefaultCheck<C, C[keyof C], T>) {
     // Resolve the initial config value from the provided value or use the defined default
     let isValid: IConfigCheckFn<C[keyof C]>;
     let setFn: IConfigSetFn<C, C[keyof C]>;
@@ -112,20 +106,4 @@ export function _applyDefaultValue<T extends IConfiguration, C>(theConfig: C, na
 
     // Needed to ensure that the (potentially) new field is dynamic even if null/undefined
     dynamicHandler.set(theConfig, name, theValue);
-}
-
-export function applyDefaults<C>(theConfig: C, defaultValues: IConfigDefaults<C>): C {
-    if (defaultValues) {
-        if (theConfig && !theConfig[CFG_HANDLER_LINK] && (isPlainObject(theConfig) || isArray(theConfig))) {
-            throwInvalidAccess(STR_NOT_DYNAMIC_ERROR + dumpObj(theConfig))
-        }
-    
-        // Resolve/apply the defaults
-        objForEachKey(defaultValues, (name, value) => {
-            // Sets the value and makes it dynamic (if it doesn't already exist)
-            _applyDefaultValue(theConfig, name, value);
-        });
-    }
-
-    return theConfig;
 }

@@ -92,6 +92,5 @@ export { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } fr
 export { IDynamicConfigHandler } from "./Config/IDynamicConfigHandler";
 export { IDynamicPropertyHandler } from "./Config/IDynamicPropertyHandler";
 export { IWatchDetails, IWatcherHandler, WatcherFunction } from "./Config/IDynamicWatcher";
-export { applyDefaults } from "./Config/ConfigDefaults";
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
 export { getDynamicConfigHandler } from "./Config/DynamicSupport";

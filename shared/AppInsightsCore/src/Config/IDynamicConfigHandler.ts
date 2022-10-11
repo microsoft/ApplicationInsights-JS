@@ -3,6 +3,7 @@
 
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IConfigDefaults } from "./IConfigDefaults";
 import { IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
 
 /**
@@ -41,6 +42,13 @@ export interface IDynamicConfigHandler<T extends IConfiguration> {
      * @throws TypeError if the provided config is not a monitored dynamic config
      */
     set: <C, V>(theConfig: C, name: string, value: V) => V;
+
+    /**
+     * Set default values for the config if not present.
+     * @param theConfig - The configuration object to set default on (if missing)
+     * @param defaultValues - The default values to apply to the config
+     */
+    setDf: <C>(theConfig: C, defaultValues: IConfigDefaults<C, T>) => C;
 }
 
 /**

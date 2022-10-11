@@ -4,7 +4,6 @@ import {
     arrForEach, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objDeepFreeze,
     objForEachKey, strEndsWith, strTrim
 } from "@nevware21/ts-utils";
-import { applyDefaults } from "../Config/ConfigDefaults";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
@@ -150,10 +149,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     onConfigChange(rootConfig, (details) => {
 
         // Make sure the root config has all of the the defaults to the root config to ensure they are dynamic
-        applyDefaults(details.cfg, rootDefaultConfig);
+        details.setDf(details.cfg, rootDefaultConfig);
 
         // Create and apply the defaults to the cookieCfg element
-        cookieMgrConfig = applyDefaults(details.cfg.cookieCfg, defaultConfig);
+        cookieMgrConfig =  details.setDf(details.cfg.cookieCfg, defaultConfig);
         let isEnabled = cookieMgrConfig.enabled;
         if (isNullOrUndefined(isEnabled)) {
             // Set the enabled from the provided setting or the legacy root values

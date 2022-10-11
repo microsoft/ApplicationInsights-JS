@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, dumpObj, newSymbol } from "@nevware21/ts-utils";
+import { ITimerHandler, arrForEach, dumpObj, newSymbol, scheduleTimeout } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { throwInvalidAccess } from "./DynamicSupport";
 import { _IInternalDynamicConfigHandler } from "./IDynamicConfigHandler";
@@ -34,7 +34,7 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
     let dynamicPropertySymbol = newSymbol(symPrefix + "get" + cfgHandler.uid + symPostfix);
     let dynamicPropertyReadOnly = newSymbol(symPrefix + "ro" + cfgHandler.uid + symPostfix);
     let _waitingHandlers: IWatcherHandler<T>[] = null;
-    let _watcherTimer: any = null;
+    let _watcherTimer: ITimerHandler = null;
     let theState: _IDynamicConfigHandlerState<T>;
 
     function _useHandler(activeHandler: IWatcherHandler<T>, callback: WatcherFunction<T>) {
@@ -43,7 +43,8 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
             theState.act = activeHandler;
             callback({
                 cfg: cfgHandler.cfg,
-                hdlr: cfgHandler
+                set: cfgHandler.set.bind(cfgHandler),
+                setDf: cfgHandler.setDf.bind(cfgHandler)
             });
         } catch(e) {
             const message = "Watcher [" + dumpObj(callback) + "] failed [" + dumpObj(e) + "]";
@@ -65,7 +66,7 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
             _waitingHandlers = null;
             if (_watcherTimer) {
                 // Stop any timer as we are running them now anyway
-                clearTimeout(_watcherTimer);
+                _watcherTimer.cancel();
                 _watcherTimer = null;
             }
 
@@ -91,7 +92,7 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
             }
     
             if (!_watcherTimer) {
-                _watcherTimer = setTimeout(() => {
+                _watcherTimer = scheduleTimeout(() => {
                     _watcherTimer = null;
                     _notifyWatchers();
                 }, 0);

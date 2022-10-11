@@ -6,8 +6,9 @@ import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/Lo
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { createUniqueNamespace } from "../JavaScriptSDK/DataCacheHelper";
+import { objForEachKey } from "../JavaScriptSDK/HelperFuncs";
 import { STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
-import { applyDefaults } from "./ConfigDefaults";
+import { _applyDefaultValue } from "./ConfigDefaults";
 import { _makeDynamicObject, _setDynamicProperty } from "./DynamicProperty";
 import { _createState } from "./DynamicState";
 import { CFG_HANDLER_LINK, _cfgDeepCopy, getDynamicConfigHandler, throwInvalidAccess } from "./DynamicSupport";
@@ -46,10 +47,10 @@ function _createAndUseHandler<T>(state: _IDynamicConfigHandlerState<T>, configHa
  * @returns The existing dynamic handler or a new instance with the provided config values
  */
 function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogger, target: T, inPlace: boolean) : IDynamicConfigHandler<T> {
-    let dynamicConfig = getDynamicConfigHandler(target);
-    if (dynamicConfig) {
+    let dynamicHandler = getDynamicConfigHandler(target);
+    if (dynamicHandler) {
         // The passed config is already dynamic so return it's tracker
-        return dynamicConfig;
+        return dynamicHandler;
     }
 
     let uid = createUniqueNamespace("dyncfg", true);
@@ -73,12 +74,25 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
         theState.use(null, configHandler);
     }
 
+    function _applyDefaults<C>(theConfig: C, defaultValues: IConfigDefaults<C, T>): C {
+        if (defaultValues) {
+            // Resolve/apply the defaults
+            objForEachKey(defaultValues, (name: string, value: any) => {
+                // Sets the value and makes it dynamic (if it doesn't already exist)
+                _applyDefaultValue(cfgHandler, theConfig, name, value);
+            });
+        }
+    
+        return theConfig;
+    }
+
     let cfgHandler: _IInternalDynamicConfigHandler<T> = {
         uid: null,      // Will get replaced with a get property to ensure it's readonly nature
         cfg: newTarget,
         logger: logger,
         notify: _notifyWatchers,
         set: _setValue,
+        setDf: _applyDefaults,
         watch: _watch,
         _block: _block
     };
@@ -120,13 +134,13 @@ function _logInvalidAccess(logger: IDiagnosticLogger, message: string) {
  * @returns The dynamic config handler for the config (whether new or existing)
  */
 export function createDynamicConfig<T extends IConfiguration>(config: T, defaultConfig?: IConfigDefaults<T>, logger?: IDiagnosticLogger, inPlace?: boolean): IDynamicConfigHandler<T> {
-    let dynamic = _createDynamicHandler<T>(logger, config || {} as T, inPlace);
+    let dynamicHandler = _createDynamicHandler<T>(logger, config || {} as T, inPlace);
 
     if (defaultConfig) {
-        applyDefaults(dynamic.cfg, defaultConfig);
+        dynamicHandler.setDf(dynamicHandler.cfg, defaultConfig);
     }
 
-    return dynamic;
+    return dynamicHandler;
 }
 
 /**
