@@ -4,8 +4,8 @@ import * as pako from "pako";
 import { Snippet } from "../../../src/Initialization";
 
 export class AISKUSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 118;
-    private readonly MAX_BUNDLE_SIZE = 118;
+    private readonly MAX_RAW_SIZE = 119;
+    private readonly MAX_BUNDLE_SIZE = 119;
     private readonly MAX_RAW_DEFLATE_SIZE = 46;
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 47;
     private readonly rawFilePath = "../dist/applicationinsights-web.min.js";
