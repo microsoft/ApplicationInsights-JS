@@ -377,6 +377,10 @@ function shouldProcess(name) {
         return updateDefPkgs;
     }
 
+    if (name.indexOf("tools/config") !== -1) {
+        return updateDefPkgs;
+    }
+
     if (name === "package.json") {
         return updateDefPkgs;
     }
