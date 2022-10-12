@@ -21,26 +21,29 @@ let _cachedGlobal: Window = null;
  * of the properties or functions.
  */
 export function getGlobal(useCached: boolean = true): Window {
-    if (!_cachedGlobal || !useCached) {
+    let result = useCached === false ? null : _cachedGlobal;
 
-        if (typeof globalThis !== strShimUndefined && globalThis) {
-            _cachedGlobal = globalThis;
+    if (!result) {
+        if (typeof globalThis !== strShimUndefined) {
+            result = globalThis;
         }
 
-        if (typeof self !== strShimUndefined && self) {
-            _cachedGlobal = self;
+        if (!result && typeof self !== strShimUndefined) {
+            result = self;
         }
 
-        if (typeof window !== strShimUndefined && window) {
-            _cachedGlobal = window;
+        if (!result && typeof window !== strShimUndefined) {
+            result = window;
+        }
+    
+        if (!result && typeof global !== strShimUndefined) {
+            result = global;
         }
 
-        if (typeof global !== strShimUndefined && global) {
-            _cachedGlobal = global;
-        }
+        _cachedGlobal = result;
     }
 
-    return _cachedGlobal;
+    return result;
 }
 
 export function throwTypeError(message: string): never {
