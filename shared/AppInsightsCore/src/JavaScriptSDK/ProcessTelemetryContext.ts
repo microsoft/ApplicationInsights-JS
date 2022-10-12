@@ -3,7 +3,7 @@
 "use strict";
 
 import { arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objFreeze, objKeys } from "@nevware21/ts-utils";
-import { _applyDefaultValue, applyDefaults } from "../Config/ConfigDefaults";
+import { _applyDefaultValue } from "../Config/ConfigDefaults";
 import { createDynamicConfig } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
 import { IDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
@@ -65,19 +65,19 @@ function _getNextProxyStart(proxy: ITelemetryPluginChain, core: IAppInsightsCore
 /**
  * @ignore
  * @param telemetryChain
- * @param dynamicConfig
+ * @param dynamicHandler
  * @param core
  * @param startAt - Identifies the next plugin to execute, if null there is no "next" plugin and if undefined it should assume the start of the chain
  * @returns
  */
-function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain: ITelemetryPluginChain, dynamicConfig: IDynamicConfigHandler<IConfiguration>, core: IAppInsightsCore, startAt?: IPlugin): IInternalContext<T> {
+function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain: ITelemetryPluginChain, dynamicHandler: IDynamicConfigHandler<IConfiguration>, core: IAppInsightsCore, startAt?: IPlugin): IInternalContext<T> {
     // We have a special case where we want to start execution from this specific plugin
     // or we simply reuse the existing telemetry plugin chain (normal execution case)
     let _nextProxy: ITelemetryPluginChain | null = null;  // By Default set as no next plugin
     let _onComplete: OnCompleteCallback[] = [];
 
-    if (!dynamicConfig) {
-        dynamicConfig = createDynamicConfig({}, null, core.logger);
+    if (!dynamicHandler) {
+        dynamicHandler = createDynamicConfig({}, null, core.logger);
     }
 
     if (startAt !== null) {
@@ -92,10 +92,10 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
                 return core
             },
             diagLog: () => {
-                return safeGetLogger(core, dynamicConfig.cfg);
+                return safeGetLogger(core, dynamicHandler.cfg);
             },
             getCfg: () => {
-                return dynamicConfig.cfg;
+                return dynamicHandler.cfg;
             },
             getExtCfg: _resolveExtCfg,
             getConfig: _getConfig,
@@ -153,19 +153,26 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
 
     function _getExtCfg<T>(identifier: string, createIfMissing: boolean) {
         let idCfg: T = null;
-        if (dynamicConfig.cfg && identifier) {
-            let extCfg = dynamicConfig.cfg.extensionConfig;
+        let cfg = dynamicHandler.cfg;
+        if (cfg && identifier) {
+            let extCfg = cfg.extensionConfig;
             if (!extCfg && createIfMissing) {
-                dynamicConfig.set(dynamicConfig.cfg, "extensionConfig", {});
-                extCfg = dynamicConfig.cfg.extensionConfig;
+                extCfg = {};
             }
-            
+
+            // Always set the value so that it's created as a dynamic config element (if not already)
+            dynamicHandler.set(cfg, "extensionConfig", extCfg);  // Note: it is valid for the "value" to be undefined
+            extCfg = cfg.extensionConfig;
+        
             if (extCfg) {
                 idCfg = extCfg[identifier];
                 if (!idCfg && createIfMissing) {
-                    dynamicConfig.set(extCfg, identifier, {});
-                    idCfg = extCfg[identifier];
+                    idCfg = {} as T;
                 }
+
+                // Always set the value so that it's created as a dynamic config element (if not already)
+                dynamicHandler.set(extCfg, identifier, idCfg);
+                idCfg = extCfg[identifier];
             }
         }
 
@@ -181,23 +188,23 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
             objForEachKey(defaultValues, (field, defaultValue) => {
                 // for each unspecified field, set the default value
                 if (isNullOrUndefined(newConfig[field])) {
-                    let cfgValue = dynamicConfig.cfg[field];
+                    let cfgValue = dynamicHandler.cfg[field];
                     if (cfgValue || !isNullOrUndefined(cfgValue)) {
                         newConfig[field] = cfgValue;
                     }
                 }
 
-                _applyDefaultValue(newConfig, field, defaultValue);
+                _applyDefaultValue(dynamicHandler, newConfig, field, defaultValue);
             });
         }
 
-        return applyDefaults(newConfig, defaultValues);
+        return dynamicHandler.setDf(newConfig, defaultValues);
     }
 
     function _getConfig(identifier:string, field: string, defaultValue: number | string | boolean | string[] | RegExp[] | Function = false) {
         let theValue;
         let extConfig: T = _getExtCfg(identifier, false);
-        let rootConfig = dynamicConfig.cfg;
+        let rootConfig = dynamicHandler.cfg;
 
         if (extConfig && (extConfig[field] || !isNullOrUndefined(extConfig[field]))) {
             theValue = extConfig[field];

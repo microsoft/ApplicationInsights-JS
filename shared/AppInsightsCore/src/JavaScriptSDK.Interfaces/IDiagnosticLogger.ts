@@ -4,8 +4,6 @@ import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/Logg
 import { _InternalLogMessage } from "../JavaScriptSDK/DiagnosticLogger";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
 
-"use strict"
-
 export interface IDiagnosticLogger {
     /**
      * When this is true the SDK will throw exceptions to aid in debugging.
@@ -38,14 +36,14 @@ export interface IDiagnosticLogger {
 
     /**
      * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
-     * @param severity - {LoggingSeverity} - The severity of the log message
-     * @param message - {_InternalLogMessage} - The log message.
+     * @param severity - The severity of the log message
+     * @param message - The log message.
      */
     throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void;
 
     /**
      * This will write a warning to the console if possible
-     * @param message - {string} - The warning message
+     * @param message - The warning message
      */
     warnToConsole(message: string): void;
 
@@ -53,7 +51,7 @@ export interface IDiagnosticLogger {
      * This will write an error to the console if possible.
      * Provided by the default DiagnosticLogger instance, and internally the SDK will fall back to warnToConsole, however,
      * direct callers MUST check for its existence on the logger as you can provide your own IDiagnosticLogger instance.
-     * @param message - {string} - The error message
+     * @param message - The error message
      */
     errorToConsole?(message: string): void;
 
@@ -64,8 +62,8 @@ export interface IDiagnosticLogger {
 
     /**
      * Logs a message to the internal queue.
-     * @param severity - {LoggingSeverity} - The severity of the log message
-     * @param message - {_InternalLogMessage} - The message to log.
+     * @param severity - The severity of the log message
+     * @param message - The message to log.
      */
     logInternalMessage?(severity: LoggingSeverity, message: _InternalLogMessage): void;
 

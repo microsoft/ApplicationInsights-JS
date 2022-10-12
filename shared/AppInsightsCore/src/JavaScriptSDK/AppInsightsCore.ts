@@ -7,7 +7,6 @@ import {
     arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, isFunction, isNullOrUndefined, objDeepFreeze, objDefineProp, objFreeze,
     objHasOwn, throwError
 } from "@nevware21/ts-utils";
-import { applyDefaults } from "../Config/ConfigDefaults";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
 import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
@@ -154,7 +153,7 @@ function _deepMergeConfig(details: IWatchDetails<IConfiguration>, target: any, n
                 _deepMergeConfig(details, target[key], value, merge);
             } else {
                 // Just Assign (replace) and/or make the property dynamic
-                details.hdlr.set(target, key, value);
+                details.set(target, key, value);
             }
         });
     }
@@ -612,13 +611,13 @@ export class AppInsightsCore implements IAppInsightsCore {
                         objForEachKey(theConfig, (key) => {
                             if (!objHasOwn(newConfig, key)) {
                                 // Set the value to undefined
-                                details.hdlr.set(theConfig, key, UNDEFINED_VALUE);
+                                details.set(theConfig, key, UNDEFINED_VALUE);
                             }
                         });
                     }
 
                     // Apply defaults to the new config
-                    applyDefaults(theConfig, defaultConfig as any);
+                    details.setDf(theConfig, defaultConfig as any);
 
                     // Reapply the notification manager
                     _initExtConfig();
