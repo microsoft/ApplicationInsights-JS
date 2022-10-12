@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, isArray, objForEachKey, symbolFor, throwTypeError } from "@nevware21/ts-utils";
+import { isArray, objForEachKey, symbolFor, throwTypeError } from "@nevware21/ts-utils";
 import { isPlainObject } from "../JavaScriptSDK/HelperFuncs";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 
@@ -13,18 +13,17 @@ export const CFG_HANDLER_LINK = symbolFor("[[ai_dynCfg_1]]");
 export function _cfgDeepCopy<T>(source: T): T {
 
     if (source) {
+        let target: any;
+
         if (isArray(source)) {
-            let result: any[] = [];
-            result.length = source.length;
-            arrForEach(source, (value, idx) => {
-                result[idx] = _cfgDeepCopy(value);
-            });
-    
-            return <any>result;
+            target = [];
+            target.length = source.length;
+        } else if (isPlainObject(source)) {
+            target = {} as T;
         }
-    
-        if (isPlainObject(source)) {
-            let target = {} as T;
+
+        if (target) {
+            // Copying index values by property name as the extensionConfig can be an array or object
             objForEachKey(source, (key, value) => {
                 // Perform a deep copy of the object
                 target[key] = _cfgDeepCopy(value);
