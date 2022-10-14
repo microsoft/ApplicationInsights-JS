@@ -3,7 +3,7 @@
 
 import { ITimerHandler, arrForEach, dumpObj, newSymbol, scheduleTimeout } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { throwInvalidAccess } from "./DynamicSupport";
+import { throwAggregationError } from "../JavaScriptSDK/AggregationError";
 import { _IInternalDynamicConfigHandler } from "./IDynamicConfigHandler";
 import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "./IDynamicWatcher";
 import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
@@ -47,14 +47,14 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
                 setDf: cfgHandler.setDf.bind(cfgHandler)
             });
         } catch(e) {
-            const message = "Watcher [" + dumpObj(callback) + "] failed [" + dumpObj(e) + "]";
             let logger = cfgHandler.logger;
             if (logger) {
                 // Don't let one individual failure break everyone
-                cfgHandler.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.ConfigWatcherException, message);
-            } else {
-                throwInvalidAccess(message);
+                logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.ConfigWatcherException, "Watcher [" + dumpObj(callback) + "] failed [" + dumpObj(e) + "]");
             }
+
+            // Re-throw the exception so that any true "error" is reported back to the called
+            throw e;
         } finally {
             theState.act = prevWatcher || null;
         }
@@ -70,17 +70,32 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
                 _watcherTimer = null;
             }
 
+            let watcherFailures: any[] = [];
+
             // Now run the handlers
             arrForEach(notifyHandlers, (handler) => {
                 // The handler may have self removed as part of another handler so re-check
                 if (handler.fn) {
-                    _useHandler(handler, handler.fn);
+                    try {
+                        _useHandler(handler, handler.fn);
+                    } catch (e) {
+                        // Don't let a single failing watcher cause other watches to fail
+                        watcherFailures.push(e);
+                    }
                 }
             });
 
             // During notification we may have had additional updates -- so notify those updates as well
             if (_waitingHandlers) {
-                _notifyWatchers();
+                try {
+                    _notifyWatchers();
+                } catch (e) {
+                    watcherFailures.push(e);
+                }
+            }
+
+            if (watcherFailures.length > 0) {
+                throwAggregationError("Unexpected watcher error occurred: ", watcherFailures);
             }
         }
     }
