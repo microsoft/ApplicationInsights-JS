@@ -274,14 +274,8 @@ export class AppInsightsCore implements IAppInsightsCore {
 
                 _notificationManager = notificationManager;
 
-                // For backward compatibility only
-                _self[strNotificationManager] = notificationManager;
-
                 _initDebugListener();
                 _initPerfManager();
-
-                // add notification to the extensions in the config so other plugins can access it
-                _initExtConfig();
 
                 _self.logger = logger || new DiagnosticLogger(config);
                 _configHandler.logger = _self.logger;
@@ -359,6 +353,9 @@ export class AppInsightsCore implements IAppInsightsCore {
                         // For backward compatibility only
                         _self[strNotificationManager] = _notificationManager;
                     }));
+
+                    // Ensure that the current notification manager is exposed
+                    _configHandler.cfg.extensionConfig.NotificationManager = _notificationManager;
                 }
 
                 return _notificationManager;
@@ -371,9 +368,7 @@ export class AppInsightsCore implements IAppInsightsCore {
              * @param listener - An INotificationListener object.
              */
             _self.addNotificationListener = (listener: INotificationListener): void => {
-                if (_notificationManager) {
-                    _notificationManager.addNotificationListener(listener);
-                }
+                _self.getNotifyMgr().addNotificationListener(listener);
             };
         
             /**
@@ -604,6 +599,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
                     // Lets assign the new values to the existing config either overwriting or re-assigning
                     let theConfig = details.cfg;
+                    let notificationManager = theConfig.extensionConfig.NotificationManager;
                     _deepMergeConfig(details, theConfig, newConfig, mergeExisting);
 
                     if (!mergeExisting) {
@@ -620,7 +616,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                     details.setDf(theConfig, defaultConfig as any);
 
                     // Reapply the notification manager
-                    _initExtConfig();
+                    theConfig.extensionConfig.NotificationManager = notificationManager;
                 });
 
                 // Now execute all of the listeners (synchronously) so they update their values immediately
@@ -917,6 +913,9 @@ export class AppInsightsCore implements IAppInsightsCore {
             }
 
             function _initDebugListener() {
+                // Lazily ensure that the notification manager is created
+                !_notificationManager && _self.getNotifyMgr();
+
                 // Will get recalled if any referenced config values are changed
                 _addUnloadHook(_configHandler.watch((details) => {
                     let disableDbgExt = details.cfg.disableDbgExt;
@@ -949,10 +948,6 @@ export class AppInsightsCore implements IAppInsightsCore {
                         getSetValue(details.cfg, STR_CREATE_PERF_MGR, _createPerfManager);
                     }
                 }));
-            }
-
-            function _initExtConfig() {
-                _configHandler.cfg.extensionConfig.NotificationManager = _notificationManager;
             }
 
             function _doUpdate(updateState: ITelemetryUpdateState): void {
