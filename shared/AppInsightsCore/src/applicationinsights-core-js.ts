@@ -16,6 +16,7 @@ export { eEventsDiscardedReason, EventsDiscardedReason } from "./JavaScriptSDK.E
 export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
+export { throwAggregationError } from "./JavaScriptSDK/AggregationError";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
 export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./JavaScriptSDK/RandomHelper";
