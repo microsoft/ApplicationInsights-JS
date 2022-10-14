@@ -353,9 +353,6 @@ export class AppInsightsCore implements IAppInsightsCore {
                         // For backward compatibility only
                         _self[strNotificationManager] = _notificationManager;
                     }));
-
-                    // Ensure that the current notification manager is exposed
-                    _configHandler.cfg.extensionConfig.NotificationManager = _notificationManager;
                 }
 
                 return _notificationManager;
@@ -599,7 +596,6 @@ export class AppInsightsCore implements IAppInsightsCore {
 
                     // Lets assign the new values to the existing config either overwriting or re-assigning
                     let theConfig = details.cfg;
-                    let notificationManager = theConfig.extensionConfig.NotificationManager;
                     _deepMergeConfig(details, theConfig, newConfig, mergeExisting);
 
                     if (!mergeExisting) {
@@ -614,9 +610,6 @@ export class AppInsightsCore implements IAppInsightsCore {
 
                     // Apply defaults to the new config
                     details.setDf(theConfig, defaultConfig as any);
-
-                    // Reapply the notification manager
-                    theConfig.extensionConfig.NotificationManager = notificationManager;
                 });
 
                 // Now execute all of the listeners (synchronously) so they update their values immediately

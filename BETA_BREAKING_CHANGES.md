@@ -165,6 +165,11 @@ All previously `@deprecated` marked functions and the legacy "global" cookie han
 -`hasOwnProperty()`
   - use `objHasOwnProperty()`
 
+#### Exposed Runtime configuration values
+
+- `config.extensionConfig.NotificationManager` In eariler versions this was assigned to the current notification manager, this is now removed
+  - You can access the current notification manager via `core.getNotifyMgr()` which is more reliable as it will lazily create an instance if one is currently not assigned.
+
 ##### Removed no replacement
 
 __Functions__
