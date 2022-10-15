@@ -259,8 +259,9 @@ export class AppInsightsCore implements IAppInsightsCore {
                     throwError("Core cannot be initialized more than once");
                 }
 
-                // Re-assigning the local config property so we don't have any references to the passed value and it can be garbage collected
                 _configHandler = createDynamicConfig(config, defaultConfig, logger || _self.logger, false);
+
+                // Re-assigning the local config property so we don't have any references to the passed value and it can be garbage collected
                 config = _configHandler.cfg;
 
                 // This will be "re-run" if the referenced config properties are changed
@@ -572,21 +573,23 @@ export class AppInsightsCore implements IAppInsightsCore {
             };
 
             _self.updateCfg = <T extends IConfiguration = IConfiguration>(newConfig: T, mergeExisting: boolean = true) => {
-                let updateState: ITelemetryUpdateState = {
-                    reason: TelemetryUpdateReason.ConfigurationChanged,
-                    cfg: _configHandler.cfg,
-                    oldCfg: deepExtend({}, _configHandler.cfg),
-                    newConfig: deepExtend({}, newConfig),
-                    merge: mergeExisting
-                };
+                let updateState: ITelemetryUpdateState;
+                if (_self.isInitialized()) {
+                    updateState = {
+                        reason: TelemetryUpdateReason.ConfigurationChanged,
+                        cfg: _configHandler.cfg,
+                        oldCfg: deepExtend({}, _configHandler.cfg),
+                        newConfig: deepExtend({}, newConfig),
+                        merge: mergeExisting
+                    };
 
-                newConfig = updateState.newConfig as T;
+                    newConfig = updateState.newConfig as T;
+                    let cfg =  _configHandler.cfg;
 
-                let cfg =  _configHandler.cfg;
-
-                // replace the immutable values
-                newConfig.extensions = cfg.extensions;
-                newConfig.channels = cfg.channels;
+                    // replace the immutable (if initialized) values
+                    newConfig.extensions = cfg.extensions;
+                    newConfig.channels = cfg.channels;
+                }
 
                 // We don't currently allow updating the extensions and channels via the update config
                 // So overwriting any user provided values to reuse the existing values
@@ -615,8 +618,9 @@ export class AppInsightsCore implements IAppInsightsCore {
                 // Now execute all of the listeners (synchronously) so they update their values immediately
                 _configHandler.notify();
 
-                _doUpdate(updateState);
-
+                if (updateState) {
+                    _doUpdate(updateState);
+                }
             };
 
             _self.evtNamespace = (): string => {
@@ -672,13 +676,9 @@ export class AppInsightsCore implements IAppInsightsCore {
                     enumerable: true,
                     get: () => _configHandler.cfg,
                     set: (newValue) => {
-                        if (_self.isInitialized()) {
-                            _self.updateCfg(newValue, false);
-                        }
+                        _self.updateCfg(newValue, false);
                     }
                 });
-
-
 
                 _self.logger = new DiagnosticLogger(_configHandler.cfg);
                 _self._extensions = [];
