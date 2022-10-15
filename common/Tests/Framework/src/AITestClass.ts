@@ -5,6 +5,7 @@ import { SinonSandbox, SinonSpy, SinonStub, SinonMock, SinonFakeXMLHttpRequest }
 import * as sinon from "sinon";
 import { Assert } from "./Assert";
 import { ITestContext, StepResult, TestCase, TestCaseAsync } from "./TestCase";
+import { getNavigator, getPerformance, setBypassLazyCache } from "@nevware21/ts-utils";
 
 const stepRetryCnt = "retryCnt";
 
@@ -113,6 +114,7 @@ export class AITestClass {
     // Simulate an IE environment
     private _orgObjectFuncs: any = null;
     private _orgFetch: any = null;
+    private _orgSymbol: Symbol = null;
 
     private _onDoneFuncs: VoidFunction[] = [];
 
@@ -604,6 +606,8 @@ export class AITestClass {
                         return userAgent;
                     }
                 });
+
+            setBypassLazyCache(true);
         } catch (e) {
             QUnit.assert.ok(false, "Failed to set the userAgent - " + e);
             throw e;
@@ -669,6 +673,9 @@ export class AITestClass {
                         return newNavigator;
                     }
                 });
+
+            // clear any cached content
+            setBypassLazyCache(true);
         } catch (e) {
             QUnit.assert.ok(true, "Set Navigator failed - " + e);
             sinon.stub(window, "navigator").returns(newNavigator);
@@ -722,6 +729,8 @@ export class AITestClass {
                         this._orgPerformance[name] = window.performance[name];
                     }
                 }
+
+                getPerformance();
             } catch (e) {
                 console.log("Saving performance values - " + e);
                 QUnit.assert.ok(false, "Saving performance values failed - " + e);
@@ -741,6 +750,7 @@ export class AITestClass {
                         window.performance[name] = this._orgPerformance[name];
                     }
                 }
+
             } catch (e) {
                 console.log("Restoring performance values - " + e);
                 QUnit.assert.ok(false, "Restoring performance values failed - " + e);
@@ -749,6 +759,8 @@ export class AITestClass {
 
             this._orgNavigator = null;
         }
+
+        getPerformance();
     }
 
 
@@ -883,7 +895,11 @@ export class AITestClass {
         // Initialize the sandbox similar to what is done in sinon.js "test()" override. See note on class.
         _self.sandbox = sinon.createSandbox(this.sandboxConfig);
 
+
         if (_self.isEmulatingIe) {
+            // Reset any previously cached values, which may have grabbed the mocked values
+            setBypassLazyCache(true);
+
             // As we removed Object.define we need to temporarily restore this for each sandbox call
             for (var field in _self.sandbox) {
                 var value = _self.sandbox[field];
@@ -959,6 +975,7 @@ export class AITestClass {
         if (this._orgNavigator) {
             this.setNavigator(this._orgNavigator);
             this._orgNavigator = null;
+            getNavigator();
         }
 
         this._restorePerformance();
@@ -1069,6 +1086,14 @@ export class AITestClass {
         this._orgObjectFuncs = null;
 
         this._unhookFetch();
+
+        if (this._orgSymbol) {
+            let global = window as any;
+            global["Symbol"] = this._orgSymbol;
+            this._orgSymbol = null;
+
+            setBypassLazyCache(true);
+        }
     }
 
     private _emulateIE() {
@@ -1090,6 +1115,15 @@ export class AITestClass {
 
         // Lets pretend to also be IE9
         this.setUserAgent("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0)");
+
+        if (!this._orgSymbol) {
+            let global = window as any;
+            this._orgSymbol = global["Symbol"];
+            global["Symbol"] = undefined;
+        }
+
+        // clear any lazy cached global values
+        setBypassLazyCache(true);
     }
 
     private _unhookXhr() {
