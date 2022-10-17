@@ -49,6 +49,7 @@ export const DistributedTracingModes = createEnumStyle<typeof eDistributedTracin
 export type DistributedTracingModes = number | eDistributedTracingModes;
 
 export const enum IThrottleMsgKey {
+    default = 0,
     ikeyDeprecate = 1,
     cdnDeprecate = 2
 }

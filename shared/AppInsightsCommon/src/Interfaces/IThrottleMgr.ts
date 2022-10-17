@@ -6,11 +6,11 @@ import { IThrottleMsgKey } from "../Enums";
  */
 export interface IThrottleLimit {
     /**
-     * Identifies limit percentage of items sent per time
-     * In %, for example: 20 means 20%
+     * Identifies sampling percentage of items per time
+     * In /1000, for example: 200 means 0.2
      * Default: 100
      */
-    sendPercentage?: number;
+    samplingPercentage?: number;
 
     /**
      * Identifies limit number of items per time
@@ -83,7 +83,13 @@ export interface IthrottleLocalStorageObj {
     /**
     * Identifies current count
     */
+
     count: number;
+
+    /**
+     * identifies if the throttle is triggered
+     */
+    isTriggered: boolean;
 }
 
 /**
