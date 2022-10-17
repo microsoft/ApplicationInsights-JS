@@ -42,7 +42,7 @@ export {
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
     isReactNative, getConsole, dumpObj, isIE, getIEVersion, isSafari,
     setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported,
-    findMetaTag, findNamedServerTiming, openXhr
+    findMetaTag, findNamedServerTiming
 } from "./JavaScriptSDK/EnvUtils";
 export {
     getGlobal,

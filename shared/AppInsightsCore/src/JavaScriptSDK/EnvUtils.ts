@@ -413,59 +413,6 @@ export function isXhrSupported(): boolean {
     return isSupported;
 }
 
-/**
- * Create and open an XMLHttpRequest object
- * @param method - The request method
- * @param urlString - The url
- * @param withCredentials - Option flag indicating that credentials should be sent
- * @param disabled - Optional flag indicating that the XHR object should be marked as disabled and not tracked (default is false)
- * @param isSync - Optional flag indicating if the instance should be a synchronous request (defaults to false)
- * @param timeout - Optional value identifying the timeout value that should be assigned to the XHR request
- * @returns A new opened XHR request
- */
-export function openXhr(method: string, urlString: string, withCredentials?: boolean, disabled: boolean = false, isSync: boolean = false, timeout?: number) {
-
-    function _wrapSetXhrProp<T>(xhr: XMLHttpRequest, prop: string, value: T) {
-        try {
-            xhr[prop] = value;
-        } catch (e) {
-            // - Wrapping as depending on the environment setting the property may fail (non-terminally)
-        }
-    }
-
-    let xhr = new XMLHttpRequest();
-
-    if (disabled) {
-        // Tag the instance so it's not tracked (trackDependency)
-        // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
-        // cause the request to fail and we no telemetry would be sent
-        _wrapSetXhrProp(xhr, strDisabledPropertyName, disabled);
-    }
-
-    if (withCredentials) {
-        // Some libraries require that the withCredentials flag is set "before" open and
-        // - Wrapping as IE 10 has started throwing when setting before open
-        _wrapSetXhrProp(xhr, strWithCredentials, withCredentials);
-    }
-
-    xhr.open(method, urlString, !isSync);
-
-    if (withCredentials) {
-        // withCredentials should be set AFTER open (https://xhr.spec.whatwg.org/#the-withcredentials-attribute)
-        // And older firefox instances from 11+ will throw for sync events (current versions don't) which happens during unload processing
-        _wrapSetXhrProp(xhr, strWithCredentials, withCredentials);
-    }
-
-    // Only set the timeout for asynchronous requests as
-    // "Timeout shouldn't be used for synchronous XMLHttpRequests requests used in a document environment or it will throw an InvalidAccessError exception.""
-    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/timeout
-    if (!isSync && timeout) {
-        _wrapSetXhrProp(xhr, strTimeout, timeout);
-    }
-
-    return xhr;
-}
-
 
 function _getNamedValue(values: any, name: string) {
     if (values) {
