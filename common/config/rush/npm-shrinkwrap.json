@@ -574,7 +574,7 @@
     "node_modules/@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-common.tgz",
-      "integrity": "sha512-Ov93UI41fMh3QxEfWiPkDph78NU74bsj2pll/ybV9r1EY9oRe/L6XmCAaiQuNWzIdBv21rUncVGajrF0eKzeQw==",
+      "integrity": "sha512-1RaBSXyzWQefs/YF0Ol26DG4C3IO5eBxdITklnQdm8z6bb2s9aJzX3Kk9jjOLdIqUQ0gSSBTQZ6HvtCPxDTNoA==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.18.1",
         "@microsoft/dynamicproto-js": "^1.1.7",
@@ -5892,7 +5892,7 @@
     },
     "@rush-temp/applicationinsights-common": {
       "version": "file:projects\\applicationinsights-common.tgz",
-      "integrity": "sha512-Ov93UI41fMh3QxEfWiPkDph78NU74bsj2pll/ybV9r1EY9oRe/L6XmCAaiQuNWzIdBv21rUncVGajrF0eKzeQw==",
+      "integrity": "sha512-1RaBSXyzWQefs/YF0Ol26DG4C3IO5eBxdITklnQdm8z6bb2s9aJzX3Kk9jjOLdIqUQ0gSSBTQZ6HvtCPxDTNoA==",
       "requires": {
         "@microsoft/api-extractor": "^7.18.1",
         "@microsoft/dynamicproto-js": "^1.1.7",
