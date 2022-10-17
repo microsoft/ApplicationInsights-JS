@@ -118,7 +118,7 @@ export class ThrottleMgr {
                     msgID: msgID,
                     message: message,
                     severity: severity
-                } as SendMsgParameter)
+                } as SendMsgParameter);
             }
             return null;
         }

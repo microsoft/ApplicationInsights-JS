@@ -31,9 +31,6 @@ const strReactNative = "ReactNative";
 const strMsie = "msie";
 const strTrident = "trident/";
 const strXMLHttpRequest = "XMLHttpRequest";
-const strDisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
-const strWithCredentials: string = "withCredentials";
-const strTimeout: string = "timeout";
 
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
