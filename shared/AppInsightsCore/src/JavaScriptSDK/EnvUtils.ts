@@ -3,7 +3,7 @@
 "use strict";
 
 import { strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
-import { getDocument, getInst, getNavigator, hasNavigator, isString, isUndefined } from "@nevware21/ts-utils";
+import { getDocument, getInst, getNavigator, getPerformance, hasNavigator, isString, isUndefined, strIndexOf } from "@nevware21/ts-utils";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
@@ -100,15 +100,6 @@ export function getConsole(): Console | null {
     }
 
     return getInst(strConsole);
-}
-
-/**
- * Returns the performance object if it is present otherwise null.
- * This helper is used to access the performance object from the current
- * global instance which could be window or globalThis for a web worker
- */
-export function getPerformance(): Performance | null {
-    return getInst(strPerformance);
 }
 
 /**
@@ -212,7 +203,7 @@ export function isSafari(userAgentStr ?: string) {
     }
 
     var ua = (userAgentStr || STR_EMPTY).toLowerCase();
-    return (ua.indexOf("safari") >= 0);
+    return (strIndexOf(ua, "safari") >= 0);
 }
 
 /**

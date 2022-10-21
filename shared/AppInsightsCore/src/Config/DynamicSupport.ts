@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isArray, objForEachKey, symbolFor, throwTypeError } from "@nevware21/ts-utils";
-import { isPlainObject } from "../JavaScriptSDK/HelperFuncs";
+import { isArray, isPlainObject, objForEachKey, symbolFor, throwTypeError } from "@nevware21/ts-utils";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 
 // Using Symbol.for so that if the same symbol was already created it would be returned

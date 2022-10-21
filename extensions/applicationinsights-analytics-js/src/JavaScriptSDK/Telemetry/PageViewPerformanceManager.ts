@@ -6,6 +6,7 @@ import { IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeS
 import {
     IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getNavigator, getPerformance, safeGetLogger
 } from "@microsoft/applicationinsights-core-js";
+import { strIndexOf } from "@nevware21/ts-utils";
 
 const MAX_DURATION_ALLOWED = 3600000; // 1h
 const botAgentNames = ["googlebot", "adsbot-google", "apis-google", "mediapartners-google"];
@@ -62,7 +63,7 @@ function _shouldCollectDuration(...durations: number[]): boolean {
 
     if (userAgent) {
         for (let i = 0; i < botAgentNames.length; i++) {
-            isGoogleBot = isGoogleBot || userAgent.toLowerCase().indexOf(botAgentNames[i]) !== -1;
+            isGoogleBot = isGoogleBot || strIndexOf(userAgent.toLowerCase(), botAgentNames[i]) !== -1;
         }
     }
 

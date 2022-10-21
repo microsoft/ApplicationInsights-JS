@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { arrForEach, arrIndexOf } from "@nevware21/ts-utils";
+import { arrForEach, arrIndexOf, scheduleTimeout } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../Config/DynamicConfig";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
@@ -18,7 +18,7 @@ function _runListeners(listeners: INotificationListener[], name: string, isAsync
     arrForEach(listeners, (listener) => {
         if (listener && listener[name]) {
             if (isAsync) {
-                setTimeout(() => callback(listener), 0);
+                scheduleTimeout(() => callback(listener), 0);
             } else {
                 try {
                     callback(listener);
@@ -102,7 +102,7 @@ export class NotificationManager implements INotificationManager {
                     if (perfEvtsSendAll || !perfEvent.isChildEvt()) {
                         _runListeners(_self.listeners, STR_PERF_EVENT, false, (listener) => {
                             if (perfEvent.isAsync) {
-                                setTimeout(() => listener.perfEvent(perfEvent), 0);
+                                scheduleTimeout(() => listener.perfEvent(perfEvent), 0);
                             } else {
                                 listener.perfEvent(perfEvent);
                             }

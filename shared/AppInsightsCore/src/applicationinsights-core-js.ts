@@ -21,10 +21,10 @@ export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
 export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./JavaScriptSDK/RandomHelper";
 export {
-    Undefined, newGuid, perfNow, generateW3CId
+    Undefined, newGuid, generateW3CId
 } from "./JavaScriptSDK/CoreUtils";
 export {
-    normalizeJsName, toISOString, dateNow, getExceptionName, strContains, setValue, getSetValue,
+    normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
     isNotUndefined, isNotNullOrUndefined, objExtend
 } from "./JavaScriptSDK/HelperFuncs";
@@ -35,7 +35,7 @@ export {
     arrReduce, arrMap, strTrim, objKeys, objDefineAccessors, throwError, isSymbol,
     isNotTruthy, isTruthy, objFreeze, objSeal, objToString, objDeepFreeze as deepFreeze,
     getInst as getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, hasNavigator, getNavigator, hasHistory,
-    getHistory, dumpObj, asString, objForEachKey
+    getHistory, dumpObj, asString, objForEachKey, getPerformance, utcNow as dateNow, perfNow
 } from "@nevware21/ts-utils";
 export { EnumValue, createEnumStyle, createValueMap } from "./JavaScriptSDK.Enums/EnumHelperFuncs";
 export {
@@ -45,7 +45,7 @@ export {
 } from "./JavaScriptSDK/EventHelpers";
 
 export {
-    getCrypto, getMsCrypto, getLocation, getPerformance, hasJSON, getJSON,
+    getCrypto, getMsCrypto, getLocation, hasJSON, getJSON,
     isReactNative, getConsole, isIE, getIEVersion, isSafari,
     setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported,
     findMetaTag, findNamedServerTiming

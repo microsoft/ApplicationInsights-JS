@@ -11,7 +11,7 @@ import {
     dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON, getNavigator, getWindow, isArray, isBeaconsSupported,
     isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend, objKeys, onConfigChange, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
-import { isTruthy, objDeepFreeze, objDefineProp } from "@nevware21/ts-utils";
+import { ITimerHandler, isTruthy, objDeepFreeze, objDefineProp, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
@@ -129,7 +129,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         let _retryAt: number;                   // The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
         let _lastSend: number;                  // The time of the last send operation.
         let _paused: boolean;                   // Flag indicating that the sending should be paused
-        let _timeoutHandle: any;                // Handle to the timer for delayed sending of batches of data.
+        let _timeoutHandle: ITimerHandler;      // Handle to the timer for delayed sending of batches of data.
         let _serializer: Serializer;
         let _stamp_specific_redirects: number;
         let _headers: { [name: string]: string };
@@ -964,7 +964,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     const retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
                     const timerValue = Math.max(_maxBatchInterval, retryInterval);
         
-                    _timeoutHandle = setTimeout(() => {
+                    _timeoutHandle = scheduleTimeout(() => {
                         _timeoutHandle = null;
                         _self.triggerSend(true, null, SendRequestReason.NormalSchedule);
                     }, timerValue);
@@ -972,7 +972,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             }
 
             function _clearScheduledTimer() {
-                clearTimeout(_timeoutHandle);
+                _timeoutHandle && _timeoutHandle.cancel();
                 _timeoutHandle = null;
                 _retryAt = null;
             }

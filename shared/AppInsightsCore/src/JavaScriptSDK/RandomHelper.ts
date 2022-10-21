@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { utcNow } from "@nevware21/ts-utils";
 import { getCrypto, getMsCrypto, isIE } from "./EnvUtils";
-import { dateNow } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
 const UInt32Mask = 0x100000000;
@@ -28,7 +28,7 @@ function _autoSeedMwc() {
     // Simple initialization using default Math.random() - So we inherit any entropy from the browser
     // and bitwise XOR with the current milliseconds
     try {
-        const now = dateNow() & 0x7fffffff;
+        const now = utcNow() & 0x7fffffff;
         _mwcSeed(((Math.random() * UInt32Mask) ^ now) + now);
     } catch (e) {
         // Don't crash if something goes wrong

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { arrForEach, arrIndexOf, getDocument, getWindow, isArray, objKeys } from "@nevware21/ts-utils";
+import { arrForEach, arrIndexOf, getDocument, getWindow, isArray, objForEachKey, objKeys } from "@nevware21/ts-utils";
 import { createElmNodeData, createUniqueNamespace } from "./DataCacheHelper";
-import { objForEachKey } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
 // Added to help with minfication

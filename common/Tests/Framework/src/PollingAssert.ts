@@ -1,6 +1,7 @@
 import { Assert } from "./Assert";
 import { AITestClass } from "./AITestClass";
 import { ITestContext } from "./TestCase";
+import { scheduleTimeout } from "@nevware21/ts-utils";
 
 export class PollingAssert {
     /**
@@ -23,11 +24,11 @@ export class PollingAssert {
                         Assert.ok(false, "assert didn't succeed for " + timeout + " seconds: " + assertDescription + "[" + (AITestClass.currentTestInfo ? AITestClass.currentTestInfo.name : "<null>") + "]");
                         nextTestStep();
                     } else {
-                        setTimeout(polling, pollIntervalMs);
+                        scheduleTimeout(polling, pollIntervalMs);
                     }
                 } catch (e) {
                     Assert.ok(true, "Polling exception - " + e);
-                    setTimeout(polling, pollIntervalMs);
+                    scheduleTimeout(polling, pollIntervalMs);
                 }
 
                 if (testContext.clock) {
@@ -38,7 +39,7 @@ export class PollingAssert {
                 }
             }
 
-            setTimeout(polling, pollIntervalMs);
+            scheduleTimeout(polling, pollIntervalMs);
             if (testContext.clock) {
                 AITestClass.orgSetTimeout(() => {
                     testContext.clock.tick(pollIntervalMs);

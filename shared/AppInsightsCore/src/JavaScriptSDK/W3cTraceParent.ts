@@ -1,4 +1,4 @@
-import { isArray, isString, strTrim } from "@nevware21/ts-utils";
+import { isArray, isString, strLeft, strTrim } from "@nevware21/ts-utils";
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
@@ -54,7 +54,7 @@ export function createTraceParent(traceId?: string, spanId?: string, flags?: num
     return {
         version: _isValid(version, 2, INVALID_VERSION) ? version : DEFAULT_VERSION,
         traceId: isValidTraceId(traceId) ? traceId : generateW3CId(),
-        spanId: isValidSpanId(spanId) ? spanId : generateW3CId().substr(0, 16),
+        spanId: isValidSpanId(spanId) ? spanId : strLeft(generateW3CId(), 16),
         traceFlags: flags >= 0 && flags <= 0xFF ? flags : 1
     };
 }

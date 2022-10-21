@@ -45,7 +45,12 @@ export interface _IDynamicDetail<T extends IConfiguration> extends IDynamicPrope
     /**
      * Add the watcher for monitoring changes
      */
-    add: (handler: IWatcherHandler<T>) => void;
+    trk: (handler: IWatcherHandler<T>) => void;
+
+    /**
+     * Clear all of the watchers from monitoring changes
+     */
+    clr: (handler: IWatcherHandler<T>) => void;
 }
 
 export interface IWatcherHandler<T extends IConfiguration> extends IUnloadHook {

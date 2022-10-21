@@ -1,7 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { utcNow } from "@nevware21/ts-utils";
 import { ITraceParent } from "../../../src/JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId, newGuid } from "../../../src/JavaScriptSDK/CoreUtils";
-import { dateNow } from "../../../src/JavaScriptSDK/HelperFuncs";
 import { formatTraceParent, isSampledFlag, isValidSpanId, isValidTraceId, isValidTraceParent, parseTraceParent } from "../../../src/JavaScriptSDK/W3cTraceParent";
 
 export class W3cTraceParentTests extends AITestClass {
@@ -265,12 +265,12 @@ export class W3cTraceParentTests extends AITestClass {
                 let maxAttempts = 3;
                 let orgTotal = -1;
                 do {
-                    let start = dateNow();
+                    let start = utcNow();
                     for (let lp = 0; lp < 10000; lp++) {
                         let newId = generateW3CId();
                     }
     
-                    orgTotal = dateNow() - start;
+                    orgTotal = utcNow() - start;
                     maxAttempts--;
                     // Virtualized test servers are slooooow, so try and perform a couple of tests before failing
                 } while (orgTotal >= 300 && maxAttempts > 0);
@@ -304,12 +304,12 @@ export class W3cTraceParentTests extends AITestClass {
                 let maxAttempts = 3;
                 let guidTotal = -1;
                 do {
-                    let start = dateNow();
+                    let start = utcNow();
                     for (let lp = 0; lp < 10000; lp++) {
                         let newId = newGuid();
                     }
 
-                    guidTotal = dateNow() - start;
+                    guidTotal = utcNow() - start;
                     maxAttempts--;
                     // Virtualized test servers are slooooow, so try and perform a couple of tests before failing
                 } while (guidTotal >= 300 && maxAttempts > 0);

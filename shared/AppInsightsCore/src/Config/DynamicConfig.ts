@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dumpObj, objDefineProp } from "@nevware21/ts-utils";
+import { dumpObj, objDefineProp, objForEachKey } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { createUniqueNamespace } from "../JavaScriptSDK/DataCacheHelper";
-import { objForEachKey } from "../JavaScriptSDK/HelperFuncs";
 import { STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
 import { _applyDefaultValue } from "./ConfigDefaults";
 import { _makeDynamicObject, _setDynamicProperty } from "./DynamicProperty";

@@ -15,7 +15,7 @@ import {
     dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
     isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { objFreeze } from "@nevware21/ts-utils";
+import { objFreeze, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
 import {
     DependencyListenerFunction, IDependencyHandler, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler
@@ -141,7 +141,7 @@ function _createErrorCallbackFunc(ajaxMonitorInstance:AjaxMonitor, internalMessa
 
 function _indexOf(value:string, match:string):number {
     if (value && match) {
-        return value.indexOf(match);
+        return strIndexOf(value, match);
     }
 
     return -1;
@@ -1048,7 +1048,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             // We need to wait for the browser to populate the window.performance entry
                             // This needs to be at least 1ms as waiting <= 1 (on firefox) is not enough time for fetch or xhr,
                             // this is a scheduling issue for the browser implementation
-                            setTimeout(locateResourceTiming, retryDelay);
+                            scheduleTimeout(locateResourceTiming, retryDelay);
                         }
                     } catch (e) {
                         reportError(e);

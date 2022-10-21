@@ -5,8 +5,9 @@ import { getInst } from "@nevware21/ts-utils";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDbgExtension } from "../JavaScriptSDK.Interfaces/IDbgExtension";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
+import { STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT } from "./InternalConstants";
 
-const listenerFuncs = [ "eventsSent", "eventsDiscarded", "eventsSendRequest", "perfEvent" ];
+const listenerFuncs = [ STR_EVENTS_SENT, STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_PERF_EVENT ];
 
 let _aiNamespace: any = null;
 let _debugListener: INotificationListener;

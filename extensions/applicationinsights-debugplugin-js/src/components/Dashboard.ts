@@ -1,5 +1,6 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { arrForEach, arrIndexOf } from "@microsoft/applicationinsights-core-js";
+import { ITimerHandler, scheduleTimeout } from "@nevware21/ts-utils";
 import { LogEntry } from "./LogEntry";
 import { FilterList } from "./filterList";
 import { copySelectedTree } from "./helpers";
@@ -195,13 +196,12 @@ export class Dashboard {
                 };
         
                 textFilterInput.onkeyup = (evt: Event) => {
-                    if (keyupTimer != null) {
-                        clearTimeout(keyupTimer);
-                    }
+                    keyupTimer && keyupTimer.cancel();
+                    keyupTimer = null;
         
                     let newValue = textFilterInput.value;
                     if (newValue !== _self.getTextFilter()) {
-                        keyupTimer = setTimeout(() => {
+                        keyupTimer = scheduleTimeout(() => {
                             keyupTimer = null;
                             _self.setTextFilter(textFilterInput.value);
                         }, 200);
@@ -216,7 +216,7 @@ export class Dashboard {
                 copyButton.onclick = copySelectedTree;
                 copyButton.ontouchend = copySelectedTree;
         
-                let keyupTimer: any = null;
+                let keyupTimer: ITimerHandler = null;
         
                 filterList = new FilterList(controlDiv, trackers.slice(0), () => _self.render());
 

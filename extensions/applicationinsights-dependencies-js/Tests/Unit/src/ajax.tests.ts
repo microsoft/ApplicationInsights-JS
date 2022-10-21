@@ -8,6 +8,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
 import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework/dist-esm/src/AITestClass";
+import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 interface IFetchArgs {
     input: RequestInfo,
@@ -2103,6 +2104,7 @@ export class AjaxTests extends AITestClass {
             name: "Ajax: test ajax duration is calculated correctly",
             test: () => {
                 var initialPerformance = window.performance;
+                setBypassLazyCache(true);
                 this._ajax = new AjaxMonitor();
                 try {
                     // Mocking window performance (sinon doesn't have it).
@@ -2545,6 +2547,7 @@ export class AjaxPerfTrackTests extends AITestClass {
         testThis._initialPerformance = performance;
 
         testThis._perfEntries = [];
+        setBypassLazyCache(true);
 
         // Add polyfil / mock
         (<any>window).performance = {
