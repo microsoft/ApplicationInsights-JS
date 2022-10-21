@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import {
-    arrForEach, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined, objDeepFreeze,
-    objForEachKey, strEndsWith, strTrim
+    arrForEach, arrIndexOf, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined,
+    objDeepFreeze, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -13,7 +13,7 @@ import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICooki
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _throwInternal } from "./DiagnosticLogger";
 import { getLocation, isIE } from "./EnvUtils";
-import { dateNow, getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
+import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
 import { STR_DOMAIN, STR_EMPTY, STR_PATH, UNDEFINED_VALUE } from "./InternalConstants";
 
 const strToGMTString = "toGMTString";
@@ -86,7 +86,7 @@ function _isMgrEnabled(cookieMgr: ICookieMgr) {
 
 function _isIgnoredCookie(cookieMgrCfg: ICookieMgrConfig, name: string) {
     if (name && cookieMgrCfg && isArray(cookieMgrCfg.ignoreCookies)) {
-        return cookieMgrCfg.ignoreCookies.indexOf(name) !== -1;
+        return arrIndexOf(cookieMgrCfg.ignoreCookies, name) !== -1;
     }
 
     return false;
@@ -94,7 +94,7 @@ function _isIgnoredCookie(cookieMgrCfg: ICookieMgrConfig, name: string) {
 
 function _isBlockedCookie(cookieMgrCfg: ICookieMgrConfig, name: string) {
     if (name && cookieMgrCfg && isArray(cookieMgrCfg.blockedCookies)) {
-        if (cookieMgrCfg.blockedCookies.indexOf(name) !== -1) {
+        if (arrIndexOf(cookieMgrCfg.blockedCookies, name) !== -1) {
             return true;
         }
     }
@@ -206,10 +206,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (_isMgrEnabled(cookieMgr) && !_isBlockedCookie(cookieMgrConfig, name)) {
                 let values: any = {};
                 let theValue = strTrim(value || STR_EMPTY);
-                let idx = theValue.indexOf(";");
+                let idx = strIndexOf(theValue, ";");
                 if (idx !== -1) {
-                    theValue = strTrim(value.substring(0, idx));
-                    values = _extractParts(value.substring(idx + 1));
+                    theValue = strTrim(strLeft(value, idx));
+                    values = _extractParts(strSubstring(value, idx + 1));
                 }
 
                 // Only update domain if not already present (isUndefined) and the value is truthy (not null, undefined or empty string)
@@ -218,7 +218,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 if (!isNullOrUndefined(maxAgeSec)) {
                     const _isIE = isIE();
                     if (isUndefined(values[strExpires])) {
-                        const nowMs = dateNow();
+                        const nowMs = utcNow();
                         // Only add expires if not already present
                         let expireMs = nowMs + (maxAgeSec * 1000);
             
@@ -337,11 +337,11 @@ function _extractParts(theValue: string) {
         arrForEach(parts, (thePart) => {
             thePart = strTrim(thePart || STR_EMPTY);
             if (thePart) {
-                let idx = thePart.indexOf("=");
+                let idx = strIndexOf(thePart, "=");
                 if (idx === -1) {
                     values[thePart] = null;
                 } else {
-                    values[strTrim(thePart.substring(0, idx))] = strTrim(thePart.substring(idx + 1));
+                    values[strTrim(strLeft(thePart, idx))] = strTrim(strSubstring(thePart, idx + 1));
                 }
             }
         });

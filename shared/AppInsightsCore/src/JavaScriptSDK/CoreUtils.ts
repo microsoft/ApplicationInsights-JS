@@ -3,8 +3,6 @@
 "use strict";
 import { strShimUndefined } from "@microsoft/applicationinsights-shims";
 import { strSubstr, strSubstring } from "@nevware21/ts-utils";
-import { getPerformance } from "./EnvUtils";
-import { dateNow } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 import { random32 } from "./RandomHelper";
 
@@ -15,19 +13,6 @@ export function newGuid(): string {
     const uuid = generateW3CId();
 
     return strSubstring(uuid, 0, 8) + "-" + strSubstring(uuid, 8, 12) + "-" + strSubstring(uuid, 12, 16) + "-" + strSubstring(uuid, 16, 20) + "-" + strSubstring(uuid, 20);
-}
-
-/**
- * Return the current value of the Performance Api now() function (if available) and fallback to dateNow() if it is unavailable (IE9 or less)
- * https://caniuse.com/#search=performance.now
- */
-export function perfNow(): number {
-    let perf = getPerformance();
-    if (perf && perf.now) {
-        return perf.now();
-    }
-
-    return dateNow();
 }
 
 /**

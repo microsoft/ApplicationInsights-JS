@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { scheduleTimeout } from "@nevware21/ts-utils";
+
 export class DebugBinParent {
     public showChildren: boolean = false;
 
@@ -120,6 +122,6 @@ export class DebugBin {
         _self.elValue.innerText = `${++_self.value}`;
         _self.parent.increment();
         _self.elValue.className = "el-value incremented";
-        setTimeout(() => _self.elValue.className = "el-value", 1);
+        scheduleTimeout(() => _self.elValue.className = "el-value", 1);
     }
 }

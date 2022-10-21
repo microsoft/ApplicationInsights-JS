@@ -5,12 +5,11 @@ import { IConfigDefaults } from "../../../src/Config/IConfigDefaults";
 import { IConfiguration } from "../../../src/JavaScriptSDK.Interfaces/IConfiguration";
 import { getDynamicConfigHandler } from "../../../src/Config/DynamicSupport";
 import { createDynamicConfig, onConfigChange } from "../../../src/Config/DynamicConfig";
-import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys } from "@nevware21/ts-utils";
-import { isPlainObject } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys, isPlainObject } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { INotificationManager } from "../../../src/JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfManager } from "../../../src/JavaScriptSDK.Interfaces/IPerfManager";
-import { AppInsightsCore } from "../../../src/applicationinsights-core-js";
+import { AppInsightsCore, setEnableEnvMocks } from "../../../src/applicationinsights-core-js";
 import { ITelemetryItem } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryItem";
 import { ITelemetryPluginChain } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryPlugin } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
@@ -487,6 +486,70 @@ export class DynamicConfigTests extends AITestClass {
                 Assert.equal(2, onChangeCalled, "Expected the onChanged was called");
                 this.clock.tick(1);
                 Assert.equal(2, onChangeCalled, "Expected the onChanged was not called again");
+            }
+        });
+
+
+        this.testCase({
+            name: "onCfgChange only calls accessed changes",
+            useFakeTimers: true,
+            test: () => {
+                let theConfig: IConfiguration = {
+                    instrumentationKey: "testiKey",
+                    endpointUrl: "https://localhost:9001",
+                    enableDebugExceptions: false,
+                    loggingLevelConsole: 1
+                };
+
+                const channelPlugin = new TestChannelPlugin();
+                let core = new AppInsightsCore();
+                let expectedEnableDebugExceptions = theConfig.enableDebugExceptions;
+                let expectedLoggingLevel = theConfig.loggingLevelConsole;
+
+                core.initialize(theConfig, [channelPlugin]);
+                let onChangeCalled = 0;
+                let handler = core.onCfgChange((details) => {
+                    onChangeCalled ++;
+                    Assert.equal(expectedEnableDebugExceptions, details.cfg.enableDebugExceptions, "Expect the endpoint to be set");
+                    if (details.cfg.enableDebugExceptions) {
+                        Assert.equal(expectedLoggingLevel, details.cfg.loggingLevelConsole, "Expected the logging level console")
+                    }
+                });
+
+                Assert.equal(1, onChangeCalled, "OnCfgChange was not called");
+
+                // This should not trigger the listener as enableDebugExceptions was false
+                expectedLoggingLevel = 99;
+                core.config.loggingLevelConsole = expectedLoggingLevel;
+
+                this.clock.tick(10);
+                Assert.equal(1, onChangeCalled, "listener should not have been called as enableDebugExceptions was false");
+
+                // Enable Debug extensions
+                expectedEnableDebugExceptions = true;
+                core.config.enableDebugExceptions = expectedEnableDebugExceptions;
+                this.clock.tick(10);
+                Assert.equal(2, onChangeCalled, "listener should have been called enableDebugExceptions");
+
+                // This should trigger the listener as enableDebugExceptions was false
+                expectedLoggingLevel = 2;
+                core.config.loggingLevelConsole = expectedLoggingLevel;
+
+                this.clock.tick(10);
+                Assert.equal(3, onChangeCalled, "listener should have been called as enableDebugExceptions was true");
+
+                // Disable Debug extensions again
+                expectedEnableDebugExceptions = false;
+                core.config.enableDebugExceptions = expectedEnableDebugExceptions;
+                this.clock.tick(10);
+                Assert.equal(4, onChangeCalled, "listener should have been called enableDebugExceptions");
+
+                // This should not call trigger the listener as enableDebugExceptions was false
+                expectedLoggingLevel = 42;
+                core.config.loggingLevelConsole = expectedLoggingLevel;
+
+                this.clock.tick(10);
+                Assert.equal(4, onChangeCalled, "listener should have been called as enableDebugExceptions was disabled");
             }
         });
 

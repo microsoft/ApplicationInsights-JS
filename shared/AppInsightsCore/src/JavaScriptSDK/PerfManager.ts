@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { isArray, isFunction, objDefineAccessors } from "@nevware21/ts-utils";
+import { isArray, isFunction, objDefineAccessors, utcNow } from "@nevware21/ts-utils";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
-import { dateNow } from "./HelperFuncs";
 import { STR_GET_PERF_MGR } from "./InternalConstants";
 
 const strExecutionContextKey = "ctx";
@@ -64,7 +63,7 @@ export class PerfEvent implements IPerfEvent {
 
     constructor(name: string, payloadDetails: () => any, isAsync: boolean) {
         let _self = this;
-        _self.start = dateNow();
+        _self.start = utcNow();
         _self.name = name;
         _self.isAsync = isAsync;
         _self.isChildEvt = (): boolean => false;
@@ -127,7 +126,7 @@ export class PerfEvent implements IPerfEvent {
                 }
             }
 
-            _self.time = dateNow() - _self.start;
+            _self.time = utcNow() - _self.start;
             _self.exTime = _self.time - childTime;
             _self.complete = () => {};
         };

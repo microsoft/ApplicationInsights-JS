@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objFreeze, objKeys } from "@nevware21/ts-utils";
+import {
+    arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objForEachKey, objFreeze, objKeys
+} from "@nevware21/ts-utils";
 import { _applyDefaultValue } from "../Config/ConfigDefaults";
 import { createDynamicConfig } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -20,8 +22,8 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
-import { objForEachKey, proxyFunctions } from "./HelperFuncs";
-import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
+import { proxyFunctions } from "./HelperFuncs";
+import { STR_CORE, STR_DISABLED, STR_EMPTY, STR_EXTENSION_CONFIG } from "./InternalConstants";
 import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";
 
@@ -161,7 +163,7 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
             }
 
             // Always set the value so that it's created as a dynamic config element (if not already)
-            dynamicHandler.set(cfg, "extensionConfig", extCfg);  // Note: it is valid for the "value" to be undefined
+            dynamicHandler.set(cfg, STR_EXTENSION_CONFIG, extCfg);  // Note: it is valid for the "value" to be undefined
             extCfg = cfg.extensionConfig;
         
             if (extCfg) {

@@ -5,6 +5,7 @@ import {
     IDiagnosticLogger, IDistributedTraceContext, arrForEach, arrIndexOf, dateNow, getPerformance, isNullOrUndefined, isValidSpanId,
     isValidTraceId
 } from "@microsoft/applicationinsights-core-js";
+import { strIndexOf } from "@nevware21/ts-utils";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "./Constants";
 import { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
@@ -54,7 +55,7 @@ export function correlationIdCanIncludeCorrelationHeader(config: ICorrelationCon
     }
 
     let requestHost = urlParseUrl(requestUrl).host.toLowerCase();
-    if (requestHost && (requestHost.indexOf(":443") !== -1 || requestHost.indexOf(":80") !== -1)) {
+    if (requestHost && (strIndexOf(requestHost, ":443") !== -1 || strIndexOf(requestHost, ":80") !== -1)) {
         // [Bug #1260] IE can include the port even for http and https URLs so if present
         // try and parse it to remove if it matches the default protocol port
         requestHost = (urlParseFullHost(requestUrl, true) || "").toLowerCase();

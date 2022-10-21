@@ -4,6 +4,7 @@
 import {
     IDiagnosticLogger, arrForEach, arrMap, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, strTrim
 } from "@microsoft/applicationinsights-core-js";
+import { strIndexOf } from "@nevware21/ts-utils";
 import { strNotSpecified } from "../Constants";
 import { FieldType } from "../Enums";
 import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";
@@ -66,7 +67,7 @@ function _formatMessage(theEvent: any, errorType: string) {
     }
     
     // Automatically add the error type to the message if it does already appear to be present
-    if (errorType && errorType !== "String" && errorType !== "Object" && errorType !== "Error" && (evtMessage || "").indexOf(errorType) === -1) {
+    if (errorType && errorType !== "String" && errorType !== "Object" && errorType !== "Error" && strIndexOf(evtMessage || "", errorType) === -1) {
         evtMessage = errorType + ": " + evtMessage;
     }
 
@@ -302,7 +303,7 @@ export function _formatErrorCode(errorObj:any) {
                     result = _stringify(errorObj, true);
                 }
 
-                if (result.indexOf(errorType) !== 0 && errorType !== "String") {
+                if (strIndexOf(result, errorType) !== 0 && errorType !== "String") {
                     return errorType + ":" + result;
                 }
 

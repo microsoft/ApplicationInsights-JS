@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // // Licensed under the MIT License.
 
-import { arrForEach, isArray, objFreeze, throwError } from "@nevware21/ts-utils";
+import { ITimerHandler, arrForEach, isArray, objFreeze, scheduleTimeout, throwError } from "@nevware21/ts-utils";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
@@ -193,17 +193,15 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
             // Setting waiting to one so that we don't call the callBack until we finish iterating
             let waiting = 1;
             let doneIterating = false;
-            let cbTimer: any = null;
+            let cbTimer: ITimerHandler = null;
 
             cbTimeout = cbTimeout || 5000;
 
             function doCallback() {
                 waiting--;
                 if (doneIterating && waiting === 0) {
-                    if (cbTimer) {
-                        clearTimeout(cbTimer);
-                        cbTimer = null;
-                    }
+                    cbTimer && cbTimer.cancel();
+                    cbTimer = null;
 
                     callBack && callBack(doneIterating);
                     callBack = null;
@@ -226,7 +224,7 @@ export function createChannelControllerPlugin(channelQueue: _IInternalChannels[]
                                 // will never be called, so use a timeout to allow the channel(s) some time to "finish" before triggering any
                                 // followup function (such as unloading)
                                 if (isAsync && cbTimer == null) {
-                                    cbTimer = setTimeout(() => {
+                                    cbTimer = scheduleTimeout(() => {
                                         cbTimer = null;
                                         doCallback();
                                     }, cbTimeout);

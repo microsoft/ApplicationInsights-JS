@@ -1,9 +1,9 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { normalizeJsName, objExtend, _getObjProto, isPlainObject, dateNow } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { normalizeJsName, objExtend, _getObjProto } from "../../../src/JavaScriptSDK/HelperFuncs";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
-import { isArray, isObject, objKeys, strEndsWith, strStartsWith } from "@nevware21/ts-utils";
+import { isArray, isObject, objKeys, strEndsWith, strStartsWith, isPlainObject, utcNow } from "@nevware21/ts-utils";
 import { dumpObj } from "../../../src/applicationinsights-core-js";
 
 
@@ -282,7 +282,7 @@ export class HelperFuncTests extends AITestClass {
                 Assert.equal(true, isPlainObject({}));
                 Assert.equal(true, isPlainObject(Object.create(null)));
                 Assert.equal(false, isPlainObject(new AppInsightsCore()));
-                Assert.equal(false, isPlainObject(dateNow()));
+                Assert.equal(false, isPlainObject(utcNow()));
                 Assert.equal(false, isPlainObject([]));
                 Assert.equal(false, isPlainObject(true), "true");
                 Assert.equal(false, isPlainObject(1), "1");
@@ -303,7 +303,7 @@ export class HelperFuncTests extends AITestClass {
                 Assert.equal(true, isObject({}), "{}");
                 Assert.equal(true, isObject(Object.create(null)), "Object.create");
                 Assert.equal(true, isObject(new AppInsightsCore()), "AppInsightsCore");
-                Assert.equal(false, isObject(dateNow()), "dateNow");
+                Assert.equal(false, isObject(utcNow()), "utcNow");
                 Assert.equal(true, isObject([]), "[]");
                 Assert.equal(false, isObject(true), "true");
                 Assert.equal(false, isObject(1), "1");
@@ -327,7 +327,7 @@ export class HelperFuncTests extends AITestClass {
                 });
                 Assert.equal(Object.prototype, _getObjProto({}));
                 Assert.equal(Date.prototype, _getObjProto(new Date()));
-                Assert.equal(Number.prototype, _getObjProto(dateNow()));
+                Assert.equal(Number.prototype, _getObjProto(utcNow()));
                 Assert.equal(Array.prototype, _getObjProto([]));
                 Assert.equal(Boolean.prototype, _getObjProto(true), "new Boolean(true)");
                 Assert.equal(Number.prototype, _getObjProto(1), "new Number(1)");

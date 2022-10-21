@@ -3,6 +3,7 @@
 */
 
 import { getDocument, getLocation, getWindow, hasDocument, isFunction } from "@microsoft/applicationinsights-core-js";
+import { scheduleTimeout } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration, IOverrideValues } from "./Interfaces/Datamodel";
 import { findClosestAnchor, isValueAssigned } from "./common/Utils";
 
@@ -92,7 +93,7 @@ function onDomReadyDo(f: any) {
     /// <param type='function'>function to call on domRead</param>
 
     let doc = getDocument() || ({} as Document);
-    /in/.test(doc.readyState) ? setTimeout(() => {
+    /in/.test(doc.readyState) ? scheduleTimeout(() => {
         onDomReadyDo(f);
     }, 100) : f.call();
 }

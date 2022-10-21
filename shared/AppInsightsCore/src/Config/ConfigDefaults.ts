@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { asString, isArray, isDefined, isNullOrUndefined, isObject, objHasOwn } from "@nevware21/ts-utils";
+import { asString, isArray, isDefined, isNullOrUndefined, isObject, isPlainObject, objHasOwn } from "@nevware21/ts-utils";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { isPlainObject } from "../JavaScriptSDK/HelperFuncs";
 import { _cfgDeepCopy } from "./DynamicSupport";
 import { IConfigCheckFn, IConfigDefaultCheck, IConfigSetFn } from "./IConfigDefaults";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";

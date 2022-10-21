@@ -1,6 +1,19 @@
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 import { IDynamicPropertyHandler } from "./IDynamicPropertyHandler";
-import { IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
+import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "./IDynamicWatcher";
+
+/**
+ * @internal
+ * Interface for internal communication to notifying state changes
+ */
+export interface _IDynamicGetter {
+    /**
+     * Cause any listeners of this property to be notified that the value has changed.
+     * Primarily used to ensure that listeners of child properties of an object that is getting replaced
+     * will be notified.
+     */
+    chng: () => void;
+}
 
 /**
  * @internal
@@ -34,6 +47,11 @@ export interface _IDynamicConfigHandlerState<T> {
      * Add this property handler to the collection to be notified
      */
     add: (handler: IDynamicPropertyHandler<T>) => void;
+
+    /**
+     * Add this handler as a handler for
+     */
+    trk: (handler: IWatcherHandler<T>, detail: _IDynamicDetail<T>) => void;
 
     /**
      * Use the provided handler to listen for changes

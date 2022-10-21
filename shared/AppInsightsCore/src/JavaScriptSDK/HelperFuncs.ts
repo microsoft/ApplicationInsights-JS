@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ObjAssign, ObjClass, strShimFunction } from "@microsoft/applicationinsights-shims";
+import { ObjAssign, ObjClass } from "@microsoft/applicationinsights-shims";
 import {
-    arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isObject, isString, isUndefined,
-    objDeepFreeze, objDefineAccessors, objForEachKey as objForEachKey21, objHasOwn, objHasOwnProperty, strIndexOf
+    arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isObject, isPlainObject, isString,
+    isUndefined, objDeepFreeze, objDefineAccessors, objForEachKey, objHasOwn, strIndexOf
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "./InternalConstants";
 
@@ -63,14 +63,6 @@ export function normalizeJsName(name: string): string {
 }
 
 /**
- * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a
- * performance optimization to avoid the creation of a new array for large objects
- * @param target - The target object to find and process the keys
- * @param callbackfn - The function to call with the details
- */
-export const objForEachKey = objForEachKey21;
-
-/**
  * A simple wrapper (for minification support) to check if the value contains the search string.
  * @param value - The string value to check for the existence of the search value
  * @param search - The value search within the value
@@ -84,32 +76,6 @@ export function strContains(value: string, search: string): boolean {
 }
 
 /**
- * Checks if the type of the value is a normal plain object (not a null or data)
- * @param value
- */
-export function isPlainObject(value: any): boolean {
-    let result: boolean = false;
-
-    if (value && typeof value === "object") {
-        // Inlining _objGetPrototypeOf for performance to avoid an additional function call
-        let proto = _getObjProto(value);
-        if (!proto) {
-            // No prototype found so this is a plain Object eg. 'Object.create(null)'
-            result = true;
-        } else {
-            // Objects that have a prototype are plain only if they were created using the Object global (native) function
-            if (proto[strConstructor] && objHasOwnProperty(proto, strConstructor)) {
-                proto = proto[strConstructor];
-            }
-
-            result = typeof proto === strShimFunction && _fnToString.call(proto) === _objFunctionString;
-        }
-    }
-
-    return result;
-}
-
-/**
  * Convert a date to I.S.O. format in IE8
  */
 export function toISOString(date: Date) {
@@ -117,16 +83,6 @@ export function toISOString(date: Date) {
 }
 
 export const deepFreeze: <T>(obj: T) => T = objDeepFreeze;
-
-/**
- * Return the current time via the Date now() function (if available) and falls back to (new Date()).getTime() if now() is unavailable (IE8 or less)
- * https://caniuse.com/#search=Date.now
- */
-export function dateNow() {
-    let dt = Date;
-    
-    return dt.now ? dt.now() : new dt().getTime();
-}
 
 /**
  * Returns the name of object if it's an Error. Otherwise, returns empty string.

@@ -106,7 +106,7 @@
             instrumentationKey: instrumentationKey,
             endpointUrl: "http://localhost:9001/v2/track",
             //extensions: [reactPlugin],
-            enableDebug: true,
+            enableDebug: false,
             loggingLevelConsole: enableDebug ? 2 : 0,
             loggingLevelTelemetry: enableDebug ? 2 : 1,
             autoTrackPageVisitTime: true,
@@ -115,7 +115,8 @@
             enableUnhandledPromiseRejectionTracking: true,
             enableCorsCorrelation: false,
             enableRequestHeaderTracking: true,
-            enableResponseHeaderTracking: true
+            enableResponseHeaderTracking: true,
+            hello: "World"
         }
     });
 
@@ -134,6 +135,15 @@
     appInsights.onCfgChange(function (details) {
         logMessage(JSON.stringify(details.cfg, null, 4), "cfg");
         logMessage("onCfgChange 3 - called", "cfg");
+    });
+
+    appInsights.onCfgChange(function (details) {
+        if (details.cfg.enableDebug) {
+            logMessage("Debug Enable - " + details.cfg.loggingLevelConsole);
+        } else {
+            logMessage("Debug Not enabled!");
+        }
+        logMessage("onCfgChange 4 - called");
     });
 
     

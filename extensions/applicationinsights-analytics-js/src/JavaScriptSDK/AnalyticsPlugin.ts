@@ -21,7 +21,7 @@ import {
     mergeEvtNamespace, objDefineAccessors, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { objDeepFreeze, objDefineProp } from "@nevware21/ts-utils";
+import { objDeepFreeze, objDefineProp, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -640,7 +640,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                             let remoteData = envelope.baseData as IDependencyTelemetry;
                             if (remoteData) {
                                 for (let i = 0; i < browserLinkPaths.length; i++) {
-                                    if (remoteData.target && remoteData.target.indexOf(browserLinkPaths[i]) >= 0) {
+                                    if (remoteData.target && strIndexOf(remoteData.target, browserLinkPaths[i]) >= 0) {
                                         return false;
                                     }
                                 }
@@ -778,7 +778,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                             distributedTraceCtx.setName(dataSanitizeString(_self.diagLog(), traceLocationName));
                         }
 
-                        setTimeout(((uri: string) => {
+                        scheduleTimeout(((uri: string) => {
                             // todo: override start time so that it is not affected by autoRoutePVDelay
                             _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
                         }).bind(this, _prevUri), _self.autoRoutePVDelay);

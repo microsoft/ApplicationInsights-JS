@@ -4,8 +4,8 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, isFunction, isNullOrUndefined, objDeepFreeze, objDefineProp, objFreeze,
-    objHasOwn, throwError
+    arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objDefineProp,
+    objForEachKey, objFreeze, objHasOwn, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -41,7 +41,7 @@ import { createCookieMgr } from "./CookieMgr";
 import { createUniqueNamespace } from "./DataCacheHelper";
 import { getDebugListener } from "./DbgExtensionUtils";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import { getSetValue, isPlainObject, objForEachKey, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
+import { getSetValue, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
 import {
     STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
 } from "./InternalConstants";
