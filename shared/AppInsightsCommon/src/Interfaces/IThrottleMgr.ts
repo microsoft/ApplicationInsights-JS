@@ -7,10 +7,10 @@ import { IThrottleMsgKey } from "../Enums";
 export interface IThrottleLimit {
     /**
      * Identifies sampling percentage of items per time
-     * In /1000, for example: 200 means 0.2
-     * Default: 100
+     * The percentage is set to 4 decimal places, for example: 1 means 0.0001%
+     * Default: 100 (0.01%)
      */
-    samplingPercentage?: number;
+    samplingRate?: number;
 
     /**
      * Identifies limit number of items per time
@@ -47,7 +47,7 @@ export interface IThrottleInterval {
 /**
 * Identifies basic config
 */
-export interface IthrottleMgrConfig {
+export interface IThrottleMgrConfig {
     /**
     * Identifies message key to be used for local storage key
     */
@@ -74,7 +74,7 @@ export interface IthrottleMgrConfig {
 /**
 * Identifies object for local storage
 */
-export interface IthrottleLocalStorageObj {
+export interface IThrottleLocalStorageObj {
     /**
     * Identifies start date
     */
@@ -95,7 +95,7 @@ export interface IthrottleLocalStorageObj {
 /**
 * Identifies throttle result
 */
-export interface IthrottleResult {
+export interface IThrottleResult {
     /**
     * Identifies if items are sent
     */

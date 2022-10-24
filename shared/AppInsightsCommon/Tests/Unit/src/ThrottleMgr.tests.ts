@@ -1,23 +1,25 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { AppInsightsCore, IAppInsightsCore, _eInternalMessageId } from "@microsoft/applicationinsights-core-js";
 import { IThrottleMsgKey } from "../../../src/Enums";
-import { IThrottleInterval, IThrottleLimit, IthrottleMgrConfig, IthrottleResult } from "../../../src/Interfaces/IThrottleMgr";
+import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "../../../src/Interfaces/IThrottleMgr";
 import { ThrottleMgr} from "../../../src/ThrottleMgr";
 import { SinonSpy } from "sinon";
 import { Util } from "../../../src/Util";
 
 const compareDates = (date1: Date, date: string | Date) => {
+    let isSame = false;
     try {
         if (date1 && date) {
             let date2 = typeof date == "string"? new Date(date) : date;
-            return date1.getUTCFullYear() === date2.getUTCFullYear() &&
+            isSame = date1.getUTCFullYear() === date2.getUTCFullYear() &&
             date1.getUTCMonth() === date2.getUTCMonth() &&
             date1.getUTCDate() === date2.getUTCDate();
         }
     } catch (e) {
-        console.log("compare dates error" + e);
+        Assert.ok(false,"compare dates error" + e);
     }
-    return false;
+    Assert.ok(isSame, "two dates are not same");
+    return isSame;
 }
 
 export class ThrottleMgrTest extends AITestClass {
@@ -54,7 +56,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 50,
+                        samplingRate: 50,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -62,7 +64,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 10,
                         maxTimesPerMonth: 1
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let actualConfig = throttleMgr.getConfig();
@@ -78,13 +80,13 @@ export class ThrottleMgrTest extends AITestClass {
             test: () => {
                 let config = {
                     msgKey: this._msgKey
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let expectedConfig = {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 100,
+                        samplingRate: 100,
                         maxSendNumber:1
                     } as IThrottleLimit,
                     interval: {
@@ -92,7 +94,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 28,
                         maxTimesPerMonth: 1
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let actualConfig = throttleMgr.getConfig();
@@ -109,7 +111,7 @@ export class ThrottleMgrTest extends AITestClass {
                 let config = {
                     msgKey: this._msgKey,
                     disabled: true
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, false);
@@ -141,7 +143,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -149,7 +151,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
@@ -185,7 +187,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -193,7 +195,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
@@ -219,7 +221,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -227,7 +229,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 31,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
@@ -253,7 +255,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -261,7 +263,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
@@ -289,7 +291,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -297,7 +299,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
@@ -324,7 +326,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -332,7 +334,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: maxTimes
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
@@ -357,7 +359,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -365,7 +367,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: 33
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
@@ -404,7 +406,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber: 1
                     } as IThrottleLimit,
                     interval: {
@@ -412,7 +414,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: date.getUTCDate(),
                         maxTimesPerMonth: 1
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
@@ -426,7 +428,7 @@ export class ThrottleMgrTest extends AITestClass {
                 let expectedRetryRlt = {
                     isThrottled: true,
                     throttleNum: 1
-                } as IthrottleResult
+                } as IThrottleResult
                 Assert.deepEqual(result, expectedRetryRlt);
                 let isPostTriggered = throttleMgr.isTriggered();
                 Assert.equal(isPostTriggered, true);
@@ -447,16 +449,11 @@ export class ThrottleMgrTest extends AITestClass {
             test: () => {
                 let msg = "Instrumentation key support will end soon, see aka.ms/IkeyMigrate";
                 let date = new Date();
-                let testStorageObj = {
-                    date: date,
-                    count: 0
-                };
-               
                 let config = {
                     msgKey: IThrottleMsgKey.ikeyDeprecate,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber:1
                     } as IThrottleLimit,
                     interval: {
@@ -464,7 +461,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
              
                 let throttleMgr = new ThrottleMgr(config, this._core);
                
@@ -510,7 +507,7 @@ export class ThrottleMgrTest extends AITestClass {
                 let expectedRlt = {
                     isThrottled: false,
                     throttleNum: 0
-                } as IthrottleResult
+                } as IThrottleResult
                 Assert.equal(onReadyCount,1);
                 Assert.deepEqual(onReadyResult, expectedRlt);
                 let onReadyIsTriggered = throttleMgr.isTriggered();
@@ -542,7 +539,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: IThrottleMsgKey.ikeyDeprecate,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber:1
                     } as IThrottleLimit,
                     interval: {
@@ -550,7 +547,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
 
@@ -568,7 +565,7 @@ export class ThrottleMgrTest extends AITestClass {
                 let expectedRlt = {
                     isThrottled: true,
                     throttleNum: 1
-                } as IthrottleResult
+                } as IThrottleResult
                 Assert.deepEqual(result, expectedRlt);
             
                 let val = window.localStorage[this._storageName];
@@ -593,7 +590,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: IThrottleMsgKey.ikeyDeprecate,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 1000,
+                        samplingRate: 1000000,
                         maxSendNumber:1
                     } as IThrottleLimit,
                     interval: {
@@ -601,7 +598,7 @@ export class ThrottleMgrTest extends AITestClass {
                         dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
-                } as IthrottleMgrConfig;
+                } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
 
@@ -620,7 +617,7 @@ export class ThrottleMgrTest extends AITestClass {
                 let expectedRlt = {
                     isThrottled: true,
                     throttleNum: 1
-                } as IthrottleResult
+                } as IThrottleResult
                 Assert.deepEqual(result, expectedRlt);
 
                 let isTriggeredPost = throttleMgr.isTriggered();
@@ -634,7 +631,7 @@ export class ThrottleMgrTest extends AITestClass {
                 let expectedRetryRlt = {
                     isThrottled: false,
                     throttleNum: 0
-                } as IthrottleResult
+                } as IThrottleResult
                 Assert.deepEqual(retryRlt, expectedRetryRlt);
             }
         });

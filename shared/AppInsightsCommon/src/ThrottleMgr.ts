@@ -1,9 +1,9 @@
 import {
     IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, eLoggingSeverity, isNotNullOrUndefined,
-    isNullOrUndefined, safeGetLogger, strTrim
+    isNullOrUndefined, randomValue, safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { IThrottleMsgKey } from "./Enums";
-import { IthrottleLocalStorageObj, IthrottleMgrConfig, IthrottleResult } from "./Interfaces/IThrottleMgr";
+import { IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
@@ -16,20 +16,20 @@ interface SendMsgParameter {
 
 export class ThrottleMgr {
     public canThrottle: () => boolean;
-    public sendMessage: (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity) => IthrottleResult | null;
-    public getConfig: () => IthrottleMgrConfig;
+    public sendMessage: (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity) => IThrottleResult | null;
+    public getConfig: () => IThrottleMgrConfig;
     public isTriggered: () => boolean; // this function is to get previous triggered status
     public isReady: () => boolean
     public onReadyState: (isReady?: boolean) => boolean;
     public flush: () => boolean;
 
-    constructor(throttleMgr?: IthrottleMgrConfig, core?: IAppInsightsCore, namePrefix?: string) {
+    constructor(throttleMgr?: IThrottleMgrConfig, core?: IAppInsightsCore, namePrefix?: string) {
         let _self = this;
         let _canUseLocalStorage: boolean;
         let _logger: IDiagnosticLogger | null | undefined;
-        let _config: IthrottleMgrConfig;
+        let _config: IThrottleMgrConfig;
         let _localStorageName: string | null;
-        let _localStorageObj: IthrottleLocalStorageObj | null | undefined;
+        let _localStorageObj: IThrottleLocalStorageObj | null | undefined;
         let _isTriggered: boolean; //_isTriggered is to make sure that we only trigger throttle once a day
         let _namePrefix: string;
         let _queue: Array<SendMsgParameter>;
@@ -37,7 +37,7 @@ export class ThrottleMgr {
 
         _initConfig();
 
-        _self.getConfig = (): IthrottleMgrConfig => {
+        _self.getConfig = (): IThrottleMgrConfig => {
             return _config;
         }
 
@@ -99,7 +99,7 @@ export class ThrottleMgr {
             return _self.flush();
         }
        
-        _self.sendMessage = (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity): IthrottleResult | null => {
+        _self.sendMessage = (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity): IThrottleResult | null => {
             if (_isReady) {
                 let isSampledIn = _canSampledIn();
                 if (!isSampledIn) {
@@ -129,7 +129,7 @@ export class ThrottleMgr {
                 return {
                     isThrottled: throttled,
                     throttleNum: number
-                } as IthrottleResult;
+                } as IThrottleResult;
             } else {
                 _queue.push({
                     msgID: msgID,
@@ -159,7 +159,7 @@ export class ThrottleMgr {
             };
             _config.interval = interval;
             let limit = {
-                samplingPercentage: configMgr.limit?.samplingPercentage || 100,
+                samplingRate: configMgr.limit?.samplingRate || 100,
                 // dafault: every time sent only 1 event
                 maxSendNumber: configMgr.limit?.maxSendNumber || 1
             };
@@ -174,7 +174,7 @@ export class ThrottleMgr {
             }
         }
 
-        function _canThrottle(config: IthrottleMgrConfig, canUseLocalStorage: boolean, localStorageObj: IthrottleLocalStorageObj) {
+        function _canThrottle(config: IThrottleMgrConfig, canUseLocalStorage: boolean, localStorageObj: IThrottleLocalStorageObj) {
             if (!config.disabled && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
                 let curDate = _getThrottleDate();
                 let date = localStorageObj.date;
@@ -216,14 +216,14 @@ export class ThrottleMgr {
                 let storageObj = {
                     date: _getThrottleDate(),
                     count: 0
-                } as IthrottleLocalStorageObj;
+                } as IThrottleLocalStorageObj;
                 if (value) {
                     let obj = JSON.parse(value);
                     return {
                         date: _getThrottleDate(obj.date) || storageObj.date,
                         count: obj.count || storageObj.count,
                         preTriggerDate: obj.preTriggerDate? _getThrottleDate(obj.preTriggerDate) : undefined
-                    } as IthrottleLocalStorageObj;
+                    } as IThrottleLocalStorageObj;
                 } else {
                     _resetLocalStorage(logger, storageName, storageObj);
                     return storageObj;
@@ -255,7 +255,7 @@ export class ThrottleMgr {
             return null;
         }
 
-        function _resetLocalStorage(logger: IDiagnosticLogger, storageName: string, obj: IthrottleLocalStorageObj) {
+        function _resetLocalStorage(logger: IDiagnosticLogger, storageName: string, obj: IThrottleLocalStorageObj) {
             try {
                 return utlSetLocalStorage(logger, storageName, strTrim(JSON.stringify(obj)));
             } catch (e) {
@@ -276,10 +276,10 @@ export class ThrottleMgr {
                 message);
         }
 
-        // NOTE: config.limit.samplingPercentage unit is 1000.
-        // So if config.limit.samplingPercentage = 20, it means 20/1000 = 0.02;
+        // NOTE: config.limit.samplingRate is set to 4 decimal places,
+        // so config.limit.samplingRate = 1 means 0.0001%
         function _canSampledIn() {
-            return Math.random() <= _config.limit.samplingPercentage / 1000;
+            return randomValue(1000000) <= _config.limit.samplingRate;
         }
     }
 }
