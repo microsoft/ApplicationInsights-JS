@@ -47,3 +47,9 @@ export const DistributedTracingModes = createEnumStyle<typeof eDistributedTracin
     W3C: eDistributedTracingModes.W3C
 });
 export type DistributedTracingModes = number | eDistributedTracingModes;
+
+export const enum IThrottleMsgKey {
+    default = 0,
+    ikeyDeprecate = 1,
+    cdnDeprecate = 2
+}

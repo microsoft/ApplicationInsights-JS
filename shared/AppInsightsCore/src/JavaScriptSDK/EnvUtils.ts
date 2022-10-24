@@ -410,6 +410,7 @@ export function isXhrSupported(): boolean {
     return isSupported;
 }
 
+
 function _getNamedValue(values: any, name: string) {
     if (values) {
         for (var i = 0; i < values.length; i++) {

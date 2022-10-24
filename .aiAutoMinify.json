@@ -20,6 +20,7 @@
                 "eStorageType",
                 "FieldType",
                 "eDistributedTracingModes",
+                "IThrottleMsgKey",
                 "eRequestHeaders",
                 "DataPointType",
                 "DependencyKind",

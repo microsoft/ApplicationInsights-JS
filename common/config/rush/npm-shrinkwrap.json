@@ -583,7 +583,7 @@
     "node_modules/@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-common.tgz",
-      "integrity": "sha512-UDe8iJSsFsXErPxwIsKJGtqExe3BQtCM2dbPms+Kh8uvQ71DwfpAH6IS04LtaYD8uVaVxsrL4EKuE5s9Ytt7HA==",
+      "integrity": "sha512-/lfjcQI5ZsfXv2267rSrFiu3d5FZJWGZtv7Vs4GPF3ZfhxTLlRO6TAgwk5k7sDgmmvZRf3tlY4oAk1inFjb/pA==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.18.1",
         "@microsoft/applicationinsights-shims": "2.0.1",
@@ -600,6 +600,7 @@
         "magic-string": "^0.25.7",
         "rollup": "^2.32.0",
         "rollup-plugin-cleanup": "^3.2.1",
+        "sinon": "^7.3.1",
         "tslib": "^2.0.0",
         "typescript": "^4.3.4"
       }
@@ -5866,7 +5867,7 @@
     },
     "@rush-temp/applicationinsights-common": {
       "version": "file:projects\\applicationinsights-common.tgz",
-      "integrity": "sha512-UDe8iJSsFsXErPxwIsKJGtqExe3BQtCM2dbPms+Kh8uvQ71DwfpAH6IS04LtaYD8uVaVxsrL4EKuE5s9Ytt7HA==",
+      "integrity": "sha512-/lfjcQI5ZsfXv2267rSrFiu3d5FZJWGZtv7Vs4GPF3ZfhxTLlRO6TAgwk5k7sDgmmvZRf3tlY4oAk1inFjb/pA==",
       "requires": {
         "@microsoft/api-extractor": "^7.18.1",
         "@microsoft/applicationinsights-shims": "2.0.1",
@@ -5883,6 +5884,7 @@
         "magic-string": "^0.25.7",
         "rollup": "^2.32.0",
         "rollup-plugin-cleanup": "^3.2.1",
+        "sinon": "^7.3.1",
         "tslib": "^2.0.0",
         "typescript": "^4.3.4"
       }
