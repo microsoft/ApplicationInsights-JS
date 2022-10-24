@@ -6,7 +6,7 @@ import { ThrottleMgr} from "../../../src/ThrottleMgr";
 import { SinonSpy } from "sinon";
 import { Util } from "../../../src/Util";
 
-const compareDates = (date1: Date, date: string | Date) => {
+const compareDates = (date1: Date, date: string | Date, expectedSame: boolean = true) => {
     let isSame = false;
     try {
         if (date1 && date) {
@@ -18,8 +18,7 @@ const compareDates = (date1: Date, date: string | Date) => {
     } catch (e) {
         Assert.ok(false,"compare dates error" + e);
     }
-    Assert.ok(isSame, "two dates are not same");
-    return isSame;
+    Assert.equal(isSame, expectedSame, "checking that the dates where as expected");
 }
 
 export class ThrottleMgrTest extends AITestClass {
@@ -435,11 +434,9 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let afterTriggered = window.localStorage[this._storageName];
                 let afterTriggeredObj = JSON.parse(afterTriggered);
-                let isAfterTriggeredDateSame = compareDates(date, afterTriggeredObj.date)
-                Assert.ok(isAfterTriggeredDateSame);
+                compareDates(date, afterTriggeredObj.date)
                 Assert.equal(0, afterTriggeredObj.count);
-                let isDateSame = compareDates(sendDate, afterTriggeredObj.preTriggerDate);
-                Assert.ok(isDateSame, afterTriggeredObj.preTriggerDate);
+                compareDates(sendDate, afterTriggeredObj.preTriggerDate);
             }
 
         });
@@ -472,8 +469,7 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.equal(isTriggeredPre, false);
                 let initialVal = window.localStorage[this._storageName];
                 let initObj = JSON.parse(initialVal);
-                let isSameInitDate = compareDates(date, initObj.date);
-                Assert.ok(isSameInitDate);
+                compareDates(date, initObj.date);
                 Assert.equal(0, initObj.count);
                 Assert.equal(undefined, initObj.preTriggerDate);
                 
@@ -485,8 +481,7 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.equal(isTriggeredPost, false);
                 let postVal = window.localStorage[this._storageName];
                 let postObj = JSON.parse(postVal);
-                let isSamePostDate = compareDates(date, postObj.date);
-                Assert.ok(isSamePostDate);
+                compareDates(date, postObj.date);
                 Assert.equal(0, postObj.count);
                 Assert.equal(undefined, postObj.preTriggerDate);
 
@@ -496,11 +491,9 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.ok(isTriggeredAfterReadySate);
                 let postOnReadyVal = window.localStorage[this._storageName];
                 let postOnReadyObj = JSON.parse(postOnReadyVal);
-                let isSamePostpostOnReadyDate = compareDates(date, postOnReadyObj.date);
-                Assert.ok(isSamePostpostOnReadyDate);
+                compareDates(date, postOnReadyObj.date);
                 Assert.equal(0, postOnReadyObj.count);
-                let isSamePostpostTriggerDate = compareDates(date, postOnReadyObj.preTriggerDate);
-                Assert.ok(isSamePostpostTriggerDate);
+                compareDates(date, postOnReadyObj.preTriggerDate);
 
                 let onReadyResult = throttleMgr.sendMessage(this._msgId, msg);
                 let onReadyCount = this.loggingSpy.callCount;
@@ -514,11 +507,9 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.equal(onReadyIsTriggered, true);
                 let afterResendVal = window.localStorage[this._storageName];
                 let afterResendObj = JSON.parse(afterResendVal);
-                let isAfterResendDateSame = compareDates(date, afterResendObj.date);
-                Assert.ok(isAfterResendDateSame);
+                compareDates(date, afterResendObj.date);
                 Assert.equal(1, afterResendObj.count);
-                let isAfterResendTriggerDateSame = compareDates(date, afterResendObj.preTriggerDate);
-                Assert.ok(isAfterResendTriggerDateSame);
+                compareDates(date, afterResendObj.preTriggerDate);
             }
         });
 
@@ -570,11 +561,9 @@ export class ThrottleMgrTest extends AITestClass {
             
                 let val = window.localStorage[this._storageName];
                 let obj = JSON.parse(val);
-                let isSameDate = compareDates(date, obj.date);
-                Assert.ok(isSameDate);
+                compareDates(date, obj.date);
                 Assert.equal(0, obj.count);
-                let isSameTrigerDate = compareDates(date, obj.preTriggerDate);
-                Assert.ok(isSameTrigerDate);
+                compareDates(date, obj.preTriggerDate);
 
                 let isTriggeredPost = throttleMgr.isTriggered();
                 Assert.equal(isTriggeredPost, true);
