@@ -6,6 +6,20 @@ import { ThrottleMgr} from "../../../src/ThrottleMgr";
 import { SinonSpy } from "sinon";
 import { Util } from "../../../src/Util";
 
+const compareDates = (date1: Date, date: string | Date) => {
+    try {
+        if (date1 && date) {
+            let date2 = typeof date == "string"? new Date(date) : date;
+            return date1.getUTCFullYear() === date2.getUTCFullYear() &&
+            date1.getUTCMonth() === date2.getUTCMonth() &&
+            date1.getUTCDate() === date2.getUTCDate();
+        }
+    } catch (e) {
+        console.log("compare dates error" + e);
+    }
+    return false;
+}
+
 export class ThrottleMgrTest extends AITestClass {
     private _core: IAppInsightsCore;
     private _msgKey: IThrottleMsgKey;
@@ -112,17 +126,22 @@ export class ThrottleMgrTest extends AITestClass {
                 let month = date.getUTCMonth();
                 let year = date.getUTCFullYear();
                 if (month == 0) {
-                    year -= 1;
-                    month = 12;
+                    date.setUTCFullYear(year-1);
+                    date.setUTCMonth(11);
+                } else {
+                    date.setUTCMonth(month-1);
                 }
-                let testStorageVal = year + "-" + month +"-" + date.getUTCDate() + ".0.0";
-                window.localStorage[this._storageName] = testStorageVal;
-
+                let storageObj = {
+                    date: date,
+                    count: 0
+                }
+                window.localStorage[this._storageName] = JSON.stringify(storageObj);
+                
                 let config = {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 50,
+                        samplingPercentage: 1000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -146,14 +165,27 @@ export class ThrottleMgrTest extends AITestClass {
             name: "ThrottleMgrTest: should not trigger throttle when year and month interval requirements are not meet",
             test: () => {
                 let date = new Date();
-                let testStorageVal = (date.getUTCFullYear() - 1) + "-" + date.getUTCMonth() +"-" + date.getUTCDate() + ".0.0";
-                window.localStorage[this._storageName] = testStorageVal;
+                let month = date.getUTCMonth();
+                let year = date.getUTCFullYear();
+             
+                if (month == 0) {
+                    date.setUTCFullYear(year-2);
+                    date.setUTCMonth(11);
+                } else {
+                    date.setUTCFullYear(year-1);
+                    date.setUTCMonth(month-1);
+                }
+                let storageObj = {
+                    date: date,
+                    count: 0
+                }
+                window.localStorage[this._storageName] = JSON.stringify(storageObj);
 
                 let config = {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 50,
+                        samplingPercentage: 1000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -177,14 +209,17 @@ export class ThrottleMgrTest extends AITestClass {
             name: "ThrottleMgrTest: should not trigger throttle when day interval requirements are not meet",
             test: () => {
                 let date = new Date();
-                let testStorageVal = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + (date.getUTCDate() - 1) + ".0.0";
-                window.localStorage[this._storageName] = testStorageVal;
+                let storageObj = {
+                    date: date,
+                    count: 0
+                }
+                window.localStorage[this._storageName] = JSON.stringify(storageObj);
 
                 let config = {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 50,
+                        samplingPercentage: 1000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -205,30 +240,25 @@ export class ThrottleMgrTest extends AITestClass {
         });
 
         this.testCase({
-            name: "ThrottleMgrTest: should trigger throttle at start month",
+            name: "ThrottleMgrTest: should trigger throttle at starting month",
             test: () => {
                 let date = new Date();
-                let testStorageVal = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-3.0.0";
-                window.localStorage[this._storageName] = testStorageVal;
-                let range = 1;
-
-                let day = date.getUTCDate();
-                if (day % 3 == 0) {
-                    range = 3
-                } else if (day % 2 == 0) {
-                    range = 2
+                let storageObj = {
+                    date: date,
+                    count: 0
                 }
+                window.localStorage[this._storageName] = JSON.stringify(storageObj);
 
                 let config = {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 50,
+                        samplingPercentage: 1000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
-                        monthInterval: 3,
-                        dayInterval: range,
+                        monthInterval: 1,
+                        dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
                 } as IthrottleMgrConfig;
@@ -247,25 +277,23 @@ export class ThrottleMgrTest extends AITestClass {
             name: "ThrottleMgrTest: should trigger throttle when month and day intervals are meet",
             test: () => {
                 let date = new Date();
-                let month = date.getUTCMonth();
-                let year = date.getUTCFullYear() -2;
-                let day = date.getUTCDate();
-                if (month == 0) {
-                    year -= 1;
-                    month = 12;
+                let year = date.getUTCFullYear() - 2;
+                date.setUTCFullYear(year);
+                let storageObj = {
+                    date: date,
+                    count: 0
                 }
-                let testStorageVal = year + "-" + month + "-" + day + ".0.0";
-                window.localStorage[this._storageName] = testStorageVal;
+                window.localStorage[this._storageName] = JSON.stringify(storageObj);
 
                 let config = {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 50,
+                        samplingPercentage: 1000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
-                        monthInterval: 5,
+                        monthInterval: 4,
                         dayInterval: 1,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
@@ -282,18 +310,21 @@ export class ThrottleMgrTest extends AITestClass {
         });
 
         this.testCase({
-            name: "ThrottleMgrTest: should trigger throttle when maxSentTimes is not meet",
+            name: "ThrottleMgrTest: should not trigger throttle when maxSentTimes is not meet",
             test: () => {
                 let date = new Date();
                 let day = date.getUTCDate();
-                let testStorageVal = date.getUTCFullYear() + "-" + date.getUTCMonth() +"-" + day + ".0.0";
-                window.localStorage[this._storageName] = testStorageVal;
+                let storageObj = {
+                    date: date,
+                    count: 0
+                }
+                window.localStorage[this._storageName] = JSON.stringify(storageObj);
                 let maxTimes = day-1;
                 let config = {
                     msgKey: this._msgKey,
                     disabled: false,
                     limit: {
-                        samplingPercentage: 50,
+                        samplingPercentage: 1000,
                         maxSendNumber: 100
                     } as IThrottleLimit,
                     interval: {
@@ -316,10 +347,12 @@ export class ThrottleMgrTest extends AITestClass {
         this.testCase({
             name: "ThrottleMgrTest: should not trigger throttle when _isTrigger state is true (in valid send message date)",
             test: () => {
-                let date = new Date();
-                let day = date.getUTCDate();
-                let testStorageVal = date.getUTCFullYear() + "-" + date.getUTCMonth() +"-" + day + ".0.1";
-                window.localStorage[this._storageName] = testStorageVal;
+                let storageObj = {
+                    date: new Date(),
+                    count: 0,
+                    preTriggerDate: new Date()
+                }
+                window.localStorage[this._storageName] = JSON.stringify(storageObj);
                 let config = {
                     msgKey: this._msgKey,
                     disabled: false,
@@ -339,19 +372,34 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.equal(canThrottle, true);
                 let isTriggered = throttleMgr.isTriggered();
                 Assert.ok(isTriggered);
+                let result = throttleMgr.sendMessage(this._msgId, "test");
+                let count = this.loggingSpy.callCount;
+                Assert.equal(count,0);
+                Assert.deepEqual(result, null);
+                let postIsTriggered = throttleMgr.isTriggered();
+                Assert.ok(postIsTriggered);
+
             }
 
         });
 
         this.testCase({
-            name: "ThrottleMgrTest: should update local storage (in non-valid send message date)",
+            name: "ThrottleMgrTest: should update local storage (in valid send message date)",
             test: () => {
                 let date = new Date();
-                let day = date.getUTCDate();
-                let preStorageVal = date.getUTCFullYear() + "-" + date.getUTCMonth() +"-" + day + ".0.1";
-                let postStorageVal = date.getUTCFullYear() + "-" + date.getUTCMonth() +"-" + day + ".1.0";
                 let msg = "Instrumentation key support will end soon, see aka.ms/IkeyMigrate";
+               
+                let preTriggerDate = date;
+                preTriggerDate.setUTCFullYear(date.getUTCFullYear() - 1);
+                let preStorageObj = {
+                    date: date,
+                    count: 0,
+                    preTriggerDate: preTriggerDate
+                }
+                
+                let preStorageVal = JSON.stringify(preStorageObj);
                 window.localStorage[this._storageName] = preStorageVal;
+
                 let config = {
                     msgKey: this._msgKey,
                     disabled: false,
@@ -361,42 +409,49 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 0
+                        dayInterval: date.getUTCDate(),
+                        maxTimesPerMonth: 1
                     } as IThrottleInterval
                 } as IthrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
-                Assert.equal(canThrottle, false);
+                Assert.equal(canThrottle, true);
                 let isPretriggered = throttleMgr.isTriggered();
-                Assert.equal(isPretriggered, true);
+                Assert.equal(isPretriggered, false);
 
                 throttleMgr.onReadyState(true);
+                let sendDate = new Date();
                 let result = throttleMgr.sendMessage(this._msgId, msg);
                 let expectedRetryRlt = {
-                    isThrottled: false,
-                    throttleNum: 0
+                    isThrottled: true,
+                    throttleNum: 1
                 } as IthrottleResult
                 Assert.deepEqual(result, expectedRetryRlt);
                 let isPostTriggered = throttleMgr.isTriggered();
-                Assert.equal(isPostTriggered, false);
+                Assert.equal(isPostTriggered, true);
 
                 let afterTriggered = window.localStorage[this._storageName];
-                Assert.equal(afterTriggered, postStorageVal);
+                let afterTriggeredObj = JSON.parse(afterTriggered);
+                let isAfterTriggeredDateSame = compareDates(date, afterTriggeredObj.date)
+                Assert.ok(isAfterTriggeredDateSame);
+                Assert.equal(0, afterTriggeredObj.count);
+                let isDateSame = compareDates(sendDate, afterTriggeredObj.preTriggerDate);
+                Assert.ok(isDateSame, afterTriggeredObj.preTriggerDate);
             }
 
         });
 
         this.testCase({
-            name: "ThrottleMgrTest: should not trigger sendmessage when isready state is not set",
+            name: "ThrottleMgrTest: should not trigger sendmessage when isready state is not set and should flush message after isReady state is set",
             test: () => {
-                let date = new Date();
-                let testStorageVal = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + ".0.0";
-                let testPostStorageVal = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + ".0.1";
-                let testAfterSendStorageVal = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + ".1.1";
                 let msg = "Instrumentation key support will end soon, see aka.ms/IkeyMigrate";
-
+                let date = new Date();
+                let testStorageObj = {
+                    date: date,
+                    count: 0
+                };
+               
                 let config = {
                     msgKey: IThrottleMsgKey.ikeyDeprecate,
                     disabled: false,
@@ -410,16 +465,21 @@ export class ThrottleMgrTest extends AITestClass {
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
                 } as IthrottleMgrConfig;
-
+             
                 let throttleMgr = new ThrottleMgr(config, this._core);
+               
 
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.ok(canThrottle);
                 let isTriggeredPre = throttleMgr.isTriggered();
                 Assert.equal(isTriggeredPre, false);
                 let initialVal = window.localStorage[this._storageName];
-                Assert.equal(initialVal,testStorageVal);
-
+                let initObj = JSON.parse(initialVal);
+                let isSameInitDate = compareDates(date, initObj.date);
+                Assert.ok(isSameInitDate);
+                Assert.equal(0, initObj.count);
+                Assert.equal(undefined, initObj.preTriggerDate);
+                
                 let result = throttleMgr.sendMessage(this._msgId, msg);
                 let count = this.loggingSpy.callCount;
                 Assert.equal(count,0);
@@ -427,12 +487,23 @@ export class ThrottleMgrTest extends AITestClass {
                 let isTriggeredPost = throttleMgr.isTriggered();
                 Assert.equal(isTriggeredPost, false);
                 let postVal = window.localStorage[this._storageName];
-                Assert.equal(postVal,testStorageVal);
+                let postObj = JSON.parse(postVal);
+                let isSamePostDate = compareDates(date, postObj.date);
+                Assert.ok(isSamePostDate);
+                Assert.equal(0, postObj.count);
+                Assert.equal(undefined, postObj.preTriggerDate);
 
                 let isFlushed = throttleMgr.onReadyState(true);
                 Assert.ok(isFlushed);
+                let isTriggeredAfterReadySate = throttleMgr.isTriggered();
+                Assert.ok(isTriggeredAfterReadySate);
                 let postOnReadyVal = window.localStorage[this._storageName];
-                Assert.equal(postOnReadyVal,testPostStorageVal);
+                let postOnReadyObj = JSON.parse(postOnReadyVal);
+                let isSamePostpostOnReadyDate = compareDates(date, postOnReadyObj.date);
+                Assert.ok(isSamePostpostOnReadyDate);
+                Assert.equal(0, postOnReadyObj.count);
+                let isSamePostpostTriggerDate = compareDates(date, postOnReadyObj.preTriggerDate);
+                Assert.ok(isSamePostpostTriggerDate);
 
                 let onReadyResult = throttleMgr.sendMessage(this._msgId, msg);
                 let onReadyCount = this.loggingSpy.callCount;
@@ -445,7 +516,12 @@ export class ThrottleMgrTest extends AITestClass {
                 let onReadyIsTriggered = throttleMgr.isTriggered();
                 Assert.equal(onReadyIsTriggered, true);
                 let afterResendVal = window.localStorage[this._storageName];
-                Assert.equal(afterResendVal, testAfterSendStorageVal);
+                let afterResendObj = JSON.parse(afterResendVal);
+                let isAfterResendDateSame = compareDates(date, afterResendObj.date);
+                Assert.ok(isAfterResendDateSame);
+                Assert.equal(1, afterResendObj.count);
+                let isAfterResendTriggerDateSame = compareDates(date, afterResendObj.preTriggerDate);
+                Assert.ok(isAfterResendTriggerDateSame);
             }
         });
 
@@ -453,9 +529,14 @@ export class ThrottleMgrTest extends AITestClass {
         this.testCase({
             name: "ThrottleMgrTest: throw messages with correct number",
             test: () => {
-                let date = new Date();
-                let testStorageVal = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + ".0.1";
                 let msg = "Instrumentation key support will end soon, see aka.ms/IkeyMigrate";
+                let date = new Date();
+                let testStorageObj = {
+                    date: date,
+                    count: 5
+                }
+                let testStorageVal = JSON.stringify(testStorageObj);
+                window.localStorage[this._storageName] = testStorageVal;
 
                 let config = {
                     msgKey: IThrottleMsgKey.ikeyDeprecate,
@@ -491,7 +572,12 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.deepEqual(result, expectedRlt);
             
                 let val = window.localStorage[this._storageName];
-                Assert.equal(val, testStorageVal);
+                let obj = JSON.parse(val);
+                let isSameDate = compareDates(date, obj.date);
+                Assert.ok(isSameDate);
+                Assert.equal(0, obj.count);
+                let isSameTrigerDate = compareDates(date, obj.preTriggerDate);
+                Assert.ok(isSameTrigerDate);
 
                 let isTriggeredPost = throttleMgr.isTriggered();
                 Assert.equal(isTriggeredPost, true);
@@ -501,9 +587,6 @@ export class ThrottleMgrTest extends AITestClass {
         this.testCase({
             name: "ThrottleMgrTest: should throw messages 1 time within a day",
             test: () => {
-                let date = new Date();
-                let testStorageVal = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + ".0.1";
-                let testStorageRetryVal = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + ".1.1";
                 let msg = "Instrumentation key support will end soon, see aka.ms/IkeyMigrate";
 
                 let config = {
@@ -533,14 +616,12 @@ export class ThrottleMgrTest extends AITestClass {
                 let result = throttleMgr.sendMessage(this._msgId, msg);
                 let count = this.loggingSpy.callCount
                 Assert.equal(count,1);
+              
                 let expectedRlt = {
                     isThrottled: true,
                     throttleNum: 1
                 } as IthrottleResult
                 Assert.deepEqual(result, expectedRlt);
-            
-                let val = window.localStorage[this._storageName];
-                Assert.equal(val,testStorageVal);
 
                 let isTriggeredPost = throttleMgr.isTriggered();
                 Assert.equal(isTriggeredPost, true);
@@ -555,9 +636,6 @@ export class ThrottleMgrTest extends AITestClass {
                     throttleNum: 0
                 } as IthrottleResult
                 Assert.deepEqual(retryRlt, expectedRetryRlt);
-            
-                let retryVal = window.localStorage[this._storageName];
-                Assert.equal(retryVal, testStorageRetryVal);
             }
         });
     }

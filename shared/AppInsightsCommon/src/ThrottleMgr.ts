@@ -18,8 +18,7 @@ export class ThrottleMgr {
     public canThrottle: () => boolean;
     public sendMessage: (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity) => IthrottleResult | null;
     public getConfig: () => IthrottleMgrConfig;
-    // this function is to get previous triggered status
-    public isTriggered: () => boolean;
+    public isTriggered: () => boolean; // this function is to get previous triggered status
     public isReady: () => boolean
     public onReadyState: (isReady?: boolean) => boolean;
     public flush: () => boolean;
@@ -31,15 +30,10 @@ export class ThrottleMgr {
         let _config: IthrottleMgrConfig;
         let _localStorageName: string | null;
         let _localStorageObj: IthrottleLocalStorageObj | null | undefined;
-        //_isTriggered is to make sure that we only trigger throttle once a day
-        let _isTriggered: boolean;
+        let _isTriggered: boolean; //_isTriggered is to make sure that we only trigger throttle once a day
         let _namePrefix: string;
         let _queue: Array<SendMsgParameter>;
         let _isReady: boolean = false;
-
-        // local storage value should follow pattern: year(4 digit)-month(1-2 digit)-day(1-2 digit).count.0|1, for example: 2022-8-10.10.1
-        // const regex = /^\d{4}\-\d{1,2}\-\d{1,2}\.\d{1,}\.0|1$/;
-        const regex = /^\d{4}\-\d{1,2}\-\d{1,2}\.\d+\.(0|1)$/;
 
         _initConfig();
 
@@ -47,21 +41,39 @@ export class ThrottleMgr {
             return _config;
         }
 
-        // NOTE: this function can only check if it is the correct day to send message.
-        // If _isTriggered is true, even if canThrottle returns true, message will not be sent.
-        // because we only allow trigger sending message once day.
+        /**
+         * Check if it is the correct day to send message.
+         * If _isTriggered is true, even if canThrottle returns true, message will not be sent,
+         * because we only allow triggering sendMessage() once a day.
+         * @returns if the current date is the valid date to send message
+         */
         _self.canThrottle = (): boolean => {
             return _canThrottle(_config, _canUseLocalStorage, _localStorageObj);
         }
 
-        // get if throttle is triggered in current day(UTC)
+        /**
+         * Check if throttle is triggered on current day(UTC)
+         * if canThrottle returns false, isTriggered will return false
+         * @returns if throttle is triggered on current day(UTC)
+         */
         _self.isTriggered = (): boolean => {
             return _isTriggered;
         }
 
+        /**
+         * Before isReady set to true, all message will be stored in queue.
+         * Message will only be sent out after isReady set to true.
+         * Initial and default value: false
+         * @returns isReady state
+         */
         _self.isReady = (): boolean => {
             return _isReady;
         }
+
+        /**
+         * Flush all message in queue with isReady state set to true.
+         * @returns if message queue is flushed
+         */
         _self.flush = (): boolean => {
             try {
                 if (_isReady && _queue.length > 0) {
@@ -76,6 +88,12 @@ export class ThrottleMgr {
             return false;
         }
 
+        /**
+         * Set isReady State
+         * if isReady set to true, message queue will be flushed automatically.
+         * @param isReady isReady State
+         * @returns if message queue is flushed
+         */
         _self.onReadyState = (isReady?: boolean): boolean => {
             _isReady  = isNullOrUndefined(isReady)? true : isReady;
             return _self.flush();
@@ -92,16 +110,15 @@ export class ThrottleMgr {
                 let number = 0;
                 try {
                     if (canThrottle && !_isTriggered) {
-                        number =  _config.limit.maxSendNumber;
+                        number =  Math.min(_config.limit.maxSendNumber, _localStorageObj.count + 1);
                         _localStorageObj.count = 0;
                         throttled = true;
                         _isTriggered = true;
+                        _localStorageObj.preTriggerDate = new Date();
                     } else {
-                        // this is to make sure that we do not trigger sendMessage mutiple times within a day.
                         _isTriggered = canThrottle;
                         _localStorageObj.count += 1;
                     }
-                    _localStorageObj.isTriggered = _isTriggered;
                     _resetLocalStorage(_logger, _localStorageName, _localStorageObj);
                     for (let i = 0; i < number; i++) {
                         _sendMessage(msgID, _logger, message, severity);
@@ -153,8 +170,7 @@ export class ThrottleMgr {
                 _localStorageObj = _getLocalStorageObj(utlGetLocalStorage(_logger, _localStorageName), _logger, _localStorageName);
             }
             if (_localStorageObj) {
-                // will reset _isTriggered status when sendMessage is called.
-                _isTriggered = _localStorageObj.isTriggered;
+                _isTriggered = _isTriggeredOnCurDate(_localStorageObj.preTriggerDate);
             }
         }
 
@@ -165,7 +181,7 @@ export class ThrottleMgr {
                 let interval = config.interval;
                 let monthExpand = (curDate.getUTCFullYear() - date.getUTCFullYear()) * 12 + curDate.getUTCMonth() - date.getUTCMonth();
                 let monthCheck = _checkInterval(interval.monthInterval, 0, monthExpand);
-                let dayCheck = _checkInterval(interval.dayInterval, 0, curDate.getUTCDate()) - 1;
+                let dayCheck = _checkInterval(interval.dayInterval, 0, curDate.getUTCDate()) -1;
                 return monthCheck >= 0 && dayCheck >= 0 && dayCheck <= config.interval.maxTimesPerMonth;
             }
             return false;
@@ -179,27 +195,39 @@ export class ThrottleMgr {
             return null;
         }
 
-        // transfer local storage string value to object that identifies start date and current count
+        // returns if throttle is triggered on current Date
+        function _isTriggeredOnCurDate(preTriggerDate?: Date) {
+            try {
+                if(preTriggerDate) {
+                    let curDate = new Date();
+                    return preTriggerDate.getUTCFullYear() === curDate.getUTCFullYear() &&
+                    preTriggerDate.getUTCMonth() === curDate.getUTCMonth() &&
+                    preTriggerDate.getUTCDate() === curDate.getUTCDate();
+                }
+            } catch (e) {
+                // eslint-disable-next-line no-empty
+            }
+            return false;
+        }
+
+        // transfer local storage string value to object that identifies start date, current count and preTriggerDate
         function _getLocalStorageObj(value: string, logger: IDiagnosticLogger, storageName: string) {
             try {
-                let isMatch = regex.test(value);
-                if (isMatch) {
-                    let valArr = value.split(".");
-                    let dateVal = _getThrottleDate(valArr[0]);
+                let storageObj = {
+                    date: _getThrottleDate(),
+                    count: 0
+                } as IthrottleLocalStorageObj;
+                if (value) {
+                    let obj = JSON.parse(value);
                     return {
-                        date: dateVal,
-                        count: parseInt(valArr[1]),
-                        isTriggered: parseInt(valArr[2]) === 1? true : false
+                        date: _getThrottleDate(obj.date) || storageObj.date,
+                        count: obj.count || storageObj.count,
+                        preTriggerDate: obj.preTriggerDate? _getThrottleDate(obj.preTriggerDate) : undefined
                     } as IthrottleLocalStorageObj;
-
                 } else {
-                    let storageObj = {
-                        date: _getThrottleDate(),
-                        count: 0,
-                        isTriggered: false
-                    } as IthrottleLocalStorageObj;
                     _resetLocalStorage(logger, storageName, storageObj);
                     return storageObj;
+
                 }
             } catch(e) {
                 // eslint-disable-next-line no-empty
@@ -209,8 +237,18 @@ export class ThrottleMgr {
 
         // if datestr is not defined, current date will be returned
         function _getThrottleDate(dateStr?: string) {
+            // if new Date() can't be created through the provided dateStr, null will be returned.
             try {
-                return isNotNullOrUndefined(dateStr)? new Date(dateStr) : new Date();
+                if (dateStr) {
+                    let date = new Date(dateStr);
+                    //make sure it is a valid Date Object
+                    if (!isNaN(date.getDate())) {
+                        return date;
+                    }
+                } else {
+                    return new Date();
+                }
+                
             } catch (e) {
                 // eslint-disable-next-line no-empty
             }
@@ -219,13 +257,9 @@ export class ThrottleMgr {
 
         function _resetLocalStorage(logger: IDiagnosticLogger, storageName: string, obj: IthrottleLocalStorageObj) {
             try {
-                let date = obj.date;
-                let isTriggered = obj.isTriggered? 1 : 0;
-                let val = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + "." + obj.count + "." + isTriggered;
-                utlSetLocalStorage(logger, storageName, strTrim(val));
-                return true;
+                return utlSetLocalStorage(logger, storageName, strTrim(JSON.stringify(obj)));
             } catch (e) {
-                // eslint-disable-next-line no-empty
+            //     // eslint-disable-next-line no-empty
             }
             return false;
         }
@@ -245,7 +279,7 @@ export class ThrottleMgr {
         // NOTE: config.limit.samplingPercentage unit is 1000.
         // So if config.limit.samplingPercentage = 20, it means 20/1000 = 0.02;
         function _canSampledIn() {
-            return Math.random() * 100 <= _config.limit.samplingPercentage;
+            return Math.random() <= _config.limit.samplingPercentage / 1000;
         }
     }
 }

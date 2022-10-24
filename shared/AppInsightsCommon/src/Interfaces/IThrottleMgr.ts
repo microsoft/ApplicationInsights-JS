@@ -87,9 +87,9 @@ export interface IthrottleLocalStorageObj {
     count: number;
 
     /**
-     * identifies if the throttle is triggered
+     * identifies previous triggered throttle date
      */
-    isTriggered: boolean;
+    preTriggerDate?: Date;
 }
 
 /**
