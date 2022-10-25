@@ -2,6 +2,21 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.9 (Oct 25th, 2022)
+
+- Updates Chrome Debug Extension to 0.3.9
+
+### Changelog
+
+- #1920 Update to DynamicProto v1.1.7
+- #1935 Update to @microsoft/applicationinsights-shims: 2.0.2
+  - #1911 Uncaught ReferenceError: global is not defined
+- #1912 Update PerfTests to use the latest version
+- #1916 [Bug] Fix randomly failing tests
+- #1915 Fix CodeQL Identified potential Issues
+- #1906 [Task]14569737: add throttle cdn config
+- #1930 Remove the source-map-loader from the package.json as we don't use it.
+
 ## Shims 2.0.2 (Oct 24th, 2022)
 
 ## Changelog
