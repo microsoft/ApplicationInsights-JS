@@ -4,8 +4,10 @@ import { UtilTests } from "./Util.tests";
 import { ConnectionStringParserTests } from "./ConnectionStringParser.tests";
 import { SeverityLevelTests } from "./SeverityLevel.tests";
 import { RequestHeadersTests } from "./RequestHeaders.tests";
+import { ThrottleMgrTest } from "./ThrottleMgr.tests";
 
 export function runTests() {
+    new ThrottleMgrTest().registerTests();
     new ApplicationInsightsTests().registerTests();
     new ExceptionTests().registerTests();
     new UtilTests().registerTests();
