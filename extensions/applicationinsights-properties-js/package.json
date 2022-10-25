@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-properties-js",
-    "version": "2.8.8",
+    "version": "2.8.9",
     "description": "Microsoft Application Insights properties (Part A) plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -53,9 +53,9 @@
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.7",
-        "@microsoft/applicationinsights-shims": "2.0.1",
-        "@microsoft/applicationinsights-core-js": "2.8.8",
-        "@microsoft/applicationinsights-common": "2.8.8",
+        "@microsoft/applicationinsights-shims": "2.0.2",
+        "@microsoft/applicationinsights-core-js": "2.8.9",
+        "@microsoft/applicationinsights-common": "2.8.9",
         "@nevware21/ts-utils": "^0.5.0"
     },
     "license": "MIT"
