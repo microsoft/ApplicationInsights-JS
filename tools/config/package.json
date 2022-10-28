@@ -8,6 +8,12 @@
         "type": "git",
         "url": "git+https://github.com/microsoft/ApplicationInsights-JS.git"
     },
+    "scripts": {
+        "build": "npm run build:browser",
+        "build:browser": "grunt copy",
+        "rebuild": "npm run build",
+        "test": ""
+      },
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/microsoft/ApplicationInsights-JS/issues"
