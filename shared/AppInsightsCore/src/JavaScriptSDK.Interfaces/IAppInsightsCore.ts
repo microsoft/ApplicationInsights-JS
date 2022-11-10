@@ -49,6 +49,16 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     logger: IDiagnosticLogger;
 
     /**
+     * An array of the installed plugins that provide a version
+     */
+    readonly pluginVersionStringArr: string[];
+    
+    /**
+     * The formatted string of the installed plugins that contain a version number
+     */
+    readonly pluginVersionString: string;
+ 
+    /**
      * Returns a value that indicates whether the instance has already been previously initialized.
      */
     isInitialized?: () => boolean;
@@ -197,4 +207,9 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     onCfgChange<T extends IConfiguration = IConfiguration>(handler: WatcherFunction<T>): IUnloadHook;
+
+    /**
+     * Function used to identify the get w parameter used to identify status bit to some channels
+     */
+    getWParam: () => number;
 }

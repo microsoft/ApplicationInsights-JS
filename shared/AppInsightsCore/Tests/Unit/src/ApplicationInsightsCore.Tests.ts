@@ -465,13 +465,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 }
 
                 let found = false;
-                (appInsightsCore as any)._extensions.forEach(ext => {
-                    if (ext.identifier === samplingPlugin.identifier) {
-                        found = true;
-                    }
-                });
-
-                Assert.ok(found, "Plugin pased in through config is part of pipeline");
+                Assert.equal(samplingPlugin, appInsightsCore.getPlugin(samplingPlugin.identifier).plugin, "Plugin passed in through config is part of pipeline");
             }
         });
 
@@ -495,7 +489,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     Assert.ok(false, "Exception not expected");
                 }
 
-                Assert.ok(typeof ((appInsightsCore as any)._extensions[0].processTelemetry) !== 'function', "Extensions can be provided through overall configuration");
+                Assert.ok(typeof ((appInsightsCore as any)["_getDbgPlgTargets"]()[0][0].processTelemetry) !== 'function', "Extensions can be provided through overall configuration");
             }
         });
 

@@ -4,8 +4,8 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objDefineProp,
-    objForEachKey, objFreeze, objHasOwn, throwError
+    arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, hasDocument, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze,
+    objDefineProp, objForEachKey, objFreeze, objHasOwn, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -43,7 +43,7 @@ import { getDebugListener } from "./DbgExtensionUtils";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
 import { getSetValue, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
 import {
-    STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
+    STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
 } from "./InternalConstants";
 import { NotificationManager } from "./NotificationManager";
 import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
@@ -172,6 +172,7 @@ function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfigura
 
     return { i: idx, l: theListener };
 }
+
 function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[], newWatcher: WatcherFunction<IConfiguration>) {
     let theListener = _findWatcher(listeners, newWatcher).l;
 
@@ -207,8 +208,25 @@ export class AppInsightsCore implements IAppInsightsCore {
     public config: IConfiguration;
     public logger: IDiagnosticLogger;
 
-    public _extensions: IPlugin[];
+    /**
+     * An array of the installed plugins that provide a version
+     */
+     public readonly pluginVersionStringArr: string[];
+    
+    /**
+     * The formatted string of the installed plugins that contain a version number
+     */
+    public readonly pluginVersionString: string;
+
+    /**
+     * Returns a value that indicates whether the instance has already been previously initialized.
+     */
     public isInitialized: () => boolean;
+
+    /**
+     * Function used to identify the get w parameter used to identify status bit to some channels
+     */
+    public getWParam: () => number;
 
     constructor() {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
@@ -235,7 +253,10 @@ export class AppInsightsCore implements IAppInsightsCore {
         let _traceCtx: IDistributedTraceContext | null;
         let _instrumentationKey: string | null;
         let _cfgListeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[];
-
+        let _extensions: IPlugin[];
+        let _pluginVersionStringArr: string[];
+        let _pluginVersionString: string;
+    
         /**
          * Internal log poller
          */
@@ -245,6 +266,11 @@ export class AppInsightsCore implements IAppInsightsCore {
 
             // Set the default values (also called during teardown)
             _initDefaults();
+
+            // Special internal method to allow the unit tests and DebugPlugin to hook embedded objects
+            _self["_getDbgPlgTargets"] = () => {
+                return [_extensions];
+            };
 
             _self.isInitialized = () => _isInitialized;
 
@@ -661,6 +687,36 @@ export class AppInsightsCore implements IAppInsightsCore {
                 }
             };
 
+            _self.getWParam = () => {
+                return (hasDocument() || !!_configHandler.cfg.enableWParam) ? 0 : -1;
+            };
+
+            function _setPluginVersions() {
+                _pluginVersionStringArr = [];
+
+                if (_channelConfig) {
+                    arrForEach(_channelConfig, (channels) => {
+                        if (channels) {
+                            arrForEach(channels, (channel) => {
+                                if (channel.identifier && channel.version) {
+                                    let ver = channel.identifier + "=" + channel.version;
+                                    _pluginVersionStringArr.push(ver);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                if (_configExtensions) {
+                    arrForEach(_configExtensions, (ext) => {
+                        if (ext && ext.identifier && ext.version) {
+                            let ver = ext.identifier + "=" + ext.version;
+                            _pluginVersionStringArr.push(ver);
+                        }
+                    });
+                }
+            }
+
             function _initDefaults() {
                 _isInitialized = false;
 
@@ -680,8 +736,36 @@ export class AppInsightsCore implements IAppInsightsCore {
                     }
                 });
 
+                objDefineProp(_self, "pluginVersionStringArr", {
+                    configurable: true,
+                    enumerable: true,
+                    get: () => {
+                        if (!_pluginVersionStringArr) {
+                            _setPluginVersions();
+                        }
+
+                        return _pluginVersionStringArr;
+                    }
+                });
+
+                objDefineProp(_self, "pluginVersionString", {
+                    configurable: true,
+                    enumerable: true,
+                    get: () => {
+                        if (!_pluginVersionString) {
+                            if (!_pluginVersionStringArr) {
+                                _setPluginVersions();
+                            }
+
+                            _pluginVersionString = _pluginVersionStringArr.join(";");
+                        }
+
+                        return _pluginVersionString || STR_EMPTY;
+                    }
+                });
+
                 _self.logger = new DiagnosticLogger(_configHandler.cfg);
-                _self._extensions = [];
+                _extensions = [];
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
                 _eventQueue = [];
@@ -703,6 +787,8 @@ export class AppInsightsCore implements IAppInsightsCore {
                 _instrumentationKey = null;
                 _hooks = [];
                 _cfgListeners = [];
+                _pluginVersionString = null;
+                _pluginVersionStringArr = null;
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
@@ -716,7 +802,9 @@ export class AppInsightsCore implements IAppInsightsCore {
             
                 _coreExtensions = theExtensions.core;
                 _pluginChain = null;
-            
+                _pluginVersionString = null;
+                _pluginVersionStringArr = null;
+    
                 // Sort the complete set of extensions by priority
                 let allExtensions = theExtensions.all;
 
@@ -747,7 +835,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                 _coreExtensions.push(_channelControl);
 
                 // Required to allow plugins to call core.getPlugin() during their own initialization
-                _self._extensions = sortPlugins(allExtensions);
+                _extensions = sortPlugins(allExtensions);
 
                 // Initialize the controls
                 _channelControl.initialize(_configHandler.cfg, _self, allExtensions);
@@ -755,7 +843,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                 initializePlugins(_createTelCtx(), allExtensions);
 
                 // Now reset the extensions to just those being managed by AppInsightsCore
-                _self._extensions = objFreeze(sortPlugins(_coreExtensions || [])).slice();
+                _extensions = objFreeze(sortPlugins(_coreExtensions || [])).slice();
 
                 if (updateState) {
                     _doUpdate(updateState);
@@ -766,7 +854,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                 let theExt: ILoadedPlugin<T> = null;
                 let thePlugin: IPlugin = null;
 
-                arrForEach(_self._extensions, (ext: any) => {
+                arrForEach(_extensions, (ext: any) => {
                     if (ext.identifier === pluginIdentifier && ext !== _channelControl && ext !== _telemetryInitializerPlugin) {
                         thePlugin = ext;
                         return -1;
@@ -849,6 +937,8 @@ export class AppInsightsCore implements IAppInsightsCore {
                         });
 
                         _configExtensions = newConfigExtensions;
+                        _pluginVersionString = null;
+                        _pluginVersionStringArr = null;
 
                         // Re-Create the channel config
                         let newChannelConfig: IChannelControls[][] = [];

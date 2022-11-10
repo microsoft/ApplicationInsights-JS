@@ -73,6 +73,16 @@ export class AppInsightsSku implements IApplicationInsights {
     public core: IAppInsightsCore;
     public context: Common_ITelemetryContext;
 
+    /**
+     * An array of the installed plugins that provide a version
+     */
+    public readonly pluginVersionStringArr: string[];
+    
+    /**
+     * The formatted string of the installed plugins that contain a version number
+     */
+    public readonly pluginVersionString: string;
+
     constructor(snippet: Snippet) {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
         let dependencies: DependenciesPlugin;
@@ -98,6 +108,20 @@ export class AppInsightsSku implements IApplicationInsights {
                         _core.config = newValue;
                     }
                 }
+            });
+
+            arrForEach(["pluginVersionStringArr", "pluginVersionString"], (key) => {
+                objDefineProp(_self, key, {
+                    configurable: true,
+                    enumerable: true,
+                    get: () => {
+                        if (_core) {
+                            return _core[key];
+                        }
+                        
+                        return null;
+                    }
+                });
             });
             
             // initialize the queue and config in case they are undefined
@@ -655,7 +679,14 @@ export class AppInsightsSku implements IApplicationInsights {
         return null;
     }
 
-    public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, doAsync: boolean, addCb?: (added?: boolean) => void): void {
+    /**
+     * Add a new plugin to the installation
+     * @param plugin - The new plugin to add
+     * @param replaceExisting - should any existing plugin be replaced, default is false
+     * @param doAsync - Should the add be performed asynchronously
+     * @param addCb - [Optional] callback to call after the plugin has been added
+     */
+     public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, doAsync?: boolean, addCb?: (added?: boolean) => void): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
