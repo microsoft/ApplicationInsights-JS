@@ -65,18 +65,8 @@ export class ApplicationInsights {
             ]);
 
             function _initialize(): void {
-                const extensions = [];
-                const appInsightsChannel: Sender = new Sender();
-        
-                extensions.push(appInsightsChannel);
-        
                 // initialize core
-                core.initialize(_self.config, extensions);
-        
-                // initialize extensions
-                appInsightsChannel.initialize(_self.config, core, extensions);
-        
-                core.pollInternalLogs();
+                core.initialize(_self.config, [new Sender()]);
             }
         });
     }

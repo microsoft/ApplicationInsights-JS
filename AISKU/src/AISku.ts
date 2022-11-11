@@ -213,10 +213,8 @@ export class AppInsightsSku implements IApplicationInsights {
                 }
 
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
-                    const extensions = arrAppend([], [ _sender, properties, dependencies, _self.appInsights]);
-        
                     // initialize core
-                    _core.initialize(_self.config, extensions, logger, notificationManager);
+                    _core.initialize(_self.config, [ _sender, properties, dependencies, _self.appInsights ], logger, notificationManager);
                     _self.context = properties.context;
                     let sdkSrc = _findSdkSourceFile();
                     if (sdkSrc && _self.context) {
@@ -686,7 +684,7 @@ export class AppInsightsSku implements IApplicationInsights {
      * @param doAsync - Should the add be performed asynchronously
      * @param addCb - [Optional] callback to call after the plugin has been added
      */
-     public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, doAsync?: boolean, addCb?: (added?: boolean) => void): void {
+    public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, doAsync?: boolean, addCb?: (added?: boolean) => void): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

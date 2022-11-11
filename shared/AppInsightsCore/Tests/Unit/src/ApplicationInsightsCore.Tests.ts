@@ -335,7 +335,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(data2.baseData.message.indexOf("Hello2") !== -1);
 
                 // Cleanup
-                clearInterval(poller);
+                poller.cancel();
             }
         });
 

@@ -4,8 +4,8 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, hasDocument, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze,
-    objDefineProp, objForEachKey, objFreeze, objHasOwn, throwError
+    ITimerHandler, arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
+    objDeepFreeze, objDefineProp, objForEachKey, objFreeze, objHasOwn, scheduleInterval, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -260,7 +260,8 @@ export class AppInsightsCore implements IAppInsightsCore {
         /**
          * Internal log poller
          */
-        let _internalLogPoller: number = 0;
+        let _internalLogPoller: ITimerHandler;
+        let _internalLogPollerListening: boolean;
 
         dynamicProto(AppInsightsCore, this, (_self) => {
 
@@ -325,6 +326,8 @@ export class AppInsightsCore implements IAppInsightsCore {
 
                 _isInitialized = true;
                 _self.releaseQueue();
+
+                _self.pollInternalLogs();
             };
         
             _self.getTransmissionControls = (): IChannelControls[][] => {
@@ -456,22 +459,31 @@ export class AppInsightsCore implements IAppInsightsCore {
             /**
              * Periodically check logger.queue for log messages to be flushed
              */
-            _self.pollInternalLogs = (eventName?: string): number => {
+            _self.pollInternalLogs = (eventName?: string): ITimerHandler => {
                 _internalLogsEventName = eventName || null;
 
-                _addUnloadHook(_configHandler.watch((details) => {
-                    let interval: number = details.cfg.diagnosticLogInterval;
+                function _startLogPoller(config: IConfiguration) {
+                    let interval: number = config.diagnosticLogInterval;
                     if (!interval || !(interval > 0)) {
                         interval = 10000;
                     }
 
-                    if(_internalLogPoller) {
-                        clearInterval(_internalLogPoller);
-                    }
-                    _internalLogPoller = setInterval(() => {
+                    _internalLogPoller && _internalLogPoller.cancel();
+                    _internalLogPoller = scheduleInterval(() => {
                         _flushInternalLogs();
                     }, interval) as any;
-                }));
+                }
+
+                if (!_internalLogPollerListening) {
+                    _internalLogPollerListening = true;
+                    // listen to the configuration
+                    _addUnloadHook(_configHandler.watch((details) => {
+                        _startLogPoller(details.cfg);
+                    }));
+                } else {
+                    // We are being called again, so make sure the poller is running
+                    _startLogPoller(_configHandler.cfg);
+                }
 
                 return _internalLogPoller;
             }
@@ -480,9 +492,9 @@ export class AppInsightsCore implements IAppInsightsCore {
              * Stop polling log messages from logger.queue
              */
             _self.stopPollingInternalLogs = (): void => {
-                if(_internalLogPoller) {
-                    clearInterval(_internalLogPoller);
-                    _internalLogPoller = 0;
+                if (_internalLogPoller) {
+                    _internalLogPoller.cancel();
+                    _internalLogPoller = null;
                     _flushInternalLogs();
                 }
             }
@@ -1140,9 +1152,9 @@ export class AppInsightsCore implements IAppInsightsCore {
     /**
      * Periodically check logger.queue for
      */
-    public pollInternalLogs(eventName?: string): number {
+    public pollInternalLogs(eventName?: string): ITimerHandler {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return 0;
+        return null;
     }
 
     /**

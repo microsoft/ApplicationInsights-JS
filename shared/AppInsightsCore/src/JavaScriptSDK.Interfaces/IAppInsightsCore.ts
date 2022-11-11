@@ -17,6 +17,7 @@ import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IDistributedTraceContext } from "./IDistributedTraceContext";
 import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
 import { WatcherFunction } from "../Config/IDynamicWatcher";
+import { ITimerHandler } from "@nevware21/ts-utils";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
@@ -115,7 +116,7 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      */
     addTelemetryInitializer(telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler;
 
-    pollInternalLogs?(eventName?: string): number;
+    pollInternalLogs?(eventName?: string): ITimerHandler;
 
     stopPollingInternalLogs?(): void;
 
