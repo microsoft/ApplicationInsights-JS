@@ -1,6 +1,6 @@
 import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { utlGetSessionStorage } from '@microsoft/applicationinsights-common';
+import { BreezeChannelIdentifier, utlGetSessionStorage } from '@microsoft/applicationinsights-common';
 import { dumpObj, getJSON, isArray } from '@microsoft/applicationinsights-core-js';
 import { SinonSpy } from 'sinon';
 import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
@@ -45,7 +45,7 @@ export class SenderE2ETests extends AITestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            this._sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
+            this._sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
             this._sender._buffer.clear();
             this.errorSpy = this.sandbox.spy(this._sender, '_onError');
             this.successSpy = this.sandbox.spy(this._sender, '_onSuccess');

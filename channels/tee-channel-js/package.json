@@ -1,0 +1,58 @@
+{
+    "name": "@microsoft/applicationinsights-teechannel-js",
+    "version": "2.8.9",
+    "description": "Microsoft Application Insights JavaScript SDK Tee Channel",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
+    "author": "Microsoft Application Insights Team",
+    "main": "dist/applicationinsights-teechannel-js.js",
+    "module": "dist-esm/applicationinsights-teechannel-js.js",
+    "types": "types/applicationinsights-teechannel-js.d.ts",
+    "sideEffects": false,
+    "repository": "github:Microsoft/applicationinsights-js",
+    "scripts": {
+        "clean": "rm -rf browser dist dist-esm types",
+        "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
+        "build:esm": "grunt teechannel",
+        "build:browser": "rollup -c",
+        "rebuild": "npm run build",
+        "test": "grunt teechanneltest",
+        "mintest": "grunt teechannel-mintest",
+        "lint": "tslint -p tsconfig.json",
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights JavaScript SDK Tee Channel\"",
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt teechannel-min",
+        "ai-restore": "grunt teechannel-restore"
+    },
+    "devDependencies": {
+        "@microsoft/ai-test-framework": "0.0.1",
+        "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.0",
+        "@microsoft/api-extractor": "^7.18.1",
+        "@types/sinon": "4.3.3",
+        "grunt": "^1.5.3",
+        "grunt-cli": "^1.4.3",
+        "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
+        "globby": "^11.0.0",
+        "magic-string": "^0.25.7",
+        "@rollup/plugin-commonjs": "^18.0.0",
+        "@rollup/plugin-node-resolve": "^11.2.1",
+        "@rollup/plugin-replace": "^2.3.3",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup": "^2.32.0",
+        "typescript": "^4.3.4",
+        "tslib": "^2.0.0",
+        "sinon": "^7.3.1"
+    },
+    "peerDependencies": {
+        "tslib": "*"
+    },
+    "dependencies": {
+        "@microsoft/dynamicproto-js": "^1.1.7",
+        "@microsoft/applicationinsights-shims": "2.0.2",
+        "@microsoft/applicationinsights-core-js": "2.8.9",
+        "@microsoft/applicationinsights-common": "2.8.9",
+        "@nevware21/ts-utils": "^0.5.0"
+    },
+    "license": "MIT"
+}

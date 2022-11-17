@@ -2,7 +2,7 @@ import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, Exc
 import { SinonSpy } from 'sinon';
 import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry } from '@microsoft/applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier } from '@microsoft/applicationinsights-common';
 import { AppInsightsCore, ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 
@@ -81,7 +81,7 @@ export class ApplicationInsightsTests extends AITestClass {
             });
 
             // Setup Sinon stuff
-            const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
+            const sender: Sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai['core'].logger, 'throwInternal');
