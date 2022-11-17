@@ -3,6 +3,7 @@ import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { AITestClass, Assert, PollingAssert } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
 import { newId } from '@microsoft/applicationinsights-core-js';
+import { BreezeChannelIdentifier } from '@microsoft/applicationinsights-common';
 
 export class SanitizerE2ETests extends AITestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -38,7 +39,7 @@ export class SanitizerE2ETests extends AITestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
+            const sender: Sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');

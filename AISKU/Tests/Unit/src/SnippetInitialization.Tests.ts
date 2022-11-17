@@ -6,10 +6,11 @@ import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { createSnippetV5 } from "./testSnippet";
 import { BaseTelemetryPlugin, IProcessTelemetryContext, isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
-import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
+import { BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { dumpObj, objHasOwnProperty } from "@nevware21/ts-utils";
+import { AppInsightsSku } from "../../../src/AISku";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
@@ -881,7 +882,7 @@ export class SnippetInitializationTests extends AITestClass {
             ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
 
             // Setup Sinon stuff
-            const appInsights = (snippet as any).appInsights;
+            const appInsights: AppInsightsSku = (snippet as any).appInsights;
             this.onDone(() => {
                 if (snippet) {
                     if (snippet["unload"]) {
@@ -896,10 +897,10 @@ export class SnippetInitializationTests extends AITestClass {
             Assert.ok(appInsights.core, "The Core exists");
             Assert.equal(appInsights.core, (snippet as any).core, "The core instances should match");
 
-            Assert.equal(true, appInsights.isInitialized(), 'App Analytics is initialized');
+            Assert.equal(true, (appInsights as any).isInitialized(), 'App Analytics is initialized');
             Assert.equal(true, appInsights.core.isInitialized(), 'Core is initialized');
 
-            const sender: Sender = appInsights.core.getTransmissionControls()[0][0] as Sender;
+            const sender: Sender = appInsights.core.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(appInsights.core.logger, 'throwInternal');

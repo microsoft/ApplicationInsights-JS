@@ -70,9 +70,9 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void;
 
     /*
-    * Get transmission controls for controlling transmission behavior
+    * Get transmission channels for controlling transmission behavior
     */
-    getTransmissionControls(): IChannelControls[][];
+    getChannels(): IChannelControls[];
 
     /*
     * Core track API

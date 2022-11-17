@@ -5,7 +5,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     ITimerHandler, arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
-    objDeepFreeze, objDefineProp, objForEachKey, objFreeze, objHasOwn, scheduleInterval, throwError
+    objDeepFreeze, objDefineProp, objForEachKey, objFreeze, objHasOwn, scheduleInterval, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -33,10 +33,7 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import {
-    ChannelControllerPriority, IChannelController, IInternalChannelController, _IInternalChannels, createChannelControllerPlugin,
-    createChannelQueues
-} from "./ChannelController";
+import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
 import { createUniqueNamespace } from "./DataCacheHelper";
 import { getDebugListener } from "./DbgExtensionUtils";
@@ -84,9 +81,10 @@ function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificat
     return new PerfManager(notificationMgr);
 }
 
-function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number, allExtensions: IPlugin[]): { all: IPlugin[]; core: ITelemetryPlugin[] } {
+function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number, allExtensions: IPlugin[]): { core: IPlugin[], channels: IChannelControls[] } {
     // Concat all available extensions
     let coreExtensions: ITelemetryPlugin[] = [];
+    let channels: IChannelControls[] = [];
 
     // Check if any two extensions have the same priority, then warn to console
     // And extract the local extensions from the
@@ -111,16 +109,18 @@ function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number,
             }
         }
 
-        // Split extensions to core and channelController
+        // Split extensions to core and channels
         if (!extPriority || extPriority < channelPriority) {
             // Add to core extension that will be managed by AppInsightsCore
             coreExtensions.push(ext);
+        } else {
+            channels.push(ext);
         }
     });
 
     return {
-        all: allExtensions,
-        core: coreExtensions
+        core: coreExtensions,
+        channels: channels
     };
 }
 
@@ -239,10 +239,8 @@ export class AppInsightsCore implements IAppInsightsCore {
         let _cookieManager: ICookieMgr | null;
         let _pluginChain: ITelemetryPluginChain | null;
         let _configExtensions: IPlugin[];
-        let _coreExtensions: ITelemetryPlugin[] | null;
-        let _channelControl: IChannelController | null;
         let _channelConfig: IChannelControls[][] | null | undefined;
-        let _channelQueue: _IInternalChannels[] | null;
+        let _channels: IChannelControls[] | null;
         let _isUnloading: boolean;
         let _telemetryInitializerPlugin: TelemetryInitializerPlugin;
         let _internalLogsEventName: string | null;
@@ -317,10 +315,17 @@ export class AppInsightsCore implements IAppInsightsCore {
 
                 _initPluginChain(null);
 
-                if (!_channelQueue || _channelQueue.length === 0) {
+                if (!_channels || _channels.length === 0) {
                     throwError("No " + STR_CHANNELS + " available");
                 }
                 
+                if (_channels.length > 1) {
+                    let teeController = _self.getPlugin("TeeChannelController");
+                    if (!teeController || !teeController.plugin) {
+                        _throwInternal(_self.logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "TeeChannel required");
+                    }
+                }
+
                 _registerDelayedCfgListener(config, _cfgListeners, _self.logger);
                 _cfgListeners = null;
 
@@ -330,11 +335,11 @@ export class AppInsightsCore implements IAppInsightsCore {
                 _self.pollInternalLogs();
             };
         
-            _self.getTransmissionControls = (): IChannelControls[][] => {
-                let controls: IChannelControls[][] = [];
-                if (_channelQueue) {
-                    arrForEach(_channelQueue, (channels) => {
-                        controls.push(channels.queue);
+            _self.getChannels = (): IChannelControls[] => {
+                let controls: IChannelControls[] = [];
+                if (_channels) {
+                    arrForEach(_channels, (channel) => {
+                        controls.push(channel);
                     });
                 }
 
@@ -786,11 +791,9 @@ export class AppInsightsCore implements IAppInsightsCore {
                 _cfgPerfManager = null;
                 _cookieManager = null;
                 _pluginChain = null;
-                _coreExtensions = null;
                 _configExtensions = [];
-                _channelControl = null;
                 _channelConfig = null;
-                _channelQueue = null;
+                _channels = null;
                 _isUnloading = false;
                 _internalLogsEventName = null;
                 _evtNamespace = createUniqueNamespace("AIBaseCore", true);
@@ -812,50 +815,34 @@ export class AppInsightsCore implements IAppInsightsCore {
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
             
-                _coreExtensions = theExtensions.core;
                 _pluginChain = null;
                 _pluginVersionString = null;
                 _pluginVersionStringArr = null;
     
+                // Get the primary channel queue and include as part of the normal extensions
+                _channels = (_channelConfig || [])[0] ||[];
+                
+                // Add any channels provided in the extensions and sort them
+                _channels = sortPlugins(arrAppend(_channels, theExtensions.channels));
+
                 // Sort the complete set of extensions by priority
-                let allExtensions = theExtensions.all;
-
-                // Initialize the Channel Queues and the channel plugins first
-                _channelQueue = objFreeze(createChannelQueues(_channelConfig, allExtensions, _self));
-                if (_channelControl) {
-                    // During add / remove of a plugin this may get called again, so don't re-add if already present
-                    // But we also want the controller as the last, so remove if already present
-                    // And reusing the existing instance, just in case an installed plugin has a reference and
-                    // is using it.
-                    let idx = arrIndexOf(allExtensions, _channelControl);
-                    if (idx !== -1) {
-                        allExtensions.splice(idx, 1);
-                    }
-
-                    idx = arrIndexOf(_coreExtensions, _channelControl);
-                    if (idx !== -1) {
-                        _coreExtensions.splice(idx, 1);
-                    }
-
-                    (_channelControl as IInternalChannelController)._setQueue(_channelQueue);
-                } else {
-                    _channelControl = createChannelControllerPlugin(_channelQueue, _self);
-                }
+                let allExtensions = sortPlugins(theExtensions.core);
 
                 // Add on "channelController" as the last "plugin"
-                allExtensions.push(_channelControl);
-                _coreExtensions.push(_channelControl);
+                arrAppend(allExtensions, _channels);
 
                 // Required to allow plugins to call core.getPlugin() during their own initialization
-                _extensions = sortPlugins(allExtensions);
+                _extensions = objFreeze(allExtensions);
 
-                // Initialize the controls
-                _channelControl.initialize(_configHandler.cfg, _self, allExtensions);
+                let rootCtx = _createTelCtx();
                 
-                initializePlugins(_createTelCtx(), allExtensions);
+                // Initializing the channels first
+                if (_channels && _channels.length > 0) {
+                    initializePlugins(rootCtx.createNew(_channels), allExtensions);
+                }
 
-                // Now reset the extensions to just those being managed by AppInsightsCore
-                _extensions = objFreeze(sortPlugins(_coreExtensions || [])).slice();
+                // Now initialize the normal extensions
+                initializePlugins(rootCtx, allExtensions);
 
                 if (updateState) {
                     _doUpdate(updateState);
@@ -867,16 +854,19 @@ export class AppInsightsCore implements IAppInsightsCore {
                 let thePlugin: IPlugin = null;
 
                 arrForEach(_extensions, (ext: any) => {
-                    if (ext.identifier === pluginIdentifier && ext !== _channelControl && ext !== _telemetryInitializerPlugin) {
+                    if (ext.identifier === pluginIdentifier && ext !== _telemetryInitializerPlugin) {
                         thePlugin = ext;
                         return -1;
                     }
+
+                    // TODO: Check if the extension is an extension "host" (like the TeeChannel)
+                    // So that if the extension is not found we can ask the "host" plugins for the plugin
                 });
 
-                if (!thePlugin && _channelControl) {
-                    // Check the channel Controller
-                    thePlugin = _channelControl.getChannel(pluginIdentifier);
-                }
+                // if (!thePlugin && _channelControl) {
+                //     // Check the channel Controller
+                //     thePlugin = _channelControl.getChannel(pluginIdentifier);
+                // }
 
                 if (thePlugin) {
                     theExt = {
@@ -916,9 +906,9 @@ export class AppInsightsCore implements IAppInsightsCore {
             function _getPluginChain() {
                 if (!_pluginChain) {
                     // copy the collection of extensions
-                    let extensions = (_coreExtensions || []).slice();
+                    let extensions = (_extensions || []).slice();
 
-                    // During add / remove this may get called again, so don't readd if already present
+                    // During add / remove this may get called again, so don't read if already present
                     if (arrIndexOf(extensions, _telemetryInitializerPlugin) === -1) {
                         extensions.push(_telemetryInitializerPlugin);
                     }
@@ -999,11 +989,56 @@ export class AppInsightsCore implements IAppInsightsCore {
             }
 
             function _flushChannels(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number) {
-                if (_channelControl) {
-                    return _channelControl.flush(isAsync, callBack, sendReason || SendRequestReason.SdkUnload, cbTimeout);
+                // Setting waiting to one so that we don't call the callBack until we finish iterating
+                let waiting = 1;
+                let doneIterating = false;
+                let cbTimer: ITimerHandler = null;
+                cbTimeout = cbTimeout || 5000;
+
+                function doCallback() {
+                    waiting--;
+                    if (doneIterating && waiting === 0) {
+                        cbTimer && cbTimer.cancel();
+                        cbTimer = null;
+    
+                        callBack && callBack(doneIterating);
+                        callBack = null;
+                    }
+                }
+                    
+                if (_channels && _channels.length > 0) {
+                    let flushCtx = _createTelCtx().createNew(_channels);
+                    flushCtx.iterate<IChannelControls>((plugin) => {
+                        if (plugin.flush) {
+                            waiting ++;
+
+                            let handled = false;
+                            // Not all channels will call this callback for every scenario
+                            if (!plugin.flush(isAsync, () => {
+                                handled = true;
+                                doCallback();
+                            }, sendReason)) {
+                                if (!handled) {
+                                    // If any channel doesn't return true and it didn't call the callback, then we should assume that the callback
+                                    // will never be called, so use a timeout to allow the channel(s) some time to "finish" before triggering any
+                                    // followup function (such as unloading)
+                                    if (isAsync && cbTimer == null) {
+                                        cbTimer = scheduleTimeout(() => {
+                                            cbTimer = null;
+                                            doCallback();
+                                        }, cbTimeout);
+                                    } else {
+                                        doCallback();
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
 
-                callBack && callBack(false);
+                doneIterating = true;
+                doCallback();
+                
                 return true;
             }
 
@@ -1082,7 +1117,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public getTransmissionControls(): IChannelControls[][] {
+    public getChannels(): IChannelControls[] {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

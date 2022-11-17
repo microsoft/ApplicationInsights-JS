@@ -59,6 +59,9 @@
         },
         "@microsoft/applicationinsights-react-js": {
             "constEnums": []
+        },
+        "@microsoft/applicationinsights-teechannel-js": {
+            "constEnums": []
         }
     }
 }

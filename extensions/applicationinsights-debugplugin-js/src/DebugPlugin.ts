@@ -194,8 +194,8 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                         });
                     }
 
-                    if (isFunction(core.getTransmissionControls)) {
-                        let channelControls: IChannelControls[][] = core.getTransmissionControls();
+                    if (isFunction(core["getTransmissionControls"])) {
+                        let channelControls: IChannelControls[][] = core["getTransmissionControls"]();
                         if (channelControls) {
                             arrForEach(channelControls, (channel) => {
                                 if (isArray(channel)) {
@@ -203,6 +203,15 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                                         _addTargets(targetObjects, theChannel);
                                     });
                                 }
+                            });
+                        }
+                    }
+
+                    if (isFunction(core["getChannels"])) {
+                        let channelControls: IChannelControls[] = core["getChannels"]();
+                        if (channelControls) {
+                            arrForEach(channelControls, (theChannel) => {
+                                _addTargets(targetObjects, theChannel);
                             });
                         }
                     }
