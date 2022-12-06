@@ -25,7 +25,7 @@ import {
     DependencyListenerFunction, IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { arrAppend, objDefineProp, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
+import { objDefineProp, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
     STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
@@ -73,6 +73,16 @@ export class AppInsightsSku implements IApplicationInsights {
     public core: IAppInsightsCore;
     public context: Common_ITelemetryContext;
 
+    /**
+     * An array of the installed plugins that provide a version
+     */
+    public readonly pluginVersionStringArr: string[];
+    
+    /**
+     * The formatted string of the installed plugins that contain a version number
+     */
+    public readonly pluginVersionString: string;
+
     constructor(snippet: Snippet) {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
         let dependencies: DependenciesPlugin;
@@ -98,6 +108,20 @@ export class AppInsightsSku implements IApplicationInsights {
                         _core.config = newValue;
                     }
                 }
+            });
+
+            arrForEach(["pluginVersionStringArr", "pluginVersionString"], (key) => {
+                objDefineProp(_self, key, {
+                    configurable: true,
+                    enumerable: true,
+                    get: () => {
+                        if (_core) {
+                            return _core[key];
+                        }
+                        
+                        return null;
+                    }
+                });
             });
             
             // initialize the queue and config in case they are undefined
@@ -138,24 +162,20 @@ export class AppInsightsSku implements IApplicationInsights {
 
             _self.flush = (async: boolean = true) => {
                 doPerf(_core, () => "AISKU.flush", () => {
-                    arrForEach(_core.getTransmissionControls(), channels => {
-                        arrForEach(channels, channel => {
-                            channel.flush(async);
-                        });
+                    arrForEach(_core.getChannels(), channel => {
+                        channel.flush(async);
                     });
                 }, null, async);
             };
 
             _self.onunloadFlush = (async: boolean = true) => {
-                arrForEach(_core.getTransmissionControls(), channels => {
-                    arrForEach(channels, (channel: IChannelControls & Sender) => {
-                        if (channel.onunloadFlush) {
-                            channel.onunloadFlush();
-                        } else {
-                            channel.flush(async);
-                        }
-                    })
-                })
+                arrForEach(_core.getChannels(), (channel: IChannelControls & Sender) => {
+                    if (channel.onunloadFlush) {
+                        channel.onunloadFlush();
+                    } else {
+                        channel.flush(async);
+                    }
+                });
             };
         
             _self.loadAppInsights = (legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights => {
@@ -189,10 +209,8 @@ export class AppInsightsSku implements IApplicationInsights {
                 }
 
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
-                    const extensions = arrAppend([], [ _sender, properties, dependencies, _self.appInsights]);
-        
                     // initialize core
-                    _core.initialize(_config, extensions, logger, notificationManager);
+                    _core.initialize(_config, [ _sender, properties, dependencies, _self.appInsights ], logger, notificationManager);
                     _self.context = properties.context;
                     let sdkSrc = _findSdkSourceFile();
                     if (sdkSrc && _self.context) {
@@ -655,7 +673,14 @@ export class AppInsightsSku implements IApplicationInsights {
         return null;
     }
 
-    public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting: boolean, doAsync: boolean, addCb?: (added?: boolean) => void): void {
+    /**
+     * Add a new plugin to the installation
+     * @param plugin - The new plugin to add
+     * @param replaceExisting - should any existing plugin be replaced, default is false
+     * @param doAsync - Should the add be performed asynchronously
+     * @param addCb - [Optional] callback to call after the plugin has been added
+     */
+    public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, doAsync?: boolean, addCb?: (added?: boolean) => void): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

@@ -17,6 +17,7 @@ import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IDistributedTraceContext } from "./IDistributedTraceContext";
 import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
 import { WatcherFunction } from "../Config/IDynamicWatcher";
+import { ITimerHandler } from "@nevware21/ts-utils";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
@@ -49,6 +50,16 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     logger: IDiagnosticLogger;
 
     /**
+     * An array of the installed plugins that provide a version
+     */
+    readonly pluginVersionStringArr: string[];
+    
+    /**
+     * The formatted string of the installed plugins that contain a version number
+     */
+    readonly pluginVersionString: string;
+ 
+    /**
      * Returns a value that indicates whether the instance has already been previously initialized.
      */
     isInitialized?: () => boolean;
@@ -59,9 +70,9 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void;
 
     /*
-    * Get transmission controls for controlling transmission behavior
+    * Get transmission channels for controlling transmission behavior
     */
-    getTransmissionControls(): IChannelControls[][];
+    getChannels(): IChannelControls[];
 
     /*
     * Core track API
@@ -105,7 +116,7 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      */
     addTelemetryInitializer(telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler;
 
-    pollInternalLogs?(eventName?: string): number;
+    pollInternalLogs?(eventName?: string): ITimerHandler;
 
     stopPollingInternalLogs?(): void;
 
@@ -197,4 +208,9 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     onCfgChange<T extends IConfiguration = IConfiguration>(handler: WatcherFunction<T>): IUnloadHook;
+
+    /**
+     * Function used to identify the get w parameter used to identify status bit to some channels
+     */
+    getWParam: () => number;
 }

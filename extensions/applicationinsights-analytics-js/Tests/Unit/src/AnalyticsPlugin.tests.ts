@@ -1134,7 +1134,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 // setup
                 const core = new AppInsightsCore();
 
-                this.sandbox.stub(core, "getTransmissionControls");
+                // this.sandbox.stub(core, "getTransmissionControls");
                 const appInsights = new AnalyticsPlugin();
                 this.onDone(() => {
                     appInsights.teardown();
@@ -1164,7 +1164,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 // setup
                 const core = new AppInsightsCore();
 
-                this.sandbox.stub(core, "getTransmissionControls");
+                // this.sandbox.stub(core, "getTransmissionControls");
                 const appInsights = new AnalyticsPlugin();
                 this.onDone(() => {
                     appInsights.teardown();
@@ -1321,7 +1321,7 @@ export class AnalyticsPluginTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 const core = new AppInsightsCore();
-                this.sandbox.stub(core, "getTransmissionControls");
+                // this.sandbox.stub(core, "getTransmissionControls");
                 const appInsights = new AnalyticsPlugin();
                 this.onDone(() => {
                     appInsights.teardown();
@@ -1350,7 +1350,7 @@ export class AnalyticsPluginTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 const core = new AppInsightsCore();
-                this.sandbox.stub(core, "getTransmissionControls");
+                // this.sandbox.stub(core, "getTransmissionControls");
                 const appInsights = new AnalyticsPlugin();
                 this.onDone(() => {
                     appInsights.teardown();
@@ -1397,7 +1397,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
                 const telemetryInitializer = {
                     initializer: (envelope) => { }
                 }
@@ -1432,7 +1432,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
                 const nameOverride = "my unique name";
                 const telemetryInitializer = {
                     initializer: (envelope) => {
@@ -1470,7 +1470,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
 
                 const messageOverride = "my unique name";
                 const propOverride = "val1";
@@ -1631,7 +1631,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => false);
@@ -1659,7 +1659,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => { return; });
@@ -1687,7 +1687,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => true);
@@ -1715,7 +1715,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => true);
@@ -1745,7 +1745,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => false);
@@ -1775,7 +1775,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer((() => "asdf") as any);
@@ -1805,7 +1805,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     [plugin, appInsights]
                 );
 
-                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(plugin, 'processTelemetry');
                 const logStub = this.sandbox.spy(appInsights.core.logger, "throwInternal")
                 // act
                 appInsights.addTelemetryInitializer(() => { throw new Error("Test error IGNORE"); });

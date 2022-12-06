@@ -85,6 +85,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-teechannel-js",
+      "projectFolder": "channels/tee-channel-js",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-web",
       "projectFolder": "AISKU",
       "shouldPublish": true
@@ -93,6 +98,11 @@
       "packageName": "@microsoft/applicationinsights-web-basic",
       "projectFolder": "AISKULight",
       "shouldPublish": true
+    },
+    {
+      "packageName": "applicationinsights-web-config",
+      "projectFolder": "tools/config",
+      "shouldPublish": false
     }
   ]
 }

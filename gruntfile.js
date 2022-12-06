@@ -393,6 +393,7 @@ module.exports = function (grunt) {
     
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
+            "teechannel":            { path: "./channels/tee-channel-js" },
     
             // Extensions
             "appinsights":          { 
@@ -709,6 +710,12 @@ module.exports = function (grunt) {
         grunt.registerTask("aichannel-restore", restoreTasks("aichannel"));
         grunt.registerTask("aichanneltest", tsTestActions("aichannel"));
         grunt.registerTask("aichannel-mintest", tsTestActions("aichannel", true));
+
+        grunt.registerTask("teechannel", tsBuildActions("teechannel"));
+        grunt.registerTask("teechannel-min", minTasks("teechannel"));
+        grunt.registerTask("teechannel-restore", restoreTasks("teechannel"));
+        grunt.registerTask("teechanneltest", tsTestActions("teechannel"));
+        grunt.registerTask("teechannel-mintest", tsTestActions("teechannel", true));
 
         grunt.registerTask("rollupuglify", tsBuildActions("rollupuglify"));
         grunt.registerTask("rollupes5", tsBuildActions("rollupes5").concat(["ts:rollupes5-tests", "qunit:rollupes5"]));

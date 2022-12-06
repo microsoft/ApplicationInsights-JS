@@ -15,6 +15,10 @@ The SDK now uses [Object.defineProperty](https://caniuse.com/?search=definePrope
 | strStartsWith  | This is now uses the native [startsWith](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith) or a [polyfill if required](https://caniuse.com/?search=startsWith) that conforms the same functionality which will throw a TypeError for `null`, `undefined` values
 | strEndsWith  | This is now uses the native [endsWith](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/endsWith) or a [polyfill if required](https://caniuse.com/?search=endsWith) that conforms the same functionality which will throw a TypeError for `null`, `undefined` values
 
+| IAppInsightsCore   | Details
+|--------------------|--------------------
+| pollInternalLogs() | This now returns an ITimerHandler interface with a `cancel()` function rather than the `number` returned from the `setInternal()`.<br/>It is also now called automatically at the end of core `initialize` rather than being explicitly called via `snippet` initialization and `loadAppInsights`, this is a minor execution order change.
+
 ## AISKU
 
 - V1 Snippet Usage

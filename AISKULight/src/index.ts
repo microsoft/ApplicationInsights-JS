@@ -87,10 +87,8 @@ export class ApplicationInsights {
                 extensions.push(appInsightsChannel);
         
                 // initialize core
-                core.initialize(_config, extensions);
+                core.initialize(_config, [new Sender()]);
         
-                // initialize extensions
-                appInsightsChannel.initialize(_config, core, extensions);
         
                 core.pollInternalLogs();
             }

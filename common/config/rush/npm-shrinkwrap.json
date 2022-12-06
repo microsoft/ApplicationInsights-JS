@@ -31,8 +31,10 @@
         "@rush-temp/applicationinsights-rollup-es5": "file:./projects/applicationinsights-rollup-es5.tgz",
         "@rush-temp/applicationinsights-rollup-plugin-uglify3-js": "file:./projects/applicationinsights-rollup-plugin-uglify3-js.tgz",
         "@rush-temp/applicationinsights-shims": "file:./projects/applicationinsights-shims.tgz",
+        "@rush-temp/applicationinsights-teechannel-js": "file:./projects/applicationinsights-teechannel-js.tgz",
         "@rush-temp/applicationinsights-web": "file:./projects/applicationinsights-web.tgz",
         "@rush-temp/applicationinsights-web-basic": "file:./projects/applicationinsights-web-basic.tgz",
+        "@rush-temp/applicationinsights-web-config": "file:./projects/applicationinsights-web-config.tgz",
         "@rush-temp/applicationinsights-web-snippet": "file:./projects/applicationinsights-web-snippet.tgz",
         "@types/chrome": "^0.0.181",
         "@types/file-saver": "~2.0.1",
@@ -800,6 +802,31 @@
         "typescript": "^4.3.4"
       }
     },
+    "node_modules/@rush-temp/applicationinsights-teechannel-js": {
+      "version": "0.0.0",
+      "resolved": "file:projects/applicationinsights-teechannel-js.tgz",
+      "integrity": "sha512-1NE+ADfSvSjBPrhDSS48eBFzz5/R0p6X9zyowoDo3Rj1qPQVBEVbWeXwXNG9lneeIQCynqq2ZIF9d0X7AHDzUQ==",
+      "dependencies": {
+        "@microsoft/api-extractor": "^7.18.1",
+        "@microsoft/dynamicproto-js": "^1.1.7",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
+        "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/ts-utils": "^0.5.0",
+        "@rollup/plugin-commonjs": "^18.0.0",
+        "@rollup/plugin-node-resolve": "^11.2.1",
+        "@rollup/plugin-replace": "^2.3.3",
+        "@types/sinon": "4.3.3",
+        "globby": "^11.0.0",
+        "grunt": "^1.5.3",
+        "grunt-cli": "^1.4.3",
+        "magic-string": "^0.25.7",
+        "rollup": "^2.32.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "sinon": "^7.3.1",
+        "tslib": "^2.0.0",
+        "typescript": "^4.3.4"
+      }
+    },
     "node_modules/@rush-temp/applicationinsights-web": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web.tgz",
@@ -853,6 +880,11 @@
         "tslib": "^2.0.0",
         "typescript": "^4.3.4"
       }
+    },
+    "node_modules/@rush-temp/applicationinsights-web-config": {
+      "version": "0.0.0",
+      "resolved": "file:projects/applicationinsights-web-config.tgz",
+      "integrity": "sha512-WwlTM/noixyLMqKFBLKa9o88N/2Z3dA9m0R6Qc9UvBNseZqPIpvl1vRMDnmwjMMV6lV3FsmeSmjD7LCJphXF2Q=="
     },
     "node_modules/@rush-temp/applicationinsights-web-snippet": {
       "version": "0.0.0",
@@ -6078,6 +6110,30 @@
         "typescript": "^4.3.4"
       }
     },
+    "@rush-temp/applicationinsights-teechannel-js": {
+      "version": "file:projects\\applicationinsights-teechannel-js.tgz",
+      "integrity": "sha512-1NE+ADfSvSjBPrhDSS48eBFzz5/R0p6X9zyowoDo3Rj1qPQVBEVbWeXwXNG9lneeIQCynqq2ZIF9d0X7AHDzUQ==",
+      "requires": {
+        "@microsoft/api-extractor": "^7.18.1",
+        "@microsoft/dynamicproto-js": "^1.1.7",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
+        "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/ts-utils": "^0.5.0",
+        "@rollup/plugin-commonjs": "^18.0.0",
+        "@rollup/plugin-node-resolve": "^11.2.1",
+        "@rollup/plugin-replace": "^2.3.3",
+        "@types/sinon": "4.3.3",
+        "globby": "^11.0.0",
+        "grunt": "^1.5.3",
+        "grunt-cli": "^1.4.3",
+        "magic-string": "^0.25.7",
+        "rollup": "^2.32.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "sinon": "^7.3.1",
+        "tslib": "^2.0.0",
+        "typescript": "^4.3.4"
+      }
+    },
     "@rush-temp/applicationinsights-web": {
       "version": "file:projects\\applicationinsights-web.tgz",
       "integrity": "sha512-DXy79eZwwIVoVKlYgErAluOFw2KHA/kv0nplBNQ2b5e9GYwp5A3HJXuk+v1c5Zs32DXibjTBIbr19IJOoZ6i1g==",
@@ -6129,6 +6185,10 @@
         "tslib": "^2.0.0",
         "typescript": "^4.3.4"
       }
+    },
+    "@rush-temp/applicationinsights-web-config": {
+      "version": "file:projects\\applicationinsights-web-config.tgz",
+      "integrity": "sha512-WwlTM/noixyLMqKFBLKa9o88N/2Z3dA9m0R6Qc9UvBNseZqPIpvl1vRMDnmwjMMV6lV3FsmeSmjD7LCJphXF2Q=="
     },
     "@rush-temp/applicationinsights-web-snippet": {
       "version": "file:projects\\applicationinsights-web-snippet.tgz",

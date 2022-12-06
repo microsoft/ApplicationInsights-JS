@@ -146,12 +146,10 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     [channelPlugin]);
 
                 Assert.ok(!channelPlugin.isUnloadInvoked, "Unload not called on initialize");
-                appInsightsCore.getTransmissionControls().forEach(queues => {
-                    queues.forEach((q: IChannelControls & ChannelPlugin) => {
-                        if (q.onunloadFlush) {
-                            q.onunloadFlush()
-                        }
-                    });
+                appInsightsCore.getChannels().forEach((q: any) => {
+                    if (q.onunloadFlush) {
+                        q.onunloadFlush()
+                    }
                 });
 
                 Assert.ok(channelPlugin.isUnloadInvoked, "Unload triggered for channel");
@@ -159,7 +157,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "config.channel adds additional queue to existing channels",
+            name: "config.channel adds to the channels to the start of the extension channels",
             test: () => {
                 const channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1030;
@@ -172,11 +170,10 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin1]] },
                     [channelPlugin]);
 
-
-                const channelQueues = appInsightsCore.getTransmissionControls();
+                const channelQueues = appInsightsCore.getChannels();
                 Assert.equal(2, channelQueues.length, "Total number of channel queues");
-                Assert.equal(1, channelQueues[0].length, "Number of channels in queue 1");
-                Assert.equal(1, channelQueues[1].length, "Number of channels in queue 2");
+                Assert.equal(channelQueues[0], channelPlugin1, "Number of channels in queue 1");
+                Assert.equal(channelQueues[1], channelPlugin, "Number of channels in queue 2");
             }
         });
 
@@ -335,7 +332,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(data2.baseData.message.indexOf("Hello2") !== -1);
 
                 // Cleanup
-                clearInterval(poller);
+                poller.cancel();
             }
         });
 
@@ -465,13 +462,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 }
 
                 let found = false;
-                (appInsightsCore as any)._extensions.forEach(ext => {
-                    if (ext.identifier === samplingPlugin.identifier) {
-                        found = true;
-                    }
-                });
-
-                Assert.ok(found, "Plugin pased in through config is part of pipeline");
+                Assert.equal(samplingPlugin, appInsightsCore.getPlugin(samplingPlugin.identifier).plugin, "Plugin passed in through config is part of pipeline");
             }
         });
 
@@ -495,7 +486,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     Assert.ok(false, "Exception not expected");
                 }
 
-                Assert.ok(typeof ((appInsightsCore as any)._extensions[0].processTelemetry) !== 'function', "Extensions can be provided through overall configuration");
+                Assert.ok(typeof ((appInsightsCore as any)["_getDbgPlgTargets"]()[0][0].processTelemetry) !== 'function', "Extensions can be provided through overall configuration");
             }
         });
 
@@ -522,14 +513,18 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
                 Assert.ok(isNullOrUndefined(channelPlugin3._nextPlugin));
-                const channelControls = appInsightsCore.getTransmissionControls();
+                const channelControls = appInsightsCore.getChannels();
+
                 Assert.ok(channelControls.length === 2);
-                Assert.ok(channelControls[0].length === 2);
-                Assert.ok(channelControls[1].length === 1);
-                Assert.ok(channelControls[0][0] === channelPlugin1);
-                Assert.ok(channelControls[1][0] === channelPlugin3);
+                Assert.ok(channelControls[0] === channelPlugin1);
+                Assert.ok(channelControls[1] === channelPlugin2);
+                
+                // Assert.ok(channelControls[0].length === 2);
+                // Assert.ok(channelControls[1].length === 1);
+                // Assert.ok(channelControls[0][0] === channelPlugin1);
+                // Assert.ok(channelControls[1][0] === channelPlugin3);
+                Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
                 Assert.ok(channelPlugin2._nextPlugin === undefined);
-                Assert.ok(channelPlugin3._nextPlugin === undefined);
             }
         });
 
@@ -550,17 +545,16 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     {
                         instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41"
                     },
-                    [channelPlugin1, channelPlugin2, channelPlugin3]);
+                    [channelPlugin3, channelPlugin2, channelPlugin1]);
 
                 Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
                 Assert.ok(channelPlugin2._nextPlugin === channelPlugin3);
                 Assert.ok(isNullOrUndefined(channelPlugin3._nextPlugin));
-                const channelControls = appInsightsCore.getTransmissionControls();
-                Assert.ok(channelControls.length === 1);
-                Assert.ok(channelControls[0].length === 3);
-                Assert.ok(channelControls[0][0] === channelPlugin1);
-                Assert.ok(channelControls[0][1] === channelPlugin2);
-                Assert.ok(channelControls[0][2] === channelPlugin3);
+                const channelControls = appInsightsCore.getChannels();
+                Assert.ok(channelControls.length === 3);
+                Assert.ok(channelControls[0] === channelPlugin1);
+                Assert.ok(channelControls[1] === channelPlugin2);
+                Assert.ok(channelControls[2] === channelPlugin3);
             }
         });
 

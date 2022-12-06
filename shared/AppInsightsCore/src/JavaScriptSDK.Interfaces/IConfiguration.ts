@@ -167,4 +167,10 @@ export interface IConfiguration {
      * this will not send any notifications.
      */
     disableDbgExt?: boolean;
+
+    /**
+     * Add "&w=0" parameter to support UA Parsing when web-workers don't have access to Document.
+     * Default is false
+     */
+    enableWParam?: boolean;
 }

@@ -5,11 +5,12 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { createSnippetV5 } from "./testSnippet";
-import { isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
-import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
+import { BaseTelemetryPlugin, IProcessTelemetryContext, isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { dumpObj, objHasOwnProperty } from "@nevware21/ts-utils";
+import { AppInsightsSku } from "../../../src/AISku";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
@@ -21,7 +22,9 @@ const _expectedBeforeProperties = [
 const _expectedAfterProperties = [
     "appInsights",
     "core",
-    "context"
+    "context",
+    "pluginVersionString",
+    "pluginVersionStringArr"
 ];
 
 const _expectedTrackMethods = [
@@ -250,6 +253,22 @@ export class SnippetInitializationTests extends AITestClass {
                     Assert.equal(coreCookieMgr, appInsightsCookieMgr, "Make sure the cookie managers are the same");
 
                     Assert.equal(false, theSnippet.getCookieMgr().isEnabled(), "Cookies should be disabled")
+                }
+            });
+
+            this.testCase({
+                name: "Check plugin version string",
+                test: () => {
+                    let theConfig = getSnippetConfig(this.sessionPrefix);
+                    let theSnippet = this._initializeSnippet(snippetCreator(theConfig)) as any;
+    
+                    QUnit.assert.equal(0, theSnippet.pluginVersionStringArr.length, "Checking the array length");
+                    QUnit.assert.equal("", theSnippet.pluginVersionString);
+
+                    // Add a versioned plugin
+                    theSnippet.addPlugin(new TestPlugin());
+                    QUnit.assert.equal(1, theSnippet.pluginVersionStringArr.length, "Checking the array length");
+                    QUnit.assert.equal("TestPlugin=0.99.1", theSnippet.pluginVersionString);
                 }
             });
 
@@ -559,7 +578,6 @@ export class SnippetInitializationTests extends AITestClass {
                             type = "Ajax";
                             Assert.ok(true, "Using fetch polyfill");
                         }
-
                         Assert.equal(3, args.length, "track is called 3 times");
                         let baseData = args[0].baseData;
                         Assert.equal(type, baseData.type, "request is " + type + " type");
@@ -864,7 +882,7 @@ export class SnippetInitializationTests extends AITestClass {
             ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
 
             // Setup Sinon stuff
-            const appInsights = (snippet as any).appInsights;
+            const appInsights: AppInsightsSku = (snippet as any).appInsights;
             this.onDone(() => {
                 if (snippet) {
                     if (snippet["unload"]) {
@@ -879,10 +897,10 @@ export class SnippetInitializationTests extends AITestClass {
             Assert.ok(appInsights.core, "The Core exists");
             Assert.equal(appInsights.core, (snippet as any).core, "The core instances should match");
 
-            Assert.equal(true, appInsights.isInitialized(), 'App Analytics is initialized');
+            Assert.equal(true, (appInsights as any).isInitialized(), 'App Analytics is initialized');
             Assert.equal(true, appInsights.core.isInitialized(), 'Core is initialized');
 
-            const sender: Sender = appInsights.core.getTransmissionControls()[0][0] as Sender;
+            const sender: Sender = appInsights.core.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(appInsights.core.logger, 'throwInternal');
@@ -941,4 +959,17 @@ export class SnippetInitializationTests extends AITestClass {
             return false;
         }
     }, "sender succeeded", 30, 1000))];
+}
+
+class TestPlugin extends BaseTelemetryPlugin {
+    public identifier: string = "TestPlugin";
+    public version: string = "0.99.1";
+
+    constructor() {
+        super();
+    }
+
+    public processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext | undefined): void {
+        itemCtx?.processNext(env);
+    }
 }
