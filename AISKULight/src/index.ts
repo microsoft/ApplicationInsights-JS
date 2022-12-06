@@ -6,8 +6,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
-    IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId, createDynamicConfig, isNullOrUndefined, onConfigChange, proxyFunctions,
-    throwError
+    IUnloadHook, UnloadHandler, WatcherFunction, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
 import { objDefineProp } from "@nevware21/ts-utils";
 
@@ -44,15 +43,9 @@ export class ApplicationInsights {
                 enumerable: true,
                 get: () => _config
             });
-            
+
             _initialize();
-            if (
-                isNullOrUndefined(_config) ||
-                isNullOrUndefined(_config.instrumentationKey) ||  isNullOrUndefined(_config.connectionString)
-            ) {
-                throwError("Invalid input configuration");
-            }
-            
+          
             _self.initialize = _initialize;
         
             proxyFunctions(_self, core, [
@@ -71,8 +64,9 @@ export class ApplicationInsights {
             function _initialize(): void {
                 let cfgHandler: IDynamicConfigHandler<IConfiguration & IConfig> = createDynamicConfig(config || ({} as any), defaultConfigValues);
                 _config = cfgHandler.cfg;
-
-                _addUnloadHook(onConfigChange(cfgHandler, () => {
+    
+                core.addUnloadHook(onConfigChange(cfgHandler, () => {
+                    console.log(_config.connectionString)
                     if (_config.connectionString) {
                         const cs = parseConnectionString(_config.connectionString);
                         const ingest = cs.ingestionendpoint;
@@ -80,21 +74,9 @@ export class ApplicationInsights {
                         _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                     }
                 }));
-                
-                const extensions = [];
-                const appInsightsChannel: Sender = new Sender();
-        
-                extensions.push(appInsightsChannel);
-        
+    
                 // initialize core
                 core.initialize(_config, [new Sender()]);
-        
-        
-                core.pollInternalLogs();
-            }
-
-            function _addUnloadHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook>) {
-                core.addUnloadHook(hooks);
             }
         });
     }

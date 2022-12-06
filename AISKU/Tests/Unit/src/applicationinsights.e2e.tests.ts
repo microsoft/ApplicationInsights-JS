@@ -202,6 +202,13 @@ export class ApplicationInsightsTests extends AITestClass {
                 this.clock.tick(1);
                 Assert.equal(3, onChangeCalled, "Expected the onChanged was called again");
 
+                expectedConnectionString = "InstrumentationKey=testKey";
+                expectedIkey = "testKey";
+                config.connectionString = expectedConnectionString;
+                Assert.equal(3, onChangeCalled, "Expected the onChanged was called");
+                this.clock.tick(1);
+                Assert.equal(4, onChangeCalled, "Expected the onChanged was called again");
+                
                 // Remove the handler
                 handler.rm();
             }

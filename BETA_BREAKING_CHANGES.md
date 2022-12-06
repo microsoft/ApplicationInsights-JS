@@ -133,7 +133,7 @@ The previously exported namespaced globals have been replaced with a reduced set
 
 ### AISKU Light
 
-#### V1 API Changes
+#### V2 API Changes
 
 | V1 API    | Details
 |-----------|---------------------
