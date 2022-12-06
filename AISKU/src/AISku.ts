@@ -192,7 +192,7 @@ export class AppInsightsSku implements IApplicationInsights {
                     const extensions = arrAppend([], [ _sender, properties, dependencies, _self.appInsights]);
         
                     // initialize core
-                    _core.initialize(_self.config, extensions, logger, notificationManager);
+                    _core.initialize(_config, extensions, logger, notificationManager);
                     _self.context = properties.context;
                     let sdkSrc = _findSdkSourceFile();
                     if (sdkSrc && _self.context) {

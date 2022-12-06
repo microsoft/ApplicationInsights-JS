@@ -3,12 +3,22 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, IConfiguration, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin, UnloadHandler, _eInternalMessageId,
-    isNullOrUndefined, proxyFunctions, throwError
+    AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
+    IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId, createDynamicConfig, isNullOrUndefined, onConfigChange, proxyFunctions,
+    throwError
 } from "@microsoft/applicationinsights-core-js";
 import { objDefineProp } from "@nevware21/ts-utils";
+
+const defaultConfigValues: IConfigDefaults<IConfiguration> = {
+    diagnosticLogInterval: { isVal: _chkDiagLevel, v: 10000 }
+};
+
+function _chkDiagLevel(value: number) {
+    // Make sure we have a value > 0
+    return value && value > 0;
+}
 
 /**
  * @export
@@ -24,14 +34,7 @@ export class ApplicationInsights {
      */
     constructor(config: IConfiguration & IConfig) {
         let core = new AppInsightsCore();
-
-        // initialize the queue and config in case they are undefined
-        if (
-            isNullOrUndefined(config) ||
-            isNullOrUndefined(config.instrumentationKey)
-        ) {
-            throwError("Invalid input configuration");
-        }
+        let _config: IConfiguration & IConfig;
 
         dynamicProto(ApplicationInsights, this, (_self) => {
 
@@ -39,18 +42,18 @@ export class ApplicationInsights {
             objDefineProp(_self, "config", {
                 configurable: true,
                 enumerable: true,
-                get: () => config
+                get: () => _config
             });
             
             _initialize();
+            if (
+                isNullOrUndefined(_config) ||
+                isNullOrUndefined(_config.instrumentationKey) ||  isNullOrUndefined(_config.connectionString)
+            ) {
+                throwError("Invalid input configuration");
+            }
             
             _self.initialize = _initialize;
-            
-            _self.getSKUDefaults = () => {
-                _self.config.diagnosticLogInterval =
-                _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
-            };
-            _self.getSKUDefaults();
         
             proxyFunctions(_self, core, [
                 "track",
@@ -61,22 +64,39 @@ export class ApplicationInsights {
                 "getPlugin",
                 "addPlugin",
                 "evtNamespace",
-                "addUnloadCb"
+                "addUnloadCb",
+                "onCfgChange"
             ]);
 
             function _initialize(): void {
+                let cfgHandler: IDynamicConfigHandler<IConfiguration & IConfig> = createDynamicConfig(config || ({} as any), defaultConfigValues);
+                _config = cfgHandler.cfg;
+
+                _addUnloadHook(onConfigChange(cfgHandler, () => {
+                    if (_config.connectionString) {
+                        const cs = parseConnectionString(_config.connectionString);
+                        const ingest = cs.ingestionendpoint;
+                        _config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : _config.endpointUrl; // only add /v2/track when from connectionstring
+                        _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
+                    }
+                }));
+                
                 const extensions = [];
                 const appInsightsChannel: Sender = new Sender();
         
                 extensions.push(appInsightsChannel);
         
                 // initialize core
-                core.initialize(_self.config, extensions);
+                core.initialize(_config, extensions);
         
                 // initialize extensions
-                appInsightsChannel.initialize(_self.config, core, extensions);
+                appInsightsChannel.initialize(_config, core, extensions);
         
                 core.pollInternalLogs();
+            }
+
+            function _addUnloadHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook>) {
+                core.addUnloadHook(hooks);
             }
         });
     }
@@ -114,10 +134,6 @@ export class ApplicationInsights {
     }
 
     public stopPollingInternalLogs(): void {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public getSKUDefaults() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -168,6 +184,18 @@ export class ApplicationInsights {
     public addUnloadCb(handler: UnloadHandler): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
+    /**
+     * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
+     * handler will be recalled.
+     * @param handler
+     * @returns A watcher handler instance that can be used to remove itself when being unloaded
+     */
+    public onCfgChange(handler: WatcherFunction<IConfiguration>): IUnloadHook {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+    
 }
 
 export {
