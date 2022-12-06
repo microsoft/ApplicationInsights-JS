@@ -825,11 +825,8 @@ export class AppInsightsCore implements IAppInsightsCore {
                 // Add any channels provided in the extensions and sort them
                 _channels = sortPlugins(arrAppend(_channels, theExtensions.channels));
 
-                // Sort the complete set of extensions by priority
-                let allExtensions = sortPlugins(theExtensions.core);
-
-                // Add on "channelController" as the last "plugin"
-                arrAppend(allExtensions, _channels);
+                // Create an array of all extensions, including the _channels
+                let allExtensions = arrAppend(sortPlugins(theExtensions.core), _channels);
 
                 // Required to allow plugins to call core.getPlugin() during their own initialization
                 _extensions = objFreeze(allExtensions);
@@ -841,7 +838,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                     initializePlugins(rootCtx.createNew(_channels), allExtensions);
                 }
 
-                // Now initialize the normal extensions
+                // Now initialize the normal extensions (explicitly not including the _channels as this can cause duplicate initialization)
                 initializePlugins(rootCtx, allExtensions);
 
                 if (updateState) {

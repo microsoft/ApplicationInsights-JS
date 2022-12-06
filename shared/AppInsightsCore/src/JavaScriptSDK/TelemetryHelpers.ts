@@ -51,12 +51,11 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
                 lastPlugin.setNextPlugin(thePlugin);
             }
 
-            let isInitialized = false;
-            if (isFunction(thePlugin.isInitialized)) {
+            pluginState = _getPluginState(thePlugin);
+
+            let isInitialized = !!pluginState.isInitialized;
+            if (thePlugin.isInitialized) {
                 isInitialized = thePlugin.isInitialized();
-            } else {
-                pluginState = _getPluginState(thePlugin);
-                isInitialized = pluginState.isInitialized;
             }
 
             if (!isInitialized) {
@@ -80,7 +79,7 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
 
         pluginState = _getPluginState(thePlugin);
 
-        // Only add the core to the state if the plugin didn't set it (doesn't extent from BaseTelemetryPlugin)
+        // Only add the core to the state if the plugin didn't set it (doesn't extend from BaseTelemetryPlugin)
         if (!thePlugin[STR_CORE] && !pluginState[STR_CORE]) {
             pluginState[STR_CORE] = core;
         }

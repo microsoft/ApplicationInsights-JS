@@ -106,6 +106,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 appInsightsCore.initialize(
                     { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
                     [samplingPlugin, channelPlugin]);
+                Assert.ok(samplingPlugin._initialized, "Make sure the plugin is initialized");
                 Assert.ok(!!samplingPlugin.nexttPlugin, "setup prior to pipeline initialization");
             }
         });
@@ -874,6 +875,7 @@ class TestSamplingPlugin implements ITelemetryPlugin {
     public nexttPlugin: ITelemetryPlugin;
     private samplingPercentage;
     private _validateItem = false;
+    public _initialized = false;
 
     constructor(validateItem: boolean = false) {
         this.processTelemetry = this._processTelemetry.bind(this);
@@ -903,6 +905,7 @@ class TestSamplingPlugin implements ITelemetryPlugin {
 
         const pluginConfig = config.extensions ? config.extensions[this.identifier] : null;
         this.samplingPercentage = pluginConfig ? pluginConfig.samplingPercentage : 100;
+        this._initialized = true;
     }
 
     private _setNextPlugin(next: ITelemetryPlugin): void {
