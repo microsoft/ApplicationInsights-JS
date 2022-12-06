@@ -43,7 +43,7 @@
         // Load Channel
         modules.add("@microsoft/applicationinsights-channel-js", "./node_modules/@microsoft/applicationinsights-channel-js/browser/applicationinsights-channel-js");
 
-        var testModule = modules.add("Tests/Unit/src/aiskuliteunittests", "./Unit/dist/aiskuliteunittests.tests.js")
+        var testModule = modules.add("aiskuliteunittests", "./Unit/dist/aiskuliteunittests.tests.js")
         testModule.run = function (tests) {
             console && console.log("Starting tests");
             QUnit.start();
