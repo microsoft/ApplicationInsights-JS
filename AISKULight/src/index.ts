@@ -66,7 +66,6 @@ export class ApplicationInsights {
                 _config = cfgHandler.cfg;
     
                 core.addUnloadHook(onConfigChange(cfgHandler, () => {
-                    console.log(_config.connectionString)
                     if (_config.connectionString) {
                         const cs = parseConnectionString(_config.connectionString);
                         const ingest = cs.ingestionendpoint;
