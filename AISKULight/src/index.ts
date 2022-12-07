@@ -3,10 +3,9 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, IConfiguration, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin, UnloadHandler, _InternalMessageId,
-    _eInternalMessageId, isNullOrUndefined, proxyFunctions, throwError
+    AppInsightsCore, IConfiguration, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin, UnloadHandler, isNullOrUndefined, proxyFunctions, throwError
 } from "@microsoft/applicationinsights-core-js";
 
 /**
@@ -27,13 +26,20 @@ export class ApplicationInsights {
         // initialize the queue and config in case they are undefined
         if (
             isNullOrUndefined(config) ||
-            isNullOrUndefined(config.instrumentationKey)
+            (isNullOrUndefined(config.instrumentationKey) && isNullOrUndefined(config.connectionString))
         ) {
             throwError("Invalid input configuration");
         }
 
         dynamicProto(ApplicationInsights, this, (_self) => {
             _self.config = config;
+            
+            if (_self.config.connectionString) {
+                const cs = parseConnectionString(config.connectionString);
+                const ingest = cs.ingestionendpoint;
+                config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : config.endpointUrl; // only add /v2/track when from connectionstring
+                config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
+            }
             
             _initialize();
             
@@ -44,7 +50,7 @@ export class ApplicationInsights {
                 _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
             };
             _self.getSKUDefaults();
-        
+
             proxyFunctions(_self, core, [
                 "track",
                 "flush",
@@ -58,18 +64,7 @@ export class ApplicationInsights {
             ]);
 
             function _initialize(): void {
-                const extensions = [];
-                const appInsightsChannel: Sender = new Sender();
-        
-                extensions.push(appInsightsChannel);
-        
-                // initialize core
-                core.initialize(_self.config, extensions);
-        
-                // initialize extensions
-                appInsightsChannel.initialize(_self.config, core, extensions);
-        
-                core.pollInternalLogs();
+                core.initialize(_self.config, [new Sender()]);
             }
         });
     }
