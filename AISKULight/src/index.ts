@@ -32,14 +32,15 @@ export class ApplicationInsights {
         }
 
         dynamicProto(ApplicationInsights, this, (_self) => {
-            _self.config = config;
             
-            if (_self.config.connectionString) {
+            if (config.connectionString) {
                 const cs = parseConnectionString(config.connectionString);
                 const ingest = cs.ingestionendpoint;
                 config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : config.endpointUrl; // only add /v2/track when from connectionstring
                 config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
             }
+
+            _self.config = config;
             
             _initialize();
             
