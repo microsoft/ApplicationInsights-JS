@@ -108,6 +108,7 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public registerTests() {
+        this.addDynamicConfigTests()
         this.addGenericE2ETests();
         this.addAnalyticsApiTests();
         this.addAsyncTests();
@@ -157,6 +158,59 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._ai.getPlugin("TestPlugin").remove();
                 QUnit.assert.equal(1, this._ai.pluginVersionStringArr.length, "Checking the array length");
                 QUnit.assert.equal("TestPlugin2=1.2.3.4", this._ai.pluginVersionString);
+            }
+        });
+    }
+
+    public addDynamicConfigTests(): void {
+        this.testCase({
+            name: 'DynamicConfigTests: ApplicationInsights dynamic config works correctly',
+            useFakeTimers: true,
+            test: () => {
+                let config = this._ai.config;
+                let expectedIkey = ApplicationInsightsTests._instrumentationKey;
+                let expectedConnectionString = ApplicationInsightsTests._connectionString;
+                let expectedEndpointUrl = "https://dc.services.visualstudio.com/v2/track";
+                let expectedLoggingLevel = 10000;
+                Assert.ok(config, "ApplicationInsights config exists");
+                Assert.equal(expectedConnectionString, config.connectionString, "connection string is set");
+                Assert.equal(expectedIkey, config.instrumentationKey, "ikey is set");
+                Assert.equal(expectedLoggingLevel, config.diagnosticLogInterval, "diagnosticLogInterval is set to 1000 by default");
+                Assert.equal(expectedEndpointUrl, config.endpointUrl, "endpoint url is set from connection string");
+                Assert.equal(false, config.disableAjaxTracking, "disableAjaxTracking is set to false");
+
+                let onChangeCalled = 0;
+                let handler = this._ai.onCfgChange((details) => {
+                    onChangeCalled ++;
+                    Assert.equal(expectedIkey, details.cfg.instrumentationKey, "Expect the iKey to be set");
+                    Assert.equal(expectedEndpointUrl, details.cfg.endpointUrl, "Expect the endpoint to be set");
+                    Assert.equal(expectedLoggingLevel, details.cfg.diagnosticLogInterval, "Expect the diagnosticLogInterval to be set");
+                });
+
+                Assert.equal(1, onChangeCalled, "OnCfgChange was not called");
+
+                expectedIkey = "newIKey";
+                config.instrumentationKey = expectedIkey;
+
+                Assert.equal(1, onChangeCalled, "Expected the onChanged was called");
+                this.clock.tick(1);
+                Assert.equal(2, onChangeCalled, "Expected the onChanged was called again");
+
+                expectedLoggingLevel = 2000;
+                config.diagnosticLogInterval = expectedLoggingLevel;
+                Assert.equal(2, onChangeCalled, "Expected the onChanged was called");
+                this.clock.tick(1);
+                Assert.equal(3, onChangeCalled, "Expected the onChanged was called again");
+
+                expectedConnectionString = "InstrumentationKey=testKey";
+                expectedIkey = "testKey";
+                config.connectionString = expectedConnectionString;
+                Assert.equal(3, onChangeCalled, "Expected the onChanged was called");
+                this.clock.tick(1);
+                Assert.equal(4, onChangeCalled, "Expected the onChanged was called again");
+                
+                // Remove the handler
+                handler.rm();
             }
         });
     }

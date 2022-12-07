@@ -210,7 +210,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
                     // initialize core
-                    _core.initialize(_self.config, [ _sender, properties, dependencies, _self.appInsights ], logger, notificationManager);
+                    _core.initialize(_config, [ _sender, properties, dependencies, _self.appInsights ], logger, notificationManager);
                     _self.context = properties.context;
                     let sdkSrc = _findSdkSourceFile();
                     if (sdkSrc && _self.context) {

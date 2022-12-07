@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Cache-control" content="no-Cache" />
-    <title>Tests for Application Insights JavaScript AISKU</title>
+    <title>Tests for Application Insights JavaScript AISKU Light</title>
     <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
     <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
     <script src="../../../common/Tests/External/require-2.2.0.js"></script>    
@@ -43,7 +43,7 @@
         // Load Channel
         modules.add("@microsoft/applicationinsights-channel-js", "./node_modules/@microsoft/applicationinsights-channel-js/browser/applicationinsights-channel-js");
 
-        var testModule = modules.add("aiskuliteunittests", "./Unit/dist/aiskuliteunittests.tests.js")
+        var testModule = modules.add("Tests/Unit/src/aiskuliteunittests", "./Unit/dist/aiskuliteunittests.tests.js")
         testModule.run = function (tests) {
             console && console.log("Starting tests");
             QUnit.start();

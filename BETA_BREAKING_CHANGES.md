@@ -133,6 +133,12 @@ The previously exported namespaced globals have been replaced with a reduced set
 
 ### AISKU Light
 
+#### V2 API Changes
+
+| V1 API    | Details
+|-----------|---------------------
+| getSKUDefaults | Removed in V2
+
 #### Exported Globals
 
 - CoreUtils
