@@ -4312,7 +4312,7 @@
       "version": "5.5.0",
       "resolved": "https://registry.npmjs.org/puppeteer/-/puppeteer-5.5.0.tgz",
       "integrity": "sha512-OM8ZvTXAhfgFA7wBIIGlPQzvyEETzDjeRa4mZRCRHxYL+GNH5WAuYUQdja3rpWZvkX/JKqmuVgbsxDNsDFjMEg==",
-      "deprecated": "Version no longer supported. Upgrade to @latest",
+      "deprecated": "< 18.1.0 is no longer supported",
       "hasInstallScript": true,
       "dependencies": {
         "debug": "^4.1.0",
