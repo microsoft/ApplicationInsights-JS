@@ -121,6 +121,89 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Dependencies Configuration: Config can be set dynamically",
+            useFakeTimers: true,
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+            
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentation_key",
+                    extensionConfig: {
+                        [this._ajax.identifier]: {
+                            disableAjaxTracking: true,
+                            enableRequestHeaderTracking: false,
+                            enableCorsCorrelation: true,
+                            addRequestContext: (requestContext: IRequestContext) => {
+                                return {
+                                    headers: {...requestContext?.xhr["ajaxData"].requestHeaders} || {}
+                                }
+                            }
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                Assert.equal(this._ajax.config.disableAjaxTracking, true, "extension config should be set from root");
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.setRequestHeader("Content-type", "application/json");
+                xhr.send();
+                Assert.ok(!(<any>xhr).ajaxData, "should not have xhr hooks");
+                Assert.equal(0, trackStub.callCount, "Track should not be called");
+
+                appInsightsCore.config["extensionConfig"][this._ajax.identifier].disableAjaxTracking = false;
+                Assert.equal(this._ajax.config.disableAjaxTracking, false, "extension config should be set from root");
+                this.clock.tick(1);
+
+                Assert.equal(this._ajax.config.enableRequestHeaderTracking, false, "extension config should be set from root");
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.setRequestHeader("Content-type", "application/json");
+                Assert.ok((<any>xhr).ajaxData)
+                var ajaxData = (<any>xhr).ajaxData;
+                Assert.equal(ajaxData.method, "GET", "ajax data should have right fields");
+                Assert.deepEqual(ajaxData.requestHeaders, {}, "request headers should not be set in ajaxData");
+                Assert.equal(0, trackStub.callCount, "Track should not be called");
+
+                appInsightsCore.config["extensionConfig"][this._ajax.identifier].enableRequestHeaderTracking = true;
+                this.clock.tick(1);
+                Assert.ok(this._ajax.config.enableRequestHeaderTracking, "config should change dynamically");
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.setRequestHeader("header name", "some value");
+                Assert.ok((<any>xhr).ajaxData)
+                var ajaxData = (<any>xhr).ajaxData;
+                Assert.equal(ajaxData.method, "GET", "ajax data should have right fields");
+                Assert.deepEqual(ajaxData.requestHeaders, {"header name":"some value"}, "request headers should not be set in ajaxData");
+                Assert.equal(0, trackStub.callCount, "Track should not be called");
+
+
+                for (let lp = 0; lp < 2; lp++) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", "http://microsoft.com");
+                    xhr.setRequestHeader("header name", "header value");
+                    xhr.send();
+                    // Emulate response
+                    (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                }
+                Assert.equal(2, trackStub.callCount, "Track has been called 2 times");
+                Assert.equal(false, throwSpy.called, "We should not have thrown an internal error -- yet");
+
+
+                Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal(data.type, "Ajax", "request type should be ajax");
+                Assert.ok(data.properties, "properties should be added");
+                Assert.ok(data.properties.headers, "headers should be added");
+                Assert.equal(data.properties.headers["header name"], "header value","headers should be added");
+            }
+        });
+
+        this.testCase({
             name: "Dependencies Configuration: Make sure we don't fail for invalid arguments",
             test: () => {
                 this._ajax = new AjaxMonitor();
