@@ -66,6 +66,7 @@ export class ApplicationInsights {
 
             function _initialize(): void {
                 core.initialize(_self.config, [new Sender()]);
+                core.pollInternalLogs();
             }
         });
     }

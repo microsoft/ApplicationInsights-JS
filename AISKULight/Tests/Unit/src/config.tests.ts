@@ -1,6 +1,6 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { newId } from "@microsoft/applicationinsights-core-js";
-import { ApplicationInsights, Sender } from "../../../src/index";
+import { ApplicationInsights} from "../../../src/index";
 
 export class ApplicationInsightsConfigTests extends AITestClass {
     private readonly _instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
@@ -180,22 +180,4 @@ export class ApplicationInsightsConfigTests extends AITestClass {
         });
     }
 
-    // public addTrackMethodTests(): void {
-    //     this.testCase({
-    //         name: "iKey replacement: envelope will use the iKey in config in track method",
-    //         test: () => {
-    //             let _config = this._getTestConfig(this._sessionPrefix, false, true);
-    //             Assert.ok(_config)
-    //             let ai = new ApplicationInsights(_config);
-    //             this.onDone(() =>{
-    //                 ai.unload(false);
-    //             });
-    //             Assert.ok(ai, "ApplicationInsights light Instance is initialized");
-    //             ai.track({ name: "event1", baseData: { "prop1": "value1" }});
-    //             Assert.ok(this.envelopeConstructorSpy.called);
-    //             const envelope = this.envelopeConstructorSpy.returnValues[0];
-    //             Assert.equal(envelope.iKey, this._instrumentationKey, "trackEvent iKey is replaced");
-    //         }
-    //     });
-    // }
 }
