@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
+        node-version: [12.x, 14.x, 16.x, 18.x]
 
     steps:
     - uses: actions/checkout@v2
@@ -30,6 +30,6 @@ jobs:
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js install
     - run: npm run build --verbose
-      timeout-minutes: 10
+      timeout-minutes: 20
     - run: npm run test --verbose
-      timeout-minutes: 15
+      timeout-minutes: 30
