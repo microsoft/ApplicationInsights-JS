@@ -287,9 +287,10 @@ module.exports = function (grunt) {
                     buildCmds.qunit[key] = {
                         options: {
                             urls: [ testUrl ],
-                            timeout: 300 * 1000, // 5 min
+                            timeout: 600 * 1000, // 10 min
                             console: true,
                             summaryOnly: false,
+                            puppeteer: { headless: true, timeout: 60000, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
                             '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                         }
                     };
@@ -329,11 +330,11 @@ module.exports = function (grunt) {
 
                     buildCmds.qunit[key + "-perf"] = {
                         options: {
-                            urls: testUrls,
-                            timeout: 300 * 1000, // 5 min
+                            urls: [ testUrls ],
+                            timeout: 600 * 1000, // 10 min
                             console: true,
                             summaryOnly: false,
-                            puppeteer: { headless: true, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
+                            puppeteer: { headless: true, timeout: 60000, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
                             '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                         }
                     };
@@ -639,7 +640,6 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-qunit');
         grunt.loadNpmTasks('grunt-contrib-connect');
-        grunt.loadNpmTasks('grunt-string-replace');
         grunt.loadNpmTasks('grunt-contrib-copy');
     
         grunt.loadTasks('./tools/grunt-tasks');
