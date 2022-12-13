@@ -18,7 +18,7 @@
     "types": "types/applicationinsights-rollup-es3.d.ts",
     "scripts": {
         "clean": "grunt clean",
-        "build": "npm run build:esm && npm run build:bundle",
+        "build": "npm run build:esm && npm run build:bundle && npm run test",
         "build:esm": "grunt rollupes3",
         "build:bundle": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
@@ -32,11 +32,12 @@
     "license": "MIT",
     "sideEffects": false,
     "devDependencies": {
+        "@types/qunit": "^2.19.3",
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
-        "grunt-contrib-qunit": "^5.1.1",
+        "grunt-contrib-qunit": "^6.2.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@rollup/plugin-commonjs": "^18.0.0",

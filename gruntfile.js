@@ -176,7 +176,8 @@ module.exports = function (grunt) {
                 server: {
                     options: {
                         port: 9001,
-                        base: '.'
+                        base: '.',
+                        debug: true
                     }
                 }        
             },
@@ -290,8 +291,19 @@ module.exports = function (grunt) {
                             timeout: 600 * 1000, // 10 min
                             console: true,
                             summaryOnly: false,
-                            puppeteer: { headless: true, timeout: 60000, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
-                            '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                            httpBase: ".",
+                            puppeteer: { 
+                                headless: true, 
+                                timeout: 60000,
+                                ignoreHTTPErrors: true,
+                                // env: {
+                                //     "CI": true
+                                // },
+                                args:[
+                                    "--enable-precise-memory-info",
+                                    "--expose-internals-for-testing"
+                                ]
+                            }
                         }
                     };
                 }
@@ -434,8 +446,8 @@ module.exports = function (grunt) {
             "rollupes3":            { 
                                         autoMinify: false,
                                         path: "./tools/rollup-es3",
-                                        unitTestName: "es3rolluptests.js",
-                                        testHttp: false
+                                        unitTestName: "es3rolluptests.js"
+                                        //testHttp: false
                                     },
             "shims":                {
                                         autoMinify: false,
@@ -445,8 +457,8 @@ module.exports = function (grunt) {
                                                 "./tools/shims/src/*.ts"
                                             ]
                                         },
-                                        unitTestName: "shimstests.js",
-                                        testHttp: false
+                                        unitTestName: "shimstests.js"
+                                        //testHttp: false
                                     },
             "chrome-debug-extension": {
                                         autoMinify: false,
@@ -712,11 +724,11 @@ module.exports = function (grunt) {
         grunt.registerTask("aichannel-mintest", tsTestActions("aichannel", true));
 
         grunt.registerTask("rollupuglify", tsBuildActions("rollupuglify"));
-        grunt.registerTask("rollupes3", tsBuildActions("rollupes3").concat(["ts:rollupes3-tests", "qunit:rollupes3"]));
-        grunt.registerTask("rollupes3test", [ "ts:rollupes3-tests", "qunit:rollupes3" ]);
+        grunt.registerTask("rollupes3", tsBuildActions("rollupes3"));
+        grunt.registerTask("rollupes3test", tsTestActions("rollupes3", false));
 
-        grunt.registerTask("shims", tsBuildActions("shims").concat(["ts:shims-tests", "qunit:shims"]));
-        grunt.registerTask("shimstest", ["ts:shims-tests", "qunit:shims"]);
+        grunt.registerTask("shims", tsBuildActions("shims"));
+        grunt.registerTask("shimstest", tsTestActions("shims", false));
 
         grunt.registerTask("chromedebugextension", tsBuildActions("chrome-debug-extension"));
         grunt.registerTask("chromedebugextension-min", minTasks("chrome-debug-extension"));
