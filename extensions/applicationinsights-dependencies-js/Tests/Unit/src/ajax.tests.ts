@@ -147,7 +147,7 @@ export class AjaxTests extends AITestClass {
                 var trackStub = this.sandbox.stub(appInsightsCore, "track");
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
 
-                Assert.equal(this._ajax.config.disableAjaxTracking, true, "extension config should be set from root");
+                Assert.equal( appInsightsCore.config["extensionConfig"][this._ajax.identifier].disableAjaxTracking, true, "extension config should be set from root");
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
                 xhr.setRequestHeader("Content-type", "application/json");
@@ -156,10 +156,8 @@ export class AjaxTests extends AITestClass {
                 Assert.equal(0, trackStub.callCount, "Track should not be called");
 
                 appInsightsCore.config["extensionConfig"][this._ajax.identifier].disableAjaxTracking = false;
-                Assert.equal(this._ajax.config.disableAjaxTracking, false, "extension config should be set from root");
                 this.clock.tick(1);
 
-                Assert.equal(this._ajax.config.enableRequestHeaderTracking, false, "extension config should be set from root");
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
                 xhr.setRequestHeader("Content-type", "application/json");
@@ -171,7 +169,6 @@ export class AjaxTests extends AITestClass {
 
                 appInsightsCore.config["extensionConfig"][this._ajax.identifier].enableRequestHeaderTracking = true;
                 this.clock.tick(1);
-                Assert.ok(this._ajax.config.enableRequestHeaderTracking, "config should change dynamically");
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
                 xhr.setRequestHeader("header name", "some value");

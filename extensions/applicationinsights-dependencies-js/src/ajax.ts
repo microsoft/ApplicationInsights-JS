@@ -15,7 +15,7 @@ import {
     dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
     isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { objDefineProp, objFreeze, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { objFreeze, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
 import {
     DependencyListenerFunction, IDependencyHandler, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler
@@ -271,7 +271,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
     public static identifier: string = "AjaxDependencyPlugin";
 
     public identifier: string = AjaxMonitor.identifier;
-    public readonly config: IConfig;
     priority: number = 120;
 
     constructor() {
@@ -487,13 +486,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _ajaxPerfLookupDelay = 1;
                 _distributedTracingMode = eDistributedTracingModes.AI_AND_W3C;
                 _appId = null;
-
-                // Define _self.config
-                objDefineProp(_self, "config", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => _extensionConfig
-                });
             }
 
             function _populateDefaults(config: IConfiguration) {
