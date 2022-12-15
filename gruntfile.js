@@ -296,12 +296,10 @@ module.exports = function (grunt) {
                                 headless: true, 
                                 timeout: 60000,
                                 ignoreHTTPErrors: true,
-                                // env: {
-                                //     "CI": true
-                                // },
                                 args:[
                                     "--enable-precise-memory-info",
-                                    "--expose-internals-for-testing"
+                                    "--expose-internals-for-testing",
+                                    "--no-sandbox"
                                 ]
                             }
                         }
@@ -346,7 +344,16 @@ module.exports = function (grunt) {
                             timeout: 600 * 1000, // 10 min
                             console: true,
                             summaryOnly: false,
-                            puppeteer: { headless: true, timeout: 60000, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
+                            puppeteer: { 
+                                headless: true, 
+                                timeout: 60000, 
+                                ignoreHTTPErrors: true,
+                                args:[
+                                    '--enable-precise-memory-info',
+                                    '--expose-internals-for-testing',
+                                    "--no-sandbox"
+                                ] 
+                            },
                             '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                         }
                     };
