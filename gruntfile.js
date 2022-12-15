@@ -2,10 +2,10 @@ module.exports = function (grunt) {
 
    const versionPlaceholder = '"#version#"';
 
-   const aiCoreDefaultNameReplacements = [
-   ];
+    const aiCoreDefaultNameReplacements = [
+    ];
 
-   const aiDefaultNameReplacements = [
+    const aiDefaultNameReplacements = [
     ];
 
     const aiInternalConstants = [
@@ -284,13 +284,26 @@ module.exports = function (grunt) {
                 }
 
                 if (addQunit) {
+                    // Remove any "/./" values from the path
+                    testUrl = testUrl.replace(/\/\.\//g, "/");
+
                     buildCmds.qunit[key] = {
                         options: {
-                            urls: [ testUrl ],
+                            urls: [testUrl],
                             timeout: 300 * 1000, // 5 min
                             console: true,
                             summaryOnly: false,
-                            '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                            httpBase: ".",
+                            puppeteer: {
+                                headless: true,
+                                timeout: 30000,
+                                ignoreHTTPErrors: true,
+                                args: [
+                                    "--enable-precise-memory-info",
+                                    "--expose-internals-for-testing",
+                                    "--no-sandbox"
+                                ]
+                            }
                         }
                     };
                 }
@@ -329,12 +342,20 @@ module.exports = function (grunt) {
 
                     buildCmds.qunit[key + "-perf"] = {
                         options: {
-                            urls: testUrls,
+                            urls: [testUrls],
                             timeout: 300 * 1000, // 5 min
                             console: true,
                             summaryOnly: false,
-                            puppeteer: { headless: true, args:['--enable-precise-memory-info','--expose-internals-for-testing'] },
-                            '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                            puppeteer: {
+                                headless: true,
+                                timeout: 30000,
+                                ignoreHTTPErrors: true,
+                                args: [
+                                    '--enable-precise-memory-info',
+                                    '--expose-internals-for-testing',
+                                    "--no-sandbox"
+                                ]
+                            }
                         }
                     };
                 }
@@ -393,8 +414,8 @@ module.exports = function (grunt) {
     
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
-            "teechannel":            { path: "./channels/tee-channel-js" },
-    
+            "teechannel":           { path: "./channels/tee-channel-js" },
+
             // Extensions
             "appinsights":          { 
                                         path: "./extensions/applicationinsights-analytics-js",
@@ -434,8 +455,7 @@ module.exports = function (grunt) {
             "rollupes5":            { 
                                         autoMinify: false,
                                         path: "./tools/rollup-es5",
-                                        unitTestName: "es5rolluptests.js",
-                                        testHttp: false
+                                        unitTestName: "es5rolluptests.js"
                                     },
             "shims":                {
                                         autoMinify: false,
@@ -445,8 +465,7 @@ module.exports = function (grunt) {
                                                 "./tools/shims/src/*.ts"
                                             ]
                                         },
-                                        unitTestName: "shimstests.js",
-                                        testHttp: false
+                                        unitTestName: "shimstests.js"
                                     },
             "chrome-debug-extension": {
                                         autoMinify: false,
@@ -640,11 +659,11 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-qunit');
         grunt.loadNpmTasks('grunt-contrib-connect');
-        grunt.loadNpmTasks('grunt-string-replace');
         grunt.loadNpmTasks('grunt-contrib-copy');
     
         grunt.loadTasks('./tools/grunt-tasks');
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
+        
 
         grunt.registerTask("core", tsBuildActions("core"));
         grunt.registerTask("core-min", minTasks("core"));
@@ -718,11 +737,11 @@ module.exports = function (grunt) {
         grunt.registerTask("teechannel-mintest", tsTestActions("teechannel", true));
 
         grunt.registerTask("rollupuglify", tsBuildActions("rollupuglify"));
-        grunt.registerTask("rollupes5", tsBuildActions("rollupes5").concat(["ts:rollupes5-tests", "qunit:rollupes5"]));
-        grunt.registerTask("rollupes5test", [ "ts:rollupes5-tests", "qunit:rollupes5" ]);
+        grunt.registerTask("rollupes5", tsBuildActions("rollupes5"));
+        grunt.registerTask("rollupes5test", tsTestActions("rollupes5", false));
 
-        grunt.registerTask("shims", tsBuildActions("shims").concat(["ts:shims-tests", "qunit:shims"]));
-        grunt.registerTask("shimstest", ["ts:shims-tests", "qunit:shims"]);
+        grunt.registerTask("shims", tsBuildActions("shims").concat(tsTestActions("shims", false)));
+        grunt.registerTask("shimstest", tsTestActions("shims", false));
 
         grunt.registerTask("chromedebugextension", tsBuildActions("chrome-debug-extension"));
         grunt.registerTask("chromedebugextension-min", minTasks("chrome-debug-extension"));
