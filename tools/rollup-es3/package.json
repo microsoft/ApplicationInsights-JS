@@ -22,7 +22,7 @@
         "build:esm": "grunt rollupes3",
         "build:bundle": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
-        "test": "grunt rollupes3test",
+        "test": "grunt rollupes3test --verbose",
         "lint": "tslint -p tsconfig.json"
     },
     "repository": {
