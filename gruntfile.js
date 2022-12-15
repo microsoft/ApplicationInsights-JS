@@ -740,7 +740,7 @@ module.exports = function (grunt) {
         grunt.registerTask("rollupes5", tsBuildActions("rollupes5"));
         grunt.registerTask("rollupes5test", tsTestActions("rollupes5", false));
 
-        grunt.registerTask("shims", tsBuildActions("shims").concat(["ts:shims-tests", "qunit:shims"]));
+        grunt.registerTask("shims", tsBuildActions("shims").concat(tsTestActions("shims", false)));
         grunt.registerTask("shimstest", tsTestActions("shims", false));
 
         grunt.registerTask("chromedebugextension", tsBuildActions("chrome-debug-extension"));
