@@ -27,7 +27,8 @@ jobs:
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
-    - run: rush check
+    - run: node common/scripts/install-run-rush.js check
+    - run: node common/scripts/install-run-rush.js install
     - run: npm run build --verbose
       timeout-minutes: 10
     - run: npm run test --verbose
