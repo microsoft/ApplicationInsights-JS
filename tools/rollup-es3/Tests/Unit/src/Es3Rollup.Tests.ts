@@ -1,5 +1,6 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { es3Check, es3Poly, importCheck } from "../../../src/applicationinsights-rollup-es3";
+import * as QUnit from "qunit";
 
 export class Es3RollupTests extends AITestClass {
 

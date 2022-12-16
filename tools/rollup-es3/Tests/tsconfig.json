@@ -5,9 +5,12 @@
         "noImplicitAny": false,
         "module": "amd",
         "moduleResolution": "Node",
-        "target": "es5",
+        "target": "es6",
+        "importHelpers": true,
+        "noEmitHelpers": true,
+        "skipLibCheck": true,
         "alwaysStrict": true,
         "declaration": true
-    },
+      },
     "files": []
 }
