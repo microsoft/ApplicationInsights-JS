@@ -303,6 +303,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _ajaxPerfLookupDelay: number;
         let _distributedTracingMode: eDistributedTracingModes;
         let _appId: string;
+        let _polyfillInitialized: boolean;
 
         dynamicProto(AjaxMonitor, this, (_self, _base) => {
             let _addHook = _base._addHook;
@@ -459,6 +460,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let location = getLocation();
                 _fetchInitialized = false;      // fetch monitoring initialized
                 _xhrInitialized = false;        // XHR monitoring initialized
+                _polyfillInitialized = false;   // polyfill monitoring initialized
                 _currentWindowHost = location && location.host && location.host.toLowerCase();
                 _extensionConfig = null;
                 _enableRequestHeaderTracking = false;
@@ -617,11 +619,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         }));
     
                         _fetchInitialized = true;
-                    } else if (isPolyfill) {
+                    } else if (isPolyfill && !_polyfillInitialized) {
                         // If fetch is a polyfill we need to capture the request to ensure that we correctly track
                         // disabled request URLS (i.e. internal urls) to ensure we don't end up in a constant loop
                         // of reporting ourselves, for example React Native uses a polyfill for fetch
-                        // Note: Polyfill implementations that don't support the "poyyfill" tag are not supported
+                        // Note: Polyfill implementations that don't support the "polyfill" tag are not supported
                         // the workaround is to add a polyfill property to your fetch implementation before initializing
                         // App Insights
                         _addHook(InstrumentFunc(global, strFetch, {
@@ -631,6 +633,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 _isDisabledRequest(null, input, init);
                             }
                         }));
+                        _polyfillInitialized = true;
                     }
                 }));
                 
@@ -646,11 +649,14 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _instrumentXhr():void {
+                if (!_supportsAjaxMonitoring(_self)) {
+                    return;
+                }
                 _self._addHook(onConfigChange(_extensionConfig, () => {
                     _disableAjaxTracking = !!_extensionConfig.disableAjaxTracking;
                     _enableRequestHeaderTracking = _extensionConfig.enableRequestHeaderTracking;
 
-                    if (_supportsAjaxMonitoring(_self) && !_disableAjaxTracking && !_xhrInitialized) {
+                    if (!_disableAjaxTracking && !_xhrInitialized) {
                         // Instrument open
                         _hookProto(XMLHttpRequest, "open", {
                             ns: _evtNamespace,
