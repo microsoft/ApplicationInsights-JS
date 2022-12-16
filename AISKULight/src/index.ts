@@ -5,7 +5,8 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, IConfiguration, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin, UnloadHandler, isNullOrUndefined, proxyFunctions, throwError
+    AppInsightsCore, IConfiguration, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin, UnloadHandler, isNullOrUndefined,
+    proxyFunctions, throwError
 } from "@microsoft/applicationinsights-core-js";
 
 /**
