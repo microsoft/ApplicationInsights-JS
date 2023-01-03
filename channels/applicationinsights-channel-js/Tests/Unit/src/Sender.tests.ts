@@ -2,13 +2,31 @@ import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
 import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
-import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, LoggingSeverity, getGlobalInst, getGlobal, safeGetLogger } from "@microsoft/applicationinsights-core-js";
+import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, LoggingSeverity, getGlobalInst, getGlobal, safeGetLogger, getJSON, isString, isArray } from "@microsoft/applicationinsights-core-js";
+import { SessionStorageSendBuffer } from "../../../src/SendBuffer";
+
+const BUFFER_KEY = "AI_buffer";
+const SENT_BUFFER_KEY = "AI_sentBuffer";
 
 export class SenderTests extends AITestClass {
     private _sender: Sender;
     private _instrumentationKey = 'iKey';
     private _offline: IOfflineListener;
+
+    protected _getBuffer(key: string, logger: DiagnosticLogger, namePrefix?: string): string[] {
+        let prefixedKey = key;
+        try {
+            prefixedKey = namePrefix ? namePrefix + "_" + prefixedKey : prefixedKey;
+            const bufferJson = utlGetSessionStorage(logger, prefixedKey);
+            if (bufferJson) {
+                return getJSON()?.parse(bufferJson);
+            }
+        } catch (e) {
+            QUnit.assert.ok(false, "Exception - " + e);
+        }
+        return [];
+    }
 
     public testInitialize() {
         this._sender = new Sender();
@@ -24,7 +42,6 @@ export class SenderTests extends AITestClass {
             this._sender.pause();
             this._sender.teardown();
         }
-
         this._sender = null;
     }
 
@@ -54,6 +71,314 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes, 'Channel config prioritizes extensionConfig over root config');
             }
         });
+
+        this.testCase({
+            name: "Channel Config: Config can be set from root dynamically",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                        
+                        }
+                    }
+                }
+                core.initialize(coreConfig, [this._sender]);
+
+                // check defaults
+                let defaultSenderConfig = this._sender._senderConfig;
+                QUnit.assert.equal(15000, defaultSenderConfig.maxBatchInterval, "Channel default maxBatchInterval config is set");
+                QUnit.assert.equal("https://dc.services.visualstudio.com/v2/track", defaultSenderConfig.endpointUrl, "Channel default endpointUrl config is set");
+                QUnit.assert.equal(102400, defaultSenderConfig.maxBatchSizeInBytes, "Channel default maxBatchSizeInBytes config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.emitLineDelimitedJson, "Channel default emitLineDelimitedJson config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.disableTelemetry, "Channel default disableTelemetry config is set");
+                QUnit.assert.equal(true, defaultSenderConfig.enableSessionStorageBuffer, "Channel default enableSessionStorageBuffer config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.isRetryDisabled, "Channel default isRetryDisabled config is set");
+                QUnit.assert.equal(true, defaultSenderConfig.isBeaconApiDisabled, "Channel default isBeaconApiDisabled config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.disableXhr, "Channel default disableXhr config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.onunloadDisableFetch, "Channel default onunloadDisableFetch config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.onunloadDisableBeacon, "Channel default onunloadDisableBeacon config is set");
+                QUnit.assert.equal(undefined, defaultSenderConfig.namePrefix, "Channel default namePrefix config is set");
+                QUnit.assert.equal(100, defaultSenderConfig.samplingPercentage, "Channel default samplingPercentage config is set");
+                QUnit.assert.equal(undefined, defaultSenderConfig.customHeaders, "Channel default customHeaders config is set");
+                QUnit.assert.equal(undefined, defaultSenderConfig.convertUndefined, "Channel default convertUndefined config is set");
+                QUnit.assert.equal(10000, defaultSenderConfig.eventsLimitInMem, "Channel default eventsLimitInMem config is set");
+
+                //check dynamic config
+                core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
+                core.config.extensionConfig[this._sender.identifier].maxBatchInterval = 10000;
+                core.config.extensionConfig[this._sender.identifier].maxBatchSizeInBytes = 100000;
+                core.config.extensionConfig[this._sender.identifier].endpointUrl = "https://test";
+                core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = true;
+                core.config.extensionConfig[this._sender.identifier].disableTelemetry = true;
+                core.config.extensionConfig[this._sender.identifier].enableSessionStorageBuffer = false;
+                core.config.extensionConfig[this._sender.identifier].isRetryDisabled = true;
+                core.config.extensionConfig[this._sender.identifier].disableXhr = true;
+                core.config.extensionConfig[this._sender.identifier].samplingPercentage = 90;
+                core.config.extensionConfig[this._sender.identifier].customHeaders = [{header: "header1",value:"value1"}];
+                this.clock.tick(1);
+                let curSenderConfig = this._sender._senderConfig;
+                QUnit.assert.equal(10000, curSenderConfig.maxBatchInterval, "Channel maxBatchInterval config is dynamically set");
+                QUnit.assert.equal(100000, curSenderConfig.maxBatchSizeInBytes, "Channel maxBatchSizeInBytes config is dynamically set");
+                QUnit.assert.equal("https://test", curSenderConfig.endpointUrl, "Channel endpointUrl config is dynamically set");
+                QUnit.assert.equal(true, curSenderConfig.emitLineDelimitedJson, "Channel emitLineDelimitedJson config is dynamically set");
+                QUnit.assert.equal(true, curSenderConfig.disableTelemetry, "Channel disableTelemetry config is dynamically set");
+                QUnit.assert.equal(false, curSenderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is dynamically set");
+                QUnit.assert.equal(true, curSenderConfig.isRetryDisabled, "Channel isRetryDisabled config is dynamically set");
+                QUnit.assert.equal(90, curSenderConfig.samplingPercentage, "Channel samplingPercentage config is dynamically set");
+                QUnit.assert.deepEqual([{header: "header1",value:"value1"}], curSenderConfig.customHeaders, "Channel customHeaders config is dynamically set");
+
+                core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = undefined;
+                core.config.extensionConfig[this._sender.identifier].endpointUrl = undefined;
+                this.clock.tick(1);
+                QUnit.assert.equal("https://dc.services.visualstudio.com/v2/track", this._sender._senderConfig.endpointUrl, "Channel default endpointUrl config is set");
+                QUnit.assert.equal(false,  this._sender._senderConfig.emitLineDelimitedJson, "Channel default emitLineDelimitedJson config is set");
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: sessionStorage change from true to false can be handled correctly",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                        
+                        }
+                    }
+                }
+
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+                const loggerSpy = this.sandbox.stub(this._sender, "triggerSend");
+
+                core.initialize(coreConfig, [this._sender]);
+                QUnit.assert.equal(true, this._sender._senderConfig.enableSessionStorageBuffer, "Channel default enableSessionStorageBuffer config is set");
+                QUnit.assert.equal(true, utlCanUseSessionStorage(), "SessionStorage should be able to use");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+                QUnit.assert.deepEqual(this._sender._buffer.getItems(), [], "buffer is empty");
+                
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+
+                QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
+                let payload  = this._getBuffer(BUFFER_KEY, logger);
+                QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
+                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                let sentPayload  = this._getBuffer(SENT_BUFFER_KEY, logger);
+                QUnit.assert.deepEqual([], sentPayload, "sent payload is empty");
+                QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "buffer length shoule be one");
+
+                // change enableSessionStorageBuffer
+                core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
+                core.config.extensionConfig[this._sender.identifier].enableSessionStorageBuffer = false;
+
+                this.clock.tick(1);
+                QUnit.assert.equal(false, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is disabled");
+                QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "session storage buffer is transferred");
+                QUnit.assert.ok(this._sender._buffer.getItems()[0].indexOf("some type") > 1, "in memory storage buffer is set");
+                
+                this.clock.tick(15000);
+                QUnit.assert.equal(true, loggerSpy.calledOnce, "The send has been triggered");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: sessionStorage change from false to true can be handled correctly",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13",
+                    enableSessionStorageBuffer: false,
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                        
+                        }
+                    }
+                }
+
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+                const loggerSpy = this.sandbox.stub(this._sender, "triggerSend");
+                core.initialize(coreConfig, [this._sender]);
+                QUnit.assert.equal(false, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is set to false");
+                QUnit.assert.equal(true, utlCanUseSessionStorage(), "utlCanUseSessionStorage should return true");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+                QUnit.assert.deepEqual(this._sender._buffer.getItems(), [], "buffer is empty");
+      
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+                QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
+                QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "session storage in memory buffer is set");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+
+                // change enableSessionStorageBuffer
+                core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
+                core.config.extensionConfig[this._sender.identifier].enableSessionStorageBuffer = true;
+                this.clock.tick(1);
+                QUnit.assert.equal(true, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is set to true");
+
+                let payload  = this._getBuffer(BUFFER_KEY, logger);
+                QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
+                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "buffer length shoule be one");
+                let sentPayload  = this._getBuffer(SENT_BUFFER_KEY, logger);
+                QUnit.assert.deepEqual([], sentPayload, "sent payload is empty");
+
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: sessionStorage prefixName change can be handled correctly",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                        
+                        }
+                    }
+                }
+                let prefixName = "test";
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+                const loggerSpy = this.sandbox.stub(this._sender, "triggerSend");
+                core.initialize(coreConfig, [this._sender]);
+                QUnit.assert.equal(true, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is set to false");
+                QUnit.assert.equal(true, utlCanUseSessionStorage(), "utlCanUseSessionStorage should return true");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger, prefixName), [], "session storage buffer with prefix is empty");
+      
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+                QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
+                QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "session storage buffer is set");
+                let payload  = this._getBuffer(BUFFER_KEY, logger);
+                QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
+                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger, prefixName), [], "session storage buffer with prefix is empty");
+             
+             
+
+                // change prefix
+                core.config.extensionConfig = core.config.extensionConfig? core.config.extensionConfig : {};
+                core.config.extensionConfig[this._sender.identifier].namePrefix = prefixName;
+                this.clock.tick(1);
+                QUnit.assert.equal(prefixName, this._sender._senderConfig.namePrefix, "Channel namePrefix config is set");
+
+                //QUnit.assert.deepEqual([], this._getBuffer(BUFFER_KEY, logger), "default buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+                payload  = this._getBuffer(BUFFER_KEY, logger, prefixName);
+                QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
+                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage with prefix");
+                QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "new session storage buffer is set");
+               
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+                utlSetSessionStorage(logger, `${prefixName}_${BUFFER_KEY}`,JSON.stringify([]));
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: endpoint change can be handled correctly",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                        
+                        }
+                    }
+                }
+
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+                const loggerSpy = this.sandbox.stub(this._sender, "triggerSend");
+
+                core.initialize(coreConfig, [this._sender]);
+                QUnit.assert.equal("https://dc.services.visualstudio.com/v2/track", this._sender._senderConfig.endpointUrl, "Channel default endpointUrl config is set");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+                
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "test",
+                    baseType: "some type",
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+
+                QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
+                let payload  = this._getBuffer(BUFFER_KEY, logger);
+                QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
+                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+
+                // change endpointUrl
+                core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
+                core.config.extensionConfig[this._sender.identifier].endpointUrl = "https://example.com";
+
+                this.clock.tick(1);
+                QUnit.assert.equal("https://example.com", this._sender._senderConfig.endpointUrl, "Channel endpointUrl config is changed");
+                payload  = this._sender._buffer.getItems();
+                QUnit.assert.deepEqual(payload.length, 0, "buffer is empty");
+                payload  = this._getBuffer(BUFFER_KEY, logger);
+                QUnit.assert.equal(payload.length, 0, "session storage buffer is empty");
+
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+            }
+        });
+
 
         this.testCase({
             name: "Channel Config: Validate empty endpointURL falls back to the default",

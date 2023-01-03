@@ -148,6 +148,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         let _convertUndefined: any;
         let _isRetryDisabled: boolean;
         let _maxBatchInterval: number;
+        let _sessionStorageUsed: boolean;
+        let _namePrefix: string;
+        let _eventsLimitInMem: number;
+        let _emitLineDelimitedJson: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -227,7 +231,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _offlineListener = createOfflineListener(_evtNamespace);
 
                 // This function will be re-called whenever any referenced configuration is changed
-                _self._addHook(onConfigChange(config, () => {
+                _self._addHook(onConfigChange(config, (details) => {
+                    let config = details.cfg;
                     let ctx = createProcessTelemetryContext(null, config, core);
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
 
@@ -239,36 +244,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         }
                     });
 
-                    _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
-                    _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
-
-                    if (_self._buffer) {
-                        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        // TODO 3.x.x !!! - Handle the enableSessionStorageBuffer changing
-                        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    } else {
-                        _self._buffer = (senderConfig.enableSessionStorageBuffer && utlCanUseSessionStorage())
-                            ? new SessionStorageSendBuffer(diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
-                    }
-
-                    _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
-
-                    _instrumentationKey = senderConfig.instrumentationKey;
-                    if(!_validateInstrumentationKey(_instrumentationKey, config)) {
-                        _throwInternal(diagLog,
-                            eLoggingSeverity.CRITICAL,
-                            _eInternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key " + _instrumentationKey);
-                    }
-
                     // Only update the endpoint if the original config !== the current config
                     // This is so any redirect endpointUrl is not overwritten
                     if (_orgEndpointUrl !== senderConfig.endpointUrl) {
                         if (_orgEndpointUrl) {
-                            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                            // TODO 3.x.x !!! - Handle the endpointUrl changing
-                            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                            // TODO: add doc to remind users to flush before changing endpoint
+                            _self._buffer.clear();
                         }
-
                         _endpointUrl = _orgEndpointUrl = senderConfig.endpointUrl;
                     }
 
@@ -279,7 +261,69 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         });
                     }
 
-                  
+                    _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
+                    _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
+                    
+                    let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer && utlCanUseSessionStorage();
+                    let namePrefix = senderConfig.namePrefix;
+                    let emitLineDelimitedJson = senderConfig.emitLineDelimitedJson;
+                    let eventsLimitInMem = senderConfig.eventsLimitInMem;
+                    let shouldUpdate = (canUseSessionStorage !== _sessionStorageUsed)
+                                    || (canUseSessionStorage && (_namePrefix !== namePrefix)) // prefixName is only used in session storage
+                                    || (_emitLineDelimitedJson !== emitLineDelimitedJson ) //emitLineDelimitedJson is used in buffer.size()
+                                    || (!canUseSessionStorage && (_eventsLimitInMem !== eventsLimitInMem)); // eventsLimitInMem is only used in memory storage
+                    
+                    if (_self._buffer) {
+
+                        // case1 (Pre and Now enableSessionStorageBuffer settings are same)
+                        // if namePrefix or eventsLimitInMem or emitLineDelimitedJson is changed, transfer current buffer to new buffer
+                        // else no action needed
+
+                        //case2 (Pre and Now enableSessionStorageBuffer settings are changed)
+                        // transfer current buffer to new buffer
+                       
+                        if (shouldUpdate) {
+                            _self.pause();
+                            let unsentPayload = _self._buffer.getItems().slice(0);
+                            _self._buffer.clear();
+
+                            _self._buffer = canUseSessionStorage
+                                ? new SessionStorageSendBuffer(diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
+                            
+                            try {
+                                if (unsentPayload.length > 0) {
+                                    arrForEach(unsentPayload, (item: string) => {
+                                        _self._buffer.enqueue(item);
+                                    });
+                                }
+                            } catch (e) {
+                                _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
+                                    _eInternalMessageId.FailedAddingTelemetryToBuffer,
+                                    "failed to transfer telemetry to different buffer storage, telemetry will be lost: " + getExceptionName(e),
+                                    { exception: dumpObj(e) });
+                            }
+                            _self.resume();
+                        }
+                        
+                    } else {
+                        _self._buffer = canUseSessionStorage
+                            ? new SessionStorageSendBuffer(diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
+                    }
+
+                    _namePrefix = namePrefix;
+                    _emitLineDelimitedJson = emitLineDelimitedJson;
+                    _eventsLimitInMem = eventsLimitInMem;
+                    _sessionStorageUsed = canUseSessionStorage;
+
+                    _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
+
+                    _instrumentationKey = senderConfig.instrumentationKey;
+                    if(!_validateInstrumentationKey(_instrumentationKey, config)) {
+                        _throwInternal(diagLog,
+                            eLoggingSeverity.CRITICAL,
+                            _eInternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key " + _instrumentationKey);
+                    }
+
                     _customHeaders = senderConfig.customHeaders;
                     if (!isInternalApplicationInsightsEndpoint(_endpointUrl) && _customHeaders && _customHeaders.length > 0) {
                         arrForEach(_customHeaders, customHeader => {
@@ -590,6 +634,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         _self._appId = response.appId;
                     }
                 }
+                //let isOrgEndpoint = responseUrl !== _orgEndpointUrl;
+                let isOrgEndpoint = true;
     
                 if ((status < 200 || status >= 300) && status !== 0) {
 
@@ -601,8 +647,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             return;
                         }
                     }
-
-                    if (!_isRetryDisabled && _isRetriable(status)) {
+                    if (!_isRetryDisabled && _isRetriable(status) && !isOrgEndpoint) {
                         _resendPayload(payload);
                         _throwInternal(_self.diagLog(),
                             eLoggingSeverity.WARNING,
@@ -613,7 +658,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
                 } else if (_offlineListener && !_offlineListener.isOnline()) { // offline
                     // Note: Don't check for status == 0, since adblock gives this code
-                    if (!_isRetryDisabled) {
+                    if (!_isRetryDisabled && !isOrgEndpoint) {
                         const offlineBackOffMultiplier = 10; // arbritrary number
                         _resendPayload(payload, offlineBackOffMultiplier);
     
@@ -632,7 +677,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             response = _parseResponse(res);
                         }
     
-                        if (response && !_isRetryDisabled) {
+                        if (response && !_isRetryDisabled && !isOrgEndpoint) {
                             _self._onPartialSuccess(payload, response);
                         } else {
                             _self._onError(payload, errorMessage);
@@ -1014,6 +1059,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 const buffer = _self._buffer;
                 let _window = getWindow();
                 const xdr = new XDomainRequest();
+                // NOTE: xdr may send previous retry payload to new endpoint since we are not able to check response URL
                 xdr.onload = () => _self._xdrOnLoad(xdr, payload);
                 xdr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXdr(xdr), event);
         
@@ -1116,6 +1162,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _instrumentationKey = null;
                 _convertUndefined = UNDEFINED_VALUE;
                 _isRetryDisabled = false;
+                _sessionStorageUsed = null;
+                _namePrefix = UNDEFINED_VALUE;
+                _eventsLimitInMem = 0;
+                _emitLineDelimitedJson = false;
 
                 objDefineProp(_self, "_senderConfig", {
                     enumerable: true,
