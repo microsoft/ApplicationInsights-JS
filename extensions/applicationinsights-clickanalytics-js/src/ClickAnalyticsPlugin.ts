@@ -5,18 +5,73 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICustomProperties, IPlugin, IProcessTelemetryContext,
+    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
-    arrForEach, dumpObj, eLoggingSeverity, getExceptionName, isNullOrUndefined, throwError, unloadComponents
+    arrForEach, createProcessTelemetryContext, dumpObj, eLoggingSeverity, getExceptionName, isNullOrUndefined, onConfigChange, throwError,
+    unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, IPageActionTelemetry } from "./Interfaces/Datamodel";
-import { BehaviorEnumValidator, BehaviorMapValidator, BehaviorValueValidator, mergeConfig } from "./common/Utils";
+import { hasDocument, objDeepFreeze, objDefineProp, objForEachKey } from "@nevware21/ts-utils";
+import {
+    IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, ICoreData, ICustomDataTags, IPageActionTelemetry
+} from "./Interfaces/Datamodel";
+import {
+    BehaviorEnumValidator, BehaviorMapValidator, BehaviorValueValidator, DEFAULT_AI_BLOB_ATTRIBUTE_TAG, DEFAULT_DATA_PREFIX,
+    DEFAULT_DONOT_TRACK_TAG, removeInvalidElements
+} from "./common/Utils";
 import { PageAction } from "./events/PageAction";
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
 
 export { BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
+
+const dataTagsDefault = {
+    useDefaultContentNameOrId: false,
+    aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
+    customDataPrefix: DEFAULT_DATA_PREFIX,
+    captureAllMetaDataContent: false,
+    dntDataTag: DEFAULT_DONOT_TRACK_TAG,
+    metaDataPrefix: "",
+    parentDataTag: ""
+} as ICustomDataTags;
+
+const coreDataDefault = {
+    eferrerUri: hasDocument ? document.referrer : "",
+    requestUri: "",
+    pageName: "",
+    pageType: ""
+} as ICoreData;
+
+const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFreeze({
+    autoCapture: true,
+    callback: {
+        pageActionPageTags: () => null,
+        pageName: (element?: Element) => null,
+        contentName: (element?: any, useDefaultContentName?: boolean) => null
+    },
+    pageTags: {},
+    coreData: {set:_setProp, v:coreDataDefault},
+    dataTags: {set: _setProp, v: dataTagsDefault},
+    behaviorValidator: (key:string) => key || "",
+    defaultRightClickBhvr: "",
+    dropInvalidEvents : false,
+    urlCollectHash: false,
+    urlCollectQuery: false
+});
+
+function _setProp(val: Object, def: Object): Object {
+    removeInvalidElements(val);
+    if (JSON.stringify(def) !== "{}") {
+        objForEachKey(def, (key, obj) => {
+            val[key] = val[key] || obj;
+            if (key === "customDataPrefix") {
+                let prefix = val[key]
+                val[key] = prefix && prefix.indexOf(DEFAULT_DATA_PREFIX) === 0? prefix : DEFAULT_DATA_PREFIX;
+            }
+        });
+    }
+    return val;
+}
 
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
     public identifier: string = "ClickAnalyticsPlugin";
@@ -41,22 +96,18 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     throwError("Error initializing");
                 }
 
-                config.extensionConfig = config.extensionConfig || [];
-                config.extensionConfig[_identifier] = config.extensionConfig[_identifier] || {};
-                _config = mergeConfig(config.extensionConfig[_identifier]);
                 super.initialize(config, core, extensions, pluginChain);
-                let logger = _self.diagLog();
+                _populateDefaults(config);
+                // let logger = _self.diagLog();
+                // _contentHandler = _contentHandler ? _contentHandler : new DomContentHandler(_config, logger);
+                // let metaTags = _contentHandler.getMetadata();
+                // _pageAction = new PageAction(this, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
 
-                // Default to DOM content handler
-                _contentHandler = _contentHandler ? _contentHandler : new DomContentHandler(_config, logger);
-                let metaTags = _contentHandler.getMetadata();
-                _pageAction = new PageAction(this, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
-
-                // Default to DOM autoCapture handler
-                _autoCaptureHandler = _autoCaptureHandler ? _autoCaptureHandler : new AutoCaptureHandler(_self, _config, _pageAction, logger);
-                if (_config.autoCapture) {
-                    _autoCaptureHandler.click();
-                }
+                // // Default to DOM autoCapture handler
+                // _autoCaptureHandler = _autoCaptureHandler ? _autoCaptureHandler : new AutoCaptureHandler(_self, _config, _pageAction, logger);
+                // if (_config.autoCapture) {
+                //     _autoCaptureHandler.click();
+                // }
 
                 // Find the properties plugin.
                 let _propertiesExtension:IPropertiesPlugin;
@@ -99,6 +150,27 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     asyncCallback && asyncCallback();
                 })
             };
+
+            function _populateDefaults(config: IConfiguration) {
+                let core = _self.core;
+
+                _self._addHook(onConfigChange(config, (details) => {
+                    let config = details.cfg;
+                    let ctx = createProcessTelemetryContext(null, config, core);
+                    let _config = ctx.getExtCfg(_identifier, defaultValues);
+
+                    let logger = _self.diagLog();
+                    _contentHandler = new DomContentHandler(_config, logger);
+                    let metaTags = _contentHandler.getMetadata();
+                    _pageAction = new PageAction(this, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
+    
+                    // Default to DOM autoCapture handler
+                    _autoCaptureHandler = _autoCaptureHandler ? _autoCaptureHandler : new AutoCaptureHandler(_self, _config, _pageAction, logger);
+                    if (_config.autoCapture) {
+                        _autoCaptureHandler.click();
+                    }
+                }));
+            }
         });
 
         function _initDefaults() {
@@ -106,6 +178,13 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
             _pageAction = null;
             _autoCaptureHandler = null;
             _contentHandler = null;
+
+            // Define _self.config
+            objDefineProp(self, "config", {
+                configurable: true,
+                enumerable: true,
+                get: () => _config
+            });
         }
     }
 

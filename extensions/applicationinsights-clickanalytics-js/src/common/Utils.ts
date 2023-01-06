@@ -7,9 +7,9 @@ import { _eInternalMessageId, arrForEach, hasDocument, isNullOrUndefined, objExt
 import { objHasOwn } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration } from "../Interfaces/Datamodel";
 
-const DEFAULT_DONOT_TRACK_TAG = "ai-dnt";
-const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = "ai-blob";
-const DEFAULT_DATA_PREFIX = "data-";
+export const DEFAULT_DONOT_TRACK_TAG = "ai-dnt";
+export const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = "ai-blob";
+export const DEFAULT_DATA_PREFIX = "data-";
 
 export const enum _eExtendedInternalMessageId {
     CannotParseAiBlobValue = 101,
@@ -265,50 +265,50 @@ export function validateContentNamePrefix ( config: IClickAnalyticsConfiguration
  * Merge passed in configuration with default configuration
  * @param overrideConfig
  */
-export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClickAnalyticsConfiguration {
-    let defaultConfig: IClickAnalyticsConfiguration = {
-        // General library settings
-        autoCapture: true,
-        callback: {
-            pageActionPageTags: null
-        },
-        pageTags: {},
-        // overrideValues to use instead of collecting automatically
-        coreData: {
-            referrerUri: hasDocument ? document.referrer : "",
-            requestUri: "",
-            pageName: "",
-            pageType: ""
-        },
-        dataTags: {
-            useDefaultContentNameOrId: false,
-            aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
-            customDataPrefix: DEFAULT_DATA_PREFIX,
-            captureAllMetaDataContent: false,
-            dntDataTag: DEFAULT_DONOT_TRACK_TAG
-        },
-        behaviorValidator: (key:string) => key || "",
-        defaultRightClickBhvr: "",
-        dropInvalidEvents : false
-    };
+// export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClickAnalyticsConfiguration {
+//     let defaultConfig: IClickAnalyticsConfiguration = {
+//         // General library settings
+//         autoCapture: true,
+//         callback: {
+//             pageActionPageTags: null
+//         },
+//         pageTags: {},
+//         // overrideValues to use instead of collecting automatically
+//         coreData: {
+//             referrerUri: hasDocument ? document.referrer : "",
+//             requestUri: "",
+//             pageName: "",
+//             pageType: ""
+//         },
+//         dataTags: {
+//             useDefaultContentNameOrId: false,
+//             aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
+//             customDataPrefix: DEFAULT_DATA_PREFIX,
+//             captureAllMetaDataContent: false,
+//             dntDataTag: DEFAULT_DONOT_TRACK_TAG
+//         },
+//         behaviorValidator: (key:string) => key || "",
+//         defaultRightClickBhvr: "",
+//         dropInvalidEvents : false
+//     };
 
-    let attributesThatAreObjectsInConfig: any[] = [];
-    for (const attribute in defaultConfig) {
-        if (typeof defaultConfig[attribute] === "object") {
-            attributesThatAreObjectsInConfig.push(attribute);
-        }
-    }
+//     let attributesThatAreObjectsInConfig: any[] = [];
+//     for (const attribute in defaultConfig) {
+//         if (typeof defaultConfig[attribute] === "object") {
+//             attributesThatAreObjectsInConfig.push(attribute);
+//         }
+//     }
 
-    if (overrideConfig) {
-        // delete attributes that should be object and
-        // delete properties that are null, undefined, ''
-        removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
-        if(isValueAssigned(overrideConfig.dataTags)) {
-            overrideConfig.dataTags.customDataPrefix = validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
-        }
-        return objExtend(true, defaultConfig, overrideConfig);
-    }
-}
+//     if (overrideConfig) {
+//         // delete attributes that should be object and
+//         // delete properties that are null, undefined, ''
+//         removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
+//         if(isValueAssigned(overrideConfig.dataTags)) {
+//             overrideConfig.dataTags.customDataPrefix = validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
+//         }
+//         return objExtend(true, defaultConfig, overrideConfig);
+//     }
+// }
 
 export function BehaviorMapValidator (map: any) {
     return (key: string)  => map[key] || "";
