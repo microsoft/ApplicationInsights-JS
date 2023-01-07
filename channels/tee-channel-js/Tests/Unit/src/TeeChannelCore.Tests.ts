@@ -18,6 +18,48 @@ export class TeeChannelCoreTests extends AITestClass {
     public registerTests() {
 
         this.testCase({
+            name: "config.channel dynamic config",
+            useFakeTimers: true,
+            test: () => {
+                const channelPlugin = new ChannelPlugin();
+                const teeChannel = new TeeChannel();
+                const appInsightsCore = new AppInsightsCore();
+                const channelPlugin1 = new ChannelPlugin();
+                channelPlugin1.priority = 1030;
+                const channelPlugin2 = new ChannelPlugin();
+                channelPlugin2.priority = 1031;
+
+                appInsightsCore.initialize(
+                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin, teeChannel],[channelPlugin1]]},[]
+                );
+                let coreChannels =  appInsightsCore.getChannels();
+                Assert.equal(2, coreChannels.length, "Total number of core channel queues");
+                const teeChannels = teeChannel.getTeeChannels();
+                Assert.equal(1, teeChannels.length, "Total number of tee channel queues");
+                Assert.equal(channelPlugin1, teeChannels[0][0], "Total number of tee channel queues");
+
+                
+                appInsightsCore.config.extensionConfig = appInsightsCore.config.extensionConfig? appInsightsCore.config.extensionConfig : {};
+                let extConfig = appInsightsCore.config.extensionConfig;
+                let teeChanneConfig = extConfig[teeChannel.identifier];
+                Assert.deepEqual(teeChanneConfig, {ignoreCoreChannels: false, teeChannels: null}, "default config is set");
+                appInsightsCore.config.extensionConfig[teeChannel.identifier] = {ignoreCoreChannels: false, teeChannels: [[channelPlugin2]]};
+                this.clock.tick(1);
+                coreChannels = appInsightsCore.getChannels();
+                Assert.equal(2, coreChannels.length, "Total number of core channel queues");
+                let channel = teeChannel.getTeeChannels();
+                Assert.equal(2, channel.length, "Total number of tee channel queues");
+
+                appInsightsCore.config.extensionConfig[teeChannel.identifier] = {ignoreCoreChannels: true, teeChannels: [[channelPlugin1, teeChannel]]};
+                this.clock.tick(1);
+                coreChannels = appInsightsCore.getChannels();
+                Assert.equal(2, coreChannels.length, "Total number of core channel queues");
+                channel = teeChannel.getTeeChannels();
+                Assert.equal(1, channel.length, "Total number of tee channel queues");
+            }
+        });
+
+        this.testCase({
             name: "config.channel adds queue to existing channels",
             test: () => {
                 const channelPlugin = new ChannelPlugin();
@@ -55,7 +97,7 @@ export class TeeChannelCoreTests extends AITestClass {
                 const teeChannel = new TeeChannel();
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    { 
+                    {
                         instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
                         channels: [[channelPlugin1, teeChannel]],
                         extensionConfig: {
