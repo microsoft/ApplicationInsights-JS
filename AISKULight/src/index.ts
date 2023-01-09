@@ -177,8 +177,8 @@ export {
     proxyFunctions,
     IPlugin,
     ITelemetryPlugin
-    
 } from "@microsoft/applicationinsights-core-js";
+
 export {
     SeverityLevel,
     eSeverityLevel,

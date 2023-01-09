@@ -48,7 +48,7 @@ function ModuleLoader(config) {
 
     function doModuleCb(moduleDef, theModule, cb) {
         if (theModule) {
-            cb(module);
+            cb(theModule);
         } else {
             // Module was loaded, but has not yet created and instance -- so create one
             console && console.log("Module [" + moduleDef.name + "] loaded - creating instance - " + moduleDef.name);

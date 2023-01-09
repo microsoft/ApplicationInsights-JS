@@ -343,7 +343,7 @@ module.exports = function (grunt) {
  
                      buildCmds.qunit[key + "-perf"] = {
                          options: {
-                             urls: [ testUrls ],
+                             urls: testUrls,
                              timeout: 300 * 1000, // 5 min
                              console: true,
                              summaryOnly: false,
