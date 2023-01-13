@@ -248,8 +248,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     // This is so any redirect endpointUrl is not overwritten
                     if (_orgEndpointUrl !== senderConfig.endpointUrl) {
                         if (_orgEndpointUrl) {
-                            // TODO: add doc to remind users to flush before changing endpoint
-                            _self._buffer.clear();
+                            // TODO: add doc to remind users to flush before changing endpoint, otherwise all unsent payload will be sent to new endpoint
                         }
                         _endpointUrl = _orgEndpointUrl = senderConfig.endpointUrl;
                     }
@@ -283,28 +282,18 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         // transfer current buffer to new buffer
                        
                         if (shouldUpdate) {
-                            _self.pause();
-                            let unsentPayload = _self._buffer.getItems().slice(0);
-                            _self._buffer.clear();
-
-                            _self._buffer = canUseSessionStorage
-                                ? new SessionStorageSendBuffer(diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
-                            
                             try {
-                                if (unsentPayload.length > 0) {
-                                    arrForEach(unsentPayload, (item: string) => {
-                                        _self._buffer.enqueue(item);
-                                    });
-                                }
+                                let newBuffer = canUseSessionStorage
+                                    ? new SessionStorageSendBuffer(diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
+                                _self._buffer.deepCopy(newBuffer);
+                                _self._buffer = newBuffer;
                             } catch (e) {
                                 _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
                                     _eInternalMessageId.FailedAddingTelemetryToBuffer,
                                     "failed to transfer telemetry to different buffer storage, telemetry will be lost: " + getExceptionName(e),
                                     { exception: dumpObj(e) });
                             }
-                            _self.resume();
                         }
-                        
                     } else {
                         _self._buffer = canUseSessionStorage
                             ? new SessionStorageSendBuffer(diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
@@ -634,8 +623,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         _self._appId = response.appId;
                     }
                 }
-                //let isOrgEndpoint = responseUrl !== _orgEndpointUrl;
-                let isOrgEndpoint = true;
     
                 if ((status < 200 || status >= 300) && status !== 0) {
 
@@ -647,7 +634,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             return;
                         }
                     }
-                    if (!_isRetryDisabled && _isRetriable(status) && !isOrgEndpoint) {
+                    if (!_isRetryDisabled && _isRetriable(status)) {
                         _resendPayload(payload);
                         _throwInternal(_self.diagLog(),
                             eLoggingSeverity.WARNING,
@@ -658,7 +645,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
                 } else if (_offlineListener && !_offlineListener.isOnline()) { // offline
                     // Note: Don't check for status == 0, since adblock gives this code
-                    if (!_isRetryDisabled && !isOrgEndpoint) {
+                    if (!_isRetryDisabled) {
                         const offlineBackOffMultiplier = 10; // arbritrary number
                         _resendPayload(payload, offlineBackOffMultiplier);
     
@@ -677,7 +664,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             response = _parseResponse(res);
                         }
     
-                        if (response && !_isRetryDisabled && !isOrgEndpoint) {
+                        if (response && !_isRetryDisabled) {
                             _self._onPartialSuccess(payload, response);
                         } else {
                             _self._onError(payload, errorMessage);

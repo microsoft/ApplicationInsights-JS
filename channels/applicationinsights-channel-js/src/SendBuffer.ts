@@ -47,6 +47,11 @@ export interface ISendBuffer {
      * Removes items from the SENT_BUFFER. Should be called on successful response from the backend.
      */
     clearSent: (payload: string[]) => void;
+
+    /**
+     * deep copy current buffer items to a new buffer
+     */
+    deepCopy: (buffer: ArraySendBuffer | SessionStorageSendBuffer) => void;
 }
 
 abstract class BaseSendBuffer {
@@ -124,6 +129,13 @@ abstract class BaseSendBuffer {
         
                 return null;
             };
+
+            _self.deepCopy = (buffer: BaseSendBuffer) => {
+                let items = _buffer.slice(0);
+                arrForEach(items, (payload) => {
+                    buffer.enqueue(payload);
+                })
+            }
         });
     }
 
@@ -153,6 +165,10 @@ abstract class BaseSendBuffer {
     public batchPayloads(payload: string[]): string {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    public deepCopy(buffer: BaseSendBuffer) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
 
@@ -270,10 +286,18 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
         
                 _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
             };
+
+            _self.deepCopy = (buffer: BaseSendBuffer) => {
+                let items = _self._get().slice(0);
+                // need to clear the original session buffer, otherwise duplicated payload may be stored to session storage
+                _self.clear();
+                arrForEach(items, (payload) => {
+                    buffer.enqueue(payload);
+                })
+            }
         
             function _removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
                 const remaining: string[] = [];
-        
                 arrForEach(buffer, (value) => {
                     if (!isFunction(value) && arrIndexOf(payloads, value) === -1) {
                         remaining.push(value);
@@ -342,6 +366,10 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
     }
 
     public clearSent(payload: string[]) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public deepCopy(buffer: BaseSendBuffer): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
