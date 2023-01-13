@@ -28,34 +28,45 @@ export class TeeChannelCoreTests extends AITestClass {
                 channelPlugin1.priority = 1030;
                 const channelPlugin2 = new ChannelPlugin();
                 channelPlugin2.priority = 1031;
+                const extId = teeChannel.identifier;
 
                 appInsightsCore.initialize(
                     { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin, teeChannel],[channelPlugin1]]},[]
                 );
                 let coreChannels =  appInsightsCore.getChannels();
                 Assert.equal(2, coreChannels.length, "Total number of core channel queues");
-                const teeChannels = teeChannel.getTeeChannels();
+                Assert.deepEqual(coreChannels[0], teeChannel, "core channel 2 in test 1");
+                Assert.deepEqual(coreChannels[1], channelPlugin, "core channel 2 in test 1");
+                let teeChannels = teeChannel.getTeeChannels();
                 Assert.equal(1, teeChannels.length, "Total number of tee channel queues");
-                Assert.equal(channelPlugin1, teeChannels[0][0], "Total number of tee channel queues");
-
+                Assert.equal(channelPlugin1, teeChannels[0][0], "tee channel 1 in test1");
+                
                 
                 appInsightsCore.config.extensionConfig = appInsightsCore.config.extensionConfig? appInsightsCore.config.extensionConfig : {};
                 let extConfig = appInsightsCore.config.extensionConfig;
-                let teeChanneConfig = extConfig[teeChannel.identifier];
+                let teeChanneConfig = extConfig[extId];
                 Assert.deepEqual(teeChanneConfig, {ignoreCoreChannels: false, teeChannels: null}, "default config is set");
-                appInsightsCore.config.extensionConfig[teeChannel.identifier] = {ignoreCoreChannels: false, teeChannels: [[channelPlugin2]]};
-                this.clock.tick(1);
-                coreChannels = appInsightsCore.getChannels();
-                Assert.equal(2, coreChannels.length, "Total number of core channel queues");
-                let channel = teeChannel.getTeeChannels();
-                Assert.equal(2, channel.length, "Total number of tee channel queues");
 
-                appInsightsCore.config.extensionConfig[teeChannel.identifier] = {ignoreCoreChannels: true, teeChannels: [[channelPlugin1, teeChannel]]};
+                appInsightsCore.config.extensionConfig[extId] = {ignoreCoreChannels: false, teeChannels: [[channelPlugin2]]};
                 this.clock.tick(1);
                 coreChannels = appInsightsCore.getChannels();
                 Assert.equal(2, coreChannels.length, "Total number of core channel queues");
-                channel = teeChannel.getTeeChannels();
-                Assert.equal(1, channel.length, "Total number of tee channel queues");
+                Assert.deepEqual(coreChannels[0], teeChannel, "core channel 1 in test2");
+                Assert.deepEqual(coreChannels[1], channelPlugin, "core channel 2 in test2");
+                teeChannels = teeChannel.getTeeChannels();
+                Assert.equal(2, teeChannels.length, "Total number of tee channel queues");
+                Assert.equal(channelPlugin1, teeChannels[0][0], "tee channel 1 in test2");
+                Assert.equal(channelPlugin2, teeChannels[1][0], "tee channel 2 in test2");
+
+                appInsightsCore.config.extensionConfig[extId] = {ignoreCoreChannels: true, teeChannels: [[channelPlugin1, teeChannel]]};
+                this.clock.tick(1);
+                coreChannels = appInsightsCore.getChannels();
+                Assert.equal(2, coreChannels.length, "Total number of core channel queues");
+                Assert.deepEqual(coreChannels[0], teeChannel, "core channel 1 in test3");
+                Assert.deepEqual(coreChannels[1], channelPlugin, "core channel 2 in test3");
+                teeChannels = teeChannel.getTeeChannels();
+                Assert.equal(1, teeChannels.length, "Total number of tee channel queues");
+                Assert.equal(teeChannel, teeChannels[0][0], "tee channel 1 in test3");
             }
         });
 
