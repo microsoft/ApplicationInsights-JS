@@ -168,10 +168,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _retryAt = null;
 
                     // flush if we have exceeded the max-size already
-                    if (_self._buffer.size() > _maxBatchSizeInBytes) {
-                        _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
-                    }
-
+                    _checkMaxSize();
                     _setupTimer();
                 }
             };
@@ -273,6 +270,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                                     || (!canUseSessionStorage && (_eventsLimitInMem !== eventsLimitInMem)); // eventsLimitInMem is only used in memory storage
                     
                     if (_self._buffer) {
+                        _checkMaxSize();
 
                         // case1 (Pre and Now enableSessionStorageBuffer settings are same)
                         // if namePrefix or eventsLimitInMem or emitLineDelimitedJson is changed, transfer current buffer to new buffer
@@ -446,12 +444,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     // flush if we would exceed the max-size limit by adding this item
                     const buffer = _self._buffer;
-                    const bufferSize = buffer.size();
-        
-                    if ((bufferSize + payload.length) > _maxBatchSizeInBytes) {
-                        _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
-                    }
-        
+                    _checkMaxSize(payload);
+
                     // enqueue the payload
                     buffer.enqueue(payload);
         
@@ -612,6 +606,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
             function _isSampledIn(envelope: ITelemetryItem): boolean {
                 return _self._sample.isSampledIn(envelope);
+            }
+
+            function _checkMaxSize(incomingPayload?: string): boolean {
+                let incomingSize = incomingPayload? incomingPayload.length : 0;
+                if ((_self._buffer.size() + incomingSize) > _maxBatchSizeInBytes) {
+                    _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                    return true;
+                }
+                return false;
             }
 
             function _checkResponsStatus(status: number, payload: string[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any) {
