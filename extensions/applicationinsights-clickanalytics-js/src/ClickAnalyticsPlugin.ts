@@ -11,13 +11,13 @@ import {
     unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { hasDocument, objDeepFreeze, objDefineProp, objForEachKey } from "@nevware21/ts-utils";
+import { hasDocument, isObject, objDeepFreeze, objDefineProp, objForEachKey } from "@nevware21/ts-utils";
 import {
     IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, ICoreData, ICustomDataTags, IPageActionTelemetry
 } from "./Interfaces/Datamodel";
 import {
     BehaviorEnumValidator, BehaviorMapValidator, BehaviorValueValidator, DEFAULT_AI_BLOB_ATTRIBUTE_TAG, DEFAULT_DATA_PREFIX,
-    DEFAULT_DONOT_TRACK_TAG, removeInvalidElements
+    DEFAULT_DONOT_TRACK_TAG
 } from "./common/Utils";
 import { PageAction } from "./events/PageAction";
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
@@ -45,9 +45,9 @@ const coreDataDefault = {
 const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFreeze({
     autoCapture: true,
     callback: {
-        pageActionPageTags: () => null,
-        pageName: (element?: Element) => null,
-        contentName: (element?: any, useDefaultContentName?: boolean) => null
+        pageActionPageTags: null,
+        pageName: null,
+        contentName: null
     },
     pageTags: {},
     coreData: {set:_setProp, v:coreDataDefault},
@@ -60,12 +60,11 @@ const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFree
 });
 
 function _setProp(val: Object, def: Object): Object {
-    removeInvalidElements(val);
-    if (JSON.stringify(def) !== "{}") {
+    if (def && isObject(def)) {
         objForEachKey(def, (key, obj) => {
             val[key] = val[key] || obj;
             if (key === "customDataPrefix") {
-                let prefix = val[key]
+                let prefix = val[key];
                 val[key] = prefix && prefix.indexOf(DEFAULT_DATA_PREFIX) === 0? prefix : DEFAULT_DATA_PREFIX;
             }
         });
@@ -85,6 +84,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         let _pageAction: PageAction;
         let _autoCaptureHandler: IAutoCaptureHandler;
         let _contentHandler: IContentHandler;
+        let _autoCapture: boolean;
 
         dynamicProto(ClickAnalyticsPlugin, this, (_self, _base) => {
             let _identifier = _self.identifier;
@@ -98,16 +98,6 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
 
                 super.initialize(config, core, extensions, pluginChain);
                 _populateDefaults(config);
-                // let logger = _self.diagLog();
-                // _contentHandler = _contentHandler ? _contentHandler : new DomContentHandler(_config, logger);
-                // let metaTags = _contentHandler.getMetadata();
-                // _pageAction = new PageAction(this, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
-
-                // // Default to DOM autoCapture handler
-                // _autoCaptureHandler = _autoCaptureHandler ? _autoCaptureHandler : new AutoCaptureHandler(_self, _config, _pageAction, logger);
-                // if (_config.autoCapture) {
-                //     _autoCaptureHandler.click();
-                // }
 
                 // Find the properties plugin.
                 let _propertiesExtension:IPropertiesPlugin;
@@ -165,10 +155,15 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     _pageAction = new PageAction(this, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
     
                     // Default to DOM autoCapture handler
-                    _autoCaptureHandler = _autoCaptureHandler ? _autoCaptureHandler : new AutoCaptureHandler(_self, _config, _pageAction, logger);
-                    if (_config.autoCapture) {
+                    if (_autoCaptureHandler) {
+                        _autoCaptureHandler._doUnload();
+                    }
+                    _autoCaptureHandler = new AutoCaptureHandler(_self, _config, _pageAction, logger);
+                    let autoCapture = !!_config.autoCapture;
+                    if (!_autoCapture && autoCapture) {
                         _autoCaptureHandler.click();
                     }
+                    _autoCapture = autoCapture;
                 }));
             }
         });
@@ -178,6 +173,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
             _pageAction = null;
             _autoCaptureHandler = null;
             _contentHandler = null;
+            _autoCapture = false;
 
             // Define _self.config
             objDefineProp(self, "config", {

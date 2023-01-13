@@ -35,7 +35,6 @@ export class ClickEventTest extends AITestClass {
             name: "clickPlugin: config can be set from roots dynamically",
             useFakeTimers: true,
             test: () => {
-
                 const dataTagsDefault = {
                     useDefaultContentNameOrId: false,
                     aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
@@ -55,6 +54,7 @@ export class ClickEventTest extends AITestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const id = clickAnalyticsPlugin.identifier;
                
                 core.initialize({
                     instrumentationKey: "testIkey",
@@ -65,8 +65,8 @@ export class ClickEventTest extends AITestClass {
                     core.unload(false);
                 });
 
-                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
-                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                core.config.extensionConfig =  core.config.extensionConfig?  core.config.extensionConfig : {};
+                let extConfig = core.config.extensionConfig[id];
                 Assert.ok(extConfig, "default config should not be null");
 
                 //check defaults
@@ -84,9 +84,9 @@ export class ClickEventTest extends AITestClass {
                 let pageActionPageTags = callbacks.pageActionPageTags;
                 let pageName = callbacks.pageName;
                 let contentName = callbacks.contentName;
-                Assert.equal(pageName(), null, "pageName should be set by default");
-                Assert.equal(pageActionPageTags(), null, "pageActionPageTags should be set by default");
-                Assert.equal(contentName(), null, "contentName should be set by default");
+                Assert.equal(pageName, null, "pageName should be set by default");
+                Assert.equal(pageActionPageTags, null, "pageActionPageTags should be set by default");
+                Assert.equal(contentName, null, "contentName should be set by default");
                 
                 Assert.ok(extConfig.behaviorValidator,"behaviorValidator should be set by default");
                 let bhvVal = extConfig.behaviorValidator;
@@ -94,13 +94,16 @@ export class ClickEventTest extends AITestClass {
                 Assert.equal(bhvVal(1), 1, "behaviorValidator should return key");
 
                 //config(non-Object) changes
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].urlCollectHash = true;
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].urlCollectQuery = true;
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].dropInvalidEvents = true;
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].autoCapture = true;
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].defaultRightClickBhvr = "click";
+                let config = {
+                    urlCollectHash: true,
+                    urlCollectQuery: true,
+                    dropInvalidEvents: true,
+                    autoCapture: true,
+                    defaultRightClickBhvr: "click"
+                }
+                core.config.extensionConfig[id] = config;
                 this.clock.tick(1);
-                extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                extConfig = core.config.extensionConfig[id];
                 Assert.equal(extConfig.urlCollectHash, true, "urlCollectHash should be updated");
                 Assert.equal(extConfig.urlCollectQuery, true, "urlCollectQuery should be updated");
                 Assert.equal(extConfig.dropInvalidEvents, true, "dropInvalidEvents should be updated");
@@ -112,9 +115,9 @@ export class ClickEventTest extends AITestClass {
                 let dataTags = {
                     useDefaultContentNameOrId: true
                 };
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].dataTags = dataTags;
+                core.config.extensionConfig[id].dataTags = dataTags;
                 this.clock.tick(1);
-                extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                extConfig = core.config.extensionConfig[id];
                 let expectedDataTags ={...dataTagsDefault};
                 expectedDataTags.useDefaultContentNameOrId = true;
                 Assert.deepEqual(extConfig.dataTags, expectedDataTags, "dataTags should be updated");
@@ -124,9 +127,9 @@ export class ClickEventTest extends AITestClass {
                     captureAllMetaDataContent: true,
                     customDataPrefix: "wrongtage"
                 };
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].dataTags = dataTags1;
+                core.config.extensionConfig[id].dataTags = dataTags1;
                 this.clock.tick(1);
-                let extConfig1 = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                let extConfig1 = core.config.extensionConfig[id];
                 let expectedDataTags1 = {...dataTagsDefault};
                 expectedDataTags1.dntDataTag = "dnt";
                 expectedDataTags1.captureAllMetaDataContent = true;
@@ -136,9 +139,9 @@ export class ClickEventTest extends AITestClass {
                     eferrerUri: "url",
                     pageName: "name"
                 }
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].coreData =coreData;
+                core.config.extensionConfig[id].coreData =coreData;
                 this.clock.tick(1);
-                extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                extConfig = core.config.extensionConfig[id];
                 let expectedCoreData = {
                     eferrerUri: "url",
                     requestUri: "",
@@ -147,18 +150,17 @@ export class ClickEventTest extends AITestClass {
                 };
                 Assert.deepEqual(extConfig.coreData, expectedCoreData, "coreData should be updated");
            
-
-                // let pageTags = {
-                //     tag1: "tag1",
-                //     tag2: true,
-                //     tag3: 1,
-                //     tag4: {tag: "val1"},
-                //     tag5: ["val1","val2"]
-                // }
-                // core.config["extensionConfig"][clickAnalyticsPlugin.identifier].pageTags = pageTags;
-                // this.clock.tick(1);
-                // extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
-                // Assert.deepEqual(extConfig.pageTages, pageTags, "PageTags should be updated");
+                let pageTags = {
+                    tag1: "tag1",
+                    tag2: true,
+                    tag3: 1,
+                    tag4: {tag: "val1"},
+                    tag5: ["val1","val2"]
+                }
+                core.config.extensionConfig[id].pageTags = pageTags;
+                this.clock.tick(1);
+                extConfig = core.config.extensionConfig[id];
+                Assert.deepEqual(extConfig.pageTags, pageTags, "PageTags should be updated");
             }
         });
 

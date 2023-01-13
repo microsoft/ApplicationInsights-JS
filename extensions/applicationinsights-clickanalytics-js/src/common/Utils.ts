@@ -3,7 +3,7 @@
 * File containing utility functions.
 */
 
-import { _eInternalMessageId, arrForEach, hasDocument, isNullOrUndefined, objExtend } from "@microsoft/applicationinsights-core-js";
+import { _eInternalMessageId, arrForEach, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 import { objHasOwn } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration } from "../Interfaces/Datamodel";
 
@@ -28,7 +28,7 @@ export type _ExtendedInternalMessageId = number | _eExtendedInternalMessageId | 
  */
 export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyticsConfiguration, attributeNamesExpectedObjects: Array<string>): void {
     removeInvalidElements(overrideConfig);
-    for (var i in attributeNamesExpectedObjects) {
+    arrForEach(attributeNamesExpectedObjects, (i) => {
         if (objHasOwn(attributeNamesExpectedObjects, i)) {
             var objectName = attributeNamesExpectedObjects[i];
             if (typeof overrideConfig[objectName] === "object") {
@@ -37,7 +37,8 @@ export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyti
                 delete overrideConfig[objectName];
             }
         }
-    }
+
+    });
 }
 
 /**
@@ -260,55 +261,6 @@ export function bracketIt(str: string): string {
 export function validateContentNamePrefix ( config: IClickAnalyticsConfiguration, defaultDataPrefix: string) {
     return isValueAssigned(config.dataTags.customDataPrefix) && (config.dataTags.customDataPrefix.indexOf(defaultDataPrefix) === 0);
 }
-
-/**
- * Merge passed in configuration with default configuration
- * @param overrideConfig
- */
-// export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClickAnalyticsConfiguration {
-//     let defaultConfig: IClickAnalyticsConfiguration = {
-//         // General library settings
-//         autoCapture: true,
-//         callback: {
-//             pageActionPageTags: null
-//         },
-//         pageTags: {},
-//         // overrideValues to use instead of collecting automatically
-//         coreData: {
-//             referrerUri: hasDocument ? document.referrer : "",
-//             requestUri: "",
-//             pageName: "",
-//             pageType: ""
-//         },
-//         dataTags: {
-//             useDefaultContentNameOrId: false,
-//             aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
-//             customDataPrefix: DEFAULT_DATA_PREFIX,
-//             captureAllMetaDataContent: false,
-//             dntDataTag: DEFAULT_DONOT_TRACK_TAG
-//         },
-//         behaviorValidator: (key:string) => key || "",
-//         defaultRightClickBhvr: "",
-//         dropInvalidEvents : false
-//     };
-
-//     let attributesThatAreObjectsInConfig: any[] = [];
-//     for (const attribute in defaultConfig) {
-//         if (typeof defaultConfig[attribute] === "object") {
-//             attributesThatAreObjectsInConfig.push(attribute);
-//         }
-//     }
-
-//     if (overrideConfig) {
-//         // delete attributes that should be object and
-//         // delete properties that are null, undefined, ''
-//         removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
-//         if(isValueAssigned(overrideConfig.dataTags)) {
-//             overrideConfig.dataTags.customDataPrefix = validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
-//         }
-//         return objExtend(true, defaultConfig, overrideConfig);
-//     }
-// }
 
 export function BehaviorMapValidator (map: any) {
     return (key: string)  => map[key] || "";
