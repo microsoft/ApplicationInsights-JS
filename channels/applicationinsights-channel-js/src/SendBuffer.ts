@@ -134,7 +134,7 @@ abstract class BaseSendBuffer {
                 let items = _buffer.slice(0);
                 arrForEach(items, (payload) => {
                     buffer.enqueue(payload);
-                })
+                });
             }
         });
     }
@@ -293,7 +293,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 _self.clear();
                 arrForEach(items, (payload) => {
                     buffer.enqueue(payload);
-                })
+                });
             }
         
             function _removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
