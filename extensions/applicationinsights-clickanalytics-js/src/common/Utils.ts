@@ -4,7 +4,6 @@
 */
 
 import { _eInternalMessageId, arrForEach, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
-import { objHasOwn } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration } from "../Interfaces/Datamodel";
 
 export const DEFAULT_DONOT_TRACK_TAG = "ai-dnt";
@@ -29,15 +28,12 @@ export type _ExtendedInternalMessageId = number | _eExtendedInternalMessageId | 
 export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyticsConfiguration, attributeNamesExpectedObjects: Array<string>): void {
     removeInvalidElements(overrideConfig);
     arrForEach(attributeNamesExpectedObjects, (i) => {
-        if (objHasOwn(attributeNamesExpectedObjects, i)) {
-            var objectName = attributeNamesExpectedObjects[i];
-            if (typeof overrideConfig[objectName] === "object") {
-                removeInvalidElements(overrideConfig[objectName]);
-            } else {
-                delete overrideConfig[objectName];
-            }
+        var objectName = attributeNamesExpectedObjects[i];
+        if (typeof overrideConfig[objectName] === "object") {
+            removeInvalidElements(overrideConfig[objectName]);
+        } else {
+            delete overrideConfig[objectName];
         }
-
     });
 }
 
