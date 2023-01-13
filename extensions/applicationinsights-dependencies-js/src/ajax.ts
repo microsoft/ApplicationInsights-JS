@@ -271,7 +271,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
     public static identifier: string = "AjaxDependencyPlugin";
 
     public identifier: string = AjaxMonitor.identifier;
-
     priority: number = 120;
 
     constructor() {
@@ -304,6 +303,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _ajaxPerfLookupDelay: number;
         let _distributedTracingMode: eDistributedTracingModes;
         let _appId: string;
+        let _polyfillInitialized: boolean;
 
         dynamicProto(AjaxMonitor, this, (_self, _base) => {
             let _addHook = _base._addHook;
@@ -460,6 +460,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let location = getLocation();
                 _fetchInitialized = false;      // fetch monitoring initialized
                 _xhrInitialized = false;        // XHR monitoring initialized
+                _polyfillInitialized = false;   // polyfill monitoring initialized
                 _currentWindowHost = location && location.host && location.host.toLowerCase();
                 _extensionConfig = null;
                 _enableRequestHeaderTracking = false;
@@ -500,7 +501,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _enableAjaxErrorStatusText = _extensionConfig.enableAjaxErrorStatusText;
                     _enableAjaxPerfTracking = _extensionConfig.enableAjaxPerfTracking;
                     _maxAjaxCallsPerView = _extensionConfig.maxAjaxCallsPerView;
-                    _enableResponseHeaderTracking = _extensionConfig.enableResponseHeaderTracking;
                     _excludeRequestFromAutoTrackingPatterns = [].concat(_extensionConfig.excludeRequestFromAutoTrackingPatterns || [], _extensionConfig.addIntEndpoints !== false ? _internalExcludeEndpoints : []);
                     _addRequestContext = _extensionConfig.addRequestContext;
 
@@ -517,7 +517,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     }
 
                     _disableAjaxTracking = !!_extensionConfig.disableAjaxTracking;
-                    _disableFetchTracking = !!_extensionConfig.disableFetchTracking;
                     _maxAjaxPerfLookupAttempts = _extensionConfig.maxAjaxPerfLookupAttempts;
                     _ajaxPerfLookupDelay = _extensionConfig.ajaxPerfLookupDelay;
                     _ignoreHeaders = _extensionConfig.ignoreHeaders;
@@ -555,83 +554,89 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 let global = getGlobal();
                 let isPolyfill = (fetch as any).polyfill;
-                if (!_disableFetchTracking && !_fetchInitialized) {
-                    _addHook(InstrumentFunc(global, strFetch, {
-                        ns: _evtNamespace,
-                        // Add request hook
-                        req: (callDetails: IInstrumentCallDetails, input, init) => {
-                            let fetchData: ajaxRecord;
-                            if (!_disableFetchTracking && _fetchInitialized &&
-                                    !_isDisabledRequest(null, input, init) &&
-                                    // If we have a polyfil and XHR instrumented then let XHR report otherwise we get duplicates
-                                    !(isPolyfill && _xhrInitialized)) {
-                                let ctx = callDetails.ctx();
-                                fetchData = _createFetchRecord(input, init);
-                                let newInit = _self.includeCorrelationHeaders(fetchData, input, init);
-                                if (newInit !== init) {
-                                    callDetails.set(1, newInit);
-                                }
-                                ctx.data = fetchData;
-                            }
-                        },
-                        rsp: (callDetails: IInstrumentCallDetails, input) => {
-                            if (!_disableFetchTracking) {
-                                let fetchData = callDetails.ctx().data;
-                                if (fetchData) {
-                                    // Replace the result with the new promise from this code
-                                    callDetails.rslt = callDetails.rslt.then((response: any) => {
-                                        _reportFetchMetrics(callDetails, (response||{}).status, input, response, fetchData, () => {
-                                            let ajaxResponse:IAjaxRecordResponse = {
-                                                statusText: response.statusText,
-                                                headerMap: null,
-                                                correlationContext: _getFetchCorrelationContext(response)
-                                            };
-    
-                                            if (_enableResponseHeaderTracking) {
-                                                const responseHeaderMap = {};
-                                                response.headers.forEach((value: string, name: string) => {     // @skip-minify
-                                                    if (_canIncludeHeaders(name)) {
-                                                        responseHeaderMap[name] = value;
-                                                    }
-                                                });
-    
-                                                ajaxResponse.headerMap = responseHeaderMap;
-                                            }
-    
-                                            return ajaxResponse;
-                                        });
-    
-                                        return response;
-                                    })
-                                        .catch((reason: any) => {
-                                            _reportFetchMetrics(callDetails, 0, input, null, fetchData, null, { error: reason.message });
-                                            throw reason;
-                                        });
-                                }
-                            }
-                        },
-                        // Create an error callback to report any hook errors
-                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
-                            "Failed to monitor Window.fetch" + ERROR_POSTFIX)
-                    }));
+                _self._addHook(onConfigChange(_extensionConfig, () => {
+                    _disableFetchTracking = !!_extensionConfig.disableFetchTracking;
+                    _enableResponseHeaderTracking = _extensionConfig.enableResponseHeaderTracking;
 
-                    _fetchInitialized = true;
-                } else if (isPolyfill) {
-                    // If fetch is a polyfill we need to capture the request to ensure that we correctly track
-                    // disabled request URLS (i.e. internal urls) to ensure we don't end up in a constant loop
-                    // of reporting ourselves, for example React Native uses a polyfill for fetch
-                    // Note: Polyfill implementations that don't support the "poyyfill" tag are not supported
-                    // the workaround is to add a polyfill property to your fetch implementation before initializing
-                    // App Insights
-                    _addHook(InstrumentFunc(global, strFetch, {
-                        ns: _evtNamespace,
-                        req: (callDetails: IInstrumentCallDetails, input, init) => {
-                            // Just call so that we record any disabled URL
-                            _isDisabledRequest(null, input, init);
-                        }
-                    }));
-                }
-
+                    if (!_disableFetchTracking && !_fetchInitialized) {
+                        _addHook(InstrumentFunc(global, strFetch, {
+                            ns: _evtNamespace,
+                            // Add request hook
+                            req: (callDetails: IInstrumentCallDetails, input, init) => {
+                                let fetchData: ajaxRecord;
+                                if (!_disableFetchTracking && _fetchInitialized &&
+                                        !_isDisabledRequest(null, input, init) &&
+                                        // If we have a polyfil and XHR instrumented then let XHR report otherwise we get duplicates
+                                        !(isPolyfill && _xhrInitialized)) {
+                                    let ctx = callDetails.ctx();
+                                    fetchData = _createFetchRecord(input, init);
+                                    let newInit = _self.includeCorrelationHeaders(fetchData, input, init);
+                                    if (newInit !== init) {
+                                        callDetails.set(1, newInit);
+                                    }
+                                    ctx.data = fetchData;
+                                }
+                            },
+                            rsp: (callDetails: IInstrumentCallDetails, input) => {
+                                if (!_disableFetchTracking) {
+                                    let fetchData = callDetails.ctx().data;
+                                    if (fetchData) {
+                                        // Replace the result with the new promise from this code
+                                        callDetails.rslt = callDetails.rslt.then((response: any) => {
+                                            _reportFetchMetrics(callDetails, (response||{}).status, input, response, fetchData, () => {
+                                                let ajaxResponse:IAjaxRecordResponse = {
+                                                    statusText: response.statusText,
+                                                    headerMap: null,
+                                                    correlationContext: _getFetchCorrelationContext(response)
+                                                };
+        
+                                                if (_enableResponseHeaderTracking) {
+                                                    const responseHeaderMap = {};
+                                                    response.headers.forEach((value: string, name: string) => {     // @skip-minify
+                                                        if (_canIncludeHeaders(name)) {
+                                                            responseHeaderMap[name] = value;
+                                                        }
+                                                    });
+        
+                                                    ajaxResponse.headerMap = responseHeaderMap;
+                                                }
+        
+                                                return ajaxResponse;
+                                            });
+        
+                                            return response;
+                                        })
+                                            .catch((reason: any) => {
+                                                _reportFetchMetrics(callDetails, 0, input, null, fetchData, null, { error: reason.message });
+                                                throw reason;
+                                            });
+                                    }
+                                }
+                            },
+                            // Create an error callback to report any hook errors
+                            hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
+                                "Failed to monitor Window.fetch" + ERROR_POSTFIX)
+                        }));
+    
+                        _fetchInitialized = true;
+                    } else if (isPolyfill && !_polyfillInitialized) {
+                        // If fetch is a polyfill we need to capture the request to ensure that we correctly track
+                        // disabled request URLS (i.e. internal urls) to ensure we don't end up in a constant loop
+                        // of reporting ourselves, for example React Native uses a polyfill for fetch
+                        // Note: Polyfill implementations that don't support the "polyfill" tag are not supported
+                        // the workaround is to add a polyfill property to your fetch implementation before initializing
+                        // App Insights
+                        _addHook(InstrumentFunc(global, strFetch, {
+                            ns: _evtNamespace,
+                            req: (callDetails: IInstrumentCallDetails, input, init) => {
+                                // Just call so that we record any disabled URL
+                                _isDisabledRequest(null, input, init);
+                            }
+                        }));
+                        _polyfillInitialized = true;
+                    }
+                }));
+                
                 if (isPolyfill) {
                     // retag the instrumented fetch with the same polyfill settings this is mostly for testing
                     // But also supports multiple App Insights usages
@@ -644,82 +649,91 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _instrumentXhr():void {
-                if (_supportsAjaxMonitoring(_self) && !_disableAjaxTracking && !_xhrInitialized) {
-                    // Instrument open
-                    _hookProto(XMLHttpRequest, "open", {
-                        ns: _evtNamespace,
-                        req: (args:IInstrumentCallDetails, method:string, url:string, async?:boolean) => {
-                            if (!_disableAjaxTracking) {
-                                let xhr = args.inst as XMLHttpRequestInstrumented;
-                                let ajaxData = xhr[strAjaxData];
-                                if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, true)) {
-                                    if (!ajaxData || !ajaxData.xhrMonitoringState.openDone) {
-                                        // Only create a single ajaxData (even when multiple AI instances are running)
-                                        _openHandler(xhr, method, url, async);
-                                    }
-    
-                                    // always attach to the on ready state change (required for handling multiple instances)
-                                    _attachToOnReadyStateChange(xhr);
-                                }
-                            }
-                        },
-                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
-                            ERROR_HEADER + ".open" + ERROR_POSTFIX)
-                    });
-
-                    // Instrument send
-                    _hookProto(XMLHttpRequest, "send", {
-                        ns: _evtNamespace,
-                        req: (args:IInstrumentCallDetails, context?: Document | BodyInit | null) => {
-                            if (!_disableAjaxTracking) {
-                                let xhr = args.inst as XMLHttpRequestInstrumented;
-                                let ajaxData = xhr[strAjaxData];
-                                if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState.sendDone) {
-                                    _createMarkId("xhr", ajaxData);
-                                    ajaxData.requestSentTime = dateTimeUtilsNow();
-                                    _self.includeCorrelationHeaders(ajaxData, undefined, undefined, xhr);
-                                    ajaxData.xhrMonitoringState.sendDone = true;
-                                }
-                            }
-                        },
-                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxSend,
-                            ERROR_HEADER + ERROR_POSTFIX)
-                    });
-
-                    // Instrument abort
-                    _hookProto(XMLHttpRequest, "abort", {
-                        ns: _evtNamespace,
-                        req: (args:IInstrumentCallDetails) => {
-                            if (!_disableAjaxTracking) {
-                                let xhr = args.inst as XMLHttpRequestInstrumented;
-                                let ajaxData = xhr[strAjaxData];
-                                if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState.abortDone) {
-                                    ajaxData.aborted = 1;
-                                    ajaxData.xhrMonitoringState.abortDone = true;
-                                }
-                            }
-                        },
-                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxAbort,
-                            ERROR_HEADER + ".abort" + ERROR_POSTFIX)
-                    });
-
-                    // Instrument setRequestHeader
-                    _hookProto(XMLHttpRequest, "setRequestHeader", {
-                        ns: _evtNamespace,
-                        req: (args: IInstrumentCallDetails, header: string, value: string) => {
-                            if (!_disableAjaxTracking && _enableRequestHeaderTracking) {
-                                let xhr = args.inst as XMLHttpRequestInstrumented;
-                                if (_isMonitoredXhrInstance(xhr) && _canIncludeHeaders(header)) {
-                                    xhr[strAjaxData].requestHeaders[header] = value;
-                                }
-                            }
-                        },
-                        hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
-                            ERROR_HEADER + ".setRequestHeader" + ERROR_POSTFIX)
-                    });
-
-                    _xhrInitialized = true;
+                if (!_supportsAjaxMonitoring(_self)) {
+                    return;
                 }
+                _self._addHook(onConfigChange(_extensionConfig, () => {
+                    _disableAjaxTracking = !!_extensionConfig.disableAjaxTracking;
+                    _enableRequestHeaderTracking = _extensionConfig.enableRequestHeaderTracking;
+
+                    if (!_disableAjaxTracking && !_xhrInitialized) {
+                        // Instrument open
+                        _hookProto(XMLHttpRequest, "open", {
+                            ns: _evtNamespace,
+                            req: (args:IInstrumentCallDetails, method:string, url:string, async?:boolean) => {
+                                if (!_disableAjaxTracking) {
+                                    let xhr = args.inst as XMLHttpRequestInstrumented;
+                                    let ajaxData = xhr[strAjaxData];
+                                    if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, true)) {
+                                        if (!ajaxData || !ajaxData.xhrMonitoringState.openDone) {
+                                            // Only create a single ajaxData (even when multiple AI instances are running)
+                                            _openHandler(xhr, method, url, async);
+                                        }
+        
+                                        // always attach to the on ready state change (required for handling multiple instances)
+                                        _attachToOnReadyStateChange(xhr);
+                                    }
+                                }
+                            },
+                            hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
+                                ERROR_HEADER + ".open" + ERROR_POSTFIX)
+                        });
+    
+                        // Instrument send
+                        _hookProto(XMLHttpRequest, "send", {
+                            ns: _evtNamespace,
+                            req: (args:IInstrumentCallDetails, context?: Document | BodyInit | null) => {
+                                if (!_disableAjaxTracking) {
+                                    let xhr = args.inst as XMLHttpRequestInstrumented;
+                                    let ajaxData = xhr[strAjaxData];
+                                    if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState.sendDone) {
+                                        _createMarkId("xhr", ajaxData);
+                                        ajaxData.requestSentTime = dateTimeUtilsNow();
+                                        _self.includeCorrelationHeaders(ajaxData, undefined, undefined, xhr);
+                                        ajaxData.xhrMonitoringState.sendDone = true;
+                                    }
+                                }
+                            },
+                            hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxSend,
+                                ERROR_HEADER + ERROR_POSTFIX)
+                        });
+    
+                        // Instrument abort
+                        _hookProto(XMLHttpRequest, "abort", {
+                            ns: _evtNamespace,
+                            req: (args:IInstrumentCallDetails) => {
+                                if (!_disableAjaxTracking) {
+                                    let xhr = args.inst as XMLHttpRequestInstrumented;
+                                    let ajaxData = xhr[strAjaxData];
+                                    if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState.abortDone) {
+                                        ajaxData.aborted = 1;
+                                        ajaxData.xhrMonitoringState.abortDone = true;
+                                    }
+                                }
+                            },
+                            hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxAbort,
+                                ERROR_HEADER + ".abort" + ERROR_POSTFIX)
+                        });
+    
+                        // Instrument setRequestHeader
+                        _hookProto(XMLHttpRequest, "setRequestHeader", {
+                            ns: _evtNamespace,
+                            req: (args: IInstrumentCallDetails, header: string, value: string) => {
+                                if (!_disableAjaxTracking && _enableRequestHeaderTracking) {
+                                    let xhr = args.inst as XMLHttpRequestInstrumented;
+                                    if (_isMonitoredXhrInstance(xhr) && _canIncludeHeaders(header)) {
+                                        xhr[strAjaxData].requestHeaders[header] = value;
+                                    }
+                                }
+                            },
+                            hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
+                                ERROR_HEADER + ".setRequestHeader" + ERROR_POSTFIX)
+                        });
+    
+                        _xhrInitialized = true;
+                    }
+                }));
+                
             }
 
             function _isDisabledRequest(xhr?: XMLHttpRequestInstrumented, request?: Request | string, init?: RequestInit) {
