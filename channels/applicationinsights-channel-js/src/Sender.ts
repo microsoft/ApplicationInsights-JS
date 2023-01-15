@@ -150,8 +150,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         let _maxBatchInterval: number;
         let _sessionStorageUsed: boolean;
         let _namePrefix: string;
-        let _eventsLimitInMem: number;
-        let _emitLineDelimitedJson: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -262,18 +260,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     
                     let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer && utlCanUseSessionStorage();
                     let namePrefix = senderConfig.namePrefix;
-                    let emitLineDelimitedJson = senderConfig.emitLineDelimitedJson;
-                    let eventsLimitInMem = senderConfig.eventsLimitInMem;
+                 
+                    //Note: emitLineDelimitedJson and eventsLimitInMem is directly accessed via config in senderBuffer
+                    //Therefore, if canUseSessionStorage is not changed, we do not need to re initialize a new one
                     let shouldUpdate = (canUseSessionStorage !== _sessionStorageUsed)
-                                    || (canUseSessionStorage && (_namePrefix !== namePrefix)) // prefixName is only used in session storage
-                                    || (_emitLineDelimitedJson !== emitLineDelimitedJson ) //emitLineDelimitedJson is used in buffer.size()
-                                    || (!canUseSessionStorage && (_eventsLimitInMem !== eventsLimitInMem)); // eventsLimitInMem is only used in memory storage
-                    
-                    if (_self._buffer) {
-                        _checkMaxSize();
+                                    || (canUseSessionStorage && (_namePrefix !== namePrefix)); // prefixName is only used in session storage
 
+                    if (_self._buffer) {
                         // case1 (Pre and Now enableSessionStorageBuffer settings are same)
-                        // if namePrefix or eventsLimitInMem or emitLineDelimitedJson is changed, transfer current buffer to new buffer
+                        // if namePrefix changes, transfer current buffer to new buffer
                         // else no action needed
 
                         //case2 (Pre and Now enableSessionStorageBuffer settings are changed)
@@ -281,10 +276,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                        
                         if (shouldUpdate) {
                             try {
-                                let newBuffer = canUseSessionStorage
-                                    ? new SessionStorageSendBuffer(diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
-                                _self._buffer.deepCopy(newBuffer);
-                                _self._buffer = newBuffer;
+                                
+                                _self._buffer = _self._buffer.deepCopy(diagLog, senderConfig, canUseSessionStorage);
+                       
                             } catch (e) {
                                 _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
                                     _eInternalMessageId.FailedAddingTelemetryToBuffer,
@@ -292,14 +286,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                                     { exception: dumpObj(e) });
                             }
                         }
+                        _checkMaxSize();
                     } else {
                         _self._buffer = canUseSessionStorage
                             ? new SessionStorageSendBuffer(diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
                     }
 
                     _namePrefix = namePrefix;
-                    _emitLineDelimitedJson = emitLineDelimitedJson;
-                    _eventsLimitInMem = eventsLimitInMem;
                     _sessionStorageUsed = canUseSessionStorage;
 
                     _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
@@ -1154,8 +1147,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _isRetryDisabled = false;
                 _sessionStorageUsed = null;
                 _namePrefix = UNDEFINED_VALUE;
-                _eventsLimitInMem = 0;
-                _emitLineDelimitedJson = false;
 
                 objDefineProp(_self, "_senderConfig", {
                     enumerable: true,

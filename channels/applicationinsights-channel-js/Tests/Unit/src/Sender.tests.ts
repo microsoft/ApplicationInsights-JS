@@ -21,7 +21,14 @@ export class SenderTests extends AITestClass {
             prefixedKey = namePrefix ? namePrefix + "_" + prefixedKey : prefixedKey;
             const bufferJson = utlGetSessionStorage(logger, prefixedKey);
             if (bufferJson) {
-                return getJSON()?.parse(bufferJson);
+                let buffer: string[] = JSON.parse(bufferJson);
+                if (isString(buffer)) {
+                    buffer = JSON.parse(buffer as any);
+                }
+
+                if (buffer && isArray(buffer)) {
+                    return buffer;
+                }
             }
         } catch (e) {
             QUnit.assert.ok(false, "Exception - " + e);
@@ -124,16 +131,6 @@ export class SenderTests extends AITestClass {
                     customHeaders: [{header: "header1",value:"value1"}]
                 }
                 core.config.extensionConfig[id] = config;
-                // core.config.extensionConfig[this._sender.identifier].maxBatchInterval = 10000;
-                // core.config.extensionConfig[this._sender.identifier].maxBatchSizeInBytes = 100000;
-                // core.config.extensionConfig[this._sender.identifier].endpointUrl = "https://test";
-                // core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = true;
-                // core.config.extensionConfig[this._sender.identifier].disableTelemetry = true;
-                // core.config.extensionConfig[this._sender.identifier].enableSessionStorageBuffer = false;
-                // core.config.extensionConfig[this._sender.identifier].isRetryDisabled = true;
-                // core.config.extensionConfig[this._sender.identifier].disableXhr = true;
-                // core.config.extensionConfig[this._sender.identifier].samplingPercentage = 90;
-                // core.config.extensionConfig[this._sender.identifier].customHeaders = [{header: "header1",value:"value1"}];
                 this.clock.tick(1);
                 let curSenderConfig = this._sender._senderConfig;
                 QUnit.assert.equal(10000, curSenderConfig.maxBatchInterval, "Channel maxBatchInterval config is dynamically set");
@@ -295,7 +292,8 @@ export class SenderTests extends AITestClass {
                 core.logger = logger;
                 const loggerSpy = this.sandbox.stub(this._sender, "triggerSend");
                 core.initialize(coreConfig, [this._sender]);
-                QUnit.assert.equal(true, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is set to false");
+                QUnit.assert.equal(true, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is set to true");
+                QUnit.assert.equal(undefined, this._sender._senderConfig.namePrefix, "Channel namePrefix config is set to default");
                 QUnit.assert.equal(true, utlCanUseSessionStorage(), "utlCanUseSessionStorage should return true");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger, prefixName), [], "session storage buffer with prefix is empty");
@@ -318,8 +316,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
                 QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger, prefixName), [], "session storage buffer with prefix is empty");
-             
-             
+
 
                 // change prefix
                 core.config.extensionConfig = core.config.extensionConfig? core.config.extensionConfig : {};
@@ -327,7 +324,7 @@ export class SenderTests extends AITestClass {
                 this.clock.tick(1);
                 QUnit.assert.equal(prefixName, this._sender._senderConfig.namePrefix, "Channel namePrefix config is set");
 
-                //QUnit.assert.deepEqual([], this._getBuffer(BUFFER_KEY, logger), "default buffer is empty");
+                QUnit.assert.deepEqual([], this._getBuffer(BUFFER_KEY, logger), "default buffer is empty");
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
                 payload  = this._getBuffer(BUFFER_KEY, logger, prefixName);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
@@ -359,6 +356,8 @@ export class SenderTests extends AITestClass {
 
                 core.initialize(coreConfig, [this._sender]);
                 QUnit.assert.equal("https://dc.services.visualstudio.com/v2/track", this._sender._senderConfig.endpointUrl, "Channel default endpointUrl config is set");
+                QUnit.assert.equal(true, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is set to false");
+                QUnit.assert.equal(true, utlCanUseSessionStorage(), "utlCanUseSessionStorage should return true");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
                 
@@ -420,13 +419,14 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
 
                 let arrBuffer = new ArraySendBuffer(logger, config);
-                let arrBufferCopy= new ArraySendBuffer(logger, config);
+                let arrBufferCopy= arrBuffer.deepCopy(logger, config, false); // set to false to make sure it is array buffer
                 QUnit.assert.deepEqual(arrBufferCopy.getItems(), [], "payload should be empty");
+
                 let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
                 arrForEach(payload, (val) =>{
                     arrBuffer.enqueue(val);
                 });
-                arrBuffer.deepCopy(arrBufferCopy);
+                arrBufferCopy = arrBuffer.deepCopy(logger, config, false);
                 QUnit.assert.deepEqual(payload, arrBufferCopy.getItems(), "payload should be same");
                 arrBuffer.enqueue("payload");
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 7, "arrBuffer length");
@@ -459,19 +459,19 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
 
                 let arrBuffer = new ArraySendBuffer(logger, config);
-                let sessionBuffer = new SessionStorageSendBuffer(logger, config);
-                arrBuffer.deepCopy(sessionBuffer);
+                let sessionBuffer =  arrBuffer.deepCopy(logger, config, true); // set to false to make sure it is session storage buffer
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "payload should be empty");
+
                 let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
                 arrForEach(payload, (val) =>{
                     arrBuffer.enqueue(val);
                 });
-                arrBuffer.deepCopy(sessionBuffer);
-                QUnit.assert.deepEqual( sessionBuffer.getItems(), payload, "payload should be same");
+                sessionBuffer = arrBuffer.deepCopy(logger, config, true);
+                QUnit.assert.deepEqual(sessionBuffer.getItems(), payload, "payload should be same");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
                 arrBuffer.enqueue("payload");
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 7, "arrBuffer length");
-                QUnit.assert.deepEqual( sessionBuffer.getItems().length, 6, "copy is deep copy");
+                QUnit.assert.deepEqual(sessionBuffer.getItems().length, 6, "copy is deep copy");
 
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
             }
@@ -502,15 +502,15 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
                 
                 let sessionBuffer = new SessionStorageSendBuffer(logger, config);
-                let arrBuffer = new ArraySendBuffer(logger, config);
-                sessionBuffer.deepCopy(arrBuffer);
+                let arrBuffer = sessionBuffer.deepCopy(logger, config, false);
                 QUnit.assert.deepEqual(arrBuffer.getItems(), [], "payload should be empty");
+
                 let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
                 arrForEach(payload, (val) =>{
                     sessionBuffer.enqueue(val);
                 });
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
-                sessionBuffer.deepCopy(arrBuffer);
+                arrBuffer = sessionBuffer.deepCopy(logger, config, false);
                 QUnit.assert.deepEqual(arrBuffer.getItems(), payload, "payload should be same");
                 sessionBuffer.enqueue("payload");
                 QUnit.assert.deepEqual(sessionBuffer.getItems().length, 1, "sessionBuffer length");
@@ -522,7 +522,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "SessionStorageSendBuffer deepCopy: function deepCopy() can return expected sessionStorage buffer",
+            name: "SessionStorageSendBuffer deepCopy: function deepCopy() can return expected sessionStorage buffer with same prefix name",
             test: () => {
                 let config = {
                     endpointUrl: "https//: test",
@@ -546,22 +546,87 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
                 
                 let sessionBuffer = new SessionStorageSendBuffer(logger, config);
-                let sessionBufferCopy = new SessionStorageSendBuffer(logger, config);
-             
-                sessionBuffer.deepCopy(sessionBufferCopy);
+                let sessionBufferCopy = sessionBuffer.deepCopy(logger, config, true);
                 QUnit.assert.deepEqual(sessionBufferCopy.getItems(), [], "payload should be empty");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer should be empty");
+
                 let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let sentPayload = ["sent1", "sent2","sent3","sent4"];
                 arrForEach(payload, (val) =>{
                     sessionBuffer.enqueue(val);
                 });
+                sessionBuffer.markAsSent(sentPayload);
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
-                sessionBuffer.deepCopy(sessionBufferCopy);
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), sentPayload, "session storage sent buffer is set");
+
+                QUnit.assert.deepEqual(sessionBuffer.getItems(), payload, "getItems() should only return unsent items");
+                sessionBufferCopy = sessionBuffer.deepCopy(logger, config, true);
                 QUnit.assert.deepEqual(sessionBufferCopy.getItems(), payload, "payload should be same");
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "original session storage buffer should be clear");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage should not be changed");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), sentPayload, "session storage sent buffer should not be changed");
 
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+                utlSetSessionStorage(logger, SENT_BUFFER_KEY,JSON.stringify([]));
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer deepCopy: function deepCopy() can return expected sessionStorage buffer with different prefix name",
+            test: () => {
+                let prefix = "prefix"
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled:true,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000
+                } as ISenderConfig;
+                let newConfig = {...config};
+                newConfig.namePrefix = prefix;
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                
+                let sessionBuffer = new SessionStorageSendBuffer(logger, config);
+                let sessionBufferCopy = sessionBuffer.deepCopy(logger, newConfig, true);
+                QUnit.assert.deepEqual(sessionBufferCopy.getItems(), [], "payload should be empty");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer should be empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer should be empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger, prefix), [], "session storage sent buffer with prefix should be empty");
+
+                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let sentPayload = ["sent1", "sent2","sent3","sent4"];
+                arrForEach(payload, (val) =>{
+                    sessionBuffer.enqueue(val);
+                });
+                sessionBuffer.markAsSent(sentPayload);
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), sentPayload, "session storage sent buffer is set");
+
+                QUnit.assert.deepEqual(sessionBuffer.getItems(), payload, "getItems() should only return unsent items");
+                sessionBufferCopy =  sessionBuffer.deepCopy(logger, newConfig, true);
+                QUnit.assert.deepEqual(sessionBufferCopy.getItems(), payload, "payload should be same");
+                QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "original session storage buffer should be clear");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger, prefix), payload, "new session storage buffer should be set");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger, prefix), sentPayload, "session storage sent buffer with prefix should be set");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "previous session storage should be clear");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "previous session storage sent buffer should be clear");
+
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+                utlSetSessionStorage(logger, SENT_BUFFER_KEY,JSON.stringify([]));
+                utlSetSessionStorage(logger, `${prefix}_${BUFFER_KEY}`,JSON.stringify([]));
+                utlSetSessionStorage(logger, `${prefix}_${SENT_BUFFER_KEY}`,JSON.stringify([]));
             }
         });
 
