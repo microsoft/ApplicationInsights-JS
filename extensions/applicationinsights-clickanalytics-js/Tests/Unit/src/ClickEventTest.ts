@@ -2,15 +2,16 @@
  * @copyright Microsoft 2020
  */
 
- import { Assert, AITestClass } from "@microsoft/ai-test-framework";
- import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger} from '@microsoft/applicationinsights-core-js';
+import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, hasDocument, isNullOrUndefined} from '@microsoft/applicationinsights-core-js';
 import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from '../../../src/ClickAnalyticsPlugin';
 import { PageAction } from "../../../src/events/PageAction";
 import { DomContentHandler } from '../../../src/handlers/DomContentHandler';
-import { IPageActionOverrideValues } from '../../../src/Interfaces/Datamodel'
-import { mergeConfig } from "../../../src/common/Utils";
+import { IPageActionOverrideValues, IPageTags } from '../../../src/Interfaces/Datamodel';
 import { sanitizeUrl } from "../../../src/DataCollector";
+import { DEFAULT_AI_BLOB_ATTRIBUTE_TAG, DEFAULT_DATA_PREFIX, DEFAULT_DONOT_TRACK_TAG } from "../../../src/common/Utils";
+
 
 
 
@@ -29,6 +30,140 @@ export class ClickEventTest extends AITestClass {
     }
 
     public registerTests() {
+
+        this.testCase({
+            name: "clickPlugin: config can be set from roots dynamically",
+            useFakeTimers: true,
+            test: () => {
+                const dataTagsDefault = {
+                    useDefaultContentNameOrId: false,
+                    aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
+                    customDataPrefix: DEFAULT_DATA_PREFIX,
+                    captureAllMetaDataContent: false,
+                    dntDataTag: DEFAULT_DONOT_TRACK_TAG,
+                    metaDataPrefix: "",
+                    parentDataTag: ""
+                };
+                const coreDataDefault = {
+                    eferrerUri: hasDocument() ? document.referrer : "",
+                    requestUri: "",
+                    pageName: "",
+                    pageType: ""
+                };
+
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const id = clickAnalyticsPlugin.identifier;
+               
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig : {
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.config.extensionConfig =  core.config.extensionConfig?  core.config.extensionConfig : {};
+                let extConfig = core.config.extensionConfig[id];
+                Assert.ok(extConfig, "default config should not be null");
+
+                //check defaults
+                Assert.equal(extConfig.autoCapture,true, "autoCapture should be true by default");
+                Assert.deepEqual(extConfig.pageTags, {}, "pageTags should be {} by default");
+                Assert.equal(extConfig.defaultRightClickBhvr, "", "defaultRightClickBhvr should be '' by default");
+                Assert.equal(extConfig.dropInvalidEvents, false, "dropInvalidEvents should be false by default");
+                Assert.equal(extConfig.urlCollectHash, false, "urlCollectHash should be false by default");
+                Assert.equal(extConfig.urlCollectQuery, false, "urlCollectQuery should be false by default");
+                Assert.deepEqual(extConfig.dataTags, dataTagsDefault, "udataTags should be set by default");
+                Assert.deepEqual(extConfig.coreData, coreDataDefault, "udataTags should be set by default");
+
+                Assert.ok(extConfig.callback, "callback should be set by default");
+                let callbacks = extConfig.callback;
+                let pageActionPageTags = callbacks.pageActionPageTags;
+                let pageName = callbacks.pageName;
+                let contentName = callbacks.contentName;
+                Assert.equal(pageName, null, "pageName should be set by default");
+                Assert.equal(pageActionPageTags, null, "pageActionPageTags should be set by default");
+                Assert.equal(contentName, null, "contentName should be set by default");
+                
+                Assert.ok(extConfig.behaviorValidator,"behaviorValidator should be set by default");
+                let bhvVal = extConfig.behaviorValidator;
+                Assert.equal(bhvVal(), "", "behaviorValidator should return ''");
+                Assert.equal(bhvVal(1), 1, "behaviorValidator should return key");
+
+                //config(non-Object) changes
+                let config = {
+                    urlCollectHash: true,
+                    urlCollectQuery: true,
+                    dropInvalidEvents: true,
+                    autoCapture: true,
+                    defaultRightClickBhvr: "click"
+                }
+                core.config.extensionConfig[id] = config;
+                this.clock.tick(1);
+                extConfig = core.config.extensionConfig[id];
+                Assert.equal(extConfig.urlCollectHash, true, "urlCollectHash should be updated");
+                Assert.equal(extConfig.urlCollectQuery, true, "urlCollectQuery should be updated");
+                Assert.equal(extConfig.dropInvalidEvents, true, "dropInvalidEvents should be updated");
+                Assert.equal(extConfig.autoCapture, true, "autoCapture should be updated");
+                Assert.equal(extConfig.defaultRightClickBhvr, "click", "defaultRightClickBhvrshould be updated");
+
+                
+                //config(object) changes
+                let dataTags = {
+                    useDefaultContentNameOrId: true
+                };
+                core.config.extensionConfig[id].dataTags = dataTags;
+                this.clock.tick(1);
+                extConfig = core.config.extensionConfig[id];
+                let expectedDataTags ={...dataTagsDefault};
+                expectedDataTags.useDefaultContentNameOrId = true;
+                Assert.deepEqual(extConfig.dataTags, expectedDataTags, "dataTags should be updated");
+                 
+                let dataTags1 = {
+                    dntDataTag: "dnt",
+                    captureAllMetaDataContent: true,
+                    customDataPrefix: "wrongtage"
+                };
+                core.config.extensionConfig[id].dataTags = dataTags1;
+                this.clock.tick(1);
+                let extConfig1 = core.config.extensionConfig[id];
+                let expectedDataTags1 = {...dataTagsDefault};
+                expectedDataTags1.dntDataTag = "dnt";
+                expectedDataTags1.captureAllMetaDataContent = true;
+                Assert.deepEqual(extConfig1.dataTags, expectedDataTags1, "dataTags should be updated with correct prefixName");
+
+                let coreData = {
+                    eferrerUri: "url",
+                    pageName: "name"
+                }
+                core.config.extensionConfig[id].coreData =coreData;
+                this.clock.tick(1);
+                extConfig = core.config.extensionConfig[id];
+                let expectedCoreData = {
+                    eferrerUri: "url",
+                    requestUri: "",
+                    pageName: "name",
+                    pageType: ""
+                };
+                Assert.deepEqual(extConfig.coreData, expectedCoreData, "coreData should be updated");
+           
+                let pageTags = {
+                    tag1: "tag1",
+                    tag2: true,
+                    tag3: 1,
+                    tag4: {tag: "val1"},
+                    tag5: ["val1","val2"]
+                }
+                core.config.extensionConfig[id].pageTags = pageTags;
+                this.clock.tick(1);
+                extConfig = core.config.extensionConfig[id];
+                Assert.deepEqual(extConfig.pageTags, pageTags, "PageTags should be updated");
+            }
+        });
+
         this.testCase({
             name: "PageAction properties are correctly assigned (Empty)",
             test: () => {
@@ -39,21 +174,19 @@ export class ClickEventTest extends AITestClass {
                     },
                     dataTags : {
                         useDefaultContentNameOrId : true,
-                        metaDataPrefix:'ha-',
-                        customDataPrefix: 'data-ha-',
-                        aiBlobAttributeTag: 'blob',
-                        parentDataTag: 'parent',
-                        dntDataTag: 'donotTrack'
+                        metaDataPrefix:"ha-",
+                        customDataPrefix: "data-ha-",
+                        aiBlobAttributeTag: "blob",
+                        parentDataTag: "parent",
+                        dntDataTag: "donotTrack"
                     }
                 };
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
-                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, config.callback.pageActionPageTags, {}, traceLogger );
+               
                 core.initialize({
-                    instrumentationKey: 'testIkey',
+                    instrumentationKey: "testIkey",
                     extensionConfig : {
                         [clickAnalyticsPlugin.identifier] : config
                     }
@@ -61,16 +194,24 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler,  extConfig.callback?.pageActionPageTags, {}, traceLogger );
+               
                 
-                const element = document.createElement('a');
-                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');   
+                const element = document.createElement("a");
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
                 // clickAnalyticsPlugin.capturePageAction(element, {} as IOverrideValues, {}, false);
                 pageAction.capturePageAction(element);
                 Assert.equal(true, spy.called);
                 let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.notEqual(-1, calledEvent.data["uri"].indexOf("Tests.html"),);
-                Assert.equal(undefined, calledEvent.data["behavior"],);
-                Assert.equal(undefined, calledEvent.data["actionType"],);
+                Assert.notEqual(-1, calledEvent.data["uri"].indexOf("Tests.html"));
+                Assert.equal(undefined, calledEvent.data["behavior"]);
+                Assert.equal(undefined, calledEvent.data["actionType"]);
                 Assert.equal("[{}]", calledEvent.data["content"]);
                 Assert.equal(false, isNaN(calledEvent.data["timeToAction"] as number));
                 Assert.equal("value2", calledEvent.data["properties"]["pageTags"].key2);
@@ -96,8 +237,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -108,9 +248,14 @@ export class ClickEventTest extends AITestClass {
                     core.unload(false);
                 });
 
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
                 const element = document.createElement('a');
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
-                this.clock.tick(500);  
+                this.clock.tick(500);
                 // clickAnalyticsPlugin.capturePageAction(element, overrides, { customProperty: { customNextedProperty: "test" } });
                 pageAction.capturePageAction(element, overrides, { customProperty: { customNextedProperty: "test" } });
                 Assert.equal(true, spy.called);
@@ -130,7 +275,7 @@ export class ClickEventTest extends AITestClass {
             test: () => {
                 const config = {
                     callback: {
-                        contentName: () => "testContentName"                  
+                        contentName: () => "testContentName"
                     },
                     dataTags : {
                         useDefaultContentNameOrId : true,
@@ -143,8 +288,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -155,9 +299,15 @@ export class ClickEventTest extends AITestClass {
                     core.unload(false);
                 });
 
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+                
+
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
-                element.setAttribute("id","testId")
+                element.setAttribute("id","testId");
                 element.setAttribute("data-ha-aN", "testAn");
                 element.setAttribute("data-ha-sN", "testsN");
                 element.setAttribute("data-ha-cS", "testcS");
@@ -173,7 +323,7 @@ export class ClickEventTest extends AITestClass {
                     tn: "testtN",
                     pid: "testpid",
                     ct: "testcT",
-                    contentName: "testContentName",
+                    contentName: "testContentName"
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
@@ -191,7 +341,7 @@ export class ClickEventTest extends AITestClass {
             test: () => {
                 const config = {
                     callback: {
-                        contentName: () => "testContentName"                  
+                        contentName: () => "testContentName"
                     },
                     dataTags : {
                         useDefaultContentNameOrId : false,
@@ -204,8 +354,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -215,6 +364,11 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -252,7 +406,7 @@ export class ClickEventTest extends AITestClass {
             test: () => {
                 const config = {
                     callback: {
-                        contentName: () => "testContentName"                  
+                        contentName: () => "testContentName"
                     },
                     dataTags : {
                         useDefaultContentNameOrId : true,
@@ -265,8 +419,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -276,6 +429,11 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -321,8 +479,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -332,6 +489,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -378,8 +541,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+               
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -389,6 +551,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -434,8 +602,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -445,6 +612,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -485,8 +658,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -496,6 +668,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -540,8 +718,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -551,6 +728,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -594,8 +777,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -605,6 +787,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -646,8 +834,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -657,6 +844,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');  
@@ -695,8 +888,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -706,6 +898,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -753,8 +951,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -764,6 +961,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -805,8 +1008,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -816,6 +1018,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -861,8 +1069,6 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 
                 core.initialize({
                     instrumentationKey: 'testIkey',
@@ -873,6 +1079,11 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -919,8 +1130,6 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 
                 core.initialize({
                     instrumentationKey: 'testIkey',
@@ -931,6 +1140,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -978,8 +1193,6 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 
                 core.initialize({
                     instrumentationKey: 'testIkey',
@@ -990,6 +1203,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
@@ -1032,8 +1251,7 @@ export class ClickEventTest extends AITestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -1043,6 +1261,12 @@ export class ClickEventTest extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
+
 
                 let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
                 const element = document.createElement('a');
