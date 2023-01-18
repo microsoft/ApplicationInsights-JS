@@ -103,6 +103,87 @@ export class PropertiesTests extends AITestClass {
             }
 
         });
+
+        this.testCase({
+            name: "Properties Configuration: config can be set from root dynamically",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const channel = new TestChannelPlugin();
+                const properties = new PropertiesPlugin();
+                let undefString: string;
+                let nullValue: any = null;
+                let id = properties.identifier;
+                const config = {
+                    instrumentationKey: "instrumentation_key",
+                    extensionConfig: {}
+                };
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                // Initialize
+                core.initialize(config, [channel, properties]);
+
+                //Check defaults
+                core.config.extensionConfig =  core.config.extensionConfig?  core.config.extensionConfig : {};
+                let extConfig =  core.config.extensionConfig[id];
+
+                let exceptedDefaultConfig = {
+                    instrumentationKey: "instrumentation_key",
+                    accountId: null,
+                    sessionRenewalMs: 30 * 60 * 1000,
+                    samplingPercentage: 100,
+                    sessionExpirationMs: 24 * 60 * 60 * 1000,
+                    cookieDomain: nullValue,
+                    sdkExtension: nullValue,
+                    isBrowserLinkTrackingEnabled: false,
+                    appId: nullValue,
+                    getSessionId: nullValue,
+                    namePrefix: undefString,
+                    sessionCookiePostfix: undefString,
+                    userCookiePostfix: undefString,
+                    idLength: 22,
+                    getNewId: nullValue
+                };
+
+                Assert.deepEqual(extConfig, exceptedDefaultConfig, "default config is set");
+                let propCtx = properties.context;
+                Assert.ok(propCtx?.internal.sdkVersion, "internal.sdkVersion shoule not be null");
+                Assert.ok(propCtx?.internal.sdkVersion.indexOf("ext") === -1, "internal.sdkVersion should not contain ext prefix");
+                let propUser = propCtx.user;
+                Assert.deepEqual(propUser.config, exceptedDefaultConfig,  "user config should be set");
+
+                let newConfig = {
+                    instrumentationKey: "key",
+                    accountId: "id",
+                    sessionRenewalMs: 30 * 60 * 100,
+                    samplingPercentage: 90,
+                    sessionExpirationMs: 24 * 60 * 60 * 100,
+                    cookieDomain: "domain",
+                    sdkExtension: "ext",
+                    isBrowserLinkTrackingEnabled: true,
+                    appId: "id",
+                    getSessionId: "session",
+                    namePrefix: "prefix",
+                    sessionCookiePostfix: "postfix",
+                    userCookiePostfix: "usercookie",
+                    idLength: 26,
+                    getNewId: (idLength?: number) => {
+                        return "" + (idLength || 0);
+                    }
+                } as IPropertiesConfig;
+                core.config.extensionConfig[id] = newConfig;
+                this.clock.tick(1);
+                extConfig = properties["_extConfig"];
+                Assert.equal(extConfig, newConfig, "extConfig should be updated");
+                propCtx = properties.context;
+                Assert.ok(propCtx?.internal.sdkVersion, "internal.sdkVersion should not be null after update");
+                Assert.ok(propCtx?.internal.sdkVersion.indexOf("ext") > -1, "internal.sdkVersion should contain ext prefix");
+                propUser = propCtx.user;
+                Assert.deepEqual(propUser.config, newConfig,  "user config should be updated");
+                Assert.equal(propCtx?.user.id, 26, "propCtx.user.id should be updated");
+            }
+        });
     }
 
     private addDeviceTests() {
