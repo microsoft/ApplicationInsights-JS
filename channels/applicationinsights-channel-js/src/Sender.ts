@@ -277,7 +277,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         if (shouldUpdate) {
                             try {
                                 
-                                _self._buffer = _self._buffer.deepCopy(diagLog, senderConfig, canUseSessionStorage);
+                                _self._buffer = _self._buffer.createNew(diagLog, senderConfig, canUseSessionStorage);
                        
                             } catch (e) {
                                 _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,

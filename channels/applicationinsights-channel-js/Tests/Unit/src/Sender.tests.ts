@@ -395,7 +395,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "ArraySendBuffer deepCopy: function deepCopy() can return expected array buffer",
+            name: "ArraySendBuffer createNew: function createNew() can return expected array buffer",
             test: () => {
                 let config = {
                     endpointUrl: "https//: test",
@@ -419,14 +419,14 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
 
                 let arrBuffer = new ArraySendBuffer(logger, config);
-                let arrBufferCopy= arrBuffer.deepCopy(logger, config, false); // set to false to make sure it is array buffer
+                let arrBufferCopy= arrBuffer.createNew(logger, config, false); // set to false to make sure it is array buffer
                 QUnit.assert.deepEqual(arrBufferCopy.getItems(), [], "payload should be empty");
 
                 let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
                 arrForEach(payload, (val) =>{
                     arrBuffer.enqueue(val);
                 });
-                arrBufferCopy = arrBuffer.deepCopy(logger, config, false);
+                arrBufferCopy = arrBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(payload, arrBufferCopy.getItems(), "payload should be same");
                 arrBuffer.enqueue("payload");
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 7, "arrBuffer length");
@@ -435,7 +435,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "ArraySendBuffer deepCopy: function deepCopy() can return expected sessionStorage buffer",
+            name: "ArraySendBuffer createNew: function createNew() can return expected sessionStorage buffer",
             test: () => {
                 let config = {
                     endpointUrl: "https//: test",
@@ -459,14 +459,14 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
 
                 let arrBuffer = new ArraySendBuffer(logger, config);
-                let sessionBuffer =  arrBuffer.deepCopy(logger, config, true); // set to false to make sure it is session storage buffer
+                let sessionBuffer =  arrBuffer.createNew(logger, config, true); // set to false to make sure it is session storage buffer
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "payload should be empty");
 
                 let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
                 arrForEach(payload, (val) =>{
                     arrBuffer.enqueue(val);
                 });
-                sessionBuffer = arrBuffer.deepCopy(logger, config, true);
+                sessionBuffer = arrBuffer.createNew(logger, config, true);
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), payload, "payload should be same");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
                 arrBuffer.enqueue("payload");
@@ -478,7 +478,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "SessionStorageSendBuffer deepCopy: function deepCopy() can return expected array buffer",
+            name: "SessionStorageSendBuffer createNew: function createNew() can return expected array buffer",
             test: () => {
                 let config = {
                     endpointUrl: "https//: test",
@@ -502,7 +502,7 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
                 
                 let sessionBuffer = new SessionStorageSendBuffer(logger, config);
-                let arrBuffer = sessionBuffer.deepCopy(logger, config, false);
+                let arrBuffer = sessionBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(arrBuffer.getItems(), [], "payload should be empty");
 
                 let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
@@ -510,7 +510,7 @@ export class SenderTests extends AITestClass {
                     sessionBuffer.enqueue(val);
                 });
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
-                arrBuffer = sessionBuffer.deepCopy(logger, config, false);
+                arrBuffer = sessionBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(arrBuffer.getItems(), payload, "payload should be same");
                 sessionBuffer.enqueue("payload");
                 QUnit.assert.deepEqual(sessionBuffer.getItems().length, 1, "sessionBuffer length");
@@ -522,7 +522,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "SessionStorageSendBuffer deepCopy: function deepCopy() can return expected sessionStorage buffer with same prefix name",
+            name: "SessionStorageSendBuffer createNew: function createNew() can return expected sessionStorage buffer with same prefix name",
             test: () => {
                 let config = {
                     endpointUrl: "https//: test",
@@ -546,7 +546,7 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
                 
                 let sessionBuffer = new SessionStorageSendBuffer(logger, config);
-                let sessionBufferCopy = sessionBuffer.deepCopy(logger, config, true);
+                let sessionBufferCopy = sessionBuffer.createNew(logger, config, true);
                 QUnit.assert.deepEqual(sessionBufferCopy.getItems(), [], "payload should be empty");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer should be empty");
 
@@ -560,7 +560,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), sentPayload, "session storage sent buffer is set");
 
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), payload, "getItems() should only return unsent items");
-                sessionBufferCopy = sessionBuffer.deepCopy(logger, config, true);
+                sessionBufferCopy = sessionBuffer.createNew(logger, config, true);
                 QUnit.assert.deepEqual(sessionBufferCopy.getItems(), payload, "payload should be same");
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "original session storage buffer should be clear");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage should not be changed");
@@ -572,7 +572,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "SessionStorageSendBuffer deepCopy: function deepCopy() can return expected sessionStorage buffer with different prefix name",
+            name: "SessionStorageSendBuffer createNew: function createNew() can return expected sessionStorage buffer with different prefix name",
             test: () => {
                 let prefix = "prefix"
                 let config = {
@@ -599,7 +599,7 @@ export class SenderTests extends AITestClass {
                 let logger = new DiagnosticLogger({instrumentationKey: "abc"});
                 
                 let sessionBuffer = new SessionStorageSendBuffer(logger, config);
-                let sessionBufferCopy = sessionBuffer.deepCopy(logger, newConfig, true);
+                let sessionBufferCopy = sessionBuffer.createNew(logger, newConfig, true);
                 QUnit.assert.deepEqual(sessionBufferCopy.getItems(), [], "payload should be empty");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer should be empty");
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer should be empty");
@@ -615,7 +615,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), sentPayload, "session storage sent buffer is set");
 
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), payload, "getItems() should only return unsent items");
-                sessionBufferCopy =  sessionBuffer.deepCopy(logger, newConfig, true);
+                sessionBufferCopy =  sessionBuffer.createNew(logger, newConfig, true);
                 QUnit.assert.deepEqual(sessionBufferCopy.getItems(), payload, "payload should be same");
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "original session storage buffer should be clear");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger, prefix), payload, "new session storage buffer should be set");

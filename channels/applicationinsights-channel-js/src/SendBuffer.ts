@@ -49,12 +49,12 @@ export interface ISendBuffer {
     clearSent: (payload: string[]) => void;
 
      /**
-     * Deep copy current buffer items to a new buffer.
+     * Copy current buffer items to a new buffer.
      * if canUseSessionStorage is undefined, it will set to false.
      * if newLogger and newConfig are undefined, current logger and empty config will be used.
      * if canUseSessionStorage is set to true, new SessionStorageSendBuffer will be returned otherwise ArraySendBuffer will be returned.
      */
-     deepCopy: (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean) => ArraySendBuffer | SessionStorageSendBuffer;
+     createNew: (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean) => ArraySendBuffer | SessionStorageSendBuffer;
 }
 
 abstract class BaseSendBuffer {
@@ -133,7 +133,7 @@ abstract class BaseSendBuffer {
                 return null;
             };
 
-            _self.deepCopy = (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer => {
+            _self.createNew = (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer => {
                 let items = _buffer.slice(0);
                 newLogger = newLogger || logger;
                 newConfig = newConfig || {} as ISenderConfig;
@@ -174,7 +174,7 @@ abstract class BaseSendBuffer {
         return null;
     }
 
-    public deepCopy(newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer {
+    public createNew(newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null
     }
@@ -296,7 +296,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
             };
 
-            _self.deepCopy = (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean) => {
+            _self.createNew = (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean) => {
                 canUseSessionStorage = !!canUseSessionStorage;
                 let unsentItems = _self._get().slice(0);
                 let sentItems = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY).slice(0);
@@ -389,7 +389,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public deepCopy(newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer {
+    public createNew(newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null
     }
