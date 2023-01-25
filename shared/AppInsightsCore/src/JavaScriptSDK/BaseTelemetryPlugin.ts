@@ -3,10 +3,9 @@
 "use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { arrAppend, arrForEach, dumpObj, isFunction } from "@nevware21/ts-utils";
+import { isFunction, objDefine } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
@@ -21,18 +20,18 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { _throwInternal } from "./DiagnosticLogger";
 import { isNotNullOrUndefined, proxyFunctionAs } from "./HelperFuncs";
 import { STR_EXTENSION_CONFIG } from "./InternalConstants";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext
 } from "./ProcessTelemetryContext";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
+import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
 
 let strGetPlugin = "getPlugin";
 
 const defaultValues: IConfigDefaults<IConfiguration> = {
-    [STR_EXTENSION_CONFIG]: { isVal: isNotNullOrUndefined, v: []}
+    [STR_EXTENSION_CONFIG]: { isVal: isNotNullOrUndefined, v: {} }
 };
 
 
@@ -110,6 +109,13 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
      */
     protected _doUpdate?: (updateCtx?: IProcessTelemetryUpdateContext, updateState?: ITelemetryUpdateState, asyncCallback?: () => void) => void | boolean;
 
+    /**
+     * Exposes the underlying unload hook container instance for this extension to allow it to be passed down to any sub components of the class.
+     * This should NEVER be exposed or called publically as it's scope is for internal use by BaseTelemetryPlugin and any derived class (which is why
+     * it's scoped as protected)
+     */
+    protected readonly _unloadHooks: IUnloadHookContainer;
+
     constructor() {
         let _self = this;           // Setting _self here as it's used outside of the dynamicProto as well
 
@@ -118,7 +124,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
         let _rootCtx: IProcessTelemetryContext; // Used as the root context, holding the current config and initialized core
         let _nextPlugin: ITelemetryPlugin | ITelemetryPluginChain; // Used for backward compatibility where plugins don't call the main pipeline
         let _unloadHandlerContainer: IUnloadHandlerContainer;
-        let _hooks: Array<ILegacyUnloadHook| IUnloadHook>;
+        let _hookContainer: IUnloadHookContainer;
 
         _initDefaults();
 
@@ -151,19 +157,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                         unloadDone = true;
 
                         _unloadHandlerContainer.run(theUnloadCtx, unloadState);
-
-                        let oldHooks = _hooks;
-                        _hooks = [];
-
-                        // Remove all registered unload hooks
-                        arrForEach(oldHooks, (fn) => {
-                            // allow either rm or remove callback function
-                            try{
-                                ((fn as IUnloadHook).rm || (fn as ILegacyUnloadHook).remove).call(fn);
-                            } catch (e) {
-                                _throwInternal(theUnloadCtx.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, "Unloading:" + dumpObj(e));
-                            }
-                        });
+                        _hookContainer.run(theUnloadCtx.diagLog());
 
                         if (result === true) {
                             theUnloadCtx.processNext(theUnloadState);
@@ -215,13 +209,9 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
                 return result;
             };
         
-            _self._addHook = (hooks: IUnloadHook | IUnloadHook[] | ILegacyUnloadHook | ILegacyUnloadHook[]) => {
-                if (hooks) {
-                    arrAppend(_hooks, hooks);
-                }
-            };
-
             proxyFunctionAs(_self, "_addUnloadCb", () => _unloadHandlerContainer, "add");
+            proxyFunctionAs(_self, "_addHook", () => _hookContainer, "add");
+            objDefine(_self, "_unloadHooks" as keyof BaseTelemetryPlugin, { g: () => _hookContainer });
         });
 
         // These are added after the dynamicProto so that are not moved to the prototype
@@ -301,7 +291,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             _self.core = null;
             _rootCtx = null;
             _nextPlugin = null;
-            _hooks = [];
+            _hookContainer = createUnloadHookContainer();
             _unloadHandlerContainer = createUnloadHandlerContainer();
         }
     }
@@ -347,7 +337,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
      * Add this hook so that it is automatically removed during unloading
      * @param hooks - The single hook or an array of IInstrumentHook objects
      */
-    protected _addHook(hooks: IUnloadHook | IUnloadHook[] | ILegacyUnloadHook | ILegacyUnloadHook[]): void {
+    protected _addHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook> | ILegacyUnloadHook | ILegacyUnloadHook[] | Iterator<ILegacyUnloadHook>): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

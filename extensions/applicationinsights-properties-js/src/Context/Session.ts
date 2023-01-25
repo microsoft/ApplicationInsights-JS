@@ -4,8 +4,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, ICookieMgr, IDiagnosticLogger, _eInternalMessageId, _throwInternal, dateNow, dumpObj, eLoggingSeverity,
-    getExceptionName, isFunction, newId, safeGetCookieMgr, safeGetLogger
+    IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IUnloadHookContainer, _eInternalMessageId, _throwInternal, dateNow, dumpObj,
+    eLoggingSeverity, getExceptionName, isFunction, newId, onConfigChange, safeGetCookieMgr, safeGetLogger
 } from "@microsoft/applicationinsights-core-js";
 
 const SESSION_COOKIE_NAME = "ai_session";
@@ -51,11 +51,14 @@ export class _SessionManager {
 
     public automaticSession: Session;
 
-    constructor(config: ISessionConfig, core?: IAppInsightsCore) {
+    constructor(config: ISessionConfig, core?: IAppInsightsCore, unloadHookContainer?: IUnloadHookContainer) {
         let self = this;
+        let _storageNamePrefix: string;
         let _cookieUpdatedTimestamp: number;
         let _logger: IDiagnosticLogger = safeGetLogger(core);
         let _cookieManager: ICookieMgr = safeGetCookieMgr(core);
+        let _sessionExpirationMs: number;
+        let _sessionRenewalMs: number;
 
         dynamicProto(_SessionManager, self, (_self) => {
    
@@ -63,6 +66,18 @@ export class _SessionManager {
                 config = ({} as any);
             }
     
+            let unloadHook = onConfigChange(config, (details) => {
+                _sessionExpirationMs = config.sessionExpirationMs || ACQUISITION_SPAN;
+                _sessionRenewalMs = config.sessionRenewalMs || RENEWAL_SPAN;
+        
+                // sessionCookiePostfix takes the preference if it is configured, otherwise takes namePrefix if configured.
+                const sessionCookiePostfix = config.sessionCookiePostfix || config.namePrefix || "";
+    
+                _storageNamePrefix = SESSION_COOKIE_NAME + sessionCookiePostfix;
+            });
+
+            unloadHookContainer && unloadHookContainer.add(unloadHook);
+
             _self.automaticSession = new Session();
 
             _self.update = () => {
@@ -76,12 +91,12 @@ export class _SessionManager {
                     isExpired = !_initializeAutomaticSession(session, nowMs);
                 }
 
-                if (!isExpired && _sessionExpirationMs() > 0) {
+                if (!isExpired && _sessionExpirationMs > 0) {
                     const timeSinceAcqMs = nowMs - session.acquisitionDate;
                     const timeSinceRenewalMs = nowMs - session.renewalDate;
                     isExpired = timeSinceAcqMs < 0 || timeSinceRenewalMs < 0;           // expired if the acquisition or last renewal are in the future
-                    isExpired = isExpired || timeSinceAcqMs > _sessionExpirationMs();     // expired if the time since acquisition is more than session Expiration
-                    isExpired = isExpired || timeSinceRenewalMs > _sessionRenewalMs();    // expired if the time since last renewal is more than renewal period
+                    isExpired = isExpired || timeSinceAcqMs > _sessionExpirationMs;     // expired if the time since acquisition is more than session Expiration
+                    isExpired = isExpired || timeSinceRenewalMs > _sessionRenewalMs;    // expired if the time since last renewal is more than renewal period
                 }
         
                 // renew if acquisitionSpan or renewalSpan has elapsed
@@ -106,21 +121,6 @@ export class _SessionManager {
                 _setStorage(session.id, session.acquisitionDate, session.renewalDate);
             };
 
-            //TODO: move _storageNamePrefix, _sessionExpirationMs _sessionRenewalMs back to local variables after dynamic config fix
-            function _storageNamePrefix(): string {
-                // sessionCookiePostfix takes the preference if it is configured, otherwise takes namePrefix if configured.
-                let sessionCookiePostfix = config.sessionCookiePostfix || config.namePrefix || "";
-                return SESSION_COOKIE_NAME + sessionCookiePostfix;
-            }
-
-            function _sessionExpirationMs(): number {
-                return config.sessionExpirationMs || ACQUISITION_SPAN;
-            }
-
-            function _sessionRenewalMs(): number {
-                return config.sessionRenewalMs || RENEWAL_SPAN;
-            }
-        
             /**
              * Use config.namePrefix + ai_session cookie data or local storage data (when the cookie is unavailable) to
              * initialize the automatic session.
@@ -128,7 +128,7 @@ export class _SessionManager {
              */
             function _initializeAutomaticSession(session: ISession, now: number): boolean {
                 let isValid = false;
-                const cookieValue = _cookieManager.get(_storageNamePrefix());
+                const cookieValue = _cookieManager.get(_storageNamePrefix);
                 if (cookieValue && isFunction(cookieValue.split)) {
                     isValid = _initializeAutomaticSessionWithData(session, cookieValue);
                 } else {
@@ -136,7 +136,7 @@ export class _SessionManager {
                     // This can happen if the session expired or the user actively deleted the cookie
                     // We only want to recover data if the cookie is missing from expiry. We should respect the user's wishes if the cookie was deleted actively.
                     // The User class handles this for us and deletes our local storage object if the persistent user cookie was removed.
-                    const storageValue = utlGetLocalStorage(_logger, _storageNamePrefix());
+                    const storageValue = utlGetLocalStorage(_logger, _storageNamePrefix);
                     if (storageValue) {
                         isValid = _initializeAutomaticSessionWithData(session, storageValue);
                     }
@@ -210,11 +210,11 @@ export class _SessionManager {
                 let acq = session.acquisitionDate;
                 session.renewalDate = nowMs;
 
-                let renewalPeriodMs = _sessionRenewalMs();
+                let renewalPeriodMs = _sessionRenewalMs;
 
                 // Set cookie to expire after the session expiry time passes or the session renewal deadline, whichever is sooner
                 // Expiring the cookie will cause the session to expire even if the user isn't on the page
-                const acqTimeLeftMs = (acq +_sessionExpirationMs()) - nowMs;
+                const acqTimeLeftMs = (acq +_sessionExpirationMs) - nowMs;
                 const cookie = [session.id, acq, nowMs];
                 let maxAgeSec = 0;
         
@@ -229,7 +229,7 @@ export class _SessionManager {
                 // if sessionExpirationMs is set to 0, it means the expiry is set to 0 for this session cookie
                 // A cookie with 0 expiry in the session cookie will never expire for that browser session.  If the browser is closed the cookie expires.
                 // Depending on the browser, another instance does not inherit this cookie, however, another tab will
-                _cookieManager.set(_storageNamePrefix(), cookie.join("|"), _sessionExpirationMs() > 0 ? maxAgeSec : null, cookieDomain);
+                _cookieManager.set(_storageNamePrefix, cookie.join("|"), _sessionExpirationMs > 0 ? maxAgeSec : null, cookieDomain);
                 _cookieUpdatedTimestamp = nowMs;
             }
         
@@ -237,7 +237,7 @@ export class _SessionManager {
                 // Keep data in local storage to retain the last session id, allowing us to cleanly end the session when it expires
                 // Browsers that don't support local storage won't be able to end sessions cleanly from the client
                 // The server will notice this and end the sessions itself, with loss of accurate session duration
-                utlSetLocalStorage(_logger, _storageNamePrefix(), [guid, acq, renewal].join("|"));
+                utlSetLocalStorage(_logger, _storageNamePrefix, [guid, acq, renewal].join("|"));
             }
         });
     }

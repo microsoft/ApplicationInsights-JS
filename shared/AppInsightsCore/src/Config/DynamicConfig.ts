@@ -73,6 +73,16 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
         theState.use(null, configHandler);
     }
 
+    function _ref<C>(target: C, name: string) {
+        // Make sure it's dynamic and mark as referenced with it's current value
+        return _setDynamicProperty(theState, target, name, target[name], true);
+    }
+
+    function _rdOnly<C>(target: C, name: string) {
+        // Make sure it's dynamic and mark as readonly with it's current value
+        return _setDynamicProperty(theState, target, name, target[name], false, true);
+    }
+
     function _applyDefaults<C>(theConfig: C, defaultValues: IConfigDefaults<C, T>): C {
         if (defaultValues) {
             // Resolve/apply the defaults
@@ -93,6 +103,8 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
         set: _setValue,
         setDf: _applyDefaults,
         watch: _watch,
+        ref: _ref,
+        rdOnly: _rdOnly,
         _block: _block
     };
 

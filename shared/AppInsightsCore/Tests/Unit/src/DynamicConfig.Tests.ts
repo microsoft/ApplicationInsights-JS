@@ -5,7 +5,7 @@ import { IConfigDefaults } from "../../../src/Config/IConfigDefaults";
 import { IConfiguration } from "../../../src/JavaScriptSDK.Interfaces/IConfiguration";
 import { getDynamicConfigHandler } from "../../../src/Config/DynamicSupport";
 import { createDynamicConfig, onConfigChange } from "../../../src/Config/DynamicConfig";
-import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys, isPlainObject } from "@nevware21/ts-utils";
+import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys, isPlainObject, objHasOwn } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { INotificationManager } from "../../../src/JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfManager } from "../../../src/JavaScriptSDK.Interfaces/IPerfManager";
@@ -23,6 +23,14 @@ const verifyArray = <T>() => <U extends NoRepeats<U> & readonly T[]>(
     u: (U | [never]) & ([T] extends [U[number]] ? unknown : never)
 ) => u;
 
+function _expectException(cb: () => void, message: string) {
+    try {
+        cb();
+        QUnit.ok(false, "Expected an exception: " + (message || ""));
+    } catch (e) {
+        QUnit.ok(true, message);
+    }
+}
 export class DynamicConfigTests extends AITestClass {
 
     public testInitialize() {
@@ -550,6 +558,196 @@ export class DynamicConfigTests extends AITestClass {
 
                 this.clock.tick(10);
                 Assert.equal(4, onChangeCalled, "listener should have been called as enableDebugExceptions was disabled");
+            }
+        });
+
+        this.testCase({
+            name: "Validate updating objects / arrays replaces the contents in-place",
+            useFakeTimers: true,
+            test: () => {
+                let theConfig: any = {
+                    instrumentationKey: "testiKey",
+                    endpointUrl: "https://localhost:9001",
+                    enableDebugExceptions: false,
+                    loggingLevelConsole: 1,
+                    extensionConfig: {
+                        "test": {} as any
+                    },
+                    userCfg: {
+                        userTest: {} as any
+                    }
+                };
+
+                const channelPlugin = new TestChannelPlugin();
+                let core = new AppInsightsCore();
+
+                core.initialize(theConfig, [channelPlugin]);
+                let cfg = core.config as any;
+
+                // Grab a copy of the testExtCfg
+                let testExtCfg = cfg.extensionConfig?.test;
+                let userTestCfg = cfg.userCfg.userTest;
+
+                let helloCfg: any = {
+                    "hello": "World"
+                };
+
+                let myCfg: any = {
+                    "my": "newCfg"
+                };
+
+                Assert.ok(!objHasOwn(cfg.extensionConfig!.test, "hello"), "The hello property should not exist");
+                Assert.ok(!objHasOwn(testExtCfg, "hello"), "The hello property should not exist");
+
+                // Assign the new config
+                cfg.extensionConfig!.test = helloCfg;
+
+                // Assign the new config to a new key
+                cfg.extensionConfig!.newTest = helloCfg;
+
+                // The test should now have "copied" the helloCfg
+                Assert.ok(objHasOwn(cfg.extensionConfig!.test, "hello"), "The hello property should exist");
+                Assert.equal("World", cfg.extensionConfig!.test.hello, "And should be assigned");
+                Assert.ok(cfg.extensionConfig!.test !== helloCfg, "The new config should have copied but not directly referenced the helloCfg");
+
+                // Check that the previously referenced config also has the value
+                Assert.ok(objHasOwn(testExtCfg, "hello"), "The hello property should exist");
+                Assert.equal("World", testExtCfg.hello, "And should be assigned");
+                Assert.ok(cfg.extensionConfig!.test === testExtCfg, "The previous reference and the current value should still be the same instance");
+
+                // The newTest element should refer to the helloCfg as it was NOT tagged as referenced
+                Assert.ok(objHasOwn(cfg.extensionConfig!.newTest, "hello"), "The hello property should exist");
+                Assert.equal("World", cfg.extensionConfig!.newTest.hello, "And should be assigned");
+                Assert.ok(cfg.extensionConfig!.newTest === helloCfg, "The new config should have directly referenced the helloCfg as it was not previously present or referenced");
+
+                // Final validation that test !== newTest
+                Assert.ok(cfg.extensionConfig!.newTest !== cfg.extensionConfig!.test, "NewTest and old test should not reference the same instance");
+
+                // Assign the new config
+                cfg.extensionConfig!.test = myCfg;
+
+                // The test should now have "copied" the helloCfg
+                Assert.ok(objHasOwn(cfg.extensionConfig!.test, "hello"), "The hello property should still exist");
+                Assert.equal(undefined, cfg.extensionConfig!.test.hello, "But hello should be undefined");
+
+                Assert.ok(objHasOwn(cfg.extensionConfig!.test, "my"), "But the my property should");
+                Assert.equal("newCfg", cfg.extensionConfig!.test.my, "And should be assigned");
+                Assert.ok(cfg.extensionConfig!.test !== myCfg, "The new config should have copied but not directly referenced the helloCfg");
+
+                // Check that the previously referenced config also has the value
+                Assert.ok(objHasOwn(testExtCfg, "hello"), "The hello property should exist");
+                Assert.equal(undefined, cfg.extensionConfig!.test.hello, "But hello should be undefined");
+
+                Assert.ok(objHasOwn(testExtCfg, "my"), "The my property should exist");
+                Assert.equal("newCfg", testExtCfg.my, "And should be assigned");
+                Assert.ok(cfg.extensionConfig!.test === testExtCfg, "The previous reference and the current value should still be the same instance");
+
+                // New Test should be unchanged
+                // The newTest element should refer to the helloCfg as it was NOT tagged as referenced
+                Assert.ok(objHasOwn(cfg.extensionConfig!.newTest, "hello"), "The hello property should exist");
+                Assert.equal("World", cfg.extensionConfig!.newTest.hello, "And should be assigned");
+                Assert.ok(cfg.extensionConfig!.newTest === helloCfg, "The new config should have directly referenced the helloCfg as it was not previously present or referenced");
+
+                // Final validation that test !== newTest
+                Assert.ok(cfg.extensionConfig!.newTest !== cfg.extensionConfig!.test, "NewTest and old test should not reference the same instance");
+
+                // ---------------------------------------------------------
+                // Validate that updating non-referenced objects replaces the object
+                Assert.ok(!objHasOwn(cfg.userCfg.userTest, "hello"), "The hello property should not exist");
+                Assert.ok(!objHasOwn(userTestCfg, "hello"), "The hello property should not exist");
+
+                // Assign the new config
+                cfg.userCfg!.userTest = helloCfg;
+
+                // Assign the new config to a new key
+                cfg.userCfg!.newTest = helloCfg;
+
+                // The test should now have "copied" the helloCfg
+                Assert.ok(objHasOwn(cfg.userCfg!.userTest, "hello"), "The hello property should exist");
+                Assert.equal("World", cfg.userCfg!.userTest.hello, "And should be assigned");
+                Assert.ok(cfg.userCfg!.userTest === helloCfg, "The new config should directly referenced the helloCfg");
+                // The original reference obtained before updating the userCfg should not have changed
+                Assert.ok(!objHasOwn(userTestCfg, "hello"), "The hello property should not exist");
+
+                // The newTest element should refer to the helloCfg
+                Assert.ok(objHasOwn(cfg.userCfg!.newTest, "hello"), "The hello property should exist");
+                Assert.equal("World", cfg.userCfg!.newTest.hello, "And should be assigned");
+                Assert.ok(cfg.userCfg!.newTest === helloCfg, "The new config should have directly referenced the helloCfg");
+
+                // Final validation that test !== newTest
+                Assert.ok(cfg.userCfg!.newTest === cfg.userCfg!.userTest, "NewTest and old test should reference the same instance");
+
+                // Assign the new config
+                cfg.userCfg!.userTest = myCfg;
+
+                // The test should now have "copied" the helloCfg
+                Assert.ok(!objHasOwn(cfg.userCfg!.userTest, "hello"), "The hello property should not exist");
+                Assert.ok(objHasOwn(cfg.userCfg!.userTest, "my"), "The my property should exist");
+                Assert.equal("newCfg", cfg.userCfg!.userTest.my, "And should be assigned");
+                Assert.ok(cfg.userCfg!.userTest === myCfg, "The new config should directly referenced the myCfg");
+
+                // The original reference obtained before updating the userCfg should not have changed
+                Assert.ok(!objHasOwn(userTestCfg, "hello"), "The hello property should not exist");
+                Assert.ok(!objHasOwn(userTestCfg, "my"), "The my property should not exist");
+
+                // The newTest element should still reference the helloCfg
+                Assert.ok(objHasOwn(cfg.userCfg!.newTest, "hello"), "The hello property should exist");
+                Assert.equal("World", cfg.userCfg!.newTest.hello, "And should be assigned");
+                Assert.ok(cfg.userCfg!.newTest === helloCfg, "The new config should have directly referenced the helloCfg");
+
+                // Final validation that test !== newTest
+                Assert.ok(cfg.userCfg!.newTest !== cfg.userCfg!.test, "NewTest and old test should not reference the same instance");
+            }
+        });
+
+
+        this.testCase({
+            name: "Validate read-only",
+            useFakeTimers: true,
+            test: () => {
+                let theConfig: any = {
+                    instrumentationKey: "testiKey",
+                    endpointUrl: "https://localhost:9001",
+                    enableDebugExceptions: false,
+                    loggingLevelConsole: 1,
+                    extensionConfig: {
+                        "test": {} as any
+                    },
+                    anArray: [ 1, 2, 3 ]
+                };
+
+                let handler = createDynamicConfig(theConfig, undefined, undefined, true);
+
+                handler.rdOnly(theConfig, "instrumentationKey");
+                _expectException(() => {
+                    theConfig.instrumentationKey = "newTestKey";
+                }, "Should not be able to re-assign instrumentationKey");
+
+                // Re-Assigning with the same value doesn't cause an exception
+                theConfig.instrumentationKey = "testiKey";
+
+                handler.rdOnly(theConfig, "extensionConfig");
+                _expectException(() => {
+                    theConfig.extensionConfig = {};
+                }, "Should not be able to re-assign extensionConfig");
+
+                // Assigning a property to a read-only property is allowed
+                theConfig.extensionConfig.hello = "World";
+                QUnit.assert.equal("World", theConfig.extensionConfig.hello, "Hello should be assigned")
+                QUnit.assert.deepEqual({}, theConfig.extensionConfig.test, "test should be assigned")
+
+                handler.rdOnly(theConfig, "anArray");
+                _expectException(() => {
+                    theConfig.anArray = [];
+                }, "Should not be able to re-assign anArray");
+
+                // Assigning a property to a read-only property is allowed
+                theConfig.anArray.hello = "World";
+                QUnit.assert.equal("World", theConfig.anArray.hello, "Hello should be assigned")
+                theConfig.anArray[0] = 0;
+                QUnit.assert.equal(0, theConfig.anArray[0], "0");
+                QUnit.assert.equal(2, theConfig.anArray[1], "2");
+                QUnit.assert.equal(3, theConfig.anArray[2], "3");
             }
         });
 

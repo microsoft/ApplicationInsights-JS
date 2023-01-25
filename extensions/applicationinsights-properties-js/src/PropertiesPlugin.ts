@@ -21,7 +21,6 @@ let undefString: string;
 const nullValue: any = null;
 
 const _defaultConfig: IConfigDefaults<IPropertiesConfig> = objDeepFreeze({
-    instrumentationKey: undefString,
     accountId: nullValue,
     sessionRenewalMs: 30 * 60 * 1000,
     samplingPercentage: 100,
@@ -68,14 +67,6 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
                 _base.initialize(config, core, extensions, pluginChain);
                 _populateDefaults(config);
-                _previousTraceCtx = core.getTraceCtx(false);
-                _context = new TelemetryContext(core, _extensionConfig, _previousTraceCtx);
-                _distributedTraceCtx = createDistributedTraceContextFromTrace(_self.context.telemetryTrace, _previousTraceCtx);
-                core.setTraceCtx(_distributedTraceCtx);
-                _self.context.appId = () => {
-                    let breezeChannel = core.getPlugin<IPlugin>(BreezeChannelIdentifier);
-                    return breezeChannel ? breezeChannel.plugin["_appId"] : null;
-                };
             };
     
             /**
@@ -147,6 +138,16 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                     // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class
                     _self["_extConfig"] = _extensionConfig;
                 }));
+
+                // This is outside of the onConfigChange as we don't want to update (replace) these values whenever a referenced config item changes
+                _previousTraceCtx = core.getTraceCtx(false);
+                _context = new TelemetryContext(core, _extensionConfig, _previousTraceCtx, _self._unloadHooks);
+                _distributedTraceCtx = createDistributedTraceContextFromTrace(_self.context.telemetryTrace, _previousTraceCtx);
+                core.setTraceCtx(_distributedTraceCtx);
+                _self.context.appId = () => {
+                    let breezeChannel = core.getPlugin<IPlugin>(BreezeChannelIdentifier);
+                    return breezeChannel ? breezeChannel.plugin["_appId"] : null;
+                };
             }
 
             function _processTelemetryInternal(evt: ITelemetryItem, itemCtx: IProcessTelemetryContext) {

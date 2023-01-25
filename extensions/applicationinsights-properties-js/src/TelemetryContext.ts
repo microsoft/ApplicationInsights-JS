@@ -9,8 +9,8 @@ import {
     PageView
 } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, _InternalLogMessage, getSetValue, hasWindow,
-    isNullOrUndefined, isString, objKeys, setValue
+    IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, _InternalLogMessage,
+    getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
 } from "@microsoft/applicationinsights-core-js";
 import { Application } from "./Context/Application";
 import { Device } from "./Context/Device";
@@ -50,19 +50,19 @@ export class TelemetryContext implements IPropTelemetryContext {
     public appId: () => string;
     public getSessionId: () => string;
 
-    constructor(core: IAppInsightsCore, defaultConfig: IPropertiesConfig, previousTraceCtx?: IDistributedTraceContext) {
+    constructor(core: IAppInsightsCore, defaultConfig: IPropertiesConfig, previousTraceCtx?: IDistributedTraceContext, unloadHookContainer?: IUnloadHookContainer) {
         let logger = core.logger
 
         dynamicProto(TelemetryContext, this, (_self) => {
             _self.appId = _nullResult;
             _self.getSessionId = _nullResult;
             _self.application = new Application();
-            _self.internal = new Internal(defaultConfig);
+            _self.internal = new Internal(defaultConfig, unloadHookContainer);
             if (hasWindow()) {
-                _self.sessionManager = new _SessionManager(defaultConfig, core);
+                _self.sessionManager = new _SessionManager(defaultConfig, core, unloadHookContainer);
                 _self.device = new Device();
                 _self.location = new Location();
-                _self.user = new User(defaultConfig, core);
+                _self.user = new User(defaultConfig, core, unloadHookContainer);
 
                 let traceId: string;
                 let parentId: string;

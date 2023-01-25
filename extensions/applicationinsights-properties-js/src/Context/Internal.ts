@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IInternal } from "@microsoft/applicationinsights-common";
-import { onConfigChange } from "@microsoft/applicationinsights-core-js";
+import { IUnloadHookContainer, onConfigChange } from "@microsoft/applicationinsights-core-js";
 import { IPropertiesConfig } from "../Interfaces/IPropertiesConfig";
 
 const Version = "2.8.5";
@@ -37,11 +37,13 @@ export class Internal implements IInternal {
     /**
      * Constructs a new instance of the internal telemetry data class.
      */
-    constructor(config: IPropertiesConfig) {
+    constructor(config: IPropertiesConfig, unloadHookContainer?: IUnloadHookContainer) {
         
-        onConfigChange((config), () => {
+        let unloadHook = onConfigChange((config), () => {
             let prefix =  config.sdkExtension;
             this.sdkVersion = (prefix ? prefix + "_" : "") + "javascript:" + Version;
         });
+
+        unloadHookContainer && unloadHookContainer.add(unloadHook);
     }
 }

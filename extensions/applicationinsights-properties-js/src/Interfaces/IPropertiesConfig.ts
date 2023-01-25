@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 export interface IPropertiesConfig {
-    readonly instrumentationKey: string;
     readonly accountId: string;
     readonly sessionRenewalMs: number;
     readonly samplingPercentage: number;

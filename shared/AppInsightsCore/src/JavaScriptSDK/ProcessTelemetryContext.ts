@@ -162,19 +162,22 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
                 extCfg = {};
             }
 
-            // Always set the value so that it's created as a dynamic config element (if not already)
-            dynamicHandler.set(cfg, STR_EXTENSION_CONFIG, extCfg);  // Note: it is valid for the "value" to be undefined
-            extCfg = cfg.extensionConfig;
-        
+            // Always set the value so that the property always exists
+            cfg[STR_EXTENSION_CONFIG] = extCfg;     // Note: it is valid for the "value" to be undefined
+
+            // Calling `ref()` has a side effect of causing the referenced property to become dynamic  (if not already)
+            extCfg = dynamicHandler.ref(cfg, STR_EXTENSION_CONFIG);
             if (extCfg) {
                 idCfg = extCfg[identifier];
                 if (!idCfg && createIfMissing) {
                     idCfg = {} as T;
                 }
 
-                // Always set the value so that it's created as a dynamic config element (if not already)
-                dynamicHandler.set(extCfg, identifier, idCfg);
-                idCfg = extCfg[identifier];
+                // Always set the value so that the property always exists
+                extCfg[identifier] = idCfg;         // Note: it is valid for the "value" to be undefined
+
+                // Calling `ref()` has a side effect of causing the referenced property to become dynamic  (if not already)
+                idCfg = dynamicHandler.ref(extCfg, identifier);
             }
         }
 

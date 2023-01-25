@@ -130,7 +130,6 @@ export class PropertiesTests extends AITestClass {
                 let extConfig =  core.config.extensionConfig[id];
 
                 let exceptedDefaultConfig = {
-                    instrumentationKey: "instrumentation_key",
                     accountId: null,
                     sessionRenewalMs: 30 * 60 * 1000,
                     samplingPercentage: 100,
@@ -166,7 +165,6 @@ export class PropertiesTests extends AITestClass {
                 const channel = new TestChannelPlugin();
                 const properties = new PropertiesPlugin();
                 let exceptedDefaultConfig = {
-                    instrumentationKey: "key1",
                     accountId: "id1",
                     sessionRenewalMs: 30 * 60 * 101,
                     samplingPercentage: 90,
@@ -280,7 +278,6 @@ export class PropertiesTests extends AITestClass {
               
                 // change config
                 let newConfig = {
-                    instrumentationKey: "key2",
                     accountId: "id2",
                     sessionRenewalMs: 30 * 60 * 102,
                     samplingPercentage: 90,
@@ -375,7 +372,228 @@ export class PropertiesTests extends AITestClass {
                 core.getCookieMgr().del("ai_session" + "postfix2");
             }
         });
+
+        this.testCase({
+            name: "Properties Configuration: config can be set from root dynamically and updated as a new single object",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                core.setCookieMgr(createCookieMgr({
+                    cookieCfg: {
+                        setCookie: (name: string, value: string) => this._setCookie(name, value),
+                        getCookie: (name: string) => this._getCookie(name),
+                        delCookie: (name: string) => this._delCookie(name)
+                    }
+                }, core.logger))
+                const channel = new TestChannelPlugin();
+                const properties = new PropertiesPlugin();
+                let exceptedDefaultConfig = {
+                    accountId: "id1",
+                    sessionRenewalMs: 30 * 60 * 101,
+                    samplingPercentage: 90,
+                    sessionExpirationMs: 24 * 60 * 60 * 101,
+                    cookieDomain: "domain1",
+                    sdkExtension: "ext1",
+                    isBrowserLinkTrackingEnabled: false,
+                    appId: "id1",
+                    getSessionId: "session1",
+                    namePrefix: "prefix1",
+                    sessionCookiePostfix: "postfix1",
+                    userCookiePostfix: "usercookie1",
+                    idLength: 26,
+                    getNewId: (idLength?: number) => {
+                        return "" + (idLength || 0);
+                    }
+                } as IPropertiesConfig;
+                let id = properties.identifier;
+                const config = {
+                    instrumentationKey: "instrumentation_key",
+                    extensionConfig: {
+                        [id]: exceptedDefaultConfig
+                    }
+                };
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                let appBuild = "build";
+                let deviceId = "newDeviceId";
+                let locId = "locId";
+                let parentId = "parentId";
+                let seId = "sessionId";
+                let cookie = "";
+                let cookieValue = ""
+                const cookieStub: SinonStub = this.sandbox.stub(core.getCookieMgr(), "set").callsFake((cookieName, value, maxAge, domain, path) => {
+                    cookie = cookieName;
+                    cookieValue = value;
+                });
+
+                // Initialize
+                core.initialize(config, [channel, properties]);
+                let extConfig = properties["_extConfig"];
+                Assert.deepEqual(extConfig, exceptedDefaultConfig, "intial config is set");
+
+                // check inital context
+                let propCtx = properties.context;
+                let appId = propCtx.appId();
+                Assert.equal(appId, null, "appId should be null");
+
+                let application = propCtx.application;
+                Assert.equal(application.build, null, "application build should be null by default");
+               
+                let device = propCtx.device;
+                Assert.equal(device.id, "browser", "device id should not be null");
+              
+                let location = propCtx.location;
+                Assert.ok(location, "location should not be null");
+               
+                let trace = propCtx.telemetryTrace;
+                let traceId = trace.traceID;
+                Assert.ok(trace, "trace should not be null");
+                Assert.ok(trace.name, "trace name should not be null");
+                Assert.ok(traceId, "trace id should not be null");
+                Assert.ok(!trace.parentID, "trace parent should be null");
+                
+                let user = propCtx.user;
+                Assert.deepEqual(user.config, exceptedDefaultConfig, "user config should be updated");
+
+                let internalSdkVer = propCtx.internal.sdkVersion;
+                Assert.ok(internalSdkVer.indexOf("ext1") > -1, "sdk ext prefix should be used");
+
+                let session = propCtx.session;
+                Assert.ok(session, "session should not be null");
+
+                let sessionMgr = propCtx.sessionManager;
+                Assert.ok(sessionMgr.automaticSession, "session mgr should not be null");
+             
+                let os = propCtx.os;
+                Assert.equal(os, null, "os should be null");
+            
+                let web = propCtx.web;
+                Assert.equal(web, null, "web should be null");
+
+                let sessionId = propCtx.getSessionId();
+                Assert.equal(sessionId, null, "session Id should be null");
+                
+                // change properities here to make sure we won't overwrite them after config change
+                device.id = deviceId;
+                location.ip = locId;
+                trace.parentID = parentId;
+                application.build = appBuild;
+                session.id = seId;
+                sessionMgr.automaticSession.id = seId;
+                Assert.equal(propCtx.getSessionId(), seId, "session Id should be updated test1");
+                let sessionPrefix = "ai_session" + "postfix1";
+                sessionMgr.backup();
+                let sessionStorage = utlGetLocalStorage(core.logger, sessionPrefix);
+                Assert.ok(sessionStorage.indexOf(seId) > -1, "sessionStorage should be set based on session id test1");
+
+                sessionMgr.update();
+                Assert.ok(cookieStub.called, "cookie set test1");
+                Assert.equal(sessionPrefix, cookie, "cookie name is set test1");
+                Assert.ok(cookieValue.indexOf(seId) > -1, "cookie value is set test1");
+                this.clock.tick(20);
+                sessionMgr.update();
+                Assert.equal(sessionMgr.automaticSession.id, seId, "session id should be same test1");
+                this.clock.tick(24 * 60 * 60 * 101 - 20);
+                sessionMgr.update();
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id should be renewed test1");
+                Assert.ok(cookieValue.indexOf("26|") > -1,"cookie value is reset test1");
+              
+                // change config
+                let newConfig = {
+                    accountId: "id2",
+                    sessionRenewalMs: 30 * 60 * 102,
+                    samplingPercentage: 90,
+                    sessionExpirationMs: 24 * 60 * 60 * 102,
+                    cookieDomain: "domain2",
+                    sdkExtension: "ext2",
+                    isBrowserLinkTrackingEnabled: true,
+                    appId: "id2",
+                    getSessionId: "session2",
+                    namePrefix: "prefix2",
+                    sessionCookiePostfix: "postfix2",
+                    userCookiePostfix: "usercookie2",
+                    idLength: 26,
+                    getNewId: (idLength?: number) => {
+                        return "" + (idLength || 0) + 1;
+                    }
+                } as IPropertiesConfig;
+
+                core.config.extensionConfig =  core.config.extensionConfig?  core.config.extensionConfig : {};
+                core.config.extensionConfig[id] = newConfig;
+                this.clock.tick(1);
+
+                // properties that should be updated
+                extConfig = properties["_extConfig"];
+                Assert.deepEqual(extConfig, newConfig, "extConfig should be updated");
+                propCtx = properties.context;
+
+                user = propCtx.user;
+                Assert.deepEqual(user.config, newConfig, "user config should be updated");
+
+                internalSdkVer = propCtx.internal.sdkVersion;
+                Assert.ok(internalSdkVer.indexOf("ext2") > -1, "sdk ext prefix should be used and updated");
+
+                sessionMgr = propCtx.sessionManager;
+                Assert.ok(sessionMgr.automaticSession, "session mgr should not be null");
+                sessionPrefix = "ai_session" + "postfix2";
+                sessionMgr.backup();
+                sessionStorage = utlGetLocalStorage(core.logger, sessionPrefix);
+                Assert.ok(sessionStorage.indexOf("26") > -1, "sessionStorage should be updated based on session id test2");
+                Assert.ok(cookieValue.indexOf("26|") > -1, "cookie should not be updated test2");
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id should not be renewed test2");
+                
+                this.clock.tick(60000);
+                sessionMgr.update();
+                Assert.ok(cookieStub.called, "cookie set test3");
+                Assert.equal(sessionPrefix, cookie, "cookie name is set test3");
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id should not be renewed test3");
+                Assert.ok(cookieValue.indexOf("26|") > -1, "cookie value should use previous session id test3");
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id should not be renewed test4");
+                this.clock.tick(24 * 60 * 60 * 102);
+                sessionMgr.update();
+                Assert.ok(cookieStub.called, "cookie set test5");
+                Assert.equal(sessionPrefix, cookie, "cookie name is set test5");
+                Assert.ok(cookieValue.indexOf("261|") > -1, "cookie value is renewed test6");
+                Assert.equal(sessionMgr.automaticSession.id, "261", "session id should be renewed test6");
+
+                //properties that should not be updated
+                appId = propCtx.appId();
+                Assert.equal(appId, null, "appId should be null");
+
+                application = propCtx.application;
+                Assert.equal(application.build, appBuild, "application build should not be updated");
+
+                device = propCtx.device;
+                Assert.equal(device.id, deviceId, "device id should not be updated");
+
+                location = propCtx.location;
+                Assert.equal(location.ip, locId, "location should not be updated");
+
+                trace = propCtx.telemetryTrace;
+                Assert.ok(trace, "trace should not be null");
+                Assert.ok(trace.name, "trace name should not be null");
+                Assert.equal(trace.traceID, traceId, "trace id should be same with previous one");
+                Assert.equal(trace.parentID, parentId, "trace parent should not be updated");
+             
+                session = propCtx.session;
+                Assert.equal(session.id, seId, "session should not be updated");
+                
+                os = propCtx.os;
+                Assert.equal(os, null,"os should not be updated");
+
+                sessionId = propCtx.getSessionId();
+                Assert.equal(sessionId, seId, "session Id should not be updated");
+                
+                if (utlCanUseLocalStorage()) {
+                    window.localStorage.clear();
+                }
+                core.getCookieMgr().del("ai_session" + "postfix1");
+                core.getCookieMgr().del("ai_session" + "postfix2");
+            }
+        });
     }
+
 
     private addDeviceTests() {
         this.testCase({
@@ -962,7 +1180,6 @@ export class PropertiesTests extends AITestClass {
 
     private getTelemetryConfig(): IPropertiesConfig {
         return {
-            instrumentationKey: "",
             accountId: "",
             sessionRenewalMs: 1000,
             samplingPercentage: 0,

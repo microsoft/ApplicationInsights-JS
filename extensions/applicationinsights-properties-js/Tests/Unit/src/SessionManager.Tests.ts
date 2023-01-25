@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { SinonStub } from 'sinon';
-import { AppInsightsCore, DiagnosticLogger, createCookieMgr, newId, dateNow } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, DiagnosticLogger, createCookieMgr, newId, dateNow, createDynamicConfig } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { _SessionManager } from "../../../src/Context/Session";
 
@@ -64,13 +64,12 @@ export class SessionManagerTests extends AITestClass {
             test: () => {
 
                 var sessionPrefix = newId();
-                var config = {
+                var config = createDynamicConfig({
                     namePrefix: sessionPrefix,
                     sessionExpirationMs: undefined,
                     sessionRenewalMs: undefined,
                     cookieDomain: undefined
-
-                };
+                }).cfg;
                 // Setup
                 let cookie = "";
                 const cookieStub: SinonStub = this.sandbox.stub(this.core.getCookieMgr(), 'set').callsFake((cookieName, value, maxAge, domain, path) => {
@@ -92,14 +91,15 @@ export class SessionManagerTests extends AITestClass {
             test: () => {
 
                 var sessionPrefix = newId();
-                var config = {
+                var config = createDynamicConfig({
                     namePrefix: sessionPrefix,
                     sessionCookiePostfix: "testSessionCookieNamePostfix",
                     sessionExpirationMs: undefined,
                     sessionRenewalMs: undefined,
                     cookieDomain: undefined
 
-                };
+                }).cfg;
+
                 // Setup
                 let cookie = "";
                 const cookieStub: SinonStub = this.sandbox.stub(this.core.getCookieMgr(), 'set').callsFake((cookieName, value, maxAge, domain, path) => {
@@ -121,12 +121,12 @@ export class SessionManagerTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 var sessionPrefix = newId();
-                var config = {
+                var config = createDynamicConfig({
                     namePrefix: sessionPrefix,
                     sessionExpirationMs: 30 * 60 * 1000,
                     sessionRenewalMs: 24 * 60 * 60 * 1000,
                     cookieDomain: undefined
-                };
+                }).cfg;
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
                 this.clock.tick(100);
@@ -152,12 +152,12 @@ export class SessionManagerTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 var sessionPrefix = newId();
-                var config = {
+                var config = createDynamicConfig({
                     namePrefix: sessionPrefix,
                     sessionExpirationMs: 5000,
                     sessionRenewalMs: 24 * 60 * 60 * 1000,
                     cookieDomain: undefined
-                };
+                }).cfg;
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
                 this.clock.tick(100);
@@ -211,12 +211,12 @@ export class SessionManagerTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 var sessionPrefix = newId();
-                var config = {
+                var config = createDynamicConfig({
                     namePrefix: sessionPrefix,
                     sessionExpirationMs: 86400000,
                     sessionRenewalMs: 5000,
                     cookieDomain: undefined
-                };
+                }).cfg;
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
                 this.clock.tick(100);
@@ -269,12 +269,12 @@ export class SessionManagerTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 var sessionPrefix = newId();
-                var config = {
+                var config = createDynamicConfig({
                     namePrefix: sessionPrefix,
                     sessionExpirationMs: 30 * 60 * 1000,
                     sessionRenewalMs: 24 * 60 * 60 * 1000,
                     cookieDomain: undefined
-                };
+                }).cfg;
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
                 this.clock.tick(100);
@@ -315,12 +315,12 @@ export class SessionManagerTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 var sessionPrefix = newId();
-                var config = {
+                var config = createDynamicConfig({
                     namePrefix: sessionPrefix,
                     sessionExpirationMs: 5000,
                     sessionRenewalMs: 24 * 60 * 60 * 1000,
                     cookieDomain: undefined
-                };
+                }).cfg;
 
                 // Simulate 100ms as when zero the cookie values are deemed to be invalid
                 this.clock.tick(100);

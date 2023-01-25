@@ -11,26 +11,10 @@ import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
 const symPrefix = "[[ai_";
 const symPostfix = "]]";
 
-/**
- * @internal
- * @ignore
- */
-interface _IWaitingHandlers<T> {
-    /**
-     * The handler to be re-executed
-     */
-    h: IWatcherHandler<T>;
-
-    /**
-     * The detail objects that caused this handler to be re-executed, each property has a detail instance
-     * but may be the same handler
-     */
-    //d: _IDynamicDetail<T>[];
-}
-
 export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): _IDynamicConfigHandlerState<T> {
     let dynamicPropertySymbol = newSymbol(symPrefix + "get" + cfgHandler.uid + symPostfix);
     let dynamicPropertyReadOnly = newSymbol(symPrefix + "ro" + cfgHandler.uid + symPostfix);
+    let dynamicPropertyReferenced = newSymbol(symPrefix + "rf" + cfgHandler.uid + symPostfix);
     let dynamicPropertyDetail = newSymbol(symPrefix + "dtl" + cfgHandler.uid + symPostfix);
     let _waitingHandlers: IWatcherHandler<T>[] = null;
     let _watcherTimer: ITimerHandler = null;
@@ -52,7 +36,9 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
             callback({
                 cfg: cfgHandler.cfg,
                 set: cfgHandler.set.bind(cfgHandler),
-                setDf: cfgHandler.setDf.bind(cfgHandler)
+                setDf: cfgHandler.setDf.bind(cfgHandler),
+                ref: cfgHandler.ref.bind(cfgHandler),
+                rdOnly: cfgHandler.rdOnly.bind(cfgHandler)
             });
         } catch(e) {
             let logger = cfgHandler.logger;
@@ -156,6 +142,7 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
     theState = {
         prop: dynamicPropertySymbol,
         ro: dynamicPropertyReadOnly,
+        rf: dynamicPropertyReferenced,
         hdlr: cfgHandler,
         add: _addWatcher,
         notify: _notifyWatchers,
