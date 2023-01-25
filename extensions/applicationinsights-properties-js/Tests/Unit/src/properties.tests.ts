@@ -4,8 +4,9 @@ import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
 import { TelemetryTrace } from "../../../src/Context/TelemetryTrace";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { IConfig, utlGetLocalStorage } from "@microsoft/applicationinsights-common";
 import { TestChannelPlugin } from "./TestChannelPlugin";
+import { SinonStub } from 'sinon';
 
 export class PropertiesTests extends AITestClass {
     private properties: PropertiesPlugin;
@@ -191,6 +192,12 @@ export class PropertiesTests extends AITestClass {
                 let locId = "locId";
                 let parentId = "parentId";
                 let seId = "sessionId";
+                let cookie = "";
+                let cookieValue = ""
+                const cookieStub: SinonStub = this.sandbox.stub(core.getCookieMgr(), "set").callsFake((cookieName, value, maxAge, domain, path) => {
+                    cookie = cookieName;
+                    cookieValue = value;
+                });
 
                 // Initialize
                 core.initialize(config, [channel, properties]);
@@ -229,7 +236,7 @@ export class PropertiesTests extends AITestClass {
 
                 let sessionMgr = propCtx.sessionManager;
                 Assert.ok(sessionMgr.automaticSession, "session mgr should not be null");
-
+             
                 let os = propCtx.os;
                 Assert.equal(os, null, "os should be null");
             
@@ -247,6 +254,21 @@ export class PropertiesTests extends AITestClass {
                 session.id = seId;
                 sessionMgr.automaticSession.id = seId;
                 Assert.equal(propCtx.getSessionId(), seId, "session Id shoule be updated");
+                let sessionPrefix = "ai_session" + "postfix1";
+                sessionMgr.backup();
+                let sessionStorage = utlGetLocalStorage(core.logger, sessionPrefix);
+                Assert.ok(sessionStorage.indexOf(seId) > -1, "sessionStorage should be set based on session id");
+
+                sessionMgr.update();
+                Assert.ok(cookieStub.called, "cookie set");
+                Assert.equal(sessionPrefix, cookie, "cookie name is set");
+                Assert.ok(cookieValue.indexOf(seId) > -1,"cookie value is set");
+                this.clock.tick(20);
+                sessionMgr.update();
+                Assert.equal(sessionMgr.automaticSession.id, seId, "session id shoule be same");
+                this.clock.tick(24 * 60 * 60 * 101 - 20);
+                sessionMgr.update();
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id shoule be renewed");
               
                 // change config
                 let newConfig = {
@@ -289,6 +311,19 @@ export class PropertiesTests extends AITestClass {
 
                 sessionMgr = propCtx.sessionManager;
                 Assert.ok(sessionMgr.automaticSession, "session mgr should not be null");
+                sessionPrefix = "ai_session" + "postfix2";
+                sessionMgr.backup();
+                sessionStorage = utlGetLocalStorage(core.logger, sessionPrefix);
+                Assert.ok(sessionStorage.indexOf("26") > -1, "sessionStorage should be updated based on session id");
+                
+                this.clock.tick(24 * 60 * 60 * 101);
+                sessionMgr.update();
+                Assert.ok(cookieStub.called, "cookie set");
+                Assert.equal(sessionPrefix, cookie, "cookie name is set");
+                Assert.ok(cookieValue.indexOf("26") > -1,"cookie value is set");
+                this.clock.tick(24 * 60 * 60);
+                sessionMgr.update();
+                Assert.equal(sessionMgr.automaticSession.id, "261", "session id shoule be renewed");
 
                 //properties that should not be updated
                 appId = propCtx.appId();
