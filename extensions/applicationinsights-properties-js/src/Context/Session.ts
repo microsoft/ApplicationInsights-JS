@@ -106,6 +106,7 @@ export class _SessionManager {
                 _setStorage(session.id, session.acquisitionDate, session.renewalDate);
             };
 
+            //TODO: move _storageNamePrefix, _sessionExpirationMs _sessionRenewalMs back to local variables after dynamic config fix
             function _storageNamePrefix(): string {
                 // sessionCookiePostfix takes the preference if it is configured, otherwise takes namePrefix if configured.
                 let sessionCookiePostfix = config.sessionCookiePostfix || config.namePrefix || "";

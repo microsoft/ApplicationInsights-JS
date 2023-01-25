@@ -4,7 +4,7 @@ import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
 import { TelemetryTrace } from "../../../src/Context/TelemetryTrace";
-import { IConfig, utlGetLocalStorage } from "@microsoft/applicationinsights-common";
+import { IConfig, utlCanUseLocalStorage, utlGetLocalStorage } from "@microsoft/applicationinsights-common";
 import { TestChannelPlugin } from "./TestChannelPlugin";
 import { SinonStub } from 'sinon';
 
@@ -156,6 +156,13 @@ export class PropertiesTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 const core = new AppInsightsCore();
+                core.setCookieMgr(createCookieMgr({
+                    cookieCfg: {
+                        setCookie: (name: string, value: string) => this._setCookie(name, value),
+                        getCookie: (name: string) => this._getCookie(name),
+                        delCookie: (name: string) => this._delCookie(name)
+                    }
+                }, core.logger))
                 const channel = new TestChannelPlugin();
                 const properties = new PropertiesPlugin();
                 let exceptedDefaultConfig = {
@@ -202,12 +209,12 @@ export class PropertiesTests extends AITestClass {
                 // Initialize
                 core.initialize(config, [channel, properties]);
                 let extConfig = properties["_extConfig"];
-                Assert.deepEqual(extConfig, exceptedDefaultConfig, "iniial config is set");
+                Assert.deepEqual(extConfig, exceptedDefaultConfig, "intial config is set");
 
                 // check inital context
                 let propCtx = properties.context;
                 let appId = propCtx.appId();
-                Assert.equal(appId, null, "appId shoule be null");
+                Assert.equal(appId, null, "appId should be null");
 
                 let application = propCtx.application;
                 Assert.equal(application.build, null, "application build should be null by default");
@@ -229,10 +236,10 @@ export class PropertiesTests extends AITestClass {
                 Assert.deepEqual(user.config, exceptedDefaultConfig, "user config should be updated");
 
                 let internalSdkVer = propCtx.internal.sdkVersion;
-                Assert.ok(internalSdkVer.indexOf("ext1") > -1, "sdk ext prefix should be null");
+                Assert.ok(internalSdkVer.indexOf("ext1") > -1, "sdk ext prefix should be used");
 
                 let session = propCtx.session;
-                Assert.ok(session, "session should be null");
+                Assert.ok(session, "session should not be null");
 
                 let sessionMgr = propCtx.sessionManager;
                 Assert.ok(sessionMgr.automaticSession, "session mgr should not be null");
@@ -244,7 +251,7 @@ export class PropertiesTests extends AITestClass {
                 Assert.equal(web, null, "web should be null");
 
                 let sessionId = propCtx.getSessionId();
-                Assert.equal(sessionId, null, "session Id shoule be null");
+                Assert.equal(sessionId, null, "session Id should be null");
                 
                 // change properities here to make sure we won't overwrite them after config change
                 device.id = deviceId;
@@ -253,22 +260,23 @@ export class PropertiesTests extends AITestClass {
                 application.build = appBuild;
                 session.id = seId;
                 sessionMgr.automaticSession.id = seId;
-                Assert.equal(propCtx.getSessionId(), seId, "session Id shoule be updated");
+                Assert.equal(propCtx.getSessionId(), seId, "session Id should be updated test1");
                 let sessionPrefix = "ai_session" + "postfix1";
                 sessionMgr.backup();
                 let sessionStorage = utlGetLocalStorage(core.logger, sessionPrefix);
-                Assert.ok(sessionStorage.indexOf(seId) > -1, "sessionStorage should be set based on session id");
+                Assert.ok(sessionStorage.indexOf(seId) > -1, "sessionStorage should be set based on session id test1");
 
                 sessionMgr.update();
-                Assert.ok(cookieStub.called, "cookie set");
-                Assert.equal(sessionPrefix, cookie, "cookie name is set");
-                Assert.ok(cookieValue.indexOf(seId) > -1,"cookie value is set");
+                Assert.ok(cookieStub.called, "cookie set test1");
+                Assert.equal(sessionPrefix, cookie, "cookie name is set test1");
+                Assert.ok(cookieValue.indexOf(seId) > -1, "cookie value is set test1");
                 this.clock.tick(20);
                 sessionMgr.update();
-                Assert.equal(sessionMgr.automaticSession.id, seId, "session id shoule be same");
+                Assert.equal(sessionMgr.automaticSession.id, seId, "session id should be same test1");
                 this.clock.tick(24 * 60 * 60 * 101 - 20);
                 sessionMgr.update();
-                Assert.equal(sessionMgr.automaticSession.id, "26", "session id shoule be renewed");
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id should be renewed test1");
+                Assert.ok(cookieValue.indexOf("26|") > -1,"cookie value is reset test1");
               
                 // change config
                 let newConfig = {
@@ -307,27 +315,34 @@ export class PropertiesTests extends AITestClass {
                 Assert.deepEqual(user.config, newConfig, "user config should be updated");
 
                 internalSdkVer = propCtx.internal.sdkVersion;
-                Assert.ok(internalSdkVer.indexOf("ext2") > -1, "sdk ext prefix should not be null");
+                Assert.ok(internalSdkVer.indexOf("ext2") > -1, "sdk ext prefix should be used and updated");
 
                 sessionMgr = propCtx.sessionManager;
                 Assert.ok(sessionMgr.automaticSession, "session mgr should not be null");
                 sessionPrefix = "ai_session" + "postfix2";
                 sessionMgr.backup();
                 sessionStorage = utlGetLocalStorage(core.logger, sessionPrefix);
-                Assert.ok(sessionStorage.indexOf("26") > -1, "sessionStorage should be updated based on session id");
+                Assert.ok(sessionStorage.indexOf("26") > -1, "sessionStorage should be updated based on session id test2");
+                Assert.ok(cookieValue.indexOf("26|") > -1, "cookie should not be updated test2");
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id should not be renewed test2");
                 
-                this.clock.tick(24 * 60 * 60 * 101);
+                this.clock.tick(60000);
                 sessionMgr.update();
-                Assert.ok(cookieStub.called, "cookie set");
-                Assert.equal(sessionPrefix, cookie, "cookie name is set");
-                Assert.ok(cookieValue.indexOf("26") > -1,"cookie value is set");
-                this.clock.tick(24 * 60 * 60);
+                Assert.ok(cookieStub.called, "cookie set test3");
+                Assert.equal(sessionPrefix, cookie, "cookie name is set test3");
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id should not be renewed test3");
+                Assert.ok(cookieValue.indexOf("26|") > -1, "cookie value should use previous session id test3");
+                Assert.equal(sessionMgr.automaticSession.id, "26", "session id should not be renewed test4");
+                this.clock.tick(24 * 60 * 60 * 102);
                 sessionMgr.update();
-                Assert.equal(sessionMgr.automaticSession.id, "261", "session id shoule be renewed");
+                Assert.ok(cookieStub.called, "cookie set test5");
+                Assert.equal(sessionPrefix, cookie, "cookie name is set test5");
+                Assert.ok(cookieValue.indexOf("261|") > -1, "cookie value is renewed test6");
+                Assert.equal(sessionMgr.automaticSession.id, "261", "session id should be renewed test6");
 
                 //properties that should not be updated
                 appId = propCtx.appId();
-                Assert.equal(appId, null, "appId shoule be null");
+                Assert.equal(appId, null, "appId should be null");
 
                 application = propCtx.application;
                 Assert.equal(application.build, appBuild, "application build should not be updated");
@@ -348,10 +363,16 @@ export class PropertiesTests extends AITestClass {
                 Assert.equal(session.id, seId, "session should not be updated");
                 
                 os = propCtx.os;
-                Assert.equal(os, null,"os should  not be updated");
+                Assert.equal(os, null,"os should not be updated");
 
                 sessionId = propCtx.getSessionId();
                 Assert.equal(sessionId, seId, "session Id should not be updated");
+                
+                if (utlCanUseLocalStorage()) {
+                    window.localStorage.clear();
+                }
+                core.getCookieMgr().del("ai_session" + "postfix1");
+                core.getCookieMgr().del("ai_session" + "postfix2");
             }
         });
     }
