@@ -1,5 +1,5 @@
 ﻿import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim, ITelemetryPlugin, IChannelControls, random32 } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim, ITelemetryPlugin, IChannelControls, random32, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
@@ -105,7 +105,7 @@ export class PropertiesTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Properties Configuration: config can be set from root dynamically",
+            name: "Properties Configuration: default config can be set from root",
             useFakeTimers: true,
             test: () => {
                 const core = new AppInsightsCore();
@@ -147,41 +147,176 @@ export class PropertiesTests extends AITestClass {
                 };
 
                 Assert.deepEqual(extConfig, exceptedDefaultConfig, "default config is set");
-                let propCtx = properties.context;
-                Assert.ok(propCtx?.internal.sdkVersion, "internal.sdkVersion shoule not be null");
-                Assert.ok(propCtx?.internal.sdkVersion.indexOf("ext") === -1, "internal.sdkVersion should not contain ext prefix");
-                let propUser = propCtx.user;
-                Assert.deepEqual(propUser.config, exceptedDefaultConfig,  "user config should be set");
+            }
+        });
 
-                let newConfig = {
-                    instrumentationKey: "key",
-                    accountId: "id",
-                    sessionRenewalMs: 30 * 60 * 100,
+        this.testCase({
+            name: "Properties Configuration: config can be set from root dynamically",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const channel = new TestChannelPlugin();
+                const properties = new PropertiesPlugin();
+                let exceptedDefaultConfig = {
+                    instrumentationKey: "key1",
+                    accountId: "id1",
+                    sessionRenewalMs: 30 * 60 * 101,
                     samplingPercentage: 90,
-                    sessionExpirationMs: 24 * 60 * 60 * 100,
-                    cookieDomain: "domain",
-                    sdkExtension: "ext",
-                    isBrowserLinkTrackingEnabled: true,
-                    appId: "id",
-                    getSessionId: "session",
-                    namePrefix: "prefix",
-                    sessionCookiePostfix: "postfix",
-                    userCookiePostfix: "usercookie",
+                    sessionExpirationMs: 24 * 60 * 60 * 101,
+                    cookieDomain: "domain1",
+                    sdkExtension: "ext1",
+                    isBrowserLinkTrackingEnabled: false,
+                    appId: "id1",
+                    getSessionId: "session1",
+                    namePrefix: "prefix1",
+                    sessionCookiePostfix: "postfix1",
+                    userCookiePostfix: "usercookie1",
                     idLength: 26,
                     getNewId: (idLength?: number) => {
                         return "" + (idLength || 0);
                     }
                 } as IPropertiesConfig;
-                core.config.extensionConfig[id] = newConfig;
+                let id = properties.identifier;
+                const config = {
+                    instrumentationKey: "instrumentation_key",
+                    extensionConfig: {
+                        [id]: exceptedDefaultConfig
+                    }
+                };
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                let appBuild = "build";
+                let deviceId = "newDeviceId";
+                let locId = "locId";
+                let parentId = "parentId";
+                let seId = "sessionId";
+
+                // Initialize
+                core.initialize(config, [channel, properties]);
+                let extConfig = properties["_extConfig"];
+                Assert.deepEqual(extConfig, exceptedDefaultConfig, "iniial config is set");
+
+                // check inital context
+                let propCtx = properties.context;
+                let appId = propCtx.appId();
+                Assert.equal(appId, null, "appId shoule be null");
+
+                let application = propCtx.application;
+                Assert.equal(application.build, null, "application build should be null by default");
+               
+                let device = propCtx.device;
+                Assert.equal(device.id, "browser", "device id should not be null");
+              
+                let location = propCtx.location;
+                Assert.ok(location, "location should not be null");
+               
+                let trace = propCtx.telemetryTrace;
+                let traceId = trace.traceID;
+                Assert.ok(trace, "trace should not be null");
+                Assert.ok(trace.name, "trace name should not be null");
+                Assert.ok(traceId, "trace id should not be null");
+                Assert.ok(!trace.parentID, "trace parent should be null");
+                
+                let user = propCtx.user;
+                Assert.deepEqual(user.config, exceptedDefaultConfig, "user config should be updated");
+
+                let internalSdkVer = propCtx.internal.sdkVersion;
+                Assert.ok(internalSdkVer.indexOf("ext1") > -1, "sdk ext prefix should be null");
+
+                let session = propCtx.session;
+                Assert.ok(session, "session should be null");
+
+                let sessionMgr = propCtx.sessionManager;
+                Assert.ok(sessionMgr.automaticSession, "session mgr should not be null");
+
+                let os = propCtx.os;
+                Assert.equal(os, null, "os should be null");
+            
+                let web = propCtx.web;
+                Assert.equal(web, null, "web should be null");
+
+                let sessionId = propCtx.getSessionId();
+                Assert.equal(sessionId, null, "session Id shoule be null");
+                
+                // change properities here to make sure we won't overwrite them after config change
+                device.id = deviceId;
+                location.ip = locId;
+                trace.parentID = parentId;
+                application.build = appBuild;
+                session.id = seId;
+                sessionMgr.automaticSession.id = seId;
+                Assert.equal(propCtx.getSessionId(), seId, "session Id shoule be updated");
+              
+                // change config
+                let newConfig = {
+                    instrumentationKey: "key2",
+                    accountId: "id2",
+                    sessionRenewalMs: 30 * 60 * 102,
+                    samplingPercentage: 90,
+                    sessionExpirationMs: 24 * 60 * 60 * 102,
+                    cookieDomain: "domain2",
+                    sdkExtension: "ext2",
+                    isBrowserLinkTrackingEnabled: true,
+                    appId: "id2",
+                    getSessionId: "session2",
+                    namePrefix: "prefix2",
+                    sessionCookiePostfix: "postfix2",
+                    userCookiePostfix: "usercookie2",
+                    idLength: 26,
+                    getNewId: (idLength?: number) => {
+                        return "" + (idLength || 0) + 1;
+                    }
+                } as IPropertiesConfig;
+
+                core.config.extensionConfig =  core.config.extensionConfig?  core.config.extensionConfig : {};
+                let coreExtConfig = core.config.extensionConfig[id]
+                objForEachKey(newConfig, (key, value) => {
+                    coreExtConfig[key] = value;
+                });
                 this.clock.tick(1);
+
+                // properties that should be updated
                 extConfig = properties["_extConfig"];
-                Assert.equal(extConfig, newConfig, "extConfig should be updated");
+                Assert.deepEqual(extConfig, newConfig, "extConfig should be updated");
                 propCtx = properties.context;
-                Assert.ok(propCtx?.internal.sdkVersion, "internal.sdkVersion should not be null after update");
-                Assert.ok(propCtx?.internal.sdkVersion.indexOf("ext") > -1, "internal.sdkVersion should contain ext prefix");
-                propUser = propCtx.user;
-                Assert.deepEqual(propUser.config, newConfig,  "user config should be updated");
-                Assert.equal(propCtx?.user.id, 26, "propCtx.user.id should be updated");
+
+                user = propCtx.user;
+                Assert.deepEqual(user.config, newConfig, "user config should be updated");
+
+                internalSdkVer = propCtx.internal.sdkVersion;
+                Assert.ok(internalSdkVer.indexOf("ext2") > -1, "sdk ext prefix should not be null");
+
+                sessionMgr = propCtx.sessionManager;
+                Assert.ok(sessionMgr.automaticSession, "session mgr should not be null");
+
+                //properties that should not be updated
+                appId = propCtx.appId();
+                Assert.equal(appId, null, "appId shoule be null");
+
+                application = propCtx.application;
+                Assert.equal(application.build, appBuild, "application build should not be updated");
+
+                device = propCtx.device;
+                Assert.equal(device.id, deviceId, "device id should not be updated");
+
+                location = propCtx.location;
+                Assert.equal(location.ip, locId, "location should not be updated");
+
+                trace = propCtx.telemetryTrace;
+                Assert.ok(trace, "trace should not be null");
+                Assert.ok(trace.name, "trace name should not be null");
+                Assert.equal(trace.traceID, traceId, "trace id should be same with previous one");
+                Assert.equal(trace.parentID, parentId, "trace parent should not be updated");
+             
+                session = propCtx.session;
+                Assert.equal(session.id, seId, "session should not be updated");
+                
+                os = propCtx.os;
+                Assert.equal(os, null,"os should  not be updated");
+
+                sessionId = propCtx.getSessionId();
+                Assert.equal(sessionId, seId, "session Id should not be updated");
             }
         });
     }

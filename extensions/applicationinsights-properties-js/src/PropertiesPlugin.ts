@@ -68,6 +68,14 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
                 _base.initialize(config, core, extensions, pluginChain);
                 _populateDefaults(config);
+                _previousTraceCtx = core.getTraceCtx(false);
+                _context = new TelemetryContext(core, _extensionConfig, _previousTraceCtx);
+                _distributedTraceCtx = createDistributedTraceContextFromTrace(_self.context.telemetryTrace, _previousTraceCtx);
+                core.setTraceCtx(_distributedTraceCtx);
+                _self.context.appId = () => {
+                    let breezeChannel = core.getPlugin<IPlugin>(BreezeChannelIdentifier);
+                    return breezeChannel ? breezeChannel.plugin["_appId"] : null;
+                };
             };
     
             /**
@@ -135,15 +143,6 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
-    
-                    _previousTraceCtx = core.getTraceCtx(false);
-                    _context = new TelemetryContext(core, _extensionConfig, _previousTraceCtx);
-                    _distributedTraceCtx = createDistributedTraceContextFromTrace(_self.context.telemetryTrace, _previousTraceCtx);
-                    core.setTraceCtx(_distributedTraceCtx);
-                    _self.context.appId = () => {
-                        let breezeChannel = core.getPlugin<IPlugin>(BreezeChannelIdentifier);
-                        return breezeChannel ? breezeChannel.plugin["_appId"] : null;
-                    };
 
                     // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class
                     _self["_extConfig"] = _extensionConfig;
