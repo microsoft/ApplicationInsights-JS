@@ -47,6 +47,14 @@ export interface ISendBuffer {
      * Removes items from the SENT_BUFFER. Should be called on successful response from the backend.
      */
     clearSent: (payload: string[]) => void;
+
+     /**
+     * Copy current buffer items to a new buffer.
+     * if canUseSessionStorage is undefined, it will set to false.
+     * if newLogger and newConfig are undefined, current logger and empty config will be used.
+     * if canUseSessionStorage is set to true, new SessionStorageSendBuffer will be returned otherwise ArraySendBuffer will be returned.
+     */
+     createNew: (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean) => ArraySendBuffer | SessionStorageSendBuffer;
 }
 
 abstract class BaseSendBuffer {
@@ -124,6 +132,17 @@ abstract class BaseSendBuffer {
         
                 return null;
             };
+
+            _self.createNew = (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer => {
+                let items = _buffer.slice(0);
+                newLogger = newLogger || logger;
+                newConfig = newConfig || {} as ISenderConfig;
+                let newBuffer = !!canUseSessionStorage? new SessionStorageSendBuffer(newLogger, newConfig) : new ArraySendBuffer(newLogger, newConfig);
+                arrForEach(items, (payload) => {
+                    newBuffer.enqueue(payload);
+                });
+                return newBuffer;
+            }
         });
     }
 
@@ -153,6 +172,11 @@ abstract class BaseSendBuffer {
     public batchPayloads(payload: string[]): string {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    public createNew(newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null
     }
 }
 
@@ -198,6 +222,8 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
     constructor(logger: IDiagnosticLogger, config: ISenderConfig) {
         super(logger, config);
         let _bufferFullMessageSent = false;
+        //Note: should not use config.namePrefix directly, because it will always refers to the latest namePrefix
+        let _namePrefix = config?.namePrefix;
 
         dynamicProto(SessionStorageSendBuffer, this, (_self, _base) => {
             const bufferItems = _getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
@@ -209,7 +235,6 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
             if (buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                 buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
             }
-    
             _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
             _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, buffer);
     
@@ -270,10 +295,29 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
         
                 _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
             };
+
+            _self.createNew = (newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean) => {
+                canUseSessionStorage = !!canUseSessionStorage;
+                let unsentItems = _self._get().slice(0);
+                let sentItems = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY).slice(0);
+                newLogger = newLogger || logger;
+                newConfig = newConfig || {} as ISenderConfig;
+                
+                // to make sure that we do not send duplicated payloads when it is switched back to previous one
+                _self.clear();
+                let newBuffer = canUseSessionStorage? new SessionStorageSendBuffer(newLogger, newConfig) : new ArraySendBuffer(newLogger, newConfig);
+                arrForEach(unsentItems, (payload) => {
+                    newBuffer.enqueue(payload);
+                });
+                if (canUseSessionStorage) {
+                    // arr buffer will clear all payloads if markAsSent() is called
+                    newBuffer.markAsSent(sentItems);
+                }
+                return newBuffer;
+            }
         
             function _removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
                 const remaining: string[] = [];
-        
                 arrForEach(buffer, (value) => {
                     if (!isFunction(value) && arrIndexOf(payloads, value) === -1) {
                         remaining.push(value);
@@ -286,7 +330,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
             function _getBuffer(key: string): string[] {
                 let prefixedKey = key;
                 try {
-                    prefixedKey = config.namePrefix ? config.namePrefix + "_" + prefixedKey : prefixedKey;
+                    prefixedKey = _namePrefix ? _namePrefix + "_" + prefixedKey : prefixedKey;
                     const bufferJson = utlGetSessionStorage(logger, prefixedKey);
                     if (bufferJson) {
                         let buffer: string[] = getJSON().parse(bufferJson);
@@ -312,7 +356,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
             function _setBuffer(key: string, buffer: string[]) {
                 let prefixedKey = key;
                 try {
-                    prefixedKey = config.namePrefix ? config.namePrefix + "_" + prefixedKey : prefixedKey;
+                    prefixedKey = _namePrefix ? _namePrefix + "_" + prefixedKey : prefixedKey;
                     const bufferJson = JSON.stringify(buffer);
                     utlSetSessionStorage(logger, prefixedKey, bufferJson);
                 } catch (e) {
@@ -343,5 +387,10 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
 
     public clearSent(payload: string[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public createNew(newLogger?: IDiagnosticLogger, newConfig?: ISenderConfig, canUseSessionStorage?: boolean): ArraySendBuffer | SessionStorageSendBuffer {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null
     }
 }
