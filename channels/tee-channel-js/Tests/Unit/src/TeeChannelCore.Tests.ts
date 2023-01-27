@@ -68,9 +68,8 @@ export class TeeChannelCoreTests extends AITestClass {
                 Assert.deepEqual(coreChannels[1], channelPlugin, "core channel 2 in test 3");
                 teeChannels = teeChannel.getTeeChannels();
                 Assert.equal(1, teeChannels.length, "Total number of tee channel queues");
-                Assert.equal(2, teeChannels[0].length, "tee channel 1 length in test 3");
-                Assert.equal(teeChannel, teeChannels[0][0], "tee channel 1 index 1 in test 3");
-                Assert.equal(channelPlugin1, teeChannels[0][1], "tee channel 1 index 2 in test 3");
+                Assert.equal(1, teeChannels[0].length, "tee channel 1 length in test 3");
+                Assert.equal(channelPlugin1, teeChannels[0][0], "tee channel 1 index 1 in test 3");
 
                 appInsightsCore.config.extensionConfig[extId] = {ignoreCoreChannels: false, teeChannels: [[channelPlugin1, teeChannel]]};
                 this.clock.tick(1);
@@ -82,9 +81,8 @@ export class TeeChannelCoreTests extends AITestClass {
                 Assert.equal(2, teeChannels.length, "Total number of tee channel queues");
                 Assert.equal(1, teeChannels[0].length, "tee channel 1 length in test 4");
                 Assert.equal(channelPlugin1, teeChannels[0][0], "tee channel 1 index1 in test 4");
-                Assert.equal(2, teeChannels[1].length, "tee channel 2 length in test 4");
-                Assert.equal(teeChannel, teeChannels[1][0], "tee channel 2 index 1 in test 4");
-                Assert.equal(channelPlugin1, teeChannels[1][1], "tee channel 2 index 2 in test 4");
+                Assert.equal(1, teeChannels[1].length, "tee channel 2 length in test 4");
+                Assert.equal(channelPlugin1, teeChannels[1][0], "tee channel 2 index 1 in test 4");
             }
         });
 
