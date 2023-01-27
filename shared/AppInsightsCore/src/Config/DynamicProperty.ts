@@ -33,7 +33,12 @@ function _patchArray<T>(state: _IDynamicConfigHandlerState<T>, target: any) {
     }
 }
 
-function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, theConfig: C, name: string, value: V) {
+function _getOwnPropGetter<T>(target: T, name: PropertyKey) {
+    let propDesc = objGetOwnPropertyDescriptor(target, name);
+    return propDesc && propDesc.get;
+}
+
+function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, theConfig: C, name: string, value: V): V {
     // Does not appear to be dynamic so lets make it so
     let detail: _IDynamicDetail<T> = {
         n: name,
@@ -88,23 +93,36 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
 
     function _setProperty(newValue: V) {
         if (value !== newValue) {
-            if (!!_setProperty[state.ro] && state.upd) {
+            if (!!_getProperty[state.ro] && !state.upd) {
                 // field is marked as readonly so return false
-                throwInvalidAccess("[" + name + "] is sealed from " + dumpObj(theConfig));
+                throwInvalidAccess("[" + name + "] is read-only:" + dumpObj(theConfig));
             }
 
-            // As we are replacing the value, if already dynamic then we need to notify any listeners that changes
-            // are happening
-            if (value && value[CFG_HANDLER_LINK]) {
-                // For objects / arrays, we can indirectly inform any listeners by just changing the value to undefined
-                // This will trigger any listeners by simply calling their version of the setter.
-                if (isPlainObject(value) || isArray(value)) {
+            let isReferenced = _getProperty[state.rf];
+            if(isPlainObject(value) || isArray(value)) {
+                if (isReferenced) {
+                    // Reassign the properties from the current value to the same properties from the newValue
+                    // This will set properties not in the newValue to undefined
+                    objForEachKey(value, (key) => {
+                        value[key] = newValue[key];
+                    });
+    
+                    // Now assign / re-assign value with all of the keys from newValue
+                    objForEachKey(newValue, (key, theValue) => {
+                        _setDynamicProperty(state, value, key, theValue);
+                    });
+
+                    // Now drop newValue so when we assign value later it keeps the existing reference
+                    newValue = value;
+                } else if (value && value[CFG_HANDLER_LINK]) {
+                    // As we are replacing the value, if it's already dynamic then we need to notify the listeners
+                    // for every property it has already
                     objForEachKey(value, (key) => {
                         // Check if the value is dynamic
-                        let propDesc = objGetOwnPropertyDescriptor(value, key);
-                        if (propDesc && propDesc.get) {
+                        let getter = _getOwnPropGetter(value, key);
+                        if (getter) {
                             // And if it is tell it's listeners that the value has changed
-                            let valueState: _IDynamicGetter = propDesc.get[state.prop];
+                            let valueState: _IDynamicGetter = getter[state.prop];
                             valueState && valueState.chng();
                         }
                     });
@@ -112,10 +130,12 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
             }
 
             checkDynamic = false;
-            if (isPlainObject(newValue) || isArray(newValue)) {
+            if (!isReferenced && (isPlainObject(newValue) || isArray(newValue))) {
+                // As the newValue is an object/array lets preemptively make it dynamic
                 _makeDynamicObject(state, newValue);
             }
 
+            // Now assign the internal "value" to the newValue
             value = newValue;
 
             // Cause any listeners to be scheduled for notification
@@ -124,22 +144,34 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
     }
 
     objDefineAccessors(theConfig, detail.n, _getProperty, _setProperty, true);
+
+    // Return the dynamic reference
+    return _getProperty();
 }
 
-export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, target: C, name: string, value: V) {
+export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, target: C, name: string, value: V, inPlace?: boolean, rdOnly?: boolean): V {
     if (target) {
-        let isDynamic = false;
         // To be a dynamic property it needs to have a get function
-        let propDesc = objGetOwnPropertyDescriptor(target, name);
-        if (propDesc && propDesc.get) {
-            isDynamic = !!propDesc.get[state.prop];
-        }
+        let getter = _getOwnPropGetter(target, name);
+        let isDynamic = getter && !!getter[state.prop];
     
         if (!isDynamic) {
-            _makeDynamicProperty(state, target, name, value);
+            value = _makeDynamicProperty(state, target, name, value);
+            if (inPlace || rdOnly) {
+                getter = _getOwnPropGetter(target, name);
+            }
         } else {
-            // Looks like it's already dynamic and a different value so just assign the new value
+            // Looks like it's already dynamic just assign the new value
             target[name] = value;
+        }
+
+        // Assign the optional flags if true
+        if (inPlace) {
+            getter[state.rf] = inPlace;
+        }
+
+        if (rdOnly) {
+            getter[state.ro] = rdOnly;
         }
     }
 

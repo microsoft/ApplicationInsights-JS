@@ -4,8 +4,8 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    ITimerHandler, arrAppend, arrForEach, arrIndexOf, deepExtend, dumpObj, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
-    objDeepFreeze, objDefineProp, objForEachKey, objFreeze, objHasOwn, scheduleInterval, scheduleTimeout, throwError
+    ITimerHandler, arrAppend, arrForEach, arrIndexOf, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze,
+    objDefineProp, objForEachKey, objFreeze, objHasOwn, scheduleInterval, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -50,6 +50,7 @@ import {
 import { _getPluginState, createDistributedTraceContext, initializePlugins, sortPlugins } from "./TelemetryHelpers";
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
+import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
 
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
@@ -246,7 +247,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         let _internalLogsEventName: string | null;
         let _evtNamespace: string;
         let _unloadHandlers: IUnloadHandlerContainer;
-        let _hooks: Array<ILegacyUnloadHook | IUnloadHook>;
+        let _hookContainer: IUnloadHookContainer;
         let _debugListener: INotificationListener | null;
         let _traceCtx: IDistributedTraceContext | null;
         let _instrumentationKey: string | null;
@@ -293,6 +294,14 @@ export class AppInsightsCore implements IAppInsightsCore {
                 _addUnloadHook(_configHandler.watch((details) => {
                     _instrumentationKey = details.cfg.instrumentationKey;
 
+                    // Mark the extensionConfig and all first level keys as referenced
+                    // This is so that calls to getExtCfg() will always return the same object
+                    // Even when a user may "re-assign" the plugin properties (or it's unloaded/reloaded)
+                    let extCfg = details.ref(details.cfg, STR_EXTENSION_CONFIG);
+                    objForEachKey(extCfg, (key) => {
+                        details.ref(extCfg, key);
+                    });
+                
                     if (isNullOrUndefined(_instrumentationKey)) {
                         throwError("Please provide instrumentation key");
                     }
@@ -527,18 +536,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
                 let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self);
                 processUnloadCtx.onComplete(() => {
-                    let oldHooks = _hooks;
-                    _hooks = [];
-
-                    // Remove all registered unload hooks
-                    arrForEach(oldHooks, (fn) => {
-                        // allow either rm or remove callback function
-                        try{
-                            ((fn as IUnloadHook).rm || (fn as ILegacyUnloadHook).remove).call(fn);
-                        } catch (e) {
-                            _throwInternal(_self.logger, eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, "Unloading:" + dumpObj(e));
-                        }
-                    });
+                    _hookContainer.run(_self.logger);
 
                     _initDefaults();
                     unloadComplete && unloadComplete(unloadState);
@@ -739,7 +737,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
                 // Use a default logger so initialization errors are not dropped on the floor with full logging
                 _configHandler = createDynamicConfig({}, defaultConfig, _self.logger);
-                
+
                 // Set the logging level to critical so that any critical initialization failures are displayed on the console
                 _configHandler.cfg.loggingLevelConsole = eLoggingSeverity.CRITICAL;
 
@@ -800,7 +798,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                 _unloadHandlers = createUnloadHandlerContainer();
                 _traceCtx = null;
                 _instrumentationKey = null;
-                _hooks = [];
+                _hookContainer = createUnloadHookContainer();
                 _cfgListeners = [];
                 _pluginVersionString = null;
                 _pluginVersionStringArr = null;
@@ -1103,9 +1101,7 @@ export class AppInsightsCore implements IAppInsightsCore {
             }
 
             function _addUnloadHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook> | ILegacyUnloadHook | ILegacyUnloadHook[] | Iterator<ILegacyUnloadHook>) {
-                if (hooks) {
-                    arrAppend(_hooks, hooks);
-                }
+                _hookContainer.add(hooks);
             }
         });
     }

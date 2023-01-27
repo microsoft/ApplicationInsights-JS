@@ -20,8 +20,9 @@ export interface _IDynamicGetter {
  * Interface for the global dynamic config handler
  */
 export interface _IDynamicConfigHandlerState<T> {
-    prop: symbol;
-    ro: symbol;
+    prop: symbol;   // Identify that this is a dynamic property
+    ro: symbol;     // Identify that this property is read-only
+    rf: symbol;     // Identify that this property is referenced and should be updated in-place
     
     /**
      * Link to the handler

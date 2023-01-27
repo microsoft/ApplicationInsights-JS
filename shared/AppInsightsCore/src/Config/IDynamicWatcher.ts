@@ -26,6 +26,22 @@ export interface IWatchDetails<T extends IConfiguration> {
      * @param defaultValues - The default values to apply to the config
      */
     setDf: <C>(theConfig: C, defaultValues: IConfigDefaults<C>) => C;
+
+    /**
+     * Set this named property of the target as referenced, which will cause any object or array instance
+     * to be updated in-place rather than being entirely replaced. All other values will continue to be replaced.
+     * @returns The referenced properties current value
+     */
+    ref: <C, V = any>(target: C, name: string) => V;
+
+    /**
+     * Set this named property of the target as read-only, which will block this single named property from
+     * ever being changed for the target instance.
+     * This does NOT freeze or seal the instance, it just stops the direct re-assignment of the named property,
+     * if the value is a non-primitive (ie. an object or array) it's properties will still be mutable.
+     * @returns The referenced properties current value
+     */
+    rdOnly: <C, V = any>(target: C, name: string) => V;
 }
 
 export type WatcherFunction<T extends IConfiguration> = (details: IWatchDetails<T>) => void;

@@ -4,8 +4,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IUserContext, utlRemoveStorage } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, ICookieMgr, _eInternalMessageId, _throwInternal, eLoggingSeverity, newId, onConfigChange, safeGetCookieMgr,
-    safeGetLogger, toISOString
+    IAppInsightsCore, ICookieMgr, IUnloadHookContainer, _eInternalMessageId, _throwInternal, eLoggingSeverity, newId, onConfigChange,
+    safeGetCookieMgr, safeGetLogger, toISOString
 } from "@microsoft/applicationinsights-core-js";
 import { objDefineProp } from "@nevware21/ts-utils";
 import { IPropertiesConfig } from "../Interfaces/IPropertiesConfig";
@@ -69,7 +69,7 @@ export class User implements IUserContext {
      */
     public isUserCookieSet = false;
 
-    constructor(config: IPropertiesConfig, core: IAppInsightsCore) {
+    constructor(config: IPropertiesConfig, core: IAppInsightsCore, unloadHookContainer?: IUnloadHookContainer) {
         let _logger = safeGetLogger(core);
         let _cookieManager: ICookieMgr = safeGetCookieMgr(core);
         let _storageNamePrefix: string;
@@ -82,7 +82,7 @@ export class User implements IUserContext {
                 get: () => config
             });
 
-            onConfigChange(config, () => {
+            let unloadHook = onConfigChange(config, () => {
 
                 const userCookiePostfix = config.userCookiePostfix || "";
                 _storageNamePrefix = User.userCookieName + userCookiePostfix;
@@ -130,6 +130,8 @@ export class User implements IUserContext {
                     }
                 }
             });
+
+            unloadHookContainer && unloadHookContainer.add(unloadHook);
 
             function _generateNewId() {
                 let theConfig = (config || {}) as IPropertiesConfig;
