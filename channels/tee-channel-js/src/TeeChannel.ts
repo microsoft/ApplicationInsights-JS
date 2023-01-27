@@ -19,25 +19,30 @@ const defaultTeeChannelConfig: IConfigDefaults<ITeeChannelConfig> = objDeepFreez
     ignoreCoreChannels: false
 });
 
-function _addChannelQueue(channelQueue: _IInternalChannels[], queue: IChannelControls[], core: IAppInsightsCore) {
+function _addChannelQueue(channelQueue: _IInternalChannels[], queue: IChannelControls[], core: IAppInsightsCore, teeChannel?: IChannelControls) {
     if (queue && isArray(queue) && queue.length > 0) {
         queue = queue.sort((a, b) => { // sort based on priority within each queue
             return a.priority - b.priority;
         });
 
+        let _queue: IChannelControls[] = [];
         arrForEach(queue, queueItem => {
             if (queueItem.priority < ChannelControllerPriority) {
                 throwError(ChannelValidationMessage + queueItem.identifier);
             }
+            if (queueItem !== teeChannel) {
+                _queue.push(queueItem);
+            }
         });
 
         channelQueue.push({
-            queue: objFreeze(queue)
+            queue: objFreeze(_queue)
         });
+        
     }
 }
 
-function _createChannelQueues(config: ITeeChannelConfig, core: IAppInsightsCore) {
+function _createChannelQueues(config: ITeeChannelConfig, core: IAppInsightsCore, teeChannel?: TeeChannel) {
     let channelQueue: _IInternalChannels[] = [];
 
     if (config) {
@@ -45,14 +50,14 @@ function _createChannelQueues(config: ITeeChannelConfig, core: IAppInsightsCore)
             // Add and sort the configuration channel queues
             arrForEach(core.config.channels, (queue, idx) => {
                 if (idx > 0) {
-                    _addChannelQueue(channelQueue, queue, core);
+                    _addChannelQueue(channelQueue, queue, core, teeChannel);
                 }
             });
         }
 
         if (config.teeChannels) {
             // Add and sort the configuration channel queues
-            arrForEach(config.teeChannels, queue => _addChannelQueue(channelQueue, queue, core));
+            arrForEach(config.teeChannels, queue => _addChannelQueue(channelQueue, queue, core, teeChannel));
         }
     }
 
@@ -129,7 +134,7 @@ export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsA
                 let ctx = createProcessTelemetryContext(null, details.cfg, core);
                 let theConfig = ctx.getExtCfg(self.identifier, defaultTeeChannelConfig);
 
-                let channelQueue = _createChannelQueues(theConfig, core);
+                let channelQueue = _createChannelQueues(theConfig, core, self);
 
                 arrForEach(channelQueue, (channels) => {
                     if (channels && channels.queue.length > 0) {
