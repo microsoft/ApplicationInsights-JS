@@ -700,7 +700,6 @@ export class DynamicConfigTests extends AITestClass {
             }
         });
 
-
         this.testCase({
             name: "Validate read-only",
             useFakeTimers: true,
@@ -748,6 +747,203 @@ export class DynamicConfigTests extends AITestClass {
                 QUnit.assert.equal(0, theConfig.anArray[0], "0");
                 QUnit.assert.equal(2, theConfig.anArray[1], "2");
                 QUnit.assert.equal(3, theConfig.anArray[2], "3");
+            }
+        });
+
+        this.testCase({
+            name: "Validate updating referenced objects / arrays with non object or null / undefined",
+            useFakeTimers: true,
+            test: () => {
+                let expectedUserCfg = {
+                    userTest: {} as any
+                };
+
+                let theConfig: any = {
+                    instrumentationKey: "testiKey",
+                    endpointUrl: "https://localhost:9001",
+                    enableDebugExceptions: false,
+                    loggingLevelConsole: 1,
+                    extensionConfig: {
+                        "test": {} as any
+                    },
+                    userCfg: {
+                        userTest: {} as any
+                    }
+                };
+
+                let handler = createDynamicConfig(theConfig, {});
+                let config = handler.cfg;
+                let userCfg = handler.ref(theConfig, "userCfg");
+
+                Assert.deepEqual(expectedUserCfg, userCfg, "Validate that the expected user Cfg")
+                Assert.ok(userCfg === config.userCfg, "Validate userCfg reference is as expected")
+
+                // Assign the referenced object with null / undefined
+                config.userCfg = null;
+                Assert.deepEqual({ userTest: undefined }, config.userCfg);
+                Assert.ok(userCfg === config.userCfg, "The previous referenced value should still match");
+
+                config.userCfg = undefined;
+                Assert.deepEqual({ userTest: undefined }, config.userCfg);
+                Assert.ok(userCfg === config.userCfg, "The previous referenced value should still match");
+
+                // Assign back to an object (should become automatically referenced)
+                config.userCfg = {};
+                Assert.deepEqual({ userTest: undefined }, config.userCfg);
+                Assert.ok(userCfg === config.userCfg, "The previous referenced value should still match");
+                
+                // Grab a reference and update
+                userCfg = config.userCfg;
+                Assert.ok(userCfg === config.userCfg, "References should now match");
+
+                config.userCfg = { hello: "World" };
+                Assert.ok(userCfg === config.userCfg, "References should still match");
+                Assert.ok(objHasOwn(config.userCfg, "hello"), "Direct config reference should have the new property");
+                Assert.equal("World", config.userCfg.hello);
+                Assert.ok(objHasOwn(userCfg, "hello"), "previous reference should have the new property");
+                Assert.equal("World", userCfg.hello);
+
+                config.userCfg = expectedUserCfg;
+                Assert.ok(userCfg === config.userCfg, "References should still match");
+                Assert.ok(objHasOwn(config.userCfg, "userTest"), "Direct config reference should have the new property");
+                Assert.ok(objHasOwn(config.userCfg, "hello"), "Direct config reference should have the new property");
+                Assert.equal(undefined, config.userCfg.hello);
+                Assert.deepEqual({}, config.userCfg.userTest);
+                Assert.ok(objHasOwn(userCfg, "userTest"), "Direct config reference should have the new property");
+                Assert.ok(objHasOwn(userCfg, "hello"), "previous reference should have the new property");
+                Assert.equal(undefined, userCfg.hello);
+                Assert.deepEqual({}, userCfg.userTest);
+
+                // ---------------------------------------------------------------------
+                // Now try deleting the key, which will also drop the previous reference
+                // ---------------------------------------------------------------------
+                delete config.userCfg;
+                Assert.ok(!objHasOwn(config, "userCfg"), "userCfg is no longer present");
+                Assert.equal(undefined, config.userCfg, "Validate that the config.userCfg was removed");
+                Assert.ok(userCfg !== config.userCfg, "Validate userCfg reference should no longer match");
+
+                // Assign the referenced object with null / undefined
+                config.userCfg = null;
+                Assert.ok(objHasOwn(config, "userCfg"), "userCfg is present");
+                Assert.equal(null, config.userCfg, "Validate that the config.userCfg is null");
+                Assert.ok(userCfg !== config.userCfg, "Validate userCfg reference should no longer match");
+
+                config.userCfg = undefined;
+                Assert.ok(objHasOwn(config, "userCfg"), "userCfg is present");
+                Assert.equal(undefined, config.userCfg, "Validate that the config.userCfg is undefined");
+                Assert.ok(userCfg !== config.userCfg, "The previous referenced value should still match");
+
+                // Assign back to an object (should become automatically referenced)
+                config.userCfg = {};
+                Assert.deepEqual({}, config.userCfg);
+
+                // Grab a reference and update
+                userCfg = config.userCfg;
+                Assert.ok(userCfg === config.userCfg, "References should now match");
+
+                config.userCfg = { hello: "World" };
+                Assert.ok(userCfg !== config.userCfg, "References should not match");
+                Assert.ok(objHasOwn(config.userCfg, "hello"), "Direct config reference should have the new property");
+                Assert.equal("World", config.userCfg.hello);
+                Assert.ok(!objHasOwn(userCfg, "hello"), "previous reference should have the new property");
+                Assert.equal(undefined, userCfg.hello);
+            }
+        });
+
+        this.testCase({
+            name: "Validate updating initial referenced undefined value with objects / arrays with non object or null / undefined",
+            useFakeTimers: true,
+            test: () => {
+                let expectedUserCfg = {
+                    userTest: {} as any
+                };
+
+                let theConfig: any = {
+                    instrumentationKey: "testiKey",
+                    endpointUrl: "https://localhost:9001",
+                    enableDebugExceptions: false,
+                    loggingLevelConsole: 1,
+                    userCfg: undefined
+                };
+
+                let handler = createDynamicConfig(theConfig, {});
+                let config = handler.cfg;
+
+                let userCfg = handler.ref(theConfig, "userCfg");
+
+                Assert.equal(undefined, config.userCfg, "Check that the userCfg value is as expected");
+                Assert.deepEqual(undefined, userCfg, "Validate that the expected user Cfg")
+                Assert.ok(userCfg === config.userCfg, "Validate userCfg reference is as expected")
+
+                // Assign the referenced object with null / undefined
+                config.userCfg = null;
+                Assert.equal(null, config.userCfg);
+                Assert.ok(userCfg !== config.userCfg, "The previous referenced value should no longer match");
+
+                config.userCfg = undefined;
+                Assert.equal(undefined, config.userCfg);
+                Assert.ok(userCfg === config.userCfg, "The previous referenced value should no longer match");
+
+                // Assign back to an object (should become automatically referenced)
+                config.userCfg = {};
+                Assert.equal(0, objKeys(config.userCfg), "Check the number of keys");
+                Assert.ok(userCfg !== config.userCfg, "The previous referenced value should no longer match");
+                
+                // Grab a reference and update
+                userCfg = config.userCfg;
+                Assert.ok(userCfg === config.userCfg, "References should now match");
+
+                config.userCfg = { hello: "World" };
+                Assert.ok(userCfg === config.userCfg, "References should still match");
+                Assert.ok(objHasOwn(config.userCfg, "hello"), "Direct config reference should have the new property")
+                Assert.equal("World", config.userCfg.hello);
+                Assert.ok(objHasOwn(userCfg, "hello"), "previous reference should have the new property")
+                Assert.equal("World", userCfg.hello);
+
+                config.userCfg = expectedUserCfg;
+                Assert.ok(userCfg === config.userCfg, "References should still match");
+                Assert.ok(objHasOwn(config.userCfg, "userTest"), "Direct config reference should have the new property")
+                Assert.ok(objHasOwn(config.userCfg, "hello"), "Direct config reference should have the new property")
+                Assert.equal(undefined, config.userCfg.hello);
+                Assert.deepEqual({}, config.userCfg.userTest);
+                Assert.ok(objHasOwn(userCfg, "userTest"), "Direct config reference should have the new property")
+                Assert.ok(objHasOwn(userCfg, "hello"), "previous reference should have the new property")
+                Assert.equal(undefined, userCfg.hello);
+                Assert.deepEqual({}, userCfg.userTest);
+
+                // ---------------------------------------------------------------------
+                // Now try deleting the key, which will also drop the previous reference
+                // ---------------------------------------------------------------------
+                delete config.userCfg;
+                Assert.ok(!objHasOwn(config, "userCfg"), "userCfg is no longer present");
+                Assert.equal(undefined, config.userCfg, "Validate that the config.userCfg was removed");
+                Assert.ok(userCfg !== config.userCfg, "Validate userCfg reference should no longer match");
+
+                // Assign the referenced object with null / undefined
+                config.userCfg = null;
+                Assert.ok(objHasOwn(config, "userCfg"), "userCfg is present");
+                Assert.equal(null, config.userCfg, "Validate that the config.userCfg is null");
+                Assert.ok(userCfg !== config.userCfg, "Validate userCfg reference should no longer match");
+
+                config.userCfg = undefined;
+                Assert.ok(objHasOwn(config, "userCfg"), "userCfg is present");
+                Assert.equal(undefined, config.userCfg, "Validate that the config.userCfg is undefined");
+                Assert.ok(userCfg !== config.userCfg, "The previous referenced value should still match");
+
+                // Assign back to an object (should become automatically referenced)
+                config.userCfg = {};
+                Assert.deepEqual({}, config.userCfg);
+
+                // Grab a reference and update
+                userCfg = config.userCfg;
+                Assert.ok(userCfg === config.userCfg, "References should now match");
+
+                config.userCfg = { hello: "World" };
+                Assert.ok(userCfg !== config.userCfg, "References should not match");
+                Assert.ok(objHasOwn(config.userCfg, "hello"), "Direct config reference should have the new property");
+                Assert.equal("World", config.userCfg.hello);
+                Assert.ok(!objHasOwn(userCfg, "hello"), "previous reference should have the new property");
+                Assert.equal(undefined, userCfg.hello);
             }
         });
 
