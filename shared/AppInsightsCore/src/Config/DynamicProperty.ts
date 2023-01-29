@@ -4,6 +4,7 @@
 import {
     arrForEach, arrIndexOf, dumpObj, isArray, isPlainObject, objDefineAccessors, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
 } from "@nevware21/ts-utils";
+import { UNDEFINED_VALUE } from "../JavaScriptSDK/InternalConstants";
 import { CFG_HANDLER_LINK, throwInvalidAccess } from "./DynamicSupport";
 import { IWatcherHandler, _IDynamicDetail } from "./IDynamicWatcher";
 import { _IDynamicConfigHandlerState, _IDynamicGetter } from "./_IDynamicConfigHandlerState";
@@ -63,10 +64,15 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
 
     // Flag to optimize lookup response time by avoiding additional function calls
     let checkDynamic = true;
+    let isObjectOrArray = false;
+
     function _getProperty() {
 
         if (checkDynamic) {
-            if (value && !value[CFG_HANDLER_LINK] && (isPlainObject(value) || isArray(value))) {
+            isObjectOrArray = isObjectOrArray || (value && (isPlainObject(value) || isArray(value)));
+
+            // Make sure that if it's an object that we make it dynamic
+            if (value && !value[CFG_HANDLER_LINK] && isObjectOrArray) {
                 // It doesn't look like it's already dynamic so lets make sure it's converted the object into a dynamic Config as well
                 value = _makeDynamicObject(state, value);
             }
@@ -98,13 +104,21 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
                 throwInvalidAccess("[" + name + "] is read-only:" + dumpObj(theConfig));
             }
 
-            let isReferenced = _getProperty[state.rf];
-            if(isPlainObject(value) || isArray(value)) {
+            if (checkDynamic) {
+                isObjectOrArray = isObjectOrArray || (value && (isPlainObject(value) || isArray(value)));
+                checkDynamic = false;
+            }
+
+            // The value must be a plain object or an array to enforce the reference (in-place updates)
+            let isReferenced = isObjectOrArray && _getProperty[state.rf];
+
+            if(isObjectOrArray) {
+                // We are about to replace a plain object or an array
                 if (isReferenced) {
                     // Reassign the properties from the current value to the same properties from the newValue
                     // This will set properties not in the newValue to undefined
                     objForEachKey(value, (key) => {
-                        value[key] = newValue[key];
+                        value[key] = newValue ? newValue[key] : UNDEFINED_VALUE;
                     });
     
                     // Now assign / re-assign value with all of the keys from newValue
@@ -129,14 +143,17 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
                 }
             }
 
-            checkDynamic = false;
-            if (!isReferenced && (isPlainObject(newValue) || isArray(newValue))) {
-                // As the newValue is an object/array lets preemptively make it dynamic
-                _makeDynamicObject(state, newValue);
-            }
+            if (newValue !== value) {
+                let newIsObjectOrArray = newValue && (isPlainObject(newValue) || isArray(newValue));
+                if (!isReferenced && newIsObjectOrArray) {
+                    // As the newValue is an object/array lets preemptively make it dynamic
+                    _makeDynamicObject(state, newValue);
+                }
 
-            // Now assign the internal "value" to the newValue
-            value = newValue;
+                // Now assign the internal "value" to the newValue
+                value = newValue;
+                isObjectOrArray = newIsObjectOrArray;
+            }
 
             // Cause any listeners to be scheduled for notification
             state.add(detail);
@@ -178,9 +195,9 @@ export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandler
     return value;
 }
 
-export function _makeDynamicObject<T>(state: _IDynamicConfigHandlerState<T>, target: any/*, newValues?: any*/) {
+export function _makeDynamicObject<T>(state: _IDynamicConfigHandlerState<T>, target: any) {
     // Assign target with new value properties (converting into dynamic properties in the process)
-    objForEachKey(/*newValues || */target, (key, value) => {
+    objForEachKey(target, (key, value) => {
         // Assign and/or make the property dynamic
         _setDynamicProperty(state, target, key, value);
     });
