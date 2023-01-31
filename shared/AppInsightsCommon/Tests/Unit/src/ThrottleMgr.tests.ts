@@ -225,7 +225,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: 31,
+                        dayInterval: 32,
                         maxTimesPerMonth: 100
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
