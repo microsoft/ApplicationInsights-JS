@@ -17,7 +17,7 @@ import {
     IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain,
     ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach, createProcessTelemetryContext,
     createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory,
-    getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace,
+    getLocation, getWindow, hasHistory, hasWindow, isError, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace,
     objDefineAccessors, objForEachKey, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
@@ -406,7 +406,17 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             * @param systemProperties
             */
             _self.sendExceptionInternal = (exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
-                const theError = exception.exception || exception.error || new Error(strNotSpecified);
+                // Adding additional edge cases to handle
+                // - Not passing anything (null / undefined)
+                const theError = (exception && (exception.exception || exception.error)) ||
+                    // - Handle someone calling trackException based of v1 API where the exception was the Error
+                    isError(exception) && exception ||
+                    // - Handles no error being defined and instead of creating a new Error() instance attempt to map so any stacktrace
+                    //   is preserved and does not list ApplicationInsights code as the source
+                    { name: (exception && typeof exception) as string, message: exception as any || strNotSpecified };
+
+                // If no exception object was passed assign to an empty object to avoid internal exceptions
+                exception = exception || {};
                 let exceptionPartB = new Exception(
                     _self.diagLog(),
                     theError,
