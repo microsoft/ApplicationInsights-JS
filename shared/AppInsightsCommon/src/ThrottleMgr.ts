@@ -1,9 +1,9 @@
 import {
-    IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, eLoggingSeverity, isNotNullOrUndefined,
+    IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf, eLoggingSeverity, isNotNullOrUndefined,
     isNullOrUndefined, randomValue, safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { IThrottleMsgKey } from "./Enums";
-import { IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
+import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
@@ -34,6 +34,7 @@ export class ThrottleMgr {
         let _namePrefix: string;
         let _queue: Array<SendMsgParameter>;
         let _isReady: boolean = false;
+        let _isSpecificDaysGiven: boolean = false;
 
         _initConfig();
 
@@ -150,14 +151,11 @@ export class ThrottleMgr {
             _config = {} as any;
             _config.disabled = !!configMgr.disabled;
             _config.msgKey = configMgr.msgKey;
-            // default: send data on 28th every 3 month each year
-            let interval = {
-                // dafault: sent every three months
-                monthInterval: configMgr.interval?.monthInterval || 3,
-                dayInterval : configMgr.interval?.dayInterval || 28,
-                maxTimesPerMonth: configMgr.interval?.maxTimesPerMonth || 1
-            };
-            _config.interval = interval;
+            
+            let configInterval = configMgr.interval || {};
+            _isSpecificDaysGiven = configInterval?.daysOfMonth && configInterval?.daysOfMonth.length > 0;
+            _config.interval = _getIntervalConfig(configInterval);
+
             let limit = {
                 samplingRate: configMgr.limit?.samplingRate || 100,
                 // dafault: every time sent only 1 event
@@ -174,15 +172,49 @@ export class ThrottleMgr {
             }
         }
 
+        function _getIntervalConfig(interval: IThrottleInterval) {
+            interval = interval || {};
+            let monthInterval = interval?.monthInterval;
+            let dayInterval = interval?.dayInterval;
+
+            // default: send data every 3 month each year
+            if (isNullOrUndefined(monthInterval) && isNullOrUndefined(dayInterval)) {
+                interval.monthInterval = 3;
+                if (!_isSpecificDaysGiven) {
+                    // default: send data on 28th
+                    interval.daysOfMonth = [28];
+                    _isSpecificDaysGiven = true;
+                }
+            }
+            interval = {
+                // dafault: sent every three months
+                monthInterval: interval?.monthInterval,
+                dayInterval: interval?.dayInterval,
+                daysOfMonth: interval?.daysOfMonth
+            } as IThrottleInterval;
+            return interval;
+        }
+
         function _canThrottle(config: IThrottleMgrConfig, canUseLocalStorage: boolean, localStorageObj: IThrottleLocalStorageObj) {
             if (!config.disabled && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
                 let curDate = _getThrottleDate();
                 let date = localStorageObj.date;
                 let interval = config.interval;
-                let monthExpand = (curDate.getUTCFullYear() - date.getUTCFullYear()) * 12 + curDate.getUTCMonth() - date.getUTCMonth();
-                let monthCheck = _checkInterval(interval.monthInterval, 0, monthExpand);
-                let dayCheck = _checkInterval(interval.dayInterval, 0, curDate.getUTCDate()) -1;
-                return monthCheck >= 0 && dayCheck >= 0 && dayCheck <= config.interval.maxTimesPerMonth;
+                let monthCheck = 1;
+                if (interval?.monthInterval) {
+                    let monthExpand = (curDate.getUTCFullYear() - date.getUTCFullYear()) * 12 + curDate.getUTCMonth() - date.getUTCMonth();
+                    monthCheck = _checkInterval(interval.monthInterval, 0, monthExpand);
+                }
+                
+                let dayCheck = 1;
+                if (_isSpecificDaysGiven) {
+                    dayCheck = arrIndexOf(interval.daysOfMonth, curDate.getUTCDate());
+                } else if (interval?.dayInterval) {
+                    let daySpan =  Math.floor((curDate.getTime() - date.getTime()) / 86400000);
+                    dayCheck = _checkInterval(interval.dayInterval, 0, daySpan);
+                }
+
+                return monthCheck >= 0 && dayCheck >= 0;
             }
             return false;
         }

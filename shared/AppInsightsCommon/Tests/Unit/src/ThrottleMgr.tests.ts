@@ -61,7 +61,7 @@ export class ThrottleMgrTest extends AITestClass {
                     interval: {
                         monthInterval: 2,
                         dayInterval: 10,
-                        maxTimesPerMonth: 1
+                        daysOfMonth: undefined
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -90,8 +90,8 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 3,
-                        dayInterval: 28,
-                        maxTimesPerMonth: 1
+                        dayInterval: undefined,
+                        daysOfMonth: [28]
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -101,6 +101,162 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let isTriggered = throttleMgr.isTriggered();
                 Assert.equal(isTriggered, false);
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: monthInterval should be set to 3 when dayInterval and monthInterval are both undefined",
+            test: () => {
+
+                let config = {
+                    msgKey: this._msgKey,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        daysOfMonth: [25, 26, 28]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let expectedConfig = {
+                    msgKey: this._msgKey,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 3,
+                        dayInterval: undefined,
+                        daysOfMonth: [25, 26, 28]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let throttleMgr = new ThrottleMgr(config, this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedConfig, actualConfig);
+
+                let isTriggered = throttleMgr.isTriggered();
+                Assert.equal(isTriggered, false);
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: monthInterval and daysOfMonth should be changed to default when dayInterval is defined",
+            test: () => {
+
+                let config = {
+                    msgKey: this._msgKey,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        dayInterval: 100
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let expectedConfig = {
+                    msgKey: this._msgKey,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: undefined,
+                        dayInterval: 100,
+                        daysOfMonth: undefined
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let throttleMgr = new ThrottleMgr(config, this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedConfig, actualConfig);
+
+                let isTriggered = throttleMgr.isTriggered();
+                Assert.equal(isTriggered, false);
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: Throttle Manager should trigger when current date is in daysOfMonth",
+            test: () => {
+                let date = new Date();
+                let day = date.getUTCDate();
+                let daysOfMonth;
+                if (day == 1) {
+                    daysOfMonth = [31,day];
+                } else {
+                    daysOfMonth = [day-1, day];
+                }
+                let config = {
+                    msgKey: this._msgKey,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 3,
+                        dayInterval: 28,
+                        daysOfMonth: daysOfMonth
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let throttleMgr = new ThrottleMgr(config, this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(config, actualConfig);
+
+                let isTriggered = throttleMgr.isTriggered();
+                Assert.equal(isTriggered, false);
+
+                let canThrottle = throttleMgr.canThrottle();
+                Assert.equal(canThrottle, true, "should throttle");
+                
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: Throttle Manager should trigger when interval config is undefined and current date 28",
+            test: () => {
+                let date = new Date();
+                let day = date.getUTCDate();
+                let config = {
+                    msgKey: this._msgKey
+                } as IThrottleMgrConfig;
+
+                let expectedConfig = {
+                    msgKey: this._msgKey,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 3,
+                        dayInterval: undefined,
+                        daysOfMonth: [28]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let throttleMgr = new ThrottleMgr(config, this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedConfig, actualConfig);
+
+                let isTriggered = throttleMgr.isTriggered();
+                Assert.equal(isTriggered, false);
+
+                let shouldTrigger = false;
+                if (day === 28) {
+                    shouldTrigger = true;
+                }
+
+                let canThrottle = throttleMgr.canThrottle();
+                Assert.equal(canThrottle, shouldTrigger, "should only throttle on 28th");
             }
         });
 
@@ -147,8 +303,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 3,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 100
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -191,8 +346,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 3,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 100
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -210,6 +364,16 @@ export class ThrottleMgrTest extends AITestClass {
             name: "ThrottleMgrTest: should not trigger throttle when day interval requirements are not meet",
             test: () => {
                 let date = new Date();
+                let curDate = date.getUTCDate();
+                let curMonth = date.getUTCMonth();
+                if (curDate === 1) {
+                    curMonth -= 1;
+                    curDate = 28;
+                } else {
+                    curDate -= 1;
+                }
+                date.setUTCDate(curDate);
+                date.setUTCMonth(curMonth);
                 let storageObj = {
                     date: date,
                     count: 0
@@ -225,8 +389,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: 31,
-                        maxTimesPerMonth: 100
+                        dayInterval: 31
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -259,8 +422,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 100
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -295,49 +457,13 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 4,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 100
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, true);
-
-                let isTriggered = throttleMgr.isTriggered();
-                Assert.equal(isTriggered, false);
-            }
-
-        });
-
-        this.testCase({
-            name: "ThrottleMgrTest: should not trigger throttle when maxSentTimes is not meet",
-            test: () => {
-                let date = new Date();
-                let day = date.getUTCDate();
-                let storageObj = {
-                    date: date,
-                    count: 0
-                }
-                window.localStorage[this._storageName] = JSON.stringify(storageObj);
-                let maxTimes = day-1;
-                let config = {
-                    msgKey: this._msgKey,
-                    disabled: false,
-                    limit: {
-                        samplingRate: 1000000,
-                        maxSendNumber: 100
-                    } as IThrottleLimit,
-                    interval: {
-                        monthInterval: 1,
-                        dayInterval: 1,
-                        maxTimesPerMonth: maxTimes
-                    } as IThrottleInterval
-                } as IThrottleMgrConfig;
-
-                let throttleMgr = new ThrottleMgr(config, this._core);
-                let canThrottle = throttleMgr.canThrottle();
-                Assert.equal(canThrottle, false);
 
                 let isTriggered = throttleMgr.isTriggered();
                 Assert.equal(isTriggered, false);
@@ -363,8 +489,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 33
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -410,8 +535,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: date.getUTCDate(),
-                        maxTimesPerMonth: 1
+                        dayInterval: date.getUTCDate()
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -455,8 +579,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 100
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
              
@@ -535,8 +658,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 100
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
@@ -584,8 +706,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: 1,
-                        maxTimesPerMonth: 100
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
