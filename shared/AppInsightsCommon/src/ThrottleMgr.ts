@@ -199,7 +199,7 @@ export class ThrottleMgr {
                 let curDate = _getThrottleDate();
                 let date = localStorageObj.date;
                 let interval = config.interval;
-                let monthCheck = 1
+                let monthCheck = 1;
                 if (interval?.monthInterval) {
                     let monthExpand = (curDate.getUTCFullYear() - date.getUTCFullYear()) * 12 + curDate.getUTCMonth() - date.getUTCMonth();
                     monthCheck = _checkInterval(interval.monthInterval, 0, monthExpand);
