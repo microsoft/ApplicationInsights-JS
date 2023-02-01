@@ -27,26 +27,19 @@ export interface IThrottleInterval {
     /**
      * Identifies month interval that items can be sent
      * For example, if it is set to 2 and start date is in Jan, items will be sent out every two months (Jan, March, May etc.)
-     * Default: 3
+     * If both monthInterval and dayInterval are undefined, it will be set to 3
      */
     monthInterval?: number;
 
     /**
-     * Identifies days that items can be sent within a month
-     * Default: 28
+     * Identifies days Interval from start date that items can be sent
+     * Default: undefined
      */
     dayInterval?: number;
 
-    /**
-     * Identifies max times items can be sent within a month
-     * Default: 1 or length of daysOfMonth if daysOfMonth is defined
-     */
-    maxTimesPerMonth?: number;
-
      /**
      * Identifies days within each month that items can be sent
-     * if length of daysOfMonth >  maxTimesPerMonth, only days in daysOfMonth.slice(0, maxTimesPerMonth-1) will trigger throttle
-     * Default: undefined
+     * If both monthInterval and dayInterval are undefined, it will be default to [28]
      */
     daysOfMonth?: number[];
 }
