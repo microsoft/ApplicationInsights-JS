@@ -1,9 +1,9 @@
 import {
     IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, eLoggingSeverity, isNotNullOrUndefined,
-    isNullOrUndefined, randomValue, safeGetLogger, strTrim
+    isNullOrUndefined, randomValue, safeGetLogger, strTrim, arrIndexOf
 } from "@microsoft/applicationinsights-core-js";
 import { IThrottleMsgKey } from "./Enums";
-import { IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
+import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
@@ -34,6 +34,7 @@ export class ThrottleMgr {
         let _namePrefix: string;
         let _queue: Array<SendMsgParameter>;
         let _isReady: boolean = false;
+        let _isSpecificDaysGiven: boolean = false;
 
         _initConfig();
 
@@ -150,13 +151,27 @@ export class ThrottleMgr {
             _config = {} as any;
             _config.disabled = !!configMgr.disabled;
             _config.msgKey = configMgr.msgKey;
+            
+            let configInterval = configMgr.interval;
+            let daysOfMonth = configInterval?.daysOfMonth;
+            let maxTimes = configInterval?.maxTimesPerMonth;
+            if (daysOfMonth && daysOfMonth.length > 0) {
+                _isSpecificDaysGiven = true;
+                if (isNullOrUndefined(maxTimes)) {
+                    maxTimes = daysOfMonth.length;
+                }
+                let maxLength = Math.min(daysOfMonth.length, maxTimes);
+                daysOfMonth = daysOfMonth.slice(0, maxLength);
+            }
+            maxTimes = isNullOrUndefined(maxTimes) ? 1 : maxTimes;
             // default: send data on 28th every 3 month each year
             let interval = {
                 // dafault: sent every three months
-                monthInterval: configMgr.interval?.monthInterval || 3,
-                dayInterval : configMgr.interval?.dayInterval || 28,
-                maxTimesPerMonth: configMgr.interval?.maxTimesPerMonth || 1
-            };
+                monthInterval:  configInterval?.monthInterval || 3,
+                dayInterval :  configInterval?.dayInterval || 28,
+                maxTimesPerMonth: maxTimes,
+                daysOfMonth: daysOfMonth
+            } as IThrottleInterval;
             _config.interval = interval;
             let limit = {
                 samplingRate: configMgr.limit?.samplingRate || 100,
@@ -181,8 +196,15 @@ export class ThrottleMgr {
                 let interval = config.interval;
                 let monthExpand = (curDate.getUTCFullYear() - date.getUTCFullYear()) * 12 + curDate.getUTCMonth() - date.getUTCMonth();
                 let monthCheck = _checkInterval(interval.monthInterval, 0, monthExpand);
-                let dayCheck = _checkInterval(interval.dayInterval, 0, curDate.getUTCDate()) -1;
-                return monthCheck >= 0 && dayCheck >= 0 && dayCheck <= config.interval.maxTimesPerMonth;
+                
+                let dayCheck = -1;
+                if (_isSpecificDaysGiven) {
+                    dayCheck = arrIndexOf(interval.daysOfMonth, curDate.getUTCDate());
+                } else {
+                    let dayInternal = _checkInterval(interval.dayInterval, date.getUTCDate(), curDate.getUTCDate());
+                    dayCheck = (dayInternal <= config.interval.maxTimesPerMonth) ? dayInternal : -1;
+                }
+                return monthCheck >= 0 && dayCheck >= 0;
             }
             return false;
         }

@@ -39,9 +39,16 @@ export interface IThrottleInterval {
 
     /**
      * Identifies max times items can be sent within a month
-     * Default: 1
+     * Default: 1 or length of daysOfMonth if daysOfMonth is defined
      */
     maxTimesPerMonth?: number;
+
+     /**
+     * Identifies days within each month that items can be sent
+     * if length of daysOfMonth >  maxTimesPerMonth, only days in daysOfMonth.slice(0, maxTimesPerMonth-1) will trigger throttle
+     * Default: undefined
+     */
+    daysOfMonth?: number[];
 }
 
 /**
