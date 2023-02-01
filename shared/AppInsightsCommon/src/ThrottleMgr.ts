@@ -183,6 +183,7 @@ export class ThrottleMgr {
                 if (!_isSpecificDaysGiven) {
                     // default: send data on 28th
                     interval.daysOfMonth = [28];
+                    _isSpecificDaysGiven = true;
                 }
             }
             interval = {

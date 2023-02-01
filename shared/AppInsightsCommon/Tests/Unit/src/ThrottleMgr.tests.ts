@@ -221,6 +221,46 @@ export class ThrottleMgrTest extends AITestClass {
         });
 
         this.testCase({
+            name: "ThrottleMgrTest: Throttle Manager should trigger when interval config is undefined and current date 28",
+            test: () => {
+                let date = new Date();
+                let day = date.getUTCDate();
+                let config = {
+                    msgKey: this._msgKey
+                } as IThrottleMgrConfig;
+
+                let expectedConfig = {
+                    msgKey: this._msgKey,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 3,
+                        dayInterval: undefined,
+                        daysOfMonth: [28]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let throttleMgr = new ThrottleMgr(config, this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedConfig, actualConfig);
+
+                let isTriggered = throttleMgr.isTriggered();
+                Assert.equal(isTriggered, false);
+
+                let shouldTrigger = false;
+                if (day === 28) {
+                    shouldTrigger = true;
+                }
+
+                let canThrottle = throttleMgr.canThrottle();
+                Assert.equal(canThrottle, shouldTrigger, "should only throttle on 28th");
+            }
+        });
+
+        this.testCase({
             name: "ThrottleMgrTest: should not trigger throttle when disabled is true",
             test: () => {
                 let config = {
