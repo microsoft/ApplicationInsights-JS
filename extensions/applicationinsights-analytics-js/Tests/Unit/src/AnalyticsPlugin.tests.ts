@@ -467,10 +467,12 @@ export class AnalyticsPluginTests extends AITestClass {
                 // Act
                 appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical});
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({exception: "Critical Exception" as any, severityLevel: SeverityLevel.Critical});
+                appInsights.trackException("Critical Exception" as any);
                 this.clock.tick(1);
 
                 // Test
-                Assert.ok(senderStub.calledTwice, "Telemetry is sent when master switch is on");
+                Assert.equal(4, senderStub.callCount, "Telemetry is sent when master switch is on");
             }
         });
     }
@@ -535,6 +537,58 @@ export class AnalyticsPluginTests extends AITestClass {
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Error});
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 Assert.equal(SeverityLevel.Error, trackStub.firstCall.args[0].baseData.severityLevel);
+            }
+        });
+
+        this.testCase({
+            name: "TrackExceptionTests: trackException with a string as the exception",
+            test: () => {
+                // setup
+                const plugin = new ChannelPlugin();
+                const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.initialize(
+                    {instrumentationKey: "ikey"},
+                    [plugin]
+                );
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
+                const trackStub = this.sandbox.stub(appInsights.core, "track");
+
+                // Test
+                appInsights.trackException({exception: new Error("Critical Exception"), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                Assert.equal(SeverityLevel.Critical, trackStub.firstCall.args[0].baseData.severityLevel);
+                Assert.equal("Critical Exception", trackStub.firstCall.args[0].baseData.exceptions[0].message);
+
+                trackStub.reset();
+
+                appInsights.trackException({exception: "String Exception" as any, severityLevel: SeverityLevel.Error});
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                Assert.equal(SeverityLevel.Error, trackStub.firstCall.args[0].baseData.severityLevel);
+                Assert.equal("String Exception", trackStub.firstCall.args[0].baseData.exceptions[0].message);
+
+                trackStub.reset();
+
+                appInsights.trackException("Direct String Exception" as any);
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                Assert.equal("string: Direct String Exception", trackStub.firstCall.args[0].baseData.exceptions[0].message);
+
+                trackStub.reset();
+
+                appInsights.trackException(new Error("Wrapped String Exception") as any);
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                Assert.equal("Wrapped String Exception", trackStub.firstCall.args[0].baseData.exceptions[0].message);
+
+                trackStub.reset();
+
+                appInsights.trackException(null as any);
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                Assert.equal("not_specified", trackStub.firstCall.args[0].baseData.exceptions[0].message, JSON.stringify(trackStub.firstCall.args[0].baseData.exceptions[0]));
             }
         });
     }
