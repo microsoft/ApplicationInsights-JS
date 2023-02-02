@@ -535,7 +535,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleLimit,
                     interval: {
                         monthInterval: 1,
-                        dayInterval: date.getUTCDate()
+                        dayInterval: 1
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
