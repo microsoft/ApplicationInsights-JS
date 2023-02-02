@@ -1,7 +1,10 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { AnalyticsPluginIdentifier, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DisabledPropertyName, DistributedTracingModes, PropertiesPluginIdentifier, RequestHeaders, SeverityLevel } from "@microsoft/applicationinsights-common";
-import { addEventHandler, eventOff, eventOn, generateW3CId, LoggingSeverity, mergeEvtNamespace, objForEachKey, removeEventHandler, strUndefined } from "@microsoft/applicationinsights-core-js";
-import { Snippet } from "../../../src/Snippet";
+import { 
+    AnalyticsPluginIdentifier, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DisabledPropertyName,
+    DistributedTracingModes, PropertiesPluginIdentifier, RequestHeaders, SeverityLevel
+} from "@microsoft/applicationinsights-common";
+import { dumpObj, LoggingSeverity, objForEachKey, objKeys, strUndefined } from "@microsoft/applicationinsights-core-js";
+import { Snippet } from "../../../src/Initialization";
 
 declare var define;
 
@@ -118,9 +121,10 @@ export class CdnPackagingChecks extends AITestClass {
         Assert.equal(theExports.AnalyticsPluginIdentifier, AnalyticsPluginIdentifier, "AnalyticsPluginIdentifier value");
     }
 
-    private _validateExports(text: string, format: CdnFormat) {
+    private _validateExportsAsModule(text: string, format: CdnFormat) {
         let orgExports = exports;
         let orgDefine = define;
+        
         try {
 
             // remove any previously registered bundle
@@ -132,38 +136,51 @@ export class CdnPackagingChecks extends AITestClass {
             // Remove any "exports"
             exports = {};
 
-            // Used to simulate loading a cjs module
-            let cjsModule = this["_cjsModule"] = {};
+            // Used to simulate globals without overriding them
+            let theExports = {};
+            let hostValues = this["_hostValues"] = {
+                global: {},
+                globalThis: undefined,
+                exports: theExports,
+                module: {
+                    exports: theExports
+                },
+                define: undefined
+            };
 
             // "process" the script
             eval(text);
-            if (format == CdnFormat.Umd) {
-                // Because "exports" exists then no namespace is expected
-                let microsoft: any = window["Microsoft"];
-                Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
-                Assert.equal(undefined, cjsModule["Microsoft"], "global not added to cjs exports");
 
-                this._validateExpectedExports(exports);
+            // This test should not be overriding the real globals
+            Assert.equal(0, objKeys(exports || {}), "The exports should not have been changed");
+            Assert.equal(undefined, define, "define should not have been exposed");
+            Assert.equal(undefined, window["Microsoft"], "The global window[\"Microsoft\"] should not have been defined");
+            Assert.equal(undefined, exports["Microsoft"], "global not added to exports");
+            Assert.equal(undefined, this["Microsoft"], "The this should not have been changed Microsoft namespace does not exists");
+
+            if (format == CdnFormat.Umd) {
+                // Because "exports" exists as a module then no namespace is expected
+                Assert.equal(undefined, hostValues.global["Microsoft"], "global Microsoft namespace does not exists");
+                Assert.equal(undefined, hostValues.exports["Microsoft"], "global not added to cjs exports");
+
+                this._validateExpectedExports(hostValues.exports);
             } else if (format === CdnFormat.Gbl) {
-                let microsoft: any = window["Microsoft"];
-                Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
-                Assert.equal(undefined, exports["Microsoft"], "global not added to exports");
-                Assert.equal(undefined, cjsModule["Microsoft"], "global not added to cjs exports");
-                
-                microsoft = this["Microsoft"];
+                let microsoft: any = hostValues.global["Microsoft"];
+                Assert.equal(0, objKeys(hostValues.exports || {}), "The exports should not have been changed");
                 Assert.ok(microsoft, "Microsoft namespace exists on this");
                 Assert.ok(microsoft.ApplicationInsights, "Microsoft namespace exists");
 
                 this._validateExpectedExports(microsoft.ApplicationInsights);
             } else if (format === CdnFormat.CommonJs) {
                 // There is no namespace for common js
-                let microsoft: any = window["Microsoft"];
+                let microsoft: any = hostValues.global["Microsoft"];
                 Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
-                Assert.equal(undefined, exports["Microsoft"], "global Microsoft namespace does not exist on exports");
+                Assert.equal(undefined, hostValues.exports["Microsoft"], "global Microsoft namespace does not exist on exports");
 
-                this._validateExpectedExports(cjsModule);
+                this._validateExpectedExports(hostValues.exports);
             }
-
+        } catch (e) {
+            Assert.ok(false, dumpObj(e));
         } finally {
             if (orgExports) {
                 exports = orgExports;
@@ -192,17 +209,35 @@ export class CdnPackagingChecks extends AITestClass {
             // Remove any "exports"
             exports = undefined;
 
-            // Used to simulate loading a cjs module
-            let cjsModule = this["_cjsModule"] = {};
+            // Used to simulate globals without overriding them
+            let hostValues = this["_hostValues"] = {
+                global: {},
+                globalThis: undefined,
+                exports: undefined as any,             // Don't provide an "exports"
+                module: undefined,
+                define: undefined
+            };
 
+            if (format === CdnFormat.CommonJs) {
+                // CommonJs always needs the "exports" defined
+                hostValues.exports = {};
+            }
+            
             // "process" the script
             eval(text);
+
+            // This test should not be overriding the real globals
+            Assert.equal(0, objKeys(exports || {}), "The exports should not have been changed");
+            Assert.equal(undefined, define, "define should not have been exposed");
+            Assert.equal(undefined, window["Microsoft"], "The global window[\"Microsoft\"] should not have been defined");
+            Assert.equal(undefined, exports, "global not added to exports");
+            Assert.equal(undefined, this["Microsoft"], "The this should not have been changed Microsoft namespace does not exists");
+
             if (format == CdnFormat.Umd) {
                 // Because we are simulating no "exports" then there should be a global namespace defined
-                Assert.equal(undefined, exports, "No global exports should have been defined");
-                Assert.equal(undefined, cjsModule["Microsoft"], "global not added to cjs exports");
+                Assert.equal(undefined, hostValues.exports, "No global exports should have been defined");
 
-                let microsoft: any = window["Microsoft"];
+                let microsoft: any = hostValues.global["Microsoft"];
                 Assert.ok(microsoft, "Microsoft namespace exists");
                 Assert.ok(microsoft.ApplicationInsights, "Microsoft namespace exists");
     
@@ -210,22 +245,211 @@ export class CdnPackagingChecks extends AITestClass {
             } else if (format === CdnFormat.Gbl) {
                 let microsoft: any = window["Microsoft"];
                 Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
-                Assert.equal(undefined, exports, "global not added to exports");
-                Assert.equal(undefined, cjsModule["Microsoft"], "global not added to cjs exports");
+                Assert.equal(undefined, hostValues.exports, "global not added to exports");
                 
-                microsoft = this["Microsoft"];
+                microsoft = hostValues.global["Microsoft"];
                 Assert.ok(microsoft, "Microsoft namespace exists on this");
                 Assert.ok(microsoft.ApplicationInsights, "Microsoft namespace exists");
 
                 this._validateExpectedExports(microsoft.ApplicationInsights);
             } else if (format === CdnFormat.CommonJs) {
                 // There is no namespace for common js
+                let microsoft: any = hostValues.global["Microsoft"];
+                Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
+
+                this._validateExpectedExports(hostValues.exports);
+            }
+        } catch (e) {
+            Assert.ok(false, dumpObj(e));
+        } finally {
+            if (orgExports) {
+                exports = orgExports;
+            } else {
+                exports = undefined;
+            }
+
+            if (orgDefine) {
+                define = orgDefine;
+            } else {
+                define = undefined;
+            }
+        }
+    }
+
+    private _validateExportsAsDefine(text: string, format: CdnFormat) {
+        let orgExports = window.exports;
+        let orgDefine = define;
+        try {
+            // remove any previously registered bundle
+            delete window["Microsoft"];
+
+            // Hide define()
+            define = undefined;
+
+            // Remove any "exports"
+            exports = undefined;
+
+            let simulatedDefine = (names: string[], factory) => {
+                QUnit.assert.ok(false, "Not tagged as 'amd' so should not be called");
+            }
+
+            // Used to simulate globals without overriding them
+            let hostValues = this["_hostValues"] = {
+                global: {},
+                globalThis: undefined,
+                exports: undefined as any,             // Don't provide an "exports"
+                module: undefined,
+                define: simulatedDefine
+            };
+
+            if (format === CdnFormat.CommonJs) {
+                // CommonJs always needs the "exports" defined
+                hostValues.exports = {};
+            }
+            
+            // "process" the script
+            eval(text);
+
+            // This test should not be overriding the real globals
+            Assert.equal(0, objKeys(exports || {}), "The exports should not have been changed");
+            Assert.equal(undefined, define, "define should not have been exposed");
+            Assert.equal(undefined, window["Microsoft"], "The global window[\"Microsoft\"] should not have been defined");
+            Assert.equal(undefined, exports, "global not added to exports");
+            Assert.equal(undefined, this["Microsoft"], "The this should not have been changed Microsoft namespace does not exists");
+
+            if (format == CdnFormat.Umd) {
+                // Because we are simulating no "exports" then there should be a global namespace defined
+                Assert.equal(undefined, hostValues.exports, "No global exports should have been defined");
+
+                let microsoft: any = hostValues.global["Microsoft"];
+                Assert.ok(microsoft, "Microsoft namespace exists");
+                Assert.ok(microsoft.ApplicationInsights, "Microsoft namespace exists");
+    
+                this._validateExpectedExports(microsoft.ApplicationInsights);
+            } else if (format === CdnFormat.Gbl) {
                 let microsoft: any = window["Microsoft"];
                 Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
-                Assert.equal(undefined, exports, "global not added to exports");
+                Assert.equal(undefined, hostValues.exports, "global not added to exports");
+                
+                microsoft = hostValues.global["Microsoft"];
+                Assert.ok(microsoft, "Microsoft namespace exists on this");
+                Assert.ok(microsoft.ApplicationInsights, "Microsoft namespace exists");
 
-                this._validateExpectedExports(cjsModule);
+                this._validateExpectedExports(microsoft.ApplicationInsights);
+            } else if (format === CdnFormat.CommonJs) {
+                // There is no namespace for common js
+                let microsoft: any = hostValues.global["Microsoft"];
+                Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
+
+                this._validateExpectedExports(hostValues.exports);
             }
+        } catch (e) {
+            Assert.ok(false, dumpObj(e));
+        } finally {
+            if (orgExports) {
+                exports = orgExports;
+            } else {
+                exports = undefined;
+            }
+
+            if (orgDefine) {
+                define = orgDefine;
+            } else {
+                define = undefined;
+            }
+        }
+    }
+
+    private _validateExportsAsAmdDefine(text: string, format: CdnFormat) {
+        let orgExports = window.exports;
+        let orgDefine = define;
+        try {
+            // remove any previously registered bundle
+            delete window["Microsoft"];
+
+            // Hide define()
+            define = undefined;
+
+            // Remove any "exports"
+            exports = undefined;
+
+            let defineCalled = false;
+            let theNames: string[];
+            let theFactory = null;
+            let simulatedDefine = (names: string[], factory) => {
+                defineCalled = true;
+                theNames = names;
+                theFactory = factory;
+            }
+            // Tag the function
+            simulatedDefine["amd"] = true;
+
+            // Used to simulate globals without overriding them
+            let hostValues = this["_hostValues"] = {
+                global: {},
+                globalThis: undefined,
+                exports: undefined as any,             // Don't provide an "exports"
+                module: undefined,
+                define: simulatedDefine
+            };
+
+            if (format === CdnFormat.CommonJs) {
+                // CommonJs always needs the "exports" defined
+                hostValues.exports = {};
+            }
+            
+            // "process" the script
+            eval(text);
+
+            // This test should not be overriding the real globals
+            Assert.equal(0, objKeys(exports || {}), "The exports should not have been changed");
+            Assert.equal(undefined, define, "define should not have been exposed");
+            Assert.equal(undefined, window["Microsoft"], "The global window[\"Microsoft\"] should not have been defined");
+            Assert.equal(undefined, exports, "global not added to exports");
+            Assert.equal(undefined, this["Microsoft"], "The this should not have been changed Microsoft namespace does not exists");
+
+            if (format == CdnFormat.Umd) {
+                // Because we are simulating no "exports" then there should be a global namespace defined
+                Assert.equal(undefined, hostValues.exports, "No global exports should have been defined");
+                Assert.equal(undefined, hostValues.global["Microsoft"], "Microsoft namespace should not have been defined");
+
+                let microsoft: any = hostValues.global["Microsoft"];
+                Assert.equal(undefined, microsoft, "Microsoft namespace does not exist on the global");
+
+                Assert.equal(true, defineCalled, "Validate that define was called");
+                Assert.ok(theNames, "Make sure names was populated");
+                Assert.equal(1, theNames.length, "Check the provided names")
+                Assert.equal("exports", theNames[0], "Check the provided name")
+    
+                let theExports = {};
+                Assert.ok(theFactory, "Make sure the factory was provided");
+                theFactory(theExports);
+
+                microsoft = theExports["Microsoft"];
+                Assert.equal(undefined, microsoft, "Microsoft namespace does not exist on the exports");
+
+                this._validateExpectedExports(theExports);
+            } else if (format === CdnFormat.Gbl) {
+                let microsoft: any = window["Microsoft"];
+                Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
+                Assert.equal(undefined, hostValues.exports, "global not added to exports");
+                
+                microsoft = hostValues.global["Microsoft"];
+                Assert.ok(microsoft, "Microsoft namespace exists on this");
+                Assert.ok(microsoft.ApplicationInsights, "Microsoft namespace exists");
+                Assert.equal(false, defineCalled, "Validate that define was not called");
+
+                this._validateExpectedExports(microsoft.ApplicationInsights);
+            } else if (format === CdnFormat.CommonJs) {
+                // There is no namespace for common js
+                let microsoft: any = hostValues.global["Microsoft"];
+                Assert.equal(undefined, microsoft, "global Microsoft namespace does not exists");
+                Assert.equal(false, defineCalled, "Validate that define was not called");
+
+                this._validateExpectedExports(hostValues.exports);
+            }
+        } catch (e) {
+            Assert.ok(false, dumpObj(e));
         } finally {
             if (orgExports) {
                 exports = orgExports;
@@ -254,13 +478,25 @@ export class CdnPackagingChecks extends AITestClass {
                         return;
                     } else {
                         return response.text().then(text => {
-                            if (format === CdnFormat.CommonJs) {
-                                // Wrap commonJs in a closure so the global space is not polluted
-                                text = "(function(exports) {" + text + "})(this._cjsModule);";
-                            }
+                            // Wrap in a closure so the global space is not polluted
+                            text = "(function(values) {\n" +
+                                "function init(hostValues) {\n" +
+                                    "console.log(\"initializing\");" + 
+                                    "console.log(JSON.stringify(this));\n" +
+                                    "let globalThis = hostValues.globalThis;\n" +
+                                    "let exports = hostValues.exports;\n" +
+                                    "let module = hostValues.module;\n" +
+                                    "let define = hostValues.define;\n" +
+                                    "console.log(\"Now running CDN script\");" + 
+                                    text + "\n" +
+                                    "}\n" +
+                                    "init.apply(values.global, [values]);\n" +
+                                "})(this._hostValues)";
 
-                            this._validateExports(text, format);
+                            this._validateExportsAsModule(text, format);
                             this._validateGlobalExports(text, format);
+                            this._validateExportsAsDefine(text, format);
+                            this._validateExportsAsAmdDefine(text, format);
                         }).catch((error: Error) => {
                             Assert.ok(false, `AISKU bundle ${fileName} response error: ${error}`);
                         });

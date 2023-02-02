@@ -1,6 +1,6 @@
 import {
-    IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, eLoggingSeverity, isNotNullOrUndefined,
-    isNullOrUndefined, randomValue, safeGetLogger, strTrim, arrIndexOf
+    IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf, eLoggingSeverity, isNotNullOrUndefined,
+    isNullOrUndefined, randomValue, safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { IThrottleMsgKey } from "./Enums";
 import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";

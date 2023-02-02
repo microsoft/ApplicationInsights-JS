@@ -44,7 +44,7 @@
         "@microsoft/api-extractor": "^7.18.1",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
-        "grunt-contrib-qunit": "^5.0.1",
+        "grunt-contrib-qunit": "^6.2.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "globby": "^11.0.0",
@@ -55,7 +55,7 @@
         "@rollup/plugin-replace": "^2.3.3",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup": "^2.32.0",
-        "typescript": "^4.3.4",
+        "typescript": "^4.9.3",
         "tslib": "^2.0.0",
         "qunit": "^2.11.2",
         "sinon": "^7.3.1"
@@ -66,6 +66,6 @@
     "dependencies": {
         "@microsoft/applicationinsights-shims": "2.0.2",
         "@microsoft/dynamicproto-js": "^1.1.7",
-        "@nevware21/ts-utils": "^0.6.0"
+        "@nevware21/ts-utils": "^0.7.0"
     }
 }

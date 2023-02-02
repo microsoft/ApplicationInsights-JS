@@ -8,7 +8,7 @@ import {
     AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
     IUnloadHook, UnloadHandler, WatcherFunction, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
-import { objDefineProp } from "@nevware21/ts-utils";
+import { isNullOrUndefined, objDefineProp, throwError } from "@nevware21/ts-utils";
 
 const defaultConfigValues: IConfigDefaults<IConfiguration> = {
     diagnosticLogInterval: { isVal: _chkDiagLevel, v: 10000 }
@@ -35,7 +35,22 @@ export class ApplicationInsights {
         let core = new AppInsightsCore();
         let _config: IConfiguration & IConfig;
 
+        // initialize the queue and config in case they are undefined
+        if (
+            isNullOrUndefined(config) ||
+            (isNullOrUndefined(config.instrumentationKey) && isNullOrUndefined(config.connectionString))
+        ) {
+            throwError("Invalid input configuration");
+        }
+
         dynamicProto(ApplicationInsights, this, (_self) => {
+            
+            if (config.connectionString) {
+                const cs = parseConnectionString(config.connectionString);
+                const ingest = cs.ingestionendpoint;
+                config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : config.endpointUrl; // only add /v2/track when from connectionstring
+                config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
+            }
 
             // Define _self.config
             objDefineProp(_self, "config", {
@@ -191,8 +206,8 @@ export {
     proxyFunctions,
     IPlugin,
     ITelemetryPlugin
-    
 } from "@microsoft/applicationinsights-core-js";
+
 export {
     SeverityLevel,
     eSeverityLevel,
