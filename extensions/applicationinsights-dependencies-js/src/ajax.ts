@@ -23,7 +23,7 @@ import { IAjaxRecordResponse, ajaxRecord } from "./ajaxRecord";
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
 const strAjaxData = "ajaxData";
-const strFetch = "fetch";
+const STR_FETCH = "fetch";
 
 const ERROR_HEADER = "Failed to monitor XMLHttpRequest";
 const ERROR_PREFIX = ", monitoring data for this ajax call ";
@@ -47,11 +47,11 @@ function _supportsFetch(): (input: RequestInfo, init?: RequestInit) => Promise<R
     if (!_global ||
             isNullOrUndefined((_global as any).Request) ||
             isNullOrUndefined((_global as any).Request[strPrototype]) ||
-            isNullOrUndefined(_global[strFetch])) {
+            isNullOrUndefined(_global[STR_FETCH])) {
         return null;
     }
 
-    return _global[strFetch];
+    return _global[STR_FETCH];
 }
 
 /**
@@ -196,7 +196,8 @@ function _processDependencyListeners(listeners: _IInternalDependencyHandler<Depe
             traceId: ajaxData.traceID,
             spanId: ajaxData.spanID,
             traceFlags: ajaxData.traceFlags,
-            context: ajaxData.context || {}
+            context: ajaxData.context || {},
+            aborted: !!ajaxData.aborted
         };
     
         _processDependencyContainer(core, listeners, details, "listener");
@@ -559,7 +560,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let global = getGlobal();
                 let isPolyfill = (fetch as any).polyfill;
                 if (!_disableFetchTracking && !_fetchInitialized) {
-                    _addHook(InstrumentFunc(global, strFetch, {
+                    _addHook(InstrumentFunc(global, STR_FETCH, {
                         ns: _evtNamespace,
                         // Add request hook
                         req: (callDetails: IInstrumentCallDetails, input, init) => {
@@ -585,12 +586,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                     callDetails.rslt = callDetails.rslt.then((response: any) => {
                                         _reportFetchMetrics(callDetails, (response||{}).status, input, response, fetchData, () => {
                                             let ajaxResponse:IAjaxRecordResponse = {
-                                                statusText: response.statusText,
+                                                statusText: (response||{}).statusText,
                                                 headerMap: null,
                                                 correlationContext: _getFetchCorrelationContext(response)
                                             };
     
-                                            if (_enableResponseHeaderTracking) {
+                                            if (_enableResponseHeaderTracking && response) {
                                                 const responseHeaderMap = {};
                                                 response.headers.forEach((value: string, name: string) => {     // @skip-minify
                                                     if (_canIncludeHeaders(name)) {
@@ -607,7 +608,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                         return response;
                                     })
                                         .catch((reason: any) => {
-                                            _reportFetchMetrics(callDetails, 0, input, null, fetchData, null, { error: reason.message });
+                                            _reportFetchMetrics(callDetails, 0, input, null, fetchData, null, { error: reason.message || dumpObj(reason) });
                                             throw reason;
                                         });
                                 }
@@ -626,7 +627,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     // Note: Polyfill implementations that don't support the "poyyfill" tag are not supported
                     // the workaround is to add a polyfill property to your fetch implementation before initializing
                     // App Insights
-                    _addHook(InstrumentFunc(global, strFetch, {
+                    _addHook(InstrumentFunc(global, STR_FETCH, {
                         ns: _evtNamespace,
                         req: (callDetails: IInstrumentCallDetails, input, init) => {
                             // Just call so that we record any disabled URL
@@ -638,7 +639,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 if (isPolyfill) {
                     // retag the instrumented fetch with the same polyfill settings this is mostly for testing
                     // But also supports multiple App Insights usages
-                    (global[strFetch] as any).polyfill = isPolyfill;
+                    (global[STR_FETCH] as any).polyfill = isPolyfill;
                 }
             }
 
@@ -1097,7 +1098,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 ajaxData.requestHeaders = requestHeaders;
 
-                _createMarkId("fetch", ajaxData);
+                _createMarkId(STR_FETCH, ajaxData);
 
                 return ajaxData;
             }
@@ -1143,7 +1144,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ajaxData.responseFinishedTime = dateTimeUtilsNow();
                 ajaxData.status = status;
 
-                _findPerfResourceEntry("fetch", ajaxData, () => {
+                _findPerfResourceEntry(STR_FETCH, ajaxData, () => {
                     const dependency = ajaxData.CreateTrackItem("Fetch", _enableRequestHeaderTracking, getResponse);
                     
                     let properties;
@@ -1209,7 +1210,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         item: dependency,
                         properties: properties,
                         sysProperties: systemProperties,
-                        context: ajaxData ? ajaxData.context : null
+                        context: ajaxData ? ajaxData.context : null,
+                        aborted: ajaxData ? !!ajaxData.aborted : false
                     };
                 
                     result = _processDependencyContainer(core, initializers, details, "initializer");

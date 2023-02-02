@@ -26,6 +26,7 @@
         "ai-restore": "grunt deps-restore"
     },
     "devDependencies": {
+        "@nevware21/ts-async": "^0.1.0",
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es3": "1.1.3",

@@ -51,6 +51,13 @@ export interface IDependencyListenerDetails {
      * [Optional] Context that the application can assign that will also be passed to any dependency initializer
      */
     context?: { [key: string]: any };
+
+    /**
+     * [Optional] A flag that indicates whether the client request was manually aborted by the `abort()`,
+     * as listeners are called just before the request is sent it is unlikely that an application would have
+     * called `abort` before `send` this is also available in the dependency initializer.
+     */
+    aborted?: boolean;
 }
 
 /**

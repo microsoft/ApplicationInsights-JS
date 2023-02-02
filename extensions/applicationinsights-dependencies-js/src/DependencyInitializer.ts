@@ -23,6 +23,11 @@ export interface IDependencyInitializerDetails {
      * The context that the application can assigned via the dependency listener(s)
      */
     context?: { [key: string]: any };
+
+    /**
+     * [Optional] A flag that indicates whether the client request was manually aborted by the `abort()`
+     */
+    aborted?: boolean;
 }
 
 /**

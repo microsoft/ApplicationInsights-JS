@@ -15,7 +15,6 @@ function loadFetchModule(moduleLoader, name) {
         window.Headers = window.Headers || polyFetch.Headers;
         window.Response = window.Response || polyFetch.Response;
         window.Request = window.Request || polyFetch.Request;
-        window.Promise = window.Promise || SimpleSyncPromise;
         
         var usePolyFetch = getParameterByName("polyFetch");
         if (usePolyFetch) {
