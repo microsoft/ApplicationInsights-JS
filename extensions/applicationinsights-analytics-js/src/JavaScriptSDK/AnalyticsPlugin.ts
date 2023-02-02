@@ -9,16 +9,16 @@ import {
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
     PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
-    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, stringToBoolOrDefault, utlDisableStorage,
-    utlEnableStorage
+    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
     IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
     ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
-    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, generateW3CId, getDocument,
-    getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined,
-    mergeEvtNamespace, objDefineAccessors, onConfigChange, safeGetCookieMgr, strUndefined, throwError
+    cfgDfBoolean, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity,
+    eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction,
+    isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, objDefineAccessors, onConfigChange, safeGetCookieMgr, strUndefined,
+    throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isError, objDeepFreeze, objDefineProp, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
@@ -52,21 +52,21 @@ function _getReason(error: any) {
 const MinMilliSeconds = 60000;
 
 const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
-    sessionRenewalMs: { set: _chkConfigMilliseconds, v:30 * 60 * 1000 },
-    sessionExpirationMs: { set: _chkConfigMilliseconds, v: 24 * 60 * 60 * 1000 },
-    disableExceptionTracking: { set: stringToBoolOrDefault },
-    autoTrackPageVisitTime: { set: stringToBoolOrDefault },
-    overridePageViewDuration: { set: stringToBoolOrDefault },
-    enableUnhandledPromiseRejectionTracking: { set:  stringToBoolOrDefault },
+    sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
+    sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
+    disableExceptionTracking: cfgDfBoolean(),
+    autoTrackPageVisitTime: cfgDfBoolean(),
+    overridePageViewDuration: cfgDfBoolean(),
+    enableUnhandledPromiseRejectionTracking: cfgDfBoolean(),
     autoUnhandledPromiseInstrumented: false,
-    samplingPercentage: { isVal: _chkSampling, v: 100 },
-    isStorageUseDisabled: { set: stringToBoolOrDefault },
-    isBrowserLinkTrackingEnabled: { set: stringToBoolOrDefault },
-    enableAutoRouteTracking: { set: stringToBoolOrDefault },
-    namePrefix: "",
-    enableDebug: { set: stringToBoolOrDefault },
-    disableFlushOnBeforeUnload: { set: stringToBoolOrDefault },
-    disableFlushOnUnload: { set: stringToBoolOrDefault, fb: "disableFlushOnBeforeUnload" }
+    samplingPercentage: cfgDfValidate(_chkSampling, 100),
+    isStorageUseDisabled: cfgDfBoolean(),
+    isBrowserLinkTrackingEnabled: cfgDfBoolean(),
+    enableAutoRouteTracking: cfgDfBoolean(),
+    namePrefix: cfgDfString(),
+    enableDebug: cfgDfBoolean(),
+    disableFlushOnBeforeUnload: cfgDfBoolean(),
+    disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload")
 });
 
 function _chkConfigMilliseconds(value: number, defValue: number): number {

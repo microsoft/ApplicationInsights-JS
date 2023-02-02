@@ -4,17 +4,13 @@
 
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, hasDocument, isNullOrUndefined} from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, hasDocument, isNullOrUndefined, isFunction} from '@microsoft/applicationinsights-core-js';
 import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from '../../../src/ClickAnalyticsPlugin';
 import { PageAction } from "../../../src/events/PageAction";
 import { DomContentHandler } from '../../../src/handlers/DomContentHandler';
 import { IPageActionOverrideValues, IPageTags } from '../../../src/Interfaces/Datamodel';
 import { sanitizeUrl } from "../../../src/DataCollector";
 import { DEFAULT_AI_BLOB_ATTRIBUTE_TAG, DEFAULT_DATA_PREFIX, DEFAULT_DONOT_TRACK_TAG } from "../../../src/common/Utils";
-
-
-
-
 
 export class ClickEventTest extends AITestClass {
     public testInitialize() {
@@ -45,7 +41,7 @@ export class ClickEventTest extends AITestClass {
                     parentDataTag: ""
                 };
                 const coreDataDefault = {
-                    eferrerUri: hasDocument() ? document.referrer : "",
+                    referrerUri: hasDocument() ? document.referrer : "",
                     requestUri: "",
                     pageName: "",
                     pageType: ""
@@ -136,14 +132,14 @@ export class ClickEventTest extends AITestClass {
                 Assert.deepEqual(extConfig1.dataTags, expectedDataTags1, "dataTags should be updated with correct prefixName");
 
                 let coreData = {
-                    eferrerUri: "url",
+                    referrerUri: "url",
                     pageName: "name"
                 }
                 core.config.extensionConfig[id].coreData =coreData;
                 this.clock.tick(1);
                 extConfig = core.config.extensionConfig[id];
                 let expectedCoreData = {
-                    eferrerUri: "url",
+                    referrerUri: "url",
                     requestUri: "",
                     pageName: "name",
                     pageType: ""
@@ -273,9 +269,10 @@ export class ClickEventTest extends AITestClass {
             name: "PageAction properties are correctly assigned (Populated)",
             useFakeTimers: true,
             test: () => {
+                const contentNameFn = () => "testContentName";
                 const config = {
                     callback: {
-                        contentName: () => "testContentName"
+                        contentName: contentNameFn
                     },
                     dataTags : {
                         useDefaultContentNameOrId : true,
@@ -299,8 +296,10 @@ export class ClickEventTest extends AITestClass {
                     core.unload(false);
                 });
 
-                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
                 let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                Assert.ok(extConfig, "Make sure it is not null/undefined");
+                const behaviorValidator = extConfig.behaviorValidator;
+                Assert.ok(isFunction(behaviorValidator), "Make sure we have a function")
                 const contentHandler = new DomContentHandler(extConfig, traceLogger);
                 const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger );
                 
@@ -332,6 +331,38 @@ export class ClickEventTest extends AITestClass {
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
                 Assert.equal("testId", calledEvent.baseData["name"]);
                 Assert.equal(expectedContent, calledEvent.data["content"]);
+
+                // Check the "merged" config
+                Assert.deepEqual({                // Check the "merged" config
+                    autoCapture: true,
+                    callback: {
+                        contentName: contentNameFn,
+                        pageActionPageTags: null,
+                        pageName: null
+                    },
+                    coreData: {
+                        referrerUri: document.referrer,
+                        requestUri: "",
+                        pageName: "",
+                        pageType: ""
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob',
+                        captureAllMetaDataContent: false,
+                        dntDataTag: DEFAULT_DONOT_TRACK_TAG,
+                        parentDataTag: ""                        
+                    },
+                    pageTags: {},
+                    behaviorValidator: behaviorValidator,
+                    defaultRightClickBhvr: "",
+                    dropInvalidEvents : false,
+                    urlCollectHash: false,
+                    urlCollectQuery: false
+                }, core.config.extensionConfig[clickAnalyticsPlugin.identifier]);
+
             }
         });
 

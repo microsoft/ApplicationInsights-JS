@@ -9,7 +9,7 @@ import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys, isPla
 import { IAppInsightsCore } from "../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { INotificationManager } from "../../../src/JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfManager } from "../../../src/JavaScriptSDK.Interfaces/IPerfManager";
-import { AppInsightsCore, setEnableEnvMocks } from "../../../src/applicationinsights-core-js";
+import { AppInsightsCore } from "../../../src/applicationinsights-core-js";
 import { ITelemetryItem } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryItem";
 import { ITelemetryPluginChain } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryPlugin } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
@@ -944,6 +944,105 @@ export class DynamicConfigTests extends AITestClass {
                 Assert.equal("World", config.userCfg.hello);
                 Assert.ok(!objHasOwn(userCfg, "hello"), "previous reference should have the new property");
                 Assert.equal(undefined, userCfg.hello);
+            }
+        });
+
+        this.testCase({
+            name: "Validate setting defaults when partial values are provided",
+            useFakeTimers: true,
+            test: () => {
+                let theConfig: any = {
+                    instrumentationKey: "testiKey",
+                    endpointUrl: "https://localhost:9001",
+                    enableDebugExceptions: false,
+                    loggingLevelConsole: 1,
+                    userCfg: undefined,
+                    extensionConfig: {
+                        myExtension: {
+                            value1: "Hello",
+                            subValue1: {
+                                sub1: "World"
+                            }
+                        },
+                        partialConfig: {
+                            p1: {
+                                v1: "Back"
+                            }
+                        }
+                    }
+                };
+
+                const channelPlugin = new TestChannelPlugin();
+                let core = new AppInsightsCore();
+
+                core.initialize(theConfig, [channelPlugin]);
+
+                let handler = getDynamicConfigHandler(core.config);
+                let config = handler!.cfg;
+
+                let expectedExtCfg: any = {
+                    myExtension: {
+                        value1: "Hello",
+                        subValue1: {
+                            sub1: "World"
+                        },
+                    },
+                    partialConfig: {
+                        p1: {
+                            v1: "Back"
+                        }
+                    }
+                }
+                Assert.deepEqual(expectedExtCfg, config.extensionConfig, "Check the extension Config")
+
+                let newExtensionCfg: IConfigDefaults<any> = {
+                    extensionConfig: { 
+                        mrg: true, v: {
+                            anotherPlugin: {
+                                newValue1: "foo",
+                                subValue2: {
+                                    v: {
+                                        sub2: "bar",
+                                        sub3: {
+                                            v: "fred"
+                                        }
+                                    }
+                                }
+                            },
+                            partialConfig: {
+                                mrg: true,
+                                v: {
+                                    p1: {
+                                        v1: "Back"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                handler?.setDf(config, newExtensionCfg);
+
+                expectedExtCfg = {
+                    myExtension: {
+                        value1: "Hello",
+                        subValue1: {
+                            sub1: "World"
+                        }
+                    },
+                    anotherPlugin:  {
+                        newValue1: "foo",
+                        subValue2: {
+                            sub2: "bar",
+                            sub3: "fred"
+                        }
+                    },
+                    partialConfig: {
+                        p1: {
+                            v1: "Back"
+                        }
+                    }
+                }
+                Assert.deepEqual(expectedExtCfg, config.extensionConfig, "Check the extension Config")
             }
         });
 

@@ -1,14 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { asString, isArray, isDefined, isNullOrUndefined, isObject, isPlainObject, objHasOwn } from "@nevware21/ts-utils";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import {
+    asString, isArray, isDefined, isNullOrUndefined, isObject, isPlainObject, isUndefined, objForEachKey, objHasOwn
+} from "@nevware21/ts-utils";
 import { _cfgDeepCopy } from "./DynamicSupport";
-import { IConfigCheckFn, IConfigDefaultCheck, IConfigSetFn } from "./IConfigDefaults";
+import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./IConfigDefaults";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 
-function _getDefault<C, T>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: C, cfgDefaults: IConfigDefaultCheck<C, C[keyof C]>): C[keyof C] {
-    let defValue: C[keyof C];
+function _isConfigDefaults<C, T>(value: any): value is IConfigDefaultCheck<C, C[keyof C], T> {
+    return (value && isObject(value) && (value.isVal || value.fb || objHasOwn(value, "v") || objHasOwn(value, "mrg") || objHasOwn(value, "ref") || value.set));
+}
+
+function _getDefault<C, T>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: C, cfgDefaults: IConfigDefaultCheck<C, C[keyof C], T>): C[keyof C] | IConfigDefaults<C[keyof C], C> {
+    let defValue: C[keyof C] | IConfigDefaults<C[keyof C], C>;
     let isDefaultValid: (value: any) => boolean =  cfgDefaults.dfVal || isDefined;
 
     // There is a fallback config key so try and grab that first
@@ -24,7 +29,7 @@ function _getDefault<C, T>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: 
             let fbValue = theConfig[fallback as keyof C];
             if (isDefaultValid(fbValue)) {
                 defValue = fbValue;
-            } else {
+            } else if (dynamicHandler) {
                 // Needed to ensure that the fallback value (and potentially) new field is also dynamic even if null/undefined
                 fbValue = dynamicHandler.cfg[fallback as keyof T] as unknown as C[keyof C];
                 if (isDefaultValid(fbValue)) {
@@ -51,22 +56,74 @@ function _getDefault<C, T>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: 
 }
 
 /**
+ * Recursively resolve the default value
+ * @param dynamicHandler
+ * @param theConfig
+ * @param cfgDefaults
+ * @returns
+ */
+function _resolveDefaultValue<C, T>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: C, cfgDefaults: C[keyof C] | IConfigDefaultCheck<C, C[keyof C]>): C[keyof C] {
+    let theValue: C[keyof C] = cfgDefaults as C[keyof C];
+    
+    if (cfgDefaults && _isConfigDefaults<C, T>(cfgDefaults)) {
+        theValue = _getDefault<C, T>(dynamicHandler, theConfig, cfgDefaults) as C[keyof C];
+    }
+
+    if (theValue) {
+        if (_isConfigDefaults<C, T>(theValue)) {
+            theValue = _resolveDefaultValue<C, T>(dynamicHandler, theConfig, theValue);
+        }
+
+        let newValue: any;
+        if (isArray(theValue)) {
+            newValue = [];
+            newValue.length = theValue.length;
+        } else if (isPlainObject(theValue)) {
+            newValue = {} as T;
+        }
+
+        if (newValue) {
+            objForEachKey(theValue, (key, value) => {
+                if (value && _isConfigDefaults(value)) {
+                    value = _resolveDefaultValue<C, T>(dynamicHandler, theConfig, value) as any;
+                }
+    
+                newValue[key] = value;
+            });
+
+            theValue = newValue;
+        }
+    }
+
+    return theValue as C[keyof C];
+}
+
+/**
  * Applies the default value on the config property and makes sure that it's dynamic
  * @param theConfig
  * @param name
  * @param defaultValue
  */
-export function _applyDefaultValue<T extends IConfiguration, C>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: C, name: string, defaultValue: C[keyof C] | IConfigDefaultCheck<C, C[keyof C], T>) {
+export function _applyDefaultValue<T, C>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: C, name: string, defaultValue: C[keyof C] | IConfigDefaultCheck<C, C[keyof C], T>) {
     // Resolve the initial config value from the provided value or use the defined default
     let isValid: IConfigCheckFn<C[keyof C]>;
     let setFn: IConfigSetFn<C, C[keyof C]>;
-    let defValue: C[keyof C];
+    let defValue: C[keyof C] | IConfigDefaults<C[keyof C], C>;
     let cfgDefaults: IConfigDefaultCheck<C, C[keyof C]> = defaultValue as IConfigDefaultCheck<C, C[keyof C]>;
+    let mergeDf: boolean;
+    let reference: boolean;
+    let readOnly: boolean;
 
-    if (cfgDefaults && isObject(cfgDefaults) && (cfgDefaults.isVal || cfgDefaults.set || cfgDefaults.fb || objHasOwn(cfgDefaults, "v"))) {
+    if (_isConfigDefaults<C, T>(cfgDefaults)) {
         // looks like a IConfigDefault
         isValid = cfgDefaults.isVal;
         setFn = cfgDefaults.set;
+        readOnly = cfgDefaults.rdOnly;
+        mergeDf = cfgDefaults.mrg;
+        reference = cfgDefaults.ref;
+        if (!reference && isUndefined(reference)) {
+            reference = !!mergeDf;
+        }
 
         defValue = _getDefault(dynamicHandler, theConfig, cfgDefaults);
     } else {
@@ -74,7 +131,7 @@ export function _applyDefaultValue<T extends IConfiguration, C>(dynamicHandler: 
     }
 
     // Set the value to the default value;
-    let theValue: any = defValue;
+    let theValue: any;
     let usingDefault = true;
 
     let cfgValue = theConfig[name];
@@ -83,26 +140,49 @@ export function _applyDefaultValue<T extends IConfiguration, C>(dynamicHandler: 
         // Use the defined theConfig[name] value
         theValue = cfgValue;
         usingDefault = false;
-    }
 
-    if (!usingDefault) {
         // The values are different and we have a special default value check, which is used to
         // override config values like empty strings to continue using the default
         if (isValid && theValue !== defValue && !isValid(theValue)) {
             theValue = defValue;
             usingDefault = true;
         }
-        
+
         if (setFn) {
-            theValue = setFn(theValue, defValue, theConfig);
+            theValue = setFn(theValue, defValue as C[keyof C], theConfig);
             usingDefault = theValue === defValue;
         }
     }
 
-    if (theValue && usingDefault && (isPlainObject(theValue) || isArray(theValue))) {
-        theValue = _cfgDeepCopy(theValue);
+    if (!usingDefault) {
+        if (isPlainObject(theValue) || isArray(defValue)) {
+            // we are using the user supplied value and it's an object
+            if (mergeDf && defValue && (isPlainObject(defValue) || isArray(defValue)) ) {
+                // Resolve/apply the defaults
+                objForEachKey(defValue, (dfName: string, dfValue: any) => {
+                    // Sets the value and makes it dynamic (if it doesn't already exist)
+                    _applyDefaultValue(dynamicHandler, theValue, dfName, dfValue);
+                });
+            }
+        }
+    } else if (defValue) {
+        // Just resolve the default
+        theValue = _resolveDefaultValue(dynamicHandler, theConfig, defValue);
+    } else {
+        theValue = defValue;
     }
+
+    // if (theValue && usingDefault && (isPlainObject(theValue) || isArray(theValue))) {
+    //     theValue = _cfgDeepCopy(theValue);
+    // }
 
     // Needed to ensure that the (potentially) new field is dynamic even if null/undefined
     dynamicHandler.set(theConfig, name, theValue);
+    if (reference) {
+        dynamicHandler.ref(theConfig, name);
+    }
+
+    if (readOnly) {
+        dynamicHandler.rdOnly(theConfig, name);
+    }
 }

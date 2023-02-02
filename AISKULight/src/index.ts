@@ -6,12 +6,12 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
-    IUnloadHook, UnloadHandler, WatcherFunction, createDynamicConfig, onConfigChange, proxyFunctions
+    IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
 import { isNullOrUndefined, objDefine, throwError } from "@nevware21/ts-utils";
 
 const defaultConfigValues: IConfigDefaults<IConfiguration> = {
-    diagnosticLogInterval: { isVal: _chkDiagLevel, v: 10000 }
+    diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000)
 };
 
 function _chkDiagLevel(value: number) {
