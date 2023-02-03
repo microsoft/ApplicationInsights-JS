@@ -63,19 +63,19 @@ export class ShimsTests extends AITestClass {
             name: "__objAssignImplFn should be assigned values to target",
             test: () => {
                 let t = __objAssignFnImpl({}, {a:1}, {b:2});
-                QUnit.equal(t.a, 1, "Checking expected value");
-                QUnit.equal(t.b, 2, "Checking expected value");
+                QUnit.assert.equal(t.a, 1, "Checking expected value");
+                QUnit.assert.equal(t.b, 2, "Checking expected value");
 
                 // check overwrite
                 t = __objAssignFnImpl({a:0}, {a:1}, {b:2});
-                QUnit.equal(t.a, 1, "Checking expected value");
-                QUnit.equal(t.b, 2, "Checking expected value");
+                QUnit.assert.equal(t.a, 1, "Checking expected value");
+                QUnit.assert.equal(t.b, 2, "Checking expected value");
 
                 // check target
                 t = __objAssignFnImpl({x:0}, {a:1}, {b:2});
-                QUnit.equal(t.x, 0, "Checking expected value");
-                QUnit.equal(t.a, 1, "Checking expected value");
-                QUnit.equal(t.b, 2, "Checking expected value");
+                QUnit.assert.equal(t.x, 0, "Checking expected value");
+                QUnit.assert.equal(t.a, 1, "Checking expected value");
+                QUnit.assert.equal(t.b, 2, "Checking expected value");
             }
         });
 
@@ -83,19 +83,19 @@ export class ShimsTests extends AITestClass {
             name: "__assignFn should be assigned values to target",
             test: () => {
                 let t = __assignFn({}, {a:1}, {b:2});
-                QUnit.equal(t.a, 1, "Checking expected value");
-                QUnit.equal(t.b, 2, "Checking expected value");
+                QUnit.assert.equal(t.a, 1, "Checking expected value");
+                QUnit.assert.equal(t.b, 2, "Checking expected value");
 
                 // check overwrite
                 t = __assignFn({a:0}, {a:1}, {b:2});
-                QUnit.equal(t.a, 1, "Checking expected value");
-                QUnit.equal(t.b, 2, "Checking expected value");
+                QUnit.assert.equal(t.a, 1, "Checking expected value");
+                QUnit.assert.equal(t.b, 2, "Checking expected value");
 
                 // check target
                 t = __assignFn({x:0}, {a:1}, {b:2});
-                QUnit.equal(t.x, 0, "Checking expected value");
-                QUnit.equal(t.a, 1, "Checking expected value");
-                QUnit.equal(t.b, 2, "Checking expected value");
+                QUnit.assert.equal(t.x, 0, "Checking expected value");
+                QUnit.assert.equal(t.a, 1, "Checking expected value");
+                QUnit.assert.equal(t.b, 2, "Checking expected value");
             }
         });
 

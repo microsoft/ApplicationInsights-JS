@@ -172,6 +172,7 @@ export class ThrottleMgrTest extends AITestClass {
                         daysOfMonth: undefined
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
+
                 let throttleMgr = new ThrottleMgr(config, this._core);
                 let actualConfig = throttleMgr.getConfig();
                 Assert.deepEqual(expectedConfig, actualConfig);
@@ -215,7 +216,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, true, "should throttle");
-
+                
             }
         });
 

@@ -46,7 +46,7 @@
         "@microsoft/applicationinsights-common": "2.8.9",
         "@microsoft/applicationinsights-shims": "2.0.2",
         "@microsoft/dynamicproto-js": "^1.1.7",
-        "@nevware21/ts-utils": "^0.6.0",
+        "@nevware21/ts-utils": "^0.7.0",
         "file-saver": "^2.0.0",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
@@ -72,7 +72,7 @@
         "rollup-plugin-peer-deps-external": "^2.2.4",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
-        "typescript": "^4.3.4",
+        "typescript": "^4.9.3",
         "archiver": "^5.3.0"
     }
 }

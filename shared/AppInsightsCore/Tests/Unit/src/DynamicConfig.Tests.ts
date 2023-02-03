@@ -26,9 +26,9 @@ const verifyArray = <T>() => <U extends NoRepeats<U> & readonly T[]>(
 function _expectException(cb: () => void, message: string) {
     try {
         cb();
-        QUnit.ok(false, "Expected an exception: " + (message || ""));
+        Assert.ok(false, "Expected an exception: " + (message || ""));
     } catch (e) {
-        QUnit.ok(true, message);
+        Assert.ok(true, message);
     }
 }
 export class DynamicConfigTests extends AITestClass {
@@ -732,8 +732,8 @@ export class DynamicConfigTests extends AITestClass {
 
                 // Assigning a property to a read-only property is allowed
                 theConfig.extensionConfig.hello = "World";
-                QUnit.assert.equal("World", theConfig.extensionConfig.hello, "Hello should be assigned")
-                QUnit.assert.deepEqual({}, theConfig.extensionConfig.test, "test should be assigned")
+                Assert.equal("World", theConfig.extensionConfig.hello, "Hello should be assigned")
+                Assert.deepEqual({}, theConfig.extensionConfig.test, "test should be assigned")
 
                 handler.rdOnly(theConfig, "anArray");
                 _expectException(() => {
@@ -742,11 +742,11 @@ export class DynamicConfigTests extends AITestClass {
 
                 // Assigning a property to a read-only property is allowed
                 theConfig.anArray.hello = "World";
-                QUnit.assert.equal("World", theConfig.anArray.hello, "Hello should be assigned")
+                Assert.equal("World", theConfig.anArray.hello, "Hello should be assigned")
                 theConfig.anArray[0] = 0;
-                QUnit.assert.equal(0, theConfig.anArray[0], "0");
-                QUnit.assert.equal(2, theConfig.anArray[1], "2");
-                QUnit.assert.equal(3, theConfig.anArray[2], "3");
+                Assert.equal(0, theConfig.anArray[0], "0");
+                Assert.equal(2, theConfig.anArray[1], "2");
+                Assert.equal(3, theConfig.anArray[2], "3");
             }
         });
 

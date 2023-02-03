@@ -15,7 +15,6 @@ function loadFetchModule(moduleLoader, name) {
         window.Headers = window.Headers || polyFetch.Headers;
         window.Response = window.Response || polyFetch.Response;
         window.Request = window.Request || polyFetch.Request;
-        window.Promise = window.Promise || SimpleSyncPromise;
         
         var usePolyFetch = getParameterByName("polyFetch");
         if (usePolyFetch) {
@@ -38,7 +37,7 @@ function loadCommonModules(moduleLoader) {
     moduleLoader.add("@microsoft/dynamicproto-js", "./node_modules/@microsoft/dynamicproto-js/lib/dist/umd/dynamicproto-js", true);
 
     // Load ts-utils
-    moduleLoader.add("@nevware21/ts-utils", "./node_modules/@nevware21/ts-utils/dist/umd/ts-utils");
+    moduleLoader.add("@nevware21/ts-utils", "./node_modules/@nevware21/ts-utils/dist/es5/umd/ts-utils");
 }
 
 function ModuleLoader(config) {
@@ -51,7 +50,7 @@ function ModuleLoader(config) {
 
     function doModuleCb(moduleDef, theModule, cb) {
         if (theModule) {
-            cb(module);
+            cb(theModule);
         } else {
             // Module was loaded, but has not yet created and instance -- so create one
             console && console.log("Module [" + moduleDef.name + "] loaded - creating instance - " + moduleDef.name);

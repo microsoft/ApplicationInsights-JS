@@ -1,5 +1,6 @@
 ﻿import { SinonStub } from "sinon";
 import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
+import { createSyncPromise } from "@nevware21/ts-async";
 import { AjaxMonitor } from "../../../src/ajax";
 import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext, formatTraceParent, createTraceParent } from "@microsoft/applicationinsights-common";
 import {
@@ -23,7 +24,7 @@ function hookFetch<T>(executor: (resolve: (value?: T | PromiseLike<T>) => void, 
             input,
             init
         });
-        return new window["SimpleSyncPromise"](executor);
+        return createSyncPromise(executor);
     }
 
     return calls;
@@ -722,6 +723,7 @@ export class AjaxTests extends AITestClass {
                 data = trackStub.args[1][0].baseData;
                 Assert.equal("Ajax", data.type, "request is Ajax type");
                 Assert.equal(undefined, data.properties.responseText, "xhr request's reponse error is not stored in part C");
+                Assert.equal(undefined, data.properties.aborted, "The aborted flag should not be set");
             }
         });
 
@@ -764,6 +766,116 @@ export class AjaxTests extends AITestClass {
                 data = trackStub.args[1][0].baseData;
                 Assert.equal("Ajax", data.type, "request is Ajax type");
                 Assert.equal(undefined, data.properties.responseText, "xhr request's reponse error is not stored in part C");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: xhr abort is tracked as part C data when enableAjaxErrorStatusText flag is true",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableAjaxErrorStatusText: true };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                xhr.abort();
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "track is called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal(0, data.responseCode, "Check the response code");
+                Assert.equal(true, data.properties.aborted, "The aborted flag should be set");
+                Assert.notEqual(undefined, data.properties.responseText, "xhr request's reponse error is stored in part C");
+                Assert.strictEqual("", data.properties.responseText, "Check the status Text");
+            }
+        });
+        
+        this.testCase({
+            name: "Ajax: xhr abort is tracked as part C data when enableAjaxErrorStatusText flag is false",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableAjaxErrorStatusText: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                xhr.abort();
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "track is called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal(0, data.responseCode, "Check the response code");
+                Assert.equal(true, data.properties.aborted, "The aborted flag should be set");
+                Assert.equal(undefined, data.properties.responseText, "xhr request's reponse error is stored in part C");
+            }
+        });
+        
+        this.testCase({
+            name: "Ajax: xhr respond with status code zero is tracked as part C data when enableAjaxErrorStatusText flag is true",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableAjaxErrorStatusText: true };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                (<any>xhr).respond(0);
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "track is called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal(0, data.responseCode, "Check the response code");
+                Assert.equal(undefined, data.properties.aborted, "The aborted flag should be set");
+                Assert.notEqual(undefined, data.properties.responseText, "xhr request's reponse error is stored in part C");
+                Assert.strictEqual("", data.properties.responseText, "Check the status Text");
+            }
+        });
+        
+        this.testCase({
+            name: "Ajax: xhr respond with status code zero is tracked as part C data when enableAjaxErrorStatusText flag is false",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableAjaxErrorStatusText: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                (<any>xhr).respond(0);
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "track is called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal(0, data.responseCode, "Check the response code");
+                Assert.equal(undefined, data.properties.aborted, "The aborted flag should be set");
+                Assert.equal(undefined, data.properties.responseText, "xhr request's reponse error is stored in part C");
             }
         });
 
@@ -1115,6 +1227,108 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called")
+                    testContext.testDone();
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: Respond with status 0 and no status text",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 0,
+                            statusText: "Blocked",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                    Assert.equal(0, dependencyFields[0].dependency.responseCode, "Check the response code");
+                    Assert.equal(undefined, dependencyFields[0].dependency.properties.responseText);
+                    testContext.testDone();
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: Respond with status 0 and no status text",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 0,
+                            statusText: "Blocked",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false, enableAjaxErrorStatusText: true };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                    Assert.equal(0, dependencyFields[0].dependency.responseCode, "Check the response code");
+                    Assert.equal("Blocked", dependencyFields[0].dependency!.properties.responseText);
                     testContext.testDone();
                 }, () => {
                     Assert.ok(false, "fetch failed!");
@@ -2947,7 +3161,12 @@ export class AjaxPerfTrackTests extends AITestClass {
             .concat(PollingAssert.createPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (this._context["fetchComplete"]) {
-                    Assert.ok(trackStub.notCalled, "No fetch called yet");
+                    Assert.ok(trackStub.calledOnce, "track is called");
+                    let data = trackStub.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    let props = data.properties;
+                    Assert.notEqual(undefined, props, "Should contain properties");
+                    Assert.equal(undefined, props.ajaxPerf, "No performance data should exist");
                     return true;
                 }
 
@@ -3283,7 +3502,7 @@ export class AjaxFrozenTests extends AITestClass {
                 return false;
             }, 'response received', 60, 1000) as any)
         });
-
+        
         // This is currently a manual test as we don't have hooks / mocks defined to automated this today
         // this.testCaseAsync({
         //     name: "AjaxFrozenTests: check frozen prototype",

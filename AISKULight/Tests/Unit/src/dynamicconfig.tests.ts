@@ -12,7 +12,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
     static registerTests: any;
 
     constructor(testName?: string) {
-        super(testName || "ApplicationInsightsAISKULightTests");
+        super(testName || "AISKU Dynamic Config");
     }
     
     protected _getTestConfig(sessionPrefix: string) {

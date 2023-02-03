@@ -8,7 +8,7 @@ import {
     AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
     IUnloadHook, UnloadHandler, WatcherFunction, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
-import { objDefineProp } from "@nevware21/ts-utils";
+import { isNullOrUndefined, objDefine, throwError } from "@nevware21/ts-utils";
 
 const defaultConfigValues: IConfigDefaults<IConfiguration> = {
     diagnosticLogInterval: { isVal: _chkDiagLevel, v: 10000 }
@@ -35,13 +35,19 @@ export class ApplicationInsights {
         let core = new AppInsightsCore();
         let _config: IConfiguration & IConfig;
 
-        dynamicProto(ApplicationInsights, this, (_self) => {
+        // initialize the queue and config in case they are undefined
+        if (
+            isNullOrUndefined(config) ||
+            (isNullOrUndefined(config.instrumentationKey) && isNullOrUndefined(config.connectionString))
+        ) {
+            throwError("Invalid input configuration");
+        }
 
+        dynamicProto(ApplicationInsights, this, (_self) => {
+            
             // Define _self.config
-            objDefineProp(_self, "config", {
-                configurable: true,
-                enumerable: true,
-                get: () => _config
+            objDefine(_self, "config", {
+                g: () => _config
             });
 
             _initialize();
@@ -191,8 +197,8 @@ export {
     proxyFunctions,
     IPlugin,
     ITelemetryPlugin
-    
 } from "@microsoft/applicationinsights-core-js";
+
 export {
     SeverityLevel,
     eSeverityLevel,
