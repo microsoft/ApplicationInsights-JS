@@ -25,7 +25,7 @@ import {
     DependencyListenerFunction, IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { objDefineProp, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
+import { objDefine, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
     STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
@@ -97,24 +97,20 @@ export class AppInsightsSku implements IApplicationInsights {
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
 
-            objDefineProp(_self, "config", {
-                enumerable: true,
-                configurable: true,
-                get: function() {
+            objDefine(_self, "config", {
+                g: function() {
                     return _config;
                 },
-                set: function(newValue: IConfiguration) {
+                s: function(newValue: IConfiguration) {
                     if (_core) {
                         _core.config = newValue;
                     }
                 }
             });
 
-            arrForEach(["pluginVersionStringArr", "pluginVersionString"], (key) => {
-                objDefineProp(_self, key, {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => {
+            arrForEach(["pluginVersionStringArr", "pluginVersionString"], (key: keyof AppInsightsSku) => {
+                objDefine(_self, key, {
+                    g: () => {
                         if (_core) {
                             return _core[key];
                         }

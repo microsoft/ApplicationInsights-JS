@@ -4,7 +4,7 @@ import {
     DistributedTracingModes, PropertiesPluginIdentifier, RequestHeaders, SeverityLevel
 } from "@microsoft/applicationinsights-common";
 import { dumpObj, LoggingSeverity, objForEachKey, objKeys, strUndefined } from "@microsoft/applicationinsights-core-js";
-import { Snippet } from "../../../src/Initialization";
+import { Snippet } from "../../../src/Snippet";
 
 declare var define;
 
