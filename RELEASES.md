@@ -2,6 +2,17 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.10 (Feb 6th, 2023)
+
+### Changelog
+
+- #1940 [BUG] Application Insights reports 'not_specified' to Azure when tracking unhandled browser exception
+- #1979 [BUG][ThrottleMgr] Incorrectly fires based on the number of days past
+- #1970 Add the Aborted flag to the dependency initializer / listeners
+- #1981 [AI][Task]16961420: fix throttleMgr incorrectly fires based on the number of days past
+- #1956 [AI Light][Task]14130466: Instrumentation key API is being deprecated - need to add support
+- #1962 Add --no-sandbox to test runs
+
 ## 2.8.9 (Oct 25th, 2022)
 
 - Updates Chrome Debug Extension to 0.3.9
