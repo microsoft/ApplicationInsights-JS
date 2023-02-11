@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-chrome-debug-extension",
-    "version": "0.3.9",
+    "version": "0.3.10",
     "description": "A chrome based browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/tools/chrome-debug-extension#readme",
     "keywords": [
@@ -42,11 +42,11 @@
     "license": "MIT",
     "sideEffects": false,
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "2.8.9",
-        "@microsoft/applicationinsights-common": "2.8.9",
+        "@microsoft/applicationinsights-core-js": "2.8.10",
+        "@microsoft/applicationinsights-common": "2.8.10",
         "@microsoft/applicationinsights-shims": "2.0.2",
         "@microsoft/dynamicproto-js": "^1.1.7",
-        "@nevware21/ts-utils": "^0.7.0",
+        "@nevware21/ts-utils": ">= 0.7 < 2.x",
         "file-saver": "^2.0.0",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
