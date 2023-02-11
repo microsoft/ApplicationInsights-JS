@@ -1,6 +1,9 @@
 
 body {
     margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 16px;
+    padding-left: 1rem;
 }
 
 h1 {
@@ -25,12 +28,12 @@ h4 {
 
 h5 {
     font-size: 1rem;
-    margin: 1.5rem 0;
+    margin: 0.67rem 0;
 }
 
 h6 {
     font-size: 0.875rem;
-    margin: 2.33rem 0;
+    margin: 0.3rem 0;
 }
 
 .uppercase {
@@ -50,21 +53,17 @@ ul {
 
 .container {
     max-width: 1600px;
-    padding: 0 2rem;
+    padding: 0 0.5rem;
 }
 
 .container-main {
     justify-content: space-between;
     position: relative;
-    margin: 1rem auto;
-    padding-left: 1rem;
-}
-
-
-body {
-    font-family: "Segoe UI", sans-serif;
-    font-size: 16px;
-    padding-left: 1rem;
+    margin: 1.5rem auto;
+    padding-left: 0.5rem;
+    max-height: 20rem;
+    overflow: auto;
+    background-color: azure;
 }
 
 code,
@@ -75,8 +74,18 @@ pre {
     font-size: 0.875rem;
     border-radius: 0.8em;
 }
+
 button {
     font-family: "Segoe UI", sans-serif;
-    margin-right: 0.5rem;
+    margin: 0.5rem;
     padding: 0.2em;
 }
+
+.time {
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+
+
+

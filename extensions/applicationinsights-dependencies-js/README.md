@@ -5,53 +5,6 @@
 
 Dependencies Plugin for the Application Insights Javascript SDK
 
-## Configuration
-
-[`ICorrelationConfig`](../../shared/AppInsightsCommon/src/Interfaces/ICorrelationConfig.ts)
-
-## Functions
-
-### Dependency Listeners
-
-`addDependencyListener(dependencyListener: DependencyListenerFunction): IDependencyListenerHandler`
-
-A [dependency listener](../../API-reference.md#adddependencylistener) is a callback function that **allows you to perform additional manipulation of the request details before the request is performed**.
-
-This includes :-
-
-- Complete access to either the XMLHttpRequest instance or the fetch API `input` and `init` arguments.
-- Ability to get/set the properties used to generate the W3C `traceparent` header (`traceId`, `spanId,`traceFlags)
-- Set values in the object context container for other listeners called after the current one, as well as this context object is also made available to all dependency initializers.
-
-### Dependency Initializers
-
-`addDependencyInitializer(dependencyInitializer: DependencyInitializerFunction): IDependencyInitializerHandler`
-
-A [Dependency Initializer](../../API-reference.md#adddependencyinitializer)  is very similar to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it **allows you modify the contents of collected telemetry before being sent from the user's browser**. And you can also returning `false` to cause the event to not be emitted.
-
-The differences between a telemetry initializer and a dependency initializer are :-
-
-- A Dependency Initializer is called "before" the event is processed by the pipeline, as such it will NOT (yet) contain the automatically populated properties that are applied later;
-- When a dependency initializer returns `false` to drop the event the event does NOT count against the `maxAjaxCallsPerView` as this blocks the event call from being tracked, and while returning `false` from a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) will also stop the event from being reported because this is further down the processing pipeline the dependency event IS counted against the `maxAjaxCallsPerView` limit.
-- It has access to an optional "context" `{ [key: string]: any }` object that is also available to the Dependency Listeners. This allows a listener to add additional details to the context (before the XHR/fetch request is sent), and the initializer will be called after the request has completed.
-
-### Track Dependency
-
-`trackDependencyData(dependency:` [`IDependencyTelemetry`](../../API-reference.md#IDe)`, properties?: { [key: string]: any }): void`
-
-[TrackDependencyData](../../API-reference.md###IDependencyTelemetry) function allows you to manually log a dependency call.
-
-## Sample
-
-A [sample](./example/) is provided to show how to filter, modify, block and disable dependency data.
-
-### Sample Build
-
-- locate to [sample folder](./example/) root
-- run `tsc` to build the sample
-- replace "YOUR_CONNECTION_STRING" in `index.html` with your connection string.
-- open `index.html` in a running server
-
 ## Build
 
 ``` javascript
