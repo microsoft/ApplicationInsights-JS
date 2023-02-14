@@ -158,7 +158,7 @@ function createDetailList(propsToWatch: string[], details: any, id: string, titl
 
         propsToWatch.forEach((prop) => {
             
-            let obj = (typeof details[prop] === undefined)?  "undefined" : details[prop];
+            let obj = (details[prop] === undefined)?  "undefined" : details[prop];
             if (prop === "item") {
                 obj = {name: obj.name, target: obj.target};
             }
