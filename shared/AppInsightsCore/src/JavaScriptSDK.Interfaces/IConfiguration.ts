@@ -6,6 +6,7 @@ import { ICookieMgrConfig } from "./ICookieMgr";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
 import { IAppInsightsCore } from "./IAppInsightsCore";
+import { IThrottleMgrConfig } from "./IThrottleMgr";
 
 "use strict";
 
@@ -173,4 +174,9 @@ export interface IConfiguration {
      * Default is false
      */
     enableWParam?: boolean;
+
+    /**
+     * [Optional] config for throttle manager
+     */
+    throttleMgrConfig?: IThrottleMgrConfig;
 }

@@ -58,8 +58,7 @@ export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 export { IUser, IUserContext } from "./Interfaces/Context/IUser";
 export { ITelemetryTrace, ITraceState } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
-export { IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult, IThrottleLimit, IThrottleInterval } from "./Interfaces/IThrottleMgr";
-export { eDistributedTracingModes, DistributedTracingModes, IThrottleMsgKey } from "./Enums";
+export { eDistributedTracingModes, DistributedTracingModes } from "./Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
     isBeaconsSupported as isBeaconApiSupported,

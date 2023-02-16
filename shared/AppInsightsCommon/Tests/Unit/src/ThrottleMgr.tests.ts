@@ -1,7 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IAppInsightsCore, _eInternalMessageId } from "@microsoft/applicationinsights-core-js";
-import { IThrottleMsgKey } from "../../../src/Enums";
-import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "../../../src/Interfaces/IThrottleMgr";
+import { AppInsightsCore, IAppInsightsCore, _eInternalMessageId, IThrottleMsgKey, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "@microsoft/applicationinsights-core-js";
 import { ThrottleMgr} from "../../../src/ThrottleMgr";
 import { SinonSpy } from "sinon";
 import { utlCanUseLocalStorage } from "../../../src/StorageHelperFuncs";
@@ -49,6 +47,123 @@ export class ThrottleMgrTest extends AITestClass {
     public registerTests() {
 
         this.testCase({
+            name: "ThrottleMgrTest: Default config should be set from root",
+            test: () => {
+                let expectedconfig = {
+                    msgKey: IThrottleMsgKey.default,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber: 1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 3,
+                        dayInterval: undefined,
+                        daysOfMonth: [28]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let throttleMgr = new ThrottleMgr({}, this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedconfig, actualConfig, "should get expected default config");
+                let isTriggered = throttleMgr.isTriggered();
+                Assert.equal(isTriggered, false, "should not be triggered");
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: Config should be updated dynamically",
+            useFakeTimers: true,
+            test: () => {
+                let date = new Date();
+                let config = {
+                    msgKey: this._msgKey,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 50,
+                        maxSendNumber: 100
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 1,
+                        dayInterval: undefined,
+                        daysOfMonth: [date.getUTCDate()]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+                let rootConfig = {throttleMgrConfig: config};
+
+                let throttleMgr = new ThrottleMgr(rootConfig, this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(config, actualConfig, "should get expected config");
+                let isTriggered = throttleMgr.isTriggered();
+                Assert.equal(isTriggered, false, "should not be triggered");
+                let canThrottle = throttleMgr.canThrottle();
+                Assert.deepEqual(canThrottle, true, "should be able to throttle");
+
+                config = {
+                    msgKey: IThrottleMsgKey.cdnDeprecate,
+                    disabled: true,
+                    limit: {
+                        samplingRate: 80,
+                        maxSendNumber: 10
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 3,
+                        dayInterval: undefined,
+                        daysOfMonth: [date.getUTCDate() + 1]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+                rootConfig.throttleMgrConfig = config;
+                this.clock.tick(1);
+                actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(rootConfig.throttleMgrConfig, actualConfig, "config should be updated dynamically");
+                canThrottle = throttleMgr.canThrottle();
+                Assert.deepEqual(canThrottle, false, "should not be able to throttle");
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: flush",
+            test: () => {
+                let date = new Date();
+                let expectedconfig = {
+                    msgKey: IThrottleMsgKey.ikeyDeprecate,
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber: 10
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 1,
+                        dayInterval: undefined,
+                        daysOfMonth: [date.getUTCDate()]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: expectedconfig}, this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedconfig, actualConfig, "should get expected default config");
+                let isTriggered = throttleMgr.isTriggered();
+                Assert.equal(isTriggered, false, "should not be triggered");
+                let canThrottle = throttleMgr.canThrottle();
+                Assert.equal(canThrottle, true, "should be able to be throttle");
+
+                let isReady = throttleMgr.isReady();
+                Assert.equal(isReady, false, "isReady state should be false");
+                let result = throttleMgr.sendMessage(this._msgId, "test");
+                Assert.equal(result, null, "should not be throttled");
+                let queue = throttleMgr["_getQueue"]();
+                Assert.equal(queue.length, 1, "should have 1 item");
+                Assert.equal(queue[0].msgID, this._msgId, "sshould habe correct msgId");
+
+                throttleMgr.onReadyState(true);
+                queue = throttleMgr["_getQueue"]();
+                Assert.equal(queue.length, 0, "queue should be empty");
+                let storage = window.localStorage[this._storageName];
+                Assert.ok(storage.indexOf(`${date.getUTCMonth() + 1}-${date.getUTCDate()}`) > -1, "local storage should have correct date");
+            }
+        });
+
+        this.testCase({
             name: "ThrottleMgrTest: Throttle Manager can get expected config",
             test: () => {
                 let config = {
@@ -65,7 +180,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let actualConfig = throttleMgr.getConfig();
                 Assert.deepEqual(config, actualConfig);
 
@@ -95,7 +210,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let actualConfig = throttleMgr.getConfig();
                 Assert.deepEqual(expectedConfig, actualConfig);
 
@@ -134,7 +249,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let actualConfig = throttleMgr.getConfig();
                 Assert.deepEqual(expectedConfig, actualConfig);
 
@@ -173,7 +288,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let actualConfig = throttleMgr.getConfig();
                 Assert.deepEqual(expectedConfig, actualConfig);
 
@@ -207,7 +322,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let actualConfig = throttleMgr.getConfig();
                 Assert.deepEqual(config, actualConfig);
 
@@ -243,7 +358,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let actualConfig = throttleMgr.getConfig();
                 Assert.deepEqual(expectedConfig, actualConfig);
 
@@ -267,7 +382,7 @@ export class ThrottleMgrTest extends AITestClass {
                     msgKey: this._msgKey,
                     disabled: true
                 } as IThrottleMgrConfig;
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, false);
 
@@ -307,7 +422,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, false);
 
@@ -350,7 +465,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, false);
 
@@ -393,7 +508,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, false);
 
@@ -426,7 +541,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, true);
 
@@ -461,7 +576,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, true);
 
@@ -493,7 +608,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, true);
                 let isTriggered = throttleMgr.isTriggered();
@@ -539,7 +654,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.equal(canThrottle, true);
                 let isPretriggered = throttleMgr.isTriggered();
@@ -583,7 +698,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
              
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
                
 
                 let canThrottle = throttleMgr.canThrottle();
@@ -662,7 +777,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
 
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.ok(canThrottle);
@@ -710,7 +825,7 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
 
-                let throttleMgr = new ThrottleMgr(config, this._core);
+                let throttleMgr = new ThrottleMgr({throttleMgrConfig: config}, this._core);
 
                 let canThrottle = throttleMgr.canThrottle();
                 Assert.ok(canThrottle);

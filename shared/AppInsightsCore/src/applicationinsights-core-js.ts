@@ -96,3 +96,5 @@ export { IDynamicPropertyHandler } from "./Config/IDynamicPropertyHandler";
 export { IWatchDetails, IWatcherHandler, WatcherFunction } from "./Config/IDynamicWatcher";
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
 export { getDynamicConfigHandler } from "./Config/DynamicSupport";
+export { IThrottleMsgKey } from "./JavaScriptSDK.Enums/ThrottleMgrMsg";
+export { IThrottleInterval, IThrottleLocalStorageObj, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "./JavaScriptSDK.Interfaces/IThrottleMgr";
