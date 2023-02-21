@@ -79,11 +79,11 @@ Parameter | Type | Description
 `severityLevel?` | [SeverityLevel (number)](https://github.com/microsoft/ApplicationInsights-JS/blob/master/legacy/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
 `properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
-By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the config section below your instrumentation key:
+By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the config section below your connection string:
 
 ```ts
 {
-  instrumentationKey: "your instrumentation key",
+  connectionString: "your connection string",
   disableExceptionTracking: true
 }
 ```

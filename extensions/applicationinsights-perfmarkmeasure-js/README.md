@@ -29,7 +29,7 @@ const perfManager = new PerfMarkMeasureManager();
 
 // Application Insights Configuration
 const configObj = {
-  instrumentationKey: "YOUR INSTRUMENTATION KEY",
+  connectionString: 'YOUR CONNECTION STRING",
 };
 
 const appInsights = new ApplicationInsights({ config: configObj });
