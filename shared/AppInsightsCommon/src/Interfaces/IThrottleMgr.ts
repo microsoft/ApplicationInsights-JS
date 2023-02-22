@@ -1,4 +1,4 @@
-import { IThrottleMsgKey } from "../JavaScriptSDK.Enums/ThrottleMgrMsg";
+import { IThrottleMsgKey } from "../Enums";
 
 /**
  * Identifies limit number/percentage of items sent per time

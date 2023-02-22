@@ -1,8 +1,12 @@
 import {
-    IAppInsightsCore, IDiagnosticLogger, IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleMsgKey, IThrottleResult,
-    _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf, eLoggingSeverity, isNotNullOrUndefined, isNullOrUndefined, randomValue,
-    safeGetLogger, strTrim, onConfigChange, createDynamicConfig, IConfiguration
+    IAppInsightsCore, IDiagnosticLogger, IUnloadHookContainer, _eInternalMessageId, _throwInternal, arrForEach,
+    arrIndexOf, createDynamicConfig, eLoggingSeverity, isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue, safeGetLogger,
+    strTrim,
+    createUnloadHookContainer
 } from "@microsoft/applicationinsights-core-js";
+import { objDefine } from "@nevware21/ts-utils";
+import { IThrottleMsgKey } from "./Enums";
+import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
@@ -21,8 +25,9 @@ export class ThrottleMgr {
     public isReady: () => boolean
     public onReadyState: (isReady?: boolean) => boolean;
     public flush: () => boolean;
+    public config: IThrottleMgrConfig;
 
-    constructor(rootConfig?: IConfiguration, core?: IAppInsightsCore, namePrefix?: string) {
+    constructor(config?: IThrottleMgrConfig, core?: IAppInsightsCore, namePrefix?: string, unloadHookContainer?: IUnloadHookContainer) {
         let _self = this;
         let _canUseLocalStorage: boolean;
         let _logger: IDiagnosticLogger | null | undefined;
@@ -36,6 +41,14 @@ export class ThrottleMgr {
         let _isSpecificDaysGiven: boolean = false;
 
         _initConfig();
+        objDefine(_self, "config", {
+            g: function() {
+                return _config;
+            },
+            s: function(newValue: IThrottleMgrConfig) {
+                config = newValue;
+            }
+        });
 
         // Special internal method to allow the unit tests and hook embedded objects
         _self["_getQueue"] = () => {
@@ -160,14 +173,14 @@ export class ThrottleMgr {
             _isTriggered = false;
             _queue = [];
             _namePrefix = isNotNullOrUndefined(namePrefix)? namePrefix : "";
+            unloadHookContainer = unloadHookContainer || createUnloadHookContainer();
             // Make sure the root config is dynamic as it may be the global config
-            rootConfig = createDynamicConfig(rootConfig || {}, null, _logger).cfg;
-            
-            
-            onConfigChange(rootConfig, () => {
+            config = createDynamicConfig(config as any || {}, null, _logger).cfg;
+
+            let unloadHook = onConfigChange((config), () => {
                 _canUseLocalStorage = utlCanUseLocalStorage();
                 
-                let configMgr = rootConfig.throttleMgrConfig || {};
+                let configMgr = config || {};
                 _config = {} as any;
                 _config.disabled = !!configMgr.disabled;
 
@@ -192,6 +205,7 @@ export class ThrottleMgr {
                     _isTriggered = _isTriggeredOnCurDate(_localStorageObj.preTriggerDate);
                 }
             });
+            unloadHookContainer && unloadHookContainer.add(unloadHook);
         }
 
         function _getIntervalConfig(interval: IThrottleInterval) {

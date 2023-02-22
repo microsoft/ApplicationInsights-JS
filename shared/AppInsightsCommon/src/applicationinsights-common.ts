@@ -58,7 +58,7 @@ export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 export { IUser, IUserContext } from "./Interfaces/Context/IUser";
 export { ITelemetryTrace, ITraceState } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
-export { eDistributedTracingModes, DistributedTracingModes } from "./Enums";
+export { eDistributedTracingModes, DistributedTracingModes, IThrottleMsgKey } from "./Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
     isBeaconsSupported as isBeaconApiSupported,
@@ -70,6 +70,7 @@ export {
     utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage
 } from "./StorageHelperFuncs";
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./UrlHelperFuncs";
+export { IThrottleLimit, IThrottleInterval, IThrottleMgrConfig, IThrottleLocalStorageObj, IThrottleResult } from "./Interfaces/IThrottleMgr";
 
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
