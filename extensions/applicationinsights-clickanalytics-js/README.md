@@ -74,7 +74,7 @@ const clickPluginConfig = {
 };
 // Application Insights Configuration
 const configObj = {
-  instrumentationKey: "YOUR INSTRUMENTATION KEY",
+  connectionString: 'YOUR_CONNECTION_STRING',
   extensions: [clickPluginInstance],
   extensionConfig: {
     [clickPluginInstance.identifier]: clickPluginConfig
@@ -100,7 +100,7 @@ appInsights.loadAppInsights();
   }
   // Application Insights Configuration
   var configObj = {
-    instrumentationKey: "YOUR INSTRUMENTATION KEY",
+    connectionString: 'YOUR CONNECTION STRING",
     extensions: [
       clickPluginInstance
     ],
@@ -331,7 +331,7 @@ var behaviorMap = {
 
 // Application Insights Configuration
 var configObj = {
-  instrumentationKey: "YOUR INSTRUMENTATION KEY",
+    connectionString: "YOUR CONNECTION STRING",
   extensions: [clickPluginInstance],
   extensionConfig: {
     [clickPluginInstance.identifier]: {
