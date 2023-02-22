@@ -7,9 +7,10 @@ import {
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager, IPlugin,
     IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
-    SendRequestReason, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, createProcessTelemetryContext, createUniqueNamespace,
-    dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON, getNavigator, getWindow, isArray, isBeaconsSupported,
-    isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend, objKeys, onConfigChange, useXDomainRequest
+    SendRequestReason, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
+    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON,
+    getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend,
+    objKeys, onConfigChange, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { ITimerHandler, isTruthy, objDeepFreeze, objDefineProp, scheduleTimeout } from "@nevware21/ts-utils";
 import {
@@ -45,25 +46,28 @@ function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
 
 const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepFreeze({
     // Use the default value (handles empty string in the configuration)
-    endpointUrl: { isVal: isTruthy, v: DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH },
-    emitLineDelimitedJson: false,
+    endpointUrl: cfgDfValidate(isTruthy, DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH),
+    emitLineDelimitedJson: cfgDfBoolean(),
     maxBatchInterval: 15000,
     maxBatchSizeInBytes: 102400,  // 100kb
-    disableTelemetry: false,
-    enableSessionStorageBuffer: true,
-    isRetryDisabled: false,
-    isBeaconApiDisabled:true,
-    disableXhr: false,
-    onunloadDisableFetch: false,
-    onunloadDisableBeacon: false,
+    disableTelemetry: cfgDfBoolean(),
+    enableSessionStorageBuffer: cfgDfBoolean(true),
+    isRetryDisabled: cfgDfBoolean(),
+    isBeaconApiDisabled: cfgDfBoolean(true),
+    disableXhr: cfgDfBoolean(),
+    onunloadDisableFetch: cfgDfBoolean(),
+    onunloadDisableBeacon: cfgDfBoolean(),
     instrumentationKey: UNDEFINED_VALUE,  // Channel doesn't need iKey, it should be set already
     namePrefix: UNDEFINED_VALUE,
-    samplingPercentage: 100,
+    samplingPercentage: cfgDfValidate(_chkSampling, 100),
     customHeaders: UNDEFINED_VALUE,
     convertUndefined: UNDEFINED_VALUE,
     eventsLimitInMem: 10000
-
 });
+
+function _chkSampling(value: number) {
+    return !isNaN(value) && value > 0 && value <= 100;
+}
 
 type EnvelopeCreator = (logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any) => IEnvelope;
 

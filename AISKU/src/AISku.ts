@@ -14,9 +14,10 @@ import {
     AppInsightsCore, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
     IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin, ITelemetryInitializerHandler,
     ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId,
-    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, arrForEach, arrIndexOf, createDynamicConfig, createUniqueNamespace,
-    doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
-    objForEachKey, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
+    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, arrForEach, arrIndexOf, cfgDfValidate, createDynamicConfig,
+    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString,
+    mergeEvtNamespace, objForEachKey, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener,
+    removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, IDependencyInitializerHandler
@@ -53,7 +54,7 @@ const defaultConfigValues: IConfigDefaults<IConfiguration> = {
     connectionString: UNDEFINED_VALUE,
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
-    diagnosticLogInterval: { isVal: _chkDiagLevel, v: 10000 }
+    diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000)
 };
 
 function _chkDiagLevel(value: number) {

@@ -262,7 +262,8 @@ const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
     ignoreHeaders:[
         "Authorization",
         "X-API-Key",
-        "WWW-Authenticate"],
+        "WWW-Authenticate"
+    ],
     addRequestContext: undefined,
     addIntEndpoints: true
 });

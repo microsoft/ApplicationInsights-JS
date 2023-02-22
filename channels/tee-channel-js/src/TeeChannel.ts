@@ -6,7 +6,7 @@ import { IChannelControlsAI, IConfig } from "@microsoft/applicationinsights-comm
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
-    ITelemetryUpdateState, createProcessTelemetryContext, initializePlugins, onConfigChange, proxyFunctions
+    ITelemetryUpdateState, cfgDfBoolean, createProcessTelemetryContext, initializePlugins, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
 import { arrForEach, isArray, objDeepFreeze, objFreeze, throwError } from "@nevware21/ts-utils";
 import { ChannelControllerPriority, IChannelController, _IInternalChannels, createChannelControllerPlugin } from "./ChannelController";
@@ -16,7 +16,7 @@ const ChannelValidationMessage = "Channel has invalid priority - ";
 
 const defaultTeeChannelConfig: IConfigDefaults<ITeeChannelConfig> = objDeepFreeze({
     teeChannels: null,
-    ignoreCoreChannels: false
+    ignoreCoreChannels: cfgDfBoolean()
 });
 
 function _addChannelQueue(channelQueue: _IInternalChannels[], queue: IChannelControls[], core: IAppInsightsCore, teeChannel?: IChannelControls) {

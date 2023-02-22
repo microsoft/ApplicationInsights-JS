@@ -368,8 +368,14 @@ function isIgnoreType(parsedFile, value, ignoreNames) {
                 }
             }
         }
+
+        var isFuncCall = false;
+        var funcCall = /\w+\((.*)\)/.exec(value);
+        if (funcCall != null) {
+            isFuncCall = true;
+        }
     
-        if (parsedFile.imports.length > 0) {
+        if (!isFuncCall && parsedFile.imports.length > 0) {
     
             for (var lp = 0; lp < parsedFile.imports.length; lp++) {
                 var theImports = parsedFile.imports[lp];
