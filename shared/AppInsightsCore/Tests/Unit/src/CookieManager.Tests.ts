@@ -238,13 +238,15 @@ export class CookieManagerTests extends AITestClass {
             test: () => {
 
                 let core = new AppInsightsCore();
+                let neverCalled = () => { throw "Should not be called" };
+
                 core.initialize({
                     instrumentationKey: "testiKey",
                     isCookieUseDisabled: true,
                     cookieCfg: {
-                        getCookie: () => { throw "Should not be called" },
-                        setCookie: () => { throw "Should not be called" },
-                        delCookie: () => { throw "Should not be called" }
+                        getCookie: neverCalled,
+                        setCookie: neverCalled,
+                        delCookie: neverCalled
                     }
                 } as any, [new ChannelPlugin()]);
 
@@ -256,6 +258,18 @@ export class CookieManagerTests extends AITestClass {
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
+
+                // Check the "merged" config
+                Assert.deepEqual({
+                    domain: undefined,
+                    path: undefined,
+                    enabled: undefined,
+                    ignoreCookies: undefined,
+                    blockedCookies: undefined,
+                    getCookie: neverCalled,
+                    setCookie: neverCalled,
+                    delCookie: neverCalled
+                }, core.config.cookieCfg);
             }
         });        
 
@@ -264,14 +278,16 @@ export class CookieManagerTests extends AITestClass {
             test: () => {
 
                 let core = new AppInsightsCore();
+                let neverCalled = () => { throw "Should not be called" };
+
                 core.initialize({
                     instrumentationKey: "testiKey",
                     isCookieUseDisabled: true,
                     disableCookiesUsage: true,
                     cookieCfg: {
-                        getCookie: () => { throw "Should not be called" },
-                        setCookie: () => { throw "Should not be called" },
-                        delCookie: () => { throw "Should not be called" }
+                        getCookie: neverCalled,
+                        setCookie: neverCalled,
+                        delCookie: neverCalled
                     }
                 } as any, [new ChannelPlugin()]);
 
@@ -283,6 +299,18 @@ export class CookieManagerTests extends AITestClass {
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
+
+                // Check the "merged" config
+                Assert.deepEqual({
+                    domain: undefined,
+                    path: undefined,
+                    enabled: undefined,
+                    ignoreCookies: undefined,
+                    blockedCookies: undefined,
+                    getCookie: neverCalled,
+                    setCookie: neverCalled,
+                    delCookie: neverCalled
+                }, core.config.cookieCfg);
             }
         });        
 
@@ -291,14 +319,16 @@ export class CookieManagerTests extends AITestClass {
             test: () => {
 
                 let core = new AppInsightsCore();
+                let neverCalled = () => { throw "Should not be called" };
+
                 core.initialize({
                     instrumentationKey: "testiKey",
                     isCookieUseDisabled: false,
                     disableCookiesUsage: true,
                     cookieCfg: {
-                        getCookie: () => { throw "Should not be called" },
-                        setCookie: () => { throw "Should not be called" },
-                        delCookie: () => { throw "Should not be called" }
+                        getCookie: neverCalled,
+                        setCookie: neverCalled,
+                        delCookie: neverCalled
                     }
                 } as any, [new ChannelPlugin()]);
 
@@ -369,8 +399,20 @@ export class CookieManagerTests extends AITestClass {
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
                 Assert.equal(undefined, this._testCookies[newKey]);
+
+                // Check the "merged" config
+                Assert.deepEqual({
+                    domain: undefined,
+                    path: "/sub-path",
+                    enabled: undefined,
+                    ignoreCookies: undefined,
+                    blockedCookies: undefined,
+                    getCookie: core.config.cookieCfg?.getCookie,
+                    setCookie: core.config.cookieCfg?.setCookie,
+                    delCookie: core.config.cookieCfg?.delCookie
+                }, core.config.cookieCfg);
             }
-        });        
+        });
 
         this.testCase({
             name: "CookieManager: set cookie domain at the root config setting",
@@ -394,6 +436,18 @@ export class CookieManagerTests extends AITestClass {
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
                 Assert.equal(undefined, this._testCookies[newKey]);
+
+                // Check the "merged" config
+                Assert.deepEqual({
+                    domain: "MyDomain.com",
+                    path: undefined,
+                    enabled: undefined,
+                    ignoreCookies: undefined,
+                    blockedCookies: undefined,
+                    getCookie: core.config.cookieCfg?.getCookie,
+                    setCookie: core.config.cookieCfg?.setCookie,
+                    delCookie: core.config.cookieCfg?.delCookie
+                }, core.config.cookieCfg);
             }
         });
 
@@ -422,6 +476,18 @@ export class CookieManagerTests extends AITestClass {
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
                 Assert.equal(undefined, this._testCookies[newKey]);
+
+                // Check the "merged" config
+                Assert.deepEqual({
+                    domain: "MyDomain.com",
+                    path: undefined,
+                    enabled: undefined,
+                    ignoreCookies: [],
+                    blockedCookies: undefined,
+                    getCookie: core.config.cookieCfg?.getCookie,
+                    setCookie: core.config.cookieCfg?.setCookie,
+                    delCookie: core.config.cookieCfg?.delCookie
+                }, core.config.cookieCfg);
             }
         });
 
@@ -456,6 +522,19 @@ export class CookieManagerTests extends AITestClass {
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
                 Assert.equal(undefined, this._testCookies[newKey]);
+
+                // Check the "merged" config
+                Assert.deepEqual({
+                    domain: "MyDomain.com",
+                    path: undefined,
+                    enabled: undefined,
+                    ignoreCookies: [ "testCookie" ],
+                    blockedCookies: undefined,
+                    getCookie: core.config.cookieCfg?.getCookie,
+                    setCookie: core.config.cookieCfg?.setCookie,
+                    delCookie: core.config.cookieCfg?.delCookie
+                }, core.config.cookieCfg);
+
             }
         });
 
@@ -566,6 +645,18 @@ export class CookieManagerTests extends AITestClass {
                 manager.del(newKey4);
                 Assert.equal("", manager.get(newKey4));
                 Assert.equal(undefined, this._testCookies[newKey4]);
+
+                // Check the "merged" config
+                Assert.deepEqual({
+                    domain: "CfgCookieDomain.com",
+                    path: undefined,
+                    enabled: undefined,
+                    ignoreCookies: undefined,
+                    blockedCookies: undefined,
+                    getCookie: core.config.cookieCfg?.getCookie,
+                    setCookie: core.config.cookieCfg?.setCookie,
+                    delCookie: core.config.cookieCfg?.delCookie
+                }, core.config.cookieCfg);
             }
         });        
 
@@ -645,6 +736,17 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal("", manager.get(newKey4));
                 Assert.equal(undefined, this._testCookies[newKey4]);
 
+                // Check the "merged" config
+                Assert.deepEqual({                // Check the "merged" config
+                    domain: "CfgCookieDomain.com",
+                    path: undefined,
+                    enabled: undefined,
+                    ignoreCookies: undefined,
+                    blockedCookies: undefined,
+                    getCookie: core.config.cookieCfg?.getCookie,
+                    setCookie: core.config.cookieCfg?.setCookie,
+                    delCookie: core.config.cookieCfg?.delCookie
+                }, core.config.cookieCfg);
             }
         });
     }

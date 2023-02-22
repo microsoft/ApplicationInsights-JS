@@ -7,13 +7,13 @@ import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microso
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
-    arrForEach, createProcessTelemetryContext, dumpObj, eLoggingSeverity, getExceptionName, isNullOrUndefined, onConfigChange, throwError,
-    unloadComponents
+    arrForEach, cfgDfFunc, cfgDfMerge, cfgDfString, cfgDfValidate, createProcessTelemetryContext, dumpObj, eLoggingSeverity,
+    getExceptionName, isNullOrUndefined, onConfigChange, throwError, unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { hasDocument, isObject, objDeepFreeze, objDefineProp, objForEachKey } from "@nevware21/ts-utils";
+import { hasDocument, objDeepFreeze, objDefineProp } from "@nevware21/ts-utils";
 import {
-    IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, ICoreData, ICustomDataTags, IPageActionTelemetry
+    IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, ICoreData, ICustomDataTags, IPageActionTelemetry, IValueCallback
 } from "./Interfaces/Datamodel";
 import {
     BehaviorEnumValidator, BehaviorMapValidator, BehaviorValueValidator, DEFAULT_AI_BLOB_ATTRIBUTE_TAG, DEFAULT_DATA_PREFIX,
@@ -25,51 +25,38 @@ import { DomContentHandler } from "./handlers/DomContentHandler";
 
 export { BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
 
-const dataTagsDefault = {
-    useDefaultContentNameOrId: false,
-    aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
-    customDataPrefix: DEFAULT_DATA_PREFIX,
-    captureAllMetaDataContent: false,
-    dntDataTag: DEFAULT_DONOT_TRACK_TAG,
-    metaDataPrefix: "",
-    parentDataTag: ""
-} as ICustomDataTags;
-
-const coreDataDefault = {
-    eferrerUri: hasDocument ? document.referrer : "",
-    requestUri: "",
-    pageName: "",
-    pageType: ""
-} as ICoreData;
-
 const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFreeze({
     autoCapture: true,
-    callback: {
-        pageActionPageTags: null,
-        pageName: null,
-        contentName: null
-    },
+    callback: cfgDfMerge<IValueCallback, IClickAnalyticsConfiguration>({
+        pageActionPageTags: cfgDfFunc(),
+        pageName: cfgDfFunc(),
+        contentName: cfgDfFunc()
+    }),
     pageTags: {},
-    coreData: {set:_setProp, v:coreDataDefault},
-    dataTags: {set: _setProp, v: dataTagsDefault},
-    behaviorValidator: (key:string) => key || "",
-    defaultRightClickBhvr: "",
+    coreData: cfgDfMerge<ICoreData, IClickAnalyticsConfiguration>({
+        referrerUri: hasDocument ? document.referrer : "",
+        requestUri: cfgDfString(),
+        pageName: cfgDfString(),
+        pageType: cfgDfString()
+    }),
+    dataTags: cfgDfMerge<ICustomDataTags, IClickAnalyticsConfiguration>({
+        useDefaultContentNameOrId: false,
+        aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
+        customDataPrefix: cfgDfValidate(_dataPrefixChk, DEFAULT_DATA_PREFIX),
+        captureAllMetaDataContent: false,
+        dntDataTag: DEFAULT_DONOT_TRACK_TAG,
+        metaDataPrefix: cfgDfString(),
+        parentDataTag: cfgDfString()
+    }),
+    behaviorValidator: cfgDfFunc((key:string) => key || ""),
+    defaultRightClickBhvr: cfgDfString(),
     dropInvalidEvents : false,
     urlCollectHash: false,
     urlCollectQuery: false
 });
 
-function _setProp(val: Object, def: Object): Object {
-    if (def && isObject(def)) {
-        objForEachKey(def, (key, obj) => {
-            val[key] = val[key] || obj;
-            if (key === "customDataPrefix") {
-                let prefix = val[key];
-                val[key] = prefix && prefix.indexOf(DEFAULT_DATA_PREFIX) === 0? prefix : DEFAULT_DATA_PREFIX;
-            }
-        });
-    }
-    return val;
+function _dataPrefixChk(val: any) {
+    return val && val.indexOf(DEFAULT_DATA_PREFIX) === 0;
 }
 
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
