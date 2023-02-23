@@ -103,6 +103,11 @@
       "packageName": "applicationinsights-web-config",
       "projectFolder": "tools/config",
       "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-example-shared-worker",
+      "projectFolder": "examples/shared-worker",
+      "shouldPublish": false
     }
   ]
 }

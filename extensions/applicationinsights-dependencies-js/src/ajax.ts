@@ -15,7 +15,7 @@ import {
     dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
     isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { objFreeze, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
 import {
     DependencyListenerFunction, IDependencyHandler, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler
@@ -618,7 +618,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             // Create an error callback to report any hook errors
                             hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
                                 "Failed to monitor Window.fetch" + ERROR_POSTFIX)
-                        }));
+                        }, true, isWebWorker()));
     
                         _fetchInitialized = true;
                     } else if (isPolyfill && !_polyfillInitialized) {
