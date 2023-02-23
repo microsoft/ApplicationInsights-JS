@@ -82,6 +82,25 @@ function getSnippetConfigConnectionString(sessionPrefix: string) {
     };
 };
 
+function getSnippetConfigWrongConnectionString(sessionPrefix: string) {
+    return {
+        src: "",
+        cfg: {
+            connectionString: 'wrong connection string'+TestConnectionString,
+            disableAjaxTracking: false,
+            disableFetchTracking: false,
+            enableRequestHeaderTracking: true,
+            enableResponseHeaderTracking: true,
+            maxBatchInterval: 500,
+            disableExceptionTracking: false,
+            namePrefix: `sessionPrefix`,
+            enableCorsCorrelation: true,
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            samplingPercentage: 50
+        } as IConfig
+    };
+};
+
 export class SnippetInitializationTests extends AITestClass {
 
     // Context 
@@ -153,6 +172,24 @@ export class SnippetInitializationTests extends AITestClass {
                     }
                 })
             });
+
+            this.testCaseAsync({
+                name: "checkIncorrectConnectionString",
+                stepDelay: 100,
+                steps: [() => {
+                let theSnippet:any = null;
+                let exception: Error = null;
+                this.useFakeServer = false;
+                    try {
+                        let snippet:Snippet = snippetCreator(getSnippetConfigWrongConnectionString(this.sessionPrefix));
+                        // Call the initialization
+                        ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
+                    } catch (e) {
+                        Assert.equal(e.message, "Please provide instrumentation key", "Server would not start when get incorrect connection string");
+                    }
+                }].concat(this.asserts(1))
+            });
+
 
             this.testCaseAsync({
                 name: "[" + snippetName + "] : Public Members exist",
