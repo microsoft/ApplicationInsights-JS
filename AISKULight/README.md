@@ -22,7 +22,7 @@
 Application Insights - Web Basic SDK
 
 Application Insights AI SKU Light is a package that combines minimum required packages for Web scenarios.  
-Refer to [ApplicationInsights-JS](../README.MD) for more details on getting started.
+Refer to [ApplicationInsights-JS](../README.md) for more details on getting started.
 
 ## Contributing
 
