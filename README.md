@@ -64,6 +64,13 @@ Some of the major changes include
 
 See the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) for the current documented set of breaking changes, all feedback on excessive breaks are welcome current release target is early (1st quarter) 2023.
 
+
+## Before Getting Started
+
+This repo does not intended for non-browser enverionments, for example, the Node.js applications.
+
+For instrumenting a Node.js app, please refer this [repository](https://github.com/microsoft/ApplicationInsights-node.js). 
+
 ## Getting Started
 
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
