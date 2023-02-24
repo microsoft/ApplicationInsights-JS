@@ -3,7 +3,7 @@ import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js"
 import replace from "@rollup/plugin-replace";
 import cleanup from "rollup-plugin-cleanup";
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
-import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
+import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
@@ -65,8 +65,8 @@ const browserRollupConfigFactory = (name, isProduction, format = "umd", extensio
         preferBuiltins: false
       }),
       doCleanup(),
-      es5Poly(),
-      es5Check()
+      es3Poly(),
+      es3Check()
     ]
   };
 

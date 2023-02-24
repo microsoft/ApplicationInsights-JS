@@ -11,7 +11,7 @@ let _appInsights: ApplicationInsights;
  * @param config
  * @returns
  */
-export function initApplicationInsights(config: IConfiguration) {
+export function initApplicationInsights(config: IConfiguration, onInitCallback: (appInsights: ApplicationInsights, port: MessagePort) => void, port: MessagePort) {
     
     if (!_appInsights) {
         // Make sure we have a configuration object
@@ -25,7 +25,11 @@ export function initApplicationInsights(config: IConfiguration) {
         });
         
         _appInsights.loadAppInsights();
-        _appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+        if (_appInsights.core.isInitialized()) {
+            // Call the callback before the trackPageView
+            onInitCallback(_appInsights, port);
+            _appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+        }
 
         return _appInsights;
     }

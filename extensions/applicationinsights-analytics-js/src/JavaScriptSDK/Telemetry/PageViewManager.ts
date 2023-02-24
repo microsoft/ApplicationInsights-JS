@@ -11,6 +11,23 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 
+declare let WorkerGlobalScope: any;
+declare let self: any;
+
+let _isWebWorker: boolean = null;
+
+function isWebWorker() {
+    if (_isWebWorker == null) {
+        try {
+            _isWebWorker = !!(self && self instanceof WorkerGlobalScope);
+        } catch(e) {
+            _isWebWorker = false;
+        }
+    }
+
+    return _isWebWorker;
+}
+
 /**
  * Internal interface to pass appInsights object to subcomponents without coupling
  */
@@ -99,11 +116,13 @@ export class PageViewManager {
                     );
                     _flushChannels(true);
         
-                    // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
-                    _throwInternal(_logger,
-                        eLoggingSeverity.WARNING,
-                        _eInternalMessageId.NavigationTimingNotSupported,
-                        "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
+                    if (!isWebWorker()) {
+                        // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
+                        _throwInternal(_logger,
+                            eLoggingSeverity.WARNING,
+                            _eInternalMessageId.NavigationTimingNotSupported,
+                            "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
+                    }
         
                     return;
                 }
