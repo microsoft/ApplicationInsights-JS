@@ -95,11 +95,11 @@ First lets check for JavaScript exceptions, using a browser that supports develo
 
 If there are exceptions being reported in the SDK script (for example ai.2.min.js), then this may indicate that the configuration passed into the SDK contains unexpected or missing required configuration or a faulty release has been deployed to the CDN.
 
-To check for faulty configuration, change the configuration passed into the snippet (if not already) so that it only includes your instrumentation key as a string value
+To check for faulty configuration, change the configuration passed into the snippet (if not already) so that it only includes your connection string as a string value
 
 > src: "https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js",<br />
 > cfg:{<br />
-> instrumentationKey: "INSTRUMENTATION_KEY"<br />
+> connectionString: "YOUR_CONNECTION_STRING"<br />
 > }});<br />
 
 If when using this minimal configuration you are still seeing a JavaScript exception in the SDK script, please [create a support ticket](#create-a-support-ticket) with the details as this will require the faulty build to be rolled back as it's most likely an issue with a newly deployed version.
@@ -110,7 +110,7 @@ If your configuration was previously deployed and working but just started repor
 
 Assuming there are no exceptions being thrown the next step is to enabling console debugging by adding ```loggingLevelConsole``` setting to the configuration, this will send all initialization errors and warnings to the browsers console (normally available via the developer tools (F12)). Any reported errors should be self-explanatory and if you need further assistance [file an issue on GitHub](https://github.com/Microsoft/ApplicationInsights-JS/issues).
 > cfg:{<br />
-> instrumentationKey: "INSTRUMENTATION_KEY",<br />
+> connectionString: "CONNECTION_STRING",<br />
 > loggingLevelConsole: 2<br />
 > }});<br />
 
@@ -126,7 +126,7 @@ If it still fails to initialize, try enabling the ```enableDebug``` configuratio
 
 > src: "https://az416426.vo.msecnd.net/scripts/b/ai.2.js",<br />
 > cfg:{<br />
-> instrumentationKey: "INSTRUMENTATION_KEY",<br />
+> connectionString: "CONNECTION_STRING",<br />
 > enableDebug: true<br />
 > }});<br />
 
