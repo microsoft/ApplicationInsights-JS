@@ -11,7 +11,7 @@ import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
-const TestConnectionString = 'InstrumentationKey=b7170927-2d1c-44f1-acec-59f4e1751c11'
+const TestConnectionString = 'InstrumentationKey=b7170927-2d1c-44f1-acec-59f4e1751c11';
 
 const _expectedBeforeProperties = [
     "config",
