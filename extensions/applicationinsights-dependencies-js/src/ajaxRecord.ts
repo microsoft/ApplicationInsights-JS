@@ -335,7 +335,6 @@ export class ajaxRecord {
                     duration: self.ajaxTotalDuration,
                     success: (+(self.status)) >= 200 && (+(self.status)) < 400,
                     responseCode: (+(self.status)),
-                    method: self.method,
                     [STR_PROPERTIES]: { HttpMethod: self.method }
                 } as IDependencyTelemetry;
 
