@@ -131,13 +131,13 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 
 
 /** @ignore */
-function _getOwner(target:any, name:string, checkPrototype: boolean): any {
+function _getOwner(target:any, name:string, checkPrototype: boolean, checkParentProto: boolean): any {
     let owner = null;
     if (target) {
         if (hasOwnProperty(target, name)) {
             owner = target;
         } else if (checkPrototype) {
-            owner = _getOwner(_getObjProto(target), name, false);
+            owner = _getOwner(_getObjProto(target), name, checkParentProto, false);
         }
     }
 
@@ -219,10 +219,11 @@ function _createInstrumentHook(owner: any, funcName: string, fn: any, callbacks:
  * @param funcName - The function name
  * @param callbacks - The callbacks to configure and call whenever the function is called
  * @param checkPrototype - If the function doesn't exist on the target should it attempt to hook the prototype function
+ * @param checkParentProto - If the function doesn't exist on the target or it's prototype should it attempt to hook the parent's prototype
  */
-export function InstrumentFunc(target:any, funcName:string, callbacks: IInstrumentHooksCallbacks, checkPrototype:boolean = true): IInstrumentHook {
+export function InstrumentFunc(target:any, funcName:string, callbacks: IInstrumentHooksCallbacks, checkPrototype: boolean = true, checkParentProto?: boolean): IInstrumentHook {
     if (target && funcName && callbacks) {
-        let owner = _getOwner(target, funcName, checkPrototype);
+        let owner = _getOwner(target, funcName, checkPrototype, checkParentProto);
         if (owner) {
             let fn = owner[funcName]
             if (typeof fn === strShimFunction) {
@@ -240,11 +241,12 @@ export function InstrumentFunc(target:any, funcName:string, callbacks: IInstrume
  * @param funcNames - The function names to intercept and call
  * @param callbacks - The callbacks to configure and call whenever the function is called
  * @param checkPrototype - If the function doesn't exist on the target should it attempt to hook the prototype function
+ * @param checkParentProto - If the function doesn't exist on the target or it's prototype should it attempt to hook the parent's prototype
  */
-export function InstrumentFuncs(target:any, funcNames:string[], callbacks: IInstrumentHooksCallbacks, checkPrototype:boolean = true): IInstrumentHook[] {
+export function InstrumentFuncs(target:any, funcNames:string[], callbacks: IInstrumentHooksCallbacks, checkPrototype:boolean = true, checkParentProto?: boolean): IInstrumentHook[] {
     let hooks: IInstrumentHook[] = null;
     _arrLoop(funcNames, (funcName) => {
-        let hook = InstrumentFunc(target, funcName, callbacks, checkPrototype);
+        let hook = InstrumentFunc(target, funcName, callbacks, checkPrototype, checkParentProto);
         if (hook) {
             if (!hooks) {
                 hooks = [];
@@ -264,10 +266,11 @@ export function InstrumentFuncs(target:any, funcNames:string[], callbacks: IInst
  * @param evtName - The name of the event
  * @param callbacks - The callbacks to configure and call whenever the function is called
  * @param checkPrototype - If the function doesn't exist on the target should it attempt to hook the prototype function
+ * @param checkParentProto - If the function doesn't exist on the target or it's prototype should it attempt to hook the parent's prototype
  */
-export function InstrumentEvent(target: any, evtName: string, callbacks: IInstrumentHooksCallbacks, checkPrototype?: boolean): IInstrumentHook {
+export function InstrumentEvent(target: any, evtName: string, callbacks: IInstrumentHooksCallbacks, checkPrototype?: boolean, checkParentProto?: boolean): IInstrumentHook {
     if (target && evtName && callbacks) {
-        let owner = _getOwner(target, evtName, checkPrototype) || target;
+        let owner = _getOwner(target, evtName, checkPrototype, checkParentProto) || target;
         if (owner) {
             return _createInstrumentHook(owner, evtName, owner[evtName], callbacks);
         }
