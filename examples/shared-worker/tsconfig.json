@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": true,
+    "module": "es6",
+    "moduleResolution": "node",
+    "target": "es5",
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "noEmitHelpers": true,
+    "skipLibCheck": false,
+    "alwaysStrict": true,
+    "skipDefaultLibCheck": true,
+    "declaration": true,
+    "declarationDir": "./types",
+    "outDir": "./dist-esm",
+    "rootDir": "./src",
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": ["node_modules/"]
+}

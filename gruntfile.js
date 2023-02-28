@@ -438,7 +438,12 @@ module.exports = function (grunt) {
                                          path: "./extensions/applicationinsights-properties-js",
                                          unitTestName: "prop.tests.js"
                                      },
-     
+            // Examples
+            "example-shared-worker": {
+                                        autoMinify: false,
+                                        path: "./examples/shared-worker",
+                                        testHttp: false
+                                    },
              // Tools
              "rollupuglify":         {
                                          autoMinify: false,
@@ -750,6 +755,9 @@ module.exports = function (grunt) {
          grunt.registerTask("clickanalyticstests", tsTestActions("clickanalytics"));
          grunt.registerTask("clickanalytics-mintests", tsTestActions("clickanalytics", true));
  
+         grunt.registerTask("example-shared-worker", tsBuildActions("example-shared-worker"));
+         grunt.registerTask("example-shared-worker-test", tsTestActions("example-shared-worker"));         
+
          grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
          grunt.registerTask("serve", ["connect:server:keepalive"]);
      } catch (e) {
