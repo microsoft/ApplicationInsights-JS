@@ -448,7 +448,7 @@ module.exports = function (grunt) {
 
             "example-aisku":        {
                                         autoMinify: false,
-                                        path: "./examples/aisku",
+                                        path: "./examples/AISKU",
                                         testHttp: false
                                     },
 
