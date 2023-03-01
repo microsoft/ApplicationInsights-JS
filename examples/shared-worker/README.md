@@ -1,23 +1,23 @@
-> ***Important:*** If you are looking to add Application Insights to your website/app, please see the [applicationinsights-web](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU#application-insights-javascript-sdk-beta-sdk) repository to learn how to get started.
-
-# Microsoft Application Insights JavaScript SDK - Core
+# Microsoft Application Insights JavaScript SDK Example - Shared Worker
 
 ![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=master)
-[![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-core-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-core-js)
 
-Core SDK layer for next version of application insights javascript SDK.
+Example to instrument a Shared-Worker
 
-## Beta Release Breaking changes
+## Simple Instrumented Shared Worker Example
 
-- Removed ES3 / IE8 Support
-- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
+This is a simple example that uses 2 Shared Workers as defined by
+- [worker.ts](./src/worker.ts)
+- [worker2.ts](./src/worker2.ts)
 
-See [Breaking Changes](./BETA_BREAKING_CHANGES.md)
+You WILL NEED to have compiled the repository before running this example as it loads the compiled scripts, and you will also NEED to start the
+local web server via `npm run serve` from the root of repository.
 
-## Build & Test:
-- Install: `$ npm install`
-- Build: `$ npm run build`
-- Test: `$ npm run test`
+You can load the Shared Worker example via the [SharedWorker.html](SharedWorker.html).
+
+This implements a VERY simple Shared Worker example that passes messages between the
+current page and the workers using the type in the [IExampleMessage](./src/interfaces/IExampleMessage.ts),
+And the support functions for the Web page are located in [example-shared-worker.ts](./src/example-shared-worker.ts)
 
 ## Contributing
 

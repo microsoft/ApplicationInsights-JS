@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 import {
     arrForEach, arrIndexOf, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined,
-    objDeepFreeze, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
+    objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
 } from "@nevware21/ts-utils";
+import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
@@ -31,15 +32,9 @@ let _doc = getDocument();
 let _cookieCache = {};
 let _globalCookieConfig = {};
 
-// `isCookieUseDisabled` is deprecated, so explicitly casting as a key of IConfiguration to avoid typing error
-// when both isCookieUseDisabled and disableCookiesUsage are used disableCookiesUsage will take precedent, which is
-// why its listed first
-
-const defaultConfig: IConfigDefaults<ICookieMgrConfig> = objDeepFreeze({
-    [STR_DOMAIN]: { fb: "cookieDomain", dfVal: isNotNullOrUndefined },
-    path: { fb: "cookiePath", dfVal: isNotNullOrUndefined },
-    enabled: UNDEFINED_VALUE
-});
+// // `isCookieUseDisabled` is deprecated, so explicitly casting as a key of IConfiguration to avoid typing error
+// // when both isCookieUseDisabled and disableCookiesUsage are used disableCookiesUsage will take precedent, which is
+// // why its listed first
 
 /**
  * Set the supported dynamic config values as undefined (or an empty object) so that
@@ -47,8 +42,14 @@ const defaultConfig: IConfigDefaults<ICookieMgrConfig> = objDeepFreeze({
  * Explicitly NOT including the deprecated `isCookieUseDisabled` as we don't want to support
  * the v1 deprecated field as dynamic for updates
  */
-const rootDefaultConfig = {
-    cookieCfg: {},
+const rootDefaultConfig: IConfigDefaults<IConfiguration> = {
+    cookieCfg: cfgDfMerge<ICookieMgrConfig>({
+        [STR_DOMAIN]: { fb: "cookieDomain", dfVal: isNotNullOrUndefined },
+        path: { fb: "cookiePath", dfVal: isNotNullOrUndefined },
+        enabled: UNDEFINED_VALUE,
+        ignoreCookies: UNDEFINED_VALUE,
+        blockedCookies: UNDEFINED_VALUE
+    }),
     cookieDomain: UNDEFINED_VALUE,
     cookiePath: UNDEFINED_VALUE,
     [strDisableCookiesUsage]: UNDEFINED_VALUE
@@ -152,7 +153,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         details.setDf(details.cfg, rootDefaultConfig);
 
         // Create and apply the defaults to the cookieCfg element
-        cookieMgrConfig =  details.setDf(details.cfg.cookieCfg, defaultConfig);
+        cookieMgrConfig = details.ref(details.cfg, "cookieCfg"); // details.setDf(details.cfg.cookieCfg, defaultConfig);
         let isEnabled = cookieMgrConfig.enabled;
         if (isNullOrUndefined(isEnabled)) {
             // Set the enabled from the provided setting or the legacy root values

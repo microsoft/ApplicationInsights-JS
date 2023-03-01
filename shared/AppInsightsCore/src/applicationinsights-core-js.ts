@@ -96,3 +96,4 @@ export { IDynamicPropertyHandler } from "./Config/IDynamicPropertyHandler";
 export { IWatchDetails, IWatcherHandler, WatcherFunction } from "./Config/IDynamicWatcher";
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
 export { getDynamicConfigHandler } from "./Config/DynamicSupport";
+export { cfgDfValidate, cfgDfMerge, cfgDfBoolean, cfgDfFunc, cfgDfString, cfgDfSet } from "./Config/ConfigDefaultHelpers";

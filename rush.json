@@ -113,6 +113,11 @@
       "packageName": "@microsoft/applicationinsights-example-dependencies",
       "projectFolder": "examples/dependency",
       "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-example-shared-worker",
+      "projectFolder": "examples/shared-worker",
+      "shouldPublish": false
     }
   ]
 }

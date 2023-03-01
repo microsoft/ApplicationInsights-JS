@@ -10,18 +10,7 @@ import { STR_EMPTY } from "./InternalConstants";
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 
 // Added to help with minification
-const strToString = "toString";
 const strGetPrototypeOf = "getPrototypeOf";
-
-/**
-  * Constant string defined to support minimization
-  * @ignore
-  */
-const strConstructor = "constructor";
-
-const _fnToString = ObjClass[strToString];
-// Cache what this browser reports as the object function constructor (as a string)
-const _objFunctionString = _fnToString.call(ObjClass);
 
 const rCamelCase = /-([a-z])/g;
 const rNormalizeInvalid = /([^\w\d_$])/g;
