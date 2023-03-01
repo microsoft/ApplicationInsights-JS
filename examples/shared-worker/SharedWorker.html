@@ -1,0 +1,124 @@
+<html>
+    <head>
+        <script src="./browser/example-shared-worker.gbl.js"></script>
+    </head>
+    <body>
+        <h1>Simple Instrumented Shared Worker Example</h1>
+        <p>Please make sure that you have compiled the repository before running this example as it loads the compiled scripts.</p>
+        <p>This script also needs to be run from the hosted `localhost` instance which can be started by running<br/> &gt; <code>npm run serve</code><br/>
+            from the root folder of the repository.
+        </p>
+        <p>
+            And then re-laoding this page from <a href="http://localhost:9001/examples/shared-worker/SharedWorker.html">http://localhost:9001/examples/shared-worker/SharedWorker.html</a>
+        </p>
+        <p>
+            Work is sent to the worker(s) and any responses are returned and displayed on the main console, if you want to inspect
+            the console of the workers you can access and debug the worker code via these links. You will need to manually open as accessing
+            local resources is generally prohibited.
+            <ul>
+                <li>Chrome: <code>chrome://inspect/#workers</code></li>
+                <li>MS Edge: <code>edge://inspect/#workers</code></li>
+            </ul>
+        </p>
+        <hr />
+        <h2>Worker 1 - Instrumented</h2>
+        <p>You must use the <code>Initialize SDK</code> button at least once to initialize Application Insights within the worker.
+            The <code>Unload SDK</code> will cause the SDK instance in the worker to unload and this will disable the reporting of fetch calls.<br/>
+            Once the SDK in initialized it will report back when events are sent from the Workers SDK instance.
+        </p>
+        <div>
+            <div style="display:inline-block; width:50%; vertical-align: top;">
+                <div>
+                    <div style="display:inline-block; width:10%">
+                        <label for="connectionString">Connection String</label>
+                    </div>
+                    <input id="connectionString" style="width:50%" value="YourConnectionString" />
+                </div>
+                <div style="margin-top:10px">
+                    <div style="display:inline-block; width:10%">
+                    </div>
+                    <button onclick="javascript:Microsoft.ApplicationInsights.Example.loadSdk('connectionString')">Initialize SDK</button>
+                    <button onclick="javascript:Microsoft.ApplicationInsights.Example.unloadSdk()">Unload SDK</button>
+                </div>
+                <hr style="margin-top:10px"/>
+                <div>
+                    <div style="display:inline-block; width:10%">
+                        <label for="fetchUrl">Fetch URL</label>
+                    </div>
+                    <input id="fetchUrl" style="width:50%" value="https://js.monitor.azure.com/scripts/b/ai.2.integrity.json" />
+                </div>
+                <div style="margin-top:10px">
+                    <div style="display:inline-block; width:10%">
+                    </div>
+                    <div style="display:inline-block">
+                        <div>
+                            This will cause the worker (if the SDK is initialized) to send a RemoteDependency event.
+                        </div>
+                        <button onclick="javascript:Microsoft.ApplicationInsights.Example.fetchUrl('fetchUrl')">Fetch the URL</button> (Contents will be sent to the main page console via a post)
+                    </div>
+                </div>
+                <div style="margin-top:10px">
+                    <div style="display:inline-block; width:10%">
+                    </div>
+                    <div style="display:inline-block">
+                        <div style="margin-bottom:2px">
+                            This will cause the worker (if the SDK is initialized) to send a new PageView event.
+                        </div>
+                        <button onclick="javascript:Microsoft.ApplicationInsights.Example.trackPageView()">Track Page View</button>
+                    </div>
+                </div>
+                <div style="margin-top:10px">
+                    <div style="display:inline-block; width:10%">
+                    </div>
+                    <div style="display:inline-block">
+                        <div style="margin-bottom:2px">
+                            Send an invalid request to the worker
+                        </div>
+                        <button onclick="javascript:Microsoft.ApplicationInsights.Example.sendInvalidRequest()">Send Invalid Request</button>
+                    </div>
+                </div>
+            </div>
+            <div style="display:inline-table; width:45%; margin-left: 10px">
+                <p>This is the information returned by the worker, when the SDK is initialized you will see an "Events Sent"
+                    message when the SDK has sent the events to Azure Monitor, if the connection string is valid you will
+                    see the generated events in the Azure Monitor Portal.
+                </p>
+                <textarea id="_logContainer-log" style="width:100%; min-height: 200px;"></textarea>
+                <button onclick="javascript:Microsoft.ApplicationInsights.Example.clearLog('log')">Clear Log</button>
+            </div>
+        </div>
+        <hr/>
+        <h2>Worker 2 - Not Instrumented</h2>
+        <div>
+            <div style="display:inline-block; width:50%; vertical-align: top;">
+                <div>
+                    <div style="display:inline-block; width:10%">
+                        <label for="fetch2Url">Fetch URL</label>
+                    </div>
+                    <input id="fetch2Url" style="width:50%" value="https://js.monitor.azure.com/scripts/b/ai.2.integrity.json" />
+                </div>
+                <div style="margin-top:10px">
+                    <div style="display:inline-block; width:10%">
+                    </div>
+                    <button onclick="javascript:Microsoft.ApplicationInsights.Example.fetch2Url('fetch2Url')">Fetch the URL</button> (Contents will be sent to the main page console via a post)
+                </div>
+                <div style="margin-top:10px">
+                    <div style="display:inline-block; width:10%">
+                    </div>
+                    <div style="display:inline-block">
+                        <div style="margin-bottom:2px">
+                            Send an invalid request to the worker
+                        </div>
+                        <button onclick="javascript:Microsoft.ApplicationInsights.Example.sendInvalidRequest2()">Send Invalid Request</button>
+                    </div>
+                </div>
+            </div>
+            <div style="display:inline-block; width:45%; margin-left: 10px">
+                <p>This is the information returned by the worker 2.
+                </p>
+                <textarea id="_logContainer-log2" style="width:100%; min-height: 200px;"></textarea>
+                <button onclick="javascript:Microsoft.ApplicationInsights.Example.clearLog('log2')">Clear Log</button>
+            </div>
+        </div>
+    </body>
+</html>
