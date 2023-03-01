@@ -80,27 +80,8 @@ export function createDetailList(propsToWatch: string[], details: any, id: strin
             }
             list += `<li>${prop}: ${obj}</li>`;
 
-        })
-
-        // propsToWatch.forEach((prop) => {
-        //     let obj;
-            
-        //     if (details["baseData"]) {
-        //         obj =  details["baseData"][prop] || details[prop] || details["baseData"];
-        //     } else {
-        //         obj =  details[prop] || details["baseData"];
-        //     }
-        //     if (prop === "item") {
-        //         obj = {name: obj.name, target: obj.target};
-        //     }
-
-        //     obj = (obj === undefined)?  "undefined" : obj;
-            
-        //     if (typeof obj === "object") {
-        //         obj = JSON.stringify(obj);
-        //     }
-        //     list += `<li>${prop}: ${obj}</li>`;
-        // });
+        });
+        
         list += "<div>-------------------------</div>";
         ele.innerHTML = list;
         container?.appendChild(ele);
