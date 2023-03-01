@@ -1,26 +1,43 @@
 # Application Insights JavaScript SDK
 
-## AISKU Sample
+## Dependency Sample
 
-This Sample shows how to track [`pageview`](../../API-reference.md#trackpageview), [`event`](../../API-reference.md#trackevent), [`trace`](../../API-reference.md#tracktrace), [`metric`](../../API-reference.md#trackmetric), [`exception`](../../API-reference.md#trackexception), get cookies details by using `cookieMgr` and record event duration manually by using `startTrackEvent` and `stopTrackEvent`.
+This Sample shows how to filter, modify, block and disable dependency data with [`addDependencyListener`](../../API-reference.md#adddependencylistener) and [`addDependencyInitializer`](../../API-reference.md#adddependencyinitializer).
 
 ## Sample Build
 
-- Locate to AISKU sample folder root.
-- Run `tsc` to build the sample.
-- Replace `YOUR_CONNECTION_STRING` in `index.html` with your connection string.
-- Open `index.html` in a running server.
+- Build the repository before running this example.
+- Run `npm run serve` under root folder.
+- Open `http://localhost:9001/examples/dependency/`.
 
 ## Description
 
-- button `Change Config` will change config dynamically.
-- button `Create Pageview` will trigger a pageview telemetry.
-- button `Create Event` will trigger an event telemetry.
-- button `Create Trace` will trigger a trace telemetry.
-- button `Create Metric` will trigger a metric telemetry.
-- button `Create Exception` will trigger an exception telemetry.
-- button `Start Tracking event` will start timing an event with given name `manual_record_event`
-- button `Stop Tracking event` will stop timing the previous event with given name `manual_record_event`.
+- button `change-config` will change config dynamically.
+
+- button `add-handlers` will add a dependencyListener with the following changes:
+
+    ```javascript
+        context.listener = "dependency-listener-context";
+        traceFlags = 0;
+    ```
+
+    and a dependencyInitializer with the following changes:
+
+    ```javascript
+        item.name = "dependency-name";
+        item.properties.url = item.target;
+        context.initializer = "dependency-initializer-context";
+    ```
+
+- button `stop-dependency-event` will block all dependency events.
+
+- button `remove-all-handlers` will remove all previously added dependency initializers and listeners.
+
+- button `create-fetch-request` will trigger a fetch request.
+
+- button `create-xhr-request` will trigger a xhr request.
+
+- button `untrack-fetch-request` will trigger a fetch request that will be blocked.
 
 ## Contributing
 

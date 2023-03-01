@@ -103,6 +103,16 @@
       "packageName": "applicationinsights-web-config",
       "projectFolder": "tools/config",
       "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-example-aisku",
+      "projectFolder": "examples/aisku",
+      "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-example-dependencies",
+      "projectFolder": "examples/dependency",
+      "shouldPublish": false
     }
   ]
 }

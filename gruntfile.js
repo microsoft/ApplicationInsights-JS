@@ -495,7 +495,19 @@ module.exports = function (grunt) {
                                                 "./common/Tests/Framework/src/*.ts"
                                             ]
                                         } 
-                                    }
+                                    },
+            // Examples
+            "example-aisku": {
+                autoMinify: false,
+                path: "./examples/aisku",
+                testHttp: false
+            },
+
+            "example-dependency": {
+                autoMinify: false,
+                path: "./examples/dependency",
+                testHttp: false
+            }
         }));
     
         function tsBuildActions(name, addTests, replaceName) {
@@ -758,6 +770,10 @@ module.exports = function (grunt) {
 
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
         grunt.registerTask("serve", ["connect:server:keepalive"]);
+
+        
+        grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
+        grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
     } catch (e) {
         console.error(e);
         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");

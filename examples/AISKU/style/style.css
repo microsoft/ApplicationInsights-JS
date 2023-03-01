@@ -54,11 +54,13 @@ ul {
 
 .container-main {
     justify-content: space-between;
+    font-size: 0.9rem;
     position: relative;
     margin: 1rem auto;
     padding-left: 1rem;
     background-color: azure;
     overflow: auto;
+    max-height: 350px;
 }
 
 

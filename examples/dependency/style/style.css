@@ -57,10 +57,11 @@ ul {
 
 .container-main {
     justify-content: space-between;
+    font-size: 0.9rem;
     position: relative;
     margin: 1.5rem auto;
     padding-left: 0.5rem;
-    max-height: 20rem;
+    max-height: 200px;
     overflow: auto;
     background-color: azure;
 }
