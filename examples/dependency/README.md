@@ -6,12 +6,13 @@ This Sample shows how to filter, modify, block and disable dependency data with 
 
 ## Sample Build
 
-- Locate to dependency sample folder root.
-- Run `tsc` to build the sample.
-- Replace `YOUR_CONNECTION_STRING` in `index.html` with your connection string.
-- Open `index.html` in a running server.
+- Build the repository before running this example.
+- Run `npm run serve` under root folder.
+- Open `http://localhost:9001/examples/dependency/`.
 
 ## Description
+
+- button `change-config` will change config dynamically.
 
 - button `add-handlers` will add a dependencyListener with the following changes:
 

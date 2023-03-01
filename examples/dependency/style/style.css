@@ -1,4 +1,3 @@
-
 body {
     margin: 0;
     font-family: "Segoe UI", sans-serif;
@@ -58,10 +57,11 @@ ul {
 
 .container-main {
     justify-content: space-between;
+    font-size: 0.9rem;
     position: relative;
     margin: 1.5rem auto;
     padding-left: 0.5rem;
-    max-height: 20rem;
+    max-height: 300px;
     overflow: auto;
     background-color: azure;
 }
@@ -85,7 +85,3 @@ button {
     font-weight: bold;
     font-size: 0.8rem;
 }
-
-
-
-

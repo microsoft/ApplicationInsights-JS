@@ -103,6 +103,16 @@
       "packageName": "@microsoft/applicationinsights-example-shared-worker",
       "projectFolder": "examples/shared-worker",
       "shouldPublish": false
-    }
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-example-aisku",
+      "projectFolder": "examples/AISKU",
+      "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-example-dependencies",
+      "projectFolder": "examples/dependency",
+      "shouldPublish": false
+    },
   ]
 }
