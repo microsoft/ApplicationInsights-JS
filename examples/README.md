@@ -7,6 +7,10 @@ but may not be executed as part of any automated test pass -- this may change/va
 
 [Shared Worker](./shared-worker/README.md)
 
+[AISKU](./AISKU/README.md)
+
+[Dependency](./dependency/README.md)
+
 ## Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to

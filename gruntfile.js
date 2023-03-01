@@ -445,6 +445,18 @@ module.exports = function (grunt) {
                                         path: "./examples/shared-worker",
                                         testHttp: false
                                     },
+
+            "example-aisku":        {
+                                        autoMinify: false,
+                                        path: "./examples/AISKU",
+                                        testHttp: false
+                                    },
+
+            "example-dependency":   {
+                                        autoMinify: false,
+                                        path: "./examples/dependency",
+                                        testHttp: false
+                                    },
     
             // Tools
             "rollupuglify":         {
@@ -502,7 +514,7 @@ module.exports = function (grunt) {
                                                 "./common/Tests/Framework/src/*.ts"
                                             ]
                                         } 
-                                    }
+                                    },
         }));
     
         function tsBuildActions(name, addTests, replaceName) {
@@ -768,6 +780,10 @@ module.exports = function (grunt) {
 
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
         grunt.registerTask("serve", ["connect:server:keepalive"]);
+
+        
+        grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
+        grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
     } catch (e) {
         console.error(e);
         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
