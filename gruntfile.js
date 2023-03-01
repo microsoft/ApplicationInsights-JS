@@ -445,6 +445,18 @@ module.exports = function (grunt) {
                                         path: "./examples/shared-worker",
                                         testHttp: false
                                     },
+
+            "example-aisku":        {
+                                        autoMinify: false,
+                                        path: "./examples/aisku",
+                                        testHttp: false
+                                    },
+
+            "example-dependency":   {
+                                        autoMinify: false,
+                                        path: "./examples/dependency",
+                                        testHttp: false
+                                    },
     
             // Tools
             "rollupuglify":         {
@@ -503,18 +515,6 @@ module.exports = function (grunt) {
                                             ]
                                         } 
                                     },
-            // Examples
-            "example-aisku": {
-                autoMinify: false,
-                path: "./examples/aisku",
-                testHttp: false
-            },
-
-            "example-dependency": {
-                autoMinify: false,
-                path: "./examples/dependency",
-                testHttp: false
-            }
         }));
     
         function tsBuildActions(name, addTests, replaceName) {
