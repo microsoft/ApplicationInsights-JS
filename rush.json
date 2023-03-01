@@ -106,7 +106,7 @@
     },
     {
       "packageName": "@microsoft/applicationinsights-example-aisku",
-      "projectFolder": "examples/aisku",
+      "projectFolder": "examples/AISKU",
       "shouldPublish": false
     },
     {
