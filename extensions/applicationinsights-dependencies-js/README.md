@@ -5,15 +5,17 @@
 
 Dependencies Plugin for the Application Insights Javascript SDK
 
-## Build:
-```
+## Build
+
+``` javascript
 npm install -g grunt-cli
 npm install
 npm run build --silent
 ```
 
-## Run unit tests:
-```
+## Run unit tests
+
+```javascript
 npm run test
 ```
 
@@ -22,7 +24,7 @@ npm run test
 This project welcomes contributions and suggestions. Most contributions require you to
 agree to a Contributor License Agreement (CLA) declaring that you have the right to,
 and actually do, grant us the rights to use your contribution. For details, visit
-https://cla.microsoft.com.
+<https://cla.microsoft.com>.
 
 When you submit a pull request, a CLA-bot will automatically determine whether you need
 to provide a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the
@@ -36,7 +38,7 @@ or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any addi
 
 As this SDK is designed to enable applications to perform data collection which is sent to the Microsoft collection endpoints the following is required to identify our privacy statement.
 
-The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at https://go.microsoft.com/fwlink/?LinkID=824704. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 
 ## Trademarks
 

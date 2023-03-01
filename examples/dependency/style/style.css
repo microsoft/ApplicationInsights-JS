@@ -1,0 +1,87 @@
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 16px;
+    padding-left: 1rem;
+}
+
+h1 {
+    font-size: 1.875rem;
+    margin: 0.67rem 0;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin: 0.83rem 0;
+}
+
+h3 {
+    font-size: 1.25rem;
+    margin: 1rem 0;
+}
+
+h4 {
+    font-size: 1.05rem;
+    margin: 1.33rem 0;
+}
+
+h5 {
+    font-size: 1rem;
+    margin: 0.67rem 0;
+}
+
+h6 {
+    font-size: 0.875rem;
+    margin: 0.3rem 0;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+pre {
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+ol,
+ul {
+    margin: 1em 0;
+}
+
+.container {
+    max-width: 1600px;
+    padding: 0 0.5rem;
+}
+
+.container-main {
+    justify-content: space-between;
+    font-size: 0.9rem;
+    position: relative;
+    margin: 1.5rem auto;
+    padding-left: 0.5rem;
+    max-height: 300px;
+    overflow: auto;
+    background-color: azure;
+}
+
+code,
+pre {
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    padding: 0.2em;
+    margin: 0;
+    font-size: 0.875rem;
+    border-radius: 0.8em;
+}
+
+button {
+    font-family: "Segoe UI", sans-serif;
+    margin: 0.5rem;
+    padding: 0.2em;
+}
+
+.time {
+    font-weight: bold;
+    font-size: 0.8rem;
+}
