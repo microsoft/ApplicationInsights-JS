@@ -1,7 +1,5 @@
 # Microsoft Application Insights JavaScript SDK - Dependencies Plugin
 
-
-
 Dependencies Plugin for the Application Insights Javascript SDK
 
 ## Configuration
@@ -92,4 +90,4 @@ appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, met
 
 ## Sample
 
-A [sample](./../samples/dependency/) is provided to show how to filter, modify, block and disable dependency data.
+A [sample](./../examples/dependency/README.md) is provided to show how to filter, modify, block and disable dependency data.
