@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ApplicationInsights, IConfiguration, IEventTelemetry, IMetricTelemetry, IPageViewTelemetry, ITraceTelemetry } from "@microsoft/applicationinsights-web";
 import { generateNewConfig } from "./utils";
 
 
@@ -8,12 +9,19 @@ import { generateNewConfig } from "./utils";
 // Snippet Initialization. If you want to use NPM initialization, replace this section with the NPM Initialization section at the end.
 let _appInsights: any;
 
-export function initApplicationInsights() {
+export function initApplicationInsights(config: IConfiguration = {}) {
     
     if (!_appInsights) {
         _appInsights =  (window as any).appInsights;
         return _appInsights;
     }
+
+    _appInsights = new ApplicationInsights({
+        config: config
+    });
+    
+    _appInsights.loadAppInsights();
+    _appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
 
     return _appInsights;
 }
@@ -37,7 +45,7 @@ export function unloadApplicationInsights() {
 /**
  * Request a page view request if the SDK has been initialized
  */
-export function trackPageView(pageView?: any) {
+export function trackPageView(pageView?: IPageViewTelemetry) {
     if (_appInsights) {
         _appInsights.trackPageView(pageView);
         return true;
@@ -48,7 +56,7 @@ export function trackPageView(pageView?: any) {
 /**
  * Log a custom event if the SDK has been initialized
  */
-export function trackEvent(event?: any, customProperties?: any) {
+export function trackEvent(event: IEventTelemetry, customProperties?: {[key: string]: any;} ) {
     if (_appInsights) {
         _appInsights.trackEvent(event, customProperties);
         return true;
@@ -82,7 +90,7 @@ export function stopTrackEvent(name: string, properties?: { [key: string]: strin
  * Log traces if the SDK has been initialized
  * Typically used to send regular reports of performance indicators
  */
-export function trackTrace(trace: any) {
+export function trackTrace(trace: ITraceTelemetry) {
     if (_appInsights) {
         _appInsights.trackTrace(trace);
         return true;
@@ -93,7 +101,7 @@ export function trackTrace(trace: any) {
 /**
  * Log Metric if the SDK has been initialized
  */
-export function trackMetric(metric: any, customProperties?: {[name: string]: any}) {
+export function trackMetric(metric: IMetricTelemetry, customProperties?: {[name: string]: any}) {
     if (_appInsights) {
         _appInsights.trackMetric(metric, customProperties);
         return true;
@@ -150,11 +158,10 @@ export function changeConfig() {
     return false;
 }
 
-
 /**
  * An example of customized pageview item
  */
-export const pageviewItem = {
+export const pageviewItem: IPageViewTelemetry = {
     name: "pageviewWithproperities", // Defaults to the document title
     uri: "https://pageview",
     refUri: "https://sample",
@@ -173,7 +180,7 @@ export const pageviewItem = {
 /**
  * An example of customized event item
  */
-export const eventItem = {
+export const eventItem: IEventTelemetry = {
     name: "eventWithproperities",
     properties: {
         prop: {prop1:"prop1"}
@@ -186,9 +193,9 @@ export const eventItem = {
 /**
  * An example of customized trace item
  */
-export const traceItem = {
+export const traceItem: ITraceTelemetry = {
     message: "trace",
-    SeverityLevel: 1,
+    severityLevel: 1,
     properties: {
         prop: {prop1:"prop1"}
     },
@@ -200,7 +207,7 @@ export const traceItem = {
 /**
  * An example of customized metric item
  */
-export const metricItem = {
+export const metricItem: IMetricTelemetry = {
     name: "metric",
     average: 1.2,
     //default to 1

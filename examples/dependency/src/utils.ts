@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { arrForEach } from "@microsoft/applicationinsights-core-js";
+
 export const containerId = "dependency-sample-container";
 export const dependencyListenerButtonId = "dependency-listener-button";
 export const dependencyListenerDetailsContainerId = "dependency-listener-detail-container";
@@ -20,6 +22,7 @@ export const dependencyInitializerDetails: string[] = ["item","properties","sysP
 export const ajaxDetails: string[] = ["disabbleFetchTracking", "disableExceptionTracking", "enableAutoRouteTracking"];
 export const analyticsDetails: string[] = ["autoTrackPageVisitTime", "appId", "enableAjaxPerfTracking", "enableCorsCorrelation"];
 export const configDetails: string[] = ["connectionString",...ajaxDetails, ...analyticsDetails]; // check full details in console
+
 
 export function createFetchRequest() {
     fetch("https://api.npms.io/v2/search?q=react&size=1").then(() =>{
@@ -62,8 +65,7 @@ export function createDetailList(propsToWatch: string[], details: any, id: strin
             <div class="time">Date: ${date}</div>
         `;
 
-        propsToWatch.forEach((prop) => {
-            
+        arrForEach(propsToWatch, (prop) => {
             let obj = details[prop];
             if (prop === "item") {
                 obj = {name: obj.name, target: obj.target};
@@ -79,7 +81,9 @@ export function createDetailList(propsToWatch: string[], details: any, id: strin
                 obj = JSON.stringify(obj);
             }
             list += `<li>${prop}: ${obj}</li>`;
+
         });
+        
         list += "<div>-------------------------</div>";
         ele.innerHTML = list;
         container?.appendChild(ele);

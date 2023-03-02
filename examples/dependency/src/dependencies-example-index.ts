@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { arrForEach } from "@microsoft/applicationinsights-core-js";
 import { addDependencyListener, addDependencyInitializer, stopDependencyEvent, changeConfig, initApplicationInsights, getConfig } from "./appinsights-init";
 import { addHandlersButtonId, buttonSectionId, changeConfigButtonId, clearDetailsButtonId, clearDetailsList, clearEle, configContainerId, configDetails, createButton, createContainers, createDetailList, createFetchRequest, createUnTrackRequest, createXhrRequest, dependencyInitializerDetails, dependencyInitializerDetailsContainerId, dependencyListenerButtonId, dependencyListenerDetails, dependencyListenerDetailsContainerId, fetchCallId, fetchXhrId, removeAllHandlersId, stopDependencyEventButtonId, untrackFetchRequestId } from "./utils";
 
@@ -82,7 +83,7 @@ function createButtonSection() {
     let removeHandlersButton = createButton(removeAllHandlersId, removeAllHandlers);
     let clearBtn = createButton(clearDetailsButtonId, clearDetailsList);
     let buttons = [changeConfigBtn, handlersBtn, fetchButton, xhrButton, untrackRequestButton, stopEventButton, removeHandlersButton, clearBtn];
-    buttons.forEach(ele => {
+    arrForEach(buttons, ele => {
         container?.appendChild(ele);
     });
 }

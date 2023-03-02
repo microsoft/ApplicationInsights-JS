@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { arrForEach } from "@microsoft/applicationinsights-core-js";
+
 export const detailsContainerId = "details-container";
 export const detailsWatchList = ["baseType", "name", "time", "properties"];
 export const ajaxDetails: string[] = ["disabbleFetchTracking", "disableExceptionTracking", "enableAutoRouteTracking"];
@@ -83,8 +85,7 @@ export function createDetailList(propsToWatch: string[], details: any, id: strin
             <p>Not all auto-captured events and details are displayed here.</p>
             <p>Check console and network trace for complete details</p>
         `;
-
-        propsToWatch.forEach((prop) => {
+        arrForEach(propsToWatch, (prop) => {
             let obj;
             
             if (details["baseData"]) {
@@ -109,7 +110,9 @@ export function createDetailList(propsToWatch: string[], details: any, id: strin
                 obj = JSON.stringify(obj);
             }
             list += `<li>${prop}: ${obj}</li>`;
+
         });
+        
         list += "<div>-------------------------</div>";
         ele.innerHTML = list;
         container?.appendChild(ele);
