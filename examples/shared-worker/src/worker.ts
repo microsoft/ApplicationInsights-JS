@@ -3,7 +3,7 @@
 
 import { initApplicationInsights, trackPageView, unloadApplicationInsights } from "./worker-npm-init";
 import { ExampleMessageType, IExampleRequest, IExampleResponse } from "./interfaces/IExampleMessage";
-import { IConfiguration, INotificationListener } from "@microsoft/applicationinsights-web";
+import { ApplicationInsights, IConfiguration, INotificationListener } from "@microsoft/applicationinsights-web";
 import { dumpObj, objAssign } from "@nevware21/ts-utils";
 
 /**
@@ -12,7 +12,16 @@ import { dumpObj, objAssign } from "@nevware21/ts-utils";
  * the connection string.
  */
 const defaultApplicationInsightsConfig: IConfiguration = {
-    
+    /**
+     * Telemtry logging level to instrumentation key. All logs with a severity
+     * level higher than the configured level will sent as telemetry data to
+     * the configured instrumentation key.
+     *
+     * 0: ALL iKey logging off
+     * 1: logs to iKey: severity >= CRITICAL
+     * 2: logs to iKey: severity >= WARNING
+     */
+    loggingLevelTelemetry: 2
 };
 
 /**
@@ -92,6 +101,31 @@ function notificationListener(port: MessagePort): INotificationListener {
 }
 
 /**
+ * We only want to add any notification listener or telemetry initializer once
+ * otherwise they WILL get called multiple times during processing.
+ * @param appInsights
+ * @param port
+ */
+function onInitAddInitializers(appInsights: ApplicationInsights, port: MessagePort) {
+    // This callback is only called once, otherwise we would keep adding listeners and initializers
+    appInsights.core.getNotifyMgr().addNotificationListener(notificationListener(port));
+
+    // This is not normally needed, but this provides a view from the worker to the
+    // main page about errors that the worker is having / seeing
+    appInsights.addTelemetryInitializer((theEvent) => {
+        if (theEvent && theEvent.name && theEvent.name["startsWith"]("InternalMessageId") && theEvent.baseData) {
+            port.postMessage({
+                success: true,
+                message: "Internal Message: " + (theEvent.baseData?.message || "--")
+            });
+
+            // Drop ALL  internal message from being sent to Azure Monitor portal
+            return false;
+        }
+    });
+}
+
+/**
  * Initialize the SDK using the passed connection string from the request (if supplied)
  * @param request
  * @param port
@@ -100,9 +134,8 @@ function notificationListener(port: MessagePort): INotificationListener {
 function workerLoadSdk(request: IExampleRequest, port: MessagePort) {
     let theConfig = objAssign({}, defaultApplicationInsightsConfig);
     theConfig.connectionString = request.connectionString;
-    let appInsights = initApplicationInsights(theConfig);
+    let appInsights = initApplicationInsights(theConfig, onInitAddInitializers, port);
     if (appInsights && appInsights.core.isInitialized()) {
-        appInsights.core.getNotifyMgr().addNotificationListener(notificationListener(port));
         return {
             success: true,
             message: `SDK Loaded and Initialized with - ${appInsights.config.connectionString}`

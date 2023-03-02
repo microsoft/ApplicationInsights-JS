@@ -9,6 +9,7 @@ import {
     IAppInsightsCore, IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
     arrForEach, dumpObj, eLoggingSeverity, getDocument, getExceptionName, getLocation, isNullOrUndefined
 } from "@microsoft/applicationinsights-core-js";
+import { isWebWorker } from "@nevware21/ts-utils";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 
 /**
@@ -99,11 +100,13 @@ export class PageViewManager {
                     );
                     _flushChannels(true);
         
-                    // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
-                    _throwInternal(_logger,
-                        eLoggingSeverity.WARNING,
-                        _eInternalMessageId.NavigationTimingNotSupported,
-                        "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
+                    if (!isWebWorker()) {
+                        // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
+                        _throwInternal(_logger,
+                            eLoggingSeverity.WARNING,
+                            _eInternalMessageId.NavigationTimingNotSupported,
+                            "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
+                    }
         
                     return;
                 }
