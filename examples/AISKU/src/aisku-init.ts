@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ApplicationInsights, IConfiguration, IEventTelemetry, IMetricTelemetry, IPageViewTelemetry, ITraceTelemetry } from "@microsoft/applicationinsights-web";
 import { generateNewConfig } from "./utils";
 
 
@@ -8,24 +9,22 @@ import { generateNewConfig } from "./utils";
 // Snippet Initialization. If you want to use NPM initialization, replace this section with the NPM Initialization section at the end.
 let _appInsights: any;
 
-export function initApplicationInsights() {
-
-export function initApplicationInsights(config?: IConfiguration) {
+export function initApplicationInsights(config: IConfiguration = {}) {
     
     if (!_appInsights) {
         _appInsights =  (window as any).appInsights;
         return _appInsights;
-        }
-
-        _appInsights = new ApplicationInsights({
-            config: config
-        });
-       
-        _appInsights.loadAppInsights();
-        _appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
-
-        return _appInsights;
     }
+
+    _appInsights = new ApplicationInsights({
+        config: config
+    });
+    
+    _appInsights.loadAppInsights();
+    _appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+
+    return _appInsights;
+}
 
 // ***********************************************************************************************************************************
 
@@ -159,11 +158,10 @@ export function changeConfig() {
     return false;
 }
 
-
 /**
  * An example of customized pageview item
  */
-export const pageviewItem = {
+export const pageviewItem: IPageViewTelemetry = {
     name: "pageviewWithproperities", // Defaults to the document title
     uri: "https://pageview",
     refUri: "https://sample",
@@ -177,12 +175,12 @@ export const pageviewItem = {
     measurements: {
         metric: 1
     }
-} as IPageViewTelemetry;
+};
 
 /**
  * An example of customized event item
  */
-export const eventItem = {
+export const eventItem: IEventTelemetry = {
     name: "eventWithproperities",
     properties: {
         prop: {prop1:"prop1"}
@@ -190,26 +188,26 @@ export const eventItem = {
     measurements: {
         metirc: 1
     }
-} as IEventTelemetry;
+};
 
 /**
  * An example of customized trace item
  */
-export const traceItem = {
+export const traceItem: ITraceTelemetry = {
     message: "trace",
-    SeverityLevel: 1,
+    severityLevel: 1,
     properties: {
         prop: {prop1:"prop1"}
     },
     measurements: {
         metirc: 1
     }
-} as ITraceTelemetry;
+};
 
 /**
  * An example of customized metric item
  */
-export const metricItem = {
+export const metricItem: IMetricTelemetry = {
     name: "metric",
     average: 1.2,
     //default to 1
@@ -226,7 +224,7 @@ export const metricItem = {
     measurements: {
         metirc: 1
     }
-} as IMetricTelemetry;
+};
 
 
 
