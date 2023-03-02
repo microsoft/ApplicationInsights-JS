@@ -3,7 +3,6 @@ import {
     createDynamicConfig, createUnloadHookContainer, eLoggingSeverity, isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue,
     safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { objDefine } from "@nevware21/ts-utils";
 import { IThrottleMsgKey } from "./Enums";
 import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
