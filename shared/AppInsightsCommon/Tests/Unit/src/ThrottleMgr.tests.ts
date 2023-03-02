@@ -149,12 +149,12 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.equal(isReady, false, "isReady state should be false");
                 let result = throttleMgr.sendMessage(this._msgId, "test");
                 Assert.equal(result, null, "should not be throttled");
-                let queue = throttleMgr["_getQueue"]();
+                let queue = throttleMgr["_getDbgPlgTargets"]();
                 Assert.equal(queue.length, 1, "should have 1 item");
                 Assert.equal(queue[0].msgID, this._msgId, "sshould habe correct msgId");
 
                 throttleMgr.onReadyState(true);
-                queue = throttleMgr["_getQueue"]();
+                queue = throttleMgr["_getDbgPlgTargets"]();
                 Assert.equal(queue.length, 0, "queue should be empty");
                 let storage = window.localStorage[this._storageName];
                 Assert.ok(storage.indexOf(`${date.getUTCMonth() + 1}-${date.getUTCDate()}`) > -1, "local storage should have correct date");

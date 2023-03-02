@@ -1,8 +1,7 @@
 import {
-    IAppInsightsCore, IDiagnosticLogger, IUnloadHookContainer, _eInternalMessageId, _throwInternal, arrForEach,
-    arrIndexOf, createDynamicConfig, eLoggingSeverity, isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue, safeGetLogger,
-    strTrim,
-    createUnloadHookContainer
+    IAppInsightsCore, IDiagnosticLogger, IUnloadHookContainer, _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf,
+    createDynamicConfig, createUnloadHookContainer, eLoggingSeverity, isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue,
+    safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { objDefine } from "@nevware21/ts-utils";
 import { IThrottleMsgKey } from "./Enums";
@@ -41,20 +40,11 @@ export class ThrottleMgr {
         let _isSpecificDaysGiven: boolean = false;
 
         _initConfig();
-        objDefine(_self, "config", {
-            g: function() {
-                return _config;
-            },
-            s: function(newValue: IThrottleMgrConfig) {
-                config = newValue;
-            }
-        });
 
-        // Special internal method to allow the unit tests and hook embedded objects
-        _self["_getQueue"] = () => {
-            return _queue;
-        }
-        
+        // Special internal method to allow the unit tests and DebugPlugin to hook embedded objects
+        _self["_getDbgPlgTargets"] = () => {
+            return [_queue];
+        };
 
         _self.getConfig = (): IThrottleMgrConfig => {
             return _config;
