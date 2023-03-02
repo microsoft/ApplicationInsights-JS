@@ -438,6 +438,25 @@ module.exports = function (grunt) {
                                         path: "./extensions/applicationinsights-properties-js",
                                         unitTestName: "prop.tests.js"
                                     },
+
+            // Examples
+            "example-shared-worker": {
+                                        autoMinify: false,
+                                        path: "./examples/shared-worker",
+                                        testHttp: false
+                                    },
+
+            "example-aisku":        {
+                                        autoMinify: false,
+                                        path: "./examples/AISKU",
+                                        testHttp: false
+                                    },
+
+            "example-dependency":   {
+                                        autoMinify: false,
+                                        path: "./examples/dependency",
+                                        testHttp: false
+                                    },
     
             // Tools
             "rollupuglify":         {
@@ -495,7 +514,7 @@ module.exports = function (grunt) {
                                                 "./common/Tests/Framework/src/*.ts"
                                             ]
                                         } 
-                                    }
+                                    },
         }));
     
         function tsBuildActions(name, addTests, replaceName) {
@@ -756,8 +775,15 @@ module.exports = function (grunt) {
         grunt.registerTask("clickanalyticstests", tsTestActions("clickanalytics"));
         grunt.registerTask("clickanalytics-mintests", tsTestActions("clickanalytics", true));
 
+        grunt.registerTask("example-shared-worker", tsBuildActions("example-shared-worker"));
+        grunt.registerTask("example-shared-worker-test", tsTestActions("example-shared-worker"));
+
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
         grunt.registerTask("serve", ["connect:server:keepalive"]);
+
+        
+        grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
+        grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
     } catch (e) {
         console.error(e);
         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
