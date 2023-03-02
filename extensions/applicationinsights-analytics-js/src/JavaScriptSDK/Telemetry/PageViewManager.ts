@@ -12,6 +12,23 @@ import {
 import { isWebWorker } from "@nevware21/ts-utils";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 
+declare let WorkerGlobalScope: any;
+declare let self: any;
+
+let _isWebWorker: boolean = null;
+
+function isWebWorker() {
+    if (_isWebWorker == null) {
+        try {
+            _isWebWorker = !!(self && self instanceof WorkerGlobalScope);
+        } catch(e) {
+            _isWebWorker = false;
+        }
+    }
+
+    return _isWebWorker;
+}
+
 /**
  * Internal interface to pass appInsights object to subcomponents without coupling
  */

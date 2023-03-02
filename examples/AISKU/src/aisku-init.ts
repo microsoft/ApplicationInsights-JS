@@ -9,14 +9,23 @@ import { generateNewConfig } from "./utils";
 let _appInsights: any;
 
 export function initApplicationInsights() {
+
+export function initApplicationInsights(config?: IConfiguration) {
     
     if (!_appInsights) {
         _appInsights =  (window as any).appInsights;
         return _appInsights;
-    }
+        }
 
-    return _appInsights;
-}
+        _appInsights = new ApplicationInsights({
+            config: config
+        });
+       
+        _appInsights.loadAppInsights();
+        _appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+
+        return _appInsights;
+    }
 
 // ***********************************************************************************************************************************
 
@@ -37,7 +46,7 @@ export function unloadApplicationInsights() {
 /**
  * Request a page view request if the SDK has been initialized
  */
-export function trackPageView(pageView?: any) {
+export function trackPageView(pageView?: IPageViewTelemetry) {
     if (_appInsights) {
         _appInsights.trackPageView(pageView);
         return true;
@@ -48,7 +57,7 @@ export function trackPageView(pageView?: any) {
 /**
  * Log a custom event if the SDK has been initialized
  */
-export function trackEvent(event?: any, customProperties?: any) {
+export function trackEvent(event: IEventTelemetry, customProperties?: {[key: string]: any;} ) {
     if (_appInsights) {
         _appInsights.trackEvent(event, customProperties);
         return true;
@@ -82,7 +91,7 @@ export function stopTrackEvent(name: string, properties?: { [key: string]: strin
  * Log traces if the SDK has been initialized
  * Typically used to send regular reports of performance indicators
  */
-export function trackTrace(trace: any) {
+export function trackTrace(trace: ITraceTelemetry) {
     if (_appInsights) {
         _appInsights.trackTrace(trace);
         return true;
@@ -93,7 +102,7 @@ export function trackTrace(trace: any) {
 /**
  * Log Metric if the SDK has been initialized
  */
-export function trackMetric(metric: any, customProperties?: {[name: string]: any}) {
+export function trackMetric(metric: IMetricTelemetry, customProperties?: {[name: string]: any}) {
     if (_appInsights) {
         _appInsights.trackMetric(metric, customProperties);
         return true;
@@ -168,7 +177,7 @@ export const pageviewItem = {
     measurements: {
         metric: 1
     }
-};
+} as IPageViewTelemetry;
 
 /**
  * An example of customized event item
@@ -181,7 +190,7 @@ export const eventItem = {
     measurements: {
         metirc: 1
     }
-};
+} as IEventTelemetry;
 
 /**
  * An example of customized trace item
@@ -195,7 +204,7 @@ export const traceItem = {
     measurements: {
         metirc: 1
     }
-};
+} as ITraceTelemetry;
 
 /**
  * An example of customized metric item
@@ -217,7 +226,7 @@ export const metricItem = {
     measurements: {
         metirc: 1
     }
-};
+} as IMetricTelemetry;
 
 
 

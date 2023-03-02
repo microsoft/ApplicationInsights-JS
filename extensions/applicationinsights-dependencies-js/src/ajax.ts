@@ -22,6 +22,9 @@ import {
 } from "./DependencyListener";
 import { IAjaxRecordResponse, ajaxRecord } from "./ajaxRecord";
 
+declare let WorkerGlobalScope: any;
+declare let self: any;
+
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
 const strAjaxData = "ajaxData";
@@ -54,6 +57,20 @@ function _supportsFetch(): (input: RequestInfo, init?: RequestInit) => Promise<R
     }
 
     return _global[STR_FETCH];
+}
+
+let _isWebWorker: boolean = null;
+
+function isWebWorker() {
+    if (_isWebWorker == null) {
+        try {
+            _isWebWorker = !!(self && self instanceof WorkerGlobalScope);
+        } catch(e) {
+            _isWebWorker = false;
+        }
+    }
+
+    return _isWebWorker;
 }
 
 /**
