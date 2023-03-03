@@ -13,6 +13,7 @@ import { dumpObj, objHasOwnProperty } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "../../../src/AISku";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
+const TestConnectionString = 'InstrumentationKey=b7170927-2d1c-44f1-acec-59f4e1751c11';
 
 const _expectedBeforeProperties = [
     "config",
@@ -52,6 +53,63 @@ function getSnippetConfig(sessionPrefix: string) {
         src: "",
         cfg: {
             connectionString: `InstrumentationKey=${TestInstrumentationKey}`,
+            disableAjaxTracking: false,
+            disableFetchTracking: false,
+            enableRequestHeaderTracking: true,
+            enableResponseHeaderTracking: true,
+            maxBatchInterval: 500,
+            disableExceptionTracking: false,
+            namePrefix: `sessionPrefix`,
+            enableCorsCorrelation: true,
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            samplingPercentage: 50
+        } as IConfig
+    };
+};
+
+function getSnippetConfigConnectionString(sessionPrefix: string) {
+    return {
+        src: "",
+        cfg: {
+            connectionString: TestConnectionString,
+            disableAjaxTracking: false,
+            disableFetchTracking: false,
+            enableRequestHeaderTracking: true,
+            enableResponseHeaderTracking: true,
+            maxBatchInterval: 500,
+            disableExceptionTracking: false,
+            namePrefix: `sessionPrefix`,
+            enableCorsCorrelation: true,
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            samplingPercentage: 50
+        } as IConfig
+    };
+};
+
+function getSnippetConfigWrongConnectionString(sessionPrefix: string) {
+    return {
+        src: "",
+        cfg: {
+            connectionString: 'wrong connection string'+TestConnectionString,
+            disableAjaxTracking: false,
+            disableFetchTracking: false,
+            enableRequestHeaderTracking: true,
+            enableResponseHeaderTracking: true,
+            maxBatchInterval: 500,
+            disableExceptionTracking: false,
+            namePrefix: `sessionPrefix`,
+            enableCorsCorrelation: true,
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            samplingPercentage: 50
+        } as IConfig
+    };
+};
+
+function getSnippetConfigNotSetConnectionString(sessionPrefix: string) {
+    return {
+        src: "",
+        cfg: {
+            connectionString: '',
             disableAjaxTracking: false,
             disableFetchTracking: false,
             enableRequestHeaderTracking: true,
@@ -117,6 +175,59 @@ export class SnippetInitializationTests extends AITestClass {
                     Assert.ok(!(theSnippet as any).downloadAndSetup, "The [" + snippetName + "] snippet should NOT have the downloadAndSetup"); // has legacy method
                 }
             });
+
+            this.testCaseAsync({
+                name: "checkConnectionString",
+                stepDelay: 100,
+                steps: [
+                    () => {
+                        let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfigConnectionString(this.sessionPrefix)));
+                        theSnippet.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
+                    }
+                ]
+                .concat(this.asserts(1)).concat(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                       const payload = JSON.parse(payloadStr[0]);
+                       const data = payload.data;
+                       Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                       Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                    }
+                })
+            });
+
+            this.testCase({
+                name: "checkIncorrectConnectionString",
+                test: () => {
+                    let theSnippet:any = null;
+                    let exception: Error = null;
+                    this.useFakeServer = false;
+                    try {
+                        let snippet:Snippet = snippetCreator(getSnippetConfigWrongConnectionString(this.sessionPrefix));
+                        // Call the initialization
+                        ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
+                    } catch (e) {
+                        Assert.equal(e.message, "Please provide instrumentation key", "Server would not start when get incorrect connection string");
+                    }
+                }
+            });
+
+            this.testCase({
+                name: "checkConnectionStringNotSet",
+                test: () => {
+                    let theSnippet:any = null;
+                    let exception: Error = null;
+                    this.useFakeServer = false;
+                    try {
+                        let snippet:Snippet = snippetCreator(getSnippetConfigNotSetConnectionString(this.sessionPrefix));
+                        // Call the initialization
+                        ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
+                    } catch (e) {
+                        Assert.equal(e.message, "Please provide instrumentation key", "Server would not start without connection string");
+                    }
+                }
+            });
+
 
             this.testCaseAsync({
                 name: "[" + snippetName + "] : Public Members exist",

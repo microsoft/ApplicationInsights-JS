@@ -7,7 +7,9 @@ import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-r
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
+
 const workerName = "dependencies-example-index";
+
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK Example - AISKU, ${version}`,
