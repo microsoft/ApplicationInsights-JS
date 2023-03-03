@@ -535,7 +535,7 @@ export class _ExceptionDetails implements IExceptionDetails, ISerializable {
             const stack = exception[strStackDetails] || _getStackFromErrorObj(exception);
             _self.parsedStack = _parseStack(stack);
 
-            // after oarsedstack init, do the sanitize over array
+            // after parsedStack is inited, iterate over each frame object, sanitize its assembly field
             _self.parsedStack  = _self.parsedStack instanceof Array
             && arrMap(_self.parsedStack, (frame: _StackFrame) => frame.assembly = dataSanitizeString(logger, frame.assembly));
 
