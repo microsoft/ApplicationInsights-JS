@@ -191,12 +191,13 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
     };
 }
 
-function _formatStackTrace(stackDetails: IStackDetails) {
+function _formatStackTrace(logger: IDiagnosticLogger, stackDetails: IStackDetails) {
     let stack = "";
 
     if (stackDetails) {
         if (stackDetails.obj) {
             arrForEach(stackDetails.obj, (entry) => {
+                entry = dataSanitizeString(logger, entry);
                 stack += entry + "\n";
             });
         } else {
