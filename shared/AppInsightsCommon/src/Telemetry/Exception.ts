@@ -635,7 +635,7 @@ export class _StackFrame implements IStackFrame, ISerializable {
             const frame: string = sourceFrame;
             _self.level = level;
             _self.method = NoMethod;
-            _self.assembly = dataSanitizeString(logger, strTrim(frame));
+            _self.assembly = strTrim(frame);
             _self.fileName = "";
             _self.line = 0;
             const matches = frame.match(_StackFrame.regex);
