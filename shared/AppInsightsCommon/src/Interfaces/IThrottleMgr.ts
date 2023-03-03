@@ -50,8 +50,9 @@ export interface IThrottleInterval {
 export interface IThrottleMgrConfig {
     /**
     * Identifies message key to be used for local storage key
+    * Default: IThrottleMsgKey.default
     */
-    msgKey: IThrottleMsgKey;
+    msgKey?: IThrottleMsgKey;
 
     /**
     * Identifies if throttle is disabled
@@ -61,6 +62,7 @@ export interface IThrottleMgrConfig {
 
     /**
     * Identifies limit number/percentage of items sent per time
+    * Default: sampling percentage 0.01% with one item sent per time
     */
     limit?: IThrottleLimit;
 
