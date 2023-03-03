@@ -149,6 +149,7 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.equal(isReady, false, "isReady state should be false");
                 let result = throttleMgr.sendMessage(this._msgId, "test");
                 Assert.equal(result, null, "should not be throttled");
+                // note: _getDbgPlgTargets returns array
                 let target = throttleMgr["_getDbgPlgTargets"]();
                 Assert.ok(target && target.length === 1, "target should contain queue");
                 let queue = target[0];
