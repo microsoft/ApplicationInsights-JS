@@ -534,7 +534,7 @@ export class _ExceptionDetails implements IExceptionDetails, ISerializable {
             _self.message = dataSanitizeMessage(logger, _formatMessage(exception || error, _self.typeName)) || strNotSpecified;
             const stack = exception[strStackDetails] || _getStackFromErrorObj(exception);
             _self.parsedStack = _parseStack(stack);
-            _self[strStack] = dataSanitizeException(logger, _formatStackTrace(stack));
+            _self[strStack] = dataSanitizeException(logger, _formatStackTrace(logger, stack));
             _self.hasFullStack = isArray(_self.parsedStack) && _self.parsedStack.length > 0;
 
             if (properties) {
