@@ -191,13 +191,12 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
     };
 }
 
-function _formatStackTrace(logger: IDiagnosticLogger, stackDetails: IStackDetails) {
+function _formatStackTrace(stackDetails: IStackDetails) {
     let stack = "";
 
     if (stackDetails) {
         if (stackDetails.obj) {
             arrForEach(stackDetails.obj, (entry) => {
-                entry = dataSanitizeString(logger, entry);
                 stack += entry + "\n";
             });
         } else {
@@ -540,7 +539,7 @@ export class _ExceptionDetails implements IExceptionDetails, ISerializable {
                 arrMap(_self.parsedStack, (frame: _StackFrame) => frame.assembly = dataSanitizeString(logger, frame.assembly));
             }
           
-            _self[strStack] = dataSanitizeException(logger, _formatStackTrace(logger, stack));
+            _self[strStack] = dataSanitizeException(logger, _formatStackTrace(stack));
             _self.hasFullStack = isArray(_self.parsedStack) && _self.parsedStack.length > 0;
 
             if (properties) {
