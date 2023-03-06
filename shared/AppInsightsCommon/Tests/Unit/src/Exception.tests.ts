@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { Exception } from "../../../src/applicationinsights-common"
+import { DataSanitizer, Exception } from "../../../src/applicationinsights-common"
 import { DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from "../../../src/Interfaces/IExceptionTelemetry";
 import { _ExceptionDetails, _StackFrame } from "../../../src/Telemetry/Exception";
@@ -60,6 +60,44 @@ export class ExceptionTests extends AITestClass {
                 }
             }
         });
+
+        this.testCase({
+            name: "ExceptionDetails: ExceptionDetails assembly field will be truncated",
+            test: () => {
+                try {
+                    // const define
+                    const MAX_STRING_LENGTH = DataSanitizer.MAX_STRING_LENGTH;
+                    const messageLong = new Array(MAX_STRING_LENGTH + 10).join("abc");
+
+                    const messageFollowRegex = "at functionName (a.js:1:1)"
+                    const longMessageFollowRegex = messageFollowRegex.replace("functionName", messageLong)
+
+                    let errObj = {
+                        reason:{
+                            message: "message",
+                            stack: longMessageFollowRegex + "\n" + longMessageFollowRegex + "\n" + longMessageFollowRegex
+                        }
+                    };
+
+                    let exception = Exception.CreateAutoException("message",
+                        "url",
+                        9,
+                        0,
+                        errObj
+                    );
+                    const exceptionDetails = new _ExceptionDetails(this.logger, exception);
+                    
+                    for (let i = 0; i < exceptionDetails.parsedStack.length; i++) {
+                        Assert.ok(exceptionDetails.parsedStack[i].assembly.length <= MAX_STRING_LENGTH);
+                      }
+                } catch (e) {
+                    console.log(e.stack);
+                    console.log(e.toString());
+                    Assert.ok(false, e.toString());
+                }
+            }
+        });
+
 
         this.testCase({
             name: "StackFrame: StackFrame can be exported to interface format",
