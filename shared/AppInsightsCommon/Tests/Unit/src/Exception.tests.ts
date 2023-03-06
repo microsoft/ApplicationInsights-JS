@@ -86,11 +86,9 @@ export class ExceptionTests extends AITestClass {
                         errObj
                     );
                     const exceptionDetails = new _ExceptionDetails(this.logger, exception);
-                    console.log("exception", exceptionDetails.parsedStack)
-                    console.log(exceptionDetails.parsedStack.length)
+                    
                     for (let i = 0; i < exceptionDetails.parsedStack.length; i++) {
                         Assert.ok(exceptionDetails.parsedStack[i].assembly.length <= MAX_STRING_LENGTH);
-                        console.log(exceptionDetails.parsedStack[i].assembly.length, MAX_STRING_LENGTH)
                       }
                 } catch (e) {
                     console.log(e.stack);
