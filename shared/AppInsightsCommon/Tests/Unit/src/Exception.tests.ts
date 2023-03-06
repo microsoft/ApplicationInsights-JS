@@ -61,43 +61,44 @@ export class ExceptionTests extends AITestClass {
             }
         });
 
-        // this.testCase({
-        //     name: "ExceptionDetails: ExceptionDetails will be truncated",
-        //     test: () => {
-        //         try {
-        //             // const define
-        //             const MAX_MESSAGE_LENGTH = DataSanitizer.MAX_MESSAGE_LENGTH;
-        //             const messageLong = new Array(MAX_MESSAGE_LENGTH + 10).join('abc');
+        this.testCase({
+            name: "ExceptionDetails: ExceptionDetails assembly field will be truncated",
+            test: () => {
+                try {
+                    // const define
+                    const MAX_STRING_LENGTH = DataSanitizer.MAX_STRING_LENGTH;
+                    const messageLong = new Array(MAX_STRING_LENGTH + 10).join("abc");
 
+                    const messageFollowRegex = "at functionName (a.js:1:1)"
+                    const longMessageFollowRegex = messageFollowRegex.replace("functionName", messageLong)
 
-        //             let errObj = {
-        //                 reason:{
-        //                     message: "message",
-        //                     stack: messageLong + "\n" + messageLong + "\n" + messageLong
-        //                 }
-        //             };
+                    let errObj = {
+                        reason:{
+                            message: "message",
+                            stack: longMessageFollowRegex + "\n" + longMessageFollowRegex + "\n" + longMessageFollowRegex
+                        }
+                    };
 
-        //             let exception = Exception.CreateAutoException("message",
-        //                 "url",
-        //                 9,
-        //                 0,
-        //                 errObj
-        //             );
-
-        //             const exceptionDetails = new _ExceptionDetails(this.logger, exception);
-        //             const exceptionDetailsInterface: IExceptionDetailsInternal = exceptionDetails.toInterface();
-                   
-        //             Assert.ok(exceptionDetailsInterface.stack.length < MAX_MESSAGE_LENGTH)
-        //             // console.log(exceptionDetailsInterface.message)
-        //             // console.log(exceptionDetailsInterface.message.length)
-
-        //         } catch (e) {
-        //             console.log(e.stack);
-        //             console.log(e.toString());
-        //             Assert.ok(false, e.toString());
-        //         }
-        //     }
-        // });
+                    let exception = Exception.CreateAutoException("message",
+                        "url",
+                        9,
+                        0,
+                        errObj
+                    );
+                    const exceptionDetails = new _ExceptionDetails(this.logger, exception);
+                    console.log("exception", exceptionDetails.parsedStack)
+                    console.log(exceptionDetails.parsedStack.length)
+                    for (let i = 0; i < exceptionDetails.parsedStack.length; i++) {
+                        Assert.ok(exceptionDetails.parsedStack[i].assembly.length <= MAX_STRING_LENGTH);
+                        console.log(exceptionDetails.parsedStack[i].assembly.length, MAX_STRING_LENGTH)
+                      }
+                } catch (e) {
+                    console.log(e.stack);
+                    console.log(e.toString());
+                    Assert.ok(false, e.toString());
+                }
+            }
+        });
 
 
         this.testCase({
