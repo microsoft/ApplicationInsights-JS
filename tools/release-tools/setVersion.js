@@ -365,6 +365,10 @@ function shouldProcess(name) {
         return updateDefPkgs;
     }
 
+    if (name.indexOf("examples/") !== -1) {
+        return updateDefPkgs;
+    }
+
     if (name.indexOf("extensions/") !== -1) {
         return updateDefPkgs;
     }

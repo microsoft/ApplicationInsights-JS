@@ -20,6 +20,9 @@ import {
 } from "./DependencyListener";
 import { IAjaxRecordResponse, ajaxRecord } from "./ajaxRecord";
 
+declare let WorkerGlobalScope: any;
+declare let self: any;
+
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
 const strAjaxData = "ajaxData";
@@ -52,6 +55,20 @@ function _supportsFetch(): (input: RequestInfo, init?: RequestInit) => Promise<R
     }
 
     return _global[STR_FETCH];
+}
+
+let _isWebWorker: boolean = null;
+
+function isWebWorker() {
+    if (_isWebWorker == null) {
+        try {
+            _isWebWorker = !!(self && self instanceof WorkerGlobalScope);
+        } catch(e) {
+            _isWebWorker = false;
+        }
+    }
+
+    return _isWebWorker;
 }
 
 /**
@@ -617,7 +634,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         // Create an error callback to report any hook errors
                         hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
                             "Failed to monitor Window.fetch" + ERROR_POSTFIX)
-                    }));
+                    }, true, isWebWorker()));
 
                     _fetchInitialized = true;
                 } else if (isPolyfill) {
