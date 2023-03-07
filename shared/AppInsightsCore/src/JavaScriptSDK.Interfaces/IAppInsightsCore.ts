@@ -40,14 +40,17 @@ export interface ILoadedPlugin<T extends IPlugin> {
     remove: (isAsync?: boolean, removeCb?: (removed?: boolean) => void) => void;
 }
 
-export interface IAppInsightsCore extends IPerfManagerProvider {
+export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguration> extends IPerfManagerProvider {
 
     /*
     * Config object used to initialize AppInsights
     */
-    config: IConfiguration;
+    readonly config: CfgType;
 
-    logger: IDiagnosticLogger;
+    /**
+     * The current logger instance for this instance.
+     */
+    readonly logger: IDiagnosticLogger;
 
     /**
      * An array of the installed plugins that provide a version
@@ -67,7 +70,7 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     /*
     * Initialization queue. Contains functions to run when appInsights initializes
     */
-    initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void;
+    initialize(config: CfgType, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void;
 
     /*
     * Get transmission channels for controlling transmission behavior
@@ -160,7 +163,7 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @param newConfig - The new configuration is apply
      * @param mergeExisting - Should the new configuration merge with the existing or just replace it. Default is to merge.
      */
-    updateCfg<T extends IConfiguration = IConfiguration>(newConfig: T, mergeExisting?: boolean): void;
+    updateCfg(newConfig: CfgType, mergeExisting?: boolean): void;
 
     /**
      * Returns the unique event namespace that should be used when registering events
@@ -207,7 +210,7 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
      * @param handler
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
-    onCfgChange<T extends IConfiguration = IConfiguration>(handler: WatcherFunction<T>): IUnloadHook;
+    onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook;
 
     /**
      * Function used to identify the get w parameter used to identify status bit to some channels

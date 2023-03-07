@@ -19,6 +19,4 @@
 !/dist-esm/**
 !/dist/**
 !/types/**
-!/src/JavaScriptSDK.Enums/**
-!/src/JavaScriptSDK.Interfaces/**
-!/src/JavaScriptSDK/**
+
