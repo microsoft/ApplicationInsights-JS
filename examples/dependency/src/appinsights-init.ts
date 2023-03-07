@@ -87,7 +87,7 @@ export function getConfig() {
 export function changeConfig() {
     if (_appInsights) {
         let newConfig = generateNewConfig(); // generate new config object
-        _appInsights["config"] = newConfig; // change config
+        _appInsights.updateCfg(newConfig);   // change config merging any changes
         return true;
     }
     return false;

@@ -204,9 +204,8 @@ function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: ()
     });
 }
 
-export class AppInsightsCore implements IAppInsightsCore {
-    public static defaultConfig: IConfiguration;
-    public config: IConfiguration;
+export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> implements IAppInsightsCore<CfgType> {
+    public config: CfgType;
     public logger: IDiagnosticLogger;
 
     /**
@@ -231,7 +230,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
     constructor() {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
-        let _configHandler: IDynamicConfigHandler<IConfiguration>;
+        let _configHandler: IDynamicConfigHandler<CfgType>;
         let _isInitialized: boolean;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
@@ -251,7 +250,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         let _debugListener: INotificationListener | null;
         let _traceCtx: IDistributedTraceContext | null;
         let _instrumentationKey: string | null;
-        let _cfgListeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[];
+        let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType>}[];
         let _extensions: IPlugin[];
         let _pluginVersionStringArr: string[];
         let _pluginVersionString: string;
@@ -275,7 +274,7 @@ export class AppInsightsCore implements IAppInsightsCore {
             _self.isInitialized = () => _isInitialized;
 
             // Creating the self.initialize = ()
-            _self.initialize = (config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
+            _self.initialize = (config: CfgType, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
                 if (_isUnloading) {
                     throwError(strSdkUnloadingError);
                 }
@@ -285,7 +284,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                     throwError("Core cannot be initialized more than once");
                 }
 
-                _configHandler = createDynamicConfig(config, defaultConfig, logger || _self.logger, false);
+                _configHandler = createDynamicConfig<CfgType>(config, defaultConfig as any, logger || _self.logger, false);
 
                 // Re-assigning the local config property so we don't have any references to the passed value and it can be garbage collected
                 config = _configHandler.cfg;
@@ -476,7 +475,7 @@ export class AppInsightsCore implements IAppInsightsCore {
             _self.pollInternalLogs = (eventName?: string): ITimerHandler => {
                 _internalLogsEventName = eventName || null;
 
-                function _startLogPoller(config: IConfiguration) {
+                function _startLogPoller(config: CfgType) {
                     let interval: number = config.diagnosticLogInterval;
                     if (!interval || !(interval > 0)) {
                         interval = 10000;
@@ -613,7 +612,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                 }
             };
 
-            _self.updateCfg = <T extends IConfiguration = IConfiguration>(newConfig: T, mergeExisting: boolean = true) => {
+            _self.updateCfg = (newConfig: CfgType, mergeExisting: boolean = true) => {
                 let updateState: ITelemetryUpdateState;
                 if (_self.isInitialized()) {
                     updateState = {
@@ -624,7 +623,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                         merge: mergeExisting
                     };
 
-                    newConfig = updateState.newConfig as T;
+                    newConfig = updateState.newConfig as CfgType;
                     let cfg =  _configHandler.cfg;
 
                     // replace the immutable (if initialized) values
@@ -636,7 +635,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                 // So overwriting any user provided values to reuse the existing values
                 // Explicitly blocking any previous config watchers so that they don't get called because
                 // of this bulk update (Probably not necessary)
-                (_configHandler as _IInternalDynamicConfigHandler<IConfiguration>)._block((details) => {
+                (_configHandler as _IInternalDynamicConfigHandler<CfgType>)._block((details) => {
 
                     // Lets assign the new values to the existing config either overwriting or re-assigning
                     let theConfig = details.cfg;
@@ -687,7 +686,7 @@ export class AppInsightsCore implements IAppInsightsCore {
             // Create the addUnloadCb
             proxyFunctionAs(_self, "addUnloadCb", () => _unloadHandlers, "add");
 
-            _self.onCfgChange = <T extends IConfiguration = IConfiguration>(handler: WatcherFunction<T>): IUnloadHook => {
+            _self.onCfgChange = (handler: WatcherFunction<CfgType>): IUnloadHook => {
                 let unloadHook: IUnloadHook;
                 if (!_isInitialized) {
                     unloadHook = _addDelayedCfgListener(_cfgListeners, handler);
@@ -736,7 +735,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                 _isInitialized = false;
 
                 // Use a default logger so initialization errors are not dropped on the floor with full logging
-                _configHandler = createDynamicConfig({}, defaultConfig, _self.logger);
+                _configHandler = createDynamicConfig({} as CfgType, defaultConfig as any, _self.logger);
 
                 // Set the logging level to critical so that any critical initialization failures are displayed on the console
                 _configHandler.cfg.loggingLevelConsole = eLoggingSeverity.CRITICAL;
@@ -1106,7 +1105,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         });
     }
 
-    public initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
+    public initialize(config: CfgType, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1238,7 +1237,7 @@ export class AppInsightsCore implements IAppInsightsCore {
      * @param newConfig - The new configuration is apply
      * @param mergeExisting - Should the new configuration merge with the existing or just replace it. Default is to true.
      */
-    public updateCfg<T extends IConfiguration = IConfiguration>(newConfig: T, mergeExisting?: boolean): void {
+    public updateCfg(newConfig: CfgType, mergeExisting?: boolean): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1300,7 +1299,7 @@ export class AppInsightsCore implements IAppInsightsCore {
      * @param handler
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
-    public onCfgChange<T extends IConfiguration = IConfiguration>(handler: WatcherFunction<T>): IUnloadHook {
+    public onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

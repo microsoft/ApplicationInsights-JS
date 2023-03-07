@@ -69,10 +69,17 @@ function _chkDiagLevel(value: number) {
  */
 export class AppInsightsSku implements IApplicationInsights {
     public snippet: Snippet;
-    public config: IConfiguration & IConfig;
-    public appInsights: ApplicationInsights;
-    public core: IAppInsightsCore;
-    public context: Common_ITelemetryContext;
+
+    /**
+     * Access to the Dynamic Configuration for the current instance
+     */
+    public readonly config: IConfiguration & IConfig;
+
+    public readonly appInsights: ApplicationInsights;
+
+    public readonly core: IAppInsightsCore<IConfiguration & IConfig>;
+
+    public readonly context: Common_ITelemetryContext;
 
     /**
      * An array of the installed plugins that provide a version
@@ -92,8 +99,9 @@ export class AppInsightsSku implements IApplicationInsights {
         let _snippetVersion: string;
         let _evtNamespace: string;
         let _houseKeepingNamespace: string | string[];
-        let _core: IAppInsightsCore;
+        let _core: IAppInsightsCore<IConfiguration & IConfig>;
         let _config: IConfiguration & IConfig;
+        let _analyticsPlugin: AnalyticsPlugin;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -101,11 +109,6 @@ export class AppInsightsSku implements IApplicationInsights {
             objDefine(_self, "config", {
                 g: function() {
                     return _config;
-                },
-                s: function(newValue: IConfiguration) {
-                    if (_core) {
-                        _core.config = newValue;
-                    }
                 }
             });
 
@@ -128,13 +131,24 @@ export class AppInsightsSku implements IApplicationInsights {
             let cfgHandler: IDynamicConfigHandler<IConfiguration & IConfig> = createDynamicConfig(snippet.config || ({} as any), defaultConfigValues);
             _config = cfgHandler.cfg;
 
-            _self.appInsights = new AnalyticsPlugin();
+            _analyticsPlugin = new AnalyticsPlugin();
+
+            objDefine(_self, "appInsights", {
+                g: () => {
+                    return _analyticsPlugin;
+                }
+            });
 
             properties = new PropertiesPlugin();
             dependencies = new DependenciesPlugin();
             _sender = new Sender();
             _core = new AppInsightsCore();
-            _self.core = _core;
+
+            objDefine(_self, "core", {
+                g: () => {
+                    return _core;
+                }
+            });
 
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
@@ -207,8 +221,10 @@ export class AppInsightsSku implements IApplicationInsights {
 
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
                     // initialize core
-                    _core.initialize(_config, [ _sender, properties, dependencies, _self.appInsights ], logger, notificationManager);
-                    _self.context = properties.context;
+                    _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin ], logger, notificationManager);
+                    objDefine(_self, "context", {
+                        g: () => properties.context
+                    });
                     let sdkSrc = _findSdkSourceFile();
                     if (sdkSrc && _self.context) {
                         _self.context.internal.sdkSrc = sdkSrc;
@@ -357,7 +373,7 @@ export class AppInsightsSku implements IApplicationInsights {
                 _core.unload && _core.unload(isAsync, _unloadCallback, cbTimeout);
             };
         
-            proxyFunctions(_self, _self.appInsights, [
+            proxyFunctions(_self, _analyticsPlugin, [
                 STR_GET_COOKIE_MGR,
                 STR_TRACK_EVENT,
                 STR_TRACK_PAGE_VIEW,
