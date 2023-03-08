@@ -266,7 +266,7 @@ All autocollection is ON by default. The full version of the Application Insight
   - Exception details and message accompanying the error
   - Line & column number of error
   - URL where error was raised
-- **Network Dependency Requests** made by your app **XHR** and **Fetch** (fetch collection is disabled by default) requests, include information on
+- **Network Dependency Requests** made by your app **XHR** and **Fetch** (fetch collection is enabled by default) requests, include information on
   - Url of dependency source
   - Command & Method used to request the dependency
   - Duration of the request
