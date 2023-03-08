@@ -87,7 +87,7 @@ export interface IConfig {
 
     /**
      * If true, Fetch requests are not autocollected. Default is false (Since 2.8.0, previously true).
-     * @defaultValue true
+     * @defaultValue false
      */
     disableFetchTracking?: boolean;
 
