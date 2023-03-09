@@ -2,6 +2,22 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.11 (Mar 8th, 2023)
+
+## Changelog
+
+- #1996 [BUG] SharedWorker does not Instrument fetch correctly
+- #1995 [BUG] App Insights not auto-capturing from a Web Worker
+  - Stops logging that workers can emit the PageView Performance event
+- #1792 [BUG] Documentation should clarify that node apps should use applicationinsights, not this package
+- #1794 [BUG] link on AISKULight goes to not found page
+- #1990 Field 'assembly' on type 'StackFrame' is too long. Expected: 1024 characters [BUG]
+- Update documentation and tests to replace `instrumentationKey` usage with `connectionString`
+  - #1997 Change Readme
+  - #1999 Add snippet connection string tests
+- #1991 Internal Task 17133116: Add Policheck exclusion file
+- #1989 [AI][Task]17099792: Add sample and doc to dependency plugin
+
 ## 2.8.10 (Feb 6th, 2023)
 
 ### Changelog

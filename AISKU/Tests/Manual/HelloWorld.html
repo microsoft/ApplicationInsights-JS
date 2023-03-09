@@ -53,11 +53,11 @@
         cfg: ""
     };
 
-    function logMessage(message, dest) {
+    function logMessage(message, dest, line) {
         var dateTime = new Date().toLocaleString();
         var target = dest || "log";
         var elm = document.getElementById(target);
-        _message[target] = dateTime + ": " + message + "\n" + (_message[target] ||"");
+        _message[target] = dateTime + ": " + message + "\n" + (line ? "------------------------\n" : "") + (_message[target] ||"");
         if (_message[target].length > 4096) {
             _message[target] = _message[target].substring(0, 4090) + "...\n";
         }
@@ -121,13 +121,13 @@
     });
 
     appInsights.onCfgChange(function (details) {
-        logMessage("onCfgChange 1 - called");
+        logMessage("onCfgChange 1 - called", null, true);
 
         logMessage("endpointUrl: " + details.cfg.endpointUrl);
     });
 
     appInsights.onCfgChange(function (details) {
-        logMessage("onCfgChange 2 - called");
+        logMessage("onCfgChange 2 - called", null, true);
 
         logMessage("instrumentationKey: " + details.cfg.instrumentationKey);
     });
@@ -138,12 +138,12 @@
     });
 
     appInsights.onCfgChange(function (details) {
+        logMessage("onCfgChange 4 - called", null, true);
         if (details.cfg.enableDebug) {
             logMessage("Debug Enable - " + details.cfg.loggingLevelConsole);
         } else {
             logMessage("Debug Not enabled!");
         }
-        logMessage("onCfgChange 4 - called");
     });
 
     
