@@ -21,55 +21,22 @@
 [![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)](https://js.monitor.azure.com/scripts/b/ai.2.min.js)
 [![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://js.monitor.azure.com/scripts/b/ai.2.min.js)
 
-## Beta (v3.x) Release Breaking changes
-
-As part of the beta development we intend to stop adding additional features (enhancements) to the v2.x releases.
-
-Some of the major changes include
-
-- Removed ES3 / IE8 Support
-- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
-
-See [Breaking Changes](./BETA_BREAKING_CHANGES.md)
-
-> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md).
->
-> See the [V1 Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
->
-> For Node.js instrumentation reference this [repository](https://github.com/microsoft/ApplicationInsights-node.js).
-
-## Beta (v3.x) Release Breaking changes
-
-As part of the beta development we intend to stop adding additional features (enhancements) to the v2.x releases.
-
-Development has started on the next major release which is occurring on the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) branch, this includes nightly automatic build and releases.
-
-Some of the major changes include
-
-- Removed ES3 / IE8 Support
-- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
-
-See the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) for the current documented set of breaking changes, all feedback on excessive breaks are welcome current release target is early (1st quarter) 2023.
-
-## Beta (v3.x) Release Breaking changes
-
-As part of the beta development we intend to stop adding additional features (enhancements) to the v2.x releases.
-
-Development has started on the next major release which is occurring on the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) branch, this includes nightly automatic build and releases.
-
-Some of the major changes include
-
-- Removed ES3 / IE8 Support
-- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
-
-See the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) for the current documented set of breaking changes, all feedback on excessive breaks are welcome current release target is early (1st quarter) 2023.
-
-
 ## Before Getting Started
 
-This repo does not intended for non-browser enverionments, for example, the Node.js applications.
+This SDK is not for non-browser environments, for example, the Node.js applications.
 
-For instrumenting a Node.js app, please refer this [repository](https://github.com/microsoft/ApplicationInsights-node.js). 
+For instrumenting a Node.js app, the recommended SDK is the [ApplicationInsights-node.js repository](https://github.com/microsoft/ApplicationInsights-node.js).
+
+ES3 support has been removed from the latest version (v3.x), if required [see for ES3/IE8 Support](https://microsoft.github.io/ApplicationInsights-JS/es3_Support.html
+)
+
+## Release Versions
+
+| Version | Details
+|---------|--------------------------
+| <b>[3.x](https://github.com/microsoft/ApplicationInsights-JS/tree/main)<br/><sub>(main)</sub> </b>| Current supported release from April '2023.<br/>Supports dynamic configuration changes/updates after initialization. Supports all features of v2 except with the known <b>[Breaking changes from previous versions](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v3_BreakingChanges.html)</b> and does NOT support the previous v1.x compatible API proxy layer, it also removes support for ES3 / IE8. Minimum supported Runtime is now ES5 (IE9+).
+| [2.x](https://github.com/microsoft/ApplicationInsights-JS/tree/master)<br/><sub>(master)</sub> | Feature freeze from March '2023, security fixes and critical bugs only.<br />Supports adding / removing extensions and full unloading/removal of the SDK after initialization. Last version to support ES3 (IE8+), also provides a v1.x compatible API proxy layer for upgrading from V1.x.
+| [1.0.x](https://github.com/microsoft/ApplicationInsights-JS/tree/legacy-v1)<br/><sub>(legacy-v1)</sub> | No longer actively maintained -- please Upgrade. The documentation for `applicationinsights-js@1.0.x` has moved [here](https://github.com/microsoft/ApplicationInsights-JS/tree/master/legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v2_UpgradeGuide.html). | Not actively maintained, please upgrade.
 
 ## Getting Started
 
@@ -108,7 +75,7 @@ If your app does not use NPM, you can directly instrument your webpages with App
 ```html
 <script type="text/javascript">
 !function(T,l,y){var S=T.location,k="script",D="connectionString",C="ingestionendpoint",I="disableExceptionTracking",E="ai.device.",b="toLowerCase",w="crossOrigin",N="POST",e="appInsightsSDK",t=y.name||"appInsights";(y.name||T[e])&&(T[e]=t);var n=T[t]||function(d){var g=!1,f=!1,m={initialize:!0,queue:[],sv:"5",version:2,config:d};function v(e,t){var n={},a="Browser";return n[E+"id"]=a[b](),n[E+"type"]=a,n["ai.operation.name"]=S&&S.pathname||"_unknown_",n["ai.internal.sdkVersion"]="javascript:snippet_"+(m.sv||m.version),{time:function(){var e=new Date;function t(e){var t=""+e;return 1===t.length&&(t="0"+t),t}return e.getUTCFullYear()+"-"+t(1+e.getUTCMonth())+"-"+t(e.getUTCDate())+"T"+t(e.getUTCHours())+":"+t(e.getUTCMinutes())+":"+t(e.getUTCSeconds())+"."+((e.getUTCMilliseconds()/1e3).toFixed(3)+"").slice(2,5)+"Z"}(),iKey:e,name:"Microsoft.ApplicationInsights."+e.replace(/-/g,"")+"."+t,sampleRate:100,tags:n,data:{baseData:{ver:2}}}}var h=d.url||y.src;if(h){function a(e){var t,n,a,i,r,o,s,c,u,p,l;g=!0,m.queue=[],f||(f=!0,t=h,s=function(){var e={},t=d.connectionString;if(t)for(var n=t.split(";"),a=0;a<n.length;a++){var i=n[a].split("=");2===i.length&&(e[i[0][b]()]=i[1])}if(!e[C]){var r=e.endpointsuffix,o=r?e.location:null;e[C]="https://"+(o?o+".":"")+"dc."+(r||"services.visualstudio.com")}return e}(),c=s[D]||d[D]||"",u=s[C],p=u?u+"/v2/track":d.endpointUrl,(l=[]).push((n="SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)",a=t,i=p,(o=(r=v(c,"Exception")).data).baseType="ExceptionData",o.baseData.exceptions=[{typeName:"SDKLoadFailed",message:n.replace(/\./g,"-"),hasFullStack:!1,stack:n+"\nSnippet failed to load ["+a+"] -- Telemetry is disabled\nHelp Link: https://go.microsoft.com/fwlink/?linkid=2128109\nHost: "+(S&&S.pathname||"_unknown_")+"\nEndpoint: "+i,parsedStack:[]}],r)),l.push(function(e,t,n,a){var i=v(c,"Message"),r=i.data;r.baseType="MessageData";var o=r.baseData;return o.message='AI (Internal): 99 message:"'+("SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details) ("+n+")").replace(/\"/g,"")+'"',o.properties={endpoint:a},i}(0,0,t,p)),function(e,t){if(JSON){var n=T.fetch;if(n&&!y.useXhr)n(t,{method:N,body:JSON.stringify(e),mode:"cors"});else if(XMLHttpRequest){var a=new XMLHttpRequest;a.open(N,t),a.setRequestHeader("Content-type","application/json"),a.send(JSON.stringify(e))}}}(l,p))}function i(e,t){f||setTimeout(function(){!t&&m.core||a()},500)}var e=function(){var n=l.createElement(k);n.src=h;var e=y[w];return!e&&""!==e||"undefined"==n[w]||(n[w]=e),n.onload=i,n.onerror=a,n.onreadystatechange=function(e,t){"loaded"!==n.readyState&&"complete"!==n.readyState||i(0,t)},n}();y.ld<0?l.getElementsByTagName("head")[0].appendChild(e):setTimeout(function(){l.getElementsByTagName(k)[0].parentNode.appendChild(e)},y.ld||0)}try{m.cookie=l.cookie}catch(p){}function t(e){for(;e.length;)!function(t){m[t]=function(){var e=arguments;g||m.queue.push(function(){m[t].apply(m,e)})}}(e.pop())}var n="track",r="TrackPage",o="TrackEvent";t([n+"Event",n+"PageView",n+"Exception",n+"Trace",n+"DependencyData",n+"Metric",n+"PageViewPerformance","start"+r,"stop"+r,"start"+o,"stop"+o,"addTelemetryInitializer","setAuthenticatedUserContext","clearAuthenticatedUserContext","flush"]),m.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4};var s=(d.extensionConfig||{}).ApplicationInsightsAnalytics||{};if(!0!==d[I]&&!0!==s[I]){var c="onerror";t(["_"+c]);var u=T[c];T[c]=function(e,t,n,a,i){var r=u&&u(e,t,n,a,i);return!0!==r&&m["_"+c]({message:e,url:t,lineNumber:n,columnNumber:a,error:i}),r},d.autoExceptionInstrumented=!0}return m}(y.cfg);function a(){y.onInit&&y.onInit(n)}(T[t]=n).queue&&0===n.queue.length?(n.queue.push(a),n.trackPageView({})):a()}(window,document,{
-src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
+src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The v2.x SDK URL Source
 // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
 // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
 // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
@@ -490,35 +457,6 @@ This version comes with the bare minimum amount of features and functionalities 
 | [React](https://github.com/microsoft/applicationinsights-react-js) | [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-react-js.svg)](https://www.npmjs.com/package/@microsoft/applicationinsights-react-js)
 | [React Native](https://github.com/microsoft/applicationinsights-react-native) | [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-react-native.svg)](https://www.npmjs.com/package/@microsoft/applicationinsights-react-native)
 
-## Upgrading from the old Version of Application Insights
-
-Breaking changes in the SDK V2 version:
-- To allow for better API signatures, some of the apis such as trackPageView, trackException have been updated.
-- ES3 (IE8) compatibility, while running in IE8 or lower versions of the browser is not an officially supported scenario we are working to maintain ES3 level compatibility to ensure that the SDK will not cause any unexpected failures due to Javascript parsing error. See [ES3/IE8 Compatibility](#es3ie8-compatibility) below for further information.
-- Telemetry envelope has field name and structure changes due to data schema updates.
-- Moved `context.operation` to `context.telemetryTrace`. Some fields were also changed (`operation.id` --> `telemetryTrace.traceID`)
-  - If you want to maunally refresh the current pageview id (e.g. in SPA apps) this can be done with `appInsights.context.telemetryTrace.traceID = generateW3CId()`
-
-If you are using the current application insights PRODUCTION SDK (1.0.20) and want to see if the new SDK works in runtime, please update URL depending on your current SDK loading scenario:
-
-**a)** Download via CDN scenario:
-    Update code snippet that you currently use to point to the following URL:
-    ```
-    "https://js.monitor.azure.com/scripts/b/ai.2.min.js"
-    ```
-
-**b)** NPM scenario:
-    Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with connection string.
-
-```ts
-appInsights.downloadAndSetup({
-    connectionString: "InstrumentationKey=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",
-    url: "https://js.monitor.azure.com/scripts/b/ai.2.min.js"
-});
-```
-
-Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
-
 ## Build a new extension for the SDK
 
 The SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
@@ -700,18 +638,13 @@ It is expected that most users will be using the `Public` URL, however, it is al
 - [Releases](https://github.com/microsoft/ApplicationInsights-JS/releases)
 - [Changelist Notes](./RELEASES.md)
 
-
-### Beta Breaking Changes
-
-See [the working beta breaking changes notes](./BETA_BREAKING_CHANGES.md)
-
 ## Browser Support
 
 ![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![IE](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Opera](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
 --- | --- | --- | --- | --- |
-Latest ✔ | Latest ✔ | 9+ Full ✔<br>8- Compatible | Latest ✔ | Latest ✔ |
+Latest ✔ | Latest ✔ | 9+ Full ✔ | Latest ✔ | Latest ✔ |
 
-> Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
+> Note: ES3/IE8 compatibility has been removed from v3.x releases, if you need to retain ES3 (IE8) compatibility you will need to remain on the v2.x versions of the SDK.
 
 ### Build and Test this Project
 
@@ -733,116 +666,6 @@ git add <...your changes and rush change file...>
 git commit -m "info about your change"
 git push
 ```
-
-## ES3/IE8 Compatibility
-
-__v3.x NO Longer supports ES3 / IE8__
-
-> If you need to retain ES3 compatibility for your environment you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK. However, v3.x now uses [Object.defineProperty](https://caniuse.com/?search=defineProperty) so a polyfills that can correctly implement this functionality (if available) will be required, without this the SDK will not function correctly.
-
-As an SDK there are numerous users which cannot control the browsers that their customers use. As such we need to ensure that this SDK continues to "work" and does not break the JS execution when loaded by an older browser. While it would be ideal to just not support IE8 and older generation (ES3) browsers there are numerous large customers/users that continue to require pages to "work" and as noted they may or cannot control which browser that their end users choose to use.
-
-This does NOT mean that we will only support the lowest common set of features, just that we need to maintain ES3 code compatibility and when adding new features they will need to be added in a manner that would not break ES3 Javascript parsing and added as an optional feature.
-
-As part of enabling ES3/IE8 support we have set the ```tsconfig.json``` to ES3 and ```uglify``` settings in ```rollup.config.js``` transformations to support ie8. This provides a first level of support which blocks anyone from adding unsupported ES3 features to the code and enables the generated javascript to be validily parsed in an ES3+ environment.
-
-Ensuring that the generated code is compatible with ES3 is only the first step, JS parsers will still parse the code when an unsupport core function is used, it will just fail or throw an exception at runtime. Therefore, we also need to require/use polyfill implementations or helper functions to handle those scenarios.
-
-It should also be noted that the overall goal of ES3/IE8 compatibility is the support at least the following 2 usage usage patterns. By supporting these two (2) basic use-cases, application/developers will be able to determine what browsers their users are using and whether they are experiencing any issues. As the SDK will report the data to the server, thus enabling the insights into whether they need to either fully support ES3/IE8 or provide some sort of browser upgrade notifications.
-
-- track()
-- trackException()
-
-Beyond terminating support for older browsers that only support ES3, (which we cannot do at this point in time) we will endeavour to maintain support for the above two (2) use-cases.
-
-### Browser must support JSON class
-
-If your users are using a browser that does not support the [JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON) Api you will need to include your own JSON polyfil implementation and this will need to be loaded prior to the application insights code.
-
-This **includes** when running your application within an embedded browser, which on windows will default to using IE in IE7 doc mode -- which does NOT provide the JSON Api. 
-
-For this case either provide a JSON polyfil or add the ["X-UA-Compatible"](https://docs.microsoft.com/en-us/openspecs/ie_standards/ms-iedoco/380e2488-f5eb-4457-a07a-0cb1b6e4b4b5?redirectedfrom=MSDN) meta tag and/or a header to your hosting page so that IE will provide the expected runtime environment.
-
-```
- <meta http-equiv="X-UA-Compatible" content="IE=edge">
- 
- <meta http-equiv="X-UA-Compatible" content="IE=11">
-```
-
-[More details on this are available here](https://docs.microsoft.com/en-us/archive/blogs/asiatech/ie11-migration-guide-understanding-browser-mode-document-mode-user-agent-and-x-ua-compatible)
-
-### ES3/IE8 Packaging helper (ES3 rollup-plugin)
-
-> Removed for v.3, only supported for 2.x
-
-To ensure that the system conforms to the ES3 spec, by only using ES3 compatible code we have created a rollup plugin which has 2 functions
-
-- es3Poly() finds and rewrite several commonly incompatible functions (such as Object.defineProperty; Object.getOwnPropertyDescriptor; Object.create) with inline polyfill functions that either call the real implementation or provide a basic implementation so that the scripts can be loaded and executed.
-- es3Check() finds some of the known ES3 incompatible methods and will stop the packaging process if they are identified (and have not been polyfilled by es3Poly()), this provides a semi-automated validation of not just the application insights code, but also 3rd party libraries that it uses.
-- importCheck() checks that the source code does not include imports from specific files or packages, this has been added due to packaging issues while using es3Poly causing imported type values to be renamed as "name$$1", which causes uglify() to missing renaming in some cases where the original source is "name$1". So this is being used to ensure that each source file only imports the values from packages or the original source file and not the main module export like "index". The importCheck can be placed before the nodeResolve() or after the es3Check() the recommendation is to fail fast be having this before the resolve. It should also be noted that only if the import is used will it appear in the final output (packagin), so it may exist in the original source but the packaging will not fail in this case.
-
-To use these rollup plugins you simply need to add the following to your rollup.config.js
-
-To import the module
-```
-import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
-```
-
-And then include as part of the packaging plugin list, if you use es3Poly()you should always include it before es3Check() 
-
-```
-    plugins: [
-      replace({ ... }),
-      importCheck({ exclude: [ "Index" ] }),
-      nodeResolve({ browser: false, preferBuiltins: false }),
-      es3Poly(),
-      es3Check()
-    ]
-```
-
-All plugins take an options which allows you to add additional checks and polyfill replacements. See the [Interfaces.ts]() for the definitions and [ES3Tokens.ts]() for the default values, which should provide the examples, if we have missed some common values that you require please feel free to raise an issue or provide a PR to add as the defaults.
-
-It should be noted at this point that the both react and react-native extensions will NOT work in an ES3/IE8 environment out of the box, primarily because of the react code and their dependencies.
-You *may* be able to workaround this limitation by providing and your own polyfill implementations for the unsupported methods.
-
-### ES3/IE8 Features, Solutions, Workarounds and Polyfill style helper functions
-
-> Note: We will be removing our internal ES3 / IE8 support polyfills as part of the next major release 3.x.x (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment __before__ loading / initializing the SDK.
-
-As part of contributing to the project the following table highlights all of the currently known issues and the available solution/workaround. During PR and reviewing please ensure that you do not use the unsupported feature directly and instead use (or provide) the helper, solution or workaround.
-
-This table does not attempt to include ALL of the ES3 unsupported features, just the currently known functions that where being used at the time or writing. You are welcome to contribute to provide additional helpers, workarounds or documentation of values that should not be used.
-
-|  Feature  |  Description  |  Helper, Solution or Workaround |
-|-----------|-----------------|-----------------|
-| ```JSON.stringify(obj)``` | We have a hard requirement on JSON support, however, because of the size of adding a specific JSON polyfil just for our usage we decided not to include our own version. As such any user of this Api **MUST** include a JSON polyfil implementation, otherwise, the API simply will not work. | App/Site **MUST** provide their own JSON polyfil.
-| ```Object.keys()``` | Not provided by ES3, use the helper  | ```CoreUtils.objKeys(obj: {}): string[]``` |
-| ES5+ getters/setters<br>```Object.defineProperty(...)``` | Code will needs to created the individual getters/setters manually in a static initializer. See ```ChannelController.ts``` for example usage.<br>However, to ensure compatibility actual usage of any getters/setters internally in the primary SDK code is not permitted. They may (and should) be used in unit tests to ensure that if used they function as expected (in an ES5+ environment).| ``` CoreUtils.objDefineAccessors<T>(target:any, prop:string, getProp?:() => T, setProp?: (v:T) => void) : boolean``` |
-| ```Object.create(protoObj)``` | Not supported in an ES3 environment, use the helper or direct construct the object with SON style notation (if possible) | ```CoreUtils.objCreate(obj:object):any``` |
-| ```Object.create(protoObj, descriptorSet)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.defineProperties()``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.getOwnPropertyNames(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.getPrototypeOf(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.getOwnPropertyDescriptor(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.getOwnPropertyNames()``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.preventExtensions(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.isExtensible(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.seal(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.isSealed(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.freeze(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Object.isFrozen(obj)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Array.prototype.indexOf(...)``` | Use the provided helper | ```CoreUtils.arrIndexOf<T>(arr: T[], searchElement: T, fromIndex?: number): number``` |
-| ```Array.prototype.lastIndexOf(...)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Array.prototype.every(...)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Array.prototype.some(...)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Array.prototype.forEach(...)``` | Use the provided helper. | ```arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void, thisArg?: any):void``` |
-| ```Array.prototype.map(...)``` | Use the provided helper. | ```CoreUtils.arrMap<T,R>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => R, thisArg?: any): R[]``` |
-| ```Array.prototype.filter(...)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Array.prototype.reduce(...)``` | Use the provided helper. | ```CoreUtils.arrReduce<T,R>(arr: T[], callbackfn: (previousValue: T|R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R): R``` |
-| ```Array.prototype.reduceRight(...)``` | Not supported and no provided workaround/solution. | N/A |
-| ```Date.prototype.toISOString()``` | Use the provided helper | ```CoreUtils.toISOString(date: Date)``` |
-| ```Date.now()``` | Use the provided helper | ```CoreUtils.dateNow()``` |
-| ```performance.now()``` | Use the provided helper for the Performance Api now function. | ```CoreUtils.perfNow()``` |
 
 ## Contributing
 

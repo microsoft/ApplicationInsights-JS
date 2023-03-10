@@ -1,12 +1,30 @@
-# Beta Breaking Changes
+# V3.x Upgrade Breaking Changes (from v2.x))
 
-## ES3 (IE8) Support
+Some of the major changes include
 
-Previous internal polyfills for JavaScript features that are supported by ES5 but not at least IE8 have been removed.
+- Added support for dynamic (reactive) configuration changes after initialization
+- Removed ES3 / IE8 Support, now only supports ES5 / IE9+
+- Removed V1 API Backward Compatibility, Upgrading from V1 -> V3 is NOT supported and will require code changes in your application if you use the previous V1 API functions
+- Requires Object.defineProperty support, the SDK now uses [Object.defineProperty](https://caniuse.com/?search=defineProperty) quite heavily and therefore support is limited to runtimes correctly implement this functionality. Without this the SDK will not function correctly.
+- Many (mostly unused) exports from the NPM packages have been removed.
 
-The SDK still uses internal polyfills for ES5 features that are not supported by IE9-11, it will also start to use JavaScript object accessors (get / set) and object defineProperties, both of which cannot be polyfilled so for IE8 support you will need to either transpile the source code (not supported) or continue to use the latest v2.x (Supported).
+This document has attempted to identify all of the major breaking and behavior changes, it may be incomplete. If you encounter an issue that has not been documented please [create an issue](https://github.com/microsoft/ApplicationInsights-JS/issues/new/choose) and we will review to determine whether this was unexpected and should be fixed or if it needs to be documented.
 
-The SDK now uses [Object.defineProperty](https://caniuse.com/?search=defineProperty) and therefore support is limited to runtimes correctly implement this functionality. Without this the SDK will not function correctly.
+## Extensions build for v2.x
+
+If the extension is 100% self contained (all referenced code is included in it's own bundle), then apart from some TypeScript typing warnings / errors the SDK will load and initialize the plugin. It will most likely not support some of the newer functionality like dynamic configuration changes, complete unloading and removal.
+
+However, for any extensions that contain references to the core components (import / require) the core components WILL likely not work with the v3.x (because of the breaking changes) and will need to be updated to use the external helpers or the alternate functions.
+
+## Removed ES3 (IE8) Support
+
+Previous internal polyfills for JavaScript features that are supported by ES5 are no longer included.
+
+As part of packaging ES3 reserved word usage ("catch") is not longer wrapped, this WILL cause the SDK to fail to load in an ES3 environment.
+
+The SDK still uses internal polyfills for ES5 features that are not supported by IE9-11 (like. Symbol).
+
+If your application is required to maintain support for IE8 (ES3) you WILL need to continue to use the latest v2.x (Supported) releases.
 
 ## Behavior changes
 
@@ -167,7 +185,7 @@ All previously `@deprecated` marked functions and the legacy "global" cookie han
 - BaseCore
   - Use `AppInsightsCore` (`AppInsightsCore` and `BaseCore` are now merged)
 - ICoreUtils; CoreUtils
-  - See the replacements documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
+  - See the replacements documented in the [Tree Shaking Recommendations](https://microsoft.github.io/ApplicationInsights-JS/TreeShakingRecommendations.html).
 - IEventHelper; EventHelper
   - See the replacements documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
 - EnumMap, createEnumMap
@@ -203,4 +221,4 @@ Minimum JavaScript Language Specification: ES5
 --- | --- | --- | --- | --- |
 Latest ✔ | Latest ✔ | 9+ Full ✔ | Latest ✔ | Latest ✔ |
 
-> Note: ES3/IE8 compatibilityhas been removed, so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK.
+> Note: ES3/IE8 compatibility has been <u>__removed__</u>, so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK.
