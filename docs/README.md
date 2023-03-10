@@ -52,4 +52,4 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 - [V2 Upgrade Guide](./upgrade/v2_UpgradeGuide.md)
 - [V3 Breaking Changes](./upgrade/v3_BreakingChanges.md)
 
-[Back to GitHub]()
+[Back to GitHub](https://github.com/Microsoft/ApplicationInsights-JS)

@@ -106,7 +106,7 @@ If your end users are on a corporate network, then they are most likely behind s
 
 ## Application Insights CDN outage
 
-You can confirm this scenario by attempting to access the CDN endpoint directly from the browser (for example, https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js) from a different location to that of your end users (probably from your own development machine - assuming that your organization has not blocked this domain).
+You can confirm this scenario by attempting to access the CDN endpoint directly from the browser (for example, https://js.monitor.azure.com/scripts/b/ai.2.min.js) from a different location to that of your end users (probably from your own development machine - assuming that your organization has not blocked this domain).
 
 ### Troubleshooting
 
@@ -127,5 +127,4 @@ Quick check: Using a browser that supports Developer tools (F12), validate on th
 
 ## <a name="next"></a> Next steps
 * [Get additional help by filing an issue on GitHub](https://github.com/Microsoft/ApplicationInsights-JS/issues)
-* [Back to Snippet setup](../README.md#reporting-script-load-failures)
-
+* [Back to Snippet setup](https://github.com/microsoft/ApplicationInsights-JS/blob/master/README.md#reporting-script-load-failures)
