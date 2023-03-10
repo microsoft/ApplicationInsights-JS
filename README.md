@@ -21,27 +21,23 @@
 [![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)](https://js.monitor.azure.com/scripts/b/ai.2.min.js)
 [![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://js.monitor.azure.com/scripts/b/ai.2.min.js)
 
-> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights). 
-
-## Beta (v3.x) Release Breaking changes
-
-As part of the beta development we intend to stop adding additional features (enhancements) to the v2.x releases.
-
-Development has started on the next major release which is occurring on the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) branch, this includes nightly automatic build and releases.
-
-Some of the major changes include
-
-- Removed ES3 / IE8 Support
-- Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
-
-See the [beta](https://github.com/Microsoft/ApplicationInsights-JS/tree/beta) for the current documented set of breaking changes, all feedback on excessive breaks are welcome current release target is early (1st quarter) 2023.
-
 
 ## Before Getting Started
 
-This repo does not intended for non-browser enverionments, for example, the Node.js applications.
+This SDK is not for non-browser environments, for example, the Node.js applications.
 
-For instrumenting a Node.js app, please refer this [repository](https://github.com/microsoft/ApplicationInsights-node.js). 
+For instrumenting a Node.js app, the recommended SDK is the [ApplicationInsights-node.js repository](https://github.com/microsoft/ApplicationInsights-node.js).
+
+ES3 support has been removed from the latest version (v3.x), if required [see for ES3/IE8 Support](https://microsoft.github.io/ApplicationInsights-JS/es3_Support.html
+)
+
+## Release Versions
+
+| Version | Details
+|---------|--------------------------
+| <b>[3.x](https://github.com/microsoft/ApplicationInsights-JS/tree/main)<br/><sub>(main)</sub> </b>| Current supported release from April '2023.<br/>Supports dynamic configuration changes/updates after initialization. Supports all features of v2 except with the known <b>[Breaking changes from previous versions](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v3_BreakingChanges.html)</b> and does NOT support the previous v1.x compatible API proxy layer, it also removes support for ES3 / IE8. Minimum supported Runtime is now ES5 (IE9+).
+| [2.x](https://github.com/microsoft/ApplicationInsights-JS/tree/master)<br/><sub>(master)</sub> | Feature freeze from March '2023, security fixes and critical bugs only.<br />Supports adding / removing extensions and full unloading/removal of the SDK after initialization. Last version to support ES3 (IE8+), also provides a v1.x compatible API proxy layer for upgrading from V1.x.
+| [1.0.x](https://github.com/microsoft/ApplicationInsights-JS/tree/legacy-v1)<br/><sub>(legacy-v1)</sub> | No longer actively maintained -- please Upgrade. The documentation for `applicationinsights-js@1.0.x` has moved [here](https://github.com/microsoft/ApplicationInsights-JS/tree/master/legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v2_UpgradeGuide.html). | Not actively maintained, please upgrade.
 
 ## Getting Started
 
