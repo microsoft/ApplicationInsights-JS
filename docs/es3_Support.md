@@ -64,7 +64,7 @@ And then include as part of the packaging plugin list, if you use es3Poly()you s
     ]
 ```
 
-All plugins take an options which allows you to add additional checks and polyfill replacements. See the [Interfaces.ts]() for the definitions and [ES3Tokens.ts]() for the default values, which should provide the examples, if we have missed some common values that you require please feel free to raise an issue or provide a PR to add as the defaults.
+All plugins take an options which allows you to add additional checks and polyfill replacements. See the [Interfaces.ts](https://github.com/microsoft/ApplicationInsights-JS/blob/master/tools/rollup-es3/src/es3/Interfaces.ts) for the definitions and [ES3Tokens.ts](https://github.com/microsoft/ApplicationInsights-JS/blob/master/tools/rollup-es3/src/es3/Es3Tokens.ts) for the default values, which should provide the examples, if we have missed some common values that you require please feel free to raise an issue or provide a PR to add as the defaults.
 
 It should be noted at this point that the both react and react-native extensions will NOT work in an ES3/IE8 environment out of the box, primarily because of the react code and their dependencies.
 You *may* be able to workaround this limitation by providing and your own polyfill implementations for the unsupported methods.
