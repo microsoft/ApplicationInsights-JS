@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IChannelControlsAI, IConfig } from "@microsoft/applicationinsights-common";
+import { IConfig } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
-    ITelemetryUpdateState, cfgDfBoolean, createProcessTelemetryContext, initializePlugins, onConfigChange, proxyFunctions
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IChannelControlsHost, IConfigDefaults, IConfiguration, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, ITelemetryUpdateState, cfgDfBoolean, createProcessTelemetryContext, initializePlugins, onConfigChange,
+    proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
 import { arrForEach, isArray, objDeepFreeze, objFreeze, throwError } from "@nevware21/ts-utils";
 import { ChannelControllerPriority, IChannelController, _IInternalChannels, createChannelControllerPlugin } from "./ChannelController";
@@ -64,7 +65,7 @@ function _createChannelQueues(config: ITeeChannelConfig, core: IAppInsightsCore,
     return channelQueue;
 }
 
-export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsAI {
+export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsHost {
     public readonly identifier: string = "TeeChannelController";
     public readonly priority: number = 999;
 
@@ -215,4 +216,14 @@ export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsA
     public onunloadFlush() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
+    /**
+     * Get and return the named channel instance (if present) from the queues
+     * @param pluginIdentifier - The identifier name of the plugin
+     */
+    public getChannel<T extends IPlugin = IPlugin>(pluginIdentifier: string): T {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
 }

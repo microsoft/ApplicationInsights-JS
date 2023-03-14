@@ -77,13 +77,13 @@ export interface IConfiguration {
     /**
      * Additional plugins that should be loaded by core at runtime
      */
-    extensions?: ITelemetryPlugin[];
+    readonly extensions?: ITelemetryPlugin[];
 
     /**
      * Channel queues that is setup by caller in desired order.
      * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
-    channels?: IChannelControls[][];
+    readonly channels?: IChannelControls[][];
 
     /**
      * @type {boolean}

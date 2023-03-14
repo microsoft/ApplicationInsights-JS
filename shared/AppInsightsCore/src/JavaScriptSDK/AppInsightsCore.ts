@@ -5,7 +5,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     ITimerHandler, arrAppend, arrForEach, arrIndexOf, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze,
-    objDefineProp, objForEachKey, objFreeze, objHasOwn, scheduleInterval, scheduleTimeout, throwError
+    objDefine, objForEachKey, objFreeze, objHasOwn, scheduleInterval, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -18,6 +18,7 @@ import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadRea
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
+import { IChannelControlsHost } from "../JavaScriptSDK.Interfaces/IChannelControlsHost";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -65,9 +66,9 @@ const strSdkNotInitialized = "SDK is not initialized";
  */
 const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     cookieCfg: {},
-    [STR_EXTENSIONS]: [],
-    [STR_CHANNELS]: [],
-    [STR_EXTENSION_CONFIG]: {},
+    [STR_EXTENSIONS]: { rdOnly: true, ref: true, v: [] },
+    [STR_CHANNELS]: { rdOnly: true, ref: true, v:[] },
+    [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
     diagnosticLogInterval: UNDEFINED_VALUE
@@ -627,12 +628,12 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     let cfg =  _configHandler.cfg;
 
                     // replace the immutable (if initialized) values
-                    newConfig.extensions = cfg.extensions;
-                    newConfig.channels = cfg.channels;
+                    // We don't currently allow updating the extensions and channels via the update config
+                    // So overwriting any user provided values to reuse the existing values
+                    (newConfig as any).extensions = cfg.extensions;
+                    (newConfig as any).channels = cfg.channels;
                 }
 
-                // We don't currently allow updating the extensions and channels via the update config
-                // So overwriting any user provided values to reuse the existing values
                 // Explicitly blocking any previous config watchers so that they don't get called because
                 // of this bulk update (Probably not necessary)
                 (_configHandler as _IInternalDynamicConfigHandler<CfgType>)._block((details) => {
@@ -741,19 +742,15 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _configHandler.cfg.loggingLevelConsole = eLoggingSeverity.CRITICAL;
 
                 // Define _self.config
-                objDefineProp(_self, "config", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => _configHandler.cfg,
-                    set: (newValue) => {
+                objDefine(_self, "config", {
+                    g: () => _configHandler.cfg,
+                    s: (newValue) => {
                         _self.updateCfg(newValue, false);
                     }
                 });
 
-                objDefineProp(_self, "pluginVersionStringArr", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => {
+                objDefine(_self, "pluginVersionStringArr", {
+                    g: () => {
                         if (!_pluginVersionStringArr) {
                             _setPluginVersions();
                         }
@@ -762,10 +759,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     }
                 });
 
-                objDefineProp(_self, "pluginVersionString", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => {
+                objDefine(_self, "pluginVersionString", {
+                    g: () => {
                         if (!_pluginVersionString) {
                             if (!_pluginVersionStringArr) {
                                 _setPluginVersions();
@@ -780,6 +775,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 _self.logger = new DiagnosticLogger(_configHandler.cfg);
                 _extensions = [];
+                let cfgExtensions = _self.config.extensions || [];
+                cfgExtensions.splice(0, cfgExtensions.length);
+                arrAppend(cfgExtensions, _extensions);
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
                 _eventQueue = [];
@@ -791,6 +789,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _configExtensions = [];
                 _channelConfig = null;
                 _channels = null;
+
                 _isUnloading = false;
                 _internalLogsEventName = null;
                 _evtNamespace = createUniqueNamespace("AIBaseCore", true);
@@ -828,6 +827,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 // Required to allow plugins to call core.getPlugin() during their own initialization
                 _extensions = objFreeze(allExtensions);
 
+                // This has a side effect of adding the extensions passed during initialization
+                // into the config.extensions, so you can see all of the extensions loaded.
+                // This will also get updated by the addPlugin() and remove plugin code.
+                let cfgExtensions = _self.config.extensions || [];
+                cfgExtensions.splice(0, cfgExtensions.length);
+                arrAppend(cfgExtensions, _extensions);
+
                 let rootCtx = _createTelCtx();
                 
                 // Initializing the channels first
@@ -846,6 +852,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             function _getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
                 let theExt: ILoadedPlugin<T> = null;
                 let thePlugin: IPlugin = null;
+                let channelHosts: IChannelControlsHost[] = [];
 
                 arrForEach(_extensions, (ext: any) => {
                     if (ext.identifier === pluginIdentifier && ext !== _telemetryInitializerPlugin) {
@@ -853,14 +860,19 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         return -1;
                     }
 
-                    // TODO: Check if the extension is an extension "host" (like the TeeChannel)
-                    // So that if the extension is not found we can ask the "host" plugins for the plugin
+                    if ((ext as IChannelControlsHost).getChannel) {
+                        channelHosts.push(ext as IChannelControlsHost);
+                    }
                 });
 
-                // if (!thePlugin && _channelControl) {
-                //     // Check the channel Controller
-                //     thePlugin = _channelControl.getChannel(pluginIdentifier);
-                // }
+                if (!thePlugin && channelHosts.length > 0) {
+                    arrForEach(channelHosts, (host) => {
+                        thePlugin = host.getChannel(pluginIdentifier);
+                        if (!thePlugin) {
+                            return -1;
+                        }
+                    });
+                }
 
                 if (thePlugin) {
                     theExt = {

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dumpObj, objDefineProp, objForEachKey } from "@nevware21/ts-utils";
+import { dumpObj, objDefine, objForEachKey } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -108,11 +108,11 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
         _block: _block
     };
 
-    objDefineProp(cfgHandler, "uid", {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: uid
+    objDefine(cfgHandler, "uid", {
+        c: false,
+        e: false,
+        w: false,
+        v: uid
     });
 
     theState = _createState(cfgHandler);

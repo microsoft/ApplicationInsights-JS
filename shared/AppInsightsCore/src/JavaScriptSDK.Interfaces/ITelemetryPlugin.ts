@@ -41,7 +41,7 @@ export interface ITelemetryPlugin extends ITelemetryProcessor, IPlugin {
      * now for backward compatibility only.
      */
     setNextPlugin?: (next: ITelemetryPlugin | ITelemetryPluginChain) => void;
-    
+
     /**
      * Priority of the extension
      */

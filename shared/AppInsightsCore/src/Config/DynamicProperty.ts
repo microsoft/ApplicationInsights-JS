@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import {
-    arrForEach, arrIndexOf, dumpObj, isArray, isPlainObject, objDefineAccessors, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
+    arrForEach, arrIndexOf, dumpObj, isArray, isPlainObject, objDefine, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
 } from "@nevware21/ts-utils";
 import { UNDEFINED_VALUE } from "../JavaScriptSDK/InternalConstants";
 import { CFG_HANDLER_LINK, throwInvalidAccess } from "./DynamicSupport";
@@ -160,7 +160,7 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
         }
     }
 
-    objDefineAccessors(theConfig, detail.n, _getProperty, _setProperty, true);
+    objDefine<any>(theConfig, detail.n, { g: _getProperty, s: _setProperty });
 
     // Return the dynamic reference
     return _getProperty();
@@ -205,8 +205,6 @@ export function _makeDynamicObject<T>(state: _IDynamicConfigHandlerState<T>, tar
     if (!target[CFG_HANDLER_LINK]) {
         // Link the config back to the dynamic config details
         objDefineProp(target, CFG_HANDLER_LINK, {
-            configurable: false,
-            enumerable: false,
             get: function() {
                 return state.hdlr;
             }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { isArray, isFunction, objDefineAccessors, utcNow } from "@nevware21/ts-utils";
+import { isArray, isFunction, objDefine, utcNow } from "@nevware21/ts-utils";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
@@ -71,15 +71,17 @@ export class PerfEvent implements IPerfEvent {
         if (isFunction(payloadDetails)) {
             // Create an accessor to minimize the potential performance impact of executing the payloadDetails callback
             let theDetails:any;
-            objDefineAccessors(_self, "payload", () => {
-                // Delay the execution of the payloadDetails until needed
-                if (!theDetails && isFunction(payloadDetails)) {
-                    theDetails = payloadDetails();
-                    // clear it out now so the referenced objects can be garbage collected
-                    payloadDetails = null;
-                }
+            objDefine(_self, "payload", {
+                g: () => {
+                    // Delay the execution of the payloadDetails until needed
+                    if (!theDetails && isFunction(payloadDetails)) {
+                        theDetails = payloadDetails();
+                        // clear it out now so the referenced objects can be garbage collected
+                        payloadDetails = null;
+                    }
 
-                return theDetails;
+                    return theDetails;
+                }
             });
         }
 

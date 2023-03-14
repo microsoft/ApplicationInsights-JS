@@ -14,6 +14,7 @@ import { ITelemetryItem } from "../../../src/JavaScriptSDK.Interfaces/ITelemetry
 import { ITelemetryPluginChain } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryPlugin } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
+import { TestPlugin, TestSamplingPlugin, TrackPlugin } from "./TestPlugins";
 
 type NoRepeats<T extends readonly any[]> = { [M in keyof T]: { [N in keyof T]:
     N extends M ? never : T[M] extends T[N] ? unknown : never
@@ -1043,6 +1044,55 @@ export class DynamicConfigTests extends AITestClass {
                     }
                 }
                 Assert.deepEqual(expectedExtCfg, config.extensionConfig, "Check the extension Config")
+            }
+        });
+
+        this.testCase({
+            name: "Direct Updating of readonly fields",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+                const iKey2 = "00000000-1111-7777-8888-999999999999";
+                const testEndpoint1 = "https://localhost:9001/TestEndpoint";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+
+                const config: IConfiguration = {
+                    instrumentationKey: iKey1
+                };
+                try {
+                    appInsightsCore.initialize(config, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin]);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+                Assert.equal(0, appInsightsCore.logger.consoleLoggingLevel(), "Validate the Console Logging Level")
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(4, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                _expectException(() => {
+                    // casting to any to bypass TypeScript readonly error
+                    (appInsightsCore.config as any).extensions = []
+                }, "We should not be able to update the extensions directly");
+
+                _expectException(() => {
+                    // casting to any to bypass TypeScript readonly error
+                    (appInsightsCore.config as any).channels = [[]]
+                }, "We should not be able to update the channels directly");
             }
         });
 
