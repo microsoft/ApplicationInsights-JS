@@ -3,7 +3,7 @@
 import { ObjAssign, ObjClass } from "@microsoft/applicationinsights-shims";
 import {
     arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isObject, isPlainObject, isString,
-    isUndefined, objDeepFreeze, objDefineAccessors, objForEachKey, objHasOwn, strIndexOf
+    isUndefined, objDeepFreeze, objDefine, objForEachKey, objHasOwn, strIndexOf
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "./InternalConstants";
 
@@ -184,16 +184,14 @@ export function proxyAssign<T, S>(target: T, source: S, chkSet?: (name: string, 
                         delete (target as any)[field];
                     }
 
-                    if (!objDefineAccessors(target, field, () => {
-                        return source[field];
-                    }, (theValue) => {
-                        source[field] = theValue;
-                    })) {
-                        // Unable to create an accessor, so just assign the values as a fallback
-                        // -- this will (mostly) work for objects
-                        // -- but will fail for accessing primitives (if the source changes it) and all types of "setters" as the source won't be modified
-                        target[field as string] = value;
-                    }
+                    objDefine<any>(target, field, {
+                        g: () => {
+                            return source[field];
+                        },
+                        s: (theValue) => {
+                            source[field] = theValue;
+                        }
+                    });
                 }
             }
         }

@@ -11,7 +11,7 @@ import {
     getExceptionName, isNullOrUndefined, onConfigChange, throwError, unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { hasDocument, objDeepFreeze, objDefineProp } from "@nevware21/ts-utils";
+import { hasDocument, objDeepFreeze } from "@nevware21/ts-utils";
 import {
     IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, ICoreData, ICustomDataTags, IPageActionTelemetry, IValueCallback
 } from "./Interfaces/Datamodel";
@@ -153,22 +153,15 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     _autoCapture = autoCapture;
                 }));
             }
+
+            function _initDefaults() {
+                _config = null;
+                _pageAction = null;
+                _autoCaptureHandler = null;
+                _contentHandler = null;
+                _autoCapture = false;
+            }
         });
-
-        function _initDefaults() {
-            _config = null;
-            _pageAction = null;
-            _autoCaptureHandler = null;
-            _contentHandler = null;
-            _autoCapture = false;
-
-            // Define _self.config
-            objDefineProp(self, "config", {
-                configurable: true,
-                enumerable: true,
-                get: () => _config
-            });
-        }
     }
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {

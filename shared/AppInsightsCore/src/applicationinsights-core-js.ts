@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 export { IConfiguration } from "./JavaScriptSDK.Interfaces/IConfiguration";
 export { IChannelControls, MinChannelPriorty } from "./JavaScriptSDK.Interfaces/IChannelControls";
+export { IChannelControlsHost } from "./JavaScriptSDK.Interfaces/IChannelControlsHost";
 export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetryPlugin";
 export { IAppInsightsCore, ILoadedPlugin } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
 export { ITelemetryItem, ICustomProperties, Tags } from "./JavaScriptSDK.Interfaces/ITelemetryItem";

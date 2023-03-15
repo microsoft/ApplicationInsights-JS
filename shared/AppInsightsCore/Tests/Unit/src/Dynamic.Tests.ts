@@ -1,8 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { dumpObj } from "@nevware21/ts-utils";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
-import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
-import { _eInternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
+import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 import { IConfiguration } from "../../../src/JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin, ITelemetryPlugin } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryItem } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryItem";
@@ -10,9 +10,7 @@ import { BaseTelemetryPlugin } from "../../../src/JavaScriptSDK/BaseTelemetryPlu
 import { IAppInsightsCore } from "../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { ITelemetryPluginChain } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { IProcessTelemetryContext } from "../../../src/JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-
-const AIInternalMessagePrefix = "AITR_";
-const MaxInt32 = 0xFFFFFFFF;
+import { OldTrackPlugin, TestChannelPlugin, TestPlugin } from "./TestPlugins";
 
 export class DynamicTests extends AITestClass {
 
@@ -564,7 +562,7 @@ export class DynamicTests extends AITestClass {
                 appInsightsCore.track({
                     name: "MyCustomEvent3"
                 });
-                Assert.equal(4, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(4, channelPlugin.events.length, "We should have a track call - " + dumpObj(channelPlugin.events));
                 Assert.equal(3, channelPlugin.events[3].data.trackPlugin);
                 Assert.equal(true, channelPlugin.events[3].data.sampled);
 
@@ -1201,75 +1199,6 @@ class TestSamplingPlugin implements ITelemetryPlugin {
     }
 }
 
-class TestChannelPlugin implements IChannelControls {
-    public _nextPlugin: ITelemetryPlugin;
-    public isFlushInvoked = false;
-    public isUnloadInvoked = false;
-    public isTearDownInvoked = false;
-    public isResumeInvoked = false;
-    public isPauseInvoked = false;
-    public version: string = "1.0.33-Beta";
-
-    public processTelemetry;
-
-    public identifier = "TestSender";
-
-    public priority: number = 1001;
-    public events: ITelemetryItem[] = [];
-
-    constructor() {
-        this.processTelemetry = this._processTelemetry.bind(this);
-    }
-    public pause(): void {
-        this.isPauseInvoked = true;
-    }
-
-    public resume(): void {
-        this.isResumeInvoked = true;
-    }
-
-    public teardown(): void {
-        this.isTearDownInvoked = true;
-    }
-
-    flush(async?: boolean, callBack?: () => void): void {
-        this.isFlushInvoked = true;
-        if (callBack) {
-            callBack();
-        }
-    }
-
-    onunloadFlush(async?: boolean) {
-        this.isUnloadInvoked = true;
-    }
-
-    setNextPlugin(next: ITelemetryPlugin) {
-        this._nextPlugin = next;
-    }
-
-    public initialize = (config: IConfiguration) => {
-    }
-
-    public _processTelemetry(env: ITelemetryItem) {
-        this.events.push(env);
-
-        // Just calling processTelemetry as this is the original design of the Plugins (as opposed to the newer processNext())
-        this._nextPlugin?.processTelemetry(env);
-    }
-}
-
-class TestPlugin implements IPlugin {
-    public identifier: string = "TestPlugin";
-    public version: string = "1.0.31-Beta";
-
-    private _config: IConfiguration;
-
-    public initialize(config: IConfiguration) {
-        this._config = config;
-        // do custom one time initialization
-    }
-}
-
 class TrackPlugin extends BaseTelemetryPlugin {
     public identifier: string = "TrackPlugin";
     public version: string = "1.0.31-Beta";
@@ -1280,25 +1209,6 @@ class TrackPlugin extends BaseTelemetryPlugin {
 
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
         super.initialize(config, core, extensions, pluginChain)
-        this._config = config;
-        core.track({ name: 'TestEvent1' });
-    }
-
-    public processTelemetry(evt: ITelemetryItem, itemCtx: IProcessTelemetryContext) {
-        let data = evt.data = (evt.data || {});
-        data.trackPlugin = this.index++;
-        itemCtx.processNext(evt);
-    }
-}
-
-class OldTrackPlugin implements ITelemetryPlugin {
-    public identifier: string = "OldTrackPlugin";
-    public priority = 2;
-    public isInitialized: any;
-    private _config: IConfiguration;
-    public index: number = 0;
-
-    public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
         this._config = config;
         core.track({ name: 'TestEvent1' });
     }

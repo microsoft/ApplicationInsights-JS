@@ -12,7 +12,7 @@ import {
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _InternalLogMessage, _eInternalMessageId,
     _logInternalMessage, createProcessTelemetryContext, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
-import { objDeepFreeze, objDefineProp } from "@nevware21/ts-utils";
+import { objDeepFreeze, objDefine } from "@nevware21/ts-utils";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 import { IPropertiesConfig } from "./Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "./TelemetryContext";
@@ -56,10 +56,8 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
 
             _initDefaults();
 
-            objDefineProp(_self, "context", {
-                enumerable: true,
-                configurable: true,
-                get: function() {
+            objDefine(_self, "context", {
+                g: function() {
                     return _context;
                 }
             });

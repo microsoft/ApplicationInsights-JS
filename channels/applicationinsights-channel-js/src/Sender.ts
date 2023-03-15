@@ -1,18 +1,18 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IChannelControlsAI,
-    IConfig, IEnvelope, ISample, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate,
-    Trace, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage
+    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IConfig, IEnvelope,
+    ISample, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace, eRequestHeaders,
+    isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager, IPlugin,
-    IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager,
+    IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
     SendRequestReason, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
     createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON,
     getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend,
     objKeys, onConfigChange, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
-import { ITimerHandler, isTruthy, objDeepFreeze, objDefineProp, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
@@ -81,7 +81,7 @@ const EnvelopeTypeCreator: { [key:string] : EnvelopeCreator } = {
     [RemoteDependencyData.dataType]:    DependencyEnvelopeCreator
 };
 
-export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
+export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
     public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger, convertUndefined?: any): IEnvelope {
         let envelope: ITelemetryItem;
@@ -235,10 +235,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
 
-                    objDefineProp(_self, "_senderConfig", {
-                        enumerable: true,
-                        configurable: true,
-                        get: function() {
+                    objDefine(_self, "_senderConfig", {
+                        g: function() {
                             return senderConfig;
                         }
                     });
@@ -1152,10 +1150,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _sessionStorageUsed = null;
                 _namePrefix = UNDEFINED_VALUE;
 
-                objDefineProp(_self, "_senderConfig", {
-                    enumerable: true,
-                    configurable: true,
-                    get: function() {
+                objDefine(_self, "_senderConfig", {
+                    g: function() {
                         return objExtend({}, defaultAppInsightsChannelConfig);
                     }
                 });

@@ -17,11 +17,10 @@ import {
     ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
     cfgDfBoolean, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity,
     eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction,
-    isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, objDefineAccessors, onConfigChange, safeGetCookieMgr, strUndefined,
-    throwError
+    isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { isError, objDeepFreeze, objDefineProp, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -890,18 +889,16 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _extConfig = null;
 
                 // Define _self.config
-                objDefineProp(_self, "config", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => _extConfig
+                objDefine(_self, "config", {
+                    g: () => _extConfig
                 });
             }
         
             // For backward compatibility
-            objDefineAccessors(_self, "_pageViewManager", () => _pageViewManager);
-            objDefineAccessors(_self, "_pageViewPerformanceManager", () => _pageViewPerformanceManager);
-            objDefineAccessors(_self, "_pageVisitTimeManager", () => _pageVisitTimeManager);
-            objDefineAccessors(_self, "_evtNamespace", () => "." + _evtNamespace);
+            objDefine<any>(_self, "_pageViewManager", { g: () => _pageViewManager });
+            objDefine<any>(_self, "_pageViewPerformanceManager", { g: () => _pageViewPerformanceManager });
+            objDefine<any>(_self, "_pageVisitTimeManager", { g: () => _pageVisitTimeManager });
+            objDefine<any>(_self, "_evtNamespace", { g: () => "." + _evtNamespace });
         });
     }
 
