@@ -103,6 +103,30 @@ function _isBlockedCookie(cookieMgrCfg: ICookieMgrConfig, name: string) {
     return _isIgnoredCookie(cookieMgrCfg, name);
 }
 
+function _isCfgEnabled(rootConfig: IConfiguration, cookieMgrConfig: ICookieMgrConfig) {
+    let isCfgEnabled = cookieMgrConfig.enabled;
+    if (isNullOrUndefined(isCfgEnabled)) {
+        // Set the enabled from the provided setting or the legacy root values
+        let cookieEnabled: boolean;
+
+        // This field is deprecated and dynamic updates will not be fully supported
+        if (!isUndefined(rootConfig[strIsCookieUseDisabled])) {
+            cookieEnabled = !rootConfig[strIsCookieUseDisabled];
+        }
+
+        // If this value is defined it takes precedent over the above
+        if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
+            cookieEnabled = !rootConfig[strDisableCookiesUsage];
+        }
+
+        // Not setting the cookieMgrConfig.enabled as that will update (set) the global dynamic config
+        // So future "updates" then may not be as expected
+        isCfgEnabled = cookieEnabled;
+    }
+
+    return isCfgEnabled;
+}
+
 /**
  * Helper to return the ICookieMgr from the core (if not null/undefined) or a default implementation
  * associated with the configuration or a legacy default.
@@ -154,30 +178,11 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
         // Create and apply the defaults to the cookieCfg element
         cookieMgrConfig = details.ref(details.cfg, "cookieCfg"); // details.setDf(details.cfg.cookieCfg, defaultConfig);
-        let isEnabled = cookieMgrConfig.enabled;
-        if (isNullOrUndefined(isEnabled)) {
-            // Set the enabled from the provided setting or the legacy root values
-            let cookieEnabled: boolean;
-
-            // This field is deprecated and dynamic updates will not be fully supported
-            if (!isUndefined(rootConfig[strIsCookieUseDisabled])) {
-                cookieEnabled = !rootConfig[strIsCookieUseDisabled];
-            }
-
-            // If this value is defined it takes precedent over the above
-            if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
-                cookieEnabled = !rootConfig[strDisableCookiesUsage];
-            }
-
-            // Not setting the cookieMgrConfig.enabled as that will update (set) the global dynamic config
-            // So future "updates" then may not be as expected
-            isEnabled = cookieEnabled;
-        }
 
         _path = cookieMgrConfig.path || "/";
         _domain = cookieMgrConfig.domain;
         // Explicitly checking against false, so that setting to undefined will === true
-        _enabled = isEnabled !== false;
+        _enabled = _isCfgEnabled(rootConfig, cookieMgrConfig) !== false;
 
         _getCookieFn = cookieMgrConfig.getCookie || _getCookieValue;
         _setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
@@ -186,7 +191,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
     let cookieMgr: ICookieMgr = {
         isEnabled: () => {
-            let enabled = _enabled && areCookiesSupported(logger);
+            let enabled = _isCfgEnabled(rootConfig, cookieMgrConfig) !== false && _enabled && areCookiesSupported(logger);
             // Using an indirect lookup for any global cookie manager to support tree shaking for SDK's
             // that don't use the "applicationinsights-core" version of the default cookie function
             let gblManager = _globalCookieConfig[strConfigCookieMgr];
@@ -201,6 +206,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         setEnabled: (value: boolean) => {
             // Explicitly checking against false, so that setting to undefined will === true
             _enabled = value !== false;
+            cookieMgrConfig.enabled = value;
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;

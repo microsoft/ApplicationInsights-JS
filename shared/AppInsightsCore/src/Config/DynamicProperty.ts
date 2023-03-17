@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import {
-    arrForEach, arrIndexOf, dumpObj, isArray, isPlainObject, objDefine, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
+    arrForEach, arrIndexOf, dumpObj, isArray, objDefine, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
 } from "@nevware21/ts-utils";
 import { UNDEFINED_VALUE } from "../JavaScriptSDK/InternalConstants";
-import { CFG_HANDLER_LINK, throwInvalidAccess } from "./DynamicSupport";
+import { CFG_HANDLER_LINK, _canMakeDynamic, throwInvalidAccess } from "./DynamicSupport";
 import { IWatcherHandler, _IDynamicDetail } from "./IDynamicWatcher";
 import { _IDynamicConfigHandlerState, _IDynamicGetter } from "./_IDynamicConfigHandlerState";
 
@@ -39,7 +39,7 @@ function _getOwnPropGetter<T>(target: T, name: PropertyKey) {
     return propDesc && propDesc.get;
 }
 
-function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, theConfig: C, name: string, value: V): V {
+function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, theConfig: C, name: string, value: V): void {
     // Does not appear to be dynamic so lets make it so
     let detail: _IDynamicDetail<T> = {
         n: name,
@@ -69,7 +69,7 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
     function _getProperty() {
 
         if (checkDynamic) {
-            isObjectOrArray = isObjectOrArray || (value && (isPlainObject(value) || isArray(value)));
+            isObjectOrArray = isObjectOrArray || _canMakeDynamic(value);
 
             // Make sure that if it's an object that we make it dynamic
             if (value && !value[CFG_HANDLER_LINK] && isObjectOrArray) {
@@ -105,7 +105,7 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
             }
 
             if (checkDynamic) {
-                isObjectOrArray = isObjectOrArray || (value && (isPlainObject(value) || isArray(value)));
+                isObjectOrArray = isObjectOrArray || _canMakeDynamic(value);
                 checkDynamic = false;
             }
 
@@ -144,7 +144,7 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
             }
 
             if (newValue !== value) {
-                let newIsObjectOrArray = newValue && (isPlainObject(newValue) || isArray(newValue));
+                let newIsObjectOrArray = newValue && _canMakeDynamic(newValue);
                 if (!isReferenced && newIsObjectOrArray) {
                     // As the newValue is an object/array lets preemptively make it dynamic
                     _makeDynamicObject(state, newValue);
@@ -161,19 +161,16 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
     }
 
     objDefine<any>(theConfig, detail.n, { g: _getProperty, s: _setProperty });
-
-    // Return the dynamic reference
-    return _getProperty();
 }
 
-export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, target: C, name: string, value: V, inPlace?: boolean, rdOnly?: boolean): V {
+export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, target: C, name: string, value: V, inPlace?: boolean, rdOnly?: boolean): C {
     if (target) {
         // To be a dynamic property it needs to have a get function
         let getter = _getOwnPropGetter(target, name);
         let isDynamic = getter && !!getter[state.prop];
     
         if (!isDynamic) {
-            value = _makeDynamicProperty(state, target, name, value);
+            _makeDynamicProperty(state, target, name, value);
             if (inPlace || rdOnly) {
                 getter = _getOwnPropGetter(target, name);
             }
@@ -192,7 +189,7 @@ export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandler
         }
     }
 
-    return value;
+    return target;
 }
 
 export function _makeDynamicObject<T>(state: _IDynamicConfigHandlerState<T>, target: any) {
