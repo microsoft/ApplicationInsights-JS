@@ -62,7 +62,7 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
     }
 
     function _setValue<C, V>(target: C, name: string, value: V) {
-        return _setDynamicProperty(theState, target, name, value);
+        return _setDynamicProperty(theState, target, name, value)[name];
     }
 
     function _watch(configHandler: WatcherFunction<T>) {
@@ -75,12 +75,12 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
 
     function _ref<C>(target: C, name: string) {
         // Make sure it's dynamic and mark as referenced with it's current value
-        return _setDynamicProperty(theState, target, name, target[name], true);
+        return _setDynamicProperty(theState, target, name, target[name], true)[name];
     }
 
     function _rdOnly<C>(target: C, name: string) {
         // Make sure it's dynamic and mark as readonly with it's current value
-        return _setDynamicProperty(theState, target, name, target[name], false, true);
+        return _setDynamicProperty(theState, target, name, target[name], false, true)[name];
     }
 
     function _applyDefaults<C>(theConfig: C, defaultValues: IConfigDefaults<C, T>): C {
