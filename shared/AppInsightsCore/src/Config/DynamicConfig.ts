@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dumpObj, objDefine, objForEachKey } from "@nevware21/ts-utils";
+import { dumpObj, isUndefined, objDefine, objForEachKey } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -69,8 +69,19 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
         return _createAndUseHandler(theState, configHandler);
     }
 
-    function _block(configHandler: WatcherFunction<T>) {
-        theState.use(null, configHandler);
+    function _block(configHandler: WatcherFunction<T>, allowUpdate?: boolean) {
+        theState.use(null, (details) => {
+            let prevUpd = theState.upd;
+            try {
+                if (!isUndefined(allowUpdate)) {
+                    theState.upd = allowUpdate;
+                }
+
+                configHandler(details);
+            } finally {
+                theState.upd = prevUpd;
+            }
+        });
     }
 
     function _ref<C>(target: C, name: string) {

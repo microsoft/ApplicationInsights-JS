@@ -62,7 +62,7 @@ export interface IConfiguration {
     /**
      * If enabled, uncaught exceptions will be thrown to help with debugging
      */
-    enableDebugExceptions?: boolean;
+    enableDebug?: boolean;
 
     /**
      * Endpoint where telemetry data is sent

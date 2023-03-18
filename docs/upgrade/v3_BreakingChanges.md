@@ -26,6 +26,12 @@ The SDK still uses internal polyfills for ES5 features that are not supported by
 
 If your application is required to maintain support for IE8 (ES3) you WILL need to continue to use the latest v2.x (Supported) releases.
 
+## Configuration changes
+
+| Configuration | Change
+|---------------|-----------------
+| `enableDebugExceptions` | This configuration has been removed and now only `enableDebug` is not used, as previously documented for v2
+
 ## Behavior changes
 
 | Function       | Change
@@ -175,7 +181,6 @@ The previously exported namespaced globals have been replaced with a reduced set
   - Use the individual `url` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
 - IDataSanitizer, DataSanitizer
   - Use the individual `dataSanitizer` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
-
 
 ### @microsoft/applicationinsights-core-js
 

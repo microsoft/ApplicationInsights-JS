@@ -5,29 +5,13 @@ import { _InternalLogMessage } from "../JavaScriptSDK/DiagnosticLogger";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
 
 export interface IDiagnosticLogger {
-    /**
-     * When this is true the SDK will throw exceptions to aid in debugging.
-     */
-    enableDebugExceptions: () => boolean;
-    
+
     /**
      * 0: OFF
      * 1: only critical (default)
      * 2: critical + info
      */
     consoleLoggingLevel: () => number;
-
-    /**
-     * 0: OFF (default)
-     * 1: CRITICAL
-     * 2: WARNING
-     */
-    telemetryLoggingLevel: () => number;
-
-    /**
-     * The maximum number of internal messages allowed to be sent per page view
-     */
-    maxInternalMessageLimit: () => number;
 
     /**
      * The internal logging queue

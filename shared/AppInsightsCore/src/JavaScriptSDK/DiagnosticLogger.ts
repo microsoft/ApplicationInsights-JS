@@ -9,6 +9,7 @@ import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
+import { IConfigDefaults } from "../applicationinsights-core-js";
 import { getDebugExt } from "./DbgExtensionUtils";
 import { getConsole, getJSON, hasJSON } from "./EnvUtils";
 import { STR_EMPTY, STR_ERROR_TO_CONSOLE, STR_WARN_TO_CONSOLE } from "./InternalConstants";
@@ -28,16 +29,11 @@ const AiUserActionablePrefix = "AI: ";
  */
 const AIInternalMessagePrefix = "AITR_";
 
-/**
- * Holds the current logger which will be used as the default if no logger is available
- */
-let _currentLogger: IDiagnosticLogger = null;
-
-const defaultValues = {
+const defaultValues: IConfigDefaults<IConfiguration> = {
     loggingLevelConsole: 0,
     loggingLevelTelemetry: 1,
     maxMessageLimit: 25,
-    enableDebugExceptions: false
+    enableDebug: false
 }
 
 function _sanitizeDiagnosticText(text: string) {
@@ -115,19 +111,13 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         let _loggingLevelConsole: number;
         let _loggingLevelTelemetry: number;
         let _maxInternalMessageLimit: number;
-        let _enableDebugExceptions: boolean;
+        let _enableDebug: boolean;
 
         dynamicProto(DiagnosticLogger, this, (_self) => {
             _setDefaultsFromConfig(config || {});
 
             _self.consoleLoggingLevel = () => _loggingLevelConsole;
-            
-            _self.telemetryLoggingLevel = () => _loggingLevelTelemetry;
 
-            _self.maxInternalMessageLimit = () => _maxInternalMessageLimit;
-
-            _self.enableDebugExceptions = () => _enableDebugExceptions;
-            
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
              * @param severity - {LoggingSeverity} - The severity of the log message
@@ -136,7 +126,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
             _self.throwInternal = (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => {
                 const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
 
-                if (_enableDebugExceptions) {
+                if (_enableDebug) {
                     throw dumpObj(message);
                 } else {
                     // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
@@ -244,7 +234,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     _loggingLevelConsole = config.loggingLevelConsole;
                     _loggingLevelTelemetry = config.loggingLevelTelemetry;
                     _maxInternalMessageLimit = config.maxMessageLimit;
-                    _enableDebugExceptions =  config.enableDebugExceptions;
+                    _enableDebug =  config.enableDebug;
                 });
             }
 
@@ -262,14 +252,6 @@ export class DiagnosticLogger implements IDiagnosticLogger {
     }
 
     /**
-     * When this is true the SDK will throw exceptions to aid in debugging.
-     */
-    public enableDebugExceptions(): boolean {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return false;
-    }
-
-    /**
      * 0: OFF (default)
      * 1: CRITICAL
      * 2: >= WARNING
@@ -277,24 +259,6 @@ export class DiagnosticLogger implements IDiagnosticLogger {
     public consoleLoggingLevel(): number {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return 0;
-    }
-
-    /**
-     * 0: OFF
-     * 1: CRITICAL (default)
-     * 2: >= WARNING
-     */
-    public telemetryLoggingLevel(): number {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return 1;
-    }
-
-    /**
-     * The maximum number of internal messages allowed to be sent per page view
-     */
-    public maxInternalMessageLimit(): number {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return 25;
     }
 
     /**
