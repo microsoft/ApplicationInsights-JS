@@ -654,7 +654,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                     // Apply defaults to the new config
                     details.setDf(theConfig, defaultConfig as any);
-                });
+                }, true);
 
                 // Now execute all of the listeners (synchronously) so they update their values immediately
                 _configHandler.notify();

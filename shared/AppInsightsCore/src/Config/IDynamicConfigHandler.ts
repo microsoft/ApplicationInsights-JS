@@ -75,6 +75,8 @@ export interface _IInternalDynamicConfigHandler<T extends IConfiguration> extend
     /**
      * @ignore
      * Internal function to explicitly block watching for any config updates
+     * @param configHandler - The Callback function to call after blocking update listening
+     * @param allowUpdate - An optional flag to enable updating config properties marked as readonly
      */
-    _block: (configHandler: WatcherFunction<T>) => void;
+    _block: (configHandler: WatcherFunction<T>, allowUpdate?: boolean) => void;
 }

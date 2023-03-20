@@ -517,59 +517,59 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: IConfiguration = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1
                 };
 
                 const channelPlugin = new TestChannelPlugin();
                 let core = new AppInsightsCore();
-                let expectedEnableDebugExceptions = theConfig.enableDebugExceptions;
+                let expectedEnableDebug = theConfig.enableDebug;
                 let expectedLoggingLevel = theConfig.loggingLevelConsole;
 
                 core.initialize(theConfig, [channelPlugin]);
                 let onChangeCalled = 0;
                 let handler = core.onCfgChange((details) => {
                     onChangeCalled ++;
-                    Assert.equal(expectedEnableDebugExceptions, details.cfg.enableDebugExceptions, "Expect the endpoint to be set");
-                    if (details.cfg.enableDebugExceptions) {
+                    Assert.equal(expectedEnableDebug, details.cfg.enableDebug, "Expect the endpoint to be set");
+                    if (details.cfg.enableDebug) {
                         Assert.equal(expectedLoggingLevel, details.cfg.loggingLevelConsole, "Expected the logging level console")
                     }
                 });
 
                 Assert.equal(1, onChangeCalled, "OnCfgChange was not called");
 
-                // This should not trigger the listener as enableDebugExceptions was false
+                // This should not trigger the listener as enableDebug was false
                 expectedLoggingLevel = 99;
                 core.config.loggingLevelConsole = expectedLoggingLevel;
 
                 this.clock.tick(10);
-                Assert.equal(1, onChangeCalled, "listener should not have been called as enableDebugExceptions was false");
+                Assert.equal(1, onChangeCalled, "listener should not have been called as enableDebug was false");
 
                 // Enable Debug extensions
-                expectedEnableDebugExceptions = true;
-                core.config.enableDebugExceptions = expectedEnableDebugExceptions;
+                expectedEnableDebug = true;
+                core.config.enableDebug = expectedEnableDebug;
                 this.clock.tick(10);
-                Assert.equal(2, onChangeCalled, "listener should have been called enableDebugExceptions");
+                Assert.equal(2, onChangeCalled, "listener should have been called enableDebug");
 
-                // This should trigger the listener as enableDebugExceptions was false
+                // This should trigger the listener as enableDebug was false
                 expectedLoggingLevel = 2;
                 core.config.loggingLevelConsole = expectedLoggingLevel;
 
                 this.clock.tick(10);
-                Assert.equal(3, onChangeCalled, "listener should have been called as enableDebugExceptions was true");
+                Assert.equal(3, onChangeCalled, "listener should have been called as enableDebug was true");
 
                 // Disable Debug extensions again
-                expectedEnableDebugExceptions = false;
-                core.config.enableDebugExceptions = expectedEnableDebugExceptions;
+                expectedEnableDebug = false;
+                core.config.enableDebug = expectedEnableDebug;
                 this.clock.tick(10);
-                Assert.equal(4, onChangeCalled, "listener should have been called enableDebugExceptions");
+                Assert.equal(4, onChangeCalled, "listener should have been called enableDebug");
 
-                // This should not call trigger the listener as enableDebugExceptions was false
+                // This should not call trigger the listener as enableDebug was false
                 expectedLoggingLevel = 42;
                 core.config.loggingLevelConsole = expectedLoggingLevel;
 
                 this.clock.tick(10);
-                Assert.equal(4, onChangeCalled, "listener should have been called as enableDebugExceptions was disabled");
+                Assert.equal(4, onChangeCalled, "listener should have been called as enableDebug was disabled");
             }
         });
 
@@ -580,7 +580,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
                         "test": {} as any
@@ -719,7 +719,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
                         "test": {} as any
@@ -773,7 +773,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
                         "test": {} as any
@@ -873,7 +873,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     userCfg: undefined
                 };
@@ -966,7 +966,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     userCfg: undefined,
                     extensionConfig: {

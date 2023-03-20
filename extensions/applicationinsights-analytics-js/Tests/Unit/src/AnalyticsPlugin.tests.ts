@@ -1257,6 +1257,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
         this.testCase({
             name: "Timing Tests: Multiple startTrackPage",
+            useFakeTimers: true,
             test:
                 () => {
                     // setup
@@ -1274,7 +1275,8 @@ export class AnalyticsPluginTests extends AITestClass {
                     const appInsights = new AnalyticsPlugin();
                     core.addPlugin(appInsights);
                     const logStub = this.sandbox.stub(core.logger, "throwInternal");
-                    core.logger.consoleLoggingLevel = () => 999;
+                    core.config.loggingLevelConsole = 999;
+                    this.clock.tick(1);
 
                     // act
                     appInsights.startTrackPage();
@@ -1287,6 +1289,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
         this.testCase({
             name: "Timing Tests: stopTrackPage called without a corresponding start",
+            useFakeTimers: true,
             test:
                 () => {
                     // setup
@@ -1304,7 +1307,8 @@ export class AnalyticsPluginTests extends AITestClass {
                     const appInsights = new AnalyticsPlugin();
                     core.addPlugin(appInsights);
                     const logStub = this.sandbox.stub(core.logger, "throwInternal");
-                    core.logger.consoleLoggingLevel = () => 999;
+                    core.config.loggingLevelConsole = 999;
+                    this.clock.tick(1);
 
                     // act
                     appInsights.stopTrackPage();
