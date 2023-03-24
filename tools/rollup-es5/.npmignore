@@ -16,4 +16,5 @@
 !/LICENSE
 !/LICENSE.TXT
 !/dist/**
+!/dist-es*/**
 !/types/**

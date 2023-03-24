@@ -6,11 +6,10 @@
 # ... but these files
 !package.json
 !tsconfig.json
-!dist-esm/**
+!dist-es*/**
 !dist/**
 !browser/**
 !types/**
-!src/**
 !/CODE_OF_CONDUCT.md
 !/CONTRIBUTING.md
 !/README.md

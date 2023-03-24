@@ -4,6 +4,7 @@
 import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getJSON, hasJSON, isObject, objForEachKey, strTrim
 } from "@microsoft/applicationinsights-core-js";
+import { strSubstr } from "@nevware21/ts-utils";
 
 export const enum DataSanitizerValues {
     /**
@@ -193,5 +194,5 @@ export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLeng
 
 export function dsPadNumber(num: number) {
     const s = "00" + num;
-    return s.substr(s.length - 3);
+    return strSubstr(s, s.length - 3);
 }

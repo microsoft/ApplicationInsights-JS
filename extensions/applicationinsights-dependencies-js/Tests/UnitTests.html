@@ -23,25 +23,16 @@
         modules.add("qunit");
 
         loadFetchModule(modules, "whatwg-fetch");
-        loadCommonModules(modules);
+        loadCommonModules(modules, function() {
+            var testModule = modules.add("Tests/Unit/src/dependencies.tests", "./Unit/dist/dependencies.tests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
 
-        // Load Core
-        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
-
-        // Load Common
-        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
-
-        // Load Common
-        modules.add("@nevware21/ts-async", "./node_modules/@nevware21/ts-async/dist/es5/umd/ts-async");
-
-        var testModule = modules.add("Tests/Unit/src/dependencies.tests", "./Unit/dist/dependencies.tests.js")
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
-
-        modules.run();
+            modules.run();
+        });
     </script>
 </head>
 

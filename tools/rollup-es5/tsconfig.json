@@ -10,12 +10,13 @@
     "importHelpers": false,
     "noEmitHelpers": false,
     "alwaysStrict": true,
-    "declaration": true,
-    "declarationDir": "tools/rollup-es5/types",
-    "outDir": "./out",
-    "rootDir": "tools/rollup-es5/src",
     "suppressImplicitAnyIndexErrors": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationDir": "types",
+    "outDir": "dist-es5",
+    "rootDir": "./src",
+    "removeComments": false
   },
   "include": [
     "./src/**/*.ts"

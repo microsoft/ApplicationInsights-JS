@@ -6,6 +6,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getDocument, hasDocument, isNullOrUndefined, objExtend
 } from "@microsoft/applicationinsights-core-js";
+import { strSubstring } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration, IContent, IContentHandler } from "../Interfaces/Datamodel";
 import { isValueAssigned, removeInvalidElements, walkUpDomChainWithElementValidation } from "../common/Utils";
 
@@ -270,7 +271,7 @@ export class DomContentHandler implements IContentHandler {
                     contentName = element.value || element.name || element.alt || element.innerText || element.id;
                 }
 
-                return contentName.substring(0, MAX_CONTENTNAME_LENGTH);
+                return strSubstring(contentName, 0, MAX_CONTENTNAME_LENGTH);
             }
 
             /**

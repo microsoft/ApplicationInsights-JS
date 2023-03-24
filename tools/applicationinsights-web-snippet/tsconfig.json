@@ -13,9 +13,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "tools/applicationinsights-web-snippet/types",
-    "outDir": "./out",
-    "rootDir": "./tools/applicationinsights-web-snippet/dest"
+    "declarationDir": "./types",
+    "outDir": "./dist-es5",
+    "rootDir": "./dest",
+    "removeComments": false
   },
   "include": [
     "./dest/*.ts"

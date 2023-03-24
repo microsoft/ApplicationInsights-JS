@@ -26,7 +26,9 @@
         "fullClean": "git clean -xdf && npm install && rush update --recheck --full",
         "fullCleanBuild": "npm run fullClean && npm run rebuild",
         "ai-min": "node common/scripts/install-run-rush.js ai-min",
-        "ai-restore": "node common/scripts/install-run-rush.js ai-restore"
+        "ai-restore": "node common/scripts/install-run-rush.js ai-restore",
+        "npm-pack": "node common/scripts/install-run-rush.js npm-pack --verbose",
+        "npm-publish": "node ./tools/release-tools/npm_publish.js"
     },
     "repository": {
         "type": "git",

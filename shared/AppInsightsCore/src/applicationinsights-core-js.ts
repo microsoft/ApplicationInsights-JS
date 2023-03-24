@@ -53,7 +53,6 @@ export {
 } from "./JavaScriptSDK/EnvUtils";
 export {
     getGlobal,
-    objCreateFn as objCreate,
     strShimPrototype as strPrototype,
     strShimFunction as strFunction,
     strShimUndefined as strUndefined,

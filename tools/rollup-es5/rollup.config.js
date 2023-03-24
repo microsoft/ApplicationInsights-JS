@@ -5,9 +5,9 @@ import minify from 'rollup-plugin-minify-es';
 
 const version = require("./package.json").version;
 const desc = require("./package.json").description;
-const inputName = "./out/applicationinsights-rollup-es5";
+const inputName = "./dist-es5/applicationinsights-rollup-es5";
 const outputName = "applicationinsights-rollup-es5";
-const distPath = "./dist/";
+const distPath = "./dist/es5/";
 const banner = [
   "/*!",
   ` * ${desc}, ${version}`,

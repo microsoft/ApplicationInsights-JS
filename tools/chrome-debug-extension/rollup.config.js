@@ -21,12 +21,12 @@ const replaceValues = {
 
 const generateBackground = (isProduction) => {
     const browserRollupConfig = {
-        input: `dist-esm/background.js`,
+        input: `dist-es5/background.js`,
         output: {
             file: `browser/scripts/background.js`,
             banner: banner,
             format: "umd",
-            name: "Microsoft.ApplicationInsights",
+            name: "Microsoft.ApplicationInsights3",
             extend: true,
             freeze: false,
             sourcemap: true
@@ -72,12 +72,12 @@ const generateBackground = (isProduction) => {
 
 const generatePopup = (isProduction) => {
     const browserRollupConfig = {
-        input: `dist-esm/popup.js`,
+        input: `dist-es5/popup.js`,
         output: {
             file: `browser/scripts/popup.js`,
             banner: banner,
             format: "umd",
-            name: "Microsoft.ApplicationInsights",
+            name: "Microsoft.ApplicationInsights3",
             extend: true,
             freeze: false,
             sourcemap: true
@@ -131,7 +131,7 @@ const generatePopup = (isProduction) => {
 
 const generateContentLoad = () => {
     const browserRollupConfig = {
-        input: `dist-esm/contentLoad.js`,
+        input: `dist-es5/contentLoad.js`,
         output: {
             file: `browser/scripts/contentLoad.min.js`,
             banner: banner,
@@ -174,12 +174,12 @@ const generateContentLoad = () => {
 
 const generatePageHelper = () => {
     const browserRollupConfig = {
-        input: `dist-esm/pageHelper.js`,
+        input: `dist-es5/pageHelper.js`,
         output: {
             file: `browser/scripts/pageHelper.min.js`,
             banner: banner,
             format: "iife",
-            name: "Microsoft.ApplicationInsights",
+            name: "Microsoft.ApplicationInsights3",
             extend: true,
             freeze: false,
             sourcemap: true

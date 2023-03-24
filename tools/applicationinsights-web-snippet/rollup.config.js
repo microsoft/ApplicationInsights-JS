@@ -3,9 +3,9 @@ import commonjs from '@rollup/plugin-commonjs';
 
 
 const version = require("./package.json").version;
-const inputName = "./out/applicationinsights-web-snippet";
+const inputName = "./dist-es5/applicationinsights-web-snippet";
 const outputName = "applicationinsights-web-snippet";
-const distPath = "./dist/";
+const distPath = "./dist/es5/";
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Web Snippet, ${version}`,

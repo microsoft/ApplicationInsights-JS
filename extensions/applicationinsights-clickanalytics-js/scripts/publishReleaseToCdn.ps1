@@ -55,7 +55,7 @@ Function GetReleaseFiles (
     Write-Log "  BldNum  : $($verDetails.bldNum)"
 
     # check if the minified dir exists
-    $jsSdkSrcDir = Join-Path $jssdkDir -ChildPath "browser\";
+    $jsSdkSrcDir = Join-Path $jssdkDir -ChildPath "browser\es5\";
 
     if (-Not (Test-Path $jsSdkSrcDir)) {
         Write-LogWarning "'$jsSdkSrcDir' directory doesn't exist. Compile JSSDK first.";

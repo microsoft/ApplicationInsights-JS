@@ -6,11 +6,13 @@ import { STR_EMPTY } from "./InternalConstants";
 
 const UInt32Mask = 0x100000000;
 const MaxUInt32 = 0xffffffff;
+const SEED1 = 123456789
+const SEED2 = 987654321
 
 // MWC based Random generator (for IE)
 let _mwcSeeded = false;
-let _mwcW = 123456789;
-var _mwcZ = 987654321;
+let _mwcW = SEED1;
+let _mwcZ = SEED2;
 
 // Takes any integer
 function _mwcSeed(seedValue: number) {
@@ -19,8 +21,8 @@ function _mwcSeed(seedValue: number) {
         seedValue >>>= 0;
     }
 
-    _mwcW = (123456789 + seedValue) & MaxUInt32;
-    _mwcZ = (987654321 - seedValue) & MaxUInt32;
+    _mwcW = (SEED1 + seedValue) & MaxUInt32;
+    _mwcZ = (SEED2 - seedValue) & MaxUInt32;
     _mwcSeeded = true;
 }
 

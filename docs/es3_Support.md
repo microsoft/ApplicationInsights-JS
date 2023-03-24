@@ -1,8 +1,11 @@
 ## ES3/IE8 Compatibility
 
-> __NOT supported in v3.x__
+> __ES3 / IE8 support has been removed from Version 3.x.__
 >
-> __If you need to retain ES3 compatibility for your environment you will need to remain on the v2.x versions of the SDK.__
+> __If you need to retain ES3 / IE8 compatibility then you will need to use one of the 2.x versions of the SDK, which is now maintained on the old [master branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/master)__
+
+The version 3.x is maintained on the default [main branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/main)
+
 
 As an SDK there are numerous users which cannot control the browsers that their customers use. As such we need to ensure that this SDK continues to "work" and does not break the JS execution when loaded by an older browser. While it would be ideal to just not support IE8 and older generation (ES3) browsers there are numerous large customers/users that continue to require pages to "work" and as noted they may or cannot control which browser that their end users choose to use.
 

@@ -1,7 +1,7 @@
 export { Assert } from "./Assert";
 export { PollingAssert } from "./PollingAssert";
-export { TestCase, TestCaseAsync } from "./TestCase";
-export { AITestClass } from "./AITestClass";
+export { TestCase, TestCaseAsync, ITestContext, StepResult } from "./TestCase";
+export { AITestClass, FakeXMLHttpRequest, IFetchArgs } from "./AITestClass";
 
 export { ITypeValidator } from "./TelemetryValidation/ITypeValidator";
 export { CommonValidator } from "./TelemetryValidation/CommonValidator";

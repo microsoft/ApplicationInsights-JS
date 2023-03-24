@@ -21,7 +21,7 @@ export function formatError(keyword:IEs5CheckKeyword|IEs5Keyword, funcName:strin
     }
   
     let marker = padEnd("", funcName.length, "^");
-    let line = lineNumber - 6;
+    let line = lineNumber - 4;
     if (line > 0) {
         message += " ...\n";
     }

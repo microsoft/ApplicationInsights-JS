@@ -8,7 +8,7 @@ import {
     getPerformance, getGlobalInst, getGlobal, generateW3CId, arrForEach
 } from "@microsoft/applicationinsights-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
-import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework/dist-esm/src/AITestClass";
+import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework";
 import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 interface IFetchArgs {

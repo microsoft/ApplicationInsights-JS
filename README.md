@@ -640,11 +640,13 @@ It is expected that most users will be using the `Public` URL, however, it is al
 
 ## Browser Support
 
+- ES5 Compliant browsers
+
 ![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![IE](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Opera](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
 --- | --- | --- | --- | --- |
 Latest ✔ | Latest ✔ | 9+ Full ✔ | Latest ✔ | Latest ✔ |
 
-> Note: ES3/IE8 compatibility has been removed from v3.x releases, if you need to retain ES3 (IE8) compatibility you will need to remain on the v2.x versions of the SDK.
+> v3.x removed ES3 / IE8, if you need to retain ES3 (IE8) compatibility you will need to remain on the v2.x versions of the SDK. Which is now maintained on the old [master branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/master)
 
 ### Build and Test this Project
 
