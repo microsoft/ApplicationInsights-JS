@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ApplicationInsights, IConfiguration  } from "@microsoft/applicationinsights-web";
-import { DependencyListenerFunction, DependencyInitializerFunction, IDependencyInitializerHandler, IDependencyListenerHandler } from "@microsoft/applicationinsights-dependencies-js";
+import {
+    ApplicationInsights, IConfiguration,
+    DependencyListenerFunction, DependencyInitializerFunction, IDependencyInitializerHandler, IDependencyListenerHandler
+} from "@microsoft/applicationinsights-web";
 
 // Cache the previously initialized instance to avoid creating multiple instances
 let _appInsights: ApplicationInsights;
@@ -32,7 +34,7 @@ export function initApplicationInsights(config?: IConfiguration) {
 /**
  * Use addDependencyListener to modify dependencyDetails if the SDK has been initialized
  */
-export function addDependencyListener(dependencyListener: DependencyListenerFunction): IDependencyInitializerHandler | null {
+export function addDependencyListener(dependencyListener: DependencyListenerFunction): IDependencyListenerHandler | null {
     if (_appInsights) {
         return _appInsights.addDependencyListener(dependencyListener);
     }
@@ -42,7 +44,7 @@ export function addDependencyListener(dependencyListener: DependencyListenerFunc
 /**
  * Use addDependencyInitializer to modify dependencyInitializerDetails if the SDK has been initialized
  */
-export function addDependencyInitializer(dependencyInitializer: DependencyInitializerFunction): IDependencyListenerHandler | null {
+export function addDependencyInitializer(dependencyInitializer: DependencyInitializerFunction): IDependencyInitializerHandler | null {
     if (_appInsights) {
         return _appInsights.addDependencyInitializer(dependencyInitializer);
     }

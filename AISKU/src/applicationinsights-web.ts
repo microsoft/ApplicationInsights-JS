@@ -65,4 +65,7 @@ export {
 export { Sender } from "@microsoft/applicationinsights-channel-js";
 export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";
 export { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-export { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
+export {
+    AjaxPlugin as DependenciesPlugin, IDependenciesPlugin,
+    DependencyListenerFunction, DependencyInitializerFunction, IDependencyInitializerHandler, IDependencyListenerHandler
+} from "@microsoft/applicationinsights-dependencies-js";
