@@ -62,6 +62,11 @@ export interface IConfiguration {
     /**
      * If enabled, uncaught exceptions will be thrown to help with debugging
      */
+    enableDebug?: boolean;
+
+    /**
+     * If enabled, uncaught exceptions will be thrown to help with debugging
+     */
     enableDebugExceptions?: boolean;
 
     /**

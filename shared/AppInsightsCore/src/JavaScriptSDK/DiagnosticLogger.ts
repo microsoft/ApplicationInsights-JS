@@ -101,7 +101,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         let _loggingLevelConsole: number;
         let _loggingLevelTelemetry: number;
         let _maxInternalMessageLimit: number;
-        let _enableDebugExceptions: boolean;
+        let _enableDebug: boolean;
 
         dynamicProto(DiagnosticLogger, this, (_self) => {
             _setDefaultsFromConfig(config || {});
@@ -112,7 +112,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
             _self.maxInternalMessageLimit = () => _maxInternalMessageLimit;
 
-            _self.enableDebugExceptions = () => _enableDebugExceptions;
+            _self.enableDebugExceptions = () => _enableDebug;
             
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
@@ -122,7 +122,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
             _self.throwInternal = (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => {
                 const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
 
-                if (_enableDebugExceptions) {
+                if (_enableDebug) {
                     throw dumpObj(message);
                 } else {
                     // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
@@ -226,7 +226,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 _loggingLevelConsole = getCfgValue(config.loggingLevelConsole, 0);
                 _loggingLevelTelemetry = getCfgValue(config.loggingLevelTelemetry, 1)
                 _maxInternalMessageLimit = getCfgValue(config.maxMessageLimit, 25);
-                _enableDebugExceptions =  getCfgValue(config.enableDebugExceptions, false);
+                _enableDebug =  getCfgValue(config.enableDebug, getCfgValue(config.enableDebugExceptions, false));
             }
 
             function _areInternalMessagesThrottled(): boolean {
