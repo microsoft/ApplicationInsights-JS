@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { addTelemetryInitializer, eventItem, getCookieManager, initApplicationInsights, metricItem, pageviewItem, startTrackEvent, stopTrackEvent, traceItem, trackEvent, trackMetric, trackPageView, trackTrace } from "./aisku-init";
+import { addTelemetryInitializer, eventItem, getCookieMgr, initApplicationInsights, metricItem, pageviewItem, startTrackEvent, stopTrackEvent, traceItem, trackEvent, trackMetric, trackPageView, trackTrace } from "./aisku-init";
 import { ai_session, ai_user, buttonSectionId, clearDetailsList, cookieWatchList, createButton, createContainers, createDetailList, detailsContainerId, detailsWatchList, manual_event, triggerException } from "./utils";
 import { arrForEach } from "@microsoft/applicationinsights-core-js";
 
@@ -31,7 +31,7 @@ function createMetricTracks() {
 }
 
 function getCookieMgrdetails() {
-    let cookieMgr = getCookieManager();
+    let cookieMgr = getCookieMgr();
     if(cookieMgr) {
         let details =  {
             isEnabled: cookieMgr.isEnabled(),

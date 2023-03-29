@@ -5,6 +5,24 @@ import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult 
 import { ThrottleMgr} from "../../../src/ThrottleMgr";
 import { SinonSpy } from "sinon";
 import { Util } from "../../../src/Util";
+const daysInMonth = [ 
+    31, // Jan
+    28, // Feb
+    31, // Mar
+    30, // Apr
+    31, // May
+    30, // Jun
+    31, // Jul
+    31, // Aug
+    30, // Sep
+    31, // Oct
+    30, // Nov
+    31 // Dec
+];
+
+const isLeapYear = (year: number) => {
+    return (year % 4) === 0 && ((year % 100) !== 0 || (year % 400) === 0);
+}
 
 const compareDates = (date1: Date, date: string | Date, expectedSame: boolean = true) => {
     let isSame = false;
@@ -286,6 +304,10 @@ export class ThrottleMgrTest extends AITestClass {
                     date.setUTCFullYear(year-1);
                     date.setUTCMonth(11);
                 } else {
+                    let dayOfMonth = date.getDate();
+                    if (dayOfMonth > (daysInMonth[month - 1] + (month === 2 ? (isLeapYear(year - 1) ? 1 : 0 ) : 0 ))) {
+                        date.setDate(daysInMonth[month - 1] + (month === 2 ? (isLeapYear(year - 1) ? 1 : 0 ) : 0 ));
+                    }
                     date.setUTCMonth(month-1);
                 }
                 let storageObj = {
@@ -329,6 +351,10 @@ export class ThrottleMgrTest extends AITestClass {
                     date.setUTCMonth(11);
                 } else {
                     date.setUTCFullYear(year-1);
+                    let dayOfMonth = date.getDate();
+                    if (dayOfMonth > (daysInMonth[month - 1] + (month === 2 ? (isLeapYear(year - 1) ? 1 : 0 ) : 0 ))) {
+                        date.setDate(daysInMonth[month - 1] + (month === 2 ? (isLeapYear(year - 1) ? 1 : 0 ) : 0 ));
+                    }
                     date.setUTCMonth(month-1);
                 }
                 let storageObj = {
@@ -551,7 +577,7 @@ export class ThrottleMgrTest extends AITestClass {
                 let expectedRetryRlt = {
                     isThrottled: true,
                     throttleNum: 1
-                } as IThrottleResult
+                } as IThrottleResult;
                 Assert.deepEqual(result, expectedRetryRlt);
                 let isPostTriggered = throttleMgr.isTriggered();
                 Assert.equal(isPostTriggered, true);

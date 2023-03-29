@@ -132,7 +132,7 @@ export function addTelemetryInitializer(telemetryInitializer: (item: any) => boo
  * Use getCookieMgr to get cookie details if the SDK has been initialized
  * cookieMgr can be used to del, get, purge, set cookies
  */
-export function getCookieManager(): any {
+export function getCookieMgr() {
     if (_appInsights) {
         return _appInsights.getCookieMgr();
     }
