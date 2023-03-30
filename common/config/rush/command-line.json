@@ -71,6 +71,66 @@
             "enableParallelism": false,
             "ignoreMissingScript": true,
             "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "npm-pack",
+            "summary": "Run all npm_pack tasks to create the npm bundle",
+            "description": "Run all npm_pack tasks to create the npm bundle",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": true,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "npm-publish-ai",
+            "summary": "Run all npm-publish-ai tasks to publish the ApplicationInsights packages",
+            "description": "Run all npm-publish-ai tasks to publish the ApplicationInsights packages",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "npm-publish-1ds",
+            "summary": "Run all npm-publish-1ds tasks to publish the oneDs packages",
+            "description": "Run all npm-publish-1ds tasks to publish the oneDs packages",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "npm-publish-snippet",
+            "summary": "Run all npm-publish-snippet tasks to publish the web snippet packages",
+            "description": "Run all npm-publish-snippet tasks to publish the web snippet packages",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "npm-publish-rollup-es",
+            "summary": "Run all npm-publish-rollup tasks to publish the rollup-es packages",
+            "description": "Run all npm-publish-rollup tasks to publish the rollup-es packages",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "npm-publish-shims",
+            "summary": "Run all npm-publish-shims tasks to publish the shims packages",
+            "description": "Run all npm-publish-shims tasks to publish the shims packages",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
         }
     ]
 }

@@ -26,29 +26,21 @@
         modules.add("qunit");
         modules.add("pako","./node_modules/pako/dist/pako");
 
+        // Dev Dependencies are not automatically detected and loaded so we need to include manually
+        modules.add("@microsoft/applicationinsights-channel-js");           // Load Channel
+        modules.add("@microsoft/applicationinsights-properties-js");        // Load Properties
+
         loadFetchModule(modules, "whatwg-fetch");
-        loadCommonModules(modules);
+        loadCommonModules(modules, function() {
+            var testModule = modules.add("Tests/Unit/src/appinsights-analytics.tests", "./Unit/dist/appinsights-analytics.tests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
 
-        // Load Core
-        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
-
-        // Load Common
-        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
-
-        // Load Channel
-        modules.add("@microsoft/applicationinsights-channel-js", "./node_modules/@microsoft/applicationinsights-channel-js/browser/applicationinsights-channel-js");
-
-        // Load Properties
-        modules.add("@microsoft/applicationinsights-properties-js", "./node_modules/@microsoft/applicationinsights-properties-js/browser/applicationinsights-properties-js");
-
-        var testModule = modules.add("Tests/Unit/src/appinsights-analytics.tests", "./Unit/dist/appinsights-analytics.tests.js")
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
-
-        modules.run();
+            modules.run();
+        });
     </script>
 </head>
 
