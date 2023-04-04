@@ -17,7 +17,9 @@
     "build:browser": "rollup -c",
     "rebuild": "npm run build",
     "test": "",
-    "lint": "tslint -p tsconfig.json"
+    "lint": "tslint -p tsconfig.json",
+    "npm-pack": "npm pack",
+    "npm-publish-snippet": "node ../../tools/release-tools/npm_publish.js ."
   },
   "license": "MIT",
   "devDependencies": {

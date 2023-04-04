@@ -23,7 +23,9 @@
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights properties plugin\"",
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt properties-min",
-        "ai-restore": "grunt properties-restore"
+        "ai-restore": "grunt properties-restore",
+        "npm-pack": "npm pack",
+        "npm-publish-ai": "node ../../tools/release-tools/npm_publish.js ."
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
@@ -52,7 +54,7 @@
         "tslib": "*"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^1.1.7",
+        "@microsoft/dynamicproto-js": "^1.1.9",
         "@microsoft/applicationinsights-shims": "2.0.2",
         "@microsoft/applicationinsights-core-js": "2.8.11",
         "@microsoft/applicationinsights-common": "2.8.11"

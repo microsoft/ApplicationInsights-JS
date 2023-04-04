@@ -23,7 +23,9 @@
         "build:bundle": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
         "test": "grunt rollupes3test --verbose",
-        "lint": "tslint -p tsconfig.json"
+        "lint": "tslint -p tsconfig.json",
+        "npm-pack": "npm pack",
+        "npm-publish-rollup-es": "node ../../tools/release-tools/npm_publish.js ."
     },
     "repository": {
         "type": "git",

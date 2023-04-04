@@ -29,7 +29,9 @@
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Core Javascript SDK\"",
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt core-min",
-        "ai-restore": "grunt core-restore"
+        "ai-restore": "grunt core-restore",
+        "npm-pack": "npm pack",
+        "npm-publish-ai": "node ../../tools/release-tools/npm_publish.js ."
     },
     "repository": {
         "type": "git",
@@ -65,6 +67,6 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "2.0.2",
-        "@microsoft/dynamicproto-js": "^1.1.7"
+        "@microsoft/dynamicproto-js": "^1.1.9"
     }
 }
