@@ -36,8 +36,7 @@
         "nightwatch:ie11": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie11",
         "nightwatch": "start node Tests/nightwatch/serve_nightwatch.js && npx concurrently \"npm run nightwatch:chrome\" \"npm run nightwatch:ie11\" \"npm run nightwatch:ie10\" && npm run nightwatch:done || npm run nightwatch:done",
         "nightwatch:done": "curl http://localhost:8000/_done",
-        "npm-pack": "npm pack",
-        "npm-publish-ai": "node ../tools/release-tools/npm_publish.js ."
+        "npm-pack": "npm pack"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

@@ -23,8 +23,7 @@
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt debugplugin-min",
         "ai-restore": "grunt debugplugin-restore",
-        "npm-pack": "npm pack",
-        "npm-publish-ai": "node ../../tools/release-tools/npm_publish.js ."
+        "npm-pack": "npm pack"
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",

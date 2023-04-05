@@ -30,8 +30,7 @@
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt core-min",
         "ai-restore": "grunt core-restore",
-        "npm-pack": "npm pack",
-        "npm-publish-ai": "node ../../tools/release-tools/npm_publish.js ."
+        "npm-pack": "npm pack"
     },
     "repository": {
         "type": "git",

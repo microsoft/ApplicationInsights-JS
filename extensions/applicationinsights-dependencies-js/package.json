@@ -24,8 +24,7 @@
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt deps-min",
         "ai-restore": "grunt deps-restore",
-        "npm-pack": "npm pack",
-        "npm-publish-ai": "node ../../tools/release-tools/npm_publish.js ."
+        "npm-pack": "npm pack"
     },
     "devDependencies": {
         "@nevware21/ts-async": ">= 0.1.0 < 2.x",

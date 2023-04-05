@@ -18,8 +18,7 @@
     "rebuild": "npm run build",
     "test": "",
     "lint": "tslint -p tsconfig.json",
-    "npm-pack": "npm pack",
-    "npm-publish-snippet": "node ../../tools/release-tools/npm_publish.js ."
+    "npm-pack": "npm pack"
   },
   "license": "MIT",
   "devDependencies": {

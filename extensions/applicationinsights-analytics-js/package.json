@@ -24,8 +24,7 @@
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt ai-min",
         "ai-restore": "grunt ai-restore",
-        "npm-pack": "npm pack",
-        "npm-publish-ai": "node ../../tools/release-tools/npm_publish.js ."
+        "npm-pack": "npm pack"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

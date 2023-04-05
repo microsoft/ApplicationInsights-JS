@@ -1,0 +1,31 @@
+// ------------------------------
+// NPM Publish group definitions
+// ------------------------------
+{
+    // Application Insights packages
+    "ai": [
+        "./shared/AppInsightsCore",
+        "./shared/AppInsightsCommon",
+        "./AISKU",
+        "./AISKULight",
+        "./extensions/applicationinsights-analytics-js",
+        "./extensions/applicationinsights-properties-js",
+        "./channels/applicationinsights-channel-js",
+        "./extensions/applicationinsights-dependencies-js",
+        "./extensions/applicationinsights-clickanalytics-js",
+        "./extensions/applicationinsights-perfmarkmeasure-js",
+        "./extensions/applicationinsights-debugplugin-js"
+    ],
+    // Rollup packages
+    "rollup-es": [
+        "./tools/rollup-es3"
+    ],
+    // Shims packages
+    "shims": [
+        "./tools/shims/"
+    ],
+    // Snippet packages
+    "snippet": [
+        "./tools/applicationinsights-web-snippet"
+    ]
+}

@@ -23,8 +23,7 @@
         "rebuild": "npm run build",
         "test": "grunt shimstest",
         "lint": "tslint -p tsconfig.json",
-        "npm-pack": "npm pack",
-        "npm-publish-shims": "node ../../tools/release-tools/npm_publish.js ."
+        "npm-pack": "npm pack"
     },
     "repository": {
         "type": "git",

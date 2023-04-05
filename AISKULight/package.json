@@ -20,8 +20,7 @@
         "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt aiskulite-min",
         "ai-restore": "grunt aiskulite-restore",
-        "npm-pack": "npm pack",
-        "npm-publish-ai": "node ../tools/release-tools/npm_publish.js ."
+        "npm-pack": "npm pack"
     },
     "repository": {
         "type": "git",
