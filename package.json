@@ -28,11 +28,7 @@
         "ai-min": "node common/scripts/install-run-rush.js ai-min",
         "ai-restore": "node common/scripts/install-run-rush.js ai-restore",
         "npm-pack": "node common/scripts/install-run-rush.js npm-pack --verbose",
-        "npm-publish-ai": "node common/scripts/install-run-rush.js npm-publish-ai --verbose",
-        "npm-publish-1ds": "node common/scripts/install-run-rush.js npm-publish-1ds --verbose",
-        "npm-publish-snippet": "node common/scripts/install-run-rush.js npm-publish-snippet --verbose",
-        "npm-publish-rollup-es": "node common/scripts/install-run-rush.js npm-publish-rollup-es --verbose",
-        "npm-publish-shims": "node common/scripts/install-run-rush.js npm-publish-shims --verbose"
+        "npm-publish": "node ./tools/release-tools/npm_publish.js"
     },
     "repository": {
         "type": "git",
