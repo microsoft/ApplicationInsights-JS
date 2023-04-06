@@ -370,7 +370,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     const bufferSize = buffer.size();
         
                     if ((bufferSize + payload.length) > _self._senderConfig.maxBatchSizeInBytes()) {
-                        _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                        if (!_offlineListener || _offlineListener.isOnline()) { // only trigger send when currently online
+                            _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                        }
                     }
         
                     // enqueue the payload
