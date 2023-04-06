@@ -606,7 +606,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _checkMaxSize(incomingPayload?: string): boolean {
                 let incomingSize = incomingPayload? incomingPayload.length : 0;
                 if ((_self._buffer.size() + incomingSize) > _maxBatchSizeInBytes) {
-                    _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                    if (!_offlineListener || _offlineListener.isOnline()) { // only trigger send when currently online
+                        _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                    }
+
                     return true;
                 }
                 return false;
