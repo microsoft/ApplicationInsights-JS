@@ -1,6 +1,6 @@
 import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { Util } from '@microsoft/applicationinsights-common';
+import { Util, utlRemoveSessionStorage } from '@microsoft/applicationinsights-common';
 import { dumpObj, getJSON } from '@microsoft/applicationinsights-core-js';
 import { SinonSpy } from 'sinon';
 import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
@@ -63,6 +63,9 @@ export class SenderE2ETests extends AITestClass {
     }
     
     public testCleanup() {
+        utlRemoveSessionStorage(null as any, "AI_sentBuffer", );
+        utlRemoveSessionStorage(null as any, "AI_buffer", );
+
         this.successSpy.restore();
     }
 

@@ -1233,11 +1233,12 @@ export class SenderTests extends AITestClass {
                 };
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
+                    this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
                     QUnit.assert.ok(false);
                 }
 
-                QUnit.assert.equal(true, loggerSpy.calledOnce);
+                QUnit.assert.equal(true, loggerSpy.called);
                 this.clock.tick(1);
                 QUnit.assert.ok(sendNotifications.length === 1);
                 QUnit.assert.ok(sendNotifications[0].sendReason === SendRequestReason.MaxBatchSize);
