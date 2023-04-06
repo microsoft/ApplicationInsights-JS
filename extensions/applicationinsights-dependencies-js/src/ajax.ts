@@ -15,7 +15,7 @@ import {
     dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
     isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf, strSubstr, strSubstring } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
 import {
     DependencyListenerFunction, IDependencyHandler, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler
@@ -512,7 +512,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     if (_enableAjaxPerfTracking) {
                         let iKey = config.instrumentationKey || "unkwn";
                         if (iKey.length > 5) {
-                            _markPrefix = AJAX_MONITOR_PREFIX + iKey.substring(iKey.length - 5) + ".";
+                            _markPrefix = AJAX_MONITOR_PREFIX + strSubstring(iKey, iKey.length - 5) + ".";
                         } else {
                             _markPrefix = AJAX_MONITOR_PREFIX + iKey + ".";
                         }
@@ -833,7 +833,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let distributedTraceCtx: IDistributedTraceContext = _getDistributedTraceCtx();
 
                 const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
-                const spanID = generateW3CId().substr(0, 16);
+                const spanID = strSubstr(generateW3CId(), 0, 16);
 
                 const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog](), _self.core?.getTraceCtx());
                 ajaxData.traceFlags = distributedTraceCtx && distributedTraceCtx.getTraceFlags();
@@ -1076,7 +1076,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let distributedTraceCtx: IDistributedTraceContext = _getDistributedTraceCtx();
 
                 const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
-                const spanID = generateW3CId().substr(0, 16);
+                const spanID = strSubstr(generateW3CId(), 0, 16);
 
                 let ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog](), _self.core?.getTraceCtx());
                 ajaxData.traceFlags = distributedTraceCtx && distributedTraceCtx.getTraceFlags();

@@ -12,10 +12,12 @@
       "skipLibCheck": true,
       "alwaysStrict": true,
       "declaration": true,
-      "outDir": "dist-esm/",
-      "rootDir": "common/Tests/Framework",
+      "declarationDir": "./types",
+      "outDir": "dist-es5",
+      "rootDir": "./src",
       "suppressImplicitAnyIndexErrors": true,
-      "allowSyntheticDefaultImports": true
+      "allowSyntheticDefaultImports": true,
+      "removeComments": false
     },
     "include": [
       "./src/**/*.ts"

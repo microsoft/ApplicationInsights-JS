@@ -5,8 +5,6 @@
       "sourceMap": true,
       "inlineSources": true,
       "moduleResolution": "node",
-      "outDir": "./dist-esm",
-      "rootDir": "./src",
       "strict": true,
       "allowSyntheticDefaultImports": true,
       "esModuleInterop": true,
@@ -14,11 +12,14 @@
       "forceConsistentCasingInFileNames": true,
       "noImplicitAny": false,
       "importHelpers": true,
-      "declaration": true,
-      "declarationDir": "./types",
       "allowJs": true,
-      "resolveJsonModule": true
-    },
+      "resolveJsonModule": true,
+      "declaration": true,
+      "declarationDir": "build/types",
+      "outDir": "dist-es5",
+      "rootDir": "./src",
+      "removeComments": false
+      },
     "include": [
       "./src"
     ],

@@ -1,7 +1,7 @@
 //
 // This script wrap the generated api dts file with a oneDS namespace and copyright notice the version
 //
-//  node ../../scripts\dtsgen.js ./dist-esm/applicationinsights-web.d.ts 'Microsoft.ApplicationInsights' ./
+//  node ../../scripts\dtsgen.js ./dist-es5/applicationinsights-web.d.ts 'Microsoft.ApplicationInsights' ./
 //
 const fs = require("fs");
 const path = require("path");
@@ -62,11 +62,36 @@ var homepage = packageJson.homepage || "";
 var packageName = packageJson.name
 packageName = packageName.replace('@microsoft/', '').replace('/', '_');
 
+var rollupPath = "dist";
+var rollupExt = ".rollup";
+var namespacePath = "dist";
+var namespaceExt = "";
+
+var rollupNote = 
+    " * use this version if your build environment doesn't support the using the\n" +
+    " * individual *.d.ts files or the namespace wrapped version.\n";
+
 if (!theArgs.dtsFile) {
     theArgs.dtsFile = path.resolve(projectPath, "dist", `${packageName}.d.ts`);
+    if (!fs.existsSync(theArgs.dtsFile)) {
+        theArgs.dtsFile = path.resolve(projectPath, "build/dts", `${packageName}.d.ts`);
+        rollupPath = "types";
+        rollupExt = "";
+        namespacePath = "types";
+        namespaceExt = ".namespaced"
+        rollupNote = 
+            " * if you require a namespace wrapped version it is also available.\n";
+
+        // Make sure the destination path exists
+        var dtsDestPath = path.resolve(projectPath, rollupPath);
+        if (!fs.existsSync(dtsDestPath)) {
+            fs.mkdirSync(dtsDestPath);
+        }
+    }
 }
 
-var dtsFileRollup = theArgs.dtsFile.replace(`${packageName}.d.ts`, `${packageName}.rollup.d.ts`);
+var dtsFileNamespaced = path.resolve(projectPath, namespacePath, `${packageName}${namespaceExt}.d.ts`)
+var dtsFileRollup = path.resolve(projectPath, rollupPath, `${packageName}${rollupExt}.d.ts`)
 
 var rollupContent = 
     "/*\n" +
@@ -84,9 +109,8 @@ rollupContent +=
     " *\n" +
     " * ---------------------------------------------------------------------------\n" +
     " * This is a single combined (rollup) declaration file for the package,\n" +
-    " * use this version if your build environment doesn't support the using the\n" +
-    " * individual *.d.ts files or default namespace wrapped version.\n" +
-    ` * - Namespaced version: ${packageName}.d.ts\n` +
+    rollupNote +
+    ` * - Namespaced version: ${namespacePath ? namespacePath + "/" : ""}${packageName}${namespaceExt}.d.ts\n` +
     " * ---------------------------------------------------------------------------\n" +
     " */\n";
 
@@ -153,10 +177,10 @@ function processFile(dtsContents) {
         }
     });
 
-    fs.writeFile(theArgs.dtsFile, newContent, (err, data) => {
+    fs.writeFile(dtsFileNamespaced, newContent, (err, data) => {
         if (err) {
             console.error(err);
-            throw `Failed to write ${theArgs.dtsFile}`;
+            throw `Failed to write ${dtsFileNamespaced}`;
         }
     });
 }

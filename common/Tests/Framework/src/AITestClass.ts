@@ -5,7 +5,7 @@ import { SinonSandbox, SinonSpy, SinonStub, SinonMock, SinonFakeXMLHttpRequest }
 import * as sinon from "sinon";
 import { Assert } from "./Assert";
 import { ITestContext, StepResult, TestCase, TestCaseAsync } from "./TestCase";
-import { getNavigator, getPerformance, setBypassLazyCache } from "@nevware21/ts-utils";
+import { getNavigator, getPerformance, setBypassLazyCache, strSubstr } from "@nevware21/ts-utils";
 
 const stepRetryCnt = "retryCnt";
 
@@ -842,7 +842,7 @@ export class AITestClass {
             var cookie = cookies[i];
             if (cookie) {
                 var eqPos = cookie.indexOf("=");
-                var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                var name = eqPos > -1 ? strSubstr(cookie, 0, eqPos) : cookie;
                 document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
             }
         }

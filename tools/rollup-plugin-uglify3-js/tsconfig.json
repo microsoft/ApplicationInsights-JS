@@ -10,11 +10,13 @@
       "importHelpers": false,
       "noEmitHelpers": false,
       "alwaysStrict": true,
-      "declaration": true,
-      "outDir": "./out",
-      "rootDir": "tools/rollup-plugin-uglify3-js",
       "suppressImplicitAnyIndexErrors": true,
-      "allowSyntheticDefaultImports": true
+      "allowSyntheticDefaultImports": true,
+      "declaration": true,
+      "declarationDir": "build/types",
+      "outDir": "dist-es5",
+      "rootDir": "./src",
+      "removeComments": false
     },
     "files": [
     ]

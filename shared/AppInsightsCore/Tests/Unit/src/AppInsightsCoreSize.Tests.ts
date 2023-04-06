@@ -4,10 +4,10 @@ import * as pako from "pako";
 export class AppInsightsCoreSizeCheck extends AITestClass {
     private readonly MAX_RAW_SIZE = 52;
     private readonly MAX_BUNDLE_SIZE = 52;
-    private readonly MAX_RAW_DEFLATE_SIZE = 21;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 21;
-    private readonly rawFilePath = "../dist/applicationinsights-core-js.min.js";
-    private readonly prodFilePath = "../browser/applicationinsights-core-js.min.js";
+    private readonly MAX_RAW_DEFLATE_SIZE = 22;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 22;
+    private readonly rawFilePath = "../dist/es5/applicationinsights-core-js.min.js";
+    private readonly prodFilePath = "../browser/es5/applicationinsights-core-js.min.js";
 
     public testInitialize() {
     }

@@ -69,7 +69,7 @@
 <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> -->
 
 <!-- <script src="file://./ai.2.8.0.js"></script> -->
-<script src="http://localhost:9001/AISKU/browser/ai.2.js"></script>
+<script src="http://localhost:9001/AISKU/browser/es5/ai.2.js"></script>
 <!-- <script src="https://js.monitor.azure.com/scripts/b/ai.2.7.4.js" crossorigin="anonymous"></script> -->
 <!-- <script src="https://js.monitor.azure.com/scripts/b/ai.2.8.0.js" crossorigin="anonymous"></script> -->
 <script>
@@ -133,7 +133,7 @@
     });
 
     appInsights.onCfgChange(function (details) {
-        logMessage(JSON.stringify(details.cfg, null, 4), "cfg");
+        logMessage(JSON.stringify(details.cfg, stringifyReplacer, 4), "cfg");
         logMessage("onCfgChange 3 - called", "cfg");
     });
 
@@ -150,6 +150,14 @@
     appInsights.loadAppInsights();
     appInsights.trackPageView();    
 
+
+    function stringifyReplacer(name, value) {
+        if (name === "extensions" || name === "channels") {
+            return "[... (" + (value ? value.length : 0) + ") ...]";
+        }
+
+        return value;
+    }
 
     //$.ajax({
     //    url: "https://www.mocky.io/v2/5185415ba171ea3a00704eed",

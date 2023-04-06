@@ -20,11 +20,9 @@ import {
     removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
-    AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, IDependencyInitializerHandler
+    AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
+    IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
-import {
-    DependencyListenerFunction, IDependencyListenerHandler
-} from "@microsoft/applicationinsights-dependencies-js/types/DependencyListener";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { objDefine, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";

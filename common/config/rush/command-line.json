@@ -71,6 +71,16 @@
             "enableParallelism": false,
             "ignoreMissingScript": true,
             "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "npm-pack",
+            "summary": "Run all npm_pack tasks to create the npm bundle",
+            "description": "Run all npm_pack tasks to create the npm bundle",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": true,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
         }
     ]
 }

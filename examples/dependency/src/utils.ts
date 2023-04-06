@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { arrForEach } from "@microsoft/applicationinsights-core-js";
+import { arrIncludes } from "@nevware21/ts-utils";
 
 export const containerId = "dependency-sample-container";
 export const dependencyListenerButtonId = "dependency-listener-button";
@@ -70,10 +71,10 @@ export function createDetailList(propsToWatch: string[], details: any, id: strin
             if (prop === "item") {
                 obj = {name: obj.name, target: obj.target};
             }
-            if (analyticsDetails.includes(prop)) {
+            if (arrIncludes(analyticsDetails, prop)) {
                 obj = details["extensionConfig"]["ApplicationInsightsAnalytics"][prop];
             }
-            if (ajaxDetails.includes(prop)) {
+            if (arrIncludes(ajaxDetails, prop)) {
                 obj = details["extensionConfig"]["AjaxDependencyPlugin"][prop];
             }
             obj = (obj === undefined)?  "undefined" : obj;

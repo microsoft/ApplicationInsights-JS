@@ -12,6 +12,10 @@ While the Application Insights JS SDK will use the stubs defined in this packagi
 uploaded to the CDN) they are built using the polyfill pattern, so if a global implementation of __extends() and __assign() already exist
 those versions will be used.
 
+## ES3 Support removed from v3.x
+
+ES3 support has been removed from the latest version (v3.x) which is also consumed by ApplicationInsights v3.x, if required [see for ES3/IE8 Support](https://microsoft.github.io/ApplicationInsights-JS/es3_Support.html) and you will need to remain on v2.x versions
+
 ## Global __extends() and __assign() changes - v2.0.0 or greater
 
 From v2.0.0 or greater the globally defined ```__extends()``` and ```__assign()``` methods are no longer exposed as global by default.

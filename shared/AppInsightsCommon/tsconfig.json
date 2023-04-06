@@ -14,9 +14,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "shared/AppInsightsCommon/types",
-    "outDir": "dist-esm",
-    "rootDir": "shared/AppInsightsCommon/src"
+    "declarationDir": "build/types",
+    "outDir": "dist-es5",
+    "rootDir": "./src",
+    "removeComments": false
   },
   "include": [
     "./src/**/*.ts"

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import {
-    arrForEach, arrIndexOf, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined,
-    objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
+    ILazyValue, arrForEach, arrIndexOf, dumpObj, getDocument, getLazy, getNavigator, isArray, isFunction, isNullOrUndefined, isString,
+    isTruthy, isUndefined, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
@@ -28,7 +28,7 @@ const strConfigCookieMgr = "_ckMgr";
 let _supportsCookies: boolean = null;
 let _allowUaSameSite: boolean = null;
 let _parsedCookieValue: string = null;
-let _doc = getDocument();
+let _doc: ILazyValue<Document>;
 let _cookieCache = {};
 let _globalCookieConfig = {};
 
@@ -54,6 +54,10 @@ const rootDefaultConfig: IConfigDefaults<IConfiguration> = {
     cookiePath: UNDEFINED_VALUE,
     [strDisableCookiesUsage]: UNDEFINED_VALUE
 };
+
+function _getDoc() {
+    !_doc && (_doc = getLazy(() => getDocument()));
+}
 
 /**
  * @ignore
@@ -320,9 +324,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 export function areCookiesSupported(logger?: IDiagnosticLogger): any {
     if (_supportsCookies === null) {
         _supportsCookies = false;
+        !_doc && _getDoc();
 
         try {
-            let doc = _doc || {} as Document;
+            let doc = _doc.v || {} as Document;
             _supportsCookies = doc[strCookie] !== undefined;
         } catch (e) {
             _throwInternal(
@@ -376,8 +381,10 @@ function _formatCookieValue(value: string, values: any) {
 
 function _getCookieValue(name: string) {
     let cookieValue = STR_EMPTY;
-    if (_doc) {
-        let theCookie = _doc[strCookie] || STR_EMPTY;
+    !_doc && _getDoc();
+
+    if (_doc.v) {
+        let theCookie = _doc.v[strCookie] || STR_EMPTY;
         if (_parsedCookieValue !== theCookie) {
             _cookieCache = _extractParts(theCookie);
             _parsedCookieValue = theCookie;
@@ -390,8 +397,9 @@ function _getCookieValue(name: string) {
 }
 
 function _setCookieValue(name: string, cookieValue: string) {
-    if (_doc) {
-        _doc[strCookie] = name + "=" + cookieValue;
+    !_doc && _getDoc();
+    if (_doc.v) {
+        _doc.v[strCookie] = name + "=" + cookieValue;
     }
 }
 

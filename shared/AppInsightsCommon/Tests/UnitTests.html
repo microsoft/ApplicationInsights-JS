@@ -22,19 +22,16 @@
         modules.add("qunit");
 
         loadFetchModule(modules, "whatwg-fetch");
-        loadCommonModules(modules);
+        loadCommonModules(modules, function() {
+            var testModule = modules.add("Tests/Unit/src/appinsights-common.tests", "./Unit/dist/aicommon.tests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
 
-        // Load and initialize ai core
-        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
-
-        var testModule = modules.add("Tests/Unit/src/appinsights-common.tests", "./Unit/dist/aicommon.tests.js")
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
-
-        modules.run();
+            modules.run();
+        });
     </script>
 </head>
 

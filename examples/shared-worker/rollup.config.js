@@ -2,7 +2,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
 import cleanup from "rollup-plugin-cleanup";
-import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
+import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/dist/node/removedynamic";
 import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
@@ -34,7 +34,7 @@ function doCleanup() {
 
 const browserRollupConfigFactory = (name, isProduction, format = "umd", extension = "") => {
   const browserRollupConfig = {
-    input: `dist-esm/${name}.js`,
+    input: `dist-es5/${name}.js`,
     output: {
       file: `browser/${name}${extension ? "." +extension : ""}.js`,
       banner: banner,

@@ -45,7 +45,7 @@
      *
      * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
      */
-    "mainEntryPointFilePath": "<projectFolder>/types/applicationinsights-perfmarkmeasure-js.d.ts",
+    "mainEntryPointFilePath": "<projectFolder>/build/types/applicationinsights-perfmarkmeasure-js.d.ts",
   
     /**
      * A list of NPM package names whose exports should be treated as part of this package.
@@ -138,7 +138,7 @@
        * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
        * DEFAULT VALUE: "<projectFolder>/etc/"
        */
-      "reportFolder": "<projectFolder>/dist/",
+      "reportFolder": "<projectFolder>/build/dts/",
   
       /**
        * Specifies the folder where the temporary report file is written.  The file name portion is determined by
@@ -174,7 +174,7 @@
        * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
        * DEFAULT VALUE: "<projectFolder>/temp/<unscopedPackageName>.api.json"
        */
-      "apiJsonFilePath": "<projectFolder>/dist/<unscopedPackageName>.api.json"
+      "apiJsonFilePath": "<projectFolder>/build/dts/<unscopedPackageName>.api.json"
     },
   
     /**
@@ -198,7 +198,7 @@
        * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
        * DEFAULT VALUE: "<projectFolder>/dist/<unscopedPackageName>.d.ts"
        */
-      "untrimmedFilePath": "<projectFolder>/dist/<unscopedPackageName>.d.ts",
+      "untrimmedFilePath": "<projectFolder>/build/dts/<unscopedPackageName>.d.ts",
   
       /**
        * Specifies the output path for a .d.ts rollup file to be generated with trimming for a "beta" release.
@@ -210,7 +210,7 @@
        * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
        * DEFAULT VALUE: ""
        */
-      // "betaTrimmedFilePath": "<projectFolder>/dist/<unscopedPackageName>-beta.d.ts",
+      // "betaTrimmedFilePath": "<projectFolder>/build/dts/<unscopedPackageName>-beta.d.ts",
   
   
       /**
@@ -225,7 +225,7 @@
        * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
        * DEFAULT VALUE: ""
        */
-      // "publicTrimmedFilePath": "<projectFolder>/dist/<unscopedPackageName>-public.d.ts",
+      // "publicTrimmedFilePath": "<projectFolder>/build/dts/<unscopedPackageName>-public.d.ts",
   
       /**
        * When a declaration is trimmed, by default it will be replaced by a code comment such as
@@ -246,7 +246,7 @@
        *
        * DEFAULT VALUE: true
        */
-      // "enabled": true,
+      "enabled": false,
   
       /**
        * Specifies where the TSDoc metadata file should be written.
@@ -261,7 +261,7 @@
        * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
        * DEFAULT VALUE: "<lookup>"
        */
-      // "tsdocMetadataFilePath": "<projectFolder>/dist/tsdoc-metadata.json"
+      "tsdocMetadataFilePath": "<projectFolder>/build/dts/tsdoc-metadata.json"
     },
   
     /**
@@ -356,6 +356,5 @@
         // . . .
       }
     }
-  
   }
   
