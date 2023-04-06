@@ -52,6 +52,7 @@ function _getDefaultAppInsightsChannelConfig(): ISenderConfig {
         maxBatchSizeInBytes: () => 102400,  // 100kb
         disableTelemetry: () => false,
         enableSessionStorageBuffer: () => true,
+        bufferOverride: () => false,
         isRetryDisabled: () => false,
         isBeaconApiDisabled: () => true,
         disableXhr: () => false,
@@ -231,8 +232,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
                 });
         
-                _self._buffer = (_self._senderConfig.enableSessionStorageBuffer() && utlCanUseSessionStorage())
-                    ? new SessionStorageSendBuffer(diagLog, _self._senderConfig) : new ArraySendBuffer(diagLog, _self._senderConfig);
+                const useSessionStorage = _self._senderConfig.enableSessionStorageBuffer() &&
+                    (_self._senderConfig.bufferOverride() || utlCanUseSessionStorage())
+                _self._buffer = useSessionStorage
+                    ? new SessionStorageSendBuffer(diagLog, _self._senderConfig)
+                    : new ArraySendBuffer(diagLog, _self._senderConfig);
                 _self._sample = new Sample(_self._senderConfig.samplingPercentage(), diagLog);
                 
                 if(!_validateInstrumentationKey(config)) {
