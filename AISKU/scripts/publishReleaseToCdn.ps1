@@ -137,7 +137,7 @@ elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
     PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
 }
 elseif ($version.type -eq "nightly" -or $version.type -eq "nightly3") {
-    # Publish to release type folder folder
+    # Publish to release nightly folder folder
     PublishFiles $releaseFiles "nightly" $cacheControl1Year $contentType $overwrite
 }
 else {

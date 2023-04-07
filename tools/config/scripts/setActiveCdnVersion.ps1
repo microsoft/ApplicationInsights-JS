@@ -79,8 +79,13 @@ Function Validate-Params
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -eq "dev" -or $version.type -eq "beta" -or $version.type -eq "nightly") {
+    elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
         if ($version.type -ne $container) {
+            Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
+        }
+    }
+    elseif ($version.type -eq "nightly" -or $version.type -eq "nightly3") {
+        if ("nightly" -ne $container) {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }

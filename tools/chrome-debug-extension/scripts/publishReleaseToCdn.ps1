@@ -120,9 +120,13 @@ elseif ($version.type -eq "rc") {
     PublishFiles $releaseFiles "beta/tools" $cacheControl1Year $contentType $overwrite
     PublishFiles $releaseFiles "next/tools" $cacheControl1Year $contentType $overwrite
 }
-elseif ($version.type -eq "dev" -or $version.type -eq "beta" -or $version.type -eq "nightly") {
+elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
     # Publish to release type folder folder
     PublishFiles $releaseFiles "$($version.type)/tools" $cacheControl1Year $contentType $overwrite
+}
+elseif ($version.type -eq "nightly" -or $version.type -eq "nightly3") {
+    # Publish to release nightly folder folder
+    PublishFiles $releaseFiles "nightly/tools" $cacheControl1Year $contentType $overwrite
 }
 else {
     # Upload to the test container rather than the supplied one
