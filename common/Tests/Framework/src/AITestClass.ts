@@ -168,6 +168,10 @@ export class AITestClass {
      * This is the final step before the next test is executed
      */
     public testCleanup() {
+        let storage: Storage = sessionStorage;
+        if (storage) {
+            storage.clear();
+        }
     }
 
     /** Method in which test class instances should call this.testCase(...) to register each of this suite's tests. */

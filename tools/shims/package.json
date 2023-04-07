@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-shims",
     "author": "Microsoft Application Insights Team",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "description": "Microsoft Application Insights JavaScript SDK - Shim functions",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/tools/shims",
     "keywords": [
@@ -39,7 +39,7 @@
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
-        "@microsoft/applicationinsights-rollup-es5" : "1.0.0",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.1",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-qunit": "^6.2.1",

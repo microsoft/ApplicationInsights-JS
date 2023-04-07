@@ -1,6 +1,6 @@
 # Microsoft Application Insights JavaScript SDK - Shims
 
-[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
+![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=master)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-shims.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-shims)
 
 Shims for the Application Insights Javascript SDK

@@ -129,6 +129,34 @@ export class Es5RollupTests extends AITestClass {
                 this.testCheckNoMatch(null, "ClassName.prototype.anotherMethod = function () {\n};\n");
                 this.testCheckNoMatch(null, "telemertyItem.time = CoreUtils.toISOString(new Date());");
                 this.testCheckNoMatch(null, "var responseHeaders = {};\nresponse.headers.forEach(function (value, name) {\n");
+                this.testCheckNoMatch(null, "   _this.startsWith(0, 1);");
+                this.testCheckNoMatch(null, "   this.startsWith(0, 1);");
+                this.testCheckNoMatch(null, "   _this.endsWith(0, 1);");
+                this.testCheckNoMatch(null, "   this.endsWith(0, 1);");
+                this.testCheckNoMatch(null, "   _this.find(0, 1);");
+                this.testCheckNoMatch(null, "   this.find(0, 1);");
+                this.testCheckNoMatch(null, "   _this.findIndex(0, 1);");
+                this.testCheckNoMatch(null, "   this.findIndex(0, 1);");
+                this.testCheckNoMatch(null, "   _this.findLast(0, 1);");
+                this.testCheckNoMatch(null, "   this.findLast(0, 1);");
+                this.testCheckNoMatch(null, "   _this.findLastIndex(0, 1);");
+                this.testCheckNoMatch(null, "   this.findLastIndex(0, 1);");
+                this.testCheckNoMatch(null, "   _self.startsWith(0, 1);");
+                this.testCheckNoMatch(null, "   self.startsWith(0, 1);");
+                this.testCheckNoMatch(null, "   _self.endsWith(0, 1);");
+                this.testCheckNoMatch(null, "   self.endsWith(0, 1);");
+                this.testCheckNoMatch(null, "   _self.find(0, 1);");
+                this.testCheckNoMatch(null, "   self.find(0, 1);");
+                this.testCheckNoMatch(null, "   _self.findIndex(0, 1);");
+                this.testCheckNoMatch(null, "   self.findIndex(0, 1);");
+                this.testCheckNoMatch(null, "   _self.findLast(0, 1);");
+                this.testCheckNoMatch(null, "   self.findLast(0, 1);");
+                this.testCheckNoMatch(null, "   _self.findLastIndex(0, 1);");
+                this.testCheckNoMatch(null, "   self.findLastIndex(0, 1);");
+                this.testCheckNoMatch(null, "export { doAwaitResponse, doAwait, doFinally } from \"./promise/await\";");
+                this.testCheckNoMatch(null, "export { doAwaitResponse, doAwait, doFinally } from \".\\promise\\await\";");
+                this.testCheckNoMatch(null, "export { ... } from \"./promise/async\";");
+                this.testCheckNoMatch(null, "export { ... } from \".\\promise\\async\";");
             }
         });
 

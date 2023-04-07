@@ -35,7 +35,7 @@
     "sideEffects": false,
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
-        "@microsoft/applicationinsights-rollup-es5":"1.0.0",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.1",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "@rollup/plugin-commonjs": "^24.0.0",
@@ -49,7 +49,7 @@
         "tslib": "*"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims": "3.0.0",
+        "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@microsoft/applicationinsights-web": "2.8.11",
         "@microsoft/applicationinsights-core-js": "2.8.11",
