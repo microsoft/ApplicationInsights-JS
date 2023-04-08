@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-rollup-es5",
     "author": "Microsoft Application Insights Team",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Microsoft Application Insights JavaScript SDK - Rollup Plugin for IE/ES5 support",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/tools/rollup-es5",
     "keywords": [

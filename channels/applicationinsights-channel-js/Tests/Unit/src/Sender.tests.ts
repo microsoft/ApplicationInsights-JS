@@ -48,6 +48,7 @@ export class SenderTests extends AITestClass {
 
         if (this._sender && this._sender.isInitialized()) {
             this._sender.pause();
+            this._sender._buffer.clear();
             this._sender.teardown();
         }
         this._sender = null;
@@ -1808,11 +1809,12 @@ export class SenderTests extends AITestClass {
                 };
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
+                    this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
                     QUnit.assert.ok(false);
                 }
 
-                QUnit.assert.equal(true, loggerSpy.calledOnce);
+                QUnit.assert.equal(true, loggerSpy.called);
                 this.clock.tick(1);
                 QUnit.assert.ok(sendNotifications.length === 1);
                 QUnit.assert.ok(sendNotifications[0].sendReason === SendRequestReason.MaxBatchSize);
@@ -2149,6 +2151,54 @@ export class SenderTests extends AITestClass {
 
                 QUnit.assert.equal(1, sendNotifications.length);
                 QUnit.assert.equal(SendRequestReason.MaxBatchSize, sendNotifications[0].sendReason);
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Process telemetry when offline and exceeding the batch size limits",
+            useFakeTimers: true,
+            test: () => {
+                const maxBatchSizeInBytes = 1024;
+                let core = new AppInsightsCore();
+                
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        maxBatchSizeInBytes: maxBatchSizeInBytes,
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                        }
+                        
+                    }, core, []
+                );
+                
+                const triggerSendSpy = this.sandbox.spy(this._sender, "triggerSend");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                // Act - Go offline
+                const offlineEvent = new Event('offline');
+                window.dispatchEvent(offlineEvent);
+
+                // Keep sending events until the max payload size is exceeded
+                while (!triggerSendSpy.called && this._sender._buffer.size() < maxBatchSizeInBytes) {
+                    try {
+                        this._sender.processTelemetry(telemetryItem, null);
+                    } catch(e) {
+                        QUnit.assert.ok(false);
+                    }
+                }
+
+                QUnit.assert.equal(false, triggerSendSpy.called);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(false, triggerSendSpy.called);
             }
         });
 

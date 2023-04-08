@@ -51,18 +51,42 @@ export const defaultEs5CheckTokens:IEs5CheckKeyword[] = [
         funcNames: [ /([\w0-9]*)\.(startsWith)[\s]*\(/g ],
         errorMsg: "[%funcName%] is not a supported string method in a IE/ES5 environment, use strStartsWith().",
         ignoreFuncMatch: [
+            "this.startsWith",
+            "_this.startsWith",
+            "self.startsWith",
+            "_self.startsWith"
         ]
     },
     {
         funcNames: [ /([\w0-9]*)\.(endsWith)[\s]*\(/g ],
         errorMsg: "[%funcName%] is not a supported string method in a IE/ES5 environment, use strEndsWith().",
         ignoreFuncMatch: [
+            "this.endsWith",
+            "_this.endsWith",
+            "self.endsWith",
+            "_self.endsWith"
         ]
     },
     {
         funcNames: [ /([\w0-9]*)\.(find|findIndex|findLast|findLastIndex)[\s]*\(/g ],
         errorMsg: "[%funcName%] is not supported array method in a IE/ES5 environment, use a helper function or add explicit check for existence.",
         ignoreFuncMatch: [
+            "_this.find",
+            "this.find",
+            "_self.find",
+            "self.find",
+            "_this.findIndex",
+            "this.findIndex",
+            "_self.findIndex",
+            "self.findIndex",
+            "_this.findLast",
+            "this.findLast",
+            "_self.findLast",
+            "self.findLast",
+            "_this.findLastIndex",
+            "this.findLastIndex",
+            "_self.findLastIndex",
+            "self.findLastIndex"
         ]
     },
     {
@@ -79,11 +103,19 @@ export const defaultEs5CheckTokens:IEs5CheckKeyword[] = [
     },
     {
         funcNames: [ /[^\w\"\'](await)\b/g ],
-        errorMsg: "[%funcName%] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence"
+        errorMsg: "[%funcName%] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence",
+        ignoreFuncMatch: [
+            "/await",
+            "\\await"
+        ]
     },
     {
         funcNames: [ /[^\w\"\'](async)\s+[\w]+/g ],
-        errorMsg: "[%funcName%] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence"
+        errorMsg: "[%funcName%] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence",
+        ignoreFuncMatch: [
+            "/async",
+            "\\async"
+        ]
     },
     {
         funcNames: [ /[^\w\"\']Symbol\s*\(/g ],

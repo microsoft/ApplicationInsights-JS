@@ -28,7 +28,7 @@
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
-        "@microsoft/applicationinsights-rollup-es5": "1.0.0",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.1",
         "@microsoft/api-extractor": "^7.18.1",
         "@types/sinon": "4.3.3",
         "grunt": "^1.5.3",
@@ -51,7 +51,7 @@
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.2",
-        "@microsoft/applicationinsights-shims": "3.0.0",
+        "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/applicationinsights-core-js": "2.8.11",
         "@microsoft/applicationinsights-common": "2.8.11",
         "@nevware21/ts-utils": ">= 0.9.4 < 2.x"
