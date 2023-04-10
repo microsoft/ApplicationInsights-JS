@@ -27,7 +27,7 @@
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
-        "@microsoft/applicationinsights-rollup-es5": "1.0.1",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "@microsoft/api-extractor": "^7.18.1",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",

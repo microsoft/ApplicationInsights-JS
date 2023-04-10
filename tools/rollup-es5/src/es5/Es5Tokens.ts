@@ -95,7 +95,15 @@ export const defaultEs5CheckTokens:IEs5CheckKeyword[] = [
     },
     {
         funcNames: [ /[^\w\"\']new\s+Promise[\s]*\(/g ],
-        errorMsg: "[%funcName%] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence"
+        errorMsg: "[%funcName%] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence",
+        ignoreIds: [
+            "ms.localstorage-",
+            "ms.localstorage.",
+            "ms.sigs-",
+            "ms.sigs.",
+            "promise\\nativePromise.js",
+            "promise/nativePromise.js"
+        ]
     },
     {
         funcNames: [ /[^\w\"\']Promise\.(all|race|reject|resolve|allSettled|reject)[\s]*\(/g ],

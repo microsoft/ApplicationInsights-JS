@@ -38,7 +38,7 @@
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
-        "@microsoft/applicationinsights-rollup-es5": "1.0.1",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-qunit": "^6.2.1",

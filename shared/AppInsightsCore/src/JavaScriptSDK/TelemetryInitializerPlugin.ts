@@ -88,7 +88,7 @@ export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements I
             };
 
             _self.processTelemetry = (item: ITelemetryItem, itemCtx?: IProcessTelemetryContext): void => {
-                if (_runInitializers(_initializers, item, itemCtx.diagLog())) {
+                if (_runInitializers(_initializers, item, itemCtx ? itemCtx.diagLog() : _self.diagLog())) {
                     _self.processNext(item, itemCtx);
                 }
             };
