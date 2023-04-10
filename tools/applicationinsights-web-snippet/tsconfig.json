@@ -15,11 +15,11 @@
     "declaration": true,
     "declarationDir": "./types",
     "outDir": "./dist-es5",
-    "rootDir": "./dest",
+    "rootDir": "./build",
     "removeComments": false
   },
   "include": [
-    "./dest/*.ts"
+    "./build/*.ts"
   ],
   "exclude": [
     "node_modules"

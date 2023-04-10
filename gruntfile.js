@@ -27,8 +27,15 @@ module.exports = function (grunt) {
 
     }
 
-    function generateNewSnippet() {
+    function generateNewSnippet(connString) {
         var snippetBuffer = grunt.file.read("./AISKU/snippet/snippet.min.js");
+        if (connString) {
+            snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+            snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+        } else {
+            snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+            snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+        }
         var snippetStr = _encodeStr(snippetBuffer.toString());
         var expectedStr = "##replaceSnippet##";
         var srcPath = "./tools/applicationinsights-web-snippet/src";
@@ -36,8 +43,8 @@ module.exports = function (grunt) {
             files: [{
                 expand: true,
                 cwd: srcPath,
-                dest: "./tools/applicationinsights-web-snippet/dest",
-                src: 'applicationinsights-web-snippet.ts'
+                dest: "./tools/applicationinsights-web-snippet/build",
+                src: `web-snippet${connString ? "-cs" : ""}.ts`
             }],
             options: {
                 replacements: [{
@@ -657,13 +664,19 @@ module.exports = function (grunt) {
                 }
             },
             'string-replace': {
-                'generate-snippet': generateNewSnippet()
+                'generate-snippet-ikey': generateNewSnippet(false),
+                'generate-snippet-connString': generateNewSnippet(true)
             },
             copy: {
+                "web-snippet": {
+                    files: [
+                        { src: "./tools/applicationinsights-web-snippet/src/applicationinsights-web-snippet.ts", dest: `./tools/applicationinsights-web-snippet/build/applicationinsights-web-snippet.ts` },
+                    ]
+                },
                 config: {
                     files: [
                         { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configVer}.cfg.json` },
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configMajorVer}.cfg.json`}
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configMajorVer}.cfg.json` }
                     ]
                 }
             }
@@ -766,8 +779,9 @@ module.exports = function (grunt) {
         grunt.registerTask("chromedebugextension-min", minTasks("chrome-debug-extension"));
         grunt.registerTask("chromedebugextension-restore", restoreTasks("chrome-debug-extension"));
 
-        grunt.registerTask("websnippetReplace", ["string-replace:generate-snippet"]);
+        grunt.registerTask("websnippetReplace", ["copy:web-snippet", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
+        grunt.registerTask("websnippettests", tsTestActions("applicationinsights-web-snippet"));
 
         grunt.registerTask("clickanalytics", tsBuildActions("clickanalytics"));
         grunt.registerTask("clickanalytics-min", minTasks("clickanalytics"));
@@ -781,11 +795,13 @@ module.exports = function (grunt) {
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
         grunt.registerTask("serve", ["connect:server:keepalive"]);
 
-        
-        grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
-        grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
-    } catch (e) {
-        console.error(e);
-        console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
-    }
-};
+         grunt.registerTask("copy-config", ["copy:config"]);
+
+         grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
+         grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
+     } catch (e) {
+         console.error(e);
+         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
+     }
+ };
+ 

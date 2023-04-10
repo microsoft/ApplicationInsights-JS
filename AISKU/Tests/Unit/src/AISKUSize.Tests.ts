@@ -2,6 +2,7 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
 import * as pako from "pako";
 import { Snippet } from "../../../src/Snippet";
+import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 
 export class AISKUSizeCheck extends AITestClass {
     private readonly MAX_RAW_SIZE = 119;
@@ -35,6 +36,8 @@ export class AISKUSizeCheck extends AITestClass {
     }
 
     public testCleanup() {
+        utlRemoveSessionStorage(null as any, "AI_sentBuffer", );
+        utlRemoveSessionStorage(null as any, "AI_buffer", );
     }
 
     public registerTests() {
