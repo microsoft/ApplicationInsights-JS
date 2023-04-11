@@ -198,6 +198,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
     constructor(logger: IDiagnosticLogger, config: ISenderConfig) {
         super(logger, config);
         let _bufferFullMessageSent = false;
+        const { getItem, setItem } = config.bufferOverride() || { getItem: utlGetSessionStorage, setItem: utlSetSessionStorage };
 
         dynamicProto(SessionStorageSendBuffer, this, (_self, _base) => {
             const bufferItems = _getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
@@ -287,7 +288,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 let prefixedKey = key;
                 try {
                     prefixedKey = config.namePrefix && config.namePrefix() ? config.namePrefix() + "_" + prefixedKey : prefixedKey;
-                    const bufferJson = utlGetSessionStorage(logger, prefixedKey);
+                    const bufferJson = getItem(logger, prefixedKey);
                     if (bufferJson) {
                         let buffer: string[] = getJSON().parse(bufferJson);
                         if (isString(buffer)) {
@@ -314,11 +315,11 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 try {
                     prefixedKey = config.namePrefix && config.namePrefix() ? config.namePrefix() + "_" + prefixedKey : prefixedKey;
                     const bufferJson = JSON.stringify(buffer);
-                    utlSetSessionStorage(logger, prefixedKey, bufferJson);
+                    setItem(logger, prefixedKey, bufferJson);
                 } catch (e) {
                     // if there was an error, clear the buffer
                     // telemetry is stored in the _buffer array so we won't loose any items
-                    utlSetSessionStorage(logger, prefixedKey, JSON.stringify([]));
+                    setItem(logger, prefixedKey, JSON.stringify([]));
         
                     _throwInternal(logger, eLoggingSeverity.WARNING,
                         _eInternalMessageId.FailedToSetStorageBuffer,
