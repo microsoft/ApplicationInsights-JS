@@ -1,3 +1,5 @@
+import { IStorageBuffer } from "@microsoft/applicationinsights-common";
+
 export interface ISenderConfig {
     /**
      * The url to which payloads will be sent
@@ -28,6 +30,11 @@ export interface ISenderConfig {
      * Store a copy of a send buffer in the session storage
      */
     enableSessionStorageBuffer: boolean;
+
+    /**
+     * Specify the storage buffer type implementation.
+     */
+    bufferOverride: IStorageBuffer | false;
 
     /**
      * Is retry handler disabled.

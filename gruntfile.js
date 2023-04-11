@@ -508,7 +508,7 @@ module.exports = function (grunt) {
                                         path: "./tools/applicationinsights-web-snippet",
                                         cfg: {
                                             src: [
-                                                "./tools/applicationinsights-web-snippet/dest/*.ts"
+                                                "./tools/applicationinsights-web-snippet/build/*.ts"
                                             ]
                                         }
                                     },

@@ -658,6 +658,92 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Channel Config: Session storage can be enabled",
+            test: () => {
+                let setItemSpy = this.sandbox.spy(window.sessionStorage, "setItem");
+                let getItemSpy = this.sandbox.spy(window.sessionStorage, "getItem");
+
+                this._sender.initialize(
+                    {
+                        enableSessionStorageBuffer: true
+                    }, new AppInsightsCore(), []
+                );
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem, null);
+
+                QUnit.assert.true(this._sender._buffer instanceof SessionStorageSendBuffer, 'Channel config can be set from root config (enableSessionStorageBuffer)');
+                QUnit.assert.equal(false, setItemSpy.calledOnce, "The setItem has not yet been triggered");
+                QUnit.assert.equal(false, getItemSpy.calledOnce, "The getItemSpy has not yet been triggered");
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Session storage with buffer override is used",
+            test: () => {
+                let setItemSpy = this.sandbox.stub();
+                let getItemSpy = this.sandbox.stub();
+
+                this._sender.initialize(
+                    {
+                        enableSessionStorageBuffer: true,
+                        bufferOverride: {
+                            getItem: getItemSpy,
+                            setItem: setItemSpy
+                        }
+                    }, new AppInsightsCore(), []
+                );
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem, null);
+
+                QUnit.assert.true(this._sender._buffer instanceof SessionStorageSendBuffer, 'Channel config can be set from root config (enableSessionStorageBuffer)');
+                QUnit.assert.equal(false, setItemSpy.calledOnce, "The setItem has not yet been triggered");
+                QUnit.assert.equal(false, getItemSpy.calledOnce, "The getItemSpy has not yet been triggered");
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Session storage can be disabled",
+            test: () => {
+                this._sender.initialize(
+                    {
+                        enableSessionStorageBuffer: false
+                    }, new AppInsightsCore(), []
+                );
+
+                QUnit.assert.true(this._sender._buffer instanceof ArraySendBuffer, 'Channel config can be set from root config (enableSessionStorageBuffer)');
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Session storage ignores buffer override when disabled",
+            test: () => {
+                this._sender.initialize(
+                    {
+                        enableSessionStorageBuffer: false,
+                        bufferOverride: {
+                            getItem: this.sandbox.stub(),
+                            setItem: this.sandbox.stub()
+                        }
+                    }, new AppInsightsCore(), []
+                );
+
+                QUnit.assert.true(this._sender._buffer instanceof ArraySendBuffer, 'Channel config can be set from root config (enableSessionStorageBuffer)');
+            }
+        });
+
+        this.testCase({
             name: "processTelemetry can be called with optional fields undefined",
             useFakeTimers: true,
             test: () => {
