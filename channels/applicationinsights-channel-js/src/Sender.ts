@@ -233,7 +233,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 });
         
                 const useSessionStorage = _self._senderConfig.enableSessionStorageBuffer() &&
-                    (_self._senderConfig.bufferOverride() || utlCanUseSessionStorage())
+                    !!(_self._senderConfig.bufferOverride() || utlCanUseSessionStorage())
                 _self._buffer = useSessionStorage
                     ? new SessionStorageSendBuffer(diagLog, _self._senderConfig)
                     : new ArraySendBuffer(diagLog, _self._senderConfig);

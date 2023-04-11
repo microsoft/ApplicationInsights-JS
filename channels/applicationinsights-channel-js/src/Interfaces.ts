@@ -33,6 +33,7 @@ export interface ISenderConfig {
 
     /**
      * Specify the storage buffer type implementation.
+     * @since 2.8.12
      */
     bufferOverride: () => IStorageBuffer | false;
 
