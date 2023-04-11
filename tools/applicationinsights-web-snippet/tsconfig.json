@@ -15,10 +15,10 @@
     "declaration": true,
     "declarationDir": "tools/applicationinsights-web-snippet/types",
     "outDir": "./out",
-    "rootDir": "./tools/applicationinsights-web-snippet/dest"
+    "rootDir": "./tools/applicationinsights-web-snippet/build"
   },
   "include": [
-    "./dest/*.ts"
+    "./build/*.ts"
   ],
   "exclude": [
     "node_modules"
