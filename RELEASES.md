@@ -2,9 +2,21 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.12 (Apr, 11th, 2023)
+
+### Changelog
+
+- #2014 [BUG] The documentation for enableDebug is incorrect, it should reference enableDebugExceptions
+- #2027 [BUG] SDK LOAD Failure reporting not working
+- #2034 [BUG] Failed XHR request after ever tracked item when gathered logs exceed maxBatchSizeInBytes while offline
+- #2037 [Master] Add local storage-based implementation #1419
+  - Add support for user provided storage option for Sender
+- #2029 [Master] Add npm-pack and npm-publish tasks
+- #2026 [Master] Fix examples, Throttle tests and export dependency types from Sku
+
 ## 2.8.11 (Mar 8th, 2023)
 
-## Changelog
+### Changelog
 
 - #1996 [BUG] SharedWorker does not Instrument fetch correctly
 - #1995 [BUG] App Insights not auto-capturing from a Web Worker
