@@ -2,6 +2,33 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.0 (Apr 12th, 2023)
+
+#### Major release with breaking changes from v2.x see [v3.x Breaking Changes](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v3_BreakingChanges.html) for details.
+
+Maintained from the `main` branch, v2.x is in maintenance mode on the `master` branch
+
+### Changelog
+
+- All code from 2.8.12 has been merged into the `main` branch and therefore this release
+
+#### Major Changes
+
+- Removed ES3 (IE8) Support
+- Enabled dynamic config changes after initialization
+  - #1427 Dynamically updating config (for extensions in my case)
+
+- Too many individual commits to include as most revolve around the breaking changes and enabling dynamic configuration support for each extension
+  - All Extensions now **share** the same configuration object `core.config` in previous releases each component maintained their own copy with their own default values, now all defaults and configuration values are exposed on the shared config.
+  - By default the config object passed in during initialization is NOT the same object as that used as the shared config. Any previous assumptions around this being the same object will now be broken as this was a previously unsupported scenario.
+  - All properties of the config object are now using get/set functions (via Object.defineProperty) to allow listeners to be registered (`core.onCfgChange` and internally `onConfigChange`) so that the callback function will be called if any referenced config property is changed. Yes, this means you can register your own configuration listener via `core.onCfgChange` see the [AISku Manual Test](./AISKU/Tests/Manual//HelloWorld.html) for an example.
+  - All properties present during initialization are converted into dynamic properties and may be monitored, properties added "after" creation (initialization) are not. This is to continue to support IE which does not support `Proxy` implementation which also means we are not using the `Proxy` class.
+  - Extensions are now responsible for listening and responding to the configuration changes that they want to support
+  - Updating the config `extensions` and `channels` is NOT supported, you must use the individual plugin add / remove functions if you want to dynamically add / remove extensions / channels
+  - Support for parallel channels was removed from the Core and SKU's and extracted to the new `TeeChannel`, if you require this support you will need to use npm and include this module. 
+- v2.x Extension support.
+  - While the basic API and support for Backward compatibility for the v2.x extension (plugin) API was maintained, due to the breaking changes (specifically the removal of the namespaced helpers) this will only support self contained components (without recompiling). Any npm module that attempts to import and use a removed helper function will potentially break and will need to be updated to use the newer or replacement helper functions (see the v3.x Breaking Changes for details), if you find an issue and are not able to work around please [raise an issue](https://github.com/microsoft/ApplicationInsights-JS/issues).
+
 ## 2.8.12 (Apr, 11th, 2023)
 
 ### Changelog
