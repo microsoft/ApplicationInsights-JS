@@ -1,4 +1,18 @@
-﻿(function (win, doc, snipConfig) {
+
+
+/**
+ * DO NOT FIX BUGS WITH THE OBJECT RETURNED BY THIS HELPER
+ * -------------------------------------------------------
+ * YOU *SHOULD* CREATE A NEW VERSION FOR EACH SNIPPET VERSION UNLESS CHANGES ARE MINIMAL
+ * -------------------------------------------------------
+ * This is a helper that returns an object that is the same as the v6 snippet, if there is
+ * an issue with the tests because of the object this returns there is probably a bug during 
+ * initialization.
+ */
+export function createSnippetV6(snipConfig) {
+    let win = window;
+    let doc = document;
+
     var locn = win.location;
     var helpLink = "https://go.microsoft.com/fwlink/?linkid=2128109";
     var scriptText = "script";
@@ -24,7 +38,7 @@
     var aiSdk = win[aiName] || (function (aiConfig) {
         var loadFailed = false;
         var handled = false;
-        var appInsights = {
+        var appInsights: any = {
             initialize: true,   // initialize sdk on download
             queue: [],
             sv: "6",            // Track the actual snippet version for reporting.
@@ -32,7 +46,7 @@
             config: aiConfig
         };
         function _parseConnectionString() {
-            var fields = {};
+            var fields: any = {};
             var connectionString = aiConfig.connectionString;
             if (connectionString) {
                 var kvPairs = connectionString.split(";");
@@ -108,7 +122,7 @@
                 + "Z";            
         }
 
-        function _createEnvelope(iKey, theType) {
+        function _createEnvelope(iKey, theType): any {
             var tags = {};
             var type = "Browser";
             tags[strAiDevice + "id"] = type[strToLowerCase]();
@@ -158,65 +172,67 @@
             return envelope;
         }
     
+        //     Commented out as we don't want to load from the CDN
+        // -------------------------------------------------------------
         // Assigning these to local variables allows them to be minified to save space:
-        var targetSrc = aiConfig.url || snipConfig.src;
-        if (targetSrc) {
-            function _handleError(evt) {
-                loadFailed = true;
-                appInsights.queue = []; // Clear the queue
-                if (!handled) {
-                    handled = true;
-                    _reportFailure(targetSrc);
-                }
-            }
+        // var targetSrc = aiConfig.url || snipConfig.src;
+        // if (targetSrc) {
+        //     function _handleError(evt) {
+        //         loadFailed = true;
+        //         appInsights.queue = []; // Clear the queue
+        //         if (!handled) {
+        //             handled = true;
+        //             _reportFailure(targetSrc);
+        //         }
+        //     }
 
-            function _handleLoad(evt, isAbort) {
-                if (!handled) {
-                    // IE10, Opera calls loaded before the script is processed.
-                    // so delaying to give the script a chance to be processed
-                    setTimeout(function() {
-                        if (isAbort || !appInsights.core) {
-                            _handleError();
-                        }
-                    }, 500);
-                }
-            }
+        //     function _handleLoad(evt, isAbort) {
+        //         if (!handled) {
+        //             // IE10, Opera calls loaded before the script is processed.
+        //             // so delaying to give the script a chance to be processed
+        //             setTimeout(function() {
+        //                 if (isAbort || !appInsights.core) {
+        //                     _handleError();
+        //                 }
+        //             }, 500);
+        //         }
+        //     }
 
-            function _createScript() {
-                var scriptElement = doc.createElement(scriptText);
-                scriptElement.src = targetSrc;
+        //     function _createScript() {
+        //         var scriptElement = doc.createElement(scriptText);
+        //         scriptElement.src = targetSrc;
 
-                // Allocate Cross origin only if defined and available
-                var crossOrigin = snipConfig[strCrossOrigin];
-                if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
-                    scriptElement[strCrossOrigin] = crossOrigin;
-                }
+        //         // Allocate Cross origin only if defined and available
+        //         var crossOrigin = snipConfig[strCrossOrigin];
+        //         if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
+        //             scriptElement[strCrossOrigin] = crossOrigin;
+        //         }
             
-                scriptElement.onload = _handleLoad;
-                scriptElement.onerror = _handleError;
+        //         scriptElement.onload = _handleLoad;
+        //         scriptElement.onerror = _handleError;
 
-                // Some browsers support onload while others onreadystatechange and others both
-                scriptElement.onreadystatechange = function (evt, isAbort) {
-                    if (scriptElement.readyState === "loaded" || scriptElement.readyState === "complete") {
-                        _handleLoad(evt, isAbort);
-                    }
-                };                
+        //         // Some browsers support onload while others onreadystatechange and others both
+        //         scriptElement.onreadystatechange = function (evt, isAbort) {
+        //             if (scriptElement.readyState === "loaded" || scriptElement.readyState === "complete") {
+        //                 _handleLoad(evt, isAbort);
+        //             }
+        //         };                
 
-                return scriptElement;
-            }
+        //         return scriptElement;
+        //     }
 
-            var theScript = _createScript();
-            if (snipConfig.ld < 0) {
-                // if user wants to append tag to document head, blocking page load
-                var headNode = doc.getElementsByTagName("head")[0];
-                headNode.appendChild(theScript);
-            } else {
-                setTimeout(function () {
-                    // Attempts to place the script tag in the same location as the first script on the page
-                    doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(theScript);
-                }, snipConfig.ld || 0);
-            }
-        }
+        //     var theScript = _createScript();
+        //     if (snipConfig.ld < 0) {
+        //         // if user wants to append tag to document head, blocking page load
+        //         var headNode = doc.getElementsByTagName("head")[0];
+        //         headNode.appendChild(theScript);
+        //     } else {
+        //         setTimeout(function () {
+        //             // Attempts to place the script tag in the same location as the first script on the page
+        //             doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(theScript);
+        //         }, snipConfig.ld || 0);
+        //     }
+        // }
     
         // capture initial cookie
         try {
@@ -300,7 +316,7 @@
     })(snipConfig.cfg);
 
     // global instance must be set in this order to mitigate issues in ie8 and lower
-    win[aiName] = aiSdk;
+    // win[aiName] = aiSdk;
     
     function _onInit() {
         if (snipConfig.onInit) {
@@ -311,19 +327,11 @@
     // if somebody calls the snippet twice, don't report page view again
     if (aiSdk.queue && aiSdk.queue.length === 0) {
         aiSdk.queue.push(_onInit);
-        aiSdk.trackPageView({});
+        // aiSdk.trackPageView({});
     } else {
         // Already loaded so just call the onInit
         _onInit();
     }
-})(window, document, {
-    src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
-    // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
-    // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
-    // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
-    crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
-    // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
-    cfg: { // Application Insights Configuration
-        connectionString: "YOUR_CONNECTION_STRING"
-    }
-});
+
+    return aiSdk;
+}

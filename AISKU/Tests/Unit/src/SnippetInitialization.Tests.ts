@@ -4,9 +4,13 @@ import { Snippet } from "../../../src/Snippet";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { createSnippetV5 } from "./testSnippet";
+import { createSnippetV5 } from "./testSnippetV5";
+import { createSnippetV6 } from "./testSnippetV6";
 import { BaseTelemetryPlugin, IProcessTelemetryContext, isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
-import { BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders } from "@microsoft/applicationinsights-common";
+import {
+    BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders,
+    utlRemoveSessionStorage, utlSetSessionStorage
+} from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { dumpObj, objHasOwnProperty } from "@nevware21/ts-utils";
@@ -48,7 +52,7 @@ const _expectedMethodsAfterInitialization = [
     "getCookieMgr"
 ];
 
-function getSnippetConfig(sessionPrefix: string) {
+function getSnippetConfig(sessionPrefix: string, addSampling: boolean = false) {
     return {
         src: "",
         cfg: {
@@ -62,7 +66,7 @@ function getSnippetConfig(sessionPrefix: string) {
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-            samplingPercentage: 50
+            samplingPercentage: addSampling ? 50 : undefined
         } as IConfig
     };
 };
@@ -80,8 +84,7 @@ function getSnippetConfigConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-            samplingPercentage: 50
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
         } as IConfig
     };
 };
@@ -99,8 +102,7 @@ function getSnippetConfigWrongConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-            samplingPercentage: 50
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
         } as IConfig
     };
 };
@@ -118,8 +120,7 @@ function getSnippetConfigNotSetConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-            samplingPercentage: 50
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
         } as IConfig
     };
 };
@@ -144,7 +145,8 @@ export class SnippetInitializationTests extends AITestClass {
 
     // Add any new snippet configurations to this map
     private _theSnippets = {
-        "v5": createSnippetV5
+        "v5": createSnippetV5,
+        "v6": createSnippetV6
     };
     
     public testInitialize() {
@@ -152,7 +154,9 @@ export class SnippetInitializationTests extends AITestClass {
 
         try {
             this.useFakeServer = true;
+            this.useFakeFetch = true;
             this.fakeServerAutoRespond = true;
+            this.fakeFetchAutoRespond = true;
             this.isFetchPolyfill = fetch && fetch["polyfill"];
 
             console.log("* testInitialize()");
@@ -162,6 +166,10 @@ export class SnippetInitializationTests extends AITestClass {
     }
 
     public testCleanup() {
+        utlRemoveSessionStorage(null as any, "AI_sentBuffer", );
+        utlRemoveSessionStorage(null as any, "AI_buffer", );
+        utlRemoveSessionStorage(null as any, "sessionPrefix_AI_sentBuffer", );
+        utlRemoveSessionStorage(null as any, "sessionPrefix_AI_buffer", );
     }
 
     public registerTests() {
@@ -201,11 +209,12 @@ export class SnippetInitializationTests extends AITestClass {
                 test: () => {
                     let theSnippet:any = null;
                     let exception: Error = null;
-                    this.useFakeServer = false;
+                    //this.useFakeServer = false;
                     try {
                         let snippet:Snippet = snippetCreator(getSnippetConfigWrongConnectionString(this.sessionPrefix));
                         // Call the initialization
-                        ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
+                        let ai = ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
+                        Assert.equal(true, ai.appInsights.isInitialized(), "isInitialized");
                     } catch (e) {
                         Assert.equal(e.message, "Please provide instrumentation key", "Server would not start when get incorrect connection string");
                     }
@@ -217,7 +226,7 @@ export class SnippetInitializationTests extends AITestClass {
                 test: () => {
                     let theSnippet:any = null;
                     let exception: Error = null;
-                    this.useFakeServer = false;
+                    //this.useFakeServer = false;
                     try {
                         let snippet:Snippet = snippetCreator(getSnippetConfigNotSetConnectionString(this.sessionPrefix));
                         // Call the initialization
@@ -657,7 +666,7 @@ export class SnippetInitializationTests extends AITestClass {
         if (global && global.fetch && !this.isEmulatingIe) {
             this.testCaseAsync({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
-                stepDelay: 5000,
+                stepDelay: 2000,
                 steps: [
                     () => {
                         let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
@@ -976,7 +985,7 @@ export class SnippetInitializationTests extends AITestClass {
         this.testCase({
             name: 'Sampling: sampleRate is generated as a field in the envelope when it is less than 100',
             test:() => {
-                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix, true)));
                 theSnippet.trackEvent({ name: 'event' });
                 Assert.ok(this.envelopeConstructorSpy.called);
                 const envelope = this.envelopeConstructorSpy.returnValues[0];
@@ -987,7 +996,7 @@ export class SnippetInitializationTests extends AITestClass {
 
     private _initializeSnippet(snippet: Snippet): IApplicationInsights {
         try {
-            this.useFakeServer = false;
+            //this.useFakeServer = false;
 
             // Call the initialization
             ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
@@ -1061,6 +1070,7 @@ export class SnippetInitializationTests extends AITestClass {
                     // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                     if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
                         currentCount ++;
+                        console.log(" - " + JSON.stringify(call));
                     }
                 });
             });
@@ -1069,7 +1079,7 @@ export class SnippetInitializationTests extends AITestClass {
         } else {
             return false;
         }
-    }, "sender succeeded", 30, 1000))];
+    }, "sender succeeded", 30, 500))];
 }
 
 class TestPlugin extends BaseTelemetryPlugin {

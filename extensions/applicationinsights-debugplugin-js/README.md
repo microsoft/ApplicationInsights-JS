@@ -165,7 +165,7 @@ const toTrack = [
 const debugPluginInstance = new DebugPlugin();
 const appInsights = new ApplicationInsights({
     config: {
-        instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+        connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
         extensions: [debugPluginInstance],
         extensionConfig: {
             [DebugPlugin.identifier]: {
@@ -187,7 +187,7 @@ appInsights.trackPageView(); // Manually call trackPageView to establish the cur
 <!-- Snippet code removed for brevity -- copy from main readme --!> {
 src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
 cfg: { // Application Insights Configuration
-    instrumentationKey: "INSTRUMENTATION_KEY",
+    connectionString: "InstrumentationKey=INSTRUMENTATION_KEY",
     extensions: [new Microsoft.ApplicationInsights.DebugPlugin()],
         extensionConfig: {
             ["DebugPlugin"]: {

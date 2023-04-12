@@ -3,6 +3,7 @@
 import { IConfiguration, ICustomProperties, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 import { DistributedTracingModes } from "../Enums";
 import { IRequestContext } from "./IRequestContext";
+import { IStorageBuffer } from "./IStorageBuffer";
 
 /**
  * Configuration settings for how telemetry is sent
@@ -169,6 +170,11 @@ export interface IConfig {
      * @defaultValue true
      */
     enableSessionStorageBuffer?: boolean;
+
+    /**
+     * If specified, overrides the storage & retrieval mechanism that is used to manage unsent telemetry.
+     */
+    bufferOverride?: IStorageBuffer;
 
     /**
      * @deprecated Use either disableCookiesUsage or specify a cookieCfg with the enabled value set.

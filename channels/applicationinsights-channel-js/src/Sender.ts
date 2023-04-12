@@ -1,8 +1,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IConfig, IEnvelope,
-    ISample, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace, eRequestHeaders,
-    isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage
+    ISample, IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace,
+    eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager,
@@ -62,7 +62,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     samplingPercentage: cfgDfValidate(_chkSampling, 100),
     customHeaders: UNDEFINED_VALUE,
     convertUndefined: UNDEFINED_VALUE,
-    eventsLimitInMem: 10000
+    eventsLimitInMem: 10000,
+    bufferOverride: false
 });
 
 function _chkSampling(value: number) {
@@ -153,6 +154,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _isRetryDisabled: boolean;
         let _maxBatchInterval: number;
         let _sessionStorageUsed: boolean;
+        let _bufferOverrideUsed: IStorageBuffer | false;
         let _namePrefix: string;
 
         dynamicProto(Sender, this, (_self, _base) => {
@@ -260,13 +262,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
                     _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
                     
-                    let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer && utlCanUseSessionStorage();
+                    let bufferOverride = senderConfig.bufferOverride;
+                    let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer &&
+                        (!!bufferOverride || utlCanUseSessionStorage());
                     let namePrefix = senderConfig.namePrefix;
                  
                     //Note: emitLineDelimitedJson and eventsLimitInMem is directly accessed via config in senderBuffer
                     //Therefore, if canUseSessionStorage is not changed, we do not need to re initialize a new one
                     let shouldUpdate = (canUseSessionStorage !== _sessionStorageUsed)
-                                    || (canUseSessionStorage && (_namePrefix !== namePrefix)); // prefixName is only used in session storage
+                                    || (canUseSessionStorage && (_namePrefix !== namePrefix))  // prefixName is only used in session storage
+                                    || (canUseSessionStorage && (_bufferOverrideUsed !== bufferOverride));
 
                     if (_self._buffer) {
                         // case1 (Pre and Now enableSessionStorageBuffer settings are same)
@@ -296,6 +301,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     _namePrefix = namePrefix;
                     _sessionStorageUsed = canUseSessionStorage;
+                    _bufferOverrideUsed = bufferOverride;
 
                     _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
 

@@ -33,6 +33,7 @@ export { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 export { Data } from "./Telemetry/Common/Data";
 export { eSeverityLevel, SeverityLevel } from "./Interfaces/Contracts/SeverityLevel";
 export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
+export { IStorageBuffer } from "./Interfaces/IStorageBuffer";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
 export {
     DataSanitizerValues,

@@ -1,6 +1,7 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { newId } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights} from "../../../src/index";
+import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 
 export class ApplicationInsightsConfigTests extends AITestClass {
     private readonly _instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
@@ -27,6 +28,11 @@ export class ApplicationInsightsConfigTests extends AITestClass {
     }
 
     public testCleanup() {
+        utlRemoveSessionStorage(null as any, "AI_sentBuffer", );
+        utlRemoveSessionStorage(null as any, "AI_buffer", );
+        utlRemoveSessionStorage(null as any, this._sessionPrefix + "_AI_sentBuffer", );
+        utlRemoveSessionStorage(null as any, this._sessionPrefix + "_AI_buffer", );
+
         super.testCleanup();
     }
 
