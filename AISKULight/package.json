@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "2.8.12",
+    "version": "3.0.0",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -54,9 +54,9 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-common": "2.8.12",
-        "@microsoft/applicationinsights-channel-js": "2.8.12",
-        "@microsoft/applicationinsights-core-js": "2.8.12",
+        "@microsoft/applicationinsights-common": "3.0.0",
+        "@microsoft/applicationinsights-channel-js": "3.0.0",
+        "@microsoft/applicationinsights-core-js": "3.0.0",
         "@nevware21/ts-utils": ">= 0.9.4 < 2.x"
     },
     "license": "MIT"
