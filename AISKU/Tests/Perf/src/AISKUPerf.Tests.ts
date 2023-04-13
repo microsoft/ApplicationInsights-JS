@@ -1,5 +1,6 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import {AppInsightsInitPerfTestClass} from "./AISKUPerf";
+import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 
 function isNullOrUndefined(value: any): boolean {
     return value === undefined || value === null;

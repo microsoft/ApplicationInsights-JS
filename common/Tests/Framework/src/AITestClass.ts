@@ -269,7 +269,6 @@ export class AITestClass {
 
             // Run the test.
             try {
-                let self = this;
                 let testComplete = false;
                 let timeOutTimer: any = null;
                 let stepIndex = 0;
@@ -430,7 +429,7 @@ export class AITestClass {
                     self._assertHooksRemoved();
                 }
 
-                AITestClass.currentTestClass._testCompleted(failed);
+                AITestClass.currentTestClass && AITestClass.currentTestClass._testCompleted(failed);
                 done();
             }
 
