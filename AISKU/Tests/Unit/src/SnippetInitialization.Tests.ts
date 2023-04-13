@@ -7,7 +7,7 @@ import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework
 import { createSnippetV5 } from "./testSnippetV5";
 import { createSnippetV6 } from "./testSnippetV6";
 import { dumpObj, hasOwnProperty, isNotNullOrUndefined, ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
-import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders, Util, utlRemoveSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
+import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders, Util, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 

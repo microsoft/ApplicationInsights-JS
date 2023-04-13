@@ -1194,9 +1194,9 @@
       "integrity": "sha512-EocRiD2JRWrOaA0dnyyLX083DIo1p3OSBBiGODcHaMzOFhteXtvRRp0kKsiYYqynnBSMqnqRI92iE32axdoXZw=="
     },
     "node_modules/@types/react": {
-      "version": "16.14.39",
-      "resolved": "https://registry.npmjs.org/@types/react/-/react-16.14.39.tgz",
-      "integrity": "sha512-x7El4ktgDR1KhtMO/ytMvhGEdFt15nRiNcwKJL0rORvCNC9KDB242m6Lj/BqJ8/k4br1gmThdyHoz3fSUXZueQ==",
+      "version": "16.14.40",
+      "resolved": "https://registry.npmjs.org/@types/react/-/react-16.14.40.tgz",
+      "integrity": "sha512-elQj2VQHDuJ5xuEcn5Wxh/YQFNbEuPJFRKSdyG866awDm5dmtoqsMmuAJWb/l/qd2kDkZMfOTKygVfMIdBBPKg==",
       "dependencies": {
         "@types/prop-types": "*",
         "@types/scheduler": "*",
@@ -1818,9 +1818,9 @@
       }
     },
     "node_modules/caniuse-lite": {
-      "version": "1.0.30001477",
-      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001477.tgz",
-      "integrity": "sha512-lZim4iUHhGcy5p+Ri/G7m84hJwncj+Kz7S5aD4hoQfslKZJgt0tHc/hafVbqHC5bbhHb+mrW2JOUHkI5KH7toQ==",
+      "version": "1.0.30001478",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001478.tgz",
+      "integrity": "sha512-gMhDyXGItTHipJj2ApIvR+iVB5hd0KP3svMWWXDvZOmjzJJassGLMfxRkQCSYgGd2gtdL/ReeiyvMSFD1Ss6Mw==",
       "funding": [
         {
           "type": "opencollective",
@@ -2180,9 +2180,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.358",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.358.tgz",
-      "integrity": "sha512-dbqpWy662dGVwq27q8i6+t5FPcQiFPs/VExXJ+/T9Xp9KUV0b5bvG+B/i07FNNr7PgcN3GhZQCZoYJ9EUfnIOg=="
+      "version": "1.4.361",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.361.tgz",
+      "integrity": "sha512-VocVwjPp05HUXzf3xmL0boRn5b0iyqC7amtDww84Jb1QJNPBc7F69gJyEeXRoriLBC4a5pSyckdllrXAg4mmRA=="
     },
     "node_modules/encodeurl": {
       "version": "1.0.2",
@@ -6468,9 +6468,9 @@
       "integrity": "sha512-EocRiD2JRWrOaA0dnyyLX083DIo1p3OSBBiGODcHaMzOFhteXtvRRp0kKsiYYqynnBSMqnqRI92iE32axdoXZw=="
     },
     "@types/react": {
-      "version": "16.14.39",
-      "resolved": "https://registry.npmjs.org/@types/react/-/react-16.14.39.tgz",
-      "integrity": "sha512-x7El4ktgDR1KhtMO/ytMvhGEdFt15nRiNcwKJL0rORvCNC9KDB242m6Lj/BqJ8/k4br1gmThdyHoz3fSUXZueQ==",
+      "version": "16.14.40",
+      "resolved": "https://registry.npmjs.org/@types/react/-/react-16.14.40.tgz",
+      "integrity": "sha512-elQj2VQHDuJ5xuEcn5Wxh/YQFNbEuPJFRKSdyG866awDm5dmtoqsMmuAJWb/l/qd2kDkZMfOTKygVfMIdBBPKg==",
       "requires": {
         "@types/prop-types": "*",
         "@types/scheduler": "*",
@@ -6889,9 +6889,9 @@
       "peer": true
     },
     "caniuse-lite": {
-      "version": "1.0.30001477",
-      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001477.tgz",
-      "integrity": "sha512-lZim4iUHhGcy5p+Ri/G7m84hJwncj+Kz7S5aD4hoQfslKZJgt0tHc/hafVbqHC5bbhHb+mrW2JOUHkI5KH7toQ=="
+      "version": "1.0.30001478",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001478.tgz",
+      "integrity": "sha512-gMhDyXGItTHipJj2ApIvR+iVB5hd0KP3svMWWXDvZOmjzJJassGLMfxRkQCSYgGd2gtdL/ReeiyvMSFD1Ss6Mw=="
     },
     "chalk": {
       "version": "4.1.2",
@@ -7151,9 +7151,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "electron-to-chromium": {
-      "version": "1.4.358",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.358.tgz",
-      "integrity": "sha512-dbqpWy662dGVwq27q8i6+t5FPcQiFPs/VExXJ+/T9Xp9KUV0b5bvG+B/i07FNNr7PgcN3GhZQCZoYJ9EUfnIOg=="
+      "version": "1.4.361",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.361.tgz",
+      "integrity": "sha512-VocVwjPp05HUXzf3xmL0boRn5b0iyqC7amtDww84Jb1QJNPBc7F69gJyEeXRoriLBC4a5pSyckdllrXAg4mmRA=="
     },
     "encodeurl": {
       "version": "1.0.2",
