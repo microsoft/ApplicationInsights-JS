@@ -28,7 +28,7 @@
 
         loadFetchModule(modules, "whatwg-fetch");
         loadCommonModules(modules, function() {
-            var testModule = modules.add("Tests/Perf/src/aiskuperftests", "./Perf/dist/aiskuperftests.tests.js")
+            var testModule = modules.add("aiskuperftests", "./Perf/dist/es5/aiskuperftests.tests.js")
             testModule.run = function (tests) {
                 console && console.log("Starting tests");
                 QUnit.start();

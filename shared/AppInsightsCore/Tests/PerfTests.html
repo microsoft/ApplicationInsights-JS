@@ -24,7 +24,7 @@
 
         loadFetchModule(modules, "whatwg-fetch");
         loadCommonModules(modules, function() {
-            var testModule = modules.add("Tests/Perf/src/aiperftests", "./Tests/Perf/dist/aicoreperf.tests")
+            var testModule = modules.add("Tests/Perf/src/aiperftests", "./Tests/Perf/dist/es5/aicoreperf.tests")
             testModule.run = function (tests) {
                 console && console.log("Starting tests");
                 QUnit.start();

@@ -432,7 +432,7 @@ export class AITestClass {
                     self._assertHooksRemoved();
                 }
 
-                AITestClass.currentTestClass._testCompleted(failed);
+                AITestClass.currentTestClass && AITestClass.currentTestClass._testCompleted(failed);
                 done();
             }
 
