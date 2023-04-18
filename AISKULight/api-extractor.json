@@ -61,10 +61,7 @@
      * local files for library1.
      */
     "bundledPackages": [
-      "@microsoft/applicationinsights-common",
-      "@microsoft/applicationinsights-channel-js",
-      "@microsoft/applicationinsights-core-js"
-  ],
+    ],
   
     /**
      * Determines how the TypeScript compiler engine will be invoked by API Extractor.
