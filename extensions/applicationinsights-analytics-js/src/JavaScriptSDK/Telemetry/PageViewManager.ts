@@ -9,7 +9,7 @@ import {
     IAppInsightsCore, IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
     arrForEach, dumpObj, eLoggingSeverity, getDocument, getExceptionName, getLocation, isNullOrUndefined
 } from "@microsoft/applicationinsights-core-js";
-import { isWebWorker } from "@nevware21/ts-utils";
+import { ITimerHandler, isWebWorker, scheduleTimeout } from "@nevware21/ts-utils";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 
 /**
@@ -32,7 +32,7 @@ export class PageViewManager {
         pageViewPerformanceManager: PageViewPerformanceManager) {
 
         dynamicProto(PageViewManager, this, (_self) => {
-            let intervalHandle: any = null;
+            let queueTimer: ITimerHandler = null;
             let itemQueue: Array<() => boolean> = [];
             let pageViewPerformanceSent: boolean = false;
             let _logger: IDiagnosticLogger;
@@ -47,11 +47,10 @@ export class PageViewManager {
                 }
             }
         
-            function _addQueue(cb:() => boolean) {
-                itemQueue.push(cb);
-    
-                if (!intervalHandle) {
-                    intervalHandle = setInterval((() => {
+            function _startTimer() {
+                if (!queueTimer) {
+                    queueTimer = scheduleTimeout((() => {
+                        queueTimer = null;
                         let allItems = itemQueue.slice(0);
                         let doFlush = false;
                         itemQueue = [];
@@ -64,9 +63,8 @@ export class PageViewManager {
                             }
                         });
         
-                        if (itemQueue.length === 0) {
-                            clearInterval(intervalHandle);
-                            intervalHandle = null;
+                        if (itemQueue.length > 0) {
+                            _startTimer();
                         }
     
                         if (doFlush) {
@@ -75,6 +73,12 @@ export class PageViewManager {
                         }
                     }), 100);
                 }
+            }
+
+            function _addQueue(cb:() => boolean) {
+                itemQueue.push(cb);
+    
+                _startTimer();
             }
 
             _self.trackPageView = (pageView: IPageViewTelemetry, customProperties?: { [key: string]: any })  => {
@@ -211,9 +215,9 @@ export class PageViewManager {
             };
 
             _self.teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
-                if (intervalHandle) {
-                    clearInterval(intervalHandle);
-                    intervalHandle = null;
+                if (queueTimer) {
+                    clearInterval(queueTimer);
+                    queueTimer = null;
 
                     let allItems = itemQueue.slice(0);
                     let doFlush = false;
