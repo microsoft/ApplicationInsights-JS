@@ -4,8 +4,8 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    ITimerHandler, arrAppend, arrForEach, arrIndexOf, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze,
-    objDefine, objForEachKey, objFreeze, objHasOwn, scheduleInterval, scheduleTimeout, throwError
+    ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
+    objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -261,6 +261,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
          */
         let _internalLogPoller: ITimerHandler;
         let _internalLogPollerListening: boolean;
+        let _forceStopInternalLogPoller: boolean;
 
         dynamicProto(AppInsightsCore, this, (_self) => {
 
@@ -470,47 +471,56 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 }
             };
 
-            /**
-             * Periodically check logger.queue for log messages to be flushed
-             */
             _self.pollInternalLogs = (eventName?: string): ITimerHandler => {
                 _internalLogsEventName = eventName || null;
+                _forceStopInternalLogPoller = false;
+                _internalLogPoller && _internalLogPoller.cancel();
 
-                function _startLogPoller(config: CfgType) {
-                    let interval: number = config.diagnosticLogInterval;
-                    if (!interval || !(interval > 0)) {
-                        interval = 10000;
+                return _startLogPoller(true);
+            };
+
+            function _startLogPoller(alwaysStart?: boolean): ITimerHandler {
+                if ((!_internalLogPoller || !_internalLogPoller.enabled) && !_forceStopInternalLogPoller) {
+                    let shouldStart = alwaysStart || (_self.logger && _self.logger.queue.length > 0);
+                    if (shouldStart) {
+                        if (!_internalLogPollerListening) {
+                            _internalLogPollerListening = true;
+
+                            // listen for any configuration changes so that changes to the
+                            // interval will cause the timer to be re-initialized
+                            _addUnloadHook(_configHandler.watch((details) => {
+                                let interval: number = details.cfg.diagnosticLogInterval;
+                                if (!interval || !(interval > 0)) {
+                                    interval = 10000;
+                                }
+
+                                let isRunning = false;
+                                if (_internalLogPoller) {
+                                    // It was already created so remember it's running and cancel
+                                    isRunning = _internalLogPoller.enabled;
+                                    _internalLogPoller.cancel();
+                                }
+
+                                // Create / reconfigure
+                                _internalLogPoller = createTimeout(_flushInternalLogs, interval) as any;
+                                _internalLogPoller.unref();
+
+                                // Restart if previously running
+                                _internalLogPoller.enabled = isRunning;
+                            }));
+                        }
+
+                        _internalLogPoller.enabled = true;
                     }
-
-                    _internalLogPoller && _internalLogPoller.cancel();
-                    _internalLogPoller = scheduleInterval(() => {
-                        _flushInternalLogs();
-                    }, interval) as any;
-                }
-
-                if (!_internalLogPollerListening) {
-                    _internalLogPollerListening = true;
-                    // listen to the configuration
-                    _addUnloadHook(_configHandler.watch((details) => {
-                        _startLogPoller(details.cfg);
-                    }));
-                } else {
-                    // We are being called again, so make sure the poller is running
-                    _startLogPoller(_configHandler.cfg);
                 }
 
                 return _internalLogPoller;
             }
 
-            /**
-             * Stop polling log messages from logger.queue
-             */
             _self.stopPollingInternalLogs = (): void => {
-                if (_internalLogPoller) {
-                    _internalLogPoller.cancel();
-                    _internalLogPoller = null;
-                    _flushInternalLogs();
-                }
+                _forceStopInternalLogPoller = true;
+                _internalLogPoller && _internalLogPoller.cancel();
+                _flushInternalLogs();
             }
 
             // Add addTelemetryInitializer
@@ -555,6 +565,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     // Start unloading the components, from this point onwards the SDK should be considered to be in an unstable state
                     processUnloadCtx.processNext(unloadState);
                 }
+
+                _flushInternalLogs();
 
                 if (!_flushChannels(isAsync, _doUnload, SendRequestReason.SdkUnload, cbTimeout)) {
                     _doUnload(false);
@@ -800,10 +812,14 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _cfgListeners = [];
                 _pluginVersionString = null;
                 _pluginVersionStringArr = null;
+                _forceStopInternalLogPoller = false;
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
-                return createProcessTelemetryContext(_getPluginChain(), _configHandler.cfg, _self);
+                let theCtx = createProcessTelemetryContext(_getPluginChain(), _configHandler.cfg, _self);
+                theCtx.onComplete(_startLogPoller);
+
+                return theCtx;
             }
 
             // Initialize or Re-initialize the plugins
@@ -968,6 +984,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         }
 
                         removeComplete && removeComplete(removed);
+                        _startLogPoller();
                     });
 
                     unloadCtx.processNext(unloadState);
@@ -977,8 +994,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             }
 
             function _flushInternalLogs() {
-                let queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
-                if (queue) {
+                if (_self.logger && _self.logger.queue) {
+                    let queue: _InternalLogMessage[] = _self.logger.queue.slice(0);
+                    _self.logger.queue.length = 0;
+
                     arrForEach(queue, (logMessage: _InternalLogMessage) => {
                         const item: ITelemetryItem = {
                             name: _internalLogsEventName ? _internalLogsEventName : "InternalMessageId: " + logMessage.messageId,
@@ -989,8 +1008,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         };
                         _self.track(item);
                     });
-
-                    queue.length = 0;
                 }
             }
 
@@ -1088,6 +1105,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             function _doUpdate(updateState: ITelemetryUpdateState): void {
                 let updateCtx = createProcessTelemetryUpdateContext(_getPluginChain(), _self);
+                updateCtx.onComplete(_startLogPoller);
 
                 if (!_self._updateHook || _self._updateHook(updateCtx, updateState) !== true) {
                     updateCtx.processNext(updateState);
@@ -1099,6 +1117,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (logger) {
                     // there should always be a logger
                     _throwInternal(logger, eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, message);
+                    _startLogPoller();
                 } else {
                     throwError(message);
                 }
@@ -1189,7 +1208,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     /**
-     * Periodically check logger.queue for
+     * Enable the timer that checks the logger.queue for log messages to be flushed.
+     * Note: Since 3.0.1 and 2.8.13 this is no longer an interval timer but is a normal
+     * timer that is only started when this function is called and then subsequently
+     * only _if_ there are any logger.queue messages to be sent.
      */
     public pollInternalLogs(eventName?: string): ITimerHandler {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1197,7 +1219,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     /**
-     * Periodically check logger.queue for
+     * Stop the timer that log messages from logger.queue when available
      */
     public stopPollingInternalLogs(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
