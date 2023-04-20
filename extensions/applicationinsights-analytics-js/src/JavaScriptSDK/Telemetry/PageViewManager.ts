@@ -48,7 +48,7 @@ export class PageViewManager {
         pageViewPerformanceManager: PageViewPerformanceManager) {
 
         dynamicProto(PageViewManager, this, (_self) => {
-            let intervalHandle: any = null;
+            let queueTimer: any = null;
             let itemQueue: Array<() => boolean> = [];
             let pageViewPerformanceSent: boolean = false;
             let _logger: IDiagnosticLogger;
@@ -63,11 +63,10 @@ export class PageViewManager {
                 }
             }
         
-            function _addQueue(cb:() => boolean) {
-                itemQueue.push(cb);
-    
-                if (!intervalHandle) {
-                    intervalHandle = setInterval((() => {
+            function _startTimer() {
+                if (!queueTimer) {
+                    queueTimer = setTimeout((() => {
+                        queueTimer = null;
                         let allItems = itemQueue.slice(0);
                         let doFlush = false;
                         itemQueue = [];
@@ -80,9 +79,8 @@ export class PageViewManager {
                             }
                         });
         
-                        if (itemQueue.length === 0) {
-                            clearInterval(intervalHandle);
-                            intervalHandle = null;
+                        if (itemQueue.length > 0) {
+                            _startTimer();
                         }
     
                         if (doFlush) {
@@ -91,6 +89,12 @@ export class PageViewManager {
                         }
                     }), 100);
                 }
+            }
+
+            function _addQueue(cb:() => boolean) {
+                itemQueue.push(cb);
+    
+                _startTimer();
             }
 
             _self.trackPageView = (pageView: IPageViewTelemetry, customProperties?: { [key: string]: any })  => {
@@ -227,9 +231,9 @@ export class PageViewManager {
             };
 
             _self.teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
-                if (intervalHandle) {
-                    clearInterval(intervalHandle);
-                    intervalHandle = null;
+                if (queueTimer) {
+                    clearTimeout(queueTimer);
+                    queueTimer = null;
 
                     let allItems = itemQueue.slice(0);
                     let doFlush = false;
