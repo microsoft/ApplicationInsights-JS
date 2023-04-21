@@ -1,6 +1,6 @@
 module.exports = function (grunt) {
 
-   const versionPlaceholder = '"#version#"';
+    const versionPlaceholder = '"#version#"';
 
     const aiCoreDefaultNameReplacements = [
     ];
@@ -183,7 +183,8 @@ module.exports = function (grunt) {
                 server: {
                     options: {
                         port: 9001,
-                        base: '.'
+                         base: '.',
+                         debug: true
                     }
                 }        
             },
@@ -302,6 +303,7 @@ module.exports = function (grunt) {
                             summaryOnly: false,
                             httpBase: ".",
                             puppeteer: {
+                                debug: true,
                                 headless: true,
                                 timeout: 30000,
                                 ignoreHTTPErrors: true,
@@ -325,7 +327,7 @@ module.exports = function (grunt) {
                         src: [
                             modulePath + "/test/Perf/src/**/*.ts"
                         ],
-                        out: modulePath + "/test/Perf/dist/" + (modules[key].perfTestName || key + ".perf.tests.js")
+                        out: modulePath + "/test/Perf/dist/es5/" + (modules[key].perfTestName || key + ".perf.tests.js")
                     };
                 } else if (grunt.file.exists(modulePath + '/Tests/PerfTests.html')) {
                     addQunit = true;
@@ -335,7 +337,7 @@ module.exports = function (grunt) {
                         src: [
                             modulePath + "/Tests/Perf/src/**/*.ts"
                         ],
-                        out: modulePath + "/Tests/Perf/dist/" + (modules[key].perfTestName || key + ".perf.tests.js")
+                        out: modulePath + "/Tests/Perf/dist/es5/" + (modules[key].perfTestName || key + ".perf.tests.js")
                     };
                 }
 
@@ -349,7 +351,7 @@ module.exports = function (grunt) {
 
                     buildCmds.qunit[key + "-perf"] = {
                         options: {
-                            urls: [testUrls],
+                            urls: testUrls,
                             timeout: 300 * 1000, // 5 min
                             console: true,
                             summaryOnly: false,
