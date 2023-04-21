@@ -159,7 +159,9 @@ module.exports = function (grunt) {
         var buildCmds = {
             ts: {
                 options: {
-                    comments: true
+                    comments: true,
+                    debug: true,
+                    logOutput: true
                 }            
             },
             "eslint-ts": {
@@ -699,7 +701,7 @@ module.exports = function (grunt) {
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
         
 
-        grunt.registerTask("core", tsBuildActions("core"));
+        grunt.registerTask("core", tsBuildActions("core", true));
         grunt.registerTask("core-min", minTasks("core"));
         grunt.registerTask("core-restore", restoreTasks("core"));
         grunt.registerTask("coreunittest", tsTestActions("core"));

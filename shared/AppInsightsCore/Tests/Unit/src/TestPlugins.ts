@@ -3,7 +3,7 @@ import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnu
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 import { ITelemetryItem } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../../../src/JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { TelemetryUpdateReason } from "../../../types/applicationinsights-core-js";
+import { TelemetryUpdateReason } from "../../../src/JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { IConfiguration } from "../../../src/JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin, ITelemetryPlugin } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { BaseTelemetryPlugin } from "../../../src/JavaScriptSDK/BaseTelemetryPlugin";
