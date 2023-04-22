@@ -613,6 +613,8 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCaseAsync({
             name: "TelemetryContext: auto collection of ajax requests",
             stepDelay: 1,
+            useFakeServer: true,
+            fakeServerAutoRespond: true,
             steps: [
                 () => {
                     const xhr = new XMLHttpRequest();
@@ -627,6 +629,8 @@ export class ApplicationInsightsTests extends AITestClass {
             this.testCaseAsync({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
                 stepDelay: 5000,
+                useFakeFetch: true,
+                fakeFetchAutoRespond: true,
                 steps: [
                     () => {
                         fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
@@ -640,8 +644,7 @@ export class ApplicationInsightsTests extends AITestClass {
                         fetch('https://httpbin.org/status/200');
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
-                ]
-                    .concat(this.asserts(3, false, false))
+                ].concat(this.asserts(3, false, false))
                     .concat(() => {
                         let args = [];
                         this.trackSpy.args.forEach(call => {

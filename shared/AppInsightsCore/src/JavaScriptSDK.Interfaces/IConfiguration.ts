@@ -24,7 +24,11 @@ export interface IConfiguration {
     connectionString?: string;
 
     /**
-     * Polling interval (in ms) for internal logging queue
+     * Set the timer interval (in ms) for internal logging queue, this is the
+     * amount of time to wait after logger.queue messages are detected to be sent.
+     * Note: since 2.8.13 and 3.0.1 the diagnostic logger timer is a normal timeout timer
+     * and not an interval timer. So this now represents the timer "delay" and not
+     * the frequency at which the events are sent.
      */
     diagnosticLogInterval?: number;
 

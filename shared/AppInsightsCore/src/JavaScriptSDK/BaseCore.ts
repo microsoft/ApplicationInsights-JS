@@ -163,6 +163,7 @@ export class BaseCore implements IAppInsightsCore {
          * Internal log poller
          */
         let _internalLogPoller: number = 0;
+        let _forceStopInternalLogPoller = false;
 
         dynamicProto(BaseCore, this, (_self) => {
 
@@ -331,30 +332,40 @@ export class BaseCore implements IAppInsightsCore {
                 }
             };
 
-            /**
-             * Periodically check logger.queue for log messages to be flushed
-             */
             _self.pollInternalLogs = (eventName?: string): number => {
                 _internalLogsEventName = eventName || null;
-
-                let interval: number = getCfgValue(_config.diagnosticLogInterval);
-                if (!interval || !(interval > 0)) {
-                    interval = 10000;
-                }
+                _forceStopInternalLogPoller = false;
                 if(_internalLogPoller) {
                     clearInterval(_internalLogPoller);
+                    _internalLogPoller = null;
                 }
-                _internalLogPoller = setInterval(() => {
-                    _flushInternalLogs();
-                }, interval) as any;
+
+                return _startInternalLogTimer(true);
+            }
+
+            function _startInternalLogTimer(alwaysStart?: boolean) {
+                if (!_internalLogPoller && !_forceStopInternalLogPoller) {
+                    let shouldStart = alwaysStart || (_self.logger && _self.logger.queue.length > 0);
+                    if (shouldStart) {
+                        let interval: number = getCfgValue(_config.diagnosticLogInterval);
+                        if (!interval || !(interval > 0)) {
+                            interval = 10000;
+                        }
+    
+                        // Keeping as an interval timer for backward compatibility as it returns the result
+                        _internalLogPoller = setInterval(() => {
+                            clearInterval(_internalLogPoller);
+                            _internalLogPoller = 0;
+                            _flushInternalLogs();
+                        }, interval) as any;
+                    }
+                }
 
                 return _internalLogPoller;
             }
 
-            /**
-             * Stop polling log messages from logger.queue
-             */
             _self.stopPollingInternalLogs = (): void => {
+                _forceStopInternalLogPoller = true;
                 if(_internalLogPoller) {
                     clearInterval(_internalLogPoller);
                     _internalLogPoller = 0;
@@ -402,6 +413,8 @@ export class BaseCore implements IAppInsightsCore {
                     // Start unloading the components, from this point onwards the SDK should be considered to be in an unstable state
                     processUnloadCtx.processNext(unloadState);
                 }
+
+                _flushInternalLogs();
 
                 if (!_flushChannels(isAsync, _doUnload, SendRequestReason.SdkUnload, cbTimeout)) {
                     _doUnload(false);
@@ -510,7 +523,10 @@ export class BaseCore implements IAppInsightsCore {
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
-                return createProcessTelemetryContext(_getPluginChain(), _config, _self);
+                let theCtx = createProcessTelemetryContext(_getPluginChain(), _config, _self);
+                theCtx.onComplete(_startInternalLogTimer);
+
+                return theCtx;
             }
 
             // Initialize or Re-initialize the plugins
@@ -556,7 +572,8 @@ export class BaseCore implements IAppInsightsCore {
                 // Initialize the controls
                 _channelControl.initialize(_config, _self, allExtensions);
                 
-                initializePlugins(_createTelCtx(), allExtensions);
+                let initCtx = _createTelCtx();
+                initializePlugins(initCtx, allExtensions);
 
                 // Now reset the extensions to just those being managed by Basecore
                 _self._extensions = objFreeze(sortPlugins(_coreExtensions || [])).slice();
@@ -674,6 +691,7 @@ export class BaseCore implements IAppInsightsCore {
                         }
 
                         removeComplete && removeComplete(removed);
+                        _startInternalLogTimer();
                     });
 
                     unloadCtx.processNext(unloadState);
@@ -683,8 +701,10 @@ export class BaseCore implements IAppInsightsCore {
             }
 
             function _flushInternalLogs() {
-                let queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
-                if (queue) {
+                if (_self.logger && _self.logger.queue) {
+                    let queue: _InternalLogMessage[] = _self.logger.queue.slice(0);
+                    _self.logger.queue.length = 0;
+
                     arrForEach(queue, (logMessage: _InternalLogMessage) => {
                         const item: ITelemetryItem = {
                             name: _internalLogsEventName ? _internalLogsEventName : "InternalMessageId: " + logMessage.messageId,
@@ -695,8 +715,6 @@ export class BaseCore implements IAppInsightsCore {
                         };
                         _self.track(item);
                     });
-
-                    queue.length = 0;
                 }
             }
 
@@ -745,6 +763,7 @@ export class BaseCore implements IAppInsightsCore {
 
             function _doUpdate(updateState: ITelemetryUpdateState): void {
                 let updateCtx = createProcessTelemetryUpdateContext(_getPluginChain(), _self);
+                updateCtx.onComplete(_startInternalLogTimer);
 
                 if (!_self._updateHook || _self._updateHook(updateCtx, updateState) !== true) {
                     updateCtx.processNext(updateState);
@@ -756,6 +775,7 @@ export class BaseCore implements IAppInsightsCore {
                 if (logger) {
                     // there should always be a logger
                     _throwInternal(logger, eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, message);
+                    _startInternalLogTimer();
                 } else {
                     throwError(message);
                 }
@@ -835,7 +855,10 @@ export class BaseCore implements IAppInsightsCore {
     }
 
     /**
-     * Periodically check logger.queue for
+     * Enable the timer that checks the logger.queue for log messages to be flushed.
+     * Note: Since 3.0.1 and 2.8.13 this is no longer an interval timer but is a normal
+     * timer that is only started when this function is called and then subsequently
+     * only _if_ there are any logger.queue messages to be sent.
      */
     public pollInternalLogs(eventName?: string): number {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -843,7 +866,7 @@ export class BaseCore implements IAppInsightsCore {
     }
 
     /**
-     * Periodically check logger.queue for
+     * Stop the timer that log messages from logger.queue when available
      */
     public stopPollingInternalLogs(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
