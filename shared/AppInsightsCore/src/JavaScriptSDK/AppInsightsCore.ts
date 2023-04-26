@@ -3,6 +3,7 @@
 "use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { IPromise, createPromise } from "@nevware21/ts-async";
 import {
     ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
     objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
@@ -34,6 +35,7 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
 import { createUniqueNamespace } from "./DataCacheHelper";
@@ -233,6 +235,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
         let _configHandler: IDynamicConfigHandler<CfgType>;
         let _isInitialized: boolean;
+        let _logger: IDiagnosticLogger;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
         let _perfManager: IPerfManager | null;
@@ -313,8 +316,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _initDebugListener();
                 _initPerfManager();
 
-                _self.logger = logger || new DiagnosticLogger(config);
-                _configHandler.logger = _self.logger;
+                _self.logger = logger;
 
                 let cfgExtensions = config.extensions;
 
@@ -332,11 +334,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_channels.length > 1) {
                     let teeController = _self.getPlugin("TeeChannelController");
                     if (!teeController || !teeController.plugin) {
-                        _throwInternal(_self.logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "TeeChannel required");
+                        _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "TeeChannel required");
                     }
                 }
 
-                _registerDelayedCfgListener(config, _cfgListeners, _self.logger);
+                _registerDelayedCfgListener(config, _cfgListeners, _logger);
                 _cfgListeners = null;
 
                 _isInitialized = true;
@@ -393,11 +395,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             _self.getNotifyMgr = (): INotificationManager => {
                 if (!_notificationManager) {
-                    _addUnloadHook(_configHandler.watch((details) => {
-                        _notificationManager = new NotificationManager(details.cfg);
-                        // For backward compatibility only
-                        _self[strNotificationManager] = _notificationManager;
-                    }));
+                    _notificationManager = new NotificationManager(_configHandler.cfg);
+                    // For backward compatibility only
+                    _self[strNotificationManager] = _notificationManager;
                 }
 
                 return _notificationManager;
@@ -425,16 +425,18 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         
             _self.getCookieMgr = (): ICookieMgr => {
                 if (!_cookieManager) {
-                    _addUnloadHook(_configHandler.watch((details) => {
-                        _cookieManager = createCookieMgr(details.cfg, _self.logger);
-                    }));
+                    _cookieManager = createCookieMgr(_configHandler.cfg, _self.logger);
                 }
 
                 return _cookieManager;
             };
 
             _self.setCookieMgr = (cookieMgr: ICookieMgr) => {
-                _cookieManager = cookieMgr;
+                if (_cookieManager !== cookieMgr) {
+                    runTargetUnload(_cookieManager, false);
+    
+                    _cookieManager = cookieMgr;
+                }
             };
 
             _self.getPerfMgr = (): IPerfManager => {
@@ -481,7 +483,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             function _startLogPoller(alwaysStart?: boolean): ITimerHandler {
                 if ((!_internalLogPoller || !_internalLogPoller.enabled) && !_forceStopInternalLogPoller) {
-                    let shouldStart = alwaysStart || (_self.logger && _self.logger.queue.length > 0);
+                    let shouldStart = alwaysStart || (_logger && _logger.queue.length > 0);
                     if (shouldStart) {
                         if (!_internalLogPollerListening) {
                             _internalLogPollerListening = true;
@@ -526,7 +528,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             // Add addTelemetryInitializer
             proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
 
-            _self.unload = (isAsync: boolean = true, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void => {
+            _self.unload = (isAsync: boolean = true, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> => {
                 if (!_isInitialized) {
                     // The SDK is not initialized
                     throwError(strSdkNotInitialized);
@@ -544,12 +546,23 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     flushComplete: false
                 }
 
+                let result: IPromise<ITelemetryUnloadState>;
+                if (isAsync && !unloadComplete) {
+                    result = createPromise<ITelemetryUnloadState>((resolve) => {
+                        // Set the callback to the promise resolve callback
+                        unloadComplete = resolve;
+                    });
+                }
+
                 let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self);
                 processUnloadCtx.onComplete(() => {
                     _hookContainer.run(_self.logger);
 
-                    _initDefaults();
-                    unloadComplete && unloadComplete(unloadState);
+                    // Run any "unload" functions for the _cookieManager, _notificationManager and _logger
+                    doUnloadAll([_cookieManager, _notificationManager, _logger], isAsync, () => {
+                        _initDefaults();
+                        unloadComplete && unloadComplete(unloadState);
+                    });
                 }, _self);
 
                 function _doUnload(flushComplete: boolean) {
@@ -571,6 +584,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (!_flushChannels(isAsync, _doUnload, SendRequestReason.SdkUnload, cbTimeout)) {
                     _doUnload(false);
                 }
+
+                return result;
             };
 
             _self.getPlugin = _getPlugin;
@@ -785,6 +800,24 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     }
                 });
 
+                objDefine(_self, "logger", {
+                    g: () => {
+                        if (!_logger) {
+                            _logger = new DiagnosticLogger(_configHandler.cfg);
+                            _configHandler.logger = _logger;
+                        }
+
+                        return _logger;
+                    },
+                    s: (newLogger) => {
+                        _configHandler.logger = newLogger;
+                        if (_logger !== newLogger) {
+                            runTargetUnload(_logger, false);
+                            _logger = newLogger;
+                        }
+                    }
+                });
+
                 _self.logger = new DiagnosticLogger(_configHandler.cfg);
                 _extensions = [];
                 let cfgExtensions = _self.config.extensions || [];
@@ -793,9 +826,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
                 _eventQueue = [];
+                runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
                 _perfManager = null;
                 _cfgPerfManager = null;
+                runTargetUnload(_cookieManager, false);
                 _cookieManager = null;
                 _pluginChain = null;
                 _configExtensions = [];
@@ -994,9 +1029,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             }
 
             function _flushInternalLogs() {
-                if (_self.logger && _self.logger.queue) {
-                    let queue: _InternalLogMessage[] = _self.logger.queue.slice(0);
-                    _self.logger.queue.length = 0;
+                if (_logger && _logger.queue) {
+                    let queue: _InternalLogMessage[] = _logger.queue.slice(0);
+                    _logger.queue.length = 0;
 
                     arrForEach(queue, (logMessage: _InternalLogMessage) => {
                         const item: ITelemetryItem = {
@@ -1242,11 +1277,18 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * If you pass isAsync as `true` (also the default) and DO NOT pass a callback function then an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the unload is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param isAsync - Can the unload be performed asynchronously (default)
      * @param unloadComplete - An optional callback that will be called once the unload has completed
-     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the unload. Defaults to 5 seconds.
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
+     * unload. Defaults to 5 seconds.
+     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will only be returned when no callback is provided and isAsync is true
      */
-    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void {
+    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

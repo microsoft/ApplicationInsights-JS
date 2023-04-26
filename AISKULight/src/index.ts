@@ -6,8 +6,9 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
-    IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
+    ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
+import { IPromise } from "@nevware21/ts-async";
 import { isNullOrUndefined, objDefine, throwError } from "@nevware21/ts-utils";
 
 const defaultConfigValues: IConfigDefaults<IConfiguration> = {
@@ -129,8 +130,15 @@ export class ApplicationInsights {
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @param unloadComplete - An optional callback that will be called once the unload has completed
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
+     * unload. Defaults to 5 seconds.
+     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will only be returned when no callback is provided and isAsync is true
      */
-    public unload(isAsync?: boolean, unloadComplete?: () => void): void {
+    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

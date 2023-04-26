@@ -14,17 +14,17 @@ import {
     AppInsightsCore, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
     IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin, ITelemetryInitializerHandler,
     ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId,
-    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, arrForEach, arrIndexOf, cfgDfValidate, createDynamicConfig,
-    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString,
-    mergeEvtNamespace, objForEachKey, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener,
-    removePageUnloadEventListener
+    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfValidate, createDynamicConfig, createUniqueNamespace, doPerf,
+    eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
+    onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
     IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { objDefine, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
+import { IPromise, createPromise } from "@nevware21/ts-async";
+import { arrForEach, arrIndexOf, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
     STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
@@ -169,12 +169,36 @@ export class AppInsightsSku implements IApplicationInsights {
 
             _self.snippet = snippet;
 
-            _self.flush = (async: boolean = true) => {
+            _self.flush = (async: boolean = true, callBack?: () => void) => {
+                let result: void | IPromise<void>;
+
                 doPerf(_core, () => "AISKU.flush", () => {
+                    if (async && !callBack) {
+                        result = createPromise((resolve) => {
+                            callBack = resolve;
+                        });
+                    }
+
+                    let waiting = 1;
+                    const flushDone = () => {
+                        waiting --;
+                        if (waiting === 0) {
+                            callBack();
+                        }
+                    };
+
                     arrForEach(_core.getChannels(), channel => {
-                        channel.flush(async);
+                        if (channel) {
+                            waiting++;
+                            channel.flush(async, flushDone);
+                        }
                     });
+
+                    // decrement the initial "waiting"
+                    flushDone();
                 }, null, async);
+
+                return result;
             };
 
             _self.onunloadFlush = (async: boolean = true) => {
@@ -352,8 +376,15 @@ export class AppInsightsSku implements IApplicationInsights {
                 return _sender;
             };
 
-            _self.unload = (isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void => {
+            _self.unload = (isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> => {
                 let unloadDone = false;
+                let result: IPromise<ITelemetryUnloadState>;
+                if (isAsync && !unloadComplete) {
+                    result = createPromise<ITelemetryUnloadState>((resolve) => {
+                        // Set the callback to the promise resolve callback
+                        unloadComplete = resolve;
+                    });
+                }
 
                 function _unloadCallback(unloadState: ITelemetryUnloadState) {
                     if (!unloadDone) {
@@ -369,6 +400,8 @@ export class AppInsightsSku implements IApplicationInsights {
                 _removePageEventHandlers();
 
                 _core.unload && _core.unload(isAsync, _unloadCallback, cbTimeout);
+
+                return result;
             };
         
             proxyFunctions(_self, _analyticsPlugin, [
@@ -602,11 +635,20 @@ export class AppInsightsSku implements IApplicationInsights {
     // Misc
 
     /**
-     * Manually trigger an immediate send of all telemetry still in the buffer.
-     * @param [async=true]
-     * @memberof Initialization
+     * Attempt to flush data immediately; If executing asynchronously (the default) and
+     * you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
+     * @param async - send data asynchronously when true
+     * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
+     * If the caller doesn't return true the caller should assume that it may never be called.
+     * @returns - If a callback is provided `true` to indicate that callback will be called after the flush is complete otherwise the caller
+     * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
+     * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
+     * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
+     * and async is true.
      */
-    public flush(async: boolean = true) {
+    public flush(async?: boolean, callBack?: () => void): void | IPromise<void> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -673,8 +715,19 @@ export class AppInsightsSku implements IApplicationInsights {
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * If you pass isAsync as true and do not provide
+     * If you pass isAsync as `true` (also the default) and DO NOT pass a callback function then an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the unload is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @param unloadComplete - An optional callback that will be called once the unload has completed
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
+     * unload. Defaults to 5 seconds.
+     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will only be returned when no callback is provided and isAsync is true
      */
-    public unload(isAsync?: boolean, unloadComplete?: () => void): void {
+    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

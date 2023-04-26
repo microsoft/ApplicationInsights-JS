@@ -182,5 +182,5 @@ export function onConfigChange<T>(config: T, configHandler: WatcherFunction<T>, 
 
     _logInvalidAccess(logger, STR_NOT_DYNAMIC_ERROR + dumpObj(config));
 
-    createDynamicConfig(config, null, logger).watch(configHandler);
+    return createDynamicConfig(config, null, logger).watch(configHandler);
 }

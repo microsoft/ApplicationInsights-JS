@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IPromise } from "@nevware21/ts-async";
 import {
     ILazyValue, arrForEach, arrIndexOf, dumpObj, getDocument, getLazy, getNavigator, isArray, isFunction, isNullOrUndefined, isString,
     isTruthy, isUndefined, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
@@ -12,6 +13,7 @@ import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
 import { _throwInternal } from "./DiagnosticLogger";
 import { getLocation, isIE } from "./EnvUtils";
 import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
@@ -164,6 +166,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let cookieMgrConfig: ICookieMgrConfig;
     let _path: string;
     let _domain: string;
+    let unloadHandler: IUnloadHook;
 
     // Explicitly checking against false, so that setting to undefined will === true
     let _enabled: boolean;
@@ -175,7 +178,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     rootConfig = createDynamicConfig(rootConfig || _globalCookieConfig, null, logger).cfg;
 
     // Will get recalled if the referenced configuration is changed
-    onConfigChange(rootConfig, (details) => {
+    unloadHandler = onConfigChange(rootConfig, (details) => {
 
         // Make sure the root config has all of the the defaults to the root config to ensure they are dynamic
         details.setDf(details.cfg, rootDefaultConfig);
@@ -309,6 +312,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             }
 
             return result;
+        },
+        unload: (isAsync?: boolean): void | IPromise<void> => {
+            unloadHandler && unloadHandler.rm();
+            unloadHandler = null;
         }
     };
 

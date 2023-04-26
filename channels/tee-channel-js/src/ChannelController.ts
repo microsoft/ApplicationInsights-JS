@@ -6,6 +6,7 @@ import {
     IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryUnloadState, ITelemetryUpdateState, SendRequestReason, TelemetryUnloadReason,
     TelemetryUpdateReason, createProcessTelemetryContext
 } from "@microsoft/applicationinsights-core-js";
+import { IPromise, createPromise } from "@nevware21/ts-async";
 import { ITimerHandler, arrForEach, scheduleTimeout } from "@nevware21/ts-utils";
 
 export const ChannelControllerPriority = 500;
@@ -56,12 +57,19 @@ export interface IChannelController {
     teardown: (unloadCtx: IProcessTelemetryUnloadContext, unloadState: ITelemetryUnloadState, onComplete: () => void) => void | boolean;
 
     /**
-     * Flush to send data immediately; channel should default to sending data asynchronously
+     * Flush any batched events immediately; Will not flush if the paused and channel should default to sending data asynchronously.
+     * If executing asynchronously and you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param async - send data asynchronously when true
      * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
      * If the caller doesn't return true the caller should assume that it may never be called.
      * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
-     * @returns - true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
+     * @returns - If a callback is provided `true` to indicate that callback will be called after the flush is complete otherwise the caller
+     * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
+     * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
+     * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
+     * and isAsync is true.
      */
     flush(isAsync: boolean, callBack: (flushComplete?: boolean) => void, sendReason: SendRequestReason, cbTimeout?: number): void;
 
@@ -206,8 +214,15 @@ export function createChannelControllerPlugin(): IChannelController {
             let waiting = 1;
             let doneIterating = false;
             let cbTimer: ITimerHandler = null;
+            let result: boolean | IPromise<boolean> = true;
 
             cbTimeout = cbTimeout || 5000;
+
+            if (isAsync && !callBack) {
+                result = createPromise((resolve) => {
+                    callBack = resolve;
+                });
+            }
 
             function doCallback() {
                 waiting--;
@@ -252,7 +267,7 @@ export function createChannelControllerPlugin(): IChannelController {
                 doCallback();
             });
 
-            return true;
+            return result;
         }
     };
 

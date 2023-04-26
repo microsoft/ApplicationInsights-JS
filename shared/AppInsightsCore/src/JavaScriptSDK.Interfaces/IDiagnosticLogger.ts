@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IPromise } from "@nevware21/ts-async";
 import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../JavaScriptSDK/DiagnosticLogger";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
@@ -56,4 +57,14 @@ export interface IDiagnosticLogger {
      * @param updateState
      */
     update?(updateState: ITelemetryUpdateState): void;
+
+    /**
+     * Unload and remove any state that this IDiagnosticLogger may be holding, this is generally called when the
+     * owning SDK is being unloaded.
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @return If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
+     * the function should return an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * / Promise to allow any listeners to wait for the operation to complete.
+     */
+    unload?(isAsync?: boolean): void | IPromise<void>;
 }

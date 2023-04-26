@@ -10,8 +10,9 @@ import {
     SendRequestReason, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
     createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON,
     getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend,
-    objKeys, onConfigChange, useXDomainRequest
+    objKeys, onConfigChange, runTargetUnload, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
+import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
@@ -32,7 +33,7 @@ declare var XDomainRequest: {
     new(): IXDomainRequest;
 };
 
-export type SenderFunction = (payload: string[], isAsync: boolean) => void;
+export type SenderFunction = (payload: string[], isAsync: boolean) => void | IPromise<boolean>;
 
 function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     try {
@@ -156,6 +157,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _sessionStorageUsed: boolean;
         let _bufferOverrideUsed: IStorageBuffer | false;
         let _namePrefix: string;
+        let _enableSendPromise: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -177,13 +179,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
             };
         
-            _self.flush = (isAsync: boolean = true, callBack?: () => void, sendReason?: SendRequestReason) => {
+            _self.flush = (isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason) => {
                 if (!_paused) {
                     // Clear the normal schedule timer as we are going to try and flush ASAP
                     _clearScheduledTimer();
 
                     try {
-                        _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
+                        return _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                     } catch (e) {
                         _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
                             _eInternalMessageId.FlushFailed,
@@ -197,7 +199,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (!_paused) {
                     if (_beaconSupported) {
                         try {
-                            _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
+                            return _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
                         } catch (e) {
                             _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
                                 _eInternalMessageId.FailedToSendQueuedTelemetry,
@@ -205,7 +207,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 { exception: dumpObj(e) });
                         }
                     } else {
-                        _self.flush();
+                        _self.flush(false);
                     }
                 }
             };
@@ -320,6 +322,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     } else {
                         _customHeaders = null;
                     }
+
+                    _enableSendPromise = senderConfig.enableSendPromise;
 
                     let sendPostFunc: SenderFunction = null;
                     if (!senderConfig.disableXhr && useXDomainRequest()) {
@@ -480,6 +484,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * @param forcedSender - {SenderFunction} - Indicates the forcedSender, undefined if not passed
              */
             _self.triggerSend = (async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) => {
+                let result: void | IPromise<boolean>;
                 if (!_paused) {
                     try {
                         const buffer = _self._buffer;
@@ -494,9 +499,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             
                                 // invoke send
                                 if (forcedSender) {
-                                    forcedSender.call(this, payload, async);
+                                    result = forcedSender.call(this, payload, async);
                                 } else {
-                                    _self._sender(payload, async);
+                                    result = _self._sender(payload, async);
                                 }
                             }
             
@@ -519,11 +524,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
                 }
+
+                return result;
             };
         
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _self.onunloadFlush();
-                _offlineListener.unload();
+                runTargetUnload(_offlineListener, false);
                 _initDefaults();
             };
 
@@ -765,7 +772,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * @param payload - {string} - The data payload to be sent.
              * @param isAsync - {boolean} - Indicates if the request should be sent asynchronously
              */
-            function _xhrSender(payload: string[], isAsync: boolean) {
+            function _xhrSender(payload: string[], isAsync: boolean): void | IPromise<boolean> {
+                let thePromise: void | IPromise<boolean>;
+                let resolveFunc: (sendComplete: boolean) => void;
+                let rejectFunc: (reason?: any) => void;
+
                 const xhr = new XMLHttpRequest();
                 const endPointUrl = _endpointUrl;
                 try {
@@ -786,14 +797,31 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     xhr.setRequestHeader(headerName, _headers[headerName]);
                 });
         
-                xhr.onreadystatechange = () => _self._xhrReadyStateChange(xhr, payload, payload.length);
-                xhr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXhr(xhr), event);
+                xhr.onreadystatechange = () => {
+                    _self._xhrReadyStateChange(xhr, payload, payload.length);
+                    if (xhr.readyState === 4) {
+                        resolveFunc && resolveFunc(true);
+                    }
+                }
+                xhr.onerror = (event: ErrorEvent|any) => {
+                    _self._onError(payload, _formatErrorMessageXhr(xhr), event);
+                    rejectFunc && rejectFunc(event);
+                }
         
+                if (isAsync && _enableSendPromise) {
+                    thePromise = createPromise<boolean>((resolve, reject) => {
+                        resolveFunc = resolve;
+                        rejectFunc = reject;
+                    });
+                }
+
                 // compose an array of payloads
                 const batch = _self._buffer.batchPayloads(payload);
                 xhr.send(batch);
         
                 _self._buffer.markAsSent(payload);
+
+                return thePromise;
             }
 
             function _fetchKeepAliveSender(payload: string[], isAsync: boolean) {
@@ -822,7 +850,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * @param isAsync - {boolean} - not used
              */
             function _fetchSender(payload: string[], isAsync: boolean) {
-                _doFetchSender(payload, true);
+                return _doFetchSender(payload, true);
             }
 
             /**
@@ -830,10 +858,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * @param payload - {string} - The data payload to be sent.
              * @param isAsync - {boolean} - For fetch this identifies whether we are "unloading" (false) or a normal request
              */
-            function _doFetchSender(payload: string[], isAsync: boolean) {
+            function _doFetchSender(payload: string[], isAsync: boolean): void | IPromise<boolean> {
                 const endPointUrl = _endpointUrl;
                 const batch = _self._buffer.batchPayloads(payload);
                 const plainTextBatch = new Blob([batch], { type: "application/json" });
+                let thePromise: void | IPromise<boolean>;
+                let resolveFunc: (sendComplete: boolean) => void;
+                let rejectFunc: (reason?: any) => void;
                 let requestHeaders = new Headers();
                 let batchLength = batch.length;
                 let ignoreResponse = false;
@@ -874,43 +905,49 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                 _self._buffer.markAsSent(payload);
 
+                if (isAsync && _enableSendPromise) {
+                    thePromise = createPromise<boolean>((resolve, reject) => {
+                        resolveFunc = resolve;
+                        rejectFunc = reject;
+                    });
+                }
                 try {
-                    fetch(request).then(response => {
+                    doAwaitResponse(fetch(request), (result) => {
                         if (!isAsync) {
                             _syncFetchPayload -= batchLength;
                             batchLength = 0;
                         }
-    
+
                         if (!responseHandled) {
                             responseHandled = true;
 
-                            /**
-                             * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500.
-                             * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure
-                             * or if anything prevented the request from completing.
-                             */
-                            if (!response.ok) {
-                                _self._onError(payload, response.statusText)
+                            if (!result.rejected) {
+                                let response = result.value;
+
+                                /**
+                                 * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500.
+                                 * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure
+                                 * or if anything prevented the request from completing.
+                                 */
+                                if (!response.ok) {
+                                    _self._onError(payload, response.statusText);
+                                    resolveFunc && resolveFunc(false);
+                                } else {
+                                    doAwaitResponse(response.text(), (resp) => {
+                                        _checkResponsStatus(response.status, payload, response.url, payload.length, response.statusText, resp.value || "");
+                                        resolveFunc && resolveFunc(true);
+                                    });
+                                }
                             } else {
-                                response.text().then(text => {
-                                    _checkResponsStatus(response.status, payload, response.url, payload.length, response.statusText, text);
-                                });
+                                _self._onError(payload, result.reason && result.reason.message);
+                                rejectFunc && rejectFunc(result.reason);
                             }
-                        }
-                    }).catch((error: Error) => {
-                        if (!isAsync) {
-                            _syncFetchPayload -= batchLength;
-                            batchLength = 0;
-                        }
-    
-                        if (!responseHandled) {
-                            responseHandled = true;
-                            _self._onError(payload, error.message)
                         }
                     });
                 } catch (e) {
                     if (!responseHandled) {
                         _self._onError(payload, dumpObj(e));
+                        rejectFunc && rejectFunc(e);
                     }
                 }
 
@@ -918,7 +955,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // Assume success during unload processing as we most likely won't get the response
                     responseHandled = true;
                     _self._onSuccess(payload, payload.length);
+                    resolveFunc && resolveFunc(true);
                 }
+
+                return thePromise;
             }
         
             /**
@@ -1187,10 +1227,21 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     }
 
     /**
-     * Flush the batched events immediately (not synchronously).
-     * Will not flush if the Sender has been paused.
+     * Flush to send data immediately; channel should default to sending data asynchronously. If executing asynchronously (the default) and
+     * you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
+     * @param async - send data asynchronously when true
+     * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
+     * If the caller doesn't return true the caller should assume that it may never be called.
+     * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
+     * @returns - If a callback is provided `true` to indicate that callback will be called after the flush is complete otherwise the caller
+     * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
+     * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
+     * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
+     * and async is true.
      */
-    public flush() {
+    public flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1218,11 +1269,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     }
 
     /**
-     * Immediately send buffered data
-     * @param async - {boolean} - Indicates if the events should be sent asynchronously
+     * Trigger the immediate send of buffered data; If executing asynchronously (the default) this may (not required) return
+     * an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) that will resolve once the
+     * send is complete. The actual implementation of the `IPromise` will be a native Promise (if supported) or the default
+     * as supplied by [ts-async library](https://github.com/nevware21/ts-async)
+     * @param async - Indicates if the events should be sent asynchronously
      * @param forcedSender - {SenderFunction} - Indicates the forcedSender, undefined if not passed
+     * @returns - Nothing or optionally, if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved (or reject) once the send is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * should only be returned when async is true.
      */
-    public triggerSend(async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) {
+    public triggerSend(async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason): void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

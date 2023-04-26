@@ -3,6 +3,7 @@
 
 import { ApplicationInsights, IConfiguration, IEventTelemetry, IMetricTelemetry, IPageViewTelemetry, ITraceTelemetry } from "@microsoft/applicationinsights-web";
 import { generateNewConfig } from "./utils";
+import { runTargetUnload } from "@microsoft/applicationinsights-core-js";
 
 
 // ******************************************************************************************************************************
@@ -35,7 +36,7 @@ export function initApplicationInsights(config: IConfiguration = {}) {
  */
 export function unloadApplicationInsights() {
     if (_appInsights) {
-        _appInsights.unload();
+        runTargetUnload(_appInsights);
         _appInsights = null;
         return true;
     }
@@ -225,8 +226,6 @@ export const metricItem: IMetricTelemetry = {
         metirc: 1
     }
 };
-
-
 
 // // ***********************************************************************************************************
 // // NPM Initialization
