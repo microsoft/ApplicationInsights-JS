@@ -67,7 +67,7 @@ function _createChannelQueues(config: ITeeChannelConfig, core: IAppInsightsCore,
 }
 
 export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsHost {
-public readonly identifier: string = "TeeChannelController";
+    public readonly identifier: string = "TeeChannelController";
     public readonly priority: number = 999;
 
     /**
