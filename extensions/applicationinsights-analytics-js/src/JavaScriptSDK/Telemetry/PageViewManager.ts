@@ -43,7 +43,9 @@ export class PageViewManager {
     
             function _flushChannels(isAsync: boolean) {
                 if (core) {
-                    core.flush(isAsync);
+                    core.flush(isAsync, () => {
+                        // Event flushed, callback added to prevent promise creation
+                    });
                 }
             }
         

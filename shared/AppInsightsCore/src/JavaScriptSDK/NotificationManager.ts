@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { arrForEach, arrIndexOf, scheduleTimeout } from "@nevware21/ts-utils";
+import { IPromise, createAllPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { arrForEach, arrIndexOf, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../Config/DynamicConfig";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { IUnloadHook } from "../applicationinsights-core-js";
 import { STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT } from "./InternalConstants";
 
 const defaultValues = {
@@ -34,20 +36,26 @@ function _runListeners(listeners: INotificationListener[], name: string, isAsync
  * Class to manage sending notifications to all the listeners.
  */
 export class NotificationManager implements INotificationManager {
-    listeners: INotificationListener[] = [];
+    public readonly listeners: INotificationListener[] = [];
 
     constructor(config?: IConfiguration) {
         let perfEvtsSendAll: boolean;
+        let unloadHandler: IUnloadHook;
+        let _listeners: INotificationListener[] = [];
         
         let cfgHandler = createDynamicConfig(config, defaultValues);
 
-        cfgHandler.watch((details) => {
+        unloadHandler = cfgHandler.watch((details) => {
             perfEvtsSendAll = !!details.cfg.perfEvtsSendAll;
         });
 
         dynamicProto(NotificationManager, this, (_self) => {
+            objDefine(_self, "listeners", {
+                g: () => _listeners
+            });
+    
             _self.addNotificationListener = (listener: INotificationListener): void => {
-                _self.listeners.push(listener);
+                _listeners.push(listener);
             };
 
             /**
@@ -55,10 +63,10 @@ export class NotificationManager implements INotificationManager {
              * @param listener - AWTNotificationListener to remove.
              */
             _self.removeNotificationListener = (listener: INotificationListener): void => {
-                let index: number = arrIndexOf(_self.listeners, listener);
+                let index: number = arrIndexOf(_listeners, listener);
                 while (index > -1) {
-                    _self.listeners.splice(index, 1);
-                    index = arrIndexOf(_self.listeners, listener);
+                    _listeners.splice(index, 1);
+                    index = arrIndexOf(_listeners, listener);
                 }
             };
 
@@ -67,7 +75,7 @@ export class NotificationManager implements INotificationManager {
              * @param events - The array of events that have been sent.
              */
             _self.eventsSent = (events: ITelemetryItem[]): void => {
-                _runListeners(_self.listeners, STR_EVENTS_SENT, true, (listener) => {
+                _runListeners(_listeners, STR_EVENTS_SENT, true, (listener) => {
                     listener.eventsSent(events);
                 });
             };
@@ -79,7 +87,7 @@ export class NotificationManager implements INotificationManager {
              * constant should be used to check the different values.
              */
             _self.eventsDiscarded = (events: ITelemetryItem[], reason: number): void => {
-                _runListeners(_self.listeners, STR_EVENTS_DISCARDED, true, (listener) => {
+                _runListeners(_listeners, STR_EVENTS_DISCARDED, true, (listener) => {
                     listener.eventsDiscarded(events, reason);
                 });
             };
@@ -90,7 +98,7 @@ export class NotificationManager implements INotificationManager {
              * @param isAsync - A flag which identifies whether the requests are being sent in an async or sync manner.
              */
             _self.eventsSendRequest = (sendReason: number, isAsync: boolean): void => {
-                _runListeners(_self.listeners, STR_EVENTS_SEND_REQUEST, isAsync, (listener) => {
+                _runListeners(_listeners, STR_EVENTS_SEND_REQUEST, isAsync, (listener) => {
                     listener.eventsSendRequest(sendReason, isAsync);
                 });
             };
@@ -100,7 +108,7 @@ export class NotificationManager implements INotificationManager {
 
                     // Send all events or only parent events
                     if (perfEvtsSendAll || !perfEvent.isChildEvt()) {
-                        _runListeners(_self.listeners, STR_PERF_EVENT, false, (listener) => {
+                        _runListeners(_listeners, STR_PERF_EVENT, false, (listener) => {
                             if (perfEvent.isAsync) {
                                 scheduleTimeout(() => listener.perfEvent(perfEvent), 0);
                             } else {
@@ -109,7 +117,39 @@ export class NotificationManager implements INotificationManager {
                         });
                     }
                 }
-            }
+            };
+
+            _self.unload = (isAsync?: boolean) => {
+
+                const _finishUnload = () => {
+                    unloadHandler && unloadHandler.rm();
+                    unloadHandler = null;
+                    _listeners = [];
+                };
+
+                let waiting: IPromise<void>[];
+                _runListeners(_listeners, "unload", false, (listener) => {
+                    let asyncUnload = listener.unload(isAsync);
+                    if (asyncUnload) {
+                        if (!waiting) {
+                            waiting = [];
+                        }
+
+                        waiting.push(asyncUnload);
+                    }
+                });
+
+                if (waiting) {
+                    return createPromise((resolve) => {
+                        return doAwaitResponse(createAllPromise(waiting), () => {
+                            _finishUnload();
+                            resolve();
+                        });
+                    });
+                } else {
+                    _finishUnload();
+                }
+            };
         });
     }
     
@@ -161,5 +201,19 @@ export class NotificationManager implements INotificationManager {
      * the event can be displayed via the debug plugin extension.
      * @param perfEvent
      */
-    perfEvent?(perfEvent: IPerfEvent): void;
+    perfEvent?(perfEvent: IPerfEvent): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Unload and remove any state that this INotificationManager may be holding, this is generally called when the
+     * owning SDK is being unloaded.
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @return If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
+     * the function should return an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * / Promise to allow any listeners to wait for the operation to complete.
+     */
+    unload?(isAsync?: boolean): void | IPromise<void> {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
 }

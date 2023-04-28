@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 "use strict"
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { IPromise } from "@nevware21/ts-async";
 import { dumpObj, isFunction, isUndefined } from "@nevware21/ts-utils";
-import { createDynamicConfig } from "../Config/DynamicConfig";
+import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { IConfigDefaults } from "../applicationinsights-core-js";
+import { IConfigDefaults, IUnloadHook } from "../applicationinsights-core-js";
 import { getDebugExt } from "./DbgExtensionUtils";
 import { getConsole, getJSON, hasJSON } from "./EnvUtils";
 import { STR_EMPTY, STR_ERROR_TO_CONSOLE, STR_WARN_TO_CONSOLE } from "./InternalConstants";
@@ -112,9 +112,10 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         let _loggingLevelTelemetry: number;
         let _maxInternalMessageLimit: number;
         let _enableDebug: boolean;
+        let _unloadHandler: IUnloadHook;
 
         dynamicProto(DiagnosticLogger, this, (_self) => {
-            _setDefaultsFromConfig(config || {});
+            _unloadHandler = _setDefaultsFromConfig(config || {});
 
             _self.consoleLoggingLevel = () => _loggingLevelConsole;
 
@@ -188,6 +189,11 @@ export class DiagnosticLogger implements IDiagnosticLogger {
              */
             _self.logInternalMessage = _logInternalMessage;
 
+            _self.unload = (isAsync?: boolean) => {
+                _unloadHandler && _unloadHandler.rm();
+                _unloadHandler = null;
+            };
+
             function _logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
                 if (_areInternalMessagesThrottled()) {
                     return;
@@ -226,10 +232,9 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 }
             }
 
-            function _setDefaultsFromConfig(config: IConfiguration) {
+            function _setDefaultsFromConfig(config: IConfiguration): IUnloadHook {
                 // make sure the config is dynamic
-                let handler = createDynamicConfig(config, defaultValues, _self);
-                handler.watch((details) => {
+                return onConfigChange(createDynamicConfig(config, defaultValues, _self).cfg, (details) => {
                     let config = details.cfg;
                     _loggingLevelConsole = config.loggingLevelConsole;
                     _loggingLevelTelemetry = config.loggingLevelTelemetry;
@@ -302,7 +307,15 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public update(updateState: ITelemetryUpdateState): void {
+    /**
+     * Unload and remove any state that this IDiagnosticLogger may be holding, this is generally called when the
+     * owning SDK is being unloaded.
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @return If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
+     * the function should return an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * / Promise to allow any listeners to wait for the operation to complete.
+     */
+    public unload(isAsync?: boolean): void | IPromise<void> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

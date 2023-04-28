@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+import { ITimerHandler } from "@nevware21/ts-utils";
+import { IPromise } from "@nevware21/ts-async";
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IChannelControls } from "./IChannelControls";
 import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
@@ -17,7 +20,6 @@ import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IDistributedTraceContext } from "./IDistributedTraceContext";
 import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
 import { WatcherFunction } from "../Config/IDynamicWatcher";
-import { ITimerHandler } from "@nevware21/ts-utils";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
@@ -135,11 +137,18 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * If you pass isAsync as `true` (also the default) and DO NOT pass a callback function then an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the unload is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param isAsync - Can the unload be performed asynchronously (default)
      * @param unloadComplete - An optional callback that will be called once the unload has completed
-     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the unload. Defaults to 5 seconds.
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
+     * unload. Defaults to 5 seconds.
+     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will only be returned when no callback is provided and isAsync is true
      */
-    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void;
+    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState>;
 
     /**
      * Find and return the (first) plugin with the specified identifier if present

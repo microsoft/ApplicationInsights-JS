@@ -85,6 +85,15 @@ export interface ISenderConfig {
      * (Optional) The number of events that can be kept in memory before the SDK starts to drop events. By default, this is 10,000.
      */
     eventsLimitInMem: number;
+
+    /**
+     * (Optional) Enable the sender to return a promise so that manually flushing (and general sending) can wait for the request to finish.
+     * Note: Enabling this may cause unhandled promise rejection errors to occur if you do not listen and handle any rejection response,
+     * this *should* only be for manual flush attempts.
+     * Defaults to false
+     * @since 3.0.1
+     */
+    enableSendPromise?: boolean;
 }
 
 export interface IBackendResponse {

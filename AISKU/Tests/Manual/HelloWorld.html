@@ -45,9 +45,9 @@
     <textarea id="log" style="width:45%; min-height: 400px;"></textarea>
     <textarea id="cfg" style="width:50%; min-height: 400px;"></textarea>
 </div>
-</div>
 
 <script>
+    //Promise = null;
     var _message = {
         log: "", 
         cfg: ""
@@ -69,7 +69,7 @@
 <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> -->
 
 <!-- <script src="file://./ai.2.8.0.js"></script> -->
-<script src="http://localhost:9001/AISKU/browser/es5/ai.2.js"></script>
+<script src="http://localhost:9001/AISKU/browser/es5/ai.3.js"></script>
 <!-- <script src="https://js.monitor.azure.com/scripts/b/ai.2.7.4.js" crossorigin="anonymous"></script> -->
 <!-- <script src="https://js.monitor.azure.com/scripts/b/ai.2.8.0.js" crossorigin="anonymous"></script> -->
 <!-- <script>
@@ -83,7 +83,7 @@
     // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
     // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
     // crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
-    // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
+    // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument - the sdk instance (DO NOT ADD anything to the sdk.queue - As they won't get called)
     cfg: { // Application Insights Configuration
         connectionString: "InstrumentationKey=" + instrumentationKey + ";IngestionEndpoint=http://localhost:9001",
         //extensions: [reactPlugin],

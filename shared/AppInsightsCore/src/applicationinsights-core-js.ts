@@ -21,15 +21,13 @@ export { throwAggregationError } from "./JavaScriptSDK/AggregationError";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
 export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./JavaScriptSDK/RandomHelper";
-export {
-    Undefined, newGuid, generateW3CId
-} from "./JavaScriptSDK/CoreUtils";
+export { Undefined, newGuid, generateW3CId } from "./JavaScriptSDK/CoreUtils";
+export { runTargetUnload, doUnloadAll } from "./JavaScriptSDK/AsyncUtils";
 export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
     isNotUndefined, isNotNullOrUndefined, objExtend
 } from "./JavaScriptSDK/HelperFuncs";
-
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
     strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,
