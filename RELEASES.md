@@ -2,7 +2,15 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
-## 2.8.12 (Apr, 11th, 2023)
+## 2.8.13 (May 1st, 2023)
+
+### Changelog
+
+- #2052 [BUG] Typing issue with generated types causing Type X is not assignable to type Y
+- #2055 Add ability to disable the pollInternalLogs via config and change to stop using setInterval
+- #2049 [Master] Fix Perf Tests
+
+## 2.8.12 (Apr 11th, 2023)
 
 ### Changelog
 
