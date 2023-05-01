@@ -311,6 +311,10 @@ function getVersionDetails(theVersion) {
 }
 
 function shouldUpdatePackage(name) {
+    if (name.indexOf("-shims") !== -1) {
+        return false;
+    }
+
     if (!updateAll) {
         if (name.indexOf("-react-js") !== -1) {
             return isReact;
@@ -419,7 +423,8 @@ function updateDependencies(target, orgVersion, newVersion) {
     if (target) {
         Object.keys(target).forEach((value) => {
             if (value.indexOf("@microsoft/applicationinsights-") !== -1 && 
-                    value.indexOf("@microsoft/applicationinsights-rollup") === -1) {
+                    value.indexOf("@microsoft/applicationinsights-rollup") === -1 &&
+                    value.indexOf("@microsoft/applicationinsights-shims") === -1) {
 
                 let version = target[value];
                 if (theVersion.pkgs[value]) {
