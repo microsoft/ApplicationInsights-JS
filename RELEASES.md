@@ -2,6 +2,16 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.1 (May 2nd, 2023)
+
+### Changelog
+
+- #2057 [Main] Add ability to disable the pollInternalLogs via config and change to stop using setInterval #2055
+- #2051 [Main] Fix Perf Tests
+- #2053 [Main] [BUG] Typing issue with generated types causing Type X is not assignable to type Y #2052
+- #2058 [Bug] Fix issues related to dynamic config listeners during unloading
+  - Add Promise support during unloading
+
 ## 3.0.0 (Apr 12th, 2023)
 
 #### Major release with breaking changes from v2.x see [v3.x Breaking Changes](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v3_BreakingChanges.html) for details.
@@ -28,6 +38,14 @@ Maintained from the `main` branch, v2.x is in maintenance mode on the `master` b
   - Support for parallel channels was removed from the Core and SKU's and extracted to the new `TeeChannel`, if you require this support you will need to use npm and include this module. 
 - v2.x Extension support.
   - While the basic API and support for Backward compatibility for the v2.x extension (plugin) API was maintained, due to the breaking changes (specifically the removal of the namespaced helpers) this will only support self contained components (without recompiling). Any npm module that attempts to import and use a removed helper function will potentially break and will need to be updated to use the newer or replacement helper functions (see the v3.x Breaking Changes for details), if you find an issue and are not able to work around please [raise an issue](https://github.com/microsoft/ApplicationInsights-JS/issues).
+
+## 2.8.13 (May 1st, 2023)
+
+### Changelog
+
+- #2052 [BUG] Typing issue with generated types causing Type X is not assignable to type Y
+- #2055 Add ability to disable the pollInternalLogs via config and change to stop using setInterval
+- #2049 [Master] Fix Perf Tests
 
 ## 2.8.12 (Apr, 11th, 2023)
 
