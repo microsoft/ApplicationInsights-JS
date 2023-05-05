@@ -26,7 +26,7 @@ const generateBackground = (isProduction) => {
             file: `browser/scripts/background.js`,
             banner: banner,
             format: "umd",
-            name: "Microsoft.ApplicationInsights3",
+            name: "Microsoft.ApplicationInsights",
             extend: true,
             freeze: false,
             sourcemap: true
@@ -77,7 +77,7 @@ const generatePopup = (isProduction) => {
             file: `browser/scripts/popup.js`,
             banner: banner,
             format: "umd",
-            name: "Microsoft.ApplicationInsights3",
+            name: "Microsoft.ApplicationInsights",
             extend: true,
             freeze: false,
             sourcemap: true
@@ -179,7 +179,7 @@ const generatePageHelper = () => {
             file: `browser/scripts/pageHelper.min.js`,
             banner: banner,
             format: "iife",
-            name: "Microsoft.ApplicationInsights3",
+            name: "Microsoft.ApplicationInsights",
             extend: true,
             freeze: false,
             sourcemap: true

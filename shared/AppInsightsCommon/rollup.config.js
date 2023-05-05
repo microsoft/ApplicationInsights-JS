@@ -19,4 +19,18 @@ const replaceValues = {
 
 updateDistEsmFiles(replaceValues, banner, true, true, "dist-es5");
 
-export default createUnVersionedConfig(banner, "Microsoft.ApplicationInsights3", entryPointName, entryPointName, [ "applicationinsights-common" ]);
+export default createUnVersionedConfig(banner,
+  {
+    namespace: "Microsoft.ApplicationInsights",
+    version: version,
+    node: {
+      entryPoint: entryPointName, 
+      outputName: entryPointName
+    },
+    browser: {
+      entryPoint: entryPointName,
+      outputName: entryPointName
+    },
+  },
+  [ "applicationinsights-common" ]
+);

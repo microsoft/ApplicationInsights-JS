@@ -21,7 +21,7 @@ updateDistEsmFiles(replaceValues, banner, true, true, "dist-es5");
 
 export default createConfig(banner, 
   {
-    namespace: "Microsoft.ApplicationInsights3",
+    namespace: "Microsoft.ApplicationInsights",
     version: version,
     node: {
       entryPoint: outputName,
