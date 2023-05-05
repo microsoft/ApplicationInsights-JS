@@ -95,15 +95,6 @@ try {
     //         ApplicationInsights, Telemetry
     //     };
     // }
-
-    // CDN Support for handling backward compatibility with AI 2 / 3
-    let msNs = getInst("Microsoft");
-    if (msNs && !msNs["ApplicationInsights"] && msNs["ApplicationInsights3"]) {
-        // If we have initialized as a module for Microsoft.ApplicationInsights3 and no Microsoft.ApplicationInsights
-        // exists then proxy Microsoft.ApplicationInsights to Microsoft.ApplicationInsights3 so older users can more
-        // easily upgrade.
-        msNs["ApplicationInsights"]  = msNs["ApplicationInsights3"];
-    }
 } catch (e) {
     _logWarn(aiName, e.message);
 }

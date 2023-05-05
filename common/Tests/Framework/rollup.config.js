@@ -17,7 +17,7 @@ const nodeUmdRollupConfigFactory = () => {
       file: `dist/es5/${outputName}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights3",
+      name: "Microsoft.ApplicationInsights",
       extend: true,
       freeze: false,
       sourcemap: true
