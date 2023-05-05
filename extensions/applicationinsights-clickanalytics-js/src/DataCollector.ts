@@ -67,7 +67,7 @@ export function getClickTarget(element: any) {
  */
 export function onDomLoaded(callback: () => void) {
     onDomReadyDo(() => {
-        if (hasDocument && document.readyState === "complete") {
+        if (hasDocument() && getDocument().readyState === "complete") {
             callback();
         } else {
             let win = getWindow();
