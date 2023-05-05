@@ -24,7 +24,7 @@ export class DomContentHandler implements IContentHandler {
             _self.getMetadata = (): { [name: string]: string } => {
                 let dataTags = (_self._config || {}).dataTags;
                 let metaTags = {};
-                if (hasDocument) {
+                if (hasDocument()) {
                     metaTags = isValueAssigned(dataTags.metaDataPrefix) ? _getMetaDataFromDOM(dataTags.captureAllMetaDataContent, dataTags.metaDataPrefix, false) :
                         _getMetaDataFromDOM(dataTags.captureAllMetaDataContent ,"", false);
                 }
@@ -229,8 +229,8 @@ export class DomContentHandler implements IContentHandler {
             function _getMetaDataFromDOM(captureAllMetaDataContent:boolean, prefix: string, removePrefix: boolean): { [name: string]: string } {
                 var metaElements: any;
                 var metaData = {};
-                if (hasDocument) {
-                    metaElements = document.querySelectorAll("meta");
+                if (hasDocument()) {
+                    metaElements = getDocument().querySelectorAll("meta");
                     for (var i = 0; i < metaElements.length; i++) {
                         var meta = metaElements[i];
                         if (meta.name) {
