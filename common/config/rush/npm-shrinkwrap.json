@@ -268,11 +268,11 @@
       "integrity": "sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg=="
     },
     "node_modules/@microsoft/api-extractor": {
-      "version": "7.34.7",
-      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.34.7.tgz",
-      "integrity": "sha512-8CrrYyOBWqc4XFviR1KSuHSlmJjlnC5CVpPkcFB8HXiLABUVaVWFTsOzJIwUU6z8mc4BZPZ8tSGAg/mwFDU31Q==",
+      "version": "7.34.8",
+      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.34.8.tgz",
+      "integrity": "sha512-2Eh1PlZ8wULtH3kyAWcj62gFtjGKRXrEplsCO54vMLjiav3qet454VpSBXwKkXBenBylZRMk3SMBcpcuJ8RnKQ==",
       "dependencies": {
-        "@microsoft/api-extractor-model": "7.26.7",
+        "@microsoft/api-extractor-model": "7.26.8",
         "@microsoft/tsdoc": "0.14.2",
         "@microsoft/tsdoc-config": "~0.16.1",
         "@rushstack/node-core-library": "3.58.0",
@@ -290,9 +290,9 @@
       }
     },
     "node_modules/@microsoft/api-extractor-model": {
-      "version": "7.26.7",
-      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor-model/-/api-extractor-model-7.26.7.tgz",
-      "integrity": "sha512-rx3Tq632VG3ddR74kPuPbv1qmUgO2IuCvn1z16hbNWNS5RhnTQqNPWIm7NVoi6lCh2E7uxzfmdnWXIXiJhM5IQ==",
+      "version": "7.26.8",
+      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor-model/-/api-extractor-model-7.26.8.tgz",
+      "integrity": "sha512-ESj3bBJkiMg/8tS0PW4+2rUgTVwOEfy41idTnFgdbVX+O50bN6S99MV6FIPlCZWCnRDcBfwxRXLdAkOQQ0JqGw==",
       "dependencies": {
         "@microsoft/tsdoc": "0.14.2",
         "@microsoft/tsdoc-config": "~0.16.1",
@@ -2325,9 +2325,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.378",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.378.tgz",
-      "integrity": "sha512-RfCD26kGStl6+XalfX3DGgt3z2DNwJS5DKRHCpkPq5T/PqpZMPB1moSRXuK9xhkt/sF57LlpzJgNoYl7mO7Z6w=="
+      "version": "1.4.384",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.384.tgz",
+      "integrity": "sha512-I97q0MmRAAqj53+a8vZsDkEXBZki+ehYAOPzwtQzALip52aEp2+BJqHFtTlsfjoqVZYwPpHC8wM6MbsSZQ/Eqw=="
     },
     "node_modules/encodeurl": {
       "version": "1.0.2",
@@ -5027,9 +5027,9 @@
       }
     },
     "node_modules/rollup": {
-      "version": "3.21.2",
-      "resolved": "https://registry.npmjs.org/rollup/-/rollup-3.21.2.tgz",
-      "integrity": "sha512-c4vC+JZ3bbF4Kqq2TtM7zSKtSyMybFOjqmomFax3xpfYaPZDZ4iz8NMIuBRMjnXOcKYozw7bC6vhJjiWD6JpzQ==",
+      "version": "3.21.5",
+      "resolved": "https://registry.npmjs.org/rollup/-/rollup-3.21.5.tgz",
+      "integrity": "sha512-a4NTKS4u9PusbUJcfF4IMxuqjFzjm6ifj76P54a7cKnvVzJaG12BLVR+hgU2YDGHzyMMQNxLAZWuALsn8q2oQg==",
       "bin": {
         "rollup": "dist/bin/rollup"
       },
@@ -6060,11 +6060,11 @@
       "integrity": "sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg=="
     },
     "@microsoft/api-extractor": {
-      "version": "7.34.7",
-      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.34.7.tgz",
-      "integrity": "sha512-8CrrYyOBWqc4XFviR1KSuHSlmJjlnC5CVpPkcFB8HXiLABUVaVWFTsOzJIwUU6z8mc4BZPZ8tSGAg/mwFDU31Q==",
+      "version": "7.34.8",
+      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.34.8.tgz",
+      "integrity": "sha512-2Eh1PlZ8wULtH3kyAWcj62gFtjGKRXrEplsCO54vMLjiav3qet454VpSBXwKkXBenBylZRMk3SMBcpcuJ8RnKQ==",
       "requires": {
-        "@microsoft/api-extractor-model": "7.26.7",
+        "@microsoft/api-extractor-model": "7.26.8",
         "@microsoft/tsdoc": "0.14.2",
         "@microsoft/tsdoc-config": "~0.16.1",
         "@rushstack/node-core-library": "3.58.0",
@@ -6086,9 +6086,9 @@
       }
     },
     "@microsoft/api-extractor-model": {
-      "version": "7.26.7",
-      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor-model/-/api-extractor-model-7.26.7.tgz",
-      "integrity": "sha512-rx3Tq632VG3ddR74kPuPbv1qmUgO2IuCvn1z16hbNWNS5RhnTQqNPWIm7NVoi6lCh2E7uxzfmdnWXIXiJhM5IQ==",
+      "version": "7.26.8",
+      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor-model/-/api-extractor-model-7.26.8.tgz",
+      "integrity": "sha512-ESj3bBJkiMg/8tS0PW4+2rUgTVwOEfy41idTnFgdbVX+O50bN6S99MV6FIPlCZWCnRDcBfwxRXLdAkOQQ0JqGw==",
       "requires": {
         "@microsoft/tsdoc": "0.14.2",
         "@microsoft/tsdoc-config": "~0.16.1",
@@ -7679,9 +7679,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "electron-to-chromium": {
-      "version": "1.4.378",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.378.tgz",
-      "integrity": "sha512-RfCD26kGStl6+XalfX3DGgt3z2DNwJS5DKRHCpkPq5T/PqpZMPB1moSRXuK9xhkt/sF57LlpzJgNoYl7mO7Z6w=="
+      "version": "1.4.384",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.384.tgz",
+      "integrity": "sha512-I97q0MmRAAqj53+a8vZsDkEXBZki+ehYAOPzwtQzALip52aEp2+BJqHFtTlsfjoqVZYwPpHC8wM6MbsSZQ/Eqw=="
     },
     "encodeurl": {
       "version": "1.0.2",
@@ -9723,9 +9723,9 @@
       }
     },
     "rollup": {
-      "version": "3.21.2",
-      "resolved": "https://registry.npmjs.org/rollup/-/rollup-3.21.2.tgz",
-      "integrity": "sha512-c4vC+JZ3bbF4Kqq2TtM7zSKtSyMybFOjqmomFax3xpfYaPZDZ4iz8NMIuBRMjnXOcKYozw7bC6vhJjiWD6JpzQ==",
+      "version": "3.21.5",
+      "resolved": "https://registry.npmjs.org/rollup/-/rollup-3.21.5.tgz",
+      "integrity": "sha512-a4NTKS4u9PusbUJcfF4IMxuqjFzjm6ifj76P54a7cKnvVzJaG12BLVR+hgU2YDGHzyMMQNxLAZWuALsn8q2oQg==",
       "requires": {
         "fsevents": "~2.3.2"
       }

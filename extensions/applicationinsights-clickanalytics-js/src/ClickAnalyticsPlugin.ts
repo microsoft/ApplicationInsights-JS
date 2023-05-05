@@ -11,7 +11,7 @@ import {
     getExceptionName, isNullOrUndefined, onConfigChange, throwError, unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { hasDocument, objDeepFreeze } from "@nevware21/ts-utils";
+import { getDocument, hasDocument, objDeepFreeze } from "@nevware21/ts-utils";
 import {
     IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, ICoreData, ICustomDataTags, IPageActionTelemetry, IValueCallback
 } from "./Interfaces/Datamodel";
@@ -34,7 +34,7 @@ const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFree
     }),
     pageTags: {},
     coreData: cfgDfMerge<ICoreData, IClickAnalyticsConfiguration>({
-        referrerUri: hasDocument ? document.referrer : "",
+        referrerUri: hasDocument() ? getDocument().referrer : "",
         requestUri: cfgDfString(),
         pageName: cfgDfString(),
         pageType: cfgDfString()
