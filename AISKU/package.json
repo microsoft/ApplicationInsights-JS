@@ -27,15 +27,6 @@
         "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt aisku-min",
         "ai-restore": "grunt aisku-restore",
-        "nightwatch:chrome": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env chrome",
-        "nightwatch:firefox": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env firefox",
-        "nightwatch:edge": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env edge",
-        "nightwatch:ie8": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie8",
-        "nightwatch:ie9": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie9",
-        "nightwatch:ie10": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie10",
-        "nightwatch:ie11": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie11",
-        "nightwatch": "start node Tests/nightwatch/serve_nightwatch.js && npx concurrently \"npm run nightwatch:chrome\" \"npm run nightwatch:ie11\" \"npm run nightwatch:ie10\" && npm run nightwatch:done || npm run nightwatch:done",
-        "nightwatch:done": "curl http://localhost:8000/_done",
         "npm-pack": "npm pack"
     },
     "devDependencies": {
