@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { ITelemetryItem } from "./ITelemetryItem";
-import { IPerfEvent } from "./IPerfEvent";
 import { IPromise } from "@nevware21/ts-async";
+import { IPerfEvent } from "./IPerfEvent";
+import { ITelemetryItem } from "./ITelemetryItem";
 
 /**
  * An interface used for the notification listener.

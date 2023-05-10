@@ -5,10 +5,10 @@ import { IApplication } from "./Context/IApplication";
 import { IDevice } from "./Context/IDevice";
 import { IInternal } from "./Context/IInternal";
 import { ILocation } from "./Context/ILocation";
-import { IUserContext } from "./Context/IUser";
+import { IOperatingSystem } from "./Context/IOperatingSystem";
 import { ISession } from "./Context/ISession";
 import { ITelemetryTrace } from "./Context/ITelemetryTrace";
-import { IOperatingSystem } from "./Context/IOperatingSystem";
+import { IUserContext } from "./Context/IUser";
 import { IWeb } from "./Context/IWeb";
 
 export interface ITelemetryContext {

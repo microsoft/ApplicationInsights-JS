@@ -1,6 +1,6 @@
 /**
- * @copyright Microsoft 2021
- */
+* @copyright Microsoft 2021
+*/
 
 /**
   * PerfMarkMeasure Configuration
