@@ -331,7 +331,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     throwError("No " + STR_CHANNELS + " available");
                 }
                 
-                if (_channels.length > 1) {
+                if (_channelConfig && _channelConfig.length > 1) {
                     let teeController = _self.getPlugin("TeeChannelController");
                     if (!teeController || !teeController.plugin) {
                         _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "TeeChannel required");
@@ -733,30 +733,32 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 return (hasDocument() || !!_configHandler.cfg.enableWParam) ? 0 : -1;
             };
 
+
             function _setPluginVersions() {
+                let thePlugins: { [key: string]: IPlugin } = {};
+
                 _pluginVersionStringArr = [];
 
+                const _addPluginVersions = (plugins: IPlugin[]) => {
+                    if (plugins) {
+                        arrForEach(plugins, (plugin) => {
+                            if (plugin.identifier && plugin.version && !thePlugins[plugin.identifier]) {
+                                let ver = plugin.identifier + "=" + plugin.version;
+                                _pluginVersionStringArr.push(ver);
+                                thePlugins[plugin.identifier] = plugin;
+                            }
+                        });
+                    }
+                }
+
+                _addPluginVersions(_channels);
                 if (_channelConfig) {
                     arrForEach(_channelConfig, (channels) => {
-                        if (channels) {
-                            arrForEach(channels, (channel) => {
-                                if (channel.identifier && channel.version) {
-                                    let ver = channel.identifier + "=" + channel.version;
-                                    _pluginVersionStringArr.push(ver);
-                                }
-                            });
-                        }
+                        _addPluginVersions(channels);
                     });
                 }
 
-                if (_configExtensions) {
-                    arrForEach(_configExtensions, (ext) => {
-                        if (ext && ext.identifier && ext.version) {
-                            let ver = ext.identifier + "=" + ext.version;
-                            _pluginVersionStringArr.push(ver);
-                        }
-                    });
-                }
+                _addPluginVersions(_configExtensions);
             }
 
             function _initDefaults() {

@@ -21,9 +21,6 @@ export const STR_EVENTS_DISCARDED = "eventsDiscarded";
 export const STR_EVENTS_SEND_REQUEST = "eventsSendRequest";
 export const STR_PERF_EVENT = "perfEvent";
 
-export const STR_ERROR_TO_CONSOLE = "errorToConsole";
-export const STR_WARN_TO_CONSOLE = "warnToConsole";
-
 export const STR_GET_PERF_MGR = "getPerfMgr";
 export const STR_DOMAIN = "domain";
 export const STR_PATH = "path";

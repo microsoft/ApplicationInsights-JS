@@ -3,6 +3,7 @@
 
 import { isArray, isPlainObject, objForEachKey, symbolFor, throwTypeError } from "@nevware21/ts-utils";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
+import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
 
 // Using Symbol.for so that if the same symbol was already created it would be returned
 // To handle multiple instances using potentially different versions we are not using
@@ -155,11 +156,11 @@ export function forceDynamicConversion<T>(value: T): T {
  * @param value - The object to check whether it should be converted
  * @returns `true` if the value should be converted otherwise `false`.
  */
-export function _canMakeDynamic<T>(value: any) {
+export function _canMakeDynamic<T>(getFunc: () => any, state: _IDynamicConfigHandlerState<T>, value: any) {
     let result = false;
 
-    // Object must be exist and be truthy
-    if (value) {
+    // Object must exist and be truthy
+    if (value && !getFunc[state.blkVal]) {
         // Tagged as always convert
         result = value[FORCE_DYNAMIC];
 
