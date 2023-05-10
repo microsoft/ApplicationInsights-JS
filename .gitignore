@@ -174,7 +174,8 @@ bundle/
 node_modules/
 out/
 coreSDK/node_modules
-dist-esm/
+dist-es*/
+build/
 browser/
 types/
 dist/

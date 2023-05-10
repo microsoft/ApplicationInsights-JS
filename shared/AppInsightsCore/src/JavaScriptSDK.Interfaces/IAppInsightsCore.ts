@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ITelemetryItem } from "./ITelemetryItem";
-import { IChannelControls } from "./IChannelControls";
-import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
-import { IConfiguration } from "./IConfiguration";
-import { INotificationManager } from "./INotificationManager";
-import { INotificationListener } from "./INotificationListener";
-import { IDiagnosticLogger } from "./IDiagnosticLogger";
-import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
-import { IPerfManagerProvider } from "./IPerfManager";
-import { ICookieMgr } from "./ICookieMgr";
-import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
-import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
-import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
+import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
+import { IChannelControls } from "./IChannelControls";
+import { IConfiguration } from "./IConfiguration";
+import { ICookieMgr } from "./ICookieMgr";
+import { IDiagnosticLogger } from "./IDiagnosticLogger";
 import { IDistributedTraceContext } from "./IDistributedTraceContext";
+import { INotificationListener } from "./INotificationListener";
+import { INotificationManager } from "./INotificationManager";
+import { IPerfManagerProvider } from "./IPerfManager";
+import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
+import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
+import { ITelemetryItem } from "./ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
+import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;

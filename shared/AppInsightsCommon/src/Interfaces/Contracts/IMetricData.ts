@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDomain } from "./IDomain";
 import { IDataPoint } from "./IDataPoint";
+import { IDomain } from "./IDomain";
 
 /**
  * An instance of the Metric item is a list of measurements (single data points) and/or aggregations.

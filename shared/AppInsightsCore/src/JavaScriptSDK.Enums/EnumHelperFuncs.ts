@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { objForEachKey, deepFreeze } from "../JavaScriptSDK/HelperFuncs";
+import { deepFreeze, objForEachKey } from "../JavaScriptSDK/HelperFuncs";
 
 export declare type EnumValue<E = any> = { readonly [key in keyof E]: E[key] };
 export declare type EnumMap<E = any, I = E> = { readonly [key in keyof E extends string ? keyof E : never]: key extends string ? key : keyof E } & I;

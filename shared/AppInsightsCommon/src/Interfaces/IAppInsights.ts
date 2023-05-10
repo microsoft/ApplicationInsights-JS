@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IEventTelemetry } from "./IEventTelemetry";
-import { IPageViewTelemetry } from "./IPageViewTelemetry";
-import { IExceptionTelemetry, IAutoExceptionTelemetry } from "./IExceptionTelemetry";
-import { ITraceTelemetry } from "./ITraceTelemetry";
-import { IMetricTelemetry } from  "./IMetricTelemetry";
-import { IPageViewPerformanceTelemetry } from "./IPageViewPerformanceTelemetry";
 import { ICookieMgr, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { IEventTelemetry } from "./IEventTelemetry";
+import { IAutoExceptionTelemetry, IExceptionTelemetry } from "./IExceptionTelemetry";
+import { IMetricTelemetry } from "./IMetricTelemetry";
+import { IPageViewPerformanceTelemetry } from "./IPageViewPerformanceTelemetry";
+import { IPageViewTelemetry } from "./IPageViewTelemetry";
+import { ITraceTelemetry } from "./ITraceTelemetry";
 
 export interface IAppInsights {
 

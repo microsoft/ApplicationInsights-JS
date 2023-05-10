@@ -1389,14 +1389,11 @@ function minifyNamesFn(grunt) {
                         // remove unused imports
                         removeUnusedImports(parsedFile);
             
-                        if (parsedFile.changed) {
-            
-                            var src = formatFile(parsedFile, theOptions.maxImportWidth);
-                            if (orgSrc !== src) {
-                                if (!theOptions.testOnly) {
-                                    // Rewrite the file
-                                    fs.writeFileSync(inputFile + theOptions.ext, src);
-                                }
+                        var src = formatFile(parsedFile, theOptions.maxImportWidth);
+                        if (orgSrc !== src && orgSrc.trim() !== src.trim()) {
+                            if (!theOptions.testOnly) {
+                                // Rewrite the file
+                                fs.writeFileSync(inputFile + theOptions.ext, src);
                             }
                         } else {
                             grunt.log.verbose.writeln((" -- Not changed").cyan);
