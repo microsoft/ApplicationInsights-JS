@@ -27,8 +27,8 @@
         "mintest": "",
         "perftest": "",
         "lint": "tslint -p tsconfig.json",
-        "ai-min": "grunt example-shared-worker-min",
-        "ai-restore": "grunt example-shared-worker-restore"
+        "ai-min": "",
+        "ai-restore": ""
     },
     "repository": {
         "type": "git",

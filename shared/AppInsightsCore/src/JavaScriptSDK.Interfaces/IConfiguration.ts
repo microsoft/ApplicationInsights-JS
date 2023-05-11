@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ITelemetryPlugin } from "./ITelemetryPlugin";
+import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
-import { IAppInsightsCore } from "./IAppInsightsCore";
+import { ITelemetryPlugin } from "./ITelemetryPlugin";
 
 "use strict";
 
