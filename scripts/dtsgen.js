@@ -116,14 +116,13 @@ rollupContent +=
 
 console.log(`Transforming: ${theArgs.dtsFile}`);
 
-fs.readFile(theArgs.dtsFile, (err, data) => {
-    if (err) {
-        console.error(err);
-        throw `Failed to read .d.ts file [${theArgs.dtsFile}]`;
-    } else {
-        processFile(data.toString());
-    }
-});
+try {
+    var data = fs.readFileSync(theArgs.dtsFile, "utf8");
+    processFile(data.toString());
+} catch (err) {
+    console.error(err);
+    throw `Failed to read .d.ts file [${theArgs.dtsFile}]`;
+}
 
 function processFile(dtsContents) {
     console.log("File...");
@@ -170,14 +169,14 @@ function processFile(dtsContents) {
     // Add final trailing closing bracket for the namespace
     newContent += "\n}";
 
-    fs.writeFile(dtsFileRollup, rollupContent, (err, data) => {
+    fs.writeFileSync(dtsFileRollup, rollupContent, (err, data) => {
         if (err) {
             console.error(err);
             throw `Failed to write ${dtsFileRollup}`;
         }
     });
 
-    fs.writeFile(dtsFileNamespaced, newContent, (err, data) => {
+    fs.writeFileSync(dtsFileNamespaced, newContent, (err, data) => {
         if (err) {
             console.error(err);
             throw `Failed to write ${dtsFileNamespaced}`;

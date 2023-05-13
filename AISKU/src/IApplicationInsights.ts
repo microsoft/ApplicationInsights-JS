@@ -5,7 +5,9 @@
 import { AnalyticsPlugin } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { IAppInsights, IPropertiesPlugin, IRequestHeaders } from "@microsoft/applicationinsights-common";
-import { IConfiguration, ILoadedPlugin, IPlugin, ITelemetryPlugin, ITelemetryUnloadState, UnloadHandler } from "@microsoft/applicationinsights-core-js";
+import {
+    IConfiguration, ILoadedPlugin, IPlugin, ITelemetryPlugin, ITelemetryUnloadState, UnloadHandler
+} from "@microsoft/applicationinsights-core-js";
 import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { IPromise } from "@nevware21/ts-async";
 

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { IPerfEvent } from "./IPerfEvent";
 import { IPromise } from "@nevware21/ts-async";
+import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { IPerfEvent } from "./IPerfEvent";
 
 /**
  * Class to manage sending notifications to all the listeners.

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { arrAppend, arrForEach, dumpObj } from "@nevware21/ts-utils";
-import { eLoggingSeverity, _eInternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
 import { _throwInternal } from "./DiagnosticLogger";

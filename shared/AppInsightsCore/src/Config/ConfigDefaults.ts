@@ -4,7 +4,6 @@
 import {
     asString, isArray, isDefined, isNullOrUndefined, isObject, isPlainObject, isUndefined, objForEachKey, objHasOwn
 } from "@nevware21/ts-utils";
-import { _cfgDeepCopy } from "./DynamicSupport";
 import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./IConfigDefaults";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 

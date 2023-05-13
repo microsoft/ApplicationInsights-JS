@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { FieldType } from "../../Enums";
 import { IData } from "../../Interfaces/Contracts/IData";
 import { ISerializable } from "../../Interfaces/Telemetry/ISerializable";
-import { FieldType } from "../../Enums";
 
 export class Data<TDomain> implements IData<TDomain>, ISerializable {
 

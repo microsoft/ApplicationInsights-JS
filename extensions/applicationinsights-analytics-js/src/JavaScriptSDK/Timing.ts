@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { dateTimeUtilsDuration } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, eLoggingSeverity, _eInternalMessageId, _throwInternal } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity } from "@microsoft/applicationinsights-core-js";
 
 /**
  * Used to record timed events and page views.
