@@ -12,7 +12,9 @@ import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger
 import { IConfigDefaults, IUnloadHook } from "../applicationinsights-core-js";
 import { getDebugExt } from "./DbgExtensionUtils";
 import { getConsole, getJSON, hasJSON } from "./EnvUtils";
-import { STR_EMPTY, STR_ERROR_TO_CONSOLE, STR_WARN_TO_CONSOLE } from "./InternalConstants";
+import { STR_EMPTY } from "./InternalConstants";
+
+const STR_WARN_TO_CONSOLE = "warnToConsole";
 
 /**
  * For user non actionable traces use AI Internal prefix.
@@ -34,6 +36,13 @@ const defaultValues: IConfigDefaults<IConfiguration> = {
     loggingLevelTelemetry: 1,
     maxMessageLimit: 25,
     enableDebug: false
+}
+
+const _logFuncs: { [key in eLoggingSeverity]: keyof IDiagnosticLogger} = {
+    [eLoggingSeverity.DISABLED]: null,
+    [eLoggingSeverity.CRITICAL]: "errorToConsole",
+    [eLoggingSeverity.WARNING]: STR_WARN_TO_CONSOLE,
+    [eLoggingSeverity.DEBUG]: "debugToConsole"
 }
 
 function _sanitizeDiagnosticText(text: string) {
@@ -131,7 +140,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                     throw dumpObj(message);
                 } else {
                     // Get the logging function and fallback to warnToConsole of for some reason errorToConsole doesn't exist
-                    let logFunc = severity === eLoggingSeverity.CRITICAL ? STR_ERROR_TO_CONSOLE : STR_WARN_TO_CONSOLE;
+                    let logFunc = _logFuncs[severity] || STR_WARN_TO_CONSOLE;
 
                     if (!isUndefined(message.message)) {
                         if (isUserAct) {
@@ -156,37 +165,27 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 }
             }
 
-            /**
-             * This will write a warning to the console if possible
-             * @param message - {string} - The warning message
-             */
+            _self.debugToConsole = (message: string) => {
+                _logToConsole("debug", message);
+                _debugExtMsg("warning", message);
+            };
+
             _self.warnToConsole = (message: string) => {
                 _logToConsole("warn", message);
                 _debugExtMsg("warning", message);
-            }
+            };
 
-            /**
-             * This will write an error to the console if possible
-             * @param message - {string} - The error message
-             */
+
             _self.errorToConsole = (message: string) => {
                 _logToConsole("error", message);
                 _debugExtMsg("error", message);
-            }
+            };
 
-            /**
-             * Resets the internal message count
-             */
             _self.resetInternalMessageCount = (): void => {
                 _messageCount = 0;
                 _messageLogged = {};
             };
 
-            /**
-             * Logs a message to the internal queue.
-             * @param severity - {LoggingSeverity} - The severity of the log message
-             * @param message - {_InternalLogMessage} - The message to log.
-             */
             _self.logInternalMessage = _logInternalMessage;
 
             _self.unload = (isAsync?: boolean) => {
@@ -272,6 +271,14 @@ export class DiagnosticLogger implements IDiagnosticLogger {
      * @param message - {_InternalLogMessage} - The log message.
      */
     public throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * This will write a debug message to the console if possible
+     * @param message - {string} - The debug message
+     */
+    public debugToConsole(message: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

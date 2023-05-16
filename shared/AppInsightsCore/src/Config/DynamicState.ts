@@ -15,6 +15,7 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
     let dynamicPropertySymbol = newSymbol(symPrefix + "get" + cfgHandler.uid + symPostfix);
     let dynamicPropertyReadOnly = newSymbol(symPrefix + "ro" + cfgHandler.uid + symPostfix);
     let dynamicPropertyReferenced = newSymbol(symPrefix + "rf" + cfgHandler.uid + symPostfix);
+    let dynamicPropertyBlockValue = newSymbol(symPrefix + "blkVal" + cfgHandler.uid + symPostfix);
     let dynamicPropertyDetail = newSymbol(symPrefix + "dtl" + cfgHandler.uid + symPostfix);
     let _waitingHandlers: IWatcherHandler<T>[] = null;
     let _watcherTimer: ITimerHandler = null;
@@ -143,6 +144,7 @@ export function _createState<T>(cfgHandler: _IInternalDynamicConfigHandler<T>): 
         prop: dynamicPropertySymbol,
         ro: dynamicPropertyReadOnly,
         rf: dynamicPropertyReferenced,
+        blkVal: dynamicPropertyBlockValue,
         hdlr: cfgHandler,
         add: _addWatcher,
         notify: _notifyWatchers,

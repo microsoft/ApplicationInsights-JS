@@ -8,7 +8,9 @@ import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger
 import { createUniqueNamespace } from "../JavaScriptSDK/DataCacheHelper";
 import { STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
 import { _applyDefaultValue } from "./ConfigDefaults";
-import { _makeDynamicObject, _setDynamicProperty } from "./DynamicProperty";
+import {
+    _eSetDynamicPropertyFlags, _makeDynamicObject, _setDynamicProperty, _setDynamicPropertyState, _throwDynamicError
+} from "./DynamicProperty";
 import { _createState } from "./DynamicState";
 import { CFG_HANDLER_LINK, _cfgDeepCopy, getDynamicConfigHandler, throwInvalidAccess } from "./DynamicSupport";
 import { IConfigDefaults } from "./IConfigDefaults";
@@ -62,7 +64,14 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
     }
 
     function _setValue<C, V>(target: C, name: string, value: V) {
-        return _setDynamicProperty(theState, target, name, value)[name];
+        try {
+            target = _setDynamicProperty(theState, target, name, value);
+        } catch (e) {
+            // Unable to convert to dynamic property so just leave as non-dynamic
+            _throwDynamicError(logger, name, "Setting value", e);
+        }
+
+        return target[name];
     }
 
     function _watch(configHandler: WatcherFunction<T>) {
@@ -86,12 +95,17 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
 
     function _ref<C>(target: C, name: string) {
         // Make sure it's dynamic and mark as referenced with it's current value
-        return _setDynamicProperty(theState, target, name, target[name], true)[name];
+        return _setDynamicPropertyState(theState, target, name, { [_eSetDynamicPropertyFlags.inPlace]: true })[name];
     }
 
     function _rdOnly<C>(target: C, name: string) {
         // Make sure it's dynamic and mark as readonly with it's current value
-        return _setDynamicProperty(theState, target, name, target[name], false, true)[name];
+        return _setDynamicPropertyState(theState, target, name, { [_eSetDynamicPropertyFlags.readOnly]: true })[name];
+    }
+
+    function _blkPropValue<C>(target: C, name: string) {
+        // Make sure it's dynamic and mark as readonly with it's current value
+        return _setDynamicPropertyState(theState, target, name, { [_eSetDynamicPropertyFlags.blockDynamicProperty]: true })[name];
     }
 
     function _applyDefaults<C>(theConfig: C, defaultValues: IConfigDefaults<C, T>): C {
@@ -116,6 +130,7 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
         watch: _watch,
         ref: _ref,
         rdOnly: _rdOnly,
+        blkVal: _blkPropValue,
         _block: _block
     };
 
@@ -129,7 +144,7 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
     theState = _createState(cfgHandler);
 
     // Setup tracking for all defined default keys
-    _makeDynamicObject(theState, newTarget);
+    _makeDynamicObject(theState, newTarget, "config", "Creating");
 
     return cfgHandler;
 }

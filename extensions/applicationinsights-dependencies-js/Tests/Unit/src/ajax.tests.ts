@@ -490,6 +490,36 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Ajax: xhr without disabled flag but with sealed exclude regex configured are not tracked",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                const ExcludeRequestRegex = [Object.freeze(/microsoft/i), Object.seal(/microsoft/i) ];
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: true, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up GET Request was not instrumented");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up POST Request was not instrumented");
+            }
+        });
+
+        this.testCase({
             name: "Ajax: add context into custom dimension with call back configuration on AI initialization.",
             test: () => {
                 this._ajax = new AjaxMonitor();

@@ -94,4 +94,4 @@ export { IDynamicPropertyHandler } from "./Config/IDynamicPropertyHandler";
 export { IWatchDetails, IWatcherHandler, WatcherFunction } from "./Config/IDynamicWatcher";
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
 export { getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion } from "./Config/DynamicSupport";
-export { cfgDfValidate, cfgDfMerge, cfgDfBoolean, cfgDfFunc, cfgDfString, cfgDfSet } from "./Config/ConfigDefaultHelpers";
+export { cfgDfValidate, cfgDfMerge, cfgDfBoolean, cfgDfFunc, cfgDfString, cfgDfSet, cfgDfBlockPropValue } from "./Config/ConfigDefaultHelpers";

@@ -27,6 +27,12 @@ export interface IDiagnosticLogger {
     throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void;
 
     /**
+     * This will write a debug message to the console if possible
+     * @param message - {string} - The debug message
+     */
+    debugToConsole? (message: string): void
+
+    /**
      * This will write a warning to the console if possible
      * @param message - The warning message
      */

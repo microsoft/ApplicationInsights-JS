@@ -18,13 +18,20 @@ export const enum eLoggingSeverity {
     /**
      * Error will NOT be sent as internal telemetry, and will only be shown in browser console
      */
-    WARNING = 2
+    WARNING = 2,
+
+    /**
+     * The Error will NOT be sent as an internal telemetry, and will only be shown in the browser
+     * console if the logging level allows it.
+     */
+    DEBUG = 3
 }
 
 export const LoggingSeverity = createEnumStyle<typeof eLoggingSeverity>({
     DISABLED: eLoggingSeverity.DISABLED,
     CRITICAL: eLoggingSeverity.CRITICAL,
-    WARNING: eLoggingSeverity.WARNING
+    WARNING: eLoggingSeverity.WARNING,
+    DEBUG: eLoggingSeverity.DEBUG
 });
 export type LoggingSeverity = number | eLoggingSeverity;
 

@@ -2,6 +2,7 @@
     "pkgs": {
         "@microsoft/applicationinsights-core-js": {
             "constEnums": [
+                "_eSetDynamicPropertyFlags",
                 "CallbackType",
                 "eEventsDiscardedReason",
                 "eLoggingSeverity",

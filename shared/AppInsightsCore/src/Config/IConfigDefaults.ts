@@ -66,6 +66,13 @@ export interface IConfigDefaultCheck<T, V, C = IConfiguration> {
      * @returns The referenced properties current value
      */
     rdOnly?: boolean;
+
+    /**
+     * Block the value associated with this property from having it's properties / values converted into
+     * dynamic properties, this is generally used to block objects or arrays provided by external libraries
+     * which may be a plain object with readonly (non-configurable) or const properties.
+     */
+    blkVal?: boolean;
 }
  
 /**
