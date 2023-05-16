@@ -139,7 +139,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     let logger = _self.diagLog();
                     _contentHandler = new DomContentHandler(_config, logger);
                     let metaTags = _contentHandler.getMetadata();
-                    _pageAction = new PageAction(this, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
+                    _pageAction = new PageAction(_self, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
     
                     // Default to DOM autoCapture handler
                     if (_autoCaptureHandler) {

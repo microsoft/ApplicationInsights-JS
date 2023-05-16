@@ -549,7 +549,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _populateDefaults(config);
     
                     _pageViewPerformanceManager = new PageViewPerformanceManager(_self.core);
-                    _pageViewManager = new PageViewManager(this, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
+                    _pageViewManager = new PageViewManager(_self, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
                     _pageVisitTimeManager = new PageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime))
 
                     _eventTracking = new Timing(_self.diagLog(), "trackEvent");

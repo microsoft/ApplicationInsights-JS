@@ -256,7 +256,7 @@ export class AppInsightsSku implements IApplicationInsights {
                     // Empty queue of all api calls logged prior to sdk download
                     _self.emptyQueue();
                     _self.pollInternalLogs();
-                    _self.addHousekeepingBeforeUnload(this);
+                    _self.addHousekeepingBeforeUnload(_self);
                 });
         
                 return _self;
@@ -317,7 +317,7 @@ export class AppInsightsSku implements IApplicationInsights {
         
                         // Back up the current session to local storage
                         // This lets us close expired sessions after the cookies themselves expire
-                        if (isFunction(this.core.getPlugin)) {
+                        if (isFunction(_self.core.getPlugin)) {
                             let loadedPlugin = this.core.getPlugin(PropertiesPluginIdentifier);
                             if (loadedPlugin) {
                                 let propertiesPlugin: any = loadedPlugin.plugin;
