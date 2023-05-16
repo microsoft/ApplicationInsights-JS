@@ -499,7 +499,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             
                                 // invoke send
                                 if (forcedSender) {
-                                    result = forcedSender.call(this, payload, async);
+                                    result = forcedSender.call(_self, payload, async);
                                 } else {
                                     result = _self._sender(payload, async);
                                 }
