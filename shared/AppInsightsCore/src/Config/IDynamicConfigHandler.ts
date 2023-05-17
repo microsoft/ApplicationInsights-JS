@@ -9,7 +9,7 @@ import { IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
 /**
  * This interface identifies the config which can track changes
  */
-export interface IDynamicConfigHandler<T extends IConfiguration> {
+export interface IDynamicConfigHandler<T = IConfiguration> {
     /**
      * Unique Id for this config handler
      */
@@ -21,7 +21,7 @@ export interface IDynamicConfigHandler<T extends IConfiguration> {
     cfg: T;
 
     /**
-     * The logger instance to use to loger any issues
+     * The logger instance to use to logger any issues
      */
     logger: IDiagnosticLogger,
 
@@ -101,7 +101,7 @@ export interface IDynamicConfigHandler<T extends IConfiguration> {
  * @internal
  * @ignore
  */
-export interface _IInternalDynamicConfigHandler<T extends IConfiguration> extends IDynamicConfigHandler<T> {
+export interface _IInternalDynamicConfigHandler<T = IConfiguration> extends IDynamicConfigHandler<T> {
     /**
      * @ignore
      * Internal function to explicitly block watching for any config updates

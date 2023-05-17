@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+      "module": "commonjs",
+      "target": "es6",
+      "lib": ["es2015", "dom"],
+      "outDir": "./dist",
+      "strictNullChecks": true,
+      "experimentalDecorators": true,
+      "paths": {
+        "tslib": ["./node_modules/tslib/tslib.es6.js"],
+        "tsyringe": ["./node_modules/tsyringe/dist/esm2015"]
+      }
+    },
+    "include": ["./src/**/*.ts"]
+  }
+  

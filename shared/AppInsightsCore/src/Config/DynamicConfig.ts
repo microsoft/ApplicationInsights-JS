@@ -47,8 +47,8 @@ function _createAndUseHandler<T>(state: _IDynamicConfigHandlerState<T>, configHa
  * @param inPlace - Should the passed config be converted in-place or a new proxy returned
  * @returns The existing dynamic handler or a new instance with the provided config values
  */
-function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogger, target: T, inPlace: boolean) : IDynamicConfigHandler<T> {
-    let dynamicHandler = getDynamicConfigHandler(target);
+function _createDynamicHandler<T = IConfiguration>(logger: IDiagnosticLogger, target: T, inPlace: boolean) : IDynamicConfigHandler<T> {
+    let dynamicHandler = getDynamicConfigHandler<T, T>(target);
     if (dynamicHandler) {
         // The passed config is already dynamic so return it's tracker
         return dynamicHandler;
@@ -170,7 +170,7 @@ function _logInvalidAccess(logger: IDiagnosticLogger, message: string) {
  * @param inPlace - Should the config be converted in-place into a dynamic config or a new instance returned, defaults to true
  * @returns The dynamic config handler for the config (whether new or existing)
  */
-export function createDynamicConfig<T extends IConfiguration>(config: T, defaultConfig?: IConfigDefaults<T>, logger?: IDiagnosticLogger, inPlace?: boolean): IDynamicConfigHandler<T> {
+export function createDynamicConfig<T = IConfiguration>(config: T, defaultConfig?: IConfigDefaults<T>, logger?: IDiagnosticLogger, inPlace?: boolean): IDynamicConfigHandler<T> {
     let dynamicHandler = _createDynamicHandler<T>(logger, config || {} as T, inPlace);
 
     if (defaultConfig) {
@@ -189,9 +189,9 @@ export function createDynamicConfig<T extends IConfiguration>(config: T, default
  * @returns A watcher handler instance that can be used to remove itself when being unloaded
  * @throws TypeError if the provided config is not a dynamic config instance
  */
-export function onConfigChange<T>(config: T, configHandler: WatcherFunction<T>, logger?: IDiagnosticLogger): IWatcherHandler<T> {
+export function onConfigChange<T = IConfiguration>(config: T, configHandler: WatcherFunction<T>, logger?: IDiagnosticLogger): IWatcherHandler<T> {
     let handler: IDynamicConfigHandler<T> = config[CFG_HANDLER_LINK] || config;
-    if (handler.cfg && (handler.cfg === config || handler.cfg[CFG_HANDLER_LINK] === handler)) {
+    if (handler.cfg && (handler.cfg === (config as any) || handler.cfg[CFG_HANDLER_LINK] === handler)) {
         return handler.watch(configHandler);
     }
 

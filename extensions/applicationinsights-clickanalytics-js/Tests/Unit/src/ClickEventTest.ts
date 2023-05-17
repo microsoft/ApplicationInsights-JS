@@ -163,6 +163,62 @@ export class ClickEventTest extends AITestClass {
         });
 
         this.testCase({
+            name: "trackPageView properties are correctly assigned (Empty)",
+            test: () => {
+                let config = {
+                    coreData: {},
+                    callback: {
+                        pageActionPageTags: () => ({ key2: "value2" })
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:"ha-",
+                        customDataPrefix: "data-ha-",
+                        aiBlobAttributeTag: "blob",
+                        parentDataTag: "parent",
+                        dntDataTag: "donotTrack"
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+               
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier]
+
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler,  extConfig.callback?.pageActionPageTags, {}, traceLogger );
+               
+                
+                clickAnalyticsPlugin.trackPageAction()
+                const element = document.createElement("a");
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+                // clickAnalyticsPlugin.capturePageAction(element, {} as IOverrideValues, {}, false);
+                pageAction.capturePageAction(element);
+                Assert.equal(true, spy.called);
+                let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.notEqual(-1, calledEvent.data["uri"].indexOf("Tests.html"));
+                Assert.equal(undefined, calledEvent.data["behavior"]);
+                Assert.equal(undefined, calledEvent.data["actionType"]);
+                Assert.equal("[{}]", calledEvent.data["content"]);
+                Assert.equal(false, isNaN(calledEvent.data["timeToAction"] as number));
+                Assert.equal("value2", calledEvent.data["properties"]["pageTags"].key2);
+            }
+
+        });
+
+        this.testCase({
             name: "PageAction properties are correctly assigned (Empty)",
             test: () => {
                 let config = {
