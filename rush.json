@@ -118,6 +118,11 @@
       "packageName": "@microsoft/applicationinsights-example-shared-worker",
       "projectFolder": "examples/shared-worker",
       "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-test-module-type-check",
+      "projectFolder": "AISKU/Tests/es6-module-type-check",
+      "shouldPublish": false
     }
   ]
 }

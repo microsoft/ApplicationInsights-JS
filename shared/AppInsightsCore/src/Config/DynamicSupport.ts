@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { isArray, isPlainObject, objForEachKey, symbolFor, throwTypeError } from "@nevware21/ts-utils";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
 
@@ -57,10 +58,10 @@ export function _cfgDeepCopy<T>(source: T): T {
  * @param value
  * @returns
  */
-export function getDynamicConfigHandler<T>(value: T | IDynamicConfigHandler<T>): IDynamicConfigHandler<T> | null {
+export function getDynamicConfigHandler<T = IConfiguration, V = IConfiguration>(value: V | IDynamicConfigHandler<T>): IDynamicConfigHandler<T> | null {
     if (value) {
         let handler: IDynamicConfigHandler<T> = value[CFG_HANDLER_LINK] || value;
-        if (handler.cfg && (handler.cfg === value || handler.cfg[CFG_HANDLER_LINK] === handler)) {
+        if (handler.cfg && (handler.cfg === (value as any) || handler.cfg[CFG_HANDLER_LINK] === handler)) {
             return handler;
         }
     }

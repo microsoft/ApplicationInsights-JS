@@ -166,7 +166,7 @@ export class ThrottleMgr {
             // Make sure the root config is dynamic as it may be the global config
             config = createDynamicConfig(config as any || {}, null, _logger).cfg;
 
-            let unloadHook = onConfigChange((config), () => {
+            let unloadHook = onConfigChange(config, () => {
                 _canUseLocalStorage = utlCanUseLocalStorage();
                 
                 let configMgr = config || {};

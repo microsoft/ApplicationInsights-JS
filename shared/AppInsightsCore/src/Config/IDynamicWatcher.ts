@@ -6,7 +6,7 @@ import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
 import { IConfigDefaults } from "./IConfigDefaults";
 import { IDynamicPropertyHandler } from "./IDynamicPropertyHandler";
 
-export interface IWatchDetails<T extends IConfiguration> {
+export interface IWatchDetails<T = IConfiguration> {
     /**
      * The current config object
      */
@@ -44,19 +44,19 @@ export interface IWatchDetails<T extends IConfiguration> {
     rdOnly: <C, V = any>(target: C, name: string) => V;
 }
 
-export type WatcherFunction<T extends IConfiguration> = (details: IWatchDetails<T>) => void;
+export type WatcherFunction<T = IConfiguration> = (details: IWatchDetails<T>) => void;
 
 /**
  * @internal
  */
-export interface _WatcherChangeDetails<T extends IConfiguration> {
+export interface _WatcherChangeDetails<T = IConfiguration> {
     d: _IDynamicDetail<T>;
 }
 
 /**
  * @internal
  */
-export interface _IDynamicDetail<T extends IConfiguration> extends IDynamicPropertyHandler<T> {
+export interface _IDynamicDetail<T = IConfiguration> extends IDynamicPropertyHandler<T> {
 
     /**
      * Add the watcher for monitoring changes
@@ -69,7 +69,7 @@ export interface _IDynamicDetail<T extends IConfiguration> extends IDynamicPrope
     clr: (handler: IWatcherHandler<T>) => void;
 }
 
-export interface IWatcherHandler<T extends IConfiguration> extends IUnloadHook {
+export interface IWatcherHandler<T = IConfiguration> extends IUnloadHook {
     fn: WatcherFunction<T>;
     rm: () => void;
 }

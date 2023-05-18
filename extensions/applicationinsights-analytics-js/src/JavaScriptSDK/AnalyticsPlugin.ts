@@ -790,7 +790,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         scheduleTimeout(((uri: string) => {
                             // todo: override start time so that it is not affected by autoRoutePVDelay
                             _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
-                        }).bind(this, _prevUri), _self.autoRoutePVDelay);
+                        }).bind(_self, _prevUri), _self.autoRoutePVDelay);
                     }
                 }
 
