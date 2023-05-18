@@ -11,7 +11,7 @@ import {
     getExceptionName, isNullOrUndefined, onConfigChange, throwError, unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { getDocument, hasDocument, objDeepFreeze } from "@nevware21/ts-utils";
+import { getDocument, hasDocument, objDeepFreeze, strSubstring, strTrim } from "@nevware21/ts-utils";
 import {
     IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, ICoreData, ICustomDataTags, IPageActionTelemetry, IValueCallback
 } from "./Interfaces/Datamodel";
@@ -94,9 +94,16 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     }
                 });
                 // Append Click Analytics Plugin Version to SDK version.
-                if (_propertiesExtension && _propertiesExtension.context &&
-                    _propertiesExtension.context.internal && _propertiesExtension.context.internal.sdkVersion) {
-                    _propertiesExtension.context.internal.sdkVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
+                if (_propertiesExtension && _propertiesExtension.context && _propertiesExtension.context.internal) {
+                    let theVersion = _propertiesExtension.context.internal.sdkVersion;
+                    if (theVersion) {
+                        theVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
+                        if (theVersion.length > 64) {
+                            theVersion = strTrim(strSubstring(theVersion, 0, 64));
+                        }
+
+                        _propertiesExtension.context.internal.sdkVersion = theVersion
+                    }
                 }
             }
         

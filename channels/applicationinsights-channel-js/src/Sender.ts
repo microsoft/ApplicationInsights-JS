@@ -544,7 +544,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     "Failed to send telemetry.",
                     { message });
         
-                _self._buffer.clearSent(payload);
+                _self._buffer && _self._buffer.clearSent(payload);
             };
         
             /**
@@ -589,7 +589,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * success handler
              */
             _self._onSuccess = (payload: string[], countOfItemsInPayload: number) => {
-                _self._buffer.clearSent(payload);
+                _self._buffer && _self._buffer.clearSent(payload);
             };
         
             /**

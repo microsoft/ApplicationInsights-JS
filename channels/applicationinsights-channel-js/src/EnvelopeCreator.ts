@@ -113,7 +113,7 @@ function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem
     let theTags = { ...envTags, ...tgs };
     if(!theTags[CtxTagKeys.internalSdkVersion]) {
         // Append a version in case it is not already set
-        theTags[CtxTagKeys.internalSdkVersion] = `javascript:${EnvelopeCreator.Version}`;
+        theTags[CtxTagKeys.internalSdkVersion] = dataSanitizeString(logger, `javascript:${EnvelopeCreator.Version}`, 64);
     }
     
     env.tags = optimizeObject(theTags);
