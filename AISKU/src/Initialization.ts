@@ -284,7 +284,7 @@ export class Initialization implements IApplicationInsights {
                     // Empty queue of all api calls logged prior to sdk download
                     _self.emptyQueue();
                     _self.pollInternalLogs();
-                    _self.addHousekeepingBeforeUnload(this);
+                    _self.addHousekeepingBeforeUnload(_self);
                 });
         
                 return _self;

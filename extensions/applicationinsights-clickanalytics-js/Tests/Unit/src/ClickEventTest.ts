@@ -4,13 +4,14 @@
 
  import { Assert, AITestClass } from "@microsoft/ai-test-framework";
  import { Util, IConfig } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger} from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, IAppInsightsCore} from '@microsoft/applicationinsights-core-js';
 import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from '../../../src/ClickAnalyticsPlugin';
 import { PageAction } from "../../../src/events/PageAction";
 import { DomContentHandler } from '../../../src/handlers/DomContentHandler';
 import { IPageActionOverrideValues } from '../../../src/Interfaces/Datamodel'
 import { mergeConfig } from "../../../src/common/Utils";
 import { sanitizeUrl } from "../../../src/DataCollector";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 
 
 
@@ -49,6 +50,7 @@ export class ClickEventTest extends AITestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const properties = new PropertiesPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
                 const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
                 const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, config.callback.pageActionPageTags, {}, traceLogger );
@@ -57,13 +59,16 @@ export class ClickEventTest extends AITestClass {
                     extensionConfig : {
                         [clickAnalyticsPlugin.identifier] : config
                     }
-                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel, properties]);
                 this.onDone(() => {
                     core.unload(false);
                 });
-                
-                const element = document.createElement('a');
-                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');   
+
+                let sdkVersion = properties.context.internal.sdkVersion;
+                Assert.ok(sdkVersion.indexOf("_ClickPlugin") !== -1, sdkVersion);
+
+                const element = document.createElement("a");
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
                 // clickAnalyticsPlugin.capturePageAction(element, {} as IOverrideValues, {}, false);
                 pageAction.capturePageAction(element);
                 Assert.equal(true, spy.called);
@@ -1106,6 +1111,52 @@ export class ClickEventTest extends AITestClass {
                 Assert.equal("https://www.test.com?q=search&rlz=1C1CHBF", url5);
             }
         });
+
+        this.testCase({
+            name: "Check sdkVersion length limitation",
+            test: () => {
+                let config = {
+                    coreData: {},
+                    callback: {
+                        pageActionPageTags: () => ({ key2: "value2" })
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:"ha-",
+                        customDataPrefix: "data-ha-",
+                        aiBlobAttributeTag: "blob",
+                        parentDataTag: "parent",
+                        dntDataTag: "donotTrack"
+                    }
+                };
+                let prevVersion = ClickAnalyticsPlugin.Version
+                try {
+                    ClickAnalyticsPlugin.Version = "9.9.9-nightly3.2305-999.reallylongversionthatshouldgettruncated";
+
+                    const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                    const core = new AppInsightsCore();
+                    const channel = new ChannelPlugin();
+                    const properties = new PropertiesPlugin();
+                   
+                    core.initialize({
+                        instrumentationKey: "testIkey",
+                        extensionConfig : {
+                            [clickAnalyticsPlugin.identifier] : config
+                        }
+                    } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel, properties]);
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
+    
+                    let sdkVersion = properties.context.internal.sdkVersion;
+                    Assert.ok(sdkVersion.indexOf("_ClickPlugin") !== -1, sdkVersion);
+                    Assert.equal(64, sdkVersion.length);
+    
+                } finally {
+                    ClickAnalyticsPlugin.Version = prevVersion;
+                }
+            }
+        });
     }
 }
 
@@ -1148,7 +1199,7 @@ class ChannelPlugin implements IPlugin {
         // no next setup
     }
 
-    public initialize = (config: IConfiguration, core: AppInsightsCore, plugin: IPlugin[]) => {
+    public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
     }
 
     private _processTelemetry(env: ITelemetryItem) {
