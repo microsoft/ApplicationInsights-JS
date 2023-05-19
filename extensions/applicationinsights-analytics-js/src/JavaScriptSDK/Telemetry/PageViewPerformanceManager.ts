@@ -148,7 +148,7 @@ export class PageViewPerformanceManager {
                             "error calculating page view performance.",
                             { total, network, request, response, dom });
         
-                    } else if (!this.shouldCollectDuration(total, network, request, response, dom)) {
+                    } else if (!_self.shouldCollectDuration(total, network, request, response, dom)) {
                         _throwInternal(_logger,
                             eLoggingSeverity.WARNING,
                             _eInternalMessageId.InvalidDurationValue,

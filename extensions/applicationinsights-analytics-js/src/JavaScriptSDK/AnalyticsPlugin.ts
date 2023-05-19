@@ -557,7 +557,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _updateStorageUsage(extConfig);
     
                     _pageViewPerformanceManager = new PageViewPerformanceManager(_self.core);
-                    _pageViewManager = new PageViewManager(this, extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
+                    _pageViewManager = new PageViewManager(_self, extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
                     _pageVisitTimeManager = new PageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime))
             
                     _updateBrowserLinkTracking(extConfig, config);
@@ -800,7 +800,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         setTimeout(((uri: string) => {
                             // todo: override start time so that it is not affected by autoRoutePVDelay
                             _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
-                        }).bind(this, _prevUri), _self.autoRoutePVDelay);
+                        }).bind(_self, _prevUri), _self.autoRoutePVDelay);
                     }
                 }
 

@@ -317,8 +317,9 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
         if(isValueAssigned(overrideConfig.dataTags)) {
             overrideConfig.dataTags.customDataPrefix = validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
         }
-        return objExtend(true, defaultConfig, overrideConfig);
     }
+
+    return objExtend(true, defaultConfig, overrideConfig || {});
 }
 
 export function BehaviorMapValidator (map: any) {

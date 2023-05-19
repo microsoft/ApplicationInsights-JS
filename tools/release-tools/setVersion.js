@@ -489,7 +489,7 @@ const setPackageJsonRelease = () => {
                 if (theFilename.indexOf("/package.json") !== -1) {
                     let srcFolder = theFilename.replace("/package.json", "/**/*.ts", "/**/*.tsx", "/**/*.html");
                     console.log("        - Checking source files: " + srcFolder);
-                    const tsFiles = globby.sync(srcFolder);
+                    const tsFiles = globby.sync([srcFolder, "!**/node_modules/**"]);
                     tsFiles.map(sourceFile => {
                         // Don't update node_modules
                         if (shouldProcess(sourceFile)) {
@@ -538,7 +538,6 @@ if (parseArgs()) {
             const newContent = JSON.stringify(theVersion, null, 4) + "\n";
             fs.writeFileSync(process.cwd() + "/version.json", newContent);
         }
-
     } else {
         console.error("Failed to identify the new version number");
     }

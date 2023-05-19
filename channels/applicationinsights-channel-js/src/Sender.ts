@@ -426,7 +426,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             
                                 // invoke send
                                 if (forcedSender) {
-                                    forcedSender.call(this, payload, async);
+                                    forcedSender.call(_self, payload, async);
                                 } else {
                                     _self._sender(payload, async);
                                 }
@@ -469,7 +469,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     "Failed to send telemetry.",
                     { message });
         
-                _self._buffer.clearSent(payload);
+                _self._buffer && _self._buffer.clearSent(payload);
             };
         
             /**
@@ -514,7 +514,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * success handler
              */
             _self._onSuccess = (payload: string[], countOfItemsInPayload: number) => {
-                _self._buffer.clearSent(payload);
+                _self._buffer && _self._buffer.clearSent(payload);
             };
         
             /**

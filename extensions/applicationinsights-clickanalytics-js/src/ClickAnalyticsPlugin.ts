@@ -7,7 +7,7 @@ import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microso
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICustomProperties, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
-    arrForEach, dumpObj, eLoggingSeverity, getExceptionName, isNullOrUndefined, throwError, unloadComponents
+    arrForEach, dumpObj, eLoggingSeverity, getExceptionName, isNullOrUndefined, strTrim, throwError, unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, IPageActionTelemetry } from "./Interfaces/Datamodel";
@@ -50,7 +50,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                 // Default to DOM content handler
                 _contentHandler = _contentHandler ? _contentHandler : new DomContentHandler(_config, logger);
                 let metaTags = _contentHandler.getMetadata();
-                _pageAction = new PageAction(this, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
+                _pageAction = new PageAction(_self, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
 
                 // Default to DOM autoCapture handler
                 _autoCaptureHandler = _autoCaptureHandler ? _autoCaptureHandler : new AutoCaptureHandler(_self, _config, _pageAction, logger);
@@ -66,9 +66,16 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     }
                 });
                 // Append Click Analytics Plugin Version to SDK version.
-                if (_propertiesExtension && _propertiesExtension.context &&
-                    _propertiesExtension.context.internal && _propertiesExtension.context.internal.sdkVersion) {
-                    _propertiesExtension.context.internal.sdkVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
+                if (_propertiesExtension && _propertiesExtension.context && _propertiesExtension.context.internal) {
+                    let theVersion = _propertiesExtension.context.internal.sdkVersion;
+                    if (theVersion) {
+                        theVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
+                        if (theVersion.length > 64) {
+                            theVersion = strTrim(theVersion.substring(0, 64));
+                        }
+
+                        _propertiesExtension.context.internal.sdkVersion = theVersion;
+                    }
                 }
             }
         
