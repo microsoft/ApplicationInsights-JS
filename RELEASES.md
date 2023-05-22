@@ -2,6 +2,16 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.2 (May 23rd, 2023)
+
+- [BUG] SDK fails to initialize when the config includes objects with properties that are not configurable #2068
+- [BUG] ClickAnalytics throwing errors in console #2075
+- Type 'T' does not satisfy the constraint 'IConfiguration' #2065
+- [BUG] The SDK is not limiting the sdkVersion length, which causes the night builds to cause an error #2079
+- [BUG] hasDocument should be invoked as function #2061
+- [Main] Task 20788238: [AI] Add ApplicationInsights namespace and workaround to support v2 and v3 loaded from the CDN #2064
+- [Main] Update Minify script to always sort imports #2070
+
 ## 3.0.1 (May 2nd, 2023)
 
 ### Changelog

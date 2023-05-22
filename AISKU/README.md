@@ -15,28 +15,30 @@
 
 # Microsoft Application Insights JavaScript SDK - Web
 
-[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU%20vNext?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=master)
-[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
+[![GitHub Workflow Status (master)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU%20vNext?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
 
 Application Insights SDK is a package that combines commonly used packages for Web scenarios.
 Refer to [our GitHub page](https://github.com/microsoft/applicationinsights-js) for more details on getting started.
 
-## Beta Release Breaking changes
+## V3.x Release Breaking changes
 
 - Removed ES3 / IE8 Support
 - Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
 
-See [Breaking Changes](./BETA_BREAKING_CHANGES.md)
+See [Breaking Changes](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v3_BreakingChanges.html)
 
 ## CDN Version Release Summary (with Size tracking)
 
 | Version | Full Size | Raw Minified | GZip Size
 |---------|-----------|--------------|-------------
 | [&lt;nightly3&gt;](https://github.com/microsoft/ApplicationInsights-JS/tree/main/AISKU)  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.3-nightly3.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.3-nightly3.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.3-nightly3.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.3-nightly3.min.js.svg?compression=gzip&softmax=30000&max=35000)
+| 3.0.2:  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.2.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.2.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.2.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.2.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | 3.0.1:  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.1.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.1.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.1.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.1.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | 3.0.0:  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.0.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.0.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.0.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.0.0.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | [&lt;nightly&gt;](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU)  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.2-nightly.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.2-nightly.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.2-nightly.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/nightly/ai.2-nightly.min.js.svg?compression=gzip&softmax=30000&max=35000)
+| 2.8.14:  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.14.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.14.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.14.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.14.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | 2.8.13:  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.13.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.13.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.13.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.13.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | [2.8.12](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU):  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.12.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.12.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.12.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.12.min.js.svg?compression=gzip&softmax=30000&max=35000)
 | 2.8.11:  | [![full size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.11.js.svg?label=full%20size&color=blue)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.11.js.svg?label=full%20size&color=blue)| ![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.11.min.js.svg?label=minified%20size&color=darkorchid) | ![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.8.11.min.js.svg?compression=gzip&softmax=30000&max=35000)
