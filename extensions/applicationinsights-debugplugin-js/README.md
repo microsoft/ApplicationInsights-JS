@@ -3,7 +3,8 @@
 ## [BETA]
 
 
-[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
+[![GitHub Workflow Status (master)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml)](https://github.com/microsoft/ApplicationInsights-JS/tree/master)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=master)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-debugplugin-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-debugplugin-js)
 [![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.min.js.svg?compression=gzip&softmax=20000&max=25000)
 [![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.min.js.svg?label=minified%20size)

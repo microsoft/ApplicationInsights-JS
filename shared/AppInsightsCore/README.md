@@ -2,7 +2,7 @@
 
 # Microsoft Application Insights JavaScript SDK - Core
 
-![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=master)
+![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-core-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-core-js)
 
 Core SDK layer for next version of application insights javascript SDK.

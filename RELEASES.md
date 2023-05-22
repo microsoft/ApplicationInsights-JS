@@ -2,6 +2,16 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.14 (May 22nd, 2023)
+
+### Changelog
+
+- #2061 [BUG] hasDocument should be invoked as function
+- #2079 [Master] [BUG] The SDK is not limiting the sdkVersion length, which causes the nightly builds to throw error
+- #2065 [Master] Type 'T' does not satisfy the constraint 'IConfiguration'
+- #2075 [Master] [BUG] ClickAnalytics throwing errors in console
+- #2071 [Master] Update Minify script to always sort imports
+
 ## 2.8.13 (May 1st, 2023)
 
 ### Changelog

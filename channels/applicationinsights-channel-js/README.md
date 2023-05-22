@@ -2,8 +2,8 @@
 
 Channel layer for the Application Insights JavaScript SDK
 
-[![Build Status](https://travis-ci.org/microsoft/applicationinsights-js.svg?branch=master)](https://travis-ci.org/microsoft/applicationinsights-js)
-[![Build status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/1DS%20JavaScript%20SDK%20-%20Channel)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7614)
+[![GitHub Workflow Status (master)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml)](https://github.com/microsoft/ApplicationInsights-JS/tree/master)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=master)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-channel-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-channel-js)
 
 

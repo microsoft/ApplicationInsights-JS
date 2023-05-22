@@ -1,6 +1,6 @@
 # Microsoft Application Insights JavaScript SDK Example - Shared Worker
 
-![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=master)
+![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml)
 
 Example to instrument a Shared-Worker
 
