@@ -4,13 +4,15 @@
 
 ## 3.0.2 (May 23rd, 2023)
 
-- [BUG] SDK fails to initialize when the config includes objects with properties that are not configurable #2068
-- [BUG] ClickAnalytics throwing errors in console #2075
-- Type 'T' does not satisfy the constraint 'IConfiguration' #2065
-- [BUG] The SDK is not limiting the sdkVersion length, which causes the night builds to cause an error #2079
-- [BUG] hasDocument should be invoked as function #2061
-- [Main] Task 20788238: [AI] Add ApplicationInsights namespace and workaround to support v2 and v3 loaded from the CDN #2064
-- [Main] Update Minify script to always sort imports #2070
+### Changelog
+
+- #2068 [BUG] SDK fails to initialize when the config includes objects with properties that are not configurable
+- #2075 [BUG] ClickAnalytics throwing errors in console
+- #2065 Type 'T' does not satisfy the constraint 'IConfiguration'
+- #2079 [BUG] The SDK is not limiting the sdkVersion length, which causes the night builds to cause an error
+- #2061 [BUG] hasDocument should be invoked as function
+- #2064 [Main] Task 20788238: [AI] Add ApplicationInsights namespace and workaround to support v2 and v3 loaded from the CDN
+- #2070 [Main] Update Minify script to always sort imports
 
 ## 3.0.1 (May 2nd, 2023)
 
