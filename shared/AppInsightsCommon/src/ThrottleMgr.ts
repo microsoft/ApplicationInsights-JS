@@ -4,7 +4,9 @@ import {
     safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { IThrottleMsgKey } from "./Enums";
-import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
+import {
+    IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgr, IThrottleMgrConfig, IThrottleResult
+} from "./Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
@@ -15,7 +17,7 @@ interface SendMsgParameter {
     severity?: eLoggingSeverity
 }
 
-export class ThrottleMgr {
+export class ThrottleMgr implements IThrottleMgr {
     public canThrottle: () => boolean;
     public sendMessage: (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity) => IThrottleResult | null;
     public getConfig: () => IThrottleMgrConfig;
@@ -221,6 +223,7 @@ export class ThrottleMgr {
         }
 
         function _canThrottle(config: IThrottleMgrConfig, canUseLocalStorage: boolean, localStorageObj: IThrottleLocalStorageObj) {
+            // NOTE: if local storage is not available, then throttle will not be triggered.
             if (!config.disabled && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
                 let curDate = _getThrottleDate();
                 let date = localStorageObj.date;

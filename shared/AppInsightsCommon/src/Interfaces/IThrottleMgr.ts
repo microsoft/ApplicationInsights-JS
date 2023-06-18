@@ -1,4 +1,16 @@
+import { _eInternalMessageId, eLoggingSeverity } from "@microsoft/applicationinsights-core-js";
 import { IThrottleMsgKey } from "../Enums";
+
+export interface IThrottleMgr {
+    canThrottle: () => boolean;
+    sendMessage: (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity) => IThrottleResult | null;
+    getConfig: () => IThrottleMgrConfig;
+    isTriggered: () => boolean;
+    isReady: () => boolean
+    onReadyState: (isReady?: boolean) => boolean;
+    flush: () => boolean;
+    config: IThrottleMgrConfig;
+}
 
 /**
  * Identifies limit number/percentage of items sent per time
