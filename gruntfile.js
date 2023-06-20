@@ -28,23 +28,28 @@ module.exports = function (grunt) {
     }
 
     function generateNewSnippet(connString) {
+        // Before: create a rollup task to minify dest-es5/snippet.js -> build/es5/snippet.min.js
+        // Change this to web-snipet build/es5/snippet.min.js
+        var prefix = "IKey";
         var snippetBuffer = grunt.file.read("./AISKU/snippet/snippet.min.js");
         if (connString) {
             snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
             snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+            prefix = "ConnString"
         } else {
             snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
             snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
         }
         var snippetStr = _encodeStr(snippetBuffer.toString());
-        var expectedStr = "##replaceSnippet##";
-        var srcPath = "./tools/applicationinsights-web-snippet/src";
+        var expectedStr = `##replace${prefix}Snippet##`;
+        var srcPath = "./tools/applicationinsights-web-snippet/dist-es5";
         return {
             files: [{
                 expand: true,
                 cwd: srcPath,
-                dest: "./tools/applicationinsights-web-snippet/build",
-                src: `web-snippet${connString ? "-cs" : ""}.ts`
+                dest: "./tools/applicationinsights-web-snippet/dist-es5",
+                src: "applicationinsights-web-snippet.js"
+                //src: `web-snippet${connString ? "-cs" : ""}.js`
             }],
             options: {
                 replacements: [{
@@ -512,7 +517,7 @@ module.exports = function (grunt) {
                                         path: "./tools/applicationinsights-web-snippet",
                                         cfg: {
                                             src: [
-                                                "./tools/applicationinsights-web-snippet/build/*.ts"
+                                                "./tools/applicationinsights-web-snippet/src/**/*.ts"
                                             ]
                                         }
                                     },
@@ -674,7 +679,7 @@ module.exports = function (grunt) {
             copy: {
                 "web-snippet": {
                     files: [
-                        { src: "./tools/applicationinsights-web-snippet/src/applicationinsights-web-snippet.ts", dest: `./tools/applicationinsights-web-snippet/build/applicationinsights-web-snippet.ts` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` },
                     ]
                 },
                 config: {
