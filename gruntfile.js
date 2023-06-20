@@ -449,6 +449,10 @@ module.exports = function (grunt) {
                                         path: "./extensions/applicationinsights-properties-js",
                                         unitTestName: "prop.tests.js"
                                     },
+            "idsync":               { 
+                                        path: "./extensions/applicationinsights-idsync-js",
+                                        unitTestName: "idsync.tests.js"
+                                    },
 
             // Examples
             "example-shared-worker": {
@@ -749,6 +753,12 @@ module.exports = function (grunt) {
         grunt.registerTask("properties-restore", restoreTasks("properties"));
         grunt.registerTask("propertiestests", tsTestActions("properties"));
         grunt.registerTask("properties-mintests", tsTestActions("properties", true));
+
+        grunt.registerTask("idsync", tsBuildActions("idsync"));
+        grunt.registerTask("idsync-min", minTasks("idsync"));
+        grunt.registerTask("idsync-restore", restoreTasks("idsync"));
+        grunt.registerTask("idsynctests", tsTestActions("idsync"));
+        grunt.registerTask("idsync-mintests", tsTestActions("idsync", true));
 
         grunt.registerTask("deps", tsBuildActions("deps"));
         grunt.registerTask("deps-min", minTasks("deps"));
