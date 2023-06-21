@@ -1,30 +1,32 @@
-(function (win: Window, doc: Docuemnt, snipConfig: ISnippetConfig) {
-    let locn = win.location;
-    var helpLink = "https://go.microsoft.com/fwlink/?linkid=2128109";
-    var scriptText = "script";
-    var strInstrumentationKey = "instrumentationKey";
-    var strIngestionendpoint = "ingestionendpoint";
-    var strDisableExceptionTracking = "disableExceptionTracking";
-    var strAiDevice = "ai.device.";
-    var strAiOperationName = "ai.operation.name";
-    var strAiSdkVersion = "ai.internal.sdkVersion";
-    var strToLowerCase = "toLowerCase";
-    var strConStringIKey = strInstrumentationKey[strToLowerCase]();
-    var strEmpty = "";
-    var strUndefined = "undefined";
-    var strCrossOrigin = "crossOrigin";
+import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement } from "./type";
 
-    var strPostMethod = "POST";
-    var sdkInstanceName = "appInsightsSDK";         // required for Initialization to find the current instance
-    var aiName = snipConfig.name || "appInsights";  // provide non default instance name through snipConfig name value
+(function (win: Window, doc: Document, snipConfig: ISnippetConfig) {
+    let locn: Location = win.location;
+    let helpLink = "https://go.microsoft.com/fwlink/?linkid=2128109";
+    let scriptText = "script";
+    let strInstrumentationKey = "instrumentationKey";
+    let strIngestionendpoint = "ingestionendpoint";
+    let strDisableExceptionTracking = "disableExceptionTracking";
+    let strAiDevice = "ai.device.";
+    let strAiOperationName = "ai.operation.name";
+    let strAiSdkVersion = "ai.internal.sdkVersion";
+    let strToLowerCase = "toLowerCase";
+    let strConStringIKey = strInstrumentationKey[strToLowerCase]();
+    let strEmpty = "";
+    let strUndefined = "undefined";
+    let strCrossOrigin = "crossOrigin";
+
+    let strPostMethod = "POST";
+    let sdkInstanceName = "appInsightsSDK";         // required for Initialization to find the current instance
+    let aiName = snipConfig.name || "appInsights";  // provide non default instance name through snipConfig name value
     if (snipConfig.name || win[sdkInstanceName]) {
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
     }
-    var aiSdk = win[aiName] || (function (aiConfig) {
-        var loadFailed = false;
-        var handled = false;
-        var appInsights = {
+    let aiSdk = win[aiName] || (function (aiConfig: AIConfig) {
+        let loadFailed = false;
+        let handled = false;
+        let appInsights:AppInsights= {
             initialize: true,   // initialize sdk on download
             queue: [],
             sv: "6",            // Track the actual snippet version for reporting.
@@ -32,12 +34,12 @@
             config: aiConfig
         };
         function _parseConnectionString() {
-            var fields = {};
-            var connectionString = aiConfig.connectionString;
+            let fields:Fields = {};
+            let connectionString = aiConfig.connectionString;
             if (connectionString) {
-                var kvPairs = connectionString.split(";");
-                for (var lp = 0; lp < kvPairs.length; lp++) {
-                    var kvParts = kvPairs[lp].split("=");
+                let kvPairs = connectionString.split(";");
+                for (let lp = 0; lp < kvPairs.length; lp++) {
+                    let kvParts = kvPairs[lp].split("=");
     
                     if (kvParts.length === 2) { // only save fields with valid formats
                         fields[kvParts[0][strToLowerCase]()] = kvParts[1];
@@ -48,23 +50,23 @@
             // apply the default endpoints
             if (!fields[strIngestionendpoint]) {
                 // use endpoint suffix where overrides are not provided
-                var endpointSuffix = fields.endpointsuffix;
+                let endpointSuffix = fields.endpointsuffix;
                 // Only fetch the location if a suffix was supplied
-                var fLocation = endpointSuffix ? fields.location : null;
+                let fLocation = endpointSuffix ? fields.location : null;
                 fields[strIngestionendpoint] = "https://" + (fLocation ? fLocation + "." : strEmpty) + "dc." + (endpointSuffix || "services.visualstudio.com");
             }
 
             return fields;
         }
 
-        function _sendEvents(evts, endpointUrl) {
+        function _sendEvents(evts:Envelope[], endpointUrl?:any) {
             if (JSON) {
-                var sender = win.fetch;
+                let sender = win.fetch;
                 if (sender && !snipConfig.useXhr) {
                     sender(endpointUrl, { method:strPostMethod, body: JSON.stringify(evts), mode:"cors"});
                 } else if (XMLHttpRequest) {
                     // IE doesn't support fetch and private clouds may only be using IE
-                    var xhr = new XMLHttpRequest();
+                    let xhr = new XMLHttpRequest();
                     xhr.open(strPostMethod, endpointUrl);
                     xhr.setRequestHeader("Content-type", "application/json");
                     xhr.send(JSON.stringify(evts));
@@ -72,14 +74,14 @@
             }
         }
 
-        function _reportFailure(targetSrc) {
-            var conString = _parseConnectionString();
-            var iKey = conString[strConStringIKey] || aiConfig[strInstrumentationKey] || strEmpty;
-            var ingest = conString[strIngestionendpoint];
-            var endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
+        function _reportFailure(targetSrc:string) {
+            let conString = _parseConnectionString();
+            let iKey = conString[strConStringIKey] || aiConfig[strInstrumentationKey] || strEmpty;
+            let ingest = conString[strIngestionendpoint];
+            let endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
 
-            var message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
-            var evts = [];
+            let message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
+            let evts:Envelope[] = [];
             evts.push(_createException(iKey, message, targetSrc, endpointUrl));
             evts.push(_createInternal(iKey, message, targetSrc, endpointUrl));
 
@@ -88,9 +90,9 @@
 
         // Gets the time as an ISO date format, using a function as IE7/8 doesn't support toISOString
         function _getTime() {
-            var date = new Date();
-            function pad(num) {
-                var r = strEmpty + num;
+            let date = new Date();
+            function pad(num: Number) {
+                let r = strEmpty + num;
                 if (r.length === 1) {
                     r = "0" + r;
                 }
@@ -108,9 +110,9 @@
                 + "Z";
         }
 
-        function _createEnvelope(iKey, theType) {
-            var tags = {};
-            var type = "Browser";
+        function _createEnvelope(iKey:string, theType:string) {
+            let tags = {};
+            let type = "Browser";
             tags[strAiDevice + "id"] = type[strToLowerCase]();
             tags[strAiDevice + "type"] = type;
             tags[strAiOperationName] = locn && locn.pathname || "_unknown_";
@@ -130,22 +132,23 @@
             };
         }
 
-        function _createInternal(iKey, message, targetSrc, endpointUrl) {
-            var envelope = _createEnvelope(iKey, "Message");
-            var data = envelope.data;
+        function _createInternal(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
+            let envelope : Envelope = _createEnvelope(iKey, "Message");
+            let data = envelope.data;
             data.baseType = "MessageData";
-            var baseData = data.baseData;
+            let baseData = data.baseData;
+
             baseData.message = "AI (Internal): 99 message:\"" + (message + " (" + targetSrc + ")").replace(/\"/g, strEmpty) + "\"";
             baseData.properties = {
                 endpoint: endpointUrl
             };
-
+            
             return envelope;
         }
 
-        function _createException(iKey, message, targetSrc, endpointUrl) {
-            var envelope = _createEnvelope(iKey, "Exception");
-            var data = envelope.data;
+        function _createException(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
+            let envelope : Envelope = _createEnvelope(iKey, "Exception");
+            let data = envelope.data;
             data.baseType = "ExceptionData";
             data.baseData.exceptions = [{
                 typeName: "SDKLoadFailed",
@@ -159,7 +162,7 @@
         }
     
         // Assigning these to local variables allows them to be minified to save space:
-        var targetSrc = aiConfig.url || snipConfig.src;
+        let targetSrc = aiConfig.url || snipConfig.src;
         if (targetSrc) {
             const _handleError = (evt?: any) => {
                 loadFailed = true;
@@ -170,7 +173,7 @@
                 }
             }
 
-            const _handleLoad = (evt, isAbort) => {
+            const _handleLoad = (evt?: any, isAbort?:any) => {
                 if (!handled) {
                     // IE10, Opera calls loaded before the script is processed.
                     // so delaying to give the script a chance to be processed
@@ -183,20 +186,17 @@
             }
 
             const _createScript = () => {
-                var scriptElement = doc.createElement(scriptText);
+                let scriptElement : ScriptElement = doc.createElement(scriptText);
                 scriptElement.src = targetSrc;
-
                 // Allocate Cross origin only if defined and available
-                var crossOrigin = snipConfig[strCrossOrigin];
+                let crossOrigin = snipConfig[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
                     scriptElement[strCrossOrigin] = crossOrigin;
                 }
-            
                 scriptElement.onload = _handleLoad;
                 scriptElement.onerror = _handleError;
-
                 // Some browsers support onload while others onreadystatechange and others both
-                scriptElement.onreadystatechange = function (evt, isAbort) {
+                scriptElement.onreadystatechange = function (evt?:any, isAbort?:any) {
                     if (scriptElement.readyState === "loaded" || scriptElement.readyState === "complete") {
                         _handleLoad(evt, isAbort);
                     }
@@ -205,10 +205,10 @@
                 return scriptElement;
             }
 
-            var theScript = _createScript();
-            if (snipConfig.ld < 0) {
+            let theScript = _createScript();
+            if (snipConfig.ld && snipConfig.ld < 0) {
                 // if user wants to append tag to document head, blocking page load
-                var headNode = doc.getElementsByTagName("head")[0];
+                let headNode = doc.getElementsByTagName("head")[0];
                 headNode.appendChild(theScript);
             } else {
                 setTimeout(function () {
@@ -222,16 +222,16 @@
         try {
             appInsights.cookie = doc.cookie;
         } catch (e) {
-            // do Nothing
+            // eslint-disable-next-line no-empty
         }
     
-        function _createMethods(methods) {
+        function _createMethods(methods:any[]) {
             while (methods.length) {
                 (function (name) {
                     // Define a temporary method that queues-up a the real method call
                     appInsights[name] = function () {
                         // Capture the original arguments passed to the method
-                        var originalArguments = arguments;
+                        let originalArguments = arguments;
                         if (!loadFailed) { // If we have detected that the main script failed to load then stop queuing events that will never be processed
                             // Queue-up a call to the real method
                             appInsights.queue.push(function () {
@@ -244,9 +244,9 @@
             }
         }
 
-        var track = "track";
-        var trackPage = "TrackPage";
-        var trackEvent = "TrackEvent";
+        let track = "track";
+        let trackPage = "TrackPage";
+        let trackEvent = "TrackEvent";
         _createMethods([track + "Event",
             track + "PageView",
             track + "Exception",
@@ -275,13 +275,13 @@
         // Collect global errors
         // Note: ApplicationInsightsAnalytics is the extension string identifier for
         //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
-        var analyticsCfg = ((aiConfig.extensionConfig || {}).ApplicationInsightsAnalytics ||{});
+        let analyticsCfg = ((aiConfig.extensionConfig || {}).ApplicationInsightsAnalytics ||{});
         if (!(aiConfig[strDisableExceptionTracking] === true || analyticsCfg[strDisableExceptionTracking] === true)) {
-            var method = "onerror";
+            let method = "onerror";
             _createMethods(["_" + method]);
-            var originalOnError = win[method];
-            win[method] = function(message, url, lineNumber, columnNumber, error) {
-                var handled = originalOnError && originalOnError(message, url, lineNumber, columnNumber, error);
+            let originalOnError = win[method];
+            win[method] = function(message:string, url:string, lineNumber:Number, columnNumber:Number, error?:any) {
+                let handled = originalOnError && originalOnError(message, url, lineNumber, columnNumber, error);
                 if (handled !== true) {
                     appInsights["_" + method]({
                         message: message,
