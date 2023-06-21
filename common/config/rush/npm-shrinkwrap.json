@@ -1077,8 +1077,9 @@
     "node_modules/@rush-temp/applicationinsights-web-snippet": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web-snippet.tgz",
-      "integrity": "sha512-FpoD7gC1D0hizSjHJheYUnhf4okQAS+JNMEXrht2z1chtBeRfoGuS0uhHe3ZppMH294sWWOXNjMkQsZ3KmMV7g==",
+      "integrity": "sha512-aLq6Kb8Slqa2VOiv7atFDIMDaJO0IogxW4BVYOx6vbP3isAST2LwAnpyfsiTRpYdKIkmnn9Xx95ReilYF2rPKA==",
       "dependencies": {
+        "@microsoft/dynamicproto-js": "^2.0.2",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@rollup/plugin-commonjs": "^24.0.0",
@@ -1954,9 +1955,9 @@
       }
     },
     "node_modules/caniuse-lite": {
-      "version": "1.0.30001505",
-      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001505.tgz",
-      "integrity": "sha512-jaAOR5zVtxHfL0NjZyflVTtXm3D3J9P15zSJ7HmQF8dSKGA6tqzQq+0ZI3xkjyQj46I4/M0K2GbMpcAFOcbr3A==",
+      "version": "1.0.30001506",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001506.tgz",
+      "integrity": "sha512-6XNEcpygZMCKaufIcgpQNZNf00GEqc7VQON+9Rd0K1bMYo8xhMZRAo5zpbnbMNizi4YNgIDAFrdykWsvY3H4Hw==",
       "funding": [
         {
           "type": "opencollective",
@@ -6767,8 +6768,9 @@
     },
     "@rush-temp/applicationinsights-web-snippet": {
       "version": "file:projects\\applicationinsights-web-snippet.tgz",
-      "integrity": "sha512-FpoD7gC1D0hizSjHJheYUnhf4okQAS+JNMEXrht2z1chtBeRfoGuS0uhHe3ZppMH294sWWOXNjMkQsZ3KmMV7g==",
+      "integrity": "sha512-aLq6Kb8Slqa2VOiv7atFDIMDaJO0IogxW4BVYOx6vbP3isAST2LwAnpyfsiTRpYdKIkmnn9Xx95ReilYF2rPKA==",
       "requires": {
+        "@microsoft/dynamicproto-js": "^2.0.2",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@rollup/plugin-commonjs": "^24.0.0",
@@ -7414,9 +7416,9 @@
       "integrity": "sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ=="
     },
     "caniuse-lite": {
-      "version": "1.0.30001505",
-      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001505.tgz",
-      "integrity": "sha512-jaAOR5zVtxHfL0NjZyflVTtXm3D3J9P15zSJ7HmQF8dSKGA6tqzQq+0ZI3xkjyQj46I4/M0K2GbMpcAFOcbr3A=="
+      "version": "1.0.30001506",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001506.tgz",
+      "integrity": "sha512-6XNEcpygZMCKaufIcgpQNZNf00GEqc7VQON+9Rd0K1bMYo8xhMZRAo5zpbnbMNizi4YNgIDAFrdykWsvY3H4Hw=="
     },
     "chalk": {
       "version": "4.1.2",

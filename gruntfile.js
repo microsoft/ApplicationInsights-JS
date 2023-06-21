@@ -28,10 +28,10 @@ module.exports = function (grunt) {
     }
 
     function generateNewSnippet(connString) {
-        // Before: create a rollup task to minify dest-es5/snippet.js -> build/es5/snippet.min.js
+        // TODO: Before: create a rollup task to minify dest-es5/snippet.js -> build/es5/snippet.min.js
         // Change this to web-snipet build/es5/snippet.min.js
         var prefix = "IKey";
-        var snippetBuffer = grunt.file.read("./AISKU/snippet/snippet.min.js");
+        var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
         if (connString) {
             snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
             snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
@@ -674,12 +674,14 @@ module.exports = function (grunt) {
             },
             'string-replace': {
                 'generate-snippet-ikey': generateNewSnippet(false),
-                'generate-snippet-connString': generateNewSnippet(true)
+                'generate-snippet-connString': generateNewSnippet(true),
+                'generate-min': minTasks("applicationinsights-web-snippet"),
             },
             copy: {
                 "web-snippet": {
                     files: [
                         { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js` },
                     ]
                 },
                 config: {
@@ -789,6 +791,8 @@ module.exports = function (grunt) {
         grunt.registerTask("chromedebugextension-restore", restoreTasks("chrome-debug-extension"));
 
         grunt.registerTask("websnippetReplace", ["copy:web-snippet", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
+        grunt.registerTask("snippet-min", minTasks("applicationinsights-web-snippet"));
+        grunt.registerTask("snippet-restore", minTasks("applicationinsights-web-snippet"));
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
         grunt.registerTask("websnippettests", tsTestActions("applicationinsights-web-snippet"));
 

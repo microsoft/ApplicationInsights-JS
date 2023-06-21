@@ -18,8 +18,9 @@
     "rebuild": "npm run build",
     "test": "grunt websnippettests",
     "lint": "tslint -p tsconfig.json",
-    "npm-pack": "npm pack"
-
+    "npm-pack": "npm pack",
+    "ai-min": "grunt snippet-min",
+    "ai-restore": "grunt snippet-restore"
   },
   "license": "MIT",
   "devDependencies": {
@@ -42,5 +43,7 @@
     "@nevware21/grunt-ts-plugin": "^0.4.3",
     "@nevware21/grunt-eslint-ts": "^0.2.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@microsoft/dynamicproto-js": "^2.0.2"
+  }
 }
