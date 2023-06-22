@@ -20,6 +20,6 @@ export default createConfig("",
       outputName: snippetOutputPath
     },
   },
-  [ "applicationinsights-web-snippet" ]
+  [ "applicationinsights-web-snippet" ],
 )
 
