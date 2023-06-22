@@ -28,21 +28,6 @@ module.exports = function (grunt) {
     }
 
     function generateNewSnippet(connString) {
-        // TODO: Before: create a rollup task to minify dest-es5/snippet.js -> build/es5/snippet.min.js
-        // Change this to web-snipet build/es5/snippet.min.js
-        var prefix = "IKey";
-        console.log("generateNewSnippet debug here ----- debug here --------- ");
-        var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
-        if (connString) {
-            snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
-            snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
-            prefix = "ConnString"
-        } else {
-            snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
-            snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
-        }
-        var snippetStr = _encodeStr(snippetBuffer.toString());
-        var expectedStr = `##replace${prefix}Snippet##`;
         var srcPath = "./tools/applicationinsights-web-snippet/dist-es5";
         return {
             files: [{
@@ -52,10 +37,24 @@ module.exports = function (grunt) {
                 src: "applicationinsights-web-snippet.js"
             }],
             options: {
-                replacements: [{
-                    pattern: expectedStr,
-                    replacement: snippetStr
-                }]
+                replacements: function() {
+                    var prefix = "IKey";
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
+                    if (connString) {
+                        snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+                        snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+                        prefix = "ConnString";
+                    } else {
+                        snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+                        snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+                    }
+                    var snippetStr = _encodeStr(snippetBuffer.toString());
+                    var expectedStr = `##replace${prefix}Snippet##`;
+                    return [{
+                        pattern: expectedStr,
+                        replacement: snippetStr
+                    }]
+                }
             }
         };
     }
@@ -534,7 +533,6 @@ module.exports = function (grunt) {
         }));
     
         function tsBuildActions(name, addTests, replaceName) {
-            grunt.log.writeln(`Running build actions for "${name}"`);
             var actions = [
                 "eslint-ts:" + name + "-lint-fix"
             ];

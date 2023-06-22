@@ -1,5 +1,4 @@
-
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { IConfiguration } from "@microsoft/applicationinsights-web";
 export interface ISnippetConfig {
     src: string;
     name?: string;
@@ -11,12 +10,10 @@ export interface ISnippetConfig {
         connectionString: any;
     };
 }
-export interface AIConfig extends IConfig{
-    connectionString?: any;
-    instrumentationKey?: any;
-    endpointUrl?: string;
+
+export interface AIConfig extends IConfiguration {
+    autoExceptionInstrumented?: boolean;
     url?: string;
-    extensionConfig?: any;
 }
 
 export interface Fields {
