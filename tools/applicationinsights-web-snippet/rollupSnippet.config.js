@@ -1,7 +1,4 @@
-import replace from "@rollup/plugin-replace";
-import commonjs from '@rollup/plugin-commonjs';
 import { createConfig } from "../../rollup.base.config";
-import { updateDistEsmFiles } from "../updateDistEsm/updateDistEsm";
 const version = require("./package.json").version;
 
 const snippetOutputName = "snippet";
