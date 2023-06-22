@@ -2,10 +2,10 @@ import { createConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
-const browserEntryPointName = "applicationinsights-idsync-js";
-const browserOutputName = "ai.idsync";
-const entryPointName = "applicationinsights-idsync-js";
-const outputName = "applicationinsights-idsync-js";
+const browserEntryPointName = "applicationinsights-cfgsync-js";
+const browserOutputName = "ai.cfgsync";
+const entryPointName = "applicationinsights-cfgsync-js";
+const outputName = "applicationinsights-cfgsync-js";
 
 const banner = [
   "/*!",

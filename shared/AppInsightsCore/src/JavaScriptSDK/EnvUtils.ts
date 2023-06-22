@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
+import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import { getDocument, getInst, getNavigator, getPerformance, hasNavigator, isString, isUndefined, strIndexOf } from "@nevware21/ts-utils";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
@@ -309,4 +309,22 @@ export function findNamedServerTiming(name: string): any {
     }
 
     return value;
+}
+
+export function sendCustomEvent(evtNamespace: string, details?: any): boolean {
+    let global = getGlobal();
+    if (global && (global as any).CustomEvent) {
+        try {
+            let customData = details || null;
+            let event = new CustomEvent(evtNamespace, {detail: customData});
+            let doc = getDocument();
+            if (doc && doc.dispatchEvent) {
+                doc.dispatchEvent(event);
+                return true;
+            }
+        } catch(e) {
+            // eslint-disable-next-line no-empty
+        }
+    }
+    return false;
 }

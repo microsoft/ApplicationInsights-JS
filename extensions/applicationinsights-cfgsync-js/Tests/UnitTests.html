@@ -26,7 +26,7 @@
         loadFetchModule(modules, "whatwg-fetch");
         loadCommonModules(modules, function() {
 
-            var testModule = modules.add("Tests/Unit/src/idsync.tests", "./Unit/dist/idsync.tests.js")
+            var testModule = modules.add("Tests/Unit/src/cfgsync.tests", "./Unit/dist/cfgsync.tests.js")
             testModule.run = function (tests) {
                 console && console.log("Starting tests");
                 QUnit.start();

@@ -66,6 +66,9 @@
         },
         "@microsoft/applicationinsights-idsync-js": {
             "constEnums": []
+        },
+        "@microsoft/applicationinsights-cfgsync-js": {
+            "constEnums": []
         }
     }
 }

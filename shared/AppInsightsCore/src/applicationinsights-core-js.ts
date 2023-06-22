@@ -47,7 +47,7 @@ export {
     getCrypto, getMsCrypto, getLocation, hasJSON, getJSON,
     isReactNative, getConsole, isIE, getIEVersion, isSafari,
     setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported,
-    findMetaTag, findNamedServerTiming
+    findMetaTag, findNamedServerTiming, sendCustomEvent
 } from "./JavaScriptSDK/EnvUtils";
 export {
     getGlobal,
