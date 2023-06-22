@@ -56,7 +56,7 @@ module.exports = function (grunt) {
                     return [{
                         pattern: expectedStr,
                         replacement: snippetStr,
-                    }]
+                    }];
                 }
             }
         };
