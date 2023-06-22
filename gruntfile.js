@@ -55,7 +55,7 @@ module.exports = function (grunt) {
                     console.log("change expectedStr to " + expectedStr);
                     return [{
                         pattern: expectedStr,
-                        replacement: snippetStr,
+                        replacement: snippetStr
                     }];
                 }
             }
