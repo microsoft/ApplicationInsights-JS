@@ -41,15 +41,18 @@ module.exports = function (grunt) {
                     var prefix = "IKey";
                     var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
                     if (connString) {
-                        snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
-                        snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"YOUR_CONNECTION_STRING\"");
                         prefix = "ConnString";
                     } else {
-                        snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
-                        snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+                        let snippetBuffer2 = "cfg:{connectionString:\"YOUR_CONNECTION_STRING\"";
+                        console.log("what is it doing", snippetBuffer2.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\""));
                     }
                     var snippetStr = _encodeStr(snippetBuffer.toString());
                     var expectedStr = `##replace${prefix}Snippet##`;
+                    console.log("change expectedStr to " + expectedStr);
                     return [{
                         pattern: expectedStr,
                         replacement: snippetStr
