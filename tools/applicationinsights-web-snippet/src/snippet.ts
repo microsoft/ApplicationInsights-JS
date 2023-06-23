@@ -1,6 +1,6 @@
 import { Fields, ISnippetConfig } from "./type";
-import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 import { IEnvelope } from "@microsoft/applicationinsights-common";
+import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 
 (function (win: Window, doc: Document, snipConfig: ISnippetConfig) {
     let locn: Location = win.location;
@@ -302,7 +302,7 @@ import { IEnvelope } from "@microsoft/applicationinsights-common";
     
                 return handled;
             };
-            aiConfig.autoExceptionInstrumented = true;
+            aiConfig["autoExceptionInstrumented"] = true;
         }
     
         return appInsights;
