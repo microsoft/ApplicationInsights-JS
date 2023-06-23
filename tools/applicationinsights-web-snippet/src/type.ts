@@ -1,4 +1,4 @@
-import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
+import { IConfiguration } from "@microsoft/applicationinsights-web";
 
 export interface ISnippetConfig {
     src: string;
@@ -15,10 +15,4 @@ export interface Fields {
     endpointsuffix?: any;
     location?: any;
     // Add other properties as needed
-  }
-
-export interface AppInsights extends Snippet{
-    initialize: boolean;
-    cookie?: any;
-    core?: any;
   }

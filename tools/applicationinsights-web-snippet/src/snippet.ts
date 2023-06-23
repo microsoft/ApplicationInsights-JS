@@ -1,4 +1,4 @@
-import { AppInsights, Fields, ISnippetConfig } from "./type";
+import { Fields, ISnippetConfig } from "./type";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 import { IEnvelope } from "@microsoft/applicationinsights-common";
 
@@ -28,7 +28,7 @@ import { IEnvelope } from "@microsoft/applicationinsights-common";
     let aiSdk = win[aiName] || (function (aiConfig: IConfiguration) {
         let loadFailed = false;
         let handled = false;
-        let appInsights:AppInsights= {
+        let appInsights: (Snippet & {initialize:boolean, cookie?:any, core?:any})= {
             initialize: true,   // initialize sdk on download
             queue: [],
             sv: "6",            // Track the actual snippet version for reporting.
@@ -120,7 +120,7 @@ import { IEnvelope } from "@microsoft/applicationinsights-common";
             tags[strAiOperationName] = locn && locn.pathname || "_unknown_";
             tags[strAiSdkVersion] = "javascript:snippet_" + (appInsights.sv || appInsights.version);
 
-            return {
+            let envelope:IEnvelope = {
                 time: _getTime(),
                 iKey: iKey,
                 name: "Microsoft.ApplicationInsights." + iKey.replace(/-/g, strEmpty) + "." + theType,
@@ -131,10 +131,12 @@ import { IEnvelope } from "@microsoft/applicationinsights-common";
                         ver: 2
                     }
                 },
-                ver: "4.0",
-                seq: 1,
+                ver: 4.0,
+                seq: "1",
                 aiDataContract: undefined
             };
+
+            return envelope;
         }
 
         function _createInternal(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
