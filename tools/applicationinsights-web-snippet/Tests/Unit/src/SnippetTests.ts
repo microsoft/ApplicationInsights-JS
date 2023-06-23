@@ -1,5 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { webSnippetVersion, webSnippet, webSnippetCs } from "../../../build/applicationinsights-web-snippet";
+import { webSnippetVersion, webSnippet, webSnippetCs } from "../../../dist-es5/applicationinsights-web-snippet";
 
 export class SnippetTests extends AITestClass {
 

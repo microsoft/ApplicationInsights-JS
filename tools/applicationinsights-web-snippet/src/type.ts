@@ -1,4 +1,5 @@
-import { IConfiguration } from "@microsoft/applicationinsights-web";
+import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
+
 export interface ISnippetConfig {
     src: string;
     name?: string;
@@ -6,14 +7,7 @@ export interface ISnippetConfig {
     useXhr?: boolean;
     crossOrigin?: string;
     onInit?: any;
-    cfg: {
-        connectionString: any;
-    };
-}
-
-export interface AIConfig extends IConfiguration {
-    autoExceptionInstrumented?: boolean;
-    url?: string;
+    cfg: IConfiguration;
 }
 
 export interface Fields {
@@ -23,38 +17,8 @@ export interface Fields {
     // Add other properties as needed
   }
 
-export interface Envelope{
-    time?: any;
-    iKey?: string;
-    name?: string;
-    sampleRate?: number;
-    tags?: any;
-    data: {
-        baseData: {
-            ver?: number;
-            exceptions?: any[];
-            message?: string;
-            properties?: any;
-        },
-        baseType?: any,
-
-    }
-  }
-
-export interface ScriptElement extends HTMLElement{
-    src?: any;
-    onload: any;
-    onreadystatechange?: any;
-    readyState?: any;
-  }
-
-export interface AppInsights{
+export interface AppInsights extends Snippet{
     initialize: boolean;
-    queue: any[];
-    sv: string;
-    version: number;
-    config: AIConfig;
     cookie?: any;
     core?: any;
-
   }

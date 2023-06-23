@@ -1,4 +1,6 @@
-import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement } from "./type";
+import { AppInsights, Fields, ISnippetConfig } from "./type";
+import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
+import { IEnvelope } from "@microsoft/applicationinsights-common";
 
 (function (win: Window, doc: Document, snipConfig: ISnippetConfig) {
     let locn: Location = win.location;
@@ -23,7 +25,7 @@ import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement 
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
     }
-    let aiSdk = win[aiName] || (function (aiConfig: AIConfig) {
+    let aiSdk = win[aiName] || (function (aiConfig: IConfiguration) {
         let loadFailed = false;
         let handled = false;
         let appInsights:AppInsights= {
@@ -59,7 +61,7 @@ import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement 
             return fields;
         }
 
-        function _sendEvents(evts:Envelope[], endpointUrl?:any) {
+        function _sendEvents(evts:IEnvelope[], endpointUrl?:any) {
             if (JSON) {
                 let sender = win.fetch;
                 if (sender && !snipConfig.useXhr) {
@@ -81,7 +83,7 @@ import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement 
             let endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
 
             let message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
-            let evts:Envelope[] = [];
+            let evts:IEnvelope[] = [];
             evts.push(_createException(iKey, message, targetSrc, endpointUrl));
             evts.push(_createInternal(iKey, message, targetSrc, endpointUrl));
 
@@ -128,12 +130,15 @@ import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement 
                     baseData: {
                         ver: 2
                     }
-                }
+                },
+                ver: "4.0",
+                seq: 1,
+                aiDataContract: undefined
             };
         }
 
         function _createInternal(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
-            let envelope : Envelope = _createEnvelope(iKey, "Message");
+            let envelope : IEnvelope = _createEnvelope(iKey, "Message");
             let data = envelope.data;
             data.baseType = "MessageData";
             let baseData = data.baseData;
@@ -147,7 +152,7 @@ import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement 
         }
 
         function _createException(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
-            let envelope : Envelope = _createEnvelope(iKey, "Exception");
+            let envelope : IEnvelope = _createEnvelope(iKey, "Exception");
             let data = envelope.data;
             data.baseType = "ExceptionData";
             data.baseData.exceptions = [{
@@ -162,7 +167,7 @@ import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement 
         }
     
         // Assigning these to local variables allows them to be minified to save space:
-        let targetSrc = aiConfig.url || snipConfig.src;
+        let targetSrc = (aiConfig as any)["url"] || snipConfig.src
         if (targetSrc) {
             const _handleError = (evt?: any) => {
                 loadFailed = true;
@@ -186,8 +191,8 @@ import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement 
             }
 
             const _createScript = () => {
-                let scriptElement : ScriptElement = doc.createElement(scriptText);
-                scriptElement.src = targetSrc;
+                let scriptElement : HTMLElement = doc.createElement(scriptText);
+                (scriptElement as any)["src"] = targetSrc;
                 // Allocate Cross origin only if defined and available
                 let crossOrigin = snipConfig[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
@@ -196,8 +201,8 @@ import { AIConfig, AppInsights, Envelope, Fields, ISnippetConfig, ScriptElement 
                 scriptElement.onload = _handleLoad;
                 scriptElement.onerror = _handleError;
                 // Some browsers support onload while others onreadystatechange and others both
-                scriptElement.onreadystatechange = function (evt?:any, isAbort?:any) {
-                    if (scriptElement.readyState === "loaded" || scriptElement.readyState === "complete") {
+                (scriptElement as any)["onreadystatechange"] = function (evt?:any, isAbort?:any) {
+                    if ((scriptElement as any)["readyState"] === "loaded" || (scriptElement as any)["readyState"]  === "complete") {
                         _handleLoad(evt, isAbort);
                     }
                 };

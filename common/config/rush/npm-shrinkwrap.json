@@ -1077,7 +1077,7 @@
     "node_modules/@rush-temp/applicationinsights-web-snippet": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web-snippet.tgz",
-      "integrity": "sha512-TyiHI78+6sx8a16XpJK5qKIc7VBA7YWSL3YxBPkr2aW6mc+9xMt+C6cftgASzP6LI77RtOZB5JGbKBYsV6dwRw==",
+      "integrity": "sha512-3mjnTSu0le0mj2mI5NQkFWC5jd+lAL6D4d3Hgs+a5KMq/yLpIPUo/zq/qfSMDxulx+Ie6RAluEmfjWB48ycoiw==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -2340,9 +2340,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.436",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.436.tgz",
-      "integrity": "sha512-aktOxo8fnrMC8vOIBMVS3PXbT1nrPQ+SouUuN7Y0a+Rw3pOMrvIV92Ybnax7x4tugA+ZpYA5fOHTby7ama8OQQ=="
+      "version": "1.4.438",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.438.tgz",
+      "integrity": "sha512-x94U0FhphEsHsOloCvlsujHCvoir0ZQ73ZAs/QN4PLx98uNvyEU79F75rq1db75Bx/atvuh7KPeuxelh+xfYJw=="
     },
     "node_modules/encodeurl": {
       "version": "1.0.2",
@@ -6768,7 +6768,7 @@
     },
     "@rush-temp/applicationinsights-web-snippet": {
       "version": "file:projects\\applicationinsights-web-snippet.tgz",
-      "integrity": "sha512-TyiHI78+6sx8a16XpJK5qKIc7VBA7YWSL3YxBPkr2aW6mc+9xMt+C6cftgASzP6LI77RtOZB5JGbKBYsV6dwRw==",
+      "integrity": "sha512-3mjnTSu0le0mj2mI5NQkFWC5jd+lAL6D4d3Hgs+a5KMq/yLpIPUo/zq/qfSMDxulx+Ie6RAluEmfjWB48ycoiw==",
       "requires": {
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -7698,9 +7698,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "electron-to-chromium": {
-      "version": "1.4.436",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.436.tgz",
-      "integrity": "sha512-aktOxo8fnrMC8vOIBMVS3PXbT1nrPQ+SouUuN7Y0a+Rw3pOMrvIV92Ybnax7x4tugA+ZpYA5fOHTby7ama8OQQ=="
+      "version": "1.4.438",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.438.tgz",
+      "integrity": "sha512-x94U0FhphEsHsOloCvlsujHCvoir0ZQ73ZAs/QN4PLx98uNvyEU79F75rq1db75Bx/atvuh7KPeuxelh+xfYJw=="
     },
     "encodeurl": {
       "version": "1.0.2",
