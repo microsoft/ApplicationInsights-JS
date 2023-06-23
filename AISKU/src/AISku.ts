@@ -62,6 +62,8 @@ function _chkDiagLevel(value: number) {
 
 /**
  * Application Insights API
+ * @group Entrypoint
+ * @group Classes
  * @class Initialization
  * @implements {IApplicationInsights}
  */

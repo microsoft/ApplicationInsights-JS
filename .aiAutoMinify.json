@@ -68,6 +68,25 @@
             "constEnums": [
                 "ICfgSyncMode"
             ]
+        },
+        "@microsoft/1ds-core-js": {
+            "constEnums": [
+                "eValueKind",
+                "EventLatencyValue",
+                "eEventPropertyType",
+                "EventPersistenceValue",
+                "EventSendType",
+                "eTraceLevel",
+                "_eExtendedInternalMessageId",
+                "GuidStyle",
+                "FieldValueSanitizerType",
+                "TransportType"
+            ]
+        },
+        "@microsoft/1ds-post-js": {
+            "constEnums": [
+                "EventBatchNotificationReason"
+            ]
         }
     }
 }

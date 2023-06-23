@@ -336,7 +336,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let fetchStub = this._context["fetchStub"];
                 let patchEvnSpy = this._context["patchEvnSpy"];
                
-                if (fetchStub.called && patchEvnSpy.called) {
+                if (fetchStub.called && patchEvnSpy.called && fetchStub.callCount >= 3 && patchEvnSpy.callCount >= 3) {
                     Assert.equal(fetchStub.callCount, 3, "fetch is called 3 times");
                     Assert.equal(patchEvnSpy.callCount, 3, "event should be dispatched 3 times");
                     return true;

@@ -218,7 +218,7 @@ export class PageViewManager {
 
             _self.teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 if (queueTimer) {
-                    clearInterval(queueTimer);
+                    queueTimer.cancel();
                     queueTimer = null;
 
                     let allItems = itemQueue.slice(0);

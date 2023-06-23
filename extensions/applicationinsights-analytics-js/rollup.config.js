@@ -31,5 +31,6 @@ export default createUnVersionedConfig(banner,
       outputName: outputName
     },
   },
-  [ "applicationinsights-analytics-js" ]
+  [ "applicationinsights-analytics-js" ],
+  false
 );
