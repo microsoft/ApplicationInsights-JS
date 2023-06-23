@@ -31,7 +31,7 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         let appInsights: (Snippet & {initialize:boolean, cookie?:any, core?:any})= {
             initialize: true,   // initialize sdk on download
             queue: [],
-            sv: "6",            // Track the actual snippet version for reporting.
+            sv: "7",            // Track the actual snippet version for reporting.
             version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
             config: aiConfig
         };
