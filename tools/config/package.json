@@ -9,6 +9,7 @@
         "url": "git+https://github.com/microsoft/ApplicationInsights-JS.git"
     },
     "scripts": {
+        "clean": "git clean -xdf",
         "build": "npm run build:browser",
         "build:browser": "grunt copy-config",
         "rebuild": "npm run build",

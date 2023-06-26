@@ -17,7 +17,7 @@
     "module": "dist-es5/applicationinsights-rollup-es5.js",
     "types": "types/applicationinsights-rollup-es5.d.ts",
     "scripts": {
-        "clean": "grunt clean",
+        "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:bundle",
         "build:esm": "grunt rollupes5",
         "build:bundle": "rollup -c rollup.config.js --bundleConfigAsCjs",
