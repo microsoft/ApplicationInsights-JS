@@ -1,5 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { webSnippetVersion, webSnippet, webSnippetCs } from "../../../build/applicationinsights-web-snippet";
+import { webSnippetVersion, webSnippet, webSnippetCs } from "../../../dist-es5/applicationinsights-web-snippet";
 
 export class SnippetTests extends AITestClass {
 
@@ -12,7 +12,7 @@ export class SnippetTests extends AITestClass {
         this.testCase({
             name: "Check snippet version",
             test: () => {
-                QUnit.assert.equal("6", webSnippetVersion());
+                QUnit.assert.equal("7", webSnippetVersion());
             }
         });
 

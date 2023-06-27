@@ -13,13 +13,12 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "./types",
-    "outDir": "./dist-es5",
-    "rootDir": "./build",
+    "declarationDir": "build/types",
+    "outDir": "build/output",
+    "rootDir": "./src",
     "removeComments": false
   },
   "include": [
-    "./build/*.ts"
   ],
   "exclude": [
     "node_modules"
