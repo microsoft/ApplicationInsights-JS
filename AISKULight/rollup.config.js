@@ -1,4 +1,4 @@
-import { createConfig } from "../rollup.base.config";
+import { createUMDConfig } from "../rollup.base.config";
 import { updateDistEsmFiles } from "../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
@@ -21,7 +21,7 @@ const replaceValues = {
 
 updateDistEsmFiles(replaceValues, banner, true, true, "dist-esm");
 
-export default createConfig(banner, 
+export default createUMDConfig(banner, 
   {
     namespace: "Microsoft.ApplicationInsights",
     version: version,

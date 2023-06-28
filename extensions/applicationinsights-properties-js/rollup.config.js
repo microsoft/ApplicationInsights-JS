@@ -1,9 +1,9 @@
-import { createConfig } from "../../rollup.base.config";
+import { simpleConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
 const browserEntryPointName = "applicationinsights-properties-js";
-const browserOutputName = "ai.props";
+const browserOutputName = "applicationinsights-properties-js";
 const entryPointName = "applicationinsights-properties-js";
 const outputName = "applicationinsights-properties-js"; 
 
@@ -21,7 +21,7 @@ const replaceValues = {
 
 updateDistEsmFiles(replaceValues, banner, true, true, "dist-esm");
 
-export default createConfig(banner, 
+export default simpleConfig(banner, 
   {
     namespace: "Microsoft.ApplicationInsights",
     version: version,
