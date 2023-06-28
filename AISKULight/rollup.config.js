@@ -32,7 +32,7 @@ export default createConfig(banner,
     browser: {
       entryPoint: browserEntryPointName,
       outputName: browserOutputName,
-      formats: { format: 'umd', postfix: '' }
+      formats: [{ format: 'umd', postfix: '' }]
     }
   },
-  [ "index" ], replaceValues);
+  [ "index" ], replaceValues, true, false);
