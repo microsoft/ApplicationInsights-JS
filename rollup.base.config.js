@@ -1,5 +1,4 @@
 import { nodeResolve } from "@rollup/plugin-node-resolve";
-import commonjs from "@rollup/plugin-commonjs";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
 import cleanup from "rollup-plugin-cleanup";
@@ -7,7 +6,6 @@ import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedy
 import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 
 const treeshakeCfg = {
-    // preset: "smallest",
     moduleSideEffects: false,
     propertyReadSideEffects: false,
     tryCatchDeoptimization: false,
@@ -315,15 +313,15 @@ export function createConfig(banner, cfg, importCheckNames, replaceValues) {
     return tasks;
 }
 
-export function createUnVersionedConfig(banner, cfg, importCheckName) {
+export function createUnVersionedConfig(banner, cfg, importCheckName, replaceValues) {
     const noVersion = "";
-    const targetType = "es3";
+    const targetType = "esm";
 
     let tasks = [
         //rollupModule(banner, targetType, theNamespace, "es3/" + entryInputName, outputName),
 
-        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true),
-        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false)
+        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues),
+        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues)
     ];
 
     let browserFormats = cfg.browser.formats || [ 
@@ -370,8 +368,8 @@ export function createUnVersionedConfig(banner, cfg, importCheckName) {
         }
 
         tasks.push(
-            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam),
-            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam)
+            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues),
+            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, replaceValues)
         );
     }
 
