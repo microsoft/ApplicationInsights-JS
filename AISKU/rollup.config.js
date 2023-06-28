@@ -1,6 +1,5 @@
-import { createConfig } from "../rollup.base.config";
 import { updateDistEsmFiles } from "../tools/updateDistEsm/updateDistEsm";
-
+import { createConfig } from "../rollup.base.config";
 const version = require("./package.json").version;
 const browserEntryPointName = "Init";
 const browserOutputName = "ai";
@@ -18,7 +17,6 @@ const replaceValues = {
   "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
   "// Licensed under the MIT License.": ""
 };
-
 updateDistEsmFiles(replaceValues, banner, true, true, "dist-esm");
 
 export default createConfig(banner, 
@@ -34,4 +32,4 @@ export default createConfig(banner,
       outputName: browserOutputName
     }
   },
-  [ "applicationinsights-web" ]);
+  [ "applicationinsights-web" ], replaceValues);

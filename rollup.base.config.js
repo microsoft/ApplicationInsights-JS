@@ -119,7 +119,8 @@ const getOutro = (format, theNameSpace, moduleName, version) => {
     return theOutro;
 }
 
-const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '') => {
+const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', replaceValues) => {
+
     var thePostfix = `${postfix}`;
     if (libVersion) {
         thePostfix = `.${libVersion}${postfix}`; 
@@ -134,33 +135,31 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
         output: {
             file: outputPath,
             banner: banner,
-            format: "cjs",
+            format: format,
             name: theNameSpace.browser,
             extend: true,
             freeze: false,
             sourcemap: true,
-            strict: false,
-            intro: getIntro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver),
-            outro: getOutro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver)
         },
         treeshake: treeshakeCfg,
         plugins: [
             dynamicRemove(),
             replace({
-                preventAssignment: true
+                preventAssignment: true,
+                delimiters: ["", ""],
+                values: replaceValues
             }),
             importCheck({ exclude: importCheckNames }),
             nodeResolve({
-                module: true,
-                browser: true,
+                browser: false,
                 preferBuiltins: false
             }),
-            commonjs(),
             doCleanup(),
             es3Poly(),
             es3Check()
         ]
     };
+
 
     if (isProduction) {
         browserRollupConfig.output.file = prodOutputPath;
@@ -186,7 +185,7 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
     return browserRollupConfig;
 };
 
-const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, isProduction) => {
+const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, isProduction, replaceValues) => {
 
     var outputPath = `dist/${outputName}.js`;  
     var prodOutputPath = `dist/${outputName}.min.js`;
@@ -208,14 +207,16 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
         plugins: [
             dynamicRemove(),
             replace({
-                preventAssignment: true
+              preventAssignment: true,
+              delimiters: ["", ""],
+              values: replaceValues
             }),
-            importCheck({ exclude: importCheckNames }),
+            importCheck({ exclude: importCheckNames}),
             nodeResolve(),
             doCleanup(),
             es3Poly(),
             es3Check()
-        ]
+          ]
     };
 
     if (isProduction) {
@@ -242,7 +243,7 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
     return nodeRollupConfig;
 };
 
-export function createConfig(banner, cfg, importCheckNames) {
+export function createConfig(banner, cfg, importCheckNames, replaceValues) {
     const majorVersion = cfg.version.split('.')[0];
     const targetType = "esm";
 
@@ -255,8 +256,8 @@ export function createConfig(banner, cfg, importCheckNames) {
     }
 
     tasks.push(
-        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true),
-        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false)
+        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues),
+        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues)
     );
 
     let browserFormats = cfg.browser.formats || [ 
@@ -294,20 +295,20 @@ export function createConfig(banner, cfg, importCheckNames) {
         let browserPostfix = browserCfg.postfix || '';
         let browserTeam = browserCfg.teamExt || '';
 
-        if (cfg.version) {
-            var version = cfg.version.split(".");
-            var majorVer = version[0].trim();
-            if (majorVer && !browserNamespace.browser.endsWith(majorVer)) {
-                browserNamespace.browser += majorVer;
-            }
-            browserNamespace.ver = cfg.version;
-        }
+        // if (cfg.version) {
+        //     var version = cfg.version.split(".");
+        //     var majorVer = version[0].trim();
+        //     if (majorVer && !browserNamespace.browser.endsWith(majorVer)) {
+        //         browserNamespace.browser += majorVer;
+        //     }
+        //     browserNamespace.ver = cfg.version;
+        // }
 
         tasks.push(
-            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam),
-            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, false, browserFmt, browserPostfix, browserTeam),
-            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, cfg.version, true, browserFmt, browserPostfix, browserTeam),
-            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, cfg.version, false, browserFmt, browserPostfix, browserTeam)
+            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues),
+            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, false, browserFmt, browserPostfix, browserTeam, replaceValues),
+            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, cfg.version, true, browserFmt, browserPostfix, browserTeam, replaceValues),
+            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, cfg.version, false, browserFmt, browserPostfix, browserTeam, replaceValues)
         );
     }
 
