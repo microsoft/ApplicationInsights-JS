@@ -149,19 +149,18 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
 export function createConfig(banner, cfg, importCheckNames, replaceValues, majorVersionSet = true, treeshakeSet = true) {
     const majorVersion = cfg.version.split('.')[0];
     const targetType = "esm";
-    var tasks = [
-    ];
-    tasks.push(
-        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, {}),
-        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, {})
-    );
-
+    var tasks = [];
     let treeshakeConfig = {};
 
     if (treeshakeSet){
         treeshakeConfig = treeshakeCfg;
     } 
 
+    tasks.push(
+        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, treeshakeConfig),
+        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, treeshakeConfig)
+    );
+    
     let browserFormats = cfg.browser.formats || [ 
         { format: 'umd', postfix: '' },
         { format: 'cjs', postfix: '.cjs' },
@@ -192,7 +191,6 @@ export function createConfig(banner, cfg, importCheckNames, replaceValues, major
                 gbl: browserCfg.namespaceGbl || cfg.namespace
             };
         }
-
         let browserFmt = browserCfg.format || 'umd';
         let browserPostfix = browserCfg.postfix || '';
         let browserTeam = browserCfg.teamExt || '';

@@ -32,4 +32,4 @@ export default createConfig(banner,
       outputName: browserOutputName
     }
   },
-  [ "applicationinsights-web" ], replaceValues);
+  [ "applicationinsights-web" ], replaceValues, true, true);
