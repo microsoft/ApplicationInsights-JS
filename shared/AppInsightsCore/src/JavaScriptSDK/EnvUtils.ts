@@ -3,7 +3,9 @@
 "use strict";
 
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
-import { getDocument, getInst, getNavigator, getPerformance, hasNavigator, isString, isUndefined, strIndexOf } from "@nevware21/ts-utils";
+import {
+    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, strIndexOf
+} from "@nevware21/ts-utils";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
@@ -311,17 +313,40 @@ export function findNamedServerTiming(name: string): any {
     return value;
 }
 
-export function sendCustomEvent(evtNamespace: string, details?: any): boolean {
+// TODO: should reuse this method for analytics plugin
+export function dispatchEvent(target:EventTarget, evnt: Event | CustomEvent): boolean {
+    if (target && target.dispatchEvent && evnt) {
+        target.dispatchEvent(evnt);
+        return true;
+    }
+    return false;
+}
+
+
+export function createCustomDomEvent(eventName: string, details?: any): CustomEvent {
+    let event: CustomEvent = null;
+    let detail = {details: details || null } as CustomEventInit;
+    if (isFunction(CustomEvent)) { // Use CustomEvent constructor when available
+        event = new CustomEvent(eventName, detail);
+    } else { // CustomEvent has no constructor in IE
+        let doc = getDocument();
+        if (doc && doc.createEvent) {
+            event = doc.createEvent("CustomEvent");
+            event.initCustomEvent(eventName, true, true, detail);
+        }
+    }
+
+    return event;
+}
+
+
+
+export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any): boolean {
     let global = getGlobal();
     if (global && (global as any).CustomEvent) {
         try {
-            let customData = details || null;
-            let event = new CustomEvent(evtNamespace, {detail: customData});
-            let doc = getDocument();
-            if (doc && doc.dispatchEvent) {
-                doc.dispatchEvent(event);
-                return true;
-            }
+            let details = {cfg: cfg || null,  customDetails: customDetails || null} as any;
+            return dispatchEvent(global, createCustomDomEvent(evtName, details));
         } catch(e) {
             // eslint-disable-next-line no-empty
         }

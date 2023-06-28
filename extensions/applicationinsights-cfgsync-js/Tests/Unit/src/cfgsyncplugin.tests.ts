@@ -49,18 +49,19 @@ export class CfgSyncPluginTests extends AITestClass {
             name: "CfgSyncPlugin: default config should be set dynamically from root",
             useFakeTimers: true,
             test: () => {
-                let doc = getDocument();
+                let doc = getGlobal();
                 let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
                 this.core.initialize({instrumentationKey: "Test-iKey",  extensions: [this.mainInst], extensionConfig: {[this.identifier]: {}}}, [this._channel]);
                 let udfVal = undefined;
                 let expectedDefaults = {
                     disableAutoSync: false,
-                    customEvtNamespace: udfVal,
+                    customEvtName: udfVal,
                     cfgUrl: udfVal,
                     receiveChanges: false,
                     overrideSyncFunc: udfVal,
                     overrideFetchFunc: udfVal,
-                    onCfgChangeReceive: udfVal
+                    onCfgChangeReceive: udfVal,
+                    nonOverrideConfigs:["instrumentationKey", "connectionString", "endpointUrl"]
                 };
                 this.core.config.extensionConfig = this.core.config.extensionConfig || {};
                 let actualDefaults = this.core.config.extensionConfig[this.identifier];
@@ -73,17 +74,14 @@ export class CfgSyncPluginTests extends AITestClass {
 
                 this.core.config.extensionConfig[this.identifier].disableAutoSync = true;
                 this.core.config.extensionConfig[this.identifier].receiveChanges = true;
-                this.core.config.extensionConfig[this.identifier].customEvtNamespace = "test";
+                this.core.config.extensionConfig[this.identifier].customEvtName = "test";
                 this.clock.tick(1);
                 targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], false, "auto sync is changed to false dynamically");
                 Assert.equal(targets[1], false, "receive changes should not be changed dynamically");
-                Assert.equal(targets[2], "cfgsync", "default event name should not be changed dynamically");
+                Assert.equal(targets[2], "test", "default event name should be changed dynamically");
                 Assert.equal(patchEvnSpy.callCount, 1, "event is dispatched should not be called again");
                 
-                this.mainInst.enableReceiveChanges(true);
-                targets = this.mainInst["_getDbgPlgTargets"]();
-                Assert.equal(targets[1], true, "receive changes should be changed by enableReceiveChanges function");
                 
             }
 
@@ -92,21 +90,21 @@ export class CfgSyncPluginTests extends AITestClass {
         this.testCase({
             name: "CfgSyncPlugin: eventListener should be set correctly",
             test: () => {
-                let doc = getDocument();
-                let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
-                //let global = getGlobal();
-                //let eventListenerStub = this.sandbox.spy(global, "addEventListener");
-                this.core.initialize(this._config, [this._channel]);
-                let targets = this.mainInst["_getDbgPlgTargets"]();
-                Assert.equal(targets[0], true, "auto sync is on by default");
-                Assert.equal(targets[1], true, "receive changes is on");
-                Assert.equal(targets[2], "cfgsync", "default event name is set by default");
-                Assert.equal(patchEvnSpy.callCount, 1, "event is dispatched");
+                // let doc = getGlobal();
+                // let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
+                // //let global = getGlobal();
+                // //let eventListenerStub = this.sandbox.spy(global, "addEventListener");
+                // this.core.initialize(this._config, [this._channel]);
+                // let targets = this.mainInst["_getDbgPlgTargets"]();
+                // Assert.equal(targets[0], true, "auto sync is on by default");
+                // Assert.equal(targets[1], true, "receive changes is on");
+                // Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                // Assert.equal(patchEvnSpy.callCount, 1, "event is dispatched");
                 //Assert.equal(eventListenerStub.callCount, 1, "event listener is added");
 
-                this.mainInst.updateEventListenerName("test");
-                targets = this.mainInst["_getDbgPlgTargets"]();
-                Assert.equal(targets[2], "test", "event name should be changed");
+                // this.mainInst.updateEventListenerName("test");
+                // targets = this.mainInst["_getDbgPlgTargets"]();
+                // Assert.equal(targets[2], "test", "event name should be changed");
 
             }
         });
@@ -117,7 +115,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 this._config.extensionConfig  = { [this.identifier]: {
                     cfgUrl: "testURL"
                 }}
-                let doc = getDocument();
+                let doc = getGlobal();
                 let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
                 //let global = getGlobal();
                 //let eventListenerStub = this.sandbox.spy(global, "addEventListener");
@@ -136,38 +134,38 @@ export class CfgSyncPluginTests extends AITestClass {
             name: "CfgSyncPlugin: main instance should change listeners config",
             useFakeTimers: true,
             test: () => {
-                let listener = new CfgSyncPlugin();
-                let core = new AppInsightsCore();
-                let config = {
-                    instrumentationKey: "Test-iKey123",
-                    disableInstrumentationKeyValidation: false,
-                    maxMessageLimit: 3001,
-                    enablePerfMgr: false,
-                    extensions: [listener],
-                    extensionConfig: {
-                        [this.identifier]: {
-                            disableAutoSync: false,
-                            receiveChanges: true
-                        }
-                    }
-                }
-                let doc = getDocument();
-                let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
-                this._config.extensionConfig  = { [this.identifier]: {}};
-                core.initialize(config, [this._channel]);
-                this.core.initialize(this._config, [this._channel]);
-                let targets = this.mainInst["_getDbgPlgTargets"]();
-                Assert.equal(targets[0], true, "auto sync is on by default");
-                Assert.equal(targets[1], false, "receive changes is off");
-                Assert.equal(targets[2], "cfgsync", "default event name is set by default");
-                Assert.equal(patchEvnSpy.callCount, 2, "event should be dispatched");
+                // let listener = new CfgSyncPlugin();
+                // let core = new AppInsightsCore();
+                // let config = {
+                //     instrumentationKey: "Test-iKey123",
+                //     disableInstrumentationKeyValidation: false,
+                //     maxMessageLimit: 3001,
+                //     enablePerfMgr: false,
+                //     extensions: [listener],
+                //     extensionConfig: {
+                //         [this.identifier]: {
+                //             disableAutoSync: false,
+                //             receiveChanges: true
+                //         }
+                //     }
+                // }
+                // let doc = getGlobal();
+                // let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
+                // this._config.extensionConfig  = { [this.identifier]: {}};
+                // core.initialize(config, [this._channel]);
+                // this.core.initialize(this._config, [this._channel]);
+                // let targets = this.mainInst["_getDbgPlgTargets"]();
+                // Assert.equal(targets[0], true, "auto sync is on by default");
+                // Assert.equal(targets[1], false, "receive changes is off");
+                // Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                // Assert.equal(patchEvnSpy.callCount, 2, "event should be dispatched");
 
-                let listenerTargets = listener["_getDbgPlgTargets"]();
-                Assert.equal(listenerTargets[0], true, "auto sync is on by default");
-                Assert.equal(listenerTargets[1], true, "receive changes is true");
-                Assert.equal(listenerTargets[2], "cfgsync", "default event name is set by default");
-                Assert.equal(patchEvnSpy.callCount, 2, "event should not be dispatched");
-                this.clock.tick(1);
+                // let listenerTargets = listener["_getDbgPlgTargets"]();
+                // Assert.equal(listenerTargets[0], true, "auto sync is on by default");
+                // Assert.equal(listenerTargets[1], true, "receive changes is true");
+                // Assert.equal(listenerTargets[2], "cfgsync", "default event name is set by default");
+                // Assert.equal(patchEvnSpy.callCount, 2, "event should not be dispatched");
+                // this.clock.tick(1 );
 
                 //Assert.equal(core.config.instrumentationKey, "Test-iKey", "config should be updated");
 

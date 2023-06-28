@@ -3,15 +3,18 @@ import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 export interface ICfgSyncConfig {
     disableAutoSync?: boolean; // default: false
-    customEvtNamespace?: string;
+    customEvtName?: string;
     receiveChanges?: boolean; //default: false
     cfgUrl?: string;
     onCfgChangeReceive?: (event?: ICfgSyncEvent) => void;
-    overrideSyncFn?: (config?:IConfiguration & IConfig) => boolean;
-    overrideFetchFn?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+    overrideSyncFn?: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
+    overrideFetchFn?: (url?: string) => Promise<Response> | void;
+    // default endpoint, ikey and cs
+    nonOverrideConfigs?: string[];
 }
 
 export interface ICfgSyncEvent {
     cfg?: IConfiguration & IConfig;
     customDetails?: any;
 }
+
