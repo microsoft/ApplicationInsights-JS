@@ -1,4 +1,4 @@
-import { createConfig2 } from "../../rollup.base.config";
+import { createConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
@@ -19,7 +19,7 @@ const replaceValues = {
 
 updateDistEsmFiles(replaceValues, banner, true, true, "dist-esm");
 
-export default createConfig2(banner, 
+export default createConfig(banner, 
   {
     namespace: "Microsoft.ApplicationInsights",
     version: version,
@@ -32,4 +32,4 @@ export default createConfig2(banner,
       outputName: browserOutputName
     }
   },
-  [ outputName ], replaceValues);
+  [ outputName ], replaceValues, true, false);

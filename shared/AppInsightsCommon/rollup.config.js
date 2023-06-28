@@ -1,4 +1,4 @@
-import { simpleConfig2 } from "../../rollup.base.config";
+import { simpleConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
@@ -19,7 +19,7 @@ const replaceValues = {
 
 updateDistEsmFiles(replaceValues, banner, true, true, "dist-esm");
 
-export default simpleConfig2(banner,
+export default simpleConfig(banner,
   {
     namespace: "Microsoft.ApplicationInsights",
     version: version,
@@ -32,5 +32,5 @@ export default simpleConfig2(banner,
       outputName: entryPointName
     },
   },
-  [ "applicationinsights-common" ],replaceValues
+  [ "applicationinsights-common" ], replaceValues, true
 );
