@@ -325,7 +325,7 @@ export function dispatchEvent(target:EventTarget, evnt: Event | CustomEvent): bo
 
 export function createCustomDomEvent(eventName: string, details?: any): CustomEvent {
     let event: CustomEvent = null;
-    let detail = {details: details || null } as CustomEventInit;
+    let detail = {detail: details || null } as CustomEventInit;
     if (isFunction(CustomEvent)) { // Use CustomEvent constructor when available
         event = new CustomEvent(eventName, detail);
     } else { // CustomEvent has no constructor in IE

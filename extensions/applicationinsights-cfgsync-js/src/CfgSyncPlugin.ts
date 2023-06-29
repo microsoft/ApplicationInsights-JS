@@ -7,17 +7,19 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { IConfig } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext, eventOff,
-    eventOn, getGlobal, isFetchSupported, isXhrSupported, onConfigChange, sendCustomEvent, setValue
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext,
+    createUniqueNamespace, eventOff, eventOn, getGlobal, getJSON, isFetchSupported, isXhrSupported, mergeEvtNamespace, onConfigChange,
+    sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
-import { arrForEach, isFunction, isNullOrUndefined, objDeepFreeze } from "@nevware21/ts-utils";
-import { ICfgSyncConfig, ICfgSyncEvent } from "./Interfaces/ICfgSyncConfig";
+import { isFunction, isNullOrUndefined, isObject, objDeepFreeze, objForEachKey } from "@nevware21/ts-utils";
+import { ICfgSyncConfig, ICfgSyncEvent, NonOverrideCfg, OnCompleteCallback, SendGetFunction } from "./Interfaces/ICfgSyncConfig";
 import { ICfgSyncPlugin } from "./Interfaces/ICfgSyncPlugin";
 
 const evtName = "cfgsync";
 const STR_GET_METHOD = "GET";
 const udfVal: undefined = undefined;
+let defaultNonOverrideCfg: NonOverrideCfg  = {instrumentationKey: true, connectionString: true, endpointUrl: true }
 const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     disableAutoSync: false,
     customEvtName: udfVal,
@@ -26,7 +28,7 @@ const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     overrideSyncFunc: udfVal,
     overrideFetchFunc: udfVal,
     onCfgChangeReceive: udfVal,
-    nonOverrideConfigs:["instrumentationKey", "connectionString", "endpointUrl"]
+    nonOverrideConfigs: defaultNonOverrideCfg
 });
 
 export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin {
@@ -41,12 +43,13 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _mainConfig: IConfiguration & IConfig; // throttle config should be wrapped in IConfiguration
         let _isAutoSync: boolean;
         let _evtName: string;
+        let _evtNamespace: string | string[];
         let _cfgUrl: string;
         let _receiveChanges: boolean; // if it is set true, it won't send out any events
         let _onCfgChangeReceive: (event: ICfgSyncEvent) => void;
-        let _nonOverrideConfigs: string[];
-        let _fetchFn: (url?: string) =>  Promise<Response> | void;
-        let _overrideFetchFn: (url?: string) => Promise<Response> | void;
+        let _nonOverrideConfigs: NonOverrideCfg;
+        let _fetchFn: SendGetFunction;
+        let _overrideFetchFn: SendGetFunction;
         let _overrideSyncFn: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
 
         dynamicProto(CfgSyncPlugin, this, (_self, _base) => {
@@ -55,12 +58,13 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
                 _base.initialize(config, core, extensions, pluginChain);
+                _evtNamespace = mergeEvtNamespace(createUniqueNamespace(_self.identifier), core.evtNamespace && core.evtNamespace());
                 _populateDefaults(config);
             };
 
             // used for V2 to manaully trigger config udpate
             _self.setCfg = (config?: IConfiguration & IConfig) => {
-                return _setCfg(config)
+                return _setCfg(config, _isAutoSync);
             }
 
             // to allow manually sync config or other events
@@ -72,25 +76,20 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 return _updateEventListenerName(eventName);
             }
 
-            // endpoint change?
-            // configSync {
-            //     endpoint redirect{{}}
-            // }
-            // cs & ikey
-
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _eventOff()
                 _initDefaults();
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_isAutoSync, _receiveChanges,  _evtName];
+                return [_isAutoSync, _receiveChanges, _evtName, _mainConfig];
             };
     
             function _initDefaults() {
                 _mainConfig = null;
                 _isAutoSync = null;
                 _evtName = null;
+                _evtNamespace = null;
                 _cfgUrl = null;
                 _receiveChanges = null;
                 _nonOverrideConfigs = null;
@@ -107,11 +106,23 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
-                    _isAutoSync = !_extensionConfig.disableAutoSync;
-                    let _newEvtName = _extensionConfig.customEvtName || evtName;
+                    if (isNullOrUndefined(_isAutoSync)) {
+                        _isAutoSync = !_extensionConfig.disableAutoSync;
+                    }
+                    if (isNullOrUndefined(_receiveChanges)) {
+                        _receiveChanges = !!_extensionConfig.receiveChanges;
+                    }
+                   
+                    let _newEvtName =  _extensionConfig.customEvtName || evtName;
                     if (_evtName !== _newEvtName) {
-                        _updateEventListenerName(_newEvtName);
-                        _evtName = _newEvtName;
+                        if (_receiveChanges) {
+                            _updateEventListenerName(_newEvtName);
+
+                        } else {
+                            _eventOff();
+                            _evtName = _newEvtName;
+                        }
+                        
                     }
 
                     if (isNullOrUndefined(_cfgUrl)) {
@@ -125,26 +136,23 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         }
                     }
                 }));
+               
                 _overrideSyncFn = _extensionConfig.overrideSyncFn;
                 _overrideFetchFn = _extensionConfig.overrideFetchFn;
                 _onCfgChangeReceive = _extensionConfig.onCfgChangeReceive;
-                _getFetchFnInterface();
-                _receiveChanges = !!_extensionConfig.receiveChanges;
-                _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs || [];
-                if (_receiveChanges) {
-                    _addEventListener();
-                }
+                _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs;
+                
                 // NOT support cfgURL change to avoid mutiple fetch calls
                 if (_cfgUrl) {
-                    _fetchFn && _fetchFn(_cfgUrl);
+                    _fetchFn = _getFetchFnInterface();
+                    _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _isAutoSync);
                 }
-                
             }
 
-            function _setCfg(config?: IConfiguration & IConfig) {
+            function _setCfg(config?: IConfiguration & IConfig, isAutoSync?: boolean) {
                 if (config) {
                     _mainConfig = config;
-                    if (_isAutoSync) {
+                    if (!!isAutoSync) {
                         return _sendCfgsyncEvents();
                     }
                 }
@@ -154,8 +162,8 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             function _eventOff() {
                 try {
                     let global = getGlobal();
-                    if (global && _evtName) {
-                        eventOff(global, _evtName, null);
+                    if (global) {
+                        eventOff(global, null, null,  _evtNamespace);
                     }
                 } catch (e) {
                     // eslint-disable-next-line no-empty
@@ -164,7 +172,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             function _sendCfgsyncEvents(customDetails?: any) {
                 try {
-
                     if (!!_overrideSyncFn && isFunction(_overrideSyncFn)) {
                         return _overrideSyncFn(_mainConfig, customDetails);
                     }
@@ -178,12 +185,10 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             function _updateEventListenerName(name?: string) {
                 try {
-                    if (_evtName) {
-                        _eventOff();
-                    }
+                    _eventOff();
                     if (name) {
                         _evtName = name;
-                        _addEventListener(_evtName);
+                        _addEventListener();
                     }
                     return true;
                 } catch (e) {
@@ -192,33 +197,37 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 return false;
             }
 
-            
-
 
             function _getFetchFnInterface() {
-                let _fetchFn = _overrideFetchFn
-                if (_fetchFn == null) {
+                let _fetchFn = _overrideFetchFn;
+                if (isNullOrUndefined(_fetchFn)) {
                     if (isFetchSupported()) {
-                        _fetchFn = _fetchSender
+                        _fetchFn = _fetchSender;
                     } else if (isXhrSupported()) {
-                        _fetchFn = _xhrSender
+                        _fetchFn = _xhrSender;
                     }
                 }
+                return _fetchFn;
             }
 
 
-            function _fetchSender(url?: string) {
+            function _fetchSender(url: string, oncomplete: OnCompleteCallback, isAutoSync?:  boolean) {
                 let global = getGlobal();
-                let fetchFn = _overrideFetchFn || (global && global.fetch) || null;
-                if (_cfgUrl && fetchFn && isFunction(fetchFn)) {
+                let fetchFn = (global && global.fetch) || null;
+                if (url && fetchFn && isFunction(fetchFn)) {
                     try {
                         const init: RequestInit = {
                             method: STR_GET_METHOD
                         };
-                        const request = new Request(_cfgUrl, init);
+                        const request = new Request(url, init);
                         doAwaitResponse(fetch(request), (result) => {
                             if (!result.rejected) {
-                                _setCfg(result.value)
+                                let response = result.value;
+                                if (response.ok) {
+                                    doAwaitResponse(response.text(), (res) => {
+                                        _doOnComplete(oncomplete, response.status, res.value, isAutoSync);
+                                    });
+                                }
                             }
                         });
                     } catch (e) {
@@ -227,42 +236,52 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 }
             }
 
-            function _xhrSender(url?: string) {
+            function _xhrSender(url: string, oncomplete: OnCompleteCallback, isAutoSync?: boolean) {
 
                 let xhr = new XMLHttpRequest();
-                xhr.open(STR_GET_METHOD, _cfgUrl);
+                xhr.open(STR_GET_METHOD, url);
 
-                xhr.onload = () => {
-                    try {
-                        if (xhr.readyState === xhr.DONE && xhr.status === 200) {
-                            let res = xhr.response && xhr.response.cfg as IConfiguration & IConfig;
-                            res && _setCfg(res);
-                        }
-                        
-
-                    } catch (e) {
-                        // eslint-disable-next-line no-empty
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        _doOnComplete(oncomplete, xhr.status, xhr.responseText, isAutoSync);
                     }
                 }
                 xhr.send();
             }
-            
 
-            function _addEventListener(eventName?: string) {
-                
+            function _onFetchComplete(status: number, response?: string, isAutoSync?: boolean) {
+                if (status >= 200 && status < 400 && response) {
+                    let JSON = getJSON();
+                    if (JSON) {
+                        let cfg = JSON.parse(response);
+                        cfg && _setCfg(cfg, isAutoSync);
+                    }
+                }
+            }
+
+            function _doOnComplete(oncomplete: OnCompleteCallback, status: number, response?: string, isAutoSync?: boolean) {
+                try {
+                    oncomplete(status, response, isAutoSync);
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+                }
+            }
+
+            function _addEventListener() {
                 if (_receiveChanges) {
                     let global = getGlobal();
                     if (global) {
                         try {
                             eventOn(global, _evtName, (event: any) => {
-                                if (_onCfgChangeReceive) {
-                                    _onCfgChangeReceive(event);
+                                let cfgEvent = event && (event as any).detail;
+                                if (_onCfgChangeReceive && cfgEvent) {
+                                    _onCfgChangeReceive(cfgEvent);
                                 } else {
-                                    let cfg = (event as ICfgSyncEvent).cfg;
-                                    let newCfg = _replaceTartgetByKeys(cfg);
-                                    cfg && _self.core.updateCfg(newCfg);
+                                    let cfg = cfgEvent && cfgEvent.cfg;
+                                    let newCfg = cfg && _replaceTartgetByKeys(cfg);
+                                    newCfg && _self.core.updateCfg(newCfg);
                                 }
-                            });
+                            }, _evtNamespace, true);
 
                         } catch(e) {
                             // eslint-disable-next-line no-empty
@@ -272,13 +291,16 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             }
 
             function _replaceTartgetByKeys(cfg: IConfiguration & IConfig ): IConfiguration & IConfig {
+                let _cfg: IConfiguration & IConfig = null;
                 if (_nonOverrideConfigs && cfg) {
-                    arrForEach(_nonOverrideConfigs, (val: string) => {
-                        setValue(cfg, val as any, undefined);
-                        // or use delete
+                    _cfg = {...cfg} // copy values
+                    objForEachKey(_nonOverrideConfigs, (key, val) => {
+                        if (!!val || isObject(_cfg[key])) {
+                            delete _cfg[key];
+                        }
                     });
                 }
-                return cfg;
+                return _cfg;
             }
 
             _self.processTelemetry = (env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {

@@ -8,9 +8,9 @@ export interface ICfgSyncConfig {
     cfgUrl?: string;
     onCfgChangeReceive?: (event?: ICfgSyncEvent) => void;
     overrideSyncFn?: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
-    overrideFetchFn?: (url?: string) => Promise<Response> | void;
+    overrideFetchFn?: SendGetFunction;
     // default endpoint, ikey and cs
-    nonOverrideConfigs?: string[];
+    nonOverrideConfigs?: NonOverrideCfg;
 }
 
 export interface ICfgSyncEvent {
@@ -18,3 +18,8 @@ export interface ICfgSyncEvent {
     customDetails?: any;
 }
 
+export type NonOverrideCfg<T = IConfiguration & IConfig> = {
+    [key in keyof T]?: boolean | NonOverrideCfg<T[key]> | undefined; // only top level
+}
+export type OnCompleteCallback = (status: number, response?: string, _isAutoSync?: boolean) => void;
+export type SendGetFunction = (url: string, oncomplete: OnCompleteCallback, isAutoSync?: boolean) => void;
