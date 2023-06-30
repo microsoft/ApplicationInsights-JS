@@ -414,7 +414,7 @@ let tasks = [];
         tasks.push(
             nodeUmdRollupConfigFactory2(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, treeshakeConfig),
             nodeUmdRollupConfigFactory2(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, treeshakeConfig)
-        )
+        );
     } else {
         tasks.push(
             nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, treeshakeConfig),
