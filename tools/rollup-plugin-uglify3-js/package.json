@@ -12,7 +12,7 @@
         "rollup-plugin"
     ],
     "scripts": {
-        "clean": "grunt clean",
+        "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:bundle",
         "build:esm": "grunt rollupuglify",
         "build:bundle": "npx rollup -c rollup.config.js --bundleConfigAsCjs",

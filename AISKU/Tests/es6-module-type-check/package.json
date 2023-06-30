@@ -10,7 +10,7 @@
     "module": "dist-es5/applicationinsights-test-module-type-check.js",
     "types": "types/applicationinsights-test-module-type-check.d.ts",
     "scripts": {
-        "clean": "grunt clean",
+        "clean": "git clean -xdf",
         "build": "tsc --project tsconfig.json --noEmit",
         "rebuild": "npm run build",
         "test": "",

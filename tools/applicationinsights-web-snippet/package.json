@@ -11,6 +11,7 @@
     "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-web-snippet"
   },
   "scripts": {
+    "clean": "git clean -xdf",
     "build": "npm run build:esm && npm run snippet-generate && npm run replace && npm run build:browser",
     "build:esm": "grunt websnippet",
     "snippet-generate": "npm run snippetCopy && npm run build:snippet  && npm run snippetMin",

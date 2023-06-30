@@ -6,6 +6,7 @@
     "homepage": "https://1dsdocs.azurewebsites.net/sdk.html",
     "sideEffects": false,
     "scripts": {
+        "clean": "git clean -xdf",
         "update": "rush update",
         "build": "",
         "rebuild": "",
