@@ -72,7 +72,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 return _setCfg(config, _isAutoSync);
             }
 
-            // to allow manually sync config or other events
             _self.sync = (customDetails?: any) => {
                 return _sendCfgsyncEvents(customDetails);
             }
@@ -106,7 +105,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _onCfgChangeReceive = null;
             }
 
-            // for v3
             function _populateDefaults(config: IConfiguration) {
                 let identifier = _self.identifier;
                 let core = _self.core;
@@ -130,7 +128,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                             _eventOff();
                             _evtName = _newEvtName;
                         }
-                        
+
                     }
 
                     if (isNullOrUndefined(_cfgUrl)) {
@@ -320,7 +318,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             }
 
             /**
-             * Sets up the timer which triggers actually fetching cdn every 30mins after inital call
+             * Sets up the timer which triggers fetching cdn every 30mins after inital call
              */
             function _setupTimer() {
                 if (!_timeoutHandle && _fetchSpan) {
@@ -349,16 +347,30 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
+    /**
+     * Manually set configs of current instance.
+     * @param config new configs
+    */
     public setCfg(config?: IConfiguration & IConfig): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 
+    /**
+     * Manually broadcast configs of current instance to all other instances.
+     * @param customDetails additional details should also be sent out to other instances
+    */
     public sync(customDetails?: any): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 
+    /**
+     * Manually update event name.
+     * If current instance is the main instance, then following config changes will be sent out under this new event name.
+     * If current instance is listener instances, it will listen to event details under this new name.
+     * @param eventName new event name
+     */
     public updateEventListenerName(eventName?: string): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
