@@ -13,9 +13,9 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isFunction, isNullOrUndefined, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
+import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import { ICfgSyncConfig, ICfgSyncEvent, NonOverrideCfg, OnCompleteCallback, SendGetFunction } from "./Interfaces/ICfgSyncConfig";
 import { ICfgSyncPlugin } from "./Interfaces/ICfgSyncPlugin";
-import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 
 const evtName = "cfgsync";
 const STR_GET_METHOD = "GET";

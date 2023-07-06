@@ -1,5 +1,5 @@
-import { Assert, AITestClass, IFetchArgs } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IAppInsightsCore, IPlugin, ITelemetryItem, eventOff, eventOn, getDocument, getGlobal, getGlobalInst, getWindow } from "@microsoft/applicationinsights-core-js";
+import { Assert, AITestClass, IFetchArgs, PollingAssert } from "@microsoft/ai-test-framework";
+import { AppInsightsCore, IAppInsightsCore, IPlugin, ITelemetryItem, getGlobal, getGlobalInst } from "@microsoft/applicationinsights-core-js";
 import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { CfgSyncPlugin } from "../../../../applicationinsights-cfgsync-js/src/applicationinsights-cfgsync-js";
 import { NonOverrideCfg } from "../../../src/Interfaces/ICfgSyncConfig";
@@ -14,7 +14,8 @@ export class CfgSyncPluginTests extends AITestClass {
     private mainInst: CfgSyncPlugin;
     private identifier: string;
     private _channel: ChannelPlugin;
-    private _fetch
+    private _context:any = {};
+    private _fetch;
 
     constructor(emulateIe?: boolean) {
         super("CfgSyncPluginTests", emulateIe);
@@ -48,6 +49,7 @@ export class CfgSyncPluginTests extends AITestClass {
         this._config = null as any;
         this.mainInst = null as any;
         getGlobal().fetch = this._fetch;
+        this._context = {};
     }
 
     public registerTests() {
@@ -71,6 +73,7 @@ export class CfgSyncPluginTests extends AITestClass {
                     overrideSyncFunc: udfVal,
                     overrideFetchFunc: udfVal,
                     onCfgChangeReceive: udfVal,
+                    scheduleFetchTimeout: 1800000,
                     nonOverrideConfigs: defaultNonOverrideCfg
                 };
                 this.core.config.extensionConfig = this.core.config.extensionConfig || {};
@@ -127,85 +130,121 @@ export class CfgSyncPluginTests extends AITestClass {
             }
         });
 
-        this.testCase({
+        this.testCaseAsync({
             name: "CfgSyncPlugin: should fetch from config url",
+            stepDelay: 10,
             useFakeTimers: true,
-            test: () => {
-                this._config.extensionConfig  = { [this.identifier]: {
-                    cfgUrl: "testURL"
-                }};
+            steps: [ () => {
+                let doc = getGlobal();
                 let config = {
                     instrumentationKey:"testIkey",
                     enableAjaxPerfTracking: true
                 } as IConfiguration & IConfig;
-                let doc = getGlobal();
-                function mockApiResponse(body = config) {
-                    let res = new (doc as any).Response(JSON.stringify(body), {
-                        status: 200,
-                        headers: { "Content-type": "application/json" }
-                    });
-                    return createSyncPromise(res); // resolved promise
-                }
+                let res = new (doc as any).Response(JSON.stringify(config), {
+                    status: 200,
+                    headers: { "Content-type": "application/json" }
+                });
                 this.onDone(() => {
                     this.core.unload(false);
                 });
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve(res);
+                    }, 0);
+                });
                 let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
-                let fetchstub = this.sandbox.stub((doc as any), "fetch").returns(mockApiResponse());
+                let fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this._config.extensionConfig  = { [this.identifier]: {
+                    cfgUrl: "testURL"
+                }};
+                this._context["patchEvnSpy"] = patchEvnSpy;
+                this._context["fetchStub"] = fetchStub;
                 this.core.initialize(this._config, [this._channel]);
-                this.clock.tick(1000);
-                let targets = this.mainInst["_getDbgPlgTargets"]();
-                Assert.equal(targets[0], true, "auto sync is on by default");
-                Assert.equal(targets[1], false, "receive changes is off");
-                Assert.equal(targets[2], "cfgsync", "default event name is set by default");
-                Assert.deepEqual(targets[3], config, "main config should be get from url");
-                Assert.equal(patchEvnSpy.callCount, 1, "event should be dispatched");
-                Assert.equal(fetchstub.callCount, 1, "fetch is called");
-
-            }
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                let patchEvnSpy = this._context["patchEvnSpy"];
+                let config = {
+                    instrumentationKey:"testIkey",
+                    enableAjaxPerfTracking: true
+                } as IConfiguration & IConfig;
+                if (fetchStub.called && patchEvnSpy.called) {
+                    Assert.ok(fetchStub.calledOnce, "fetch is called");
+                    Assert.ok(patchEvnSpy.calledOnce, "patchEvnSpy is called");
+                    let targets = this.mainInst["_getDbgPlgTargets"]();
+                    Assert.equal(targets[0], true, "auto sync is on by default");
+                    Assert.equal(targets[1], false, "receive changes is off");
+                    Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                    Assert.deepEqual(targets[3], config, "main config should be get from url");
+                    Assert.equal(patchEvnSpy.callCount, 1, "event should be dispatched");
+                    Assert.equal(fetchStub.callCount, 1, "fetch is called");
+                    return true;
+                }
+                return false;
+            }, "response received", 60, 1000) as any)
+        
         });
 
-        // this.testCase({
-        //     name: "CfgSyncPlugin: should fetch from config url",
-        //     test: () => {
-        //         this._config.extensionConfig  = { [this.identifier]: {
-        //             cfgUrl: "testURL"
-        //         }};
-        //         let config = {
-        //             instrumentationKey:"testIkey",
-        //             enableAjaxPerfTracking: true
-        //         } as IConfiguration & IConfig;
-        //         let doc = getGlobal();
-        //         let res = new (doc as any).Response(JSON.stringify(config), {
-        //             status: 200,
-        //             headers: { "Content-type": "application/json" }
-        //         });
-
-        //         hookFetch((resolve) => {
-        //             AITestClass.orgSetTimeout(function() {
-        //                 resolve(res);
-        //             }, 0);
-        //         });
-
-        //         try {
-        //             this.onDone(() => {
-        //                 this.core.unload(false);
-        //             });
-        //             let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
-        //             let fetchstub = this.sandbox.stub((doc as any), "fetch")
-        //             this.core.initialize(this._config, [this._channel]);
-        //             let targets = this.mainInst["_getDbgPlgTargets"]();
-        //             Assert.equal(targets[0], true, "auto sync is on by default");
-        //             Assert.equal(targets[1], false, "receive changes is off");
-        //             Assert.equal(targets[2], "cfgsync", "default event name is set by default");
-        //             Assert.deepEqual(targets[3], config, "main config should be get from url");
-        //             Assert.equal(patchEvnSpy.callCount, 1, "event should be dispatched");
-        //             Assert.equal(fetchstub.callCount, 1, "fetch is called");
-        //         } catch (e) {
-        //             console && console.warn("Exception: " + e);
-        //             Assert.ok(false, e);
-        //         }
-        //     }
-        // });
+        this.testCaseAsync({
+            name: "CfgSyncPlugin: should fetch from config url at expected interval",
+            stepDelay: 10,
+            useFakeTimers: true,
+            steps: [ () => {
+                let doc = getGlobal();
+                let config = {
+                    instrumentationKey:"testIkey",
+                    enableAjaxPerfTracking: true
+                } as IConfiguration & IConfig;
+                this.onDone(() => {
+                    this.core.unload(false);
+                });
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve(new (doc as any).Response(JSON.stringify(config), {
+                            status: 200,
+                            headers: { "Content-type": "application/json" }
+                        }));
+                    }, 0);
+                });
+                let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
+                let fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this._config.extensionConfig  = { [this.identifier]: {
+                    cfgUrl: "testURL",
+                    scheduleFetchTimeout: 1000
+                }};
+                this._context["patchEvnSpy"] = patchEvnSpy;
+                this._context["fetchStub"] = fetchStub;
+                this.core.initialize(this._config, [this._channel]);
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                let patchEvnSpy = this._context["patchEvnSpy"];
+                let config = {
+                    instrumentationKey:"testIkey",
+                    enableAjaxPerfTracking: true
+                } as IConfiguration & IConfig;
+                if (fetchStub.called && patchEvnSpy.called) {
+                    Assert.ok(patchEvnSpy.calledOnce, "patchEvnSpy is called");
+                    let targets = this.mainInst["_getDbgPlgTargets"]();
+                    Assert.equal(targets[0], true, "auto sync is on by default");
+                    Assert.equal(targets[1], false, "receive changes is off");
+                    Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                    Assert.deepEqual(targets[3], config, "main config should be get from url");
+                    Assert.equal(fetchStub.callCount, 2, "fetch is called 2 times");
+                    Assert.equal(patchEvnSpy.callCount, 1, "event should be dispatched 1 time");
+                    return true;
+                }
+                return false;
+            }, "response received", 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                let patchEvnSpy = this._context["patchEvnSpy"];
+               
+                if (fetchStub.called && patchEvnSpy.called) {
+                    Assert.equal(fetchStub.callCount, 3, "fetch is called 3 times");
+                    Assert.equal(patchEvnSpy.callCount, 3, "event should be dispatched 3 times");
+                    return true;
+                }
+                return false;
+            }, "response received", 60, 100) as any)
+        });
 
         this.testCase({
             name: "CfgSyncPlugin: main instance should change listeners config",

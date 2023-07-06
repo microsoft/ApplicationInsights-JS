@@ -13,7 +13,7 @@ export interface ICfgSyncConfig {
     nonOverrideConfigs?: NonOverrideCfg;
     // if it is set to 0, then fetch will only execute once
     // default 30 mins, 30*60*1000ms
-    scheduleFetchTimeout?: number;
+    scheduleFetchTimeout?: number; // in ms
 }
 
 export interface ICfgSyncEvent {
