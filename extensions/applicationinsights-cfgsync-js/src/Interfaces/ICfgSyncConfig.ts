@@ -11,6 +11,9 @@ export interface ICfgSyncConfig {
     overrideFetchFn?: SendGetFunction;
     // default endpoint, ikey and cs
     nonOverrideConfigs?: NonOverrideCfg;
+    // if it is set to 0, then fetch will only execute once
+    // default 30 mins, 30*60*1000ms
+    scheduleFetchTimeout?: number;
 }
 
 export interface ICfgSyncEvent {
@@ -21,5 +24,5 @@ export interface ICfgSyncEvent {
 export type NonOverrideCfg<T = IConfiguration & IConfig> = {
     [key in keyof T]?: boolean | NonOverrideCfg<T[key]> | undefined; // only top level
 }
-export type OnCompleteCallback = (status: number, response?: string, _isAutoSync?: boolean) => void;
+export type OnCompleteCallback = (status: number, response?: string, isAutoSync?: boolean) => void;
 export type SendGetFunction = (url: string, oncomplete: OnCompleteCallback, isAutoSync?: boolean) => void;
