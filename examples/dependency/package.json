@@ -15,7 +15,7 @@
         "example"
     ],
     "scripts": {
-        "clean": "grunt clean",
+        "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt example-dependency",
         "build:browser": "rollup -c rollup.config.js --bundleConfigAsCjs",

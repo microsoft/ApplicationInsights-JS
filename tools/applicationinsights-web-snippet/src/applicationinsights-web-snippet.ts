@@ -1,5 +1,5 @@
-import { webSnippet } from "./web-snippet";
-import { webSnippetCs } from "./web-snippet-cs"
+const webSnippet = "##replaceIKeySnippet##";
+const webSnippetCs = "##replaceConnStringSnippet##";
 
 function webSnippetVersion() {
     let parse = /sv:\"([^\"]+)\"/.exec(webSnippet);

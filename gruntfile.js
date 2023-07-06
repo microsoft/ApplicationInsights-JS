@@ -28,29 +28,36 @@ module.exports = function (grunt) {
     }
 
     function generateNewSnippet(connString) {
-        var snippetBuffer = grunt.file.read("./AISKU/snippet/snippet.min.js");
-        if (connString) {
-            snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
-            snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"YOUR_CONNECTION_STRING\"");
-        } else {
-            snippetBuffer = snippetBuffer.replace(/^\s*instrumentationKey:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
-            snippetBuffer = snippetBuffer.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
-        }
-        var snippetStr = _encodeStr(snippetBuffer.toString());
-        var expectedStr = "##replaceSnippet##";
-        var srcPath = "./tools/applicationinsights-web-snippet/src";
+        var srcPath = "./tools/applicationinsights-web-snippet/dist-es5";
         return {
             files: [{
                 expand: true,
                 cwd: srcPath,
-                dest: "./tools/applicationinsights-web-snippet/build",
-                src: `web-snippet${connString ? "-cs" : ""}.ts`
+                dest: "./tools/applicationinsights-web-snippet/dist-es5",
+                src: "applicationinsights-web-snippet.js"
             }],
             options: {
-                replacements: [{
-                    pattern: expectedStr,
-                    replacement: snippetStr
-                }]
+                replacements: function() {
+                    var prefix = "IKey";
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
+                    if (connString) {
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+                        prefix = "ConnString";
+                    } else {
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+                        let snippetBuffer2 = "cfg:{connectionString:\"YOUR_CONNECTION_STRING\"";
+                        console.log("what is it doing", snippetBuffer2.replace(/^\s*connectionString:\s*\".*\"/gm, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\""));
+                    }
+                    var snippetStr = _encodeStr(snippetBuffer.toString());
+                    var expectedStr = `##replace${prefix}Snippet##`;
+                    console.log("change expectedStr to " + expectedStr);
+                    return [{
+                        pattern: expectedStr,
+                        replacement: snippetStr
+                    }];
+                }
             }
         };
     }
@@ -516,7 +523,7 @@ module.exports = function (grunt) {
                                         path: "./tools/applicationinsights-web-snippet",
                                         cfg: {
                                             src: [
-                                                "./tools/applicationinsights-web-snippet/build/*.ts"
+                                                "./tools/applicationinsights-web-snippet/src/**/*.ts"
                                             ]
                                         }
                                     },
@@ -536,7 +543,6 @@ module.exports = function (grunt) {
             var actions = [
                 "eslint-ts:" + name + "-lint-fix"
             ];
-    
             var aiMinifyConfig = theBuildConfig["ai-minify"] || {};
             var gruntTsConfig = theBuildConfig["ts"];
             var replaceConfig = theBuildConfig["string-replace"] || {};
@@ -676,9 +682,14 @@ module.exports = function (grunt) {
                 'generate-snippet-connString': generateNewSnippet(true)
             },
             copy: {
-                "web-snippet": {
+                "snippet": {
                     files: [
-                        { src: "./tools/applicationinsights-web-snippet/src/applicationinsights-web-snippet.ts", dest: `./tools/applicationinsights-web-snippet/build/applicationinsights-web-snippet.ts` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js` },
+                    ]
+                },
+                "web-snippet": {
+                    files: [  
+                        { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` },
                     ]
                 },
                 config: {
@@ -793,8 +804,12 @@ module.exports = function (grunt) {
         grunt.registerTask("chromedebugextension-min", minTasks("chrome-debug-extension"));
         grunt.registerTask("chromedebugextension-restore", restoreTasks("chrome-debug-extension"));
 
-        grunt.registerTask("websnippetReplace", ["copy:web-snippet", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
+        grunt.registerTask("snippetCopy", ["copy:snippet"]);
+        grunt.registerTask("snippet-min", minTasks("applicationinsights-web-snippet"));
+        grunt.registerTask("websnippetReplace", ["copy:web-snippet", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);       
+
+        grunt.registerTask("snippet-restore", restoreTasks("applicationinsights-web-snippet"));
         grunt.registerTask("websnippettests", tsTestActions("applicationinsights-web-snippet"));
 
         grunt.registerTask("clickanalytics", tsBuildActions("clickanalytics"));

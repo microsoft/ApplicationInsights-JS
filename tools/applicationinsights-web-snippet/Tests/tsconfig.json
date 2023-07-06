@@ -10,7 +10,8 @@
         "declaration": true,
         "importHelpers": false,
         "noEmitHelpers": false,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "allowJs": true,
     },
     "files": [],
     "exclude": [

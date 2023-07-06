@@ -127,9 +127,11 @@ function stringReplaceFn(inst) {
                 let options = this.options({
                     replacements: []
                 });
-
-                let replacements = options.replacements.map(_mapReplacements);
-
+                let replacements = options.replacements;
+                if (typeof replacements === "function") {
+                    replacements = replacements();
+                }
+                replacements = replacements.map(_mapReplacements);
                 _doReplace(this.files, replacements, options || {}, function (err) {
                     if (err) {
                         done(false);

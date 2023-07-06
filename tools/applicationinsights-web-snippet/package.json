@@ -11,20 +11,27 @@
     "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-web-snippet"
   },
   "scripts": {
-    "build": " npm run replace && npm run build:esm && npm run build:browser",
-    "replace": "grunt websnippetReplace",
+    "clean": "git clean -xdf",
+    "build": "npm run build:esm && npm run snippet-generate && npm run replace && npm run build:browser",
     "build:esm": "grunt websnippet",
+    "snippet-generate": "npm run snippetCopy && npm run build:snippet  && npm run snippetMin",
+    "snippetCopy": "grunt snippetCopy",
+    "build:snippet": "rollup -c rollupSnippet.config.js --bundleConfigAsCjs",
+    "snippetMin": "grunt snippet-min",
+    "replace": "grunt websnippetReplace",
     "build:browser": "rollup -c rollup.config.js --bundleConfigAsCjs",
     "rebuild": "npm run build",
     "test": "grunt websnippettests",
     "lint": "tslint -p tsconfig.json",
-    "npm-pack": "npm pack"
-
+    "npm-pack": "npm pack",
+    "ai-min": "grunt snippet-min",
+    "ai-restore": "grunt snippet-restore"
   },
   "license": "MIT",
   "devDependencies": {
     "@types/qunit": "^2.19.3",
     "@microsoft/ai-test-framework": "0.0.1",
+    "@microsoft/applicationinsights-web": "3.0.2",
     "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
     "@microsoft/applicationinsights-rollup-es5": "1.0.2",
     "typescript": "^4.9.3",
@@ -41,5 +48,8 @@
     "@nevware21/grunt-ts-plugin": "^0.4.3",
     "@nevware21/grunt-eslint-ts": "^0.2.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@microsoft/dynamicproto-js": "^2.0.2",
+    "@microsoft/applicationinsights-common": "3.0.2"
+  }
 }
