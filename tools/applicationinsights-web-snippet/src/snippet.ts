@@ -35,6 +35,15 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
             version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
             config: aiConfig
         };
+        function isIE() {
+            let nav = navigator;
+            if (nav) {
+                let userAgent = (nav.userAgent || "").toLowerCase();
+                return (userAgent.indexOf("msie") !== -1 || userAgent.indexOf("trident/") !== -1);
+            }
+            return false;
+        }
+       
         function _parseConnectionString() {
             let fields:Fields = {};
             let connectionString = aiConfig.connectionString;
@@ -171,6 +180,13 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         // Assigning these to local variables allows them to be minified to save space:
         let targetSrc = (aiConfig as any)["url"] || snipConfig.src
         if (targetSrc) {
+            if (isIE() && targetSrc.indexOf("2") == -1) {
+                // Redrict to version 2 which support IE
+                targetSrc = "https://js.monitor.azure.com/scripts/b/ai.2.min.js";
+                // targetSrc = "https://js.monitor.azure.com/scripts/b/ai.2.gbl.min.js";
+                // targetSrc = "https://js.monitor.azure.com/scripts/b/ai.2.cjs.min.js";
+                // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
+            }
             const _handleError = (evt?: any) => {
                 loadFailed = true;
                 appInsights.queue = []; // Clear the queue
