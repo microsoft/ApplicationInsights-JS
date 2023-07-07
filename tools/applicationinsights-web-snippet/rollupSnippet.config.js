@@ -1,4 +1,4 @@
-import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
+import { es5Poly, es5Check } from "@microsoft/applicationinsights-rollup-es5";
 import replace from "@rollup/plugin-replace";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import cleanup from "rollup-plugin-cleanup";
