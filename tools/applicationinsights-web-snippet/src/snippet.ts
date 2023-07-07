@@ -324,9 +324,8 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
     } else {
         // Already loaded so just call the onInit
         _onInit();
-    }// @preserve 327
+    }
 })(window, document, {
-    // @preserve config start
     // @preserve config start
     src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
     // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
@@ -339,4 +338,4 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         connectionString: "YOUR_CONNECTION_STRING"
     }
     // @preserve config end
-}); 
+});
