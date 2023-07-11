@@ -284,6 +284,13 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (doc) {
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
+
+                // Access the performance timing object
+                const navigationEntries = window.performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+                // Get the value of loadEventStart
+                const navigationEntry = navigationEntries[0];
+                const loadEventStart = navigationEntry.loadEventStart;
+                pageView.startTime = new Date(loadEventStart);;
         
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,

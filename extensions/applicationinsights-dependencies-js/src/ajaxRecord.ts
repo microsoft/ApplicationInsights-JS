@@ -346,7 +346,7 @@ export class ajaxRecord {
                 if (self.requestSentTime) {
                     // Set the correct dependency start time
                     dependency.startTime = new Date();
-                    dependency.startTime.setTime(self.requestSentTime);
+                    dependency.startTime.setTime(self.requestSentTime); // siyu why it is set twice here?
                 }
         
                 // Add Ajax perf details if available

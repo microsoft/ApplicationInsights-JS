@@ -7,12 +7,12 @@ import { IPartC } from "./IPartC";
  * DependencyTelemetry telemetry interface
  */
 
-export interface IDependencyTelemetry extends IPartC {
+export interface IDependencyTelemetry extends IPartC { // siyu this one is related to dependency and has key word starttime
     id: string;
     name?: string;
     duration?: number;
     success?: boolean;
-    startTime?: Date;
+    startTime?: Date; // thisone
     responseCode: number;
     correlationContext?: string;
     type?: string;
