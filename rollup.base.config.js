@@ -18,6 +18,7 @@ function doCleanup() {
   return cleanup({
     comments: [
       'some', 
+      /^@preserve/,
       /^.\s*@DynamicProtoStub/i,
       /^\*\*\s*@class\s*$/
     ]
@@ -177,7 +178,8 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
                 output: {
                     ie: true,
                     preamble: banner,
-                    webkit:true
+                    webkit:true,
+                    comments: [/^@preserve/]
                 }
             })
         );
@@ -232,7 +234,8 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
                 output: {
                     ie: true,
                     preamble: banner,
-                    webkit:true
+                    webkit:true,
+                    comments: [/^@preserve/]
                 }
             })
         );
