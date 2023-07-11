@@ -68,7 +68,7 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
         browserRollupConfig.output.file = prodOutputPath;
         browserRollupConfig.plugins.push(
             uglify({
-                ie8: false,
+                ie8: true,
                 ie: true,
                 toplevel: true,
                 compress: {
@@ -135,7 +135,7 @@ const browserRollupConfigFactory2 = (banner, importCheckNames, targetType, theNa
         browserRollupConfig.output.file = prodOutputPath;
         browserRollupConfig.plugins.push(
             uglify({
-                ie8: false,
+                ie8: true,
                 ie: true,
                 compress: {
                     ie: true,
@@ -193,7 +193,7 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
         nodeRollupConfig.output.file = prodOutputPath;
         nodeRollupConfig.plugins.push(
             uglify({
-                ie8: false,
+                ie8: true,
                 ie: true,
                 toplevel: true,
                 compress: {
@@ -252,7 +252,7 @@ const nodeUmdRollupConfigFactory2 = (banner, importCheckNames, targetType, theNa
         nodeRollupConfig.output.file = prodOutputPath;
         nodeRollupConfig.plugins.push(
             uglify({
-                ie8: false,
+                ie8: true,
                 ie: true,
                 
                 compress: {
