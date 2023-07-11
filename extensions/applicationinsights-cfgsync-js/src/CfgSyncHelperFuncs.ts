@@ -1,20 +1,29 @@
 import { IConfig } from "@microsoft/applicationinsights-common";
 import { IConfiguration } from "@microsoft/applicationinsights-core-js";
-import { isArray, isFunction, isObject, objExtend, objForEachKey } from "@nevware21/ts-utils";
+import { isObject, objExtend, objForEachKey } from "@nevware21/ts-utils";
 import { NonOverrideCfg } from "./Interfaces/ICfgSyncConfig";
 
-export function replaceByNonOverrideCfg<T=IConfiguration & IConfig>(cfg: T , nonOverrideConfigs: NonOverrideCfg, curLevel: number, maxLevel: number): T {
+/**
+ * Delete a config key in the given cfg, if the config key exists in nonOverrideConfigs and its value is set to true
+ * @param cfg cfg to modify
+ * @param nonOverrideConfigs nonOverrideConfigs
+ * @param curLevel cur config level, starting at 0
+ * @param maxLevel max config level
+ * @returns new copy of modified configs
+ */
+export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverrideCfg>(cfg: T , nonOverrideConfigs: T1, curLevel: number, maxLevel: number): T {
     try {
-        if (curLevel > maxLevel || !cfg) {
-            return null;
+        let exceedMaxLevel = curLevel > maxLevel;
+        if (exceedMaxLevel) {
+            cfg = null;
         }
-        let curCfg = objExtend({}, cfg);
-        if (nonOverrideConfigs) {
-            objForEachKey(nonOverrideConfigs, (key, val) => {
-                if (!!val) {
-                    let subCfg = curCfg[key];
-                    if (isObject(subCfg) && !isFunction(subCfg) && !isArray(subCfg)) {
-                        curCfg[key] = replaceByNonOverrideCfg(subCfg, nonOverrideConfigs[key], ++curLevel, maxLevel);
+        let curCfg = curLevel == 0? objExtend({}, cfg): cfg;   // only copy cfg at the begining level
+        if (curCfg && nonOverrideConfigs && !exceedMaxLevel) {
+            objForEachKey(curCfg, (key) => {
+                let nonOverrideVal = nonOverrideConfigs[key];
+                if (!!nonOverrideVal) {
+                    if (isObject(curCfg[key]) && isObject(nonOverrideVal)) {
+                        curCfg[key] = replaceByNonOverrideCfg(curCfg[key], nonOverrideVal, ++curLevel, maxLevel);
                     } else {
                         delete curCfg[key];
                     }
@@ -22,9 +31,11 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig>(cfg: T , non
             });
         }
         return curCfg;
-
+        
     } catch(e) {
         // eslint-disable-next-line no-empty
     }
-    return null;
+
+    // if errors happen, do nothing
+    return cfg;
 }

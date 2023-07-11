@@ -111,7 +111,7 @@ export class CfgSyncHelperTests extends AITestClass {
                 let channel = new ChannelPlugin();
                 core.initialize(config, [channel]);
                 let coreCfg = core.config;
-                let newCfg = replaceByNonOverrideCfg(newConfig, nonoverrideCfg, 1, 4);
+                let newCfg = replaceByNonOverrideCfg(newConfig, nonoverrideCfg, 0, 4);
                 Assert.deepEqual(JSON.stringify(newCfg), JSON.stringify(expectedNewCfg), "only expected configs are changed under new config");
 
                 core.updateCfg(newCfg);
@@ -201,7 +201,7 @@ export class CfgSyncHelperTests extends AITestClass {
                 let channel = new ChannelPlugin();
                 core.initialize(config, [channel]);
                 let coreCfg = core.config;
-                let newCfg = replaceByNonOverrideCfg(newConfig, nonoverrideCfg, 1, 4);
+                let newCfg = replaceByNonOverrideCfg(newConfig, nonoverrideCfg, 0, 4);
                 Assert.deepEqual(JSON.stringify(newCfg), JSON.stringify(expectedNewCfg), "only expected configs are changed under new config");
 
                 core.updateCfg(newCfg);
@@ -297,7 +297,7 @@ export class CfgSyncHelperTests extends AITestClass {
                 let channel = new ChannelPlugin();
                 core.initialize(config, [channel]);
                 let coreCfg = core.config;
-                let newCfg = replaceByNonOverrideCfg(newConfig, nonoverrideCfg, 1, 5);
+                let newCfg = replaceByNonOverrideCfg(newConfig, nonoverrideCfg, 0, 4);
                 let newCfgIkey = newCfg.instrumentationKey;
                 Assert.deepEqual(newCfgIkey, undefined, "new config ikey should be deleted");
                 let newMsgLimit = newCfg.maxMessageLimit;
@@ -379,7 +379,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     disablePageUnloadEvents: true
                 } as NonOverrideCfg;
                
-                let newCfg = replaceByNonOverrideCfg(newConfig, nonoverrideCfg, 1, 1);
+                let newCfg = replaceByNonOverrideCfg(newConfig, nonoverrideCfg, 0, 0);
                 Assert.deepEqual(newCfg.instrumentationKey, undefined, "instrumentationKey should be deleted");
                 Assert.deepEqual(newCfg.maxMessageLimit, 1000, "maxMessageLimit should not be deleted");
                 Assert.deepEqual(newCfg.disablePageUnloadEvents, undefined, "disablePageUnloadEvents should be deleted");
@@ -416,7 +416,7 @@ export class CfgSyncHelperTests extends AITestClass {
                         }
                     }
                 } as NonOverrideCfg;
-                let newCfg2 = replaceByNonOverrideCfg(newConfig2, nonoverrideCfg2, 1, 3);
+                let newCfg2 = replaceByNonOverrideCfg(newConfig2, nonoverrideCfg2, 0, 2);
                 Assert.deepEqual(newCfg2.instrumentationKey, undefined, "instrumentationKey should be deleted");
                 let extCfg = newCfg2.extensionConfig || {};
                 Assert.ok(extCfg, "ext config should not be deleted");

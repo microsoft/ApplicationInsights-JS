@@ -49,7 +49,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _evtNamespace: string | string[];
         let _cfgUrl: string;
         let _timeoutHandle: ITimerHandler;
-        let _receiveChanges: boolean; // if it is set true, it won't send out any events
+        let _receiveChanges: boolean;
         let _fetchSpan: number;
         let _onCfgChangeReceive: (event: ICfgSyncEvent) => void;
         let _nonOverrideConfigs: NonOverrideCfg;
@@ -66,6 +66,10 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace(_self.identifier), core.evtNamespace && core.evtNamespace());
                 _populateDefaults(config);
             };
+
+            _self.getCfg = () => {
+                return _mainConfig;
+            }
 
             // used for V2 to manaully trigger config udpate
             _self.setCfg = (config?: IConfiguration & IConfig) => {
@@ -87,7 +91,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_isAutoSync, _receiveChanges, _evtName, _mainConfig];
+                return [_isAutoSync, _receiveChanges, _evtName];
             };
     
             function _initDefaults() {
@@ -136,7 +140,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     }
                     // if cfgUrl is set, we will ignore core config change
                     if (!_cfgUrl) {
-                        _mainConfig = config;  // might not need this core.config
+                        _mainConfig = config;
                         if (_isAutoSync) {
                             _sendCfgsyncEvents();
                         }
@@ -309,7 +313,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 let _cfg: IConfiguration & IConfig = null;
                 try {
                     if (_nonOverrideConfigs && cfg) {
-                        _cfg = replaceByNonOverrideCfg(cfg, _nonOverrideConfigs, 1, 5);
+                        _cfg = replaceByNonOverrideCfg(cfg, _nonOverrideConfigs, 0, 5);
                     }
                 } catch(e) {
                     // eslint-disable-next-line no-empty
@@ -327,6 +331,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         _fetchFn(_cfgUrl, _onFetchComplete, _isAutoSync);
                         _setupTimer();
                     }, _fetchSpan);
+                    _timeoutHandle.unref();
                 }
             }
 
@@ -345,6 +350,15 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Get current configs of current instance.
+     * @param config current configs
+     */
+    public getCfg(): IConfiguration & IConfig {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     /**

@@ -3,6 +3,11 @@ import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 export declare interface ICfgSyncPlugin {
     /**
+     * Get current configs of current instance.
+     * @param config current configs
+     */
+    getCfg(): IConfiguration & IConfig;
+    /**
      * Manually set configs of current instance.
      * @param config new configs
      */
