@@ -2,6 +2,16 @@ import { Fields, ISnippetConfig } from "./type";
 import { IEnvelope } from "@microsoft/applicationinsights-common";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 
+(function (snipConfig: ISnippetConfig){
+
+})({
+    src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
+    crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
+    cfg: { // Application Insights Configuration
+        connectionString: "YOUR_CONNECTION_STRING"
+    }
+});
+
 (function (win: Window, doc: Document, snipConfig: ISnippetConfig) {
     let locn: Location = win.location;
     let helpLink = "https://go.microsoft.com/fwlink/?linkid=2128109";
