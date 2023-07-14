@@ -13,20 +13,20 @@ const treeshakeCfg = {
 };
 
 function doCleanup() {
-  return cleanup({
-    comments: [
-      'some', 
-      /^.\s*@DynamicProtoStub/i,
-      /^\*\*\s*@class\s*$/
-    ]
-  })
+    return cleanup({
+        comments: [
+            'some',
+            /^.\s*@DynamicProtoStub/i,
+            /^\*\*\s*@class\s*$/
+        ]
+    })
 }
 
 const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', replaceValues, treeshakeConfig) => {
 
     var thePostfix = `${postfix}`;
     if (libVersion) {
-        thePostfix = `.${libVersion}${postfix}`; 
+        thePostfix = `.${libVersion}${postfix}`;
     }
 
     var outputPath = `browser/${outputName}${teamExt}${thePostfix}.js`;
@@ -92,7 +92,7 @@ const browserRollupConfigFactory2 = (banner, importCheckNames, targetType, theNa
 
     var thePostfix = `${postfix}`;
     if (libVersion) {
-        thePostfix = `.${libVersion}${postfix}`; 
+        thePostfix = `.${libVersion}${postfix}`;
     }
 
     var outputPath = `browser/${outputName}${teamExt}${thePostfix}.js`;
@@ -157,7 +157,7 @@ const browserRollupConfigFactory2 = (banner, importCheckNames, targetType, theNa
 
 const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, isProduction, replaceValues, treeshakeConfig) => {
 
-    var outputPath = `dist/${outputName}.js`;  
+    var outputPath = `dist/${outputName}.js`;
     var prodOutputPath = `dist/${outputName}.min.js`;
     var inputPath = `dist-${targetType}/${entryInputName}.js`;
 
@@ -177,16 +177,16 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
         plugins: [
             dynamicRemove(),
             replace({
-              preventAssignment: true,
-              delimiters: ["", ""],
-              values: replaceValues
+                preventAssignment: true,
+                delimiters: ["", ""],
+                values: replaceValues
             }),
             importCheck({ exclude: importCheckNames}),
             nodeResolve(),
             doCleanup(),
             es3Poly(),
             es3Check()
-          ]
+        ]
     };
 
     if (isProduction) {
@@ -214,64 +214,6 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
 };
 
 
-const nodeUmdRollupConfigFactory2 = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, isProduction, replaceValues, treeshakeConfig) => {
-
-    var outputPath = `dist/${outputName}.js`;  
-    var prodOutputPath = `dist/${outputName}.min.js`;
-    var inputPath = `dist-${targetType}/${entryInputName}.js`;
-
-    // targetType = esm, entry = applicationinsights-web
-    const nodeRollupConfig = {
-        input: inputPath,
-        output: {
-            file: outputPath,
-            banner: banner,
-            format: "umd",
-            name: theNameSpace,
-            extend: true,
-            freeze: false,
-            sourcemap: true
-        },
-        treeshake: treeshakeConfig,
-        plugins: [
-            dynamicRemove(),
-            replace({
-              preventAssignment: true,
-              delimiters: ["", ""],
-              values: replaceValues
-            }),
-            importCheck({ exclude: importCheckNames}),
-            nodeResolve(),
-            doCleanup(),
-            es3Poly(),
-            es3Check()
-          ]
-    };
-
-    if (isProduction) {
-        nodeRollupConfig.output.file = prodOutputPath;
-        nodeRollupConfig.plugins.push(
-            uglify({
-                ie8: true,
-                ie: true,
-                
-                compress: {
-                    ie: true,
-                    passes:3,
-                    unsafe: true
-                },
-                output: {
-                    ie: true,
-                    preamble: banner,
-                    webkit:true
-                }
-            })
-        );
-    }
-
-    return nodeRollupConfig;
-};
-
 
 export function createConfig(banner, cfg, importCheckNames, replaceValues, majorVersionSet = true, treeshakeSet = true) {
     const majorVersion = cfg.version.split('.')[0];
@@ -281,14 +223,14 @@ export function createConfig(banner, cfg, importCheckNames, replaceValues, major
 
     if (treeshakeSet){
         treeshakeConfig = treeshakeCfg;
-    } 
+    }
 
     tasks.push(
         nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, treeshakeConfig),
         nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, treeshakeConfig)
     );
     
-    let browserFormats = cfg.browser.formats || [ 
+    let browserFormats = cfg.browser.formats || [
         { format: 'umd', postfix: '' },
         { format: 'cjs', postfix: '.cjs' },
         { format: 'iife', postfix: '.gbl' }
@@ -327,7 +269,7 @@ export function createConfig(banner, cfg, importCheckNames, replaceValues, major
                 browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
                 browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, false, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
             );
-        } 
+        }
         tasks.push(
             browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, cfg.version, true, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
             browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, cfg.version, false, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
@@ -337,22 +279,35 @@ export function createConfig(banner, cfg, importCheckNames, replaceValues, major
 }
 
 
-export function createUnVersionedConfig(banner, cfg, importCheckName, replaceValues) {
+export function createUnVersionedConfig(banner, cfg, importCheckName, replaceValues, simplified = false, treeshakeSet = false) {
     const noVersion = "";
     const targetType = "esm";
+    let treeshakeConfig = {};
+    if (treeshakeSet){
+        treeshakeConfig = treeshakeCfg;
+    }
 
     let tasks = [
         //rollupModule(banner, targetType, theNamespace, "es3/" + entryInputName, outputName),
 
-        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, {}),
-        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, {})
+        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, treeshakeConfig),
+        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, treeshakeConfig)
     ];
 
-    let browserFormats = cfg.browser.formats || [ 
-        { format: 'umd', postfix: '' },
-        { format: 'cjs', postfix: '.cjs' },
-        { format: 'iife', postfix: '.gbl' }
-    ];
+
+    let browserFormats = [];
+
+    if (simplified){
+        browserFormats = cfg.browser.formats || [
+            { format: 'umd', postfix: '' },
+        ];
+    } else {
+        browserFormats = cfg.browser.formats || [
+            { format: 'umd', postfix: '' },
+            { format: 'cjs', postfix: '.cjs' },
+            { format: 'iife', postfix: '.gbl' }
+        ];
+    }
 
     if (cfg.teams) {
         for (let lp = 0; lp < cfg.teams.length; lp++) {
@@ -392,81 +347,69 @@ export function createUnVersionedConfig(banner, cfg, importCheckName, replaceVal
         }
 
         tasks.push(
-            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeCfg),
-            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeCfg)
+            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
+            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig)
         );
     }
 
     return tasks;
 }
 
-export function simpleConfig(banner, cfg, importCheckName, replaceValues, treeshakeSet = false, specialV = false) {
-    const noVersion = "";
-    const targetType = "esm";
+// export function simpleConfig(banner, cfg, importCheckName, replaceValues, treeshakeSet = false) {
+//     const noVersion = "";
+//     const targetType = "esm";
 
-    let treeshakeConfig = {};
+//     let treeshakeConfig = {};
 
-    if (treeshakeSet){
-        treeshakeConfig = treeshakeCfg;
-    } 
-let tasks = [];
-    if (specialV){
-        tasks.push(
-            nodeUmdRollupConfigFactory2(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, treeshakeConfig),
-            nodeUmdRollupConfigFactory2(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, treeshakeConfig)
-        );
-    } else {
-        tasks.push(
-            nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, treeshakeConfig),
-            nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, treeshakeConfig)
-        );
-    }
+//     if (treeshakeSet){
+//         treeshakeConfig = treeshakeCfg;
+//     }
+//     let tasks = [];
 
+//     tasks.push(
+//         nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true, replaceValues, treeshakeConfig),
+//         nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false, replaceValues, treeshakeConfig)
+//     );
 
-    let browserFormats = cfg.browser.formats || [ 
-        { format: 'umd', postfix: '' },
-    ];
+//     let browserFormats = cfg.browser.formats || [
+//         { format: 'umd', postfix: '' },
+//     ];
 
-    if (cfg.teams) {
-        for (let lp = 0; lp < cfg.teams.length; lp++) {
-            let teamCfg = cfg.teams[lp];
-            if (teamCfg.teamExt) {
-                browserFormats.push({
-                    teamExt: teamCfg.teamExt,
-                    namespace: teamCfg.namespace || cfg.namespace,
-                    namespaceGbl: teamCfg.namespaceGbl || teamCfg.namespace || cfg.namespace,
-                    format: teamCfg.fmt || 'iife',
-                    postfix: teamCfg.ext || '.gbl'
-                });
-            }
-        }
-    }
+//     if (cfg.teams) {
+//         for (let lp = 0; lp < cfg.teams.length; lp++) {
+//             let teamCfg = cfg.teams[lp];
+//             if (teamCfg.teamExt) {
+//                 browserFormats.push({
+//                     teamExt: teamCfg.teamExt,
+//                     namespace: teamCfg.namespace || cfg.namespace,
+//                     namespaceGbl: teamCfg.namespaceGbl || teamCfg.namespace || cfg.namespace,
+//                     format: teamCfg.fmt || 'iife',
+//                     postfix: teamCfg.ext || '.gbl'
+//                 });
+//             }
+//         }
+//     }
 
-    for (let lp = 0; lp < browserFormats.length; lp++) {
-        let browserCfg = browserFormats[lp];
-        let browserNamespace = browserCfg.namespace || cfg.namespace;
-        if (typeof browserNamespace === "string") {
-            browserNamespace = {
-                browser: browserCfg.namespace || cfg.namespace,
-                gbl: browserCfg.namespaceGbl || cfg.namespace
-            };
-        }
-        let browserFmt = browserCfg.format || 'umd';
-        let browserPostfix = browserCfg.postfix || '';
-        let browserTeam = browserCfg.teamExt || '';
+//     for (let lp = 0; lp < browserFormats.length; lp++) {
+//         let browserCfg = browserFormats[lp];
+//         let browserNamespace = browserCfg.namespace || cfg.namespace;
+//         if (typeof browserNamespace === "string") {
+//             browserNamespace = {
+//                 browser: browserCfg.namespace || cfg.namespace,
+//                 gbl: browserCfg.namespaceGbl || cfg.namespace
+//             };
+//         }
+//         let browserFmt = browserCfg.format || 'umd';
+//         let browserPostfix = browserCfg.postfix || '';
+//         let browserTeam = browserCfg.teamExt || '';
 
-        if (specialV){
-            tasks.push(
-                browserRollupConfigFactory2(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
-                browserRollupConfigFactory2(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig)
-            );
-        } else {
-            tasks.push(
-                browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
-                browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig)
-            );
-        }
-    }
+      
+//         tasks.push(
+//             browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
+//             browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig)
+//         );
 
-    return tasks;
-}
+//     }
+
+//     return tasks;
+// }
