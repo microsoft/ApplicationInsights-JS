@@ -2,17 +2,10 @@ import { Fields, ISnippetConfig } from "./type";
 import { IEnvelope } from "@microsoft/applicationinsights-common";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 
-(function (snipConfig: ISnippetConfig){
+declare var cfg:ISnippetConfig;
+// please see expandMin in gruntfile for defining cfg values
 
-})({
-    src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
-    crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
-    cfg: { // Application Insights Configuration
-        connectionString: "YOUR_CONNECTION_STRING"
-    }
-});
-
-(function (win: Window, doc: Document, snipConfig: ISnippetConfig) {
+(function (win: Window, doc: Document) {
     let locn: Location = win.location;
     let helpLink = "https://go.microsoft.com/fwlink/?linkid=2128109";
     let scriptText = "script";
@@ -30,8 +23,8 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 
     let strPostMethod = "POST";
     let sdkInstanceName = "appInsightsSDK";         // required for Initialization to find the current instance
-    let aiName = snipConfig.name || "appInsights";  // provide non default instance name through snipConfig name value
-    if (snipConfig.name || win[sdkInstanceName]) {
+    let aiName = cfg.name || "appInsights";  // provide non default instance name through snipConfig name value
+    if (cfg.name || win[sdkInstanceName]) {
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
     }
@@ -74,7 +67,7 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         function _sendEvents(evts:IEnvelope[], endpointUrl?:any) {
             if (JSON) {
                 let sender = win.fetch;
-                if (sender && !snipConfig.useXhr) {
+                if (sender && !cfg.useXhr) {
                     sender(endpointUrl, { method:strPostMethod, body: JSON.stringify(evts), mode:"cors"});
                 } else if (XMLHttpRequest) {
                     // IE doesn't support fetch and private clouds may only be using IE
@@ -179,7 +172,7 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         }
     
         // Assigning these to local variables allows them to be minified to save space:
-        let targetSrc = (aiConfig as any)["url"] || snipConfig.src
+        let targetSrc = (aiConfig as any)["url"] || cfg.src
         if (targetSrc) {
             const _handleError = (evt?: any) => {
                 loadFailed = true;
@@ -206,7 +199,7 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
                 (scriptElement as any)["src"] = targetSrc;
                 // Allocate Cross origin only if defined and available
-                let crossOrigin = snipConfig[strCrossOrigin];
+                let crossOrigin = cfg[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
                     scriptElement[strCrossOrigin] = crossOrigin;
                 }
@@ -223,7 +216,7 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
             }
 
             let theScript = _createScript();
-            if (snipConfig.ld && snipConfig.ld < 0) {
+            if (cfg.ld && cfg.ld < 0) {
                 // if user wants to append tag to document head, blocking page load
                 let headNode = doc.getElementsByTagName("head")[0];
                 headNode.appendChild(theScript);
@@ -231,7 +224,7 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
                 setTimeout(function () {
                     // Attempts to place the script tag in the same location as the first script on the page
                     doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(theScript);
-                }, snipConfig.ld || 0);
+                }, cfg.ld || 0);
             }
         }
     
@@ -316,14 +309,14 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         }
     
         return appInsights;
-    })(snipConfig.cfg);
+    })(cfg.cfg);
 
     // global instance must be set in this order to mitigate issues in ie8 and lower
     win[aiName] = aiSdk;
     
     function _onInit() {
-        if (snipConfig.onInit) {
-            snipConfig.onInit(aiSdk);
+        if (cfg.onInit) {
+            cfg.onInit(aiSdk);
         }
     }
 
@@ -335,17 +328,4 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         // Already loaded so just call the onInit
         _onInit();
     }
-})(window, document, {
-    // @preserve config start
-    src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
-    // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
-    // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
-    // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
-    crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
-    // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
-    // @preserve config middle3
-    cfg: { // Application Insights Configuration
-        connectionString: "YOUR_CONNECTION_STRING"
-    }
-    // @preserve config end
-});
+})(window, document);

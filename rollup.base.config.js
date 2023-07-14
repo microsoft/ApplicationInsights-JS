@@ -178,8 +178,7 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
                 output: {
                     ie: true,
                     preamble: banner,
-                    webkit:true,
-                    comments: [/^@preserve/]
+                    webkit:true
                 }
             })
         );
@@ -234,8 +233,7 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
                 output: {
                     ie: true,
                     preamble: banner,
-                    webkit:true,
-                    comments: [/^@preserve/]
+                    webkit:true
                 }
             })
         );

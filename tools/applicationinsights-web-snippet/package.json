@@ -13,7 +13,7 @@
   "scripts": {
     "clean": "git clean -xdf",
     "build": "npm run build:esm && npm run snippet-generate && npm run replace && npm run build:browser",
-    "build:esm": "grunt websnippet",
+    "build:esm": "grunt websnippet ",
     "snippet-generate": "npm run snippetCopy && npm run build:snippet",
     "snippetCopy": "grunt snippetCopy",
     "build:snippet": "rollup -c rollupSnippet.config.js --bundleConfigAsCjs",
