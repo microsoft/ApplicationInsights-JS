@@ -55,72 +55,6 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             importCheck({ exclude: importCheckNames }),
             nodeResolve({
                 browser: false,
-                preferBuiltins: false
-            }),
-            doCleanup(),
-            es3Poly(),
-            es3Check()
-        ]
-    };
-
-
-    if (isProduction) {
-        browserRollupConfig.output.file = prodOutputPath;
-        browserRollupConfig.plugins.push(
-            uglify({
-                ie8: true,
-                ie: true,
-                toplevel: true,
-                compress: {
-                    ie: true,
-                    passes:3,
-                    unsafe: true
-                },
-                output: {
-                    ie: true,
-                    preamble: banner,
-                    webkit:true
-                }
-            })
-        );
-    }
-
-    return browserRollupConfig;
-};
-
-const browserRollupConfigFactory2 = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', replaceValues, treeshakeConfig) => {
-
-    var thePostfix = `${postfix}`;
-    if (libVersion) {
-        thePostfix = `.${libVersion}${postfix}`;
-    }
-
-    var outputPath = `browser/${outputName}${teamExt}${thePostfix}.js`;
-    var prodOutputPath = `browser/${outputName}${teamExt}${thePostfix}.min.js`;
-    var inputPath = `dist-${targetType}/${entryInputName}.js`;
-
-    const browserRollupConfig = {
-        input: inputPath,
-        output: {
-            file: outputPath,
-            banner: banner,
-            format: format,
-            name: theNameSpace.browser,
-            extend: true,
-            freeze: false,
-            sourcemap: true,
-        },
-        treeshake: treeshakeConfig,
-        plugins: [
-            dynamicRemove(),
-            replace({
-                preventAssignment: true,
-                delimiters: ["", ""],
-                values: replaceValues
-            }),
-            importCheck({ exclude: importCheckNames }),
-            nodeResolve({
-                browser: true,
                 module: true,
                 preferBuiltins: false
             }),
@@ -137,6 +71,7 @@ const browserRollupConfigFactory2 = (banner, importCheckNames, targetType, theNa
             uglify({
                 ie8: true,
                 ie: true,
+                toplevel: true,
                 compress: {
                     ie: true,
                     passes:3,
