@@ -41,7 +41,7 @@ module.exports = function (grunt) {
             options: {
                 replacements: function() {
                     var prefix = "IKey";
-                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.cjs.min.js");
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
                     if (connString) {
                         snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"YOUR_CONNECTION_STRING\"");
                         snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"YOUR_CONNECTION_STRING\"");
@@ -71,12 +71,12 @@ module.exports = function (grunt) {
                 expand: true,
                 cwd: srcPath,
                 dest: "./tools/applicationinsights-web-snippet/build/output",
-                src: "snippet.cjs.min.js"
+                src: "snippet.min.js"
             }],
             options: {
                 replacements: function() {
                
-                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.cjs.min.js");
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
                     var codeSnippet = `src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",\n` +
                     `// name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied\n` +
                     `// ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,\n` +
@@ -871,8 +871,7 @@ module.exports = function (grunt) {
 
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
         grunt.registerTask("snippetCopy", ["copy:snippet"]);
-        grunt.registerTask("snippet-min", minTasks("applicationinsights-web-snippet"));
-        grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);       
+        grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
 
         grunt.registerTask("snippet-restore", restoreTasks("applicationinsights-web-snippet"));
         grunt.registerTask("websnippettests", tsTestActions("applicationinsights-web-snippet"));

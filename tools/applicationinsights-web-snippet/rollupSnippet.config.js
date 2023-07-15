@@ -13,7 +13,8 @@ export default createConfig("",
     },
     browser: {
       entryPoint: snippetOutputName, 
-      outputName: snippetOutputPath
+      outputName: snippetOutputPath,
+      formats: [{ format: 'cjs', postfix: '' }]
     },
   },
   [ "applicationinsights-web-snippet" ]
