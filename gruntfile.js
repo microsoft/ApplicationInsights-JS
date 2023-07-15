@@ -90,8 +90,6 @@ module.exports = function (grunt) {
                     var overWriteString = snippetBuffer.replace(/"use strict";function e\(/, "'use strict';function e(cfg");
                     overWriteString = overWriteString.replace(/e\(\);\n\/\/# source/, "e(\n{" + codeSnippet + "}\n//# source")
 
-                    console.log("------------now", overWriteString);
-
                     return [{
                         pattern: snippetBuffer,
                         replacement: overWriteString
@@ -126,8 +124,6 @@ module.exports = function (grunt) {
 
                     var overWriteString = snippetBuffer.replace(/\(function \(win, doc/, "(function (win, doc, cfg");
                     overWriteString = overWriteString.replace(/}\)\(window, document\);/, "})(window, document,\n{" + codeSnippet + "});\n")
-
-                    console.log("------------now", overWriteString);
 
                     return [{
                         pattern: snippetBuffer,
@@ -874,7 +870,6 @@ module.exports = function (grunt) {
         grunt.registerTask("chromedebugextension-restore", restoreTasks("chrome-debug-extension"));
 
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
-        // grunt.registerTask("websnippetExpand", ["string-replace:generate-expanded-JS"]);
         grunt.registerTask("snippetCopy", ["copy:snippet"]);
         grunt.registerTask("snippet-min", minTasks("applicationinsights-web-snippet"));
         grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);       
