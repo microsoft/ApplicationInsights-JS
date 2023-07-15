@@ -180,11 +180,11 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         // Assigning these to local variables allows them to be minified to save space:
         let targetSrc = (aiConfig as any)["url"] || snipConfig.src
         if (targetSrc) {
-            if (isIE() && targetSrc.indexOf("2") == -1) {
-                // Redrict to version 2 which support IE
-                targetSrc = "https://js.monitor.azure.com/scripts/b/ai.2.min.js";
-                // targetSrc = "https://js.monitor.azure.com/scripts/b/ai.2.gbl.min.js";
-                // targetSrc = "https://js.monitor.azure.com/scripts/b/ai.2.cjs.min.js";
+            if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
+                // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
+                targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {
+                    return g1 + "ai.2" + g2;
+                });
                 // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
             }
             const _handleError = (evt?: any) => {
