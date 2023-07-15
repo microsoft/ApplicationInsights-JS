@@ -18,7 +18,6 @@ function doCleanup() {
   return cleanup({
     comments: [
       'some', 
-      /^@preserve/,
       /^.\s*@DynamicProtoStub/i,
       /^\*\*\s*@class\s*$/
     ]
