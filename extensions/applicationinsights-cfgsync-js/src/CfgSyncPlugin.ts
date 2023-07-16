@@ -147,7 +147,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         _mainConfig = config;
                         
                         if (_broadcastChanges) {
-                            objExtend({}, config)
+                            objExtend({}, config);
                             _sendCfgsyncEvents();
                         }
                     }
