@@ -29,6 +29,7 @@
         "@rush-temp/applicationinsights-debugplugin-js": "file:./projects/applicationinsights-debugplugin-js.tgz",
         "@rush-temp/applicationinsights-dependencies-js": "file:./projects/applicationinsights-dependencies-js.tgz",
         "@rush-temp/applicationinsights-example-aisku": "file:./projects/applicationinsights-example-aisku.tgz",
+        "@rush-temp/applicationinsights-example-cfgsync": "file:./projects/applicationinsights-example-cfgsync.tgz",
         "@rush-temp/applicationinsights-example-dependencies": "file:./projects/applicationinsights-example-dependencies.tgz",
         "@rush-temp/applicationinsights-example-shared-worker": "file:./projects/applicationinsights-example-shared-worker.tgz",
         "@rush-temp/applicationinsights-js-release-tools": "file:./projects/applicationinsights-js-release-tools.tgz",
@@ -840,6 +841,32 @@
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "tslib": "*",
+        "typescript": "^4.9.3"
+      }
+    },
+    "node_modules/@rush-temp/applicationinsights-example-cfgsync": {
+      "version": "0.0.0",
+      "resolved": "file:projects/applicationinsights-example-cfgsync.tgz",
+      "integrity": "sha512-VreNacT3Kj29FcRg5NXv0IztOg+0hbDJMjMabs4aQeTiFnJbaKYXsNIET/mGukfOAVwBAp2rnJxbG18FQTr3tA==",
+      "dependencies": {
+        "@microsoft/dynamicproto-js": "^2.0.2",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
+        "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/ts-utils": ">= 0.9.5 < 2.x",
+        "@rollup/plugin-commonjs": "^24.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@rollup/plugin-replace": "^5.0.2",
+        "globby": "^11.0.0",
+        "grunt": "^1.5.3",
+        "grunt-cli": "^1.4.3",
+        "grunt-contrib-qunit": "^6.2.1",
+        "magic-string": "^0.25.7",
+        "pako": "^2.0.3",
+        "qunit": "^2.11.2",
+        "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "sinon": "^7.3.1",
+        "tslib": "^2.0.0",
         "typescript": "^4.9.3"
       }
     },
@@ -6563,6 +6590,31 @@
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "tslib": "*",
+        "typescript": "^4.9.3"
+      }
+    },
+    "@rush-temp/applicationinsights-example-cfgsync": {
+      "version": "file:projects\\applicationinsights-example-cfgsync.tgz",
+      "integrity": "sha512-VreNacT3Kj29FcRg5NXv0IztOg+0hbDJMjMabs4aQeTiFnJbaKYXsNIET/mGukfOAVwBAp2rnJxbG18FQTr3tA==",
+      "requires": {
+        "@microsoft/dynamicproto-js": "^2.0.2",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
+        "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/ts-utils": ">= 0.9.5 < 2.x",
+        "@rollup/plugin-commonjs": "^24.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@rollup/plugin-replace": "^5.0.2",
+        "globby": "^11.0.0",
+        "grunt": "^1.5.3",
+        "grunt-cli": "^1.4.3",
+        "grunt-contrib-qunit": "^6.2.1",
+        "magic-string": "^0.25.7",
+        "pako": "^2.0.3",
+        "qunit": "^2.11.2",
+        "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "sinon": "^7.3.1",
+        "tslib": "^2.0.0",
         "typescript": "^4.9.3"
       }
     },

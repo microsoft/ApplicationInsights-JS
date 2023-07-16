@@ -110,6 +110,11 @@
       "shouldPublish": false
     },
     {
+      "packageName": "@microsoft/applicationinsights-example-cfgsync",
+      "projectFolder": "examples/cfgSync",
+      "shouldPublish": false
+    },
+    {
       "packageName": "@microsoft/applicationinsights-example-dependencies",
       "projectFolder": "examples/dependency",
       "shouldPublish": false

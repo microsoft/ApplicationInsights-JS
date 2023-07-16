@@ -65,7 +65,9 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-cfgsync-js": {
-            "constEnums": []
+            "constEnums": [
+                "ICfgSyncMode"
+            ]
         }
     }
 }

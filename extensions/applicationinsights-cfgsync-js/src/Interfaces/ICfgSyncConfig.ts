@@ -3,22 +3,15 @@ import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 export interface ICfgSyncConfig {
     /**
-     * Identifies whether changes of main instance should be sent to all other listener instances automatically.
-     * Default to false.
-     * If set to true, should call sync() function to manually trigger broadcasting changes.
+     * Identifies whether instance should receive or broadcast config changes
+     * Default to broadcast
      */
-    disableAutoSync?: boolean;
+    syncMode?: ICfgSyncMode;
     /**
      * Identifies event name that changes will be sent out with. And all listener instances will listen to event details under this name.
      * Default to cfgsync.
      */
     customEvtName?: string;
-     /**
-     * Identifies whether current instance should receive config changes from other instances.
-     * Default to false.
-     * If current instance is set as main instance rather than listener instance, it is recommended to set it to false.
-     */
-    receiveChanges?: boolean;
      /**
      * Identifies endpoint to get config rather than core config.
      * Default to null.
@@ -48,6 +41,21 @@ export interface ICfgSyncConfig {
      * If set to 0, fetch will only be called once during initialization.
      */
     scheduleFetchTimeout?: number;
+}
+
+export const enum ICfgSyncMode {
+    /**
+     * Instance will NOT receive config changes or broadcast changes
+     */
+    None = 0,
+    /**
+     * Instance will only broadcast config changes but NOT receive changes
+     */
+    Broadcast = 1,
+    /**
+     * Instance will only receive config changes but NOT broadcast changes
+     */
+    Receive = 2
 }
 
 export interface ICfgSyncEvent {

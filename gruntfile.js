@@ -479,6 +479,11 @@ module.exports = function (grunt) {
                                         path: "./examples/dependency",
                                         testHttp: false
                                     },
+            "example-cfgsync":        {
+                                        autoMinify: false,
+                                        path: "./examples/cfgSync",
+                                        testHttp: false
+                                    },
     
             // Tools
             "rollupuglify":         {
@@ -828,6 +833,7 @@ module.exports = function (grunt) {
 
          grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
          grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
+         grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
      } catch (e) {
          console.error(e);
          console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");

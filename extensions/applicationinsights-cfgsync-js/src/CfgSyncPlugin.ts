@@ -12,9 +12,11 @@ import {
     sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, isFunction, isNullOrUndefined, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isFunction, isNullOrUndefined, objDeepFreeze, objExtend, scheduleTimeout } from "@nevware21/ts-utils";
 import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
-import { ICfgSyncConfig, ICfgSyncEvent, NonOverrideCfg, OnCompleteCallback, SendGetFunction } from "./Interfaces/ICfgSyncConfig";
+import {
+    ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
+} from "./Interfaces/ICfgSyncConfig";
 import { ICfgSyncPlugin } from "./Interfaces/ICfgSyncPlugin";
 
 const evtName = "cfgsync";
@@ -23,10 +25,9 @@ const FETCH_SPAN = 1800000; // 30 minutes
 const udfVal: undefined = undefined;
 let defaultNonOverrideCfg: NonOverrideCfg  = {instrumentationKey: true, connectionString: true, endpointUrl: true }
 const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
-    disableAutoSync: false,
+    syncMode: ICfgSyncMode.Broadcast,
     customEvtName: udfVal,
     cfgUrl: udfVal, // as long as it is set to NOT NUll, we will NOT use config from core
-    receiveChanges: false,
     overrideSyncFunc: udfVal,
     overrideFetchFunc: udfVal,
     onCfgChangeReceive: udfVal,
@@ -44,13 +45,14 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
         let _extensionConfig: ICfgSyncConfig;
         let _mainConfig: IConfiguration & IConfig; // throttle config should be wrapped in IConfiguration
-        let _isAutoSync: boolean;
         let _evtName: string;
         let _evtNamespace: string | string[];
         let _cfgUrl: string;
         let _timeoutHandle: ITimerHandler;
         let _receiveChanges: boolean;
+        let _broadcastChanges: boolean;
         let _fetchSpan: number;
+        let _retryCnt: number;
         let _onCfgChangeReceive: (event: ICfgSyncEvent) => void;
         let _nonOverrideConfigs: NonOverrideCfg;
         let _fetchFn: SendGetFunction;
@@ -73,7 +75,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             // used for V2 to manaully trigger config udpate
             _self.setCfg = (config?: IConfiguration & IConfig) => {
-                return _setCfg(config, _isAutoSync);
+                return _setCfg(config, _broadcastChanges);
             }
 
             _self.sync = (customDetails?: any) => {
@@ -91,19 +93,20 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_isAutoSync, _receiveChanges, _evtName];
+                return [_broadcastChanges, _receiveChanges, _evtName];
             };
     
             function _initDefaults() {
                 _mainConfig = null;
-                _isAutoSync = null;
                 _evtName = null;
                 _evtNamespace = null;
                 _cfgUrl = null;
                 _receiveChanges = null;
+                _broadcastChanges = null;
                 _nonOverrideConfigs = null;
                 _timeoutHandle = null;
                 _fetchSpan = null;
+                _retryCnt = null;
                 _overrideFetchFn = null;
                 _overrideSyncFn = null;
                 _onCfgChangeReceive = null;
@@ -116,11 +119,12 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
-                    if (isNullOrUndefined(_isAutoSync)) {
-                        _isAutoSync = !_extensionConfig.disableAutoSync;
-                    }
+
                     if (isNullOrUndefined(_receiveChanges)) {
-                        _receiveChanges = !!_extensionConfig.receiveChanges;
+                        _receiveChanges = _extensionConfig.syncMode === ICfgSyncMode.Receive;
+                    }
+                    if (isNullOrUndefined(_broadcastChanges)) {
+                        _broadcastChanges = _extensionConfig.syncMode === ICfgSyncMode.Broadcast;
                     }
                    
                     let _newEvtName =  _extensionConfig.customEvtName || evtName;
@@ -141,7 +145,9 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     // if cfgUrl is set, we will ignore core config change
                     if (!_cfgUrl) {
                         _mainConfig = config;
-                        if (_isAutoSync) {
+                        
+                        if (_broadcastChanges) {
+                            objExtend({}, config)
                             _sendCfgsyncEvents();
                         }
                     }
@@ -155,8 +161,9 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 
                 // NOT support cfgURL change to avoid mutiple fetch calls
                 if (_cfgUrl) {
+                    _retryCnt = 0;
                     _fetchFn = _getFetchFnInterface();
-                    _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _isAutoSync);
+                    _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
                     _setupTimer();
                 }
             }
@@ -264,17 +271,19 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             }
 
             function _onFetchComplete(status: number, response?: string, isAutoSync?: boolean) {
-                if (status >= 200 && status < 400 && response) {
-                    try {
+                try {
+                    if (status >= 200 && status < 400 && response) {
+                        _retryCnt = 0; // any successful response will reset retry count to 0
                         let JSON = getJSON();
                         if (JSON) {
                             let cfg = JSON.parse(response); //comments are not allowed
                             cfg && _setCfg(cfg, isAutoSync);
                         }
-                    } catch (e) {
-                        // eslint-disable-next-line no-empty
+                    } else {
+                        _retryCnt ++;
                     }
-                    
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
                 }
             }
 
@@ -312,7 +321,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             function _replaceTartgetByKeys<T=IConfiguration & IConfig>(cfg: T , level?: number) {
                 let _cfg: IConfiguration & IConfig = null;
                 try {
-                    if (_nonOverrideConfigs && cfg) {
+                    if (cfg) {
                         _cfg = replaceByNonOverrideCfg(cfg, _nonOverrideConfigs, 0, 5);
                     }
                 } catch(e) {
@@ -328,8 +337,11 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 if (!_timeoutHandle && _fetchSpan) {
                     _timeoutHandle = scheduleTimeout(() => {
                         _timeoutHandle = null;
-                        _fetchFn(_cfgUrl, _onFetchComplete, _isAutoSync);
-                        _setupTimer();
+                        _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
+                        if (_retryCnt < 3) {
+                            _setupTimer(); // only set new timer when retry count < 3
+                        }
+                        
                     }, _fetchSpan);
                     _timeoutHandle.unref();
                 }
