@@ -3,7 +3,11 @@ import { IEnvelope } from "@microsoft/applicationinsights-common";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 
 declare var cfg:ISnippetConfig;
-// please see expandMin in gruntfile for defining cfg values
+// To ensure that SnippetConfig resides at the bottom of snippet.min.js,
+// cfg needs to be declared globally at the top without being assigned values.
+// This allows us to later assign cfg into the function at the bottom.
+// We achieve this by using the expandMin function in gruntfile,
+// which will forcefully overwrite the min file.
 
 (function (win: Window, doc: Document) {
     let locn: Location = win.location;
