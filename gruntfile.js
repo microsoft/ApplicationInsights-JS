@@ -1,5 +1,3 @@
-const { over } = require("lodash");
-
 module.exports = function (grunt) {
 
     const versionPlaceholder = '"#version#"';
