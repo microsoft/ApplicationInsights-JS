@@ -1,18 +1,16 @@
-import nodeResolve from "@rollup/plugin-node-resolve";
-import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
-import replace from "@rollup/plugin-replace";
-import cleanup from "rollup-plugin-cleanup";
-import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
-import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
+import { createConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
-const outputName = "applicationinsights-perfmarkmeasure-js";
+const browserEntryPointName = "applicationinsights-perfmarkmeasure-js";
+const browserOutputName = "ai.prfmm-mgr";
+const entryPointName = "applicationinsights-perfmarkmeasure-js";
+const outputName = "applicationinsights-perfmarkmeasure-js"; 
+
 const verParts = version.split("-")[0].split(".")
 if (verParts.length != 3) {
   throw "Invalid Version! [" + version + "]"
 }
-const majorVersion = verParts[0]
 
 const banner = [
   "/*!",
@@ -26,130 +24,19 @@ const replaceValues = {
   "// Licensed under the MIT License.": ""
 };
 
-function doCleanup() {
-  return cleanup({
-    comments: [
-      'some', 
-      /^.\s*@DynamicProtoStub/i,
-      /^\*\*\s*@class\s*$/
-    ]
-  })
-}
+updateDistEsmFiles(replaceValues, banner, true, true, "dist-esm");
 
-const browserRollupConfigFactory = (isProduction, libVersion, format = 'umd', postfix = '') => {
-  const browserRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
-    output: {
-      file: `browser/ai.prfmm-mgr.${libVersion}${postfix}.js`,
-      banner: banner,
-      format: format,
-      name: "Microsoft.ApplicationInsights",
-      extend: true,
-      freeze: false,
-      sourcemap: true
+export default createConfig(banner, 
+  {
+    namespace: "Microsoft.ApplicationInsights",
+    version: version,
+    node: {
+      entryPoint: entryPointName,
+      outputName: outputName
     },
-    plugins: [
-      dynamicRemove(),
-      replace({
-        preventAssignment: true,
-        delimiters: ["", ""],
-        values: replaceValues
-      }),
-      importCheck({ exclude: [ "applicationinsights-perfmarkmeasure-js" ] }),
-      nodeResolve({
-        browser: false,
-        preferBuiltins: false
-      }),
-      doCleanup(),
-      es3Poly(),
-      es3Check()
-    ]
-  };
-
-  if (isProduction) {
-    browserRollupConfig.output.file = `browser/ai.prfmm-mgr.${libVersion}${postfix}.min.js`;
-    browserRollupConfig.plugins.push(
-      uglify({
-        ie8: true,
-        ie: true,
-        toplevel: true,
-        compress: {
-          ie: true,
-          passes:3,
-          unsafe: true
-        },
-        output: {
-          ie: true,
-          preamble: banner,
-          webkit:true
-        }
-      })
-    );
-  }
-
-  return browserRollupConfig;
-};
-
-const nodeUmdRollupConfigFactory = (isProduction) => {
-  const nodeRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
-    output: {
-      file: `dist/${outputName}.js`,
-      banner: banner,
-      format: "umd",
-      name: "Microsoft.ApplicationInsights",
-      extend: true,
-      freeze: false,
-      sourcemap: true
-    },
-    plugins: [
-      dynamicRemove(),
-      replace({
-        preventAssignment: true,
-        delimiters: ["", ""],
-        values: replaceValues
-      }),
-      importCheck({ exclude: [ "applicationinsights-perfmarkmeasure-js" ] }),
-      nodeResolve(),
-      doCleanup(),
-      es3Poly(),
-      es3Check()
-    ]
-  };
-
-  if (isProduction) {
-    nodeRollupConfig.output.file = `dist/${outputName}.min.js`;
-    nodeRollupConfig.plugins.push(
-      uglify({
-        ie8: true,
-        ie: true,
-        toplevel: true,
-        compress: {
-          ie: true,
-          passes:3,
-          unsafe: true
-        },
-        output: {
-          ie: true,
-          preamble: banner,
-          webkit:true
-        }
-      })
-    );
-  }
-
-  return nodeRollupConfig;
-};
-
-updateDistEsmFiles(replaceValues, banner);
-
-export default [
-  browserRollupConfigFactory(true, version),
-  browserRollupConfigFactory(false, version),
-  browserRollupConfigFactory(true, version, 'cjs', '.cjs'),
-  browserRollupConfigFactory(false, version, 'cjs', '.cjs'),
-  browserRollupConfigFactory(true, version, 'iife', '.gbl'),
-  browserRollupConfigFactory(false, version, 'iife', '.gbl'),
-  nodeUmdRollupConfigFactory(true),
-  nodeUmdRollupConfigFactory(false)
-];
+    browser: {
+      entryPoint: browserEntryPointName,
+      outputName: browserOutputName
+    }
+  },
+  [ "applicationinsights-perfmarkmeasure-js" ], replaceValues, false);

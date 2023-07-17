@@ -1,13 +1,12 @@
-import nodeResolve from "@rollup/plugin-node-resolve";
-import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
-import replace from "@rollup/plugin-replace";
-import cleanup from "rollup-plugin-cleanup";
-import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
-import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
+import { createUnVersionedConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
-const outputName = "applicationinsights-properties-js";
+const browserEntryPointName = "applicationinsights-properties-js";
+const browserOutputName = "applicationinsights-properties-js";
+const entryPointName = "applicationinsights-properties-js";
+const outputName = "applicationinsights-properties-js"; 
+
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Properties Plugin, ${version}`,
@@ -20,126 +19,19 @@ const replaceValues = {
   "// Licensed under the MIT License.": ""
 };
 
-function doCleanup() {
-  return cleanup({
-    comments: [
-      'some', 
-      /^.\s*@DynamicProtoStub/i,
-      /^\*\*\s*@class\s*$/
-    ]
-  })
-}
+updateDistEsmFiles(replaceValues, banner, true, true, "dist-esm");
 
-const browserRollupConfigFactory = isProduction => {
-  const browserRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
-    output: {
-      file: `browser/${outputName}.js`,
-      banner: banner,
-      format: "umd",
-      name: "Microsoft.ApplicationInsights",
-      extend: true,
-      freeze: false,
-      sourcemap: true
+export default createUnVersionedConfig(banner, 
+  {
+    namespace: "Microsoft.ApplicationInsights",
+    version: version,
+    node: {
+      entryPoint: entryPointName,
+      outputName: outputName
     },
-    plugins: [
-      dynamicRemove(),
-      replace({
-        preventAssignment: true,
-        delimiters: ["", ""],
-        values: replaceValues
-      }),
-      importCheck({ exclude: [ "applicationinsights-properties-js" ] }),
-      nodeResolve({
-        browser: false,
-        preferBuiltins: false
-      }),
-      doCleanup(),
-      es3Poly(),
-      es3Check()
-    ]
-  };
-
-  if (isProduction) {
-    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
-    browserRollupConfig.plugins.push(
-      uglify({
-        ie8: true,
-        ie: true,
-        toplevel: true,
-        compress: {
-          ie: true,
-          passes:3,
-          unsafe: true
-        },
-        output: {
-          ie: true,
-          preamble: banner,
-          webkit:true
-        }
-      })
-    );
-  }
-
-  return browserRollupConfig;
-};
-
-const nodeUmdRollupConfigFactory = (isProduction) => {
-  const nodeRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
-    output: {
-      file: `dist/${outputName}.js`,
-      banner: banner,
-      format: "umd",
-      name: "Microsoft.ApplicationInsights",
-      extend: true,
-      freeze: false,
-      sourcemap: true
-    },
-    plugins: [
-      dynamicRemove(),
-      replace({
-        preventAssignment: true,
-        delimiters: ["", ""],
-        values: replaceValues
-      }),
-      importCheck({ exclude: [ "applicationinsights-properties-js" ] }),
-      nodeResolve(),
-      doCleanup(),
-      es3Poly(),
-      es3Check()
-    ]
-  };
-
-  if (isProduction) {
-    nodeRollupConfig.output.file = `dist/${outputName}.min.js`;
-    nodeRollupConfig.plugins.push(
-      uglify({
-        ie8: true,
-        ie: true,
-        toplevel: true,
-        compress: {
-          ie: true,
-          passes:3,
-          unsafe: true
-        },
-        output: {
-          ie: true,
-          preamble: banner,
-          webkit:true
-        }
-      })
-    );
-  }
-
-  return nodeRollupConfig;
-};
-
-updateDistEsmFiles(replaceValues, banner);
-
-export default [
-  browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false),
-  nodeUmdRollupConfigFactory(true),
-  nodeUmdRollupConfigFactory(false)
-];
+    browser: {
+      entryPoint: browserEntryPointName,
+      outputName: browserOutputName
+    }
+  },
+  [ outputName ], replaceValues, true);
