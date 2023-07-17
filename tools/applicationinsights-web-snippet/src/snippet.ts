@@ -178,7 +178,7 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
         }
     
         // Assigning these to local variables allows them to be minified to save space:
-        let targetSrc = (aiConfig as any)["url"] || snipConfig.src
+        let targetSrc : string = (aiConfig as any)["url"] || snipConfig.src
         if (targetSrc) {
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
                 // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
