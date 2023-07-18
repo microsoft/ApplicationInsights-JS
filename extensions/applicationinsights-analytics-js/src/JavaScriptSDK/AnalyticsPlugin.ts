@@ -286,11 +286,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
 
                 // Access the performance timing object
-                const navigationEntries = window.performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+                const navigationEntries = window.performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
                 // Get the value of loadEventStart
                 const navigationEntry = navigationEntries[0];
                 const loadEventStart = navigationEntry.loadEventStart;
-                pageView.startTime = new Date(loadEventStart);;
+                pageView.startTime = new Date(loadEventStart);
         
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,

@@ -62,4 +62,5 @@ export interface IPageViewTelemetryInternal extends IPageViewTelemetry {
      * Version of the part B schema, todo: set this value in trackpageView
      */
     ver?: string;
+    startTime?: Date;
 }

@@ -147,7 +147,7 @@ function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, tel
 
     _setValueIf(envelope, "sampleRate", telemetryItem[SampleRate]);
     if ((telemetryItem[strBaseData] || {}).startTime) {
-        envelope.time = toISOString(telemetryItem[strBaseData].startTime); 
+        envelope.time = toISOString(telemetryItem[strBaseData].startTime);
     } // siyu 3.0.3 time = loadEvent time, use startTime to record it
     envelope.iKey = telemetryItem.iKey;
     const iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
