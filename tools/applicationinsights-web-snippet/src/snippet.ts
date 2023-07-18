@@ -176,7 +176,7 @@ declare var cfg:ISnippetConfig;
         }
     
         // Assigning these to local variables allows them to be minified to save space:
-        let targetSrc = (aiConfig as any)["url"] || cfg.src
+        let targetSrc : string = (aiConfig as any)["url"] || cfg.src
         if (targetSrc) {
             const _handleError = (evt?: any) => {
                 loadFailed = true;
