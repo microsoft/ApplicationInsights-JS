@@ -1,7 +1,7 @@
 import { IConfiguration, random32 } from "@microsoft/applicationinsights-core-js"
 
 export function addListener() {
-    window.addEventListener("cfgsync", (e) => {
+    window.addEventListener("ai_cfgsync", (e) => {
         console.log("new event");
         console.log(e);
     })

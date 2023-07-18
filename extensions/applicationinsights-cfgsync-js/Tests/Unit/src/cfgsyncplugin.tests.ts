@@ -80,7 +80,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], true, "auto broadcast is on by default");
                 Assert.equal(targets[1], false, "receive changes is off by default");
-                Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
                 Assert.equal(patchEvnSpy.callCount, 1, "event is dispatched for one time");
                 let curMainCfg = this.mainInst.getCfg();
                 Assert.deepEqual(curMainCfg, this.core.config, "main config should be set");
@@ -122,7 +122,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], true, "auto broadcast is on by default");
                 Assert.equal(targets[1], false, "receive changes is on");
-                Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
                 Assert.equal(patchEvnSpy.callCount, 1, "event is dispatched");
                 Assert.equal(eventListenerStub.callCount, 0, "event listener is not added to broadcase mode instance");
 
@@ -151,7 +151,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], false, "auto broadcast is off by default");
                 Assert.equal(targets[1], true, "receive changes is on");
-                Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
                 Assert.equal(patchEvnSpy.callCount, 0, "no event should be dispatched");
                 Assert.equal(eventListenerStub.callCount, 1, "event listener is added to receive mode instance");
 
@@ -180,7 +180,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], false, "auto broadcast is off by default");
                 Assert.equal(targets[1], false, "receive changes is off");
-                Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
                 Assert.equal(patchEvnSpy.callCount, 0, "no event should be dispatched");
                 Assert.equal(eventListenerStub.callCount, 0, "no event listener is added to none mode instance");
 
@@ -235,7 +235,7 @@ export class CfgSyncPluginTests extends AITestClass {
                     let targets = this.mainInst["_getDbgPlgTargets"]();
                     Assert.equal(targets[0], true, "auto broadcast is on by default");
                     Assert.equal(targets[1], false, "receive changes is off");
-                    Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                    Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
                     let curMainCfg = this.mainInst.getCfg();
                     Assert.deepEqual(curMainCfg, config, "main config should be get from url");
                     Assert.equal(patchEvnSpy.callCount, 1, "event should be dispatched");
@@ -289,7 +289,7 @@ export class CfgSyncPluginTests extends AITestClass {
                     let targets = this.mainInst["_getDbgPlgTargets"]();
                     Assert.equal(targets[0], true, "auto braodcast is on by default");
                     Assert.equal(targets[1], false, "receive changes is off");
-                    Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                    Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
                     let curMainCfg = this.mainInst.getCfg();
                     Assert.deepEqual(curMainCfg, config, "main config should be get from url");
                     Assert.equal(fetchStub.callCount, 2, "fetch is called 2 times");
@@ -345,7 +345,7 @@ export class CfgSyncPluginTests extends AITestClass {
                     let targets = this.mainInst["_getDbgPlgTargets"]();
                     Assert.equal(targets[0], true, "auto braodcast is on by default");
                     Assert.equal(targets[1], false, "receive changes is off");
-                    Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                    Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
                     let curMainCfg = this.mainInst.getCfg();
                     Assert.deepEqual(curMainCfg, null, "main config should not be set from url");
                     Assert.equal(fetchStub.callCount, 2, "fetch is called 2 times");
@@ -397,7 +397,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], true, "auto broadcast is on by default");
                 Assert.equal(targets[1], false, "receive changes is off");
-                Assert.equal(targets[2], "cfgsync", "default event name is set by default");
+                Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
                 Assert.equal(patchEvnSpy.callCount, 1, "event should be dispatched");
                 let curMainCfg = this.mainInst.getCfg();
                 Assert.deepEqual(curMainCfg, this.core.config, "main config should be set");
@@ -405,7 +405,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let listenerTargets = listener["_getDbgPlgTargets"]();
                 Assert.equal(listenerTargets[0], false, "auto broadcast is off by default");
                 Assert.equal(listenerTargets[1], true, "receive changes is true");
-                Assert.equal(listenerTargets[2], "cfgsync", "default event name is set by default");
+                Assert.equal(listenerTargets[2], "ai_cfgsync", "default event name is set by default");
                 Assert.equal(patchEvnSpy.callCount, 1, "event should not be dispatched");
                 Assert.equal(eventListenerStub.callCount, 1, "event listener is added");
                 let curListenerMainCfg = listener.getCfg();

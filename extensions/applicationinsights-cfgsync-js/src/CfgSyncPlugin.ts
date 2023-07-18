@@ -12,14 +12,16 @@ import {
     sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, isFunction, isNullOrUndefined, objDeepFreeze, objExtend, scheduleTimeout } from "@nevware21/ts-utils";
+import {
+    ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, scheduleTimeout
+} from "@nevware21/ts-utils";
 import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import {
     ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
 } from "./Interfaces/ICfgSyncConfig";
 import { ICfgSyncPlugin } from "./Interfaces/ICfgSyncPlugin";
 
-const evtName = "cfgsync";
+const EVENT_NAME = "ai_cfgsync";
 const STR_GET_METHOD = "GET";
 const FETCH_SPAN = 1800000; // 30 minutes
 const udfVal: undefined = undefined;
@@ -51,7 +53,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _timeoutHandle: ITimerHandler;
         let _receiveChanges: boolean;
         let _broadcastChanges: boolean;
-        let _fetchSpan: number;
+        let _fetchTimeout: number;
         let _retryCnt: number;
         let _onCfgChangeReceive: (event: ICfgSyncEvent) => void;
         let _nonOverrideConfigs: NonOverrideCfg;
@@ -105,7 +107,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _broadcastChanges = null;
                 _nonOverrideConfigs = null;
                 _timeoutHandle = null;
-                _fetchSpan = null;
+                _fetchTimeout = null;
                 _retryCnt = null;
                 _overrideFetchFn = null;
                 _overrideSyncFn = null;
@@ -127,14 +129,14 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         _broadcastChanges = _extensionConfig.syncMode === ICfgSyncMode.Broadcast;
                     }
                    
-                    let _newEvtName =  _extensionConfig.customEvtName || evtName;
-                    if (_evtName !== _newEvtName) {
+                    let newEvtName =  _extensionConfig.customEvtName || EVENT_NAME;
+                    if (_evtName !== newEvtName) {
                         if (_receiveChanges) {
-                            _updateEventListenerName(_newEvtName);
+                            _updateEventListenerName(newEvtName);
 
                         } else {
                             _eventOff();
-                            _evtName = _newEvtName;
+                            _evtName = newEvtName;
                         }
 
                     }
@@ -157,14 +159,13 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _overrideFetchFn = _extensionConfig.overrideFetchFn;
                 _onCfgChangeReceive = _extensionConfig.onCfgChangeReceive;
                 _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs;
-                _fetchSpan = _extensionConfig.scheduleFetchTimeout;
+                _fetchTimeout = _extensionConfig.scheduleFetchTimeout;
                 
                 // NOT support cfgURL change to avoid mutiple fetch calls
                 if (_cfgUrl) {
                     _retryCnt = 0;
                     _fetchFn = _getFetchFnInterface();
                     _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
-                    _setupTimer();
                 }
             }
 
@@ -239,13 +240,17 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                             method: STR_GET_METHOD
                         };
                         const request = new Request(url, init);
+                       
                         doAwaitResponse(fetch(request), (result) => {
+                            let response = result.value;
+                          
                             if (!result.rejected) {
-                                let response = result.value;
                                 if (response.ok) {
                                     doAwaitResponse(response.text(), (res) => {
                                         _doOnComplete(oncomplete, response.status, res.value, isAutoSync);
                                     });
+                                } else {
+                                    _doOnComplete(oncomplete, response.status, null, isAutoSync);
                                 }
                             }
                         });
@@ -282,6 +287,11 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     } else {
                         _retryCnt ++;
                     }
+                    
+                    if (_retryCnt < 3) {
+                        _setupTimer();
+                    }
+                    
                 } catch (e) {
                     // eslint-disable-next-line no-empty
                 }
@@ -301,12 +311,14 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     if (global) {
                         try {
                             eventOn(global, _evtName, (event: any) => {
+                                // TODO: add more validation here
+                                // may include a "name" or some other features to check
                                 let cfgEvent = event && (event as any).detail;
                                 if (_onCfgChangeReceive && cfgEvent) {
-                                    _onCfgChangeReceive(cfgEvent);
+                                    cfgEvent && _onCfgChangeReceive(cfgEvent);
                                 } else {
                                     let cfg = cfgEvent && cfgEvent.cfg;
-                                    let newCfg = cfg && _replaceTartgetByKeys(cfg);
+                                    let newCfg = cfg && isPlainObject(cfg) && _replaceTartgetByKeys(cfg);
                                     newCfg && _self.core.updateCfg(newCfg);
                                 }
                             }, _evtNamespace, true);
@@ -334,15 +346,11 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
              * Sets up the timer which triggers fetching cdn every 30mins after inital call
              */
             function _setupTimer() {
-                if (!_timeoutHandle && _fetchSpan) {
+                if (!_timeoutHandle && _fetchTimeout) {
                     _timeoutHandle = scheduleTimeout(() => {
                         _timeoutHandle = null;
                         _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
-                        if (_retryCnt < 3) {
-                            _setupTimer(); // only set new timer when retry count < 3
-                        }
-                        
-                    }, _fetchSpan);
+                    }, _fetchTimeout);
                     _timeoutHandle.unref();
                 }
             }
