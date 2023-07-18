@@ -85,9 +85,9 @@ module.exports = function (grunt) {
                     `    connectionString: "YOUR_CONNECTION_STRING"\n` +
                     `}`;
 
+                    // We assign a value to SnippetConfig and then forcefully overwrite it into the function input.
                     var overWriteString = snippetBuffer.replace(/"use strict";function e\(/, "'use strict';function e(cfg");
                     overWriteString = overWriteString.replace(/e\(\);\n\/\/# source/, "e(\n{" + codeSnippet + "}\n//# source");
-                    // We assign a value to SnippetConfig and then forcefully overwrite it into the function input.
 
                     return [{
                         pattern: snippetBuffer,
