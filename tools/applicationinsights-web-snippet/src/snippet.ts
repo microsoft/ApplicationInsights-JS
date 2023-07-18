@@ -42,6 +42,15 @@ declare var cfg:ISnippetConfig;
             version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
             config: aiConfig
         };
+        function isIE() {
+            let nav = navigator;
+            if (nav) {
+                let userAgent = (nav.userAgent || "").toLowerCase();
+                return (userAgent.indexOf("msie") !== -1 || userAgent.indexOf("trident/") !== -1);
+            }
+            return false;
+        }
+       
         function _parseConnectionString() {
             let fields:Fields = {};
             let connectionString = aiConfig.connectionString;
@@ -178,6 +187,13 @@ declare var cfg:ISnippetConfig;
         // Assigning these to local variables allows them to be minified to save space:
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src
         if (targetSrc) {
+            if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
+                // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
+                targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {
+                    return g1 + "ai.2" + g2;
+                });
+                // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
+            }
             const _handleError = (evt?: any) => {
                 loadFailed = true;
                 appInsights.queue = []; // Clear the queue
