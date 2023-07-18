@@ -315,7 +315,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                                 // may include a "name" or some other features to check
                                 let cfgEvent = event && (event as any).detail;
                                 if (_onCfgChangeReceive && cfgEvent) {
-                                    cfgEvent && _onCfgChangeReceive(cfgEvent);
+                                    _onCfgChangeReceive(cfgEvent);
                                 } else {
                                     let cfg = cfgEvent && cfgEvent.cfg;
                                     let newCfg = cfg && isPlainObject(cfg) && _replaceTartgetByKeys(cfg);
