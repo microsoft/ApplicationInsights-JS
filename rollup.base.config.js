@@ -90,7 +90,7 @@ const getIntro = (format, theNameSpace, moduleName, theVersion) => {
         theIntro += prefix + "    // Always set the imported value into the \"export\" versioned namespace (last-write wins)\n";
         theIntro += prefix + "    nm=\"x\", exportNs[key]=theExports[key], expNameVer[key]=ver;\n";
         theIntro += prefix + "    // Overwrite every elements in namespace and record (last-write wins)\n";
-        theIntro += prefix + "    typeof destNs[key]===undef ? (nm=\"n\", destNs[key]=theExports[key]) && (destNameVer[key]=ver)";
+        theIntro += prefix + "    nm=\"n\", destNs[key]=theExports[key],  destNameVer[key]=ver;";
         theIntro += prefix + "    (modDetail[nm] = (modDetail[nm] || [])).push(key);\n";
         theIntro += prefix + "}\n";
         
