@@ -20,7 +20,7 @@ import {
     isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { getPerformance, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -285,12 +285,18 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
 
-                // Access the performance timing object
-                const navigationEntries = window.performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
-                // Get the value of loadEventStart
-                const navigationEntry = navigationEntries[0];
-                const loadEventStart = navigationEntry.loadEventStart;
-                pageView.startTime = new Date(loadEventStart);
+                let perf = getPerformance();
+                if (perf && perf.getEntriesByType && perf.getEntriesByType("navigation")) {
+                    // Access the performance timing object
+                    const navigationEntries = perf.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+                    // Get the value of loadEventStart
+                    const navigationEntry = navigationEntries[0];
+                    const loadEventStart = navigationEntry.loadEventStart;
+                    pageView.startTime = new Date(loadEventStart);
+                } else {
+                    // calculate the start time manually
+                    pageView.startTime = new Date(Date.now() - pageView.properties.duration);
+                }
         
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,

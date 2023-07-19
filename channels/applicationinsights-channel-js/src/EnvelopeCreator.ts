@@ -147,8 +147,10 @@ function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, tel
 
     _setValueIf(envelope, "sampleRate", telemetryItem[SampleRate]);
     if ((telemetryItem[strBaseData] || {}).startTime) {
+        // Starting from Version 3.0.3, the time property will be assigned by the startTime value,
+        // which records the loadEvent time for the pageView event.
         envelope.time = toISOString(telemetryItem[strBaseData].startTime);
-    } // siyu 3.0.3 time = loadEvent time, use startTime to record it
+    }
     envelope.iKey = telemetryItem.iKey;
     const iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
     envelope.name = envelope.name.replace("{0}", iKeyNoDashes);

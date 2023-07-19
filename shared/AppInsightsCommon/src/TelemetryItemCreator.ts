@@ -48,7 +48,6 @@ export function createTelemetryItem<T>(item: T,
         },
         baseType,
         baseData: item // Part B
-        // siyu telemetryItem[strBaseData].startTime = loadEventStart Time
     };
 
     // Part C

@@ -109,7 +109,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
         /**
          * timestamp used to track number of seconds since webpage was loaded
          */
-        let startTime: number = +new Date(); // siyu cannot understand the plus here
+        let startTime: number = +new Date();
 
         /**
          * the config for this plugin

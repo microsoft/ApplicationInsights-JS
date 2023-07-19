@@ -60,7 +60,7 @@ export class PerfEvent implements IPerfEvent {
     setCtx?: (key: string, value: any) => void;
 
     complete: () => void;
-// analyticsplugin sendPageviewinternal track(telemetryItem) SET THE STARTTIME
+    // analyticsplugin sendPageviewinternal track(telemetryItem) SET THE STARTTIME
     constructor(name: string, payloadDetails: () => any, isAsync: boolean) {
         let _self = this;
         _self.start = utcNow();
