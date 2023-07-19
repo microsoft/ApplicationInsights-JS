@@ -12,7 +12,7 @@ export interface IDependencyTelemetry extends IPartC {
     name?: string;
     duration?: number;
     success?: boolean;
-    startTime?: Date; // thisone
+    startTime?: Date;
     responseCode: number;
     correlationContext?: string;
     type?: string;
