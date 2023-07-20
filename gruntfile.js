@@ -446,6 +446,10 @@ module.exports = function (grunt) {
                                          path: "./extensions/applicationinsights-properties-js",
                                          unitTestName: "prop.tests.js"
                                      },
+            "cfgsync":               {
+                                        path: "./extensions/applicationinsights-cfgsync-js",
+                                        unitTestName: "cfgsync.tests.js"
+                                    },
             // Examples
             "example-shared-worker": {
                                         autoMinify: false,
@@ -743,6 +747,12 @@ module.exports = function (grunt) {
          grunt.registerTask("properties-restore", restoreTasks("properties"));
          grunt.registerTask("propertiestests", tsTestActions("properties"));
          grunt.registerTask("properties-mintests", tsTestActions("properties", true));
+
+         grunt.registerTask("cfgsync", tsBuildActions("cfgsync"));
+         grunt.registerTask("cfgsync-min", minTasks("cfgsync"));
+         grunt.registerTask("cfgsync-restore", restoreTasks("cfgsync"));
+         grunt.registerTask("cfgsynctests", tsTestActions("cfgsync"));
+         grunt.registerTask("cfgsync-mintests", tsTestActions("cfgsync", true));
  
          grunt.registerTask("deps", tsBuildActions("deps"));
          grunt.registerTask("deps-min", minTasks("deps"));
