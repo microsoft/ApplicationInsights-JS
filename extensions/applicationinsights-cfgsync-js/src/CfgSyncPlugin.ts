@@ -23,17 +23,17 @@ import { ICfgSyncPlugin } from "./Interfaces/ICfgSyncPlugin";
 
 const EVENT_NAME = "ai_cfgsync";
 const STR_GET_METHOD = "GET";
-const FETCH_SPAN = 1800000; // 30 minutes
+const FETCH_TIMEOUT = 1800000; // 30 minutes
 const udfVal: undefined = undefined;
 let defaultNonOverrideCfg: NonOverrideCfg  = {instrumentationKey: true, connectionString: true, endpointUrl: true }
 const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     syncMode: ICfgSyncMode.Broadcast,
     customEvtName: udfVal,
     cfgUrl: udfVal, // as long as it is set to NOT NUll, we will NOT use config from core
-    overrideSyncFunc: udfVal,
-    overrideFetchFunc: udfVal,
+    overrideSyncFn: udfVal,
+    overrideFetchFn: udfVal,
     onCfgChangeReceive: udfVal,
-    scheduleFetchTimeout: FETCH_SPAN,
+    scheduleFetchTimeout: FETCH_TIMEOUT,
     nonOverrideConfigs: defaultNonOverrideCfg
 });
 
@@ -358,6 +358,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             function _clearScheduledTimer() {
                 _timeoutHandle && _timeoutHandle.cancel();
                 _timeoutHandle = null;
+                _retryCnt = 0;
             }
         
 

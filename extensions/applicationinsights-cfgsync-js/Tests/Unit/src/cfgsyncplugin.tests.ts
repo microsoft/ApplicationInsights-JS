@@ -68,8 +68,8 @@ export class CfgSyncPluginTests extends AITestClass {
                     syncMode: ICfgSyncMode.Broadcast,
                     customEvtName: udfVal,
                     cfgUrl: udfVal,
-                    overrideSyncFunc: udfVal,
-                    overrideFetchFunc: udfVal,
+                    overrideSyncFn: udfVal,
+                    overrideFetchFn: udfVal,
                     onCfgChangeReceive: udfVal,
                     scheduleFetchTimeout: 1800000,
                     nonOverrideConfigs: defaultNonOverrideCfg
@@ -103,6 +103,41 @@ export class CfgSyncPluginTests extends AITestClass {
                 Assert.equal(patchEvnSpy.callCount, 3, "event dispatch should be called again");
                 curMainCfg = this.mainInst.getCfg();
                 Assert.deepEqual(curMainCfg, this.core.config, "main config should be set test2");
+            }
+
+        });
+
+ 
+        this.testCase({
+            name: "CfgSyncPlugin: override function configs from root",
+            useFakeTimers: true,
+            test: () => {
+                this.onDone(() => {
+                    this.core.unload(false);
+                });
+                let called = 0;
+                let send = 0;
+                let overrideSyncFn = (config?:IConfiguration & IConfig, customDetails?: any) =>  {
+                    called ++;
+                    return true;
+                }
+                let onCompleteCallback = (status: number, response?: string, isAutoSync?: boolean) => {
+                    return;
+                };
+                let sendGetFunction = (url: string, oncomplete: any, isAutoSync?: boolean) => {
+                    send++;
+                    return;
+                };
+                this.core.initialize({instrumentationKey: "Test-iKey",  extensions: [this.mainInst], extensionConfig: {[this.identifier]: {overrideSyncFn: overrideSyncFn, overrideFetchFn: sendGetFunction} as ICfgSyncConfig}}, [this._channel]);
+                this.core.config.extensionConfig = this.core.config.extensionConfig || {};
+                let actualsyncFn = this.core.config.extensionConfig[this.identifier].overrideSyncFn;
+                let actualFetchFn = this.core.config.extensionConfig[this.identifier].overrideFetchFn;
+                actualsyncFn();
+                Assert.equal(called, 1, "sync function should be replced");
+
+                actualFetchFn("test", onCompleteCallback);
+                Assert.equal(send, 1, "fetch function should be replced");
+
             }
 
         });
