@@ -133,7 +133,7 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
         output: {
             file: outputPath,
             banner: banner,
-            format: format,
+            format: 'cjs',
             name: theNameSpace.browser,
             extend: true,
             freeze: false,
