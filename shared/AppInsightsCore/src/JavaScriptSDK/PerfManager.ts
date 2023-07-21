@@ -129,7 +129,6 @@ export class PerfEvent implements IPerfEvent {
             }
 
             _self.time = utcNow() - _self.start;
-            
             _self.exTime = _self.time - childTime;
             _self.complete = () => {};
         };

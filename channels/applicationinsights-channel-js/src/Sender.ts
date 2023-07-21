@@ -366,7 +366,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _maxBatchInterval = senderConfig.maxBatchInterval;
                 }));
             };
-            
             _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
                 let diagLogger = itemCtx.diagLog();

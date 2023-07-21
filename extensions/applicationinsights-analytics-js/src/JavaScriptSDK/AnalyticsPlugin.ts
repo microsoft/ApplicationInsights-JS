@@ -292,14 +292,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     // Get the value of loadEventStart
                     const navigationEntry = navigationEntries[0];
                     const loadEventStart = navigationEntry.loadEventStart;
-                    // console.log("loadeventStart", loadEventStart);
-                    pageView.startTime =  new Date(new Date().getTime() -loadEventStart);
-                    console.log("--------start time if startTime", pageView.startTime.toISOString());
-
+                    pageView.startTime =  new Date(perf.timeOrigin + loadEventStart);
                 } else {
                     // calculate the start time manually
                     pageView.startTime = new Date(new Date().getTime() - pageView.properties.duration);
-                    console.log("--------start time else startTime", pageView.startTime.toISOString());
                 }
 
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
@@ -309,7 +305,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.diagLog(),
                     properties,
                     systemProperties);
-        
+
                 _self.core.track(telemetryItem);
                 // reset ajaxes counter
                 _trackAjaxAttempts = 0;
