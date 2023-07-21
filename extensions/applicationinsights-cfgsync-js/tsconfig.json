@@ -14,13 +14,13 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "extensions/applicationinsights-cfgsync-js/types",
+    "declarationDir": "./types",
     "outDir": "./dist-esm",
-    "rootDir": "./extensions/applicationinsights-cfgsync-js/src"
+    "rootDir": "./src"
 
   },
   "include": [
-    "src/**/*.ts"
+    "./src/**/*.ts"
   ],
   "exclude": [
     "node_modules"

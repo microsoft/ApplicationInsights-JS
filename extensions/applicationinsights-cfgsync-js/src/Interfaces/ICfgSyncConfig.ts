@@ -34,7 +34,7 @@ export interface ICfgSyncConfig {
      * Identifies configs that should NOT be changed by other instances.
      * Default to {instrumentationKey: true, connectionString: true, endpointUrl: true }
      */
-    nonOverrideConfigs?: () => NonOverrideCfg;
+    nonOverrideConfigs?: NonOverrideCfg;
     /**
      * Identifies time interval (in ms) that should fetch from cfgUrl.
      * Default to 30 mins, 30*60*1000ms.

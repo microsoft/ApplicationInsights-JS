@@ -6,9 +6,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IConfig } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext,
-    createUniqueNamespace, eventOff, eventOn, getGlobal, getJSON, isFetchSupported, isFunction, isNullOrUndefined, isPlainObject, isXhrSupported, mergeEvtNamespace, objExtend, objForEachKey, onConfigChange,
+    BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
+    ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext, createUniqueNamespace, eventOff, eventOn, getGlobal,
+    getJSON, isFetchSupported, isFunction, isNullOrUndefined, isPlainObject, isXhrSupported, mergeEvtNamespace, objExtend, objForEachKey,
     sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
@@ -31,7 +31,7 @@ function _getDefaultConfig(): ICfgSyncConfig {
         overrideFetchFn: udfVal,
         onCfgChangeReceive: udfVal,
         scheduleFetchTimeout: FETCH_SPAN,
-        nonOverrideConfigs: () => defaultNonOverrideCfg
+        nonOverrideConfigs: defaultNonOverrideCfg
     };
     return config;
 }
@@ -96,7 +96,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_broadcastChanges, _receiveChanges, _evtName];
+                return [_broadcastChanges, _receiveChanges, _evtName, _extensionConfig];
             };
     
             function _initDefaults() {
@@ -121,26 +121,14 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
                 const defaultConfig = _getDefaultConfig();
                 _extensionConfig = _extensionConfig || {} as ICfgSyncConfig;
-                objForEachKey(defaultConfig, (field, value) => {
+                objForEachKey(defaultConfig, (field, value: any) => {
                     _extensionConfig[field] = ctx.getConfig(identifier, field, value);
                 });
-
-                if (isNullOrUndefined(_receiveChanges)) {
-                    _receiveChanges = _extensionConfig.syncMode === ICfgSyncMode.Receive;
-                }
-                if (isNullOrUndefined(_broadcastChanges)) {
-                    _broadcastChanges = _extensionConfig.syncMode === ICfgSyncMode.Broadcast;
-                }
-               
-                let newEvtName =  _extensionConfig.customEvtName || EVENT_NAME;
-                if (_evtName !== newEvtName) {
-                    if (_receiveChanges) {
-                        _updateEventListenerName(newEvtName);
-
-                    } else {
-                        _eventOff();
-                        _evtName = newEvtName;
-                    }
+                _receiveChanges = _extensionConfig.syncMode === ICfgSyncMode.Receive;
+                _broadcastChanges = _extensionConfig.syncMode === ICfgSyncMode.Broadcast;
+                _evtName =  _extensionConfig.customEvtName || EVENT_NAME;
+                if (_receiveChanges) {
+                    _updateEventListenerName(_evtName);
                 }
 
                 if (isNullOrUndefined(_cfgUrl)) {
@@ -149,7 +137,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 // if cfgUrl is set, we will ignore core config change
                 if (!_cfgUrl) {
                     _mainConfig = config;
-                    
                     if (_broadcastChanges) {
                         objExtend({}, config);
                         _sendCfgsyncEvents();
@@ -159,12 +146,11 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _overrideSyncFn = _extensionConfig.overrideSyncFn;
                 _overrideFetchFn = _extensionConfig.overrideFetchFn;
                 _onCfgChangeReceive = _extensionConfig.onCfgChangeReceive;
-                _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs();
+                _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs;
                 _fetchTimeout = _extensionConfig.scheduleFetchTimeout;
+                _retryCnt = 0;
                 
-                // NOT support cfgURL change to avoid mutiple fetch calls
                 if (_cfgUrl) {
-                    _retryCnt = 0;
                     _fetchFn = _getFetchFnInterface();
                     _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
                 }
@@ -220,6 +206,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
 
             function _getFetchFnInterface() {
+                
                 let _fetchFn = _overrideFetchFn;
                 if (isNullOrUndefined(_fetchFn)) {
                     if (isFetchSupported()) {
@@ -241,9 +228,9 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                             method: STR_GET_METHOD
                         };
                         const request = new Request(url, init);
-
-                        fetch(request).then((response) => {
                        
+                        fetch(request).then((response) => {
+                          
                             if (response.ok) {
                                 response.text().then((text) => {
                                     _doOnComplete(oncomplete, response.status, text, isAutoSync);
@@ -321,7 +308,10 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                                 } else {
                                     let cfg = cfgEvent && cfgEvent.cfg;
                                     let newCfg = cfg && isPlainObject(cfg) && _replaceTartgetByKeys(cfg);
-                                    newCfg && _self.core.updateCfg(newCfg);
+                                    if (newCfg) {
+                                        _mainConfig = newCfg;
+                                    }
+                                   
                                 }
                             }, _evtNamespace, true);
 

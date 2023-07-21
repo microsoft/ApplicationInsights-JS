@@ -560,12 +560,13 @@
     "node_modules/@rush-temp/applicationinsights-cfgsync-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-cfgsync-js.tgz",
-      "integrity": "sha512-djy1LI17+60mkdAzVQ6fkFBLzOkft4j8LbO2qKF/9g2d3ynFo2O7IhUD+iiWwUoNLuox7Q2oot1Ry4LotPAWlw==",
+      "integrity": "sha512-/d8pJyTGweHyt7w2sE899fzA8k9yoV73nq4kevfH8AFuKtZ70nWvaIPEVtpYQym+3uXiwyyFrKT9yrTMmVlBwg==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.18.1",
         "@microsoft/dynamicproto-js": "^1.1.9",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/ts-async": ">= 0.1.0 < 2.x",
         "@rollup/plugin-commonjs": "^18.0.0",
         "@rollup/plugin-node-resolve": "^11.2.1",
         "@rollup/plugin-replace": "^2.3.3",
@@ -2232,9 +2233,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.465",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.465.tgz",
-      "integrity": "sha512-XQcuHvEJRMU97UJ75e170mgcITZoz0lIyiaVjk6R+NMTJ8KBIvUHYd1779swgOppUlzxR+JsLpq59PumaXS1jQ=="
+      "version": "1.4.467",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.467.tgz",
+      "integrity": "sha512-2qI70O+rR4poYeF2grcuS/bCps5KJh6y1jtZMDDEteyKJQrzLOEhFyXCLcHW6DTBjKjWkk26JhWoAi+Ux9A0fg=="
     },
     "node_modules/encodeurl": {
       "version": "1.0.2",
@@ -5853,12 +5854,13 @@
     },
     "@rush-temp/applicationinsights-cfgsync-js": {
       "version": "file:projects\\applicationinsights-cfgsync-js.tgz",
-      "integrity": "sha512-djy1LI17+60mkdAzVQ6fkFBLzOkft4j8LbO2qKF/9g2d3ynFo2O7IhUD+iiWwUoNLuox7Q2oot1Ry4LotPAWlw==",
+      "integrity": "sha512-/d8pJyTGweHyt7w2sE899fzA8k9yoV73nq4kevfH8AFuKtZ70nWvaIPEVtpYQym+3uXiwyyFrKT9yrTMmVlBwg==",
       "requires": {
         "@microsoft/api-extractor": "^7.18.1",
         "@microsoft/dynamicproto-js": "^1.1.9",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/ts-async": ">= 0.1.0 < 2.x",
         "@rollup/plugin-commonjs": "^18.0.0",
         "@rollup/plugin-node-resolve": "^11.2.1",
         "@rollup/plugin-replace": "^2.3.3",
@@ -7180,9 +7182,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "electron-to-chromium": {
-      "version": "1.4.465",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.465.tgz",
-      "integrity": "sha512-XQcuHvEJRMU97UJ75e170mgcITZoz0lIyiaVjk6R+NMTJ8KBIvUHYd1779swgOppUlzxR+JsLpq59PumaXS1jQ=="
+      "version": "1.4.467",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.467.tgz",
+      "integrity": "sha512-2qI70O+rR4poYeF2grcuS/bCps5KJh6y1jtZMDDEteyKJQrzLOEhFyXCLcHW6DTBjKjWkk26JhWoAi+Ux9A0fg=="
     },
     "encodeurl": {
       "version": "1.0.2",
