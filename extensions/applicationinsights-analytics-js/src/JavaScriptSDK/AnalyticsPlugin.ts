@@ -286,11 +286,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
 
                 let perf = getPerformance();
-                if (perf && perf.getEntriesByType && perf.getEntriesByType("navigation")) {
-                    // Access the performance timing object
-                    const navigationEntries = perf.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+                 // Access the performance timing object
+                const navigationEntries = (perf && perf.getEntriesByType && perf.getEntriesByType("navigation")); 
+                if (navigationEntries) {
                     // Get the value of loadEventStart
-                    const navigationEntry = navigationEntries[0];
+                    const navigationEntry = navigationEntries[0] as PerformanceNavigationTiming;;
                     const loadEventStart = navigationEntry.loadEventStart;
                     pageView.startTime =  new Date(perf.timeOrigin + loadEventStart);
                 } else {
