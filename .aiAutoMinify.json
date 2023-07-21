@@ -63,6 +63,11 @@
         },
         "@microsoft/applicationinsights-teechannel-js": {
             "constEnums": []
+        },
+        "@microsoft/applicationinsights-cfgsync-js": {
+            "constEnums": [
+                "ICfgSyncMode"
+            ]
         }
     }
 }
