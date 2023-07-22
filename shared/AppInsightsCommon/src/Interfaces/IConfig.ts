@@ -386,6 +386,13 @@ export interface IConfig {
      * should not be excluded.
      */
     addIntEndpoints?: boolean;
+
+    /**
+     * Custom optional value that will be added as a prefix for storage name.
+     * @defaultValue undefined
+     */
+    storagePrefix?: string;
+
 }
 
 export class ConfigurationManager {
