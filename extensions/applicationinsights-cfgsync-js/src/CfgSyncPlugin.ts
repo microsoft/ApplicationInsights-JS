@@ -8,8 +8,8 @@ import { IConfig } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
     ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext, createUniqueNamespace, eventOff, eventOn, getGlobal,
-    getJSON, isFetchSupported, isFunction, isNullOrUndefined, isPlainObject, isXhrSupported, mergeEvtNamespace, objExtend, objForEachKey,
-    sendCustomEvent
+    getJSON, isFetchSupported, isFunction, isNullOrUndefined, isPlainObject, isString, isXhrSupported, mergeEvtNamespace, objExtend,
+    objForEachKey, sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import {
@@ -113,6 +113,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _overrideFetchFn = null;
                 _overrideSyncFn = null;
                 _onCfgChangeReceive = null;
+                _fetchFn = null;
             }
 
             function _populateDefaults(config: IConfiguration) {
@@ -126,13 +127,14 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 });
                 _receiveChanges = _extensionConfig.syncMode === ICfgSyncMode.Receive;
                 _broadcastChanges = _extensionConfig.syncMode === ICfgSyncMode.Broadcast;
-                _evtName =  _extensionConfig.customEvtName || EVENT_NAME;
+                _evtName = _extensionConfig.customEvtName || EVENT_NAME;
                 if (_receiveChanges) {
                     _updateEventListenerName(_evtName);
                 }
 
-                if (isNullOrUndefined(_cfgUrl)) {
-                    _cfgUrl = _extensionConfig.cfgUrl;
+                let extUrl = _extensionConfig.cfgUrl;
+                if (extUrl && isString(extUrl)) {
+                    _cfgUrl = extUrl;
                 }
                 // if cfgUrl is set, we will ignore core config change
                 if (!_cfgUrl) {
@@ -142,10 +144,16 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         _sendCfgsyncEvents();
                     }
                 }
+                if (_extensionConfig.overrideSyncFn) {
+                    _overrideSyncFn = _extensionConfig.overrideSyncFn;
+                }
+                if (_extensionConfig. overrideFetchFn) {
+                    _overrideFetchFn = _extensionConfig. overrideFetchFn;
+                }
+                if ( _extensionConfig.onCfgChangeReceive) {
+                    _onCfgChangeReceive = _extensionConfig.onCfgChangeReceive;
+                }
 
-                _overrideSyncFn = _extensionConfig.overrideSyncFn;
-                _overrideFetchFn = _extensionConfig.overrideFetchFn;
-                _onCfgChangeReceive = _extensionConfig.onCfgChangeReceive;
                 _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs;
                 _fetchTimeout = _extensionConfig.scheduleFetchTimeout;
                 _retryCnt = 0;
@@ -206,7 +214,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
 
             function _getFetchFnInterface() {
-                
                 let _fetchFn = _overrideFetchFn;
                 if (isNullOrUndefined(_fetchFn)) {
                     if (isFetchSupported()) {
