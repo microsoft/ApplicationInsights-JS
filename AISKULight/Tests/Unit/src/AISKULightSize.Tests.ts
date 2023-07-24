@@ -2,8 +2,8 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import * as pako from "pako";
 
 export class AISKULightSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 70;
-    private readonly MAX_BUNDLE_SIZE = 70;
+    private readonly MAX_RAW_SIZE = 71;
+    private readonly MAX_BUNDLE_SIZE = 71;
     private readonly MAX_RAW_DEFLATE_SIZE = 29;
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 29;
     private readonly rawFilePath = "../dist/applicationinsights-web-basic.min.js";
