@@ -13,7 +13,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
-import { dumpObj, objHasOwnProperty } from "@nevware21/ts-utils";
+import { dumpObj, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "../../../src/AISku";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -1070,7 +1070,7 @@ export class SnippetInitializationTests extends AITestClass {
                     // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                     if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
                         currentCount ++;
-                        console.log(" - " + JSON.stringify(call));
+                        //console.log(" - " + strSubstring(JSON.stringify(call), 400));
                     }
                 });
             });

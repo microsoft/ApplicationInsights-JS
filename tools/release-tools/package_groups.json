@@ -15,6 +15,26 @@
         "./extensions/applicationinsights-clickanalytics-js",
         "./extensions/applicationinsights-perfmarkmeasure-js",
         "./extensions/applicationinsights-debugplugin-js",
+        "./channels/tee-channel-js",
+        "./shared/1ds-core-js",
+        "./channels/1ds-post-js"
+    ],
+    "1ds": [
+        "./shared/1ds-core-js",
+        "./channels/1ds-post-js"
+    ],
+    "aionly": [
+        "./shared/AppInsightsCore",
+        "./shared/AppInsightsCommon",
+        "./AISKU",
+        "./AISKULight",
+        "./extensions/applicationinsights-analytics-js",
+        "./extensions/applicationinsights-properties-js",
+        "./channels/applicationinsights-channel-js",
+        "./extensions/applicationinsights-dependencies-js",
+        "./extensions/applicationinsights-clickanalytics-js",
+        "./extensions/applicationinsights-perfmarkmeasure-js",
+        "./extensions/applicationinsights-debugplugin-js",
         "./channels/tee-channel-js"
     ],
     // Rollup packages

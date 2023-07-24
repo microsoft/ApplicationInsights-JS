@@ -3,7 +3,7 @@ import { Sender } from "../../../src/Sender";
 import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, getGlobalInst,  safeGetLogger, getJSON, isString, isArray, arrForEach } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, getGlobalInst,  safeGetLogger, getJSON, isString, isArray, arrForEach, isBeaconsSupported } from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { ISenderConfig } from "../../../src/Interfaces";
 
@@ -39,6 +39,8 @@ export class SenderTests extends AITestClass {
     public testInitialize() {
         this._sender = new Sender();
         this._offline = createOfflineListener("SenderTests");
+        // Reset the cached isBeacons supported
+        isBeaconsSupported(false);
     }
 
     public testFinishedCleanup() {

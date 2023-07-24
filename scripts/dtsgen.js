@@ -12,35 +12,62 @@ function parseArgs(expectedArgs) {
         "$script" : passedArgs[1]
     };
 
+    let switches = {};
+    let expArgs = [];
     for (var lp = 0; lp < expectedArgs.length; lp++) {
-        var argIdx = 2 + lp;
         var expArg = expectedArgs[lp];
-        var value = expArg.value;
-        if (passedArgs.length > argIdx) {
-            value = passedArgs[argIdx];
-            if (value && value.length > 2 && (
-                    (value[0] === "'" && value[value.length - 1] === "'") ||
-                    (value[0] === '"' && value[value.length - 1] === '"')
-                    )) {
+        if (expArg.isSwitch) {
+            switches[expArg.name.toLowerCase()] = expArg.name;
+            theArgs[expArg.name] = !!expArg.value;
+        } else {
+            expArgs.push(expArg.name);
+            theArgs[expArg.name] = expArg.value;
+        }
+    }
+
+    var expIdx = 0;
+
+    var argIdx = 2 + expIdx;
+    while (argIdx < passedArgs.length) {
+        let done = false;
+        value = passedArgs[argIdx++];
+        // console.log(`${argIdx}: ${value}`);
+        if (value && value.length > 2) {
+            if (value[0] === "-") {
+                let swName = value.substring(1).toLowerCase();
+                if (switches[swName]) {
+                    theArgs[switches[swName]] = true;
+                    done = true;
+                    console.log(`  -${switches[swName]} -> true`);
+                } else {
+                    throw new Error("Unknown switch[" + value + "]");
+                }
+            }
+            else if ((value[0] === "'" && value[value.length - 1] === "'") || (value[0] === '"' && value[value.length - 1] === '"')) {
                 value = value.substring(1, value.length - 1);
             }
         }
-        if (expArg.isSwitch) {
-            // Convert to boolean
-            value = !!value;
-        }
 
-        theArgs[expArg.name] = value;
+        if (!done) {
+            if (expArgs.length < expIdx) {
+                throw new Error("Unexpected value [" + value + "]");
+            }
+
+            var expName = expArgs[expIdx++];
+            theArgs[expName] = value;
+            console.log(`  ${expName} -> ${value}`);
+        }
     }
 
     return theArgs;
 }
 
 var theArgs = parseArgs([
-    { name: "skuName", value: null},                        // The Sku name to place in the copyright notice
-    { name: "projectPath", value: "./"},                    // The root path for the project
-    { name: "dtsFile", value: ""},                          // [Optional] The generated Dts file (if cannot be derived from the package.json)
-    { name: "hidePrivate", value: false, isSwitch: true},   // [Optional] Switch to hide private properties and functions
+    { name: "skuName", value: null},                            // The Sku name to place in the copyright notice
+    { name: "projectPath", value: "./"},                        // The root path for the project
+    { name: "dtsFile", value: ""},                              // [Optional] The generated Dts file (if cannot be derived from the package.json)
+    { name: "includePrivate", value: false, isSwitch: true},    // [Optional] Switch to hide or include private properties and functions (defaults to false)
+    { name: "oneDs", value: false, isSwitch: true }
 ]);
 
 if (!theArgs.skuName) {
@@ -101,9 +128,14 @@ var rollupContent =
     ` * ${author}\n` +
     ` * ${homepage}\n`;
 
-var newContent = rollupContent +
+var newAppInsightsContent = rollupContent +
     " */\n\n" +
     "declare namespace ApplicationInsights {";
+
+var newOneDsContent = rollupContent +
+    " */\n\n" +
+    "declare namespace oneDS {";
+
 
 rollupContent += 
     " *\n" +
@@ -128,6 +160,11 @@ function processFile(dtsContents) {
     console.log("File...");
     // console.log(dtsContents);
 
+    let newContent = newAppInsightsContent;
+    if (theArgs.oneDs) {
+        newContent = newOneDsContent;
+    }
+
     // Read the generated dts file and append to the new content
     var lastLine = ""
 
@@ -145,11 +182,15 @@ function processFile(dtsContents) {
             line = line.replace('export declare ', '');
             line = line.replace('declare ', '');
             line = line.replace('export { }', '');
+            line = line.replace(/export\s*{\s*([\w]+)\s*}/g, '');
+            line = line.replace(/export\s*{\s*([\w]+)\s*as\s*([\w]+)\s*}/g, function (match, g1, g2) {
+                return `const ${g2}: typeof ${g1};`;
+            });
 
             // Trim whitespace from the end of the string
             line = line.replace(/(\s+$)/g, '');
 
-            if (theArgs.hidePrivate) {
+            if (!theArgs.includePrivate) {
                 // Hide private properties and functions
                 line = line.replace(/(^\s+)private (.*);/, '$1// private $2;');
                 rollupLine = rollupLine.replace(/(^\s+)private (.*);/, '$1// private $2;');

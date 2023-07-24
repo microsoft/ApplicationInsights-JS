@@ -73,17 +73,17 @@ function stringReplaceFn(inst) {
                 inst.log.debug("processing file: ", src);
     
                 if (!inst.file.exists(src)) {
-                    inst.log.debug("missing file:", src);
+                    inst.log.writeln("missing file:", src);
                     return srcDone(src + " file not found");
                 }
     
                 if (inst.file.isDir(src)) {
-                    inst.log.debug("src is a folder", src);
+                    inst.log.writeln("src is a folder", src);
                     return srcDone();
                 }
     
                 if (file.dest[file.dest.length - 1] === "/") {
-                    inst.log.debug("dest is a folder");
+                    inst.log.writeln("dest is a folder");
     
                     if (inst.file.doesPathContain(file.dest, src)) {
                         dest = path.join(
@@ -98,7 +98,8 @@ function stringReplaceFn(inst) {
                 }
     
                 dest = dest.replace(/\\/g, '/');
-                inst.log.debug("dest path:", dest);
+                inst.log.writeln("src path :", src);
+                inst.log.writeln("dest path:", dest);
                 content = inst.file.read(src);
                 newContent =_doMultiReplace(content, replacements, src, dest);
     
@@ -134,7 +135,7 @@ function stringReplaceFn(inst) {
                 replacements = replacements.map(_mapReplacements);
                 _doReplace(this.files, replacements, options || {}, function (err) {
                     if (err) {
-                        done(false);
+                        done(new Error(err));
                     } else {
                         done();
                     }

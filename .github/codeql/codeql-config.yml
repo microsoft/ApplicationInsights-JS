@@ -8,3 +8,4 @@ paths-ignore:
   - '**/Tests/'
   - '**/dist-history/'
   - '**/rollup.config.js'
+  - '**/docs/webSdk/'

@@ -31,5 +31,6 @@ export default createUnVersionedConfig(banner,
       outputName: outputName
     },
   },
-  [ "applicationinsights-dependencies-js" ]
+  [ "applicationinsights-dependencies-js" ],
+  false
 );
