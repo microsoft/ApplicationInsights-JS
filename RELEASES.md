@@ -932,7 +932,7 @@ With this release the source files can be loaded in an ES3 environment (IE7/8) a
 
 We have added upport to enable reusing the same plugin in different instances of AppInsights, owned by the same application (but using different Instrumentation keys) is required so that they can reuse a single Plugin instance for all instances.
 
-This changes introduces a new [`IProcessTelemetryContext`](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK/ProcessTelemetryContext.ts) interface that is passed to the processTelemetry() method so that the plugins can use the current request context for the event rather than the context during initialization.
+This changes introduces a new [`IProcessTelemetryContext`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IProcessTelemetryContext.html) interface that is passed to the processTelemetry() method so that the plugins can use the current request context for the event rather than the context during initialization.
 
 To assist with creating plugins we have also introduced a base class that you can use for creating new plugins [BaseTelemetryPlugin](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK/BaseTelemetryPlugin.ts), details are included on the [Readme](https://github.com/microsoft/ApplicationInsights-JS/blob/master/README.md)
 

@@ -62,6 +62,85 @@ module.exports = function (grunt) {
         };
     }
 
+    function expandMin() {
+        var srcPath = "./tools/applicationinsights-web-snippet/build/output";
+        return {
+            files: [{
+                expand: true,
+                cwd: srcPath,
+                dest: "./tools/applicationinsights-web-snippet/build/output",
+                src: "snippet.min.js"
+            }],
+            options: {
+                replacements: function() {
+               
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
+                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
+
+                    while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
+                        snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
+                    }
+
+                    // We assign a value to SnippetConfig and then forcefully overwrite it into the function input.
+                    if (snippetBuffer.startsWith("!(function")) {
+                        throw "Snippet prefix input is invalid -- replace will fail";
+                    }
+                    var overWriteString = "!(function (cfg){" + snippetBuffer
+
+                    let orgOverwrite = overWriteString;
+                    overWriteString = overWriteString.replace(/\n\/\/# source.*\n/, "})(" + snippetConfig + ");\n");
+                    if(overWriteString === orgOverwrite) {
+                        throw "Snippet postfix input is invalid -- replace will fail";
+                    }
+
+                    return [{
+                        pattern: snippetBuffer,
+                        replacement: overWriteString
+                    }];
+                }
+            }
+        };
+    }
+
+    function expandJS() {
+        var srcPath = "./tools/applicationinsights-web-snippet/build/output";
+        return {
+            files: [{
+                expand: true,
+                cwd: srcPath,
+                dest: "./tools/applicationinsights-web-snippet/build/output",
+                src: "snippet.js"
+            }],
+            options: {
+                replacements: function() {
+               
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.js");
+                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
+                    while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
+                        snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
+                    }
+
+                    var overWriteString = snippetBuffer.replace(/\(function \(win, doc\)/, "(function (win, doc, cfg)");
+                    if(overWriteString === snippetBuffer) {
+                        throw "Snippet prefix input is invalid -- replace will fail";
+                    }
+
+                    let orgOverwrite = overWriteString;
+                    overWriteString = overWriteString.replace(/}\)\(window, document\);/, "})(window, document, " + snippetConfig + ");")
+                    if(overWriteString === orgOverwrite) {
+                        throw "Snippet postfix input is invalid -- replace will fail";
+                    }
+
+                    return [{
+                        pattern: snippetBuffer,
+                        replacement: overWriteString
+                    }];
+                }
+            }
+        };
+    }
+
+
     function getConfigVersion(isMajorVer) {
         let version = "";
         try {
@@ -408,6 +487,10 @@ module.exports = function (grunt) {
                                         path: "./shared/AppInsightsCommon",
                                         unitTestName: "aicommon.tests.js"
                                     },
+            "1dsCore":                 { 
+                                        path: "./shared/1ds-core-js",
+                                        unitTestName: "core.unittests.js"
+                                    },
     
             // SKUs
             "aisku":                { 
@@ -433,6 +516,10 @@ module.exports = function (grunt) {
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
             "teechannel":           { path: "./channels/tee-channel-js" },
+            "1dsPost":              { 
+                                        path: "./channels/1ds-post-js",
+                                        unitTestName: "post.unittests.js"
+                                    },
 
             // Extensions
             "appinsights":          { 
@@ -456,6 +543,10 @@ module.exports = function (grunt) {
                                         path: "./extensions/applicationinsights-properties-js",
                                         unitTestName: "prop.tests.js"
                                     },
+            "cfgsync":               { 
+                                        path: "./extensions/applicationinsights-cfgsync-js",
+                                        unitTestName: "cfgsync.tests.js"
+                                    },
 
             // Examples
             "example-shared-worker": {
@@ -473,6 +564,11 @@ module.exports = function (grunt) {
             "example-dependency":   {
                                         autoMinify: false,
                                         path: "./examples/dependency",
+                                        testHttp: false
+                                    },
+            "example-cfgsync":        {
+                                        autoMinify: false,
+                                        path: "./examples/cfgSync",
                                         testHttp: false
                                     },
     
@@ -674,6 +770,8 @@ module.exports = function (grunt) {
                 }
             },
             'string-replace': {
+                'generate-expanded-JS': expandJS(),
+                'generate-expanded-min': expandMin(),
                 'generate-snippet-ikey': generateNewSnippet(false),
                 'generate-snippet-connString': generateNewSnippet(true)
             },
@@ -681,8 +779,12 @@ module.exports = function (grunt) {
                 "snippet": {
                     files: [
                         { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js.map` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js.map` },
                     ]
                 },
+
                 "web-snippet": {
                     files: [  
                         { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` },
@@ -761,6 +863,12 @@ module.exports = function (grunt) {
         grunt.registerTask("propertiestests", tsTestActions("properties"));
         grunt.registerTask("properties-mintests", tsTestActions("properties", true));
 
+        grunt.registerTask("cfgsync", tsBuildActions("cfgsync"));
+        grunt.registerTask("cfgsync-min", minTasks("cfgsync"));
+        grunt.registerTask("cfgsync-restore", restoreTasks("cfgsync"));
+        grunt.registerTask("cfgsynctests", tsTestActions("cfgsync"));
+        grunt.registerTask("cfgsync-mintests", tsTestActions("cfgsync", true));
+
         grunt.registerTask("deps", tsBuildActions("deps"));
         grunt.registerTask("deps-min", minTasks("deps"));
         grunt.registerTask("deps-restore", restoreTasks("deps"));
@@ -796,8 +904,7 @@ module.exports = function (grunt) {
 
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
         grunt.registerTask("snippetCopy", ["copy:snippet"]);
-        grunt.registerTask("snippet-min", minTasks("applicationinsights-web-snippet"));
-        grunt.registerTask("websnippetReplace", ["copy:web-snippet", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);       
+        grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
 
         grunt.registerTask("snippet-restore", restoreTasks("applicationinsights-web-snippet"));
         grunt.registerTask("websnippettests", tsTestActions("applicationinsights-web-snippet"));
@@ -807,6 +914,18 @@ module.exports = function (grunt) {
         grunt.registerTask("clickanalytics-restore", restoreTasks("clickanalytics"));
         grunt.registerTask("clickanalyticstests", tsTestActions("clickanalytics"));
         grunt.registerTask("clickanalytics-mintests", tsTestActions("clickanalytics", true));
+
+        grunt.registerTask("1dsCoreBuild", tsBuildActions("1dsCore"));
+        grunt.registerTask("1dsCoreTest", tsTestActions("1dsCore"));
+        grunt.registerTask("1dsCore", tsTestActions("1dsCore", true));
+        grunt.registerTask("1dsCore-min", minTasks("1dsCore"));
+        grunt.registerTask("1dsCore-restore", restoreTasks("1dsCore"));
+        
+        grunt.registerTask("1dsPostBuild", tsBuildActions("1dsPost"));
+        grunt.registerTask("1dsPostTest", tsTestActions("1dsPost"));
+        grunt.registerTask("1dsPostMinTest", tsTestActions("1dsPost", true));
+        grunt.registerTask("1dsPost-min", minTasks("1dsPost"));
+        grunt.registerTask("1dsPost-restore", restoreTasks("1dsPost"));
 
         grunt.registerTask("example-shared-worker", tsBuildActions("example-shared-worker"));
         grunt.registerTask("example-shared-worker-test", tsTestActions("example-shared-worker"));
@@ -818,6 +937,7 @@ module.exports = function (grunt) {
 
          grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
          grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
+         grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
      } catch (e) {
          console.error(e);
          console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");

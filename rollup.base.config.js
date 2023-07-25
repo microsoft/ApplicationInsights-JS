@@ -58,7 +58,7 @@ const getCommonNamespace = (browserNs, gblNs) => {
     };
 };
 
-const getIntro = (format, theNameSpace, moduleName, theVersion) => {
+const getIntro = (format, theNameSpace, moduleName, theVersion, useStrict) => {
     let theIntro = "";
     if (format === "iife" || format === "umd") {
         let nsTokens = getCommonNamespace(theNameSpace.browser, theNameSpace.gbl);
@@ -103,7 +103,9 @@ const getIntro = (format, theNameSpace, moduleName, theVersion) => {
         theIntro += "})(this, (function (exports) {\n";
     }
 
-    theIntro += "'use strict';\n";
+    if (useStrict) {
+        theIntro += "'use strict';\n";
+    }
 
     console.log("Intro: [" + theIntro + "]");
 
@@ -119,15 +121,16 @@ const getOutro = (format, theNameSpace, moduleName, version) => {
     return theOutro;
 }
 
-const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '') => {
+const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', useStrict = true) => {
+    var outPath = isOneDs ? "bundle" : "browser";
     var thePostfix = `${postfix}`;
     if (libVersion) {
-        thePostfix = `.${libVersion}${postfix}`; 
+        thePostfix = `${isOneDs ? "-" : "."}${libVersion}${postfix}`; 
     }
 
-    var outputPath = `browser/${targetType}/${outputName}${teamExt}${thePostfix}.js`;
-    var prodOutputPath = `browser/${targetType}/${outputName}${teamExt}${thePostfix}.min.js`;
-    var inputPath = `dist-${targetType}/${entryInputName}.js`;
+    var outputPath = `${outPath}/${targetType}/${outputName}${teamExt}${thePostfix}.js`;
+    var prodOutputPath = `${outPath}/${targetType}/${outputName}${teamExt}${thePostfix}.min.js`;
+    var inputPath = `${entryInputName}.js`;
 
     const browserRollupConfig = {
         input: inputPath,
@@ -140,7 +143,7 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             freeze: false,
             sourcemap: true,
             strict: false,
-            intro: getIntro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver),
+            intro: getIntro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver, useStrict),
             outro: getOutro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver)
         },
         treeshake: treeshakeCfg,
@@ -183,14 +186,17 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
         );
     }
 
+    // console.log(`Browser: ${JSON.stringify(browserRollupConfig)}`);
+
     return browserRollupConfig;
 };
 
 const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, isProduction) => {
 
+    // console.log(`Node: ${targetType}, ${entryInputName}`);
     var outputPath = `dist/${targetType}/${outputName}.js`;
     var prodOutputPath = `dist/${targetType}/${outputName}.min.js`;
-    var inputPath = `dist-${targetType}/${entryInputName}.js`;
+    var inputPath = `${entryInputName}.js`;
 
     const nodeRollupConfig = {
         input: inputPath,
@@ -241,28 +247,32 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
     return nodeRollupConfig;
 };
 
-export function createConfig(banner, cfg, importCheckNames) {
-    const majorVersion = cfg.version.split('.')[0];
+export function createConfig(banner, cfg, importCheckNames, isOneDs) {
+    const majorVersion = isOneDs ? "" : cfg.version.split('.')[0];
     const targetType = "es5";
     
-    var tasks = [
- //       rollupModule(banner, targetType, cfg.namespace, "es5/" + cfg.node.entryPoint, cfg.node.outputName),
-    ];
+    var tasks = [ ];
 
-    if (cfg.browser.outputName !== cfg.node.outputName) {
-//        tasks.push(rollupModule(banner, targetType, cfg.namespace, "es5/" + cfg.browser.entryPoint, cfg.browser.outputName));
+    if (cfg.node) {
+        let inputPath = cfg.node.inputPath || `dist-${targetType}`;
+        let entryPoint = `${inputPath}/${cfg.node.entryPoint}`;
+
+        tasks.push(
+            nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, entryPoint, cfg.node.outputName, true),
+            nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, entryPoint, cfg.node.outputName, false)
+        );
     }
 
-    tasks.push(
-        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true),
-        nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false)
-    );
-
-    let browserFormats = cfg.browser.formats || [ 
-        { format: 'umd', postfix: '' },
-        { format: 'cjs', postfix: '.cjs' },
-        { format: 'iife', postfix: '.gbl' }
-    ];
+    let browserFormats = cfg.browser.formats || 
+        isOneDs ? [ 
+            { format: 'umd', postfix: '' },
+            { format: 'iife', postfix: '.gbl' }
+        ] :
+        [
+            { format: 'umd', postfix: '' },
+            { format: 'cjs', postfix: '.cjs' },
+            { format: 'iife', postfix: '.gbl' }
+        ];
 
     if (cfg.teams) {
         for (let lp = 0; lp < cfg.teams.length; lp++) {
@@ -292,6 +302,7 @@ export function createConfig(banner, cfg, importCheckNames) {
         let browserFmt = browserCfg.format || 'umd';
         let browserPostfix = browserCfg.postfix || '';
         let browserTeam = browserCfg.teamExt || '';
+        let useStrict = browserCfg.useStrict === undefined ? true : browserCfg.useStrict;
 
         if (cfg.version) {
             var version = cfg.version.split(".");
@@ -300,29 +311,38 @@ export function createConfig(banner, cfg, importCheckNames) {
                 browserNamespace.browser += majorVer;
             }
             browserNamespace.ver = cfg.version;
+
         }
 
+        let inputPath = cfg.browser.inputPath || `dist-${targetType}`;
+        let entryPoint = `${inputPath}/${cfg.browser.entryPoint}`;
+
         tasks.push(
-            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam),
-            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, false, browserFmt, browserPostfix, browserTeam),
-            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, cfg.version, true, browserFmt, browserPostfix, browserTeam),
-            browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, cfg.version, false, browserFmt, browserPostfix, browserTeam)
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam, useStrict),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, majorVersion, false, browserFmt, browserPostfix, browserTeam, useStrict),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, true, browserFmt, browserPostfix, browserTeam, useStrict),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, false, browserFmt, browserPostfix, browserTeam, useStrict)
         );
     }
 
     return tasks;
 }
 
-export function createUnVersionedConfig(banner, cfg, importCheckName) {
+export function createUnVersionedConfig(banner, cfg, importCheckName, isOneDs) {
     const noVersion = "";
     const targetType = "es5";
 
-    let tasks = [
-        //rollupModule(banner, targetType, theNamespace, "es5/" + entryInputName, outputName),
+    let tasks = [ ];
 
-        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, true),
-        nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.node.entryPoint, cfg.node.outputName, false)
-    ];
+    if (cfg.node) {
+        let inputPath = cfg.node.inputPath || `dist-${targetType}`;
+        let entryPoint = `${inputPath}/${cfg.node.entryPoint}`;
+
+        tasks.push(
+            nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, entryPoint, cfg.node.outputName, true),
+            nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, entryPoint, cfg.node.outputName, false)
+        );
+    }
 
     let browserFormats = cfg.browser.formats || [ 
         { format: 'umd', postfix: '' },
@@ -357,6 +377,7 @@ export function createUnVersionedConfig(banner, cfg, importCheckName) {
         let browserFmt = browserCfg.format || 'umd';
         let browserPostfix = browserCfg.postfix || '';
         let browserTeam = browserCfg.teamExt || '';
+        let useStrict = browserCfg.useStrict === undefined ? true : browserCfg.useStrict;
 
         if (cfg.version) {
             var version = cfg.version.split(".");
@@ -367,9 +388,12 @@ export function createUnVersionedConfig(banner, cfg, importCheckName) {
             browserNamespace.ver = cfg.version;
         }
 
+        let inputPath = cfg.browser.inputPath || `dist-${targetType}`;
+        let entryPoint = `${inputPath}/${cfg.browser.entryPoint}`;
+
         tasks.push(
-            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam),
-            browserRollupConfigFactory(banner, importCheckName, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam)
+            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, useStrict),
+            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, useStrict)
         );
     }
 

@@ -1,22 +1,19 @@
-import { createConfig } from "../../rollup.base.config";
-const version = require("./package.json").version;
+import { createUnVersionedConfig } from "../../rollup.base.config";
 
 const snippetOutputName = "snippet";
 const snippetOutputPath = "../../build/output/snippet";
 
-export default createConfig("", 
+export default createUnVersionedConfig("", 
   {
     namespace: "Microsoft.ApplicationInsights",
-    version: version,
-    node: {
-      entryPoint: snippetOutputName, 
-      outputName: snippetOutputPath
-    },
+    version: "",
     browser: {
       entryPoint: snippetOutputName, 
-      outputName: snippetOutputPath
+      outputName: snippetOutputPath,
+      inputPath: "build/output",
+      formats: [{ format: 'cjs', postfix: '', useStrict: false }],
     },
   },
-  [ "applicationinsights-web-snippet" ]
+  [ "applicationinsights-web-snippet" ],
+  false
 );
-
