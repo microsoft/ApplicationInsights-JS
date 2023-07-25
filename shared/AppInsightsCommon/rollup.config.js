@@ -32,5 +32,6 @@ export default createUnVersionedConfig(banner,
       outputName: entryPointName
     },
   },
-  [ "applicationinsights-common" ]
+  [ "applicationinsights-common" ],
+  false
 );

@@ -22,7 +22,6 @@ declare var XDomainRequest: any;
 const strDocumentMode = "documentMode";
 const strLocation = "location";
 const strConsole = "console";
-const strPerformance = "performance";
 const strJSON = "JSON";
 const strCrypto = "crypto";
 const strMsCrypto = "msCrypto";
@@ -210,10 +209,12 @@ export function isSafari(userAgentStr ?: string) {
 
 /**
  * Checks if HTML5 Beacons are supported in the current environment.
+ * @param useCached - [Optional] used for testing to bypass the cached lookup, when `true` this will
+ * cause the cached global to be reset.
  * @returns True if supported, false otherwise.
  */
-export function isBeaconsSupported(): boolean {
-    if (_beaconsSupported === null) {
+export function isBeaconsSupported(useCached?: boolean): boolean {
+    if (_beaconsSupported === null || useCached === false) {
         _beaconsSupported = hasNavigator() && Boolean(getNavigator().sendBeacon);
     }
 

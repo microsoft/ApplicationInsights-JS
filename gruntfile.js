@@ -75,19 +75,23 @@ module.exports = function (grunt) {
                 replacements: function() {
                
                     var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
-                    var codeSnippet = `src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",\n` +
-                    `// name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied\n` +
-                    `// ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,\n` +
-                    `// useXhr: 1, // Use XHR instead of fetch to report failures (if available),\n` +
-                    `crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag\n` +
-                    `// onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)\n` +
-                    `cfg: { // Application Insights Configuration\n` +
-                    `    connectionString: "YOUR_CONNECTION_STRING"\n` +
-                    `}`;
+                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
+
+                    while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
+                        snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
+                    }
 
                     // We assign a value to SnippetConfig and then forcefully overwrite it into the function input.
-                    var overWriteString = snippetBuffer.replace(/"use strict";function e\(/, "'use strict';function e(cfg");
-                    overWriteString = overWriteString.replace(/e\(\);\n\/\/# source/, "e(\n{" + codeSnippet + "}\n//# source");
+                    if (snippetBuffer.startsWith("!(function")) {
+                        throw "Snippet prefix input is invalid -- replace will fail";
+                    }
+                    var overWriteString = "!(function (cfg){" + snippetBuffer
+
+                    let orgOverwrite = overWriteString;
+                    overWriteString = overWriteString.replace(/\n\/\/# source.*\n/, "})(" + snippetConfig + ");\n");
+                    if(overWriteString === orgOverwrite) {
+                        throw "Snippet postfix input is invalid -- replace will fail";
+                    }
 
                     return [{
                         pattern: snippetBuffer,
@@ -111,18 +115,21 @@ module.exports = function (grunt) {
                 replacements: function() {
                
                     var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.js");
-                    var codeSnippet = `src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",\n` +
-                    `// name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied\n` +
-                    `// ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,\n` +
-                    `// useXhr: 1, // Use XHR instead of fetch to report failures (if available),\n` +
-                    `crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag\n` +
-                    `// onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)\n` +
-                    `cfg: { // Application Insights Configuration\n` +
-                    `    connectionString: "YOUR_CONNECTION_STRING"\n` +
-                    `}`;
+                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
+                    while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
+                        snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
+                    }
 
-                    var overWriteString = snippetBuffer.replace(/\(function \(win, doc/, "(function (win, doc, cfg");
-                    overWriteString = overWriteString.replace(/}\)\(window, document\);/, "})(window, document,\n{" + codeSnippet + "});\n")
+                    var overWriteString = snippetBuffer.replace(/\(function \(win, doc\)/, "(function (win, doc, cfg)");
+                    if(overWriteString === snippetBuffer) {
+                        throw "Snippet prefix input is invalid -- replace will fail";
+                    }
+
+                    let orgOverwrite = overWriteString;
+                    overWriteString = overWriteString.replace(/}\)\(window, document\);/, "})(window, document, " + snippetConfig + ");")
+                    if(overWriteString === orgOverwrite) {
+                        throw "Snippet postfix input is invalid -- replace will fail";
+                    }
 
                     return [{
                         pattern: snippetBuffer,
@@ -480,6 +487,10 @@ module.exports = function (grunt) {
                                         path: "./shared/AppInsightsCommon",
                                         unitTestName: "aicommon.tests.js"
                                     },
+            "1dsCore":                 { 
+                                        path: "./shared/1ds-core-js",
+                                        unitTestName: "core.unittests.js"
+                                    },
     
             // SKUs
             "aisku":                { 
@@ -505,6 +516,10 @@ module.exports = function (grunt) {
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
             "teechannel":           { path: "./channels/tee-channel-js" },
+            "1dsPost":              { 
+                                        path: "./channels/1ds-post-js",
+                                        unitTestName: "post.unittests.js"
+                                    },
 
             // Extensions
             "appinsights":          { 
@@ -764,8 +779,12 @@ module.exports = function (grunt) {
                 "snippet": {
                     files: [
                         { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js.map` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js.map` },
                     ]
                 },
+
                 "web-snippet": {
                     files: [  
                         { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` },
@@ -895,6 +914,18 @@ module.exports = function (grunt) {
         grunt.registerTask("clickanalytics-restore", restoreTasks("clickanalytics"));
         grunt.registerTask("clickanalyticstests", tsTestActions("clickanalytics"));
         grunt.registerTask("clickanalytics-mintests", tsTestActions("clickanalytics", true));
+
+        grunt.registerTask("1dsCoreBuild", tsBuildActions("1dsCore"));
+        grunt.registerTask("1dsCoreTest", tsTestActions("1dsCore"));
+        grunt.registerTask("1dsCore", tsTestActions("1dsCore", true));
+        grunt.registerTask("1dsCore-min", minTasks("1dsCore"));
+        grunt.registerTask("1dsCore-restore", restoreTasks("1dsCore"));
+        
+        grunt.registerTask("1dsPostBuild", tsBuildActions("1dsPost"));
+        grunt.registerTask("1dsPostTest", tsTestActions("1dsPost"));
+        grunt.registerTask("1dsPostMinTest", tsTestActions("1dsPost", true));
+        grunt.registerTask("1dsPost-min", minTasks("1dsPost"));
+        grunt.registerTask("1dsPost-restore", restoreTasks("1dsPost"));
 
         grunt.registerTask("example-shared-worker", tsBuildActions("example-shared-worker"));
         grunt.registerTask("example-shared-worker-test", tsTestActions("example-shared-worker"));

@@ -22,9 +22,6 @@ const nodeUmdRollupConfigFactory = () => {
       freeze: false,
       sourcemap: true
     },
-    globals: {
-      'qunit': 'QUnit'
-    },
     plugins: [
       nodeResolve()
     ]
