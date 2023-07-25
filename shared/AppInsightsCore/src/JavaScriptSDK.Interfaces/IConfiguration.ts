@@ -177,4 +177,5 @@ export interface IConfiguration {
      * Default is false
      */
     enableWParam?: boolean;
+    storagePrefix?:string;
 }
