@@ -94,7 +94,7 @@ function _updateStorageUsage(extConfig: IConfig) {
 }
 
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "#version#"; // Not currently used anywhere
+    public static Version = '3.0.2'; // Not currently used anywhere
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
@@ -286,16 +286,17 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
 
                 let perf = getPerformance();
-                 // Access the performance timing object
-                const navigationEntries = (perf && perf.getEntriesByType && perf.getEntriesByType("navigation")); 
+                // Access the performance timing object
+                const navigationEntries = (perf && perf.getEntriesByType && perf.getEntriesByType("navigation"));
                 if (navigationEntries) {
                     // Get the value of loadEventStart
-                    const navigationEntry = navigationEntries[0] as PerformanceNavigationTiming;;
+                    const navigationEntry = navigationEntries[0] as PerformanceNavigationTiming;
                     const loadEventStart = navigationEntry.loadEventStart;
                     pageView.startTime =  new Date(perf.timeOrigin + loadEventStart);
                 } else {
                     // calculate the start time manually
-                    pageView.startTime = new Date(new Date().getTime() - pageView.properties.duration);
+                    let duration = pageView.properties?.duration ?? properties?.duration ?? 0;
+                    pageView.startTime = new Date(new Date().getTime() - duration);
                 }
 
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
