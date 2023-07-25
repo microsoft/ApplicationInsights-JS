@@ -27,14 +27,15 @@
         "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt aisku-min",
         "ai-restore": "grunt aisku-restore",
-        "npm-pack": "npm pack"
+        "npm-pack": "npm pack",
+        "api-docs": "typedoc"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "sinon": "^7.3.1",
-        "@microsoft/api-extractor": "^7.18.1",
+        "@microsoft/api-extractor": "^7.18.19",
         "finalhandler": "^1.1.1",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
@@ -51,6 +52,7 @@
         "rollup": "^3.20.0",
         "selenium-server-standalone-jar": "^3.141.5",
         "serve-static": "^1.13.2",
+        "typedoc": "^0.24.8",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
         "puppeteer": "19.2.0"
@@ -67,7 +69,7 @@
         "@microsoft/applicationinsights-core-js": "3.0.2",
         "@microsoft/applicationinsights-dependencies-js": "3.0.2",
         "@microsoft/applicationinsights-properties-js": "3.0.2",
-        "@nevware21/ts-utils": ">= 0.9.5 < 2.x",
+        "@nevware21/ts-utils": ">= 0.9.6 < 2.x",
         "@nevware21/ts-async": ">= 0.2.4 < 2.x"
     },
     "license": "MIT"

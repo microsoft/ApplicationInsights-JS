@@ -12,9 +12,9 @@
   },
   "scripts": {
     "clean": "git clean -xdf",
-    "build": "npm run build:esm && npm run snippet-generate && npm run replace && npm run build:browser",
+    "build": "npm run build:esm && npm run snippet-generate && npm run build:browser",
     "build:esm": "grunt websnippet ",
-    "snippet-generate": "npm run snippetCopy && npm run build:snippet",
+    "snippet-generate": "npm run build:snippet && npm run replace && npm run snippetCopy",
     "snippetCopy": "grunt snippetCopy",
     "build:snippet": "rollup -c rollupSnippet.config.js --bundleConfigAsCjs",
     "replace": "grunt websnippetReplace",

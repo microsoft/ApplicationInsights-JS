@@ -8,8 +8,7 @@ let preRel = null;
 let isRelease = false;
 let testOnly = null;
 let updateAll = true;
-let isReact = false;
-let isReactNative = false;
+let isOneDs = false;
 
 const theVersion = require(process.cwd() + "/version.json");
 const orgPkgVersions = {};
@@ -39,8 +38,7 @@ function showHelp() {
     console.log(" -release     - Remove any existing pre-release tags (x.y.z-prerel => x.y.z)");
     console.log(" -bld ######  - Append the provided build number to the version (x.y.z => x.y.z-[prerel].######) [prerel] defaults to dev if not defined");
     console.log(" -pre ######  - Set the pre-release to the provided value (x.y.z => x.y.z-[prerel])");
-    console.log(" -react       - Update only the react packages");
-    console.log(" -reactNative - Update only the react native packages");
+    console.log(" -1ds         - Update only the oneDs packages");
     console.log(" -test        - Scan all of the package.json files and log the changes, but DON'T update the files");
 }
 
@@ -132,11 +130,8 @@ function parseArgs() {
 
             newVer = theArg;
             updateAll = false;      // We have mixed versions so we can't update all of them if we have a version#
-        } else if (!isReact && theArg === "-react") {
-            isReact = true;
-            updateAll = false;
-        } else if (!isReactNative && theArg === "-reactNative") {
-            isReactNative = true;
+        } else if (!isOneDs && theArg === "-1ds") {
+            isOneDs = true;
             updateAll = false;
         } else {
             console.error("!!! Invalid Argument [" + theArg + "] detected");
@@ -172,7 +167,7 @@ function updateVersions() {
     let newVersion = calculateVersion(rootVersion.version, verNext);
     if (newVersion) {
         console.log("New version [" + theVersion.release + "] => [" + newVersion + "]");
-        if (updateAll || (!isReact && !isReactNative)) {
+        if (updateAll || !isOneDs) {
             theVersion.release = newVersion;
         }
     }
@@ -316,22 +311,18 @@ function shouldUpdatePackage(name) {
     }
 
     if (!updateAll) {
-        if (name.indexOf("-react-js") !== -1) {
-            return isReact;
+        if (name.indexOf("1ds-") !== -1) {
+            return isOneDs;
         }
 
-        if (name.indexOf("-react-native") !== -1) {
-            return isReactNative;
-        }
-
-        return !isReact && !isReactNative;
+        return !isOneDs;
     }
 
     return updateAll;
 }
 
 function shouldProcess(name) {
-    let updateDefPkgs = updateAll || (!isReact && !isReactNative);
+    let updateDefPkgs = updateAll || !isOneDs;
 
     if (name.indexOf("node_modules/") !== -1) {
         return false;
@@ -345,16 +336,16 @@ function shouldProcess(name) {
         return false;
     }
 
-    if (name.indexOf("-react-js") !== -1) {
-        return updateAll || isReact;
-    }
-
-    if (name.indexOf("-react-native") !== -1) {
-        return updateAll || isReactNative;
+    if (name.indexOf("-react") !== -1) {
+        return false;
     }
 
     if (name.indexOf("-angularplugin") !== -1) {
         return false;
+    }
+
+    if (name.indexOf("1ds-") !== -1) {
+        return updateAll || isOneDs;
     }
 
     if (name.indexOf("AISKU/") !== -1) {
@@ -422,7 +413,7 @@ function updatePublishConfig(package, newVersion) {
 function updateDependencies(target, orgVersion, newVersion) {
     if (target) {
         Object.keys(target).forEach((value) => {
-            if (value.indexOf("@microsoft/applicationinsights-") !== -1 && 
+            if ((value.indexOf("@microsoft/applicationinsights-") !== -1 || value.indexOf("@microsoft/1ds-") !== -1) && 
                     value.indexOf("@microsoft/applicationinsights-rollup") === -1 &&
                     value.indexOf("@microsoft/applicationinsights-shims") === -1) {
 
@@ -456,7 +447,7 @@ function updateVersion(src, orgVersion, newVersion) {
     if (src) {
         src = src.replace("\"javascript:" + orgVersion + "\"", "\"javascript:" + newVersion + "\"");
         src = src.replace("\"" + orgVersion + "\"", "\"" + newVersion + "\"");
-        src = src.replace("\"#version#\"", "\"" + newVersion + "\"");
+        //src = src.replace("\"#version#\"", "\"" + newVersion + "\"");
     }
 
     return src;

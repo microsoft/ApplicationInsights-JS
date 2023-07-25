@@ -207,6 +207,10 @@ function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: ()
     });
 }
 
+/**
+ * @group Classes
+ * @group Entrypoint
+ */
 export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> implements IAppInsightsCore<CfgType> {
     public config: CfgType;
     public logger: IDiagnosticLogger;

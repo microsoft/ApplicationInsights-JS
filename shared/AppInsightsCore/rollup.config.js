@@ -30,5 +30,6 @@ export default createUnVersionedConfig(banner,
       outputName: entryPointName
     },
   },
-  [ "applicationinsights-core-js" ]
+  [ "applicationinsights-core-js" ],
+  false
 );

@@ -12,6 +12,8 @@ import { Snippet } from "./Snippet";
 export {
     AppInsightsSku as ApplicationInsights
 } from "./AISku";
+export { IApplicationInsights } from "./IApplicationInsights";
+
 export { Snippet };
 export {
     LoggingSeverity,
