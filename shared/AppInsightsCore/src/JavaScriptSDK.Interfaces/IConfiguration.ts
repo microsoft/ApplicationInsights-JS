@@ -177,4 +177,10 @@ export interface IConfiguration {
      * Default is false
      */
     enableWParam?: boolean;
+
+    /**
+     * Custom optional value that will be added as a prefix for storage name.
+     * @defaultValue undefined
+     */
+    storagePrefix?: string;
 }
