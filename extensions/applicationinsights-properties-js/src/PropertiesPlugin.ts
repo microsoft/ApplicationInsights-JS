@@ -134,9 +134,6 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                     let ctx = createProcessTelemetryContext(null, config, core);
                     if (config.storagePrefix){
                         setStoragePrefix(config.storagePrefix);
-                        // siyu question: if propertiesplugin is not invoked, and in the session.ts, we need to deliver config to session
-                        // which may not be available each time when we call it
-                        // ps why we will export session from the propertiesPlugin package?
                     }
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
 

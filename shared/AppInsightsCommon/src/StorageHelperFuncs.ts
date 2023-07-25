@@ -36,9 +36,10 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
         }
         let uid = (new Date).toString();
         let storage: Storage = getGlobalInst(storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage");
-        storage.setItem(_storagePrefix+uid, uid);
-        let fail = storage.getItem(uid) !== uid;
-        storage.removeItem(uid);
+        let name:string = _storagePrefix + uid;
+        storage.setItem(name, uid);
+        let fail = storage.getItem(name) !== uid;
+        storage.removeItem(name);
         if (!fail) {
             return storage;
         }
@@ -70,7 +71,7 @@ export function utlDisableStorage() {
 }
 
 export function setStoragePrefix(storagePrefix: string) {
-    _storagePrefix = storagePrefix;
+    _storagePrefix = storagePrefix || "";
 }
 
 /**
