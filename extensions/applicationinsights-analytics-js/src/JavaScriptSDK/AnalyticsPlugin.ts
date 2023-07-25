@@ -9,7 +9,7 @@ import {
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
     PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
-    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage
+    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, setStoragePrefix, strNotSpecified, utlDisableStorage, utlEnableStorage
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
@@ -617,6 +617,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                     _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
 
+                    if (config.storagePrefix){
+                        setStoragePrefix(config.storagePrefix);
+                    }
                     _updateStorageUsage(_extConfig);
 
                     // _updateBrowserLinkTracking
