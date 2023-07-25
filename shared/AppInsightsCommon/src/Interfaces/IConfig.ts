@@ -386,6 +386,8 @@ export interface IConfig {
      * should not be excluded.
      */
     addIntEndpoints?: boolean;
+
+    storagePrefix?: string;
 }
 
 export class ConfigurationManager {
