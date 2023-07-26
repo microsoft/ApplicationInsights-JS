@@ -7,7 +7,7 @@ import {
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager,
     IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
-    SendRequestReason, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
+    SendRequestReason, SenderFunction, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
     createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON,
     getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend,
     objKeys, onConfigChange, runTargetUnload, useXDomainRequest
@@ -32,8 +32,6 @@ declare var XDomainRequest: {
     prototype: IXDomainRequest;
     new(): IXDomainRequest;
 };
-
-export type SenderFunction = (payload: string[], isAsync: boolean) => void | IPromise<boolean>;
 
 function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     try {
@@ -64,7 +62,9 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     customHeaders: UNDEFINED_VALUE,
     convertUndefined: UNDEFINED_VALUE,
     eventsLimitInMem: 10000,
-    bufferOverride: false
+    bufferOverride: false,
+    httpXHROverride: UNDEFINED_VALUE,
+    alwaysUseXhrOverride: cfgDfBoolean()
 });
 
 function _chkSampling(value: number) {
@@ -158,6 +158,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _bufferOverrideUsed: IStorageBuffer | false;
         let _namePrefix: string;
         let _enableSendPromise: boolean;
+        let _alwaysUseCustomSend: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -197,7 +198,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
             _self.onunloadFlush = () => {
                 if (!_paused) {
-                    if (_beaconSupported) {
+                    if (_beaconSupported || _alwaysUseCustomSend) {
                         try {
                             return _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
                         } catch (e) {
@@ -263,6 +264,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
                     _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
+                    _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     
                     let bufferOverride = senderConfig.bufferOverride;
                     let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer &&
@@ -324,6 +326,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
 
                     _enableSendPromise = senderConfig.enableSendPromise;
+                    let customSendFunc = senderConfig.httpXHROverride && senderConfig.httpXHROverride.sendPOST;
 
                     let sendPostFunc: SenderFunction = null;
                     if (!senderConfig.disableXhr && useXDomainRequest()) {
@@ -344,9 +347,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         sendPostFunc = _beaconSender;
                     }
     
-                    _self._sender = sendPostFunc || _xhrSender;
+                    _self._sender = customSendFunc || sendPostFunc || _xhrSender;
     
-                    if (!senderConfig.onunloadDisableFetch && isFetchSupported(true)) {
+                    if (_alwaysUseCustomSend && customSendFunc) {
+                        // if alwaysUseXhrOverride is set to true and httpXHROverride is not defined, it will use default one
+                        _syncUnloadSender = customSendFunc;
+                    } else if (!senderConfig.onunloadDisableFetch && isFetchSupported(true)) {
                         // Try and use the fetch with keepalive
                         _syncUnloadSender = _fetchKeepAliveSender;
                     } else if (isBeaconsSupported()) {
