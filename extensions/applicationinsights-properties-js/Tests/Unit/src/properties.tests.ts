@@ -1147,6 +1147,26 @@ export class PropertiesTests extends AITestClass {
                 Assert.equal(this.properties.context.getSessionId(), 'random id', 'automaticSession is stored in sesId')
             }
         });
+
+        
+        this.testCase({
+            name: "Storage Prefix Test for Property Plugin: prefix should be added after init",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let setItemSpy = this.sandbox.spy(window.localStorage, "setItem");
+                let storagePrefix = "storageTestPrefix"
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13ttt",
+                    storagePrefix: storagePrefix,
+                }
+                core.initialize(coreConfig, [this.properties, new TestChannelPlugin()])
+                utlCanUseLocalStorage(true);
+                let firstCallArgs = setItemSpy.args[0];
+                QUnit.assert.true(JSON.stringify(firstCallArgs).includes(storagePrefix));
+            }
+        });
+
     }
 
     private getEmptyConfig(): IConfiguration {
