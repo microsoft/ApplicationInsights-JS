@@ -6,17 +6,17 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
-    DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry,
-    IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders, ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry,
-    PropertiesPluginIdentifier, parseConnectionString
+    AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
+    IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
+    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
     IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin, ITelemetryInitializerHandler,
     ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId,
-    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfValidate, createDynamicConfig, createUniqueNamespace, doPerf,
-    eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
-    onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
+    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfValidate, createDynamicConfig, createProcessTelemetryContext,
+    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString,
+    mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -331,20 +331,23 @@ export class AppInsightsSku implements IApplicationInsights {
                     };
         
                     let added = false;
-                    let analyticsPlugin = appInsightsInstance.appInsights;
-                    let theConfig = analyticsPlugin.config;
 
                     if (!_houseKeepingNamespace) {
                         _houseKeepingNamespace = mergeEvtNamespace(_evtNamespace, _core.evtNamespace && _core.evtNamespace());
                     }
 
                     // Will be recalled if any referenced config properties change
-                    _addUnloadHook(onConfigChange(_config, () => {
+                    _addUnloadHook(onConfigChange(_config, (details) => {
+                        let coreConfig = details.cfg;
+                        let analyticsPlugin = appInsightsInstance.appInsights;
+                        let ctx = createProcessTelemetryContext(null, coreConfig, analyticsPlugin.core);
+                        let extConfig = ctx.getExtCfg<IConfig>(analyticsPlugin.identifier || AnalyticsPluginIdentifier);
+
                         // As we could get recalled, remove any previously registered event handlers first
                         _removePageEventHandlers();
 
-                        let excludePageUnloadEvents = theConfig.disablePageUnloadEvents;
-                        if (!theConfig.disableFlushOnBeforeUnload) {
+                        let excludePageUnloadEvents = coreConfig.disablePageUnloadEvents;
+                        if (!extConfig.disableFlushOnBeforeUnload) {
                             // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
                             // As just hooking the window does not always fire (on chrome) for page navigation's.
                             if (addPageUnloadEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace)) {
@@ -359,14 +362,14 @@ export class AppInsightsSku implements IApplicationInsights {
                             // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
                             // log the failure in this case
                             if (!added && !isReactNative()) {
-                                _throwInternal(analyticsPlugin.core.logger,
+                                _throwInternal(_core.logger,
                                     eLoggingSeverity.CRITICAL,
                                     _eInternalMessageId.FailedToAddHandlerForOnBeforeUnload,
                                     "Could not add handler for beforeunload and pagehide");
                             }
                         }
 
-                        if (!added && !theConfig.disableFlushOnUnload) {
+                        if (!added && !extConfig.disableFlushOnUnload) {
                             // If we didn't add the normal set then attempt to add the pagehide and visibilitychange only
                             addPageHideEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace);
                         }
