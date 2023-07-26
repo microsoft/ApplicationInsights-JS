@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "@microsoft/applicationinsights-common";
+import {
+    ISession, ISessionManager, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage
+} from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IUnloadHookContainer, _eInternalMessageId, _throwInternal, dateNow, dumpObj,
     eLoggingSeverity, getExceptionName, isFunction, newId, onConfigChange, safeGetCookieMgr, safeGetLogger
@@ -47,7 +49,7 @@ export class Session implements ISession {
     public renewalDate?: number;
 }
 
-export class _SessionManager {
+export class _SessionManager implements ISessionManager {
 
     public automaticSession: Session;
 
