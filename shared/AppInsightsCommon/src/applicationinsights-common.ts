@@ -47,6 +47,7 @@ export { IAppInsights } from "./Interfaces/IAppInsights";
 export { IWeb } from "./Interfaces/Context/IWeb";
 export { CtxTagKeys, Extensions } from "./Interfaces/PartAExtensions";
 export { ISession } from "./Interfaces/Context/ISession";
+export { ISessionManager } from "./Interfaces/Context/ISessionManager";
 export { ITelemetryContext } from "./Interfaces/ITelemetryContext";
 export { IApplication } from "./Interfaces/Context/IApplication";
 export { IDevice } from "./Interfaces/Context/IDevice";
