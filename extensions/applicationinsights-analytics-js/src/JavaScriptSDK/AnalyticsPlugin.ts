@@ -295,7 +295,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     pageView.startTime =  new Date(perf.timeOrigin + loadEventStart);
                 } else {
                     // calculate the start time manually
-                    let duration = pageView.properties?.duration ?? properties?.duration ?? 0;
+                    let duration = ((properties || pageView.properties || {}).duration || 0);
                     pageView.startTime = new Date(new Date().getTime() - duration);
                 }
 
