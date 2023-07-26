@@ -2,7 +2,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IConfig, IEnvelope,
     ISample, IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace,
-    eRequestHeaders, isInternalApplicationInsightsEndpoint, setStoragePrefix, utlCanUseSessionStorage
+    eRequestHeaders, isInternalApplicationInsightsEndpoint, utlSetStoragePrefix, utlCanUseSessionStorage
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager,
@@ -237,7 +237,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 _self._addHook(onConfigChange(config, (details) => {
                     let config = details.cfg;
                     if (config.storagePrefix){
-                        setStoragePrefix(config.storagePrefix);
+                        utlSetStoragePrefix(config.storagePrefix);
                     }
                     let ctx = createProcessTelemetryContext(null, config, core);
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);

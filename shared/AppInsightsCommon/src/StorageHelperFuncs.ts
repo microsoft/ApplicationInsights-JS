@@ -70,7 +70,7 @@ export function utlDisableStorage() {
     _canUseSessionStorage = false;
 }
 
-export function setStoragePrefix(storagePrefix: string) {
+export function utlSetStoragePrefix(storagePrefix: string) {
     _storagePrefix = storagePrefix || "";
 }
 

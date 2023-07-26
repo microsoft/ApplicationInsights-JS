@@ -6,7 +6,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, createDistributedTraceContextFromTrace,
-    setStoragePrefix
+    utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IDistributedTraceContext, IPlugin, IProcessTelemetryContext,
@@ -133,7 +133,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     if (config.storagePrefix){
-                        setStoragePrefix(config.storagePrefix);
+                        utlSetStoragePrefix(config.storagePrefix);
                     }
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
 
