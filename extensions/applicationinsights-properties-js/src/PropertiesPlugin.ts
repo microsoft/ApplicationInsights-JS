@@ -5,7 +5,8 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, createDistributedTraceContextFromTrace
+    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, createDistributedTraceContextFromTrace,
+    utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, IDistributedTraceContext, IPlugin, IProcessTelemetryContext,
@@ -132,6 +133,10 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 objForEachKey(defaultConfig, (field, value) => {
                     _extensionConfig[field] = () => ctx.getConfig(identifier, field, value());
                 });
+
+                if (config.storagePrefix){
+                    utlSetStoragePrefix(config.storagePrefix);
+                }
 
                 _previousTraceCtx = core.getTraceCtx(false);
                 _self.context = new TelemetryContext(core, _extensionConfig, _previousTraceCtx);

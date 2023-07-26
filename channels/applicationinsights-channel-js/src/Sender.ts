@@ -2,7 +2,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IChannelControlsAI,
     IConfig, IEnvelope, ISample, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate,
-    Trace, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage
+    Trace, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, IDiagnosticLogger, INotificationManager, IPlugin, IProcessTelemetryContext,
@@ -231,6 +231,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         return theValue;
                     }
                 });
+
+                if (config.storagePrefix){
+                    utlSetStoragePrefix(config.storagePrefix);
+                }
         
                 const useSessionStorage = _self._senderConfig.enableSessionStorageBuffer() &&
                     !!(_self._senderConfig.bufferOverride() || utlCanUseSessionStorage())

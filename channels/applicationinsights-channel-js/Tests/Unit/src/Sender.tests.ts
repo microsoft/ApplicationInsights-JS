@@ -2,7 +2,7 @@ import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
 import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
-import { Exception, CtxTagKeys, Util, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "@microsoft/applicationinsights-common";
+import { Exception, CtxTagKeys, Util, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _InternalMessageId, LoggingSeverity, getGlobalInst, getGlobal } from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 
@@ -225,7 +225,32 @@ export class SenderTests extends AITestClass {
                 this.clock.tick(15000);
                 QUnit.assert.equal(true, loggerSpy.calledOnce, "The send has been triggered");
             }
-        })
+        });
+
+        this.testCase({
+            name: "Storage Prefix Test: prefix should be added after init",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let setItemSpy = this.sandbox.spy(window.sessionStorage, "setItem");
+                let storagePrefix = "storageTestPrefix"
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13ttt",
+                    storagePrefix: storagePrefix,
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+
+                        }
+                    }
+                }
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+                core.initialize(coreConfig, [this._sender]);
+                let firstCallArgs = setItemSpy.args[0]; // Arguments of the first call
+                QUnit.assert.true(JSON.stringify(firstCallArgs).includes(storagePrefix));
+                // utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+            }
+        });
 
         this.testCase({
             name: "telemetry is not send when legacy telemetry initializer returns false",
