@@ -247,7 +247,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                             }
 
                         }).catch((error) => {
-                            // eslint-disable-next-line no-empty
+                            _doOnComplete(oncomplete, 400);
                         });
                        
                     } catch (e) {
@@ -265,6 +265,12 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                             _doOnComplete(oncomplete, xhr.status, xhr.responseText, isAutoSync);
                         }
                     }
+                    xhr.onerror = () => {
+                        _doOnComplete(oncomplete, 400);
+                    };
+                    xhr.ontimeout = () => {
+                        _doOnComplete(oncomplete, 400);
+                    };
                     xhr.send();
                 } catch (e) {
                     // eslint-disable-next-line no-empty
