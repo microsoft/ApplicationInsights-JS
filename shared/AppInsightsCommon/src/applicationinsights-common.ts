@@ -47,6 +47,7 @@ export { IAppInsights } from "./Interfaces/IAppInsights";
 export { IWeb } from "./Interfaces/Context/IWeb";
 export { CtxTagKeys, Extensions } from "./Interfaces/PartAExtensions";
 export { ISession } from "./Interfaces/Context/ISession";
+export { ISessionManager } from "./Interfaces/Context/ISessionManager";
 export { ITelemetryContext } from "./Interfaces/ITelemetryContext";
 export { IApplication } from "./Interfaces/Context/IApplication";
 export { IDevice } from "./Interfaces/Context/IDevice";
@@ -67,7 +68,7 @@ export {
 export { createDomEvent } from "./DomHelperFuncs";
 export {
     utlDisableStorage, utlEnableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage,
-    utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage
+    utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage, utlSetStoragePrefix
 } from "./StorageHelperFuncs";
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./UrlHelperFuncs";
 export { IThrottleLimit, IThrottleInterval, IThrottleMgrConfig, IThrottleLocalStorageObj, IThrottleResult } from "./Interfaces/IThrottleMgr";

@@ -151,21 +151,6 @@ export interface IConfig {
     disableFlushOnUnload?: boolean;
 
     /**
-     * [Optional] An array of the page unload events that you would like to be ignored, special note there must be at least one valid unload
-     * event hooked, if you list all or the runtime environment only supports a listed "disabled" event it will still be hooked if required by the SDK.
-     * (Some page unload functionality may be disabled via disableFlushOnBeforeUnload or disableFlushOnUnload config entries)
-     * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide"
-     */
-    disablePageUnloadEvents?: string[];
-
-    /**
-     * [Optional] An array of page show events that you would like to be ignored, special note there must be at lease one valid show event
-     * hooked, if you list all or the runtime environment only supports a listed (disabled) event it will STILL be hooked if required by the SDK.
-     * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state)
-     */
-    disablePageShowEvents?: string[];
- 
-    /**
      * If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load. Default is true.
      * @defaultValue true
      */

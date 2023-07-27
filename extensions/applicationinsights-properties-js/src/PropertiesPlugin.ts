@@ -5,7 +5,8 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, createDistributedTraceContextFromTrace
+    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, createDistributedTraceContextFromTrace,
+    utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IDistributedTraceContext, IPlugin, IProcessTelemetryContext,
@@ -131,6 +132,9 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 // This function will be re-called whenever any referenced configuration is changed
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
+                    if (config.storagePrefix){
+                        utlSetStoragePrefix(config.storagePrefix);
+                    }
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
 
                     // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class

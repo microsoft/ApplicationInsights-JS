@@ -1,9 +1,9 @@
 import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
-import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
+import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier } from '@microsoft/applicationinsights-common';
-import { AppInsightsCore, ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext } from "@microsoft/applicationinsights-core-js";
+import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig } from '@microsoft/applicationinsights-common';
+import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 
 
@@ -49,7 +49,7 @@ export class ApplicationInsightsTests extends AITestClass {
     }
     
     protected _getTestConfig(sessionPrefix: string) {
-        return {
+        let config: IConfiguration | IConfig = {
             connectionString: ApplicationInsightsTests._connectionString,
             disableAjaxTracking: false,
             disableFetchTracking: false,
@@ -61,8 +61,11 @@ export class ApplicationInsightsTests extends AITestClass {
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             samplingPercentage: 50,
-            convertUndefined: "test-value"
+            convertUndefined: "test-value",
+            disablePageUnloadEvents: [ "beforeunload" ]
         };
+
+        return config;
     }
 
     public testInitialize() {
@@ -79,6 +82,29 @@ export class ApplicationInsightsTests extends AITestClass {
             this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
                 Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
             });
+
+            // Validate that the before unload event was not added
+            let unloadPresent = false;
+            let visibilityChangePresent = false;
+            let beforeUnloadPresent = false;
+            let theEvents = __getRegisteredEvents(window);
+            arrForEach(theEvents, (theEvent) => {
+                if (theEvent.name.startsWith("beforeunload")) {
+                    beforeUnloadPresent = true;
+                }
+
+                if (theEvent.name.startsWith("unload")) {
+                    unloadPresent = true;
+                }
+
+                if (theEvent.name.startsWith("visibilitychange")) {
+                    visibilityChangePresent = true;
+                }
+            });
+
+            Assert.ok(!beforeUnloadPresent, "The beforeunload event should not be present");
+            Assert.ok(unloadPresent, "The unload event should be present");
+            Assert.ok(visibilityChangePresent, "The visibilitychange event should be present");
 
             // Setup Sinon stuff
             const sender: Sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
