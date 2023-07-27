@@ -9,6 +9,7 @@ import { StorageType } from "./Enums";
 
 let _canUseLocalStorage: boolean = undefined;
 let _canUseSessionStorage: boolean = undefined;
+let _storagePrefix: string = "";
 
 /**
  * Gets the localStorage object if available
@@ -35,9 +36,10 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
         }
         let uid = (new Date).toString();
         let storage: Storage = getGlobalInst(storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage");
-        storage.setItem(uid, uid);
-        let fail = storage.getItem(uid) !== uid;
-        storage.removeItem(uid);
+        let name:string = _storagePrefix + uid;
+        storage.setItem(name, uid);
+        let fail = storage.getItem(name) !== uid;
+        storage.removeItem(name);
         if (!fail) {
             return storage;
         }
@@ -66,6 +68,10 @@ function _getSessionStorageObject(): Storage {
 export function utlDisableStorage() {
     _canUseLocalStorage = false;
     _canUseSessionStorage = false;
+}
+
+export function utlSetStoragePrefix(storagePrefix: string) {
+    _storagePrefix = storagePrefix || "";
 }
 
 /**
