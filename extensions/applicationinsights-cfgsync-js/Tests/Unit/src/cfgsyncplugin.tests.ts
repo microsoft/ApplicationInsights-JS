@@ -373,7 +373,7 @@ export class CfgSyncPluginTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "response received", 60, 100) as any)
+            }, "response received", 60, 1000) as any)
         });
 
         this.testCaseAsync({
