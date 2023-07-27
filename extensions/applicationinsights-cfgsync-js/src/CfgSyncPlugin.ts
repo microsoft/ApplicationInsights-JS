@@ -279,6 +279,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             function _onFetchComplete(status: number, response?: string, isAutoSync?: boolean) {
                 try {
+                    
                     if (status >= 200 && status < 400 && response) {
                         _retryCnt = 0; // any successful response will reset retry count to 0
                         let JSON = getJSON();

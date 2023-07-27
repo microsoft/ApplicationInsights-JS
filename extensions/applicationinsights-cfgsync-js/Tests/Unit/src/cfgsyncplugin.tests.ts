@@ -316,6 +316,7 @@ export class CfgSyncPluginTests extends AITestClass {
             name: "CfgSyncPlugin: should fetch from config url at expected interval",
             stepDelay: 10,
             useFakeTimers: true,
+            useFakeServer: true,
             steps: [ () => {
                 let doc = getGlobal();
                 let config = {
@@ -378,6 +379,8 @@ export class CfgSyncPluginTests extends AITestClass {
         this.testCaseAsync({
             name: "CfgSyncPlugin: should not fetch from config url at when retry count > 2",
             stepDelay: 10,
+            useFakeServer: true,
+            useFakeTimers: true,
             steps: [ () => {
                 let doc = getGlobal();
                 this.onDone(() => {
@@ -423,7 +426,17 @@ export class CfgSyncPluginTests extends AITestClass {
                 let patchEvnSpy = this._context["patchEvnSpy"];
                
                 if (fetchStub.called) {
-                    Assert.equal(fetchStub.callCount, 2, "fetch should not be called 3 times");
+                    Assert.equal(fetchStub.callCount, 3, "fetch should be called 3 times");
+                    Assert.equal(patchEvnSpy.callCount, 0, "event should not be dispatched again");
+                    return true;
+                }
+                return false;
+            }, "response received", 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                let patchEvnSpy = this._context["patchEvnSpy"];
+               
+                if (fetchStub.called) {
+                    Assert.equal(fetchStub.callCount, 3, "fetch should not be called 4 times");
                     Assert.equal(patchEvnSpy.callCount, 0, "event should not be dispatched again");
                     return true;
                 }
