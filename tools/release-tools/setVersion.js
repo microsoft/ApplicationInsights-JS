@@ -380,6 +380,10 @@ function shouldProcess(name) {
         return updateDefPkgs;
     }
 
+    if (name.indexOf("tools/applicationinsights-web-snippet") !== -1) {
+        return updateDefPkgs;
+    }
+
     if (name === "package.json") {
         return updateDefPkgs;
     }
