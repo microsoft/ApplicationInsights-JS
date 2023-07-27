@@ -147,6 +147,8 @@ function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, tel
 
     _setValueIf(envelope, "sampleRate", telemetryItem[SampleRate]);
     if ((telemetryItem[strBaseData] || {}).startTime) {
+        // Starting from Version 3.0.3, the time property will be assigned by the startTime value,
+        // which records the loadEvent time for the pageView event.
         envelope.time = toISOString(telemetryItem[strBaseData].startTime);
     }
     envelope.iKey = telemetryItem.iKey;
