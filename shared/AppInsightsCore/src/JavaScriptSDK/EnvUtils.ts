@@ -3,7 +3,7 @@
 "use strict";
 
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
-import { isString, isUndefined, strContains } from "./HelperFuncs";
+import { isFunction, isString, isUndefined, strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
@@ -454,4 +454,45 @@ export function findNamedServerTiming(name: string): any {
     }
 
     return value;
+}
+
+// TODO: should reuse this method for analytics plugin
+export function dispatchEvent(target:EventTarget, evnt: Event | CustomEvent): boolean {
+    if (target && target.dispatchEvent && evnt) {
+        target.dispatchEvent(evnt);
+        return true;
+    }
+    return false;
+}
+
+
+export function createCustomDomEvent(eventName: string, details?: any): CustomEvent {
+    let event: CustomEvent = null;
+    let detail = {detail: details || null } as CustomEventInit;
+    if (isFunction(CustomEvent)) { // Use CustomEvent constructor when available
+        event = new CustomEvent(eventName, detail);
+    } else { // CustomEvent has no constructor in IE
+        let doc = getDocument();
+        if (doc && doc.createEvent) {
+            event = doc.createEvent("CustomEvent");
+            event.initCustomEvent(eventName, true, true, detail);
+        }
+    }
+
+    return event;
+}
+
+
+
+export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any): boolean {
+    let global = getGlobal();
+    if (global && (global as any).CustomEvent) {
+        try {
+            let details = {cfg: cfg || null,  customDetails: customDetails || null} as any;
+            return dispatchEvent(global, createCustomDomEvent(evtName, details));
+        } catch(e) {
+            // eslint-disable-next-line no-empty
+        }
+    }
+    return false;
 }

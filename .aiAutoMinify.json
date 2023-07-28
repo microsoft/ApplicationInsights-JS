@@ -60,6 +60,11 @@
         },
         "@microsoft/applicationinsights-react-js": {
             "constEnums": []
+        },
+        "@microsoft/applicationinsights-cfgsync-js": {
+            "constEnums": [
+                "ICfgSyncMode"
+            ]
         }
     }
 }

@@ -71,6 +71,10 @@
         "@microsoft/applicationinsights-test-module-type-check": {
             "package": "AISKU/Tests/es6-module-type-check/package.json",
             "release": "2.8.14"
+        },
+        "@microsoft/applicationinsights-example-cfgsync": {
+            "package": "examples/cfgSync/package.json",
+            "release": "0.0.1"
         }
     }
 }

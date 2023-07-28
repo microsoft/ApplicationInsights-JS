@@ -1047,7 +1047,7 @@ export class SnippetInitializationTests extends AITestClass {
                     // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                     if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
                         currentCount ++;
-                        console.log(" - " + JSON.stringify(call));
+                        //console.log(" - " + JSON.stringify(call));
                     }
                 });
             });

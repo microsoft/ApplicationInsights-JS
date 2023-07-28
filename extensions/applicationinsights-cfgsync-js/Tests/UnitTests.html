@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-control" content="no-Cache" />
+    <title>Tests for Application Insights JavaScript Idsync Plugin</title>
+    <link rel="stylesheet" href="../../../common/Tests/External/qunit-2.9.3.css">
+    <script src="../../../common/Tests/External/sinon-2.3.8.js"></script>
+    <script src="../../../common/Tests/External/require-2.3.6.js"></script>    
+    <script src="../../../common/Tests/Selenium/ModuleLoader.js"></script>
+
+    <script>
+        var modules = new ModuleLoader({
+            baseUrl: '../',
+            paths: {
+                qunit: "../../common/Tests/External/qunit-2.9.3",
+                "whatwg-fetch": "../../common/Tests/External/whatwg-fetch.3.6.2"
+            }
+        });
+
+        // Load qunit here instead of with tests, otherwise will not work
+        modules.add("qunit");
+        modules.add("pako","./node_modules/pako/dist/pako");
+
+        loadFetchModule(modules, "whatwg-fetch");
+        loadCommonModules(modules, function() {
+
+            var testModule = modules.add("Tests/Unit/src/cfgsync.tests", "./Unit/dist/cfgsync.tests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
+
+            modules.run();
+        });
+    </script>
+</head>
+
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <div id="error-message"></div>
+</body>
+
+</html>
