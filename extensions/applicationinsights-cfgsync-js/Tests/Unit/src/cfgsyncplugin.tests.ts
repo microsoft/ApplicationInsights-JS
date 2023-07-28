@@ -363,17 +363,17 @@ export class CfgSyncPluginTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "response received", 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "response received interval 1", 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let fetchStub = this._context["fetchStub"];
                 let patchEvnSpy = this._context["patchEvnSpy"];
                
-                if (fetchStub.called && patchEvnSpy.called) {
+                if (fetchStub.called && patchEvnSpy.called ) {
                     Assert.equal(fetchStub.callCount, 3, "fetch is called 3 times");
                     Assert.equal(patchEvnSpy.callCount, 3, "event should be dispatched 3 times");
                     return true;
                 }
                 return false;
-            }, "response received", 60, 1000) as any)
+            }, "response received interval 2", 60, 100 ) as any)
         });
 
         this.testCaseAsync({
