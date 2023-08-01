@@ -1,0 +1,22 @@
+# NPM Ignore
+
+# ignore everything
+*
+
+# ... but these files
+!package.json
+!tsconfig.json
+!/CODE_OF_CONDUCT.md
+!/CONTRIBUTING.md
+!/README.md
+!/SECURITY.md
+!/SUPPORT.md
+!/NOTICE
+!/PRIVACY
+!/LICENSE
+!/LICENSE.TXT
+!dist-esm/**
+!dist/**
+!browser/**
+!src/**
+!types/**

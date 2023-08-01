@@ -115,8 +115,18 @@
       "shouldPublish": false
     },
     {
+      "packageName": "@microsoft/applicationinsights-example-cfgsync",
+      "projectFolder": "examples/cfgSync",
+      "shouldPublish": false
+    },
+    {
       "packageName": "@microsoft/applicationinsights-test-module-type-check",
       "projectFolder": "AISKU/Tests/es6-module-type-check",
+      "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-cfgsync-js",
+      "projectFolder": "extensions/applicationinsights-cfgsync-js",
       "shouldPublish": false
     }
   ]
