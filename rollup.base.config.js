@@ -296,8 +296,6 @@ export function createConfig(banner, cfg, importCheckNames, replaceValues, major
         let browserPostfix = browserCfg.postfix || '';
         let browserTeam = browserCfg.teamExt || '';
 
-        console.log("----------cfg version", cfg.version);
-
         if (cfg.version) {
             var version = cfg.version.split(".");
             var majorVer = version[0].trim();
