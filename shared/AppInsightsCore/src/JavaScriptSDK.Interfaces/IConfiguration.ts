@@ -176,4 +176,11 @@ export interface IConfiguration {
      * this will not send any notifications.
      */
     disableDbgExt?: boolean;
+
+
+     /**
+     * Custom optional value that will be added as a prefix for storage name.
+     * @defaultValue undefined
+     */
+     storagePrefix?:string;
 }

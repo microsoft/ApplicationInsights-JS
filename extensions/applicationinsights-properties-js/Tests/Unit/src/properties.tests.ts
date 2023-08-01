@@ -4,7 +4,7 @@ import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../../src/Interfaces/ITelemetryConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
 import { TelemetryTrace } from "../../../src/Context/TelemetryTrace";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
 
 export class PropertiesTests extends AITestClass {
     private properties: PropertiesPlugin;
@@ -617,6 +617,23 @@ export class PropertiesTests extends AITestClass {
                 // verify
                 Assert.equal(undefined, telemetyItem.ext.web, "web was cleared");
                 Assert.notEqual(undefined, telemetyItem.ext.user, "user was not cleared");
+            }
+        });
+
+        this.testCase({
+            name: "Storage Prefix Test for Property Plugin: prefix should be added after init",
+            useFakeTimers: true,
+            test: () => {
+                let setItemSpy = this.sandbox.spy(window.localStorage, "setItem");
+                let storagePrefix = "storageTestPrefix"
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13ttt",
+                    storagePrefix: storagePrefix,
+                }
+                this.properties.initialize(coreConfig, this.core, []);
+                utlCanUseLocalStorage(true);
+                let firstCallArgs = setItemSpy.args[0];
+                QUnit.assert.true(JSON.stringify(firstCallArgs).includes(storagePrefix));
             }
         });
     }

@@ -10,7 +10,7 @@ import {
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
     PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
     createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, stringToBoolOrDefault, utlDisableStorage,
-    utlEnableStorage
+    utlEnableStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext, IInstrumentCallDetails,
@@ -543,6 +543,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
 
                 _base.initialize(config, core, extensions, pluginChain);
+
+                if (config.storagePrefix){
+                    utlSetStoragePrefix(config.storagePrefix);
+                }
+
                 try {
                     _evtNamespace = mergeEvtNamespace(createUniqueNamespace(_self.identifier), core.evtNamespace && core.evtNamespace());
                     if (_preInitTelemetryInitializers) {
