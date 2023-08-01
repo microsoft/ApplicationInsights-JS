@@ -13,9 +13,11 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, scheduleTimeout
+    ITimerHandler, arrForEach, getValueByKey, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, objForEachKey,
+    scheduleTimeout
 } from "@nevware21/ts-utils";
 import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
+import { ICfgSyncCdnConfig } from "./Interfaces/ICfgSyncCdnConfig";
 import {
     ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
 } from "./Interfaces/ICfgSyncConfig";
@@ -289,7 +291,8 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         _retryCnt = 0; // any successful response will reset retry count to 0
                         let JSON = getJSON();
                         if (JSON) {
-                            let cfg = JSON.parse(response); //comments are not allowed
+                            let cdnCfg = JSON.parse(response); //comments are not allowed
+                            let cfg = _getConfigFromCdn(cdnCfg);
                             cfg && _setCfg(cfg, isAutoSync);
                         }
                     } else {
@@ -311,6 +314,56 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 } catch (e) {
                     // eslint-disable-next-line no-empty
                 }
+            }
+
+            // helper function to get config for opt-in users from cdn config
+            function _getConfigFromCdn(cdnCfg: ICfgSyncCdnConfig) {
+                try {
+                    let optIn = _shouldApplyChanges(cdnCfg);
+                    if (optIn) {
+                        return cdnCfg.config;
+                    }
+
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+                }
+                return null;
+            }
+
+            // helper function to decide if current instance should be opt-in or not
+            function _shouldApplyChanges(cdnCfg: ICfgSyncCdnConfig): boolean {
+                if (!cdnCfg || !cdnCfg.enabled ) {
+                    return false;
+                }
+                let shouldOptIn = false;
+                if (!cdnCfg.dynamicOptIn) {
+                    //NOTE: if eanbled is set to true and no dynamicOptIn is defined, all instance will be opt-in
+                    shouldOptIn = true;
+                } else {
+                    let optInMap = cdnCfg.dynamicOptIn;
+                    objForEachKey(optInMap, (key, values) => {
+                        arrForEach(values, (val) => {
+                            let regexVal = _makeRegex(val);
+                            let cfgVal = getValueByKey(_self.core.config, key) as any;
+                            if (regexVal.test(cfgVal)) {
+                                shouldOptIn = true;
+                                return -1;
+                            }
+                        });
+                    });
+                }
+                return shouldOptIn;
+            }
+
+            function _makeRegex(value: string) {
+                if (value && value.length > 0) {
+                    value = value.replace(/\\/g, "\\\\");
+                    value = value.replace(/([\+\?\|\{\[\(\)\^\$\#\.\]\}])/g, "\\$1");
+                    value = value.replace(/\*/g, ".*");
+                    // eslint-disable-next-line security/detect-non-literal-regexp
+                    return new RegExp("(" + value + ")");
+                }
+                return null;
             }
 
             function _addEventListener() {
@@ -337,6 +390,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     }
                 }
             }
+
             // 4 levels
             function _replaceTartgetByKeys<T=IConfiguration & IConfig>(cfg: T , level?: number) {
                 let _cfg: IConfiguration & IConfig = null;

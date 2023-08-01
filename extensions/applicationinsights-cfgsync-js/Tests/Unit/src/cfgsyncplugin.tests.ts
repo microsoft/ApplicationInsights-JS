@@ -237,7 +237,11 @@ export class CfgSyncPluginTests extends AITestClass {
                     instrumentationKey:"testIkey",
                     enableAjaxPerfTracking: true
                 } as IConfiguration & IConfig;
-                let res = new (doc as any).Response(JSON.stringify(config), {
+                let cdnCfg = {
+                    enabled: true,
+                    config: config
+                } as ICfgSyncConfig;
+                let res = new (doc as any).Response(JSON.stringify(cdnCfg), {
                     status: 200,
                     headers: { "Content-type": "application/json" }
                 });
@@ -292,12 +296,16 @@ export class CfgSyncPluginTests extends AITestClass {
                     instrumentationKey:"testIkey",
                     enableAjaxPerfTracking: true
                 } as IConfiguration & IConfig;
+                let cdnCfg = {
+                    enabled: true,
+                    config: config
+                } as ICfgSyncConfig;
                 this.onDone(() => {
                     this.core.unload(false);
                 });
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
-                        resolve(new (doc as any).Response(JSON.stringify(config), {
+                        resolve(new (doc as any).Response(JSON.stringify(cdnCfg), {
                             status: 200,
                             headers: { "Content-type": "application/json" }
                         }));
