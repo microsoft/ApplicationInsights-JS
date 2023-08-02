@@ -2,6 +2,18 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.15 (Aug 3rd, 2023)
+
+### Changelog
+
+- #2100 Update UMD and IIFE Bundle intro for Version 2 to avoid conflicting with other SDK versions
+- #2106 [Master] Consider export IClickAnalyticsConfiguration from the click plugin?
+- #2107 [Master][Task]24316375: add support for cfgSync plugin
+- #2086 [BUG] Field 'fileName' on type 'StackFrame' is too long. Expected: 1024 characters
+- #2094 _getVerifiedStorageObject - contentious sessionStorage element
+- #2096 [Master] Create rollup base to unify bundling
+  - #2122 [Master] base rollup fix for version number
+
 ## 2.8.14 (May 22nd, 2023)
 
 ### Changelog
