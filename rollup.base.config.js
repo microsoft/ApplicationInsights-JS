@@ -296,6 +296,15 @@ export function createConfig(banner, cfg, importCheckNames, replaceValues, major
         let browserPostfix = browserCfg.postfix || '';
         let browserTeam = browserCfg.teamExt || '';
 
+        if (cfg.version) {
+            var version = cfg.version.split(".");
+            var majorVer = version[0].trim();
+            if (majorVer && !browserNamespace.browser.endsWith(majorVer)) {
+                browserNamespace.browser += majorVer;
+            }
+            browserNamespace.ver = cfg.version;
+        }
+
         if (majorVersionSet){
             tasks.push(
                 browserRollupConfigFactory(banner, importCheckNames, targetType, browserNamespace, cfg.browser.entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam, replaceValues, treeshakeConfig),
