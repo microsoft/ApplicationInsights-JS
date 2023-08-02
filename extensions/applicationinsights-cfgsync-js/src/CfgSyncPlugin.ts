@@ -6,15 +6,14 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IConfig } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext,
-    createUniqueNamespace, eventOff, eventOn, getGlobal, getJSON, isFetchSupported, isXhrSupported, mergeEvtNamespace, onConfigChange,
-    sendCustomEvent
+    BaseTelemetryPlugin, FeatureOptInMode, IAppInsightsCore, IConfigDefaults, IConfiguration, IFeatureOptIn, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
+    createProcessTelemetryContext, createUniqueNamespace, eventOff, eventOn, getGlobal, getJSON, isFetchSupported, isXhrSupported,
+    mergeEvtNamespace, onConfigChange, sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrForEach, getValueByKey, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, objForEachKey,
-    scheduleTimeout
+    ITimerHandler, getValueByKey, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, objForEachKey, scheduleTimeout
 } from "@nevware21/ts-utils";
 import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import { ICfgSyncCdnConfig } from "./Interfaces/ICfgSyncCdnConfig";
@@ -319,51 +318,66 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             // helper function to get config for opt-in users from cdn config
             function _getConfigFromCdn(cdnCfg: ICfgSyncCdnConfig) {
                 try {
-                    let optIn = _shouldApplyChanges(cdnCfg);
-                    if (optIn) {
-                        return cdnCfg.config;
+                    if (!cdnCfg || !cdnCfg.enabled) {
+                        return null;
                     }
-
+                    let optInMap = cdnCfg.featureOptIn;
+                    let cdnConfig = cdnCfg.config || {};
+                    objForEachKey(optInMap, (key) => {
+                        let featureVal = _OptInFeatureVal(key, cdnCfg, _self.core.config.featureOptIn);
+                        if (isNullOrUndefined(featureVal)) {
+                            delete cdnConfig[key];
+                        } else {
+                            cdnConfig[key] = featureVal;
+                        }
+                    });
+                    return cdnConfig;
                 } catch (e) {
                     // eslint-disable-next-line no-empty
                 }
                 return null;
             }
 
-            // helper function to decide if current instance should be opt-in or not
-            function _shouldApplyChanges(cdnCfg: ICfgSyncCdnConfig): boolean {
-                if (!cdnCfg || !cdnCfg.enabled ) {
-                    return false;
+            function _OptInFeatureVal(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
+                // if no following custom details are defined, default to disable
+                if (!customOptInDetails || !customOptInDetails[field] || isNullOrUndefined(customOptInDetails[field].mode)) {
+                    return null;
                 }
-                let shouldOptIn = false;
-                if (!cdnCfg.dynamicOptIn) {
-                    //NOTE: if eanbled is set to true and no dynamicOptIn is defined, all instance will be opt-in
-                    shouldOptIn = true;
-                } else {
-                    let optInMap = cdnCfg.dynamicOptIn;
-                    objForEachKey(optInMap, (key, values) => {
-                        arrForEach(values, (val) => {
-                            let regexVal = _makeRegex(val);
-                            let cfgVal = getValueByKey(_self.core.config, key) as any;
-                            if (regexVal.test(cfgVal)) {
-                                shouldOptIn = true;
-                                return -1;
-                            }
-                        });
-                    });
-                }
-                return shouldOptIn;
-            }
 
-            function _makeRegex(value: string) {
-                if (value && value.length > 0) {
-                    value = value.replace(/\\/g, "\\\\");
-                    value = value.replace(/([\+\?\|\{\[\(\)\^\$\#\.\]\}])/g, "\\$1");
-                    value = value.replace(/\*/g, ".*");
-                    // eslint-disable-next-line security/detect-non-literal-regexp
-                    return new RegExp("(" + value + ")");
+                let cdnMode = null;
+                let featureVal = null;
+                let cdnConfig = null;
+
+                if (!!cdnCfg) {
+                    if (cdnCfg.enabled && cdnCfg.featureOptIn && !isNullOrUndefined(cdnCfg.featureOptIn[field])) {
+                        cdnMode = cdnCfg.featureOptIn[field];
+                    }
+                    if (cdnCfg.config) {
+                        cdnConfig = cdnCfg.config;
+                        featureVal = getValueByKey(cdnConfig, field);
+                    }
                 }
-                return null;
+                
+                let details = customOptInDetails[field];
+                let customMode = details.mode;
+                let customDefinedCdnMode = details.cdnStatus;
+                let shouldApplyCustomVal = !customDefinedCdnMode || customDefinedCdnMode !== cdnMode;
+                
+                // If custom feature opt-in mode is set to force, custom defined value will be used regarless of cdn settings
+                if (customMode === FeatureOptInMode.force) {
+                    featureVal = details.cfgValue;
+                } else if (customMode === FeatureOptInMode.optIn) {
+                    if (shouldApplyCustomVal) {
+                        featureVal = details.cfgValue;
+                    }
+                } else {
+                    if (shouldApplyCustomVal) {
+                        featureVal = null;
+                    }
+                }
+
+                return featureVal;
+                
             }
 
             function _addEventListener() {

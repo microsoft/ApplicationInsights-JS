@@ -5,6 +5,7 @@
                 "_eSetDynamicPropertyFlags",
                 "CallbackType",
                 "eEventsDiscardedReason",
+                "FeatureOptInMode",
                 "eLoggingSeverity",
                 "_eInternalMessageId",
                 "SendRequestReason",
