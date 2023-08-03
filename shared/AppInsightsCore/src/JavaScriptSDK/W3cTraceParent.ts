@@ -2,9 +2,10 @@ import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
 import { isArray, isString, strTrim } from "./HelperFuncs";
+import { STR_EMPTY } from "./InternalConstants";
 
 // using {0,16} for leading and trailing whitespace just to constrain the possible runtime of a random string
-const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]*)?$/;
+const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]{1,64})?$/i;
 const DEFAULT_VERSION = "00";
 const INVALID_VERSION = "ff";
 const INVALID_TRACE_ID = "00000000000000000000000000000000";
@@ -13,7 +14,7 @@ const SAMPLED_FLAG = 0x01;
 
 function _isValid(value: string, len: number, invalidValue?: string): boolean {
     if (value && value.length === len && value !== invalidValue) {
-        return !!value.match(/^[\da-f]*$/);
+        return !!value.match(/^[\da-f]*$/i);
     }
 
     return false;
@@ -61,10 +62,11 @@ export function createTraceParent(traceId?: string, spanId?: string, flags?: num
 /**
  * Attempt to parse the provided string as a W3C TraceParent header value (https://www.w3.org/TR/trace-context/#traceparent-header)
  *
- * @param value
+ * @param value - The value to be parsed
+ * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
  * @returns
  */
-export function parseTraceParent(value: string): ITraceParent {
+export function parseTraceParent(value: string, selectIdx?: number): ITraceParent {
     if (!value) {
         // Don't pass a null/undefined or empty string
         return null;
@@ -80,6 +82,11 @@ export function parseTraceParent(value: string): ITraceParent {
         return null;
     }
 
+    if (value.indexOf(",") !== -1) {
+        let values = value.split(",");
+        value = values[selectIdx > 0 && values.length > selectIdx ? selectIdx : 0];
+    }
+
     // See https://www.w3.org/TR/trace-context/#versioning-of-traceparent
     const match = TRACE_PARENT_REGEX.exec(strTrim(value));
     if (!match ||                               // No match
@@ -90,9 +97,9 @@ export function parseTraceParent(value: string): ITraceParent {
     }
 
     return {
-        version: match[1],
-        traceId: match[2],
-        spanId: match[3],
+        version: (match[1] || STR_EMPTY).toLowerCase(),
+        traceId: (match[2] || STR_EMPTY).toLowerCase(),
+        spanId: (match[3] || STR_EMPTY).toLowerCase(),
         traceFlags: parseInt(match[4], 16)
     }
 }
@@ -175,7 +182,7 @@ export function formatTraceParent(value: ITraceParent) {
         }
 
         // Format as version 00
-        return `${version}-${_formatValue(value.traceId, 32, INVALID_TRACE_ID)}-${_formatValue(value.spanId, 16, INVALID_SPAN_ID)}-${flags}`;
+        return `${version.toLowerCase()}-${_formatValue(value.traceId, 32, INVALID_TRACE_ID).toLowerCase()}-${_formatValue(value.spanId, 16, INVALID_SPAN_ID).toLowerCase()}-${flags.toLowerCase()}`;
     }
 
     return "";
@@ -183,13 +190,14 @@ export function formatTraceParent(value: ITraceParent) {
 
 /**
  * Helper function to fetch the passed traceparent from the page, looking for it as a meta-tag or a Server-Timing header.
+ * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
  * @returns
  */
-export function findW3cTraceParent(): ITraceParent {
+export function findW3cTraceParent(selectIdx?: number): ITraceParent {
     const name = "traceparent";
-    let traceParent: ITraceParent = parseTraceParent(findMetaTag(name));
+    let traceParent: ITraceParent = parseTraceParent(findMetaTag(name), selectIdx);
     if (!traceParent) {
-        traceParent = parseTraceParent(findNamedServerTiming(name))
+        traceParent = parseTraceParent(findNamedServerTiming(name), selectIdx)
     }
 
     return traceParent;

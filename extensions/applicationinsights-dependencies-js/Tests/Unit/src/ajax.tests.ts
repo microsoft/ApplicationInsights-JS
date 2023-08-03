@@ -8,7 +8,9 @@ import {
     getPerformance, getGlobalInst, getGlobal, generateW3CId, arrForEach
 } from "@microsoft/applicationinsights-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
-import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework/dist-esm/src/AITestClass";
+import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework";
+
+const AJAX_DATA_CONTAINER = "_ajaxData";
 
 interface IFetchArgs {
     input: RequestInfo,
@@ -164,14 +166,16 @@ export class AjaxTests extends AITestClass {
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let ajaxDataId = (this._ajax as any)._ajaxDataId;
 
                 // act
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
-                Assert.ok((<any>xhr).ajaxData)
-                var ajaxData = (<any>xhr).ajaxData;
+                Assert.ok((<any>xhr)[AJAX_DATA_CONTAINER])
+                Assert.ok((<any>xhr)[AJAX_DATA_CONTAINER].i[ajaxDataId])
+                var ajaxData = (<any>xhr)[AJAX_DATA_CONTAINER].i[ajaxDataId];
                 Assert.equal("http://microsoft.com", ajaxData.requestUrl, "RequestUrl is collected correctly");
             }
         });
@@ -183,6 +187,7 @@ export class AjaxTests extends AITestClass {
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let ajaxDataId = (this._ajax as any)._ajaxDataId;
 
                 // act
                 var xhr = new XMLHttpRequest();
@@ -190,7 +195,7 @@ export class AjaxTests extends AITestClass {
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
-                Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "RequestUrl is collected correctly");
             }
         });
 
@@ -214,6 +219,7 @@ export class AjaxTests extends AITestClass {
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let ajaxDataId = (this._ajax as any)._ajaxDataId;
 
                 arrForEach(endpointUrls, (endpointUrl) => {
                     // act
@@ -221,7 +227,7 @@ export class AjaxTests extends AITestClass {
                     xhr.open("GET", endpointUrl);
 
                     // assert
-                    Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+                    Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "RequestUrl is collected correctly");
                 });
             }
         });
@@ -251,6 +257,7 @@ export class AjaxTests extends AITestClass {
                     addIntEndpoints: false
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let ajaxDataId = (this._ajax as any)._ajaxDataId;
 
                 arrForEach(endpointUrls, (endpointUrl) => {
                     // act
@@ -258,7 +265,9 @@ export class AjaxTests extends AITestClass {
                     xhr.open("GET", endpointUrl);
 
                     // assert
-                    var ajaxData = (<any>xhr).ajaxData;
+                    Assert.ok((<any>xhr)[AJAX_DATA_CONTAINER], "Ajax Container created");
+
+                    var ajaxData = (<any>xhr)[AJAX_DATA_CONTAINER].i[ajaxDataId];
                     Assert.equal(endpointUrl, ajaxData.requestUrl, "RequestUrl is collected correctly");
                 });
             }
@@ -282,6 +291,8 @@ export class AjaxTests extends AITestClass {
                     addIntEndpoints: false
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let ajaxDataId = (this._ajax as any)._ajaxDataId;
+
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
 
                 Assert.equal(0, trackSpy.callCount, "Track has not been called");
@@ -290,7 +301,7 @@ export class AjaxTests extends AITestClass {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
 
-                var ajaxData = (<any>xhr).ajaxData;
+                var ajaxData = (<any>xhr)[AJAX_DATA_CONTAINER].i[ajaxDataId];
                 Assert.equal("http://microsoft.com", ajaxData.requestUrl, "RequestUrl is collected correctly");
 
                 xhr.send();
@@ -301,7 +312,8 @@ export class AjaxTests extends AITestClass {
                 Assert.ok(initializerCalled, "Initializer was not called");
 
                 // assert
-                Assert.ok(!(<any>xhr).ajaxData, "The ajax data should have been removed");
+                Assert.ok((<any>xhr)[AJAX_DATA_CONTAINER], "The ajax data container should still exist");
+                Assert.ok(!(<any>xhr)[AJAX_DATA_CONTAINER].i[ajaxDataId], "The ajax data should have been removed");
                 Assert.equal(1, trackSpy.callCount, "Track has been called");
                 Assert.equal(true, trackSpy.args[0][0].baseData.properties.initializer.called, "The value set in the initializer was added");
             }
@@ -324,6 +336,8 @@ export class AjaxTests extends AITestClass {
                     addIntEndpoints: false
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let ajaxDataId = (this._ajax as any)._ajaxDataId;
+
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
 
                 Assert.equal(0, trackSpy.callCount, "Track has not been called");
@@ -332,7 +346,7 @@ export class AjaxTests extends AITestClass {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
 
-                var ajaxData = (<any>xhr).ajaxData;
+                var ajaxData = (<any>xhr)[AJAX_DATA_CONTAINER].i[ajaxDataId];
                 Assert.equal("http://microsoft.com", ajaxData.requestUrl, "RequestUrl is collected correctly");
 
                 xhr.send();
@@ -343,7 +357,8 @@ export class AjaxTests extends AITestClass {
                 Assert.ok(initializerCalled, "Initializer was not called");
 
                 // assert
-                Assert.ok(!(<any>xhr).ajaxData, "The ajax data should have been removed");
+                Assert.ok((<any>xhr)[AJAX_DATA_CONTAINER], "The ajax data container should still exist");
+                Assert.ok(!(<any>xhr)[AJAX_DATA_CONTAINER].i[ajaxDataId], "The ajax data should have been removed");
                 Assert.equal(0, trackSpy.callCount, "Track has not been called");
             }
         });
@@ -355,6 +370,7 @@ export class AjaxTests extends AITestClass {
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let ajaxDataId = (this._ajax as any)._ajaxDataId;
 
                 // act
                 var xhr = new XMLHttpRequest();
@@ -362,19 +378,19 @@ export class AjaxTests extends AITestClass {
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
-                Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "RequestUrl is collected correctly");
 
                 xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
-                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up GET Request was not instrumented");
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "Follow up GET Request was not instrumented");
 
                 xhr = new XMLHttpRequest();
                 xhr.open("POST", "http://microsoft.com");
 
                 // assert
-                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up POST Request was not instrumented");
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "Follow up POST Request was not instrumented");
             }
         });
 
@@ -392,19 +408,49 @@ export class AjaxTests extends AITestClass {
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
-                Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "RequestUrl is collected correctly");
 
                 xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
-                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up GET Request was not instrumented");
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "Follow up GET Request was not instrumented");
 
                 xhr = new XMLHttpRequest();
                 xhr.open("POST", "http://microsoft.com");
 
                 // assert
-                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up POST Request was not instrumented");
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "Follow up POST Request was not instrumented");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: xhr without disabled flag but with sealed exclude regex configured are not tracked",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                const ExcludeRequestRegex = [Object.freeze(/microsoft/i), Object.seal(/microsoft/i) ];
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: true, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "RequestUrl is collected correctly");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "Follow up GET Request was not instrumented");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr)[AJAX_DATA_CONTAINER], "Follow up POST Request was not instrumented");
             }
         });
 
@@ -2369,7 +2415,7 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Ajax: 2nd invokation of xhr.send doesn't cause send wrapper to execute 2nd time",
+            name: "Ajax: 2nd invocation of xhr.send doesn't cause send wrapper to execute 2nd time",
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
@@ -2397,7 +2443,7 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Ajax: 2nd invokation of xhr.send doesn't cause send wrapper to execute 2nd time even if after response",
+            name: "Ajax: 2nd invocation of xhr.send doesn't cause send wrapper to execute 2nd time even if after response",
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
@@ -2425,27 +2471,28 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Ajax: 2 invokation of xhr.open() doesn't cause send wrapper to execute 2nd time",
+            name: "Ajax: 2 invocation of xhr.open() doesn't cause send wrapper to execute 2nd time",
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let ajaxDataId = (this._ajax as any)._ajaxDataId;
 
                 // Act
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "example.com/bla");
 
-
-                Assert.equal("GET", xhr["ajaxData"].method, "Expecting the ajax data set the method");
+                Assert.ok(xhr[AJAX_DATA_CONTAINER], "Expecting the ajax data set the method");
+                Assert.equal("GET", xhr[AJAX_DATA_CONTAINER].i[ajaxDataId].method, "Expecting the ajax data set the method");
                 // Reset the method to something else
-                xhr["ajaxData"].method = "TEST";
+                xhr[AJAX_DATA_CONTAINER].i[ajaxDataId].method = "TEST";
 
                 try {
                     xhr.open("GET", "example.com/bla");
                 } catch (e) { }
 
-                Assert.equal("TEST", xhr["ajaxData"].method, "sendPrefixInstrumentor should be called only once");
+                Assert.equal("TEST", xhr[AJAX_DATA_CONTAINER].i[ajaxDataId].method, "sendPrefixInstrumentor should be called only once");
             }
         });
 
@@ -2484,6 +2531,83 @@ export class AjaxTests extends AITestClass {
                 var id = trackStub.args[0][0].baseData.id;
                 Assert.equal("|", id[0]);
                 Assert.equal(".", id[id.length - 1]);
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: should create and pass a single traceparent header if w3c is enabled with multiple instances",
+            test: () => {
+                let _ajax2 = new AjaxMonitor();
+                let appInsightsFirst = new AppInsightsCore();
+                let coreConfig2 = {
+                    instrumentationKey: "instrumentationKey",
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsFirst.initialize(coreConfig2, [_ajax2, new TestChannelPlugin()]);
+                appInsightsFirst.getTraceCtx(true)?.setTraceId(generateW3CId());
+                appInsightsFirst.getTraceCtx(true)?.setSpanId(generateW3CId().substr(0, 16));
+                let firstTraceId = appInsightsFirst.getTraceCtx()?.getTraceId();
+                let firstSpanId = appInsightsFirst.getTraceCtx()?.getSpanId();
+
+                const firstExpectedTraceParent = formatTraceParent(createTraceParent(firstTraceId, firstSpanId, 0x01));
+                appInsightsFirst.track({ name: "Test1" });
+                appInsightsFirst.flush(false);
+                this.onDone(() => {
+                    appInsightsFirst.unload(false);
+                });
+
+                // Use test hook to simulate the correct url location
+                _ajax2["_currentWindowHost"] = "www.example.com";
+
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                appInsightsCore.getTraceCtx(true)?.setTraceId(generateW3CId());
+                appInsightsCore.getTraceCtx(true)?.setSpanId(generateW3CId().substr(0, 16));
+                let coreTraceId = appInsightsCore.getTraceCtx()?.getTraceId();
+                let coreSpanId = appInsightsCore.getTraceCtx()?.getSpanId();
+
+                const coreExpectedTraceParent = formatTraceParent(createTraceParent(coreTraceId, coreSpanId, 0x01));
+                appInsightsCore.track({ name: "Test2" });
+                appInsightsCore.flush(false);
+
+                Assert.notEqual(firstTraceId, coreTraceId, "Make sure that the traceId's are different");
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "www.example.com";
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                var stub = this.sandbox.stub(xhr, "setRequestHeader");
+                xhr.open("GET", "http://www.example.com");
+                xhr.send();
+
+                // Assert that both headers are sent and that it was called by both instances (3 each)
+                Assert.equal(6, stub.callCount, "setRequestHeader called multiple times");
+                Assert.equal(true, stub.calledWith(RequestHeaders.requestIdHeader)); // AI
+                Assert.equal(true, stub.calledWith(RequestHeaders.traceParentHeader)); // W3C
+
+                let request = this._getXhrRequests();
+                Assert.equal(1, request.length);
+
+                // Assert that the W3C header is included
+                Assert.equal(RequestHeaders.traceParentHeader, stub.args[2][0], "Validate the actual header sent");
+                Assert.ok(stub.args[2][1].indexOf("00-" + firstTraceId) != -1, "Validate the actual header sent - actual: [" + stub.args[2][1] + "], expected parent [" + firstExpectedTraceParent + "] - alt: " + coreExpectedTraceParent);
             }
         });
 
@@ -3412,7 +3536,7 @@ export class AjaxFrozenTests extends AITestClass {
                     let message = throwSpy.args[0][2];
                     Assert.notEqual(-1, message.indexOf("Failed to monitor XMLHttpRequest"));
                     let data = throwSpy.args[0][3];
-                    Assert.notEqual(-1, data.exception.indexOf("Cannot add property ajaxData"));
+                    Assert.notEqual(-1, data.exception.indexOf("Cannot add property _ajaxData"));
                     return true;
                 }
 
