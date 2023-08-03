@@ -6,16 +6,16 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IConfig } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, FeatureOptInMode, IAppInsightsCore, IConfigDefaults, IConfiguration, IFeatureOptIn, IPlugin,
-    IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
-    createProcessTelemetryContext, createUniqueNamespace, eventOff, eventOn, getGlobal, getJSON, isFetchSupported, isXhrSupported,
-    mergeEvtNamespace, onConfigChange, sendCustomEvent
+    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext,
+    createUniqueNamespace, eventOff, eventOn, getGlobal, getJSON, isFetchSupported, isXhrSupported, mergeEvtNamespace, onConfigChange,
+    sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, getValueByKey, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, objForEachKey, scheduleTimeout
+    ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, objForEachKey, scheduleTimeout
 } from "@nevware21/ts-utils";
-import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
+import { getOptInFeatureVal, replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import { ICfgSyncCdnConfig } from "./Interfaces/ICfgSyncCdnConfig";
 import {
     ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
@@ -324,7 +324,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     let optInMap = cdnCfg.featureOptIn;
                     let cdnConfig = cdnCfg.config || {};
                     objForEachKey(optInMap, (key) => {
-                        let featureVal = _OptInFeatureVal(key, cdnCfg, _self.core.config.featureOptIn);
+                        let featureVal = getOptInFeatureVal(key, cdnCfg, _self.core.config.featureOptIn);
                         if (isNullOrUndefined(featureVal)) {
                             delete cdnConfig[key];
                         } else {
@@ -336,48 +336,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     // eslint-disable-next-line no-empty
                 }
                 return null;
-            }
-
-            function _OptInFeatureVal(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
-                // if no following custom details are defined, default to disable
-                if (!customOptInDetails || !customOptInDetails[field] || isNullOrUndefined(customOptInDetails[field].mode)) {
-                    return null;
-                }
-
-                let cdnMode = null;
-                let featureVal = null;
-                let cdnConfig = null;
-
-                if (!!cdnCfg) {
-                    if (cdnCfg.enabled && cdnCfg.featureOptIn && !isNullOrUndefined(cdnCfg.featureOptIn[field])) {
-                        cdnMode = cdnCfg.featureOptIn[field];
-                    }
-                    if (cdnCfg.config) {
-                        cdnConfig = cdnCfg.config;
-                        featureVal = getValueByKey(cdnConfig, field);
-                    }
-                }
-                
-                let details = customOptInDetails[field];
-                let customMode = details.mode;
-                let customDefinedCdnMode = details.cdnStatus;
-                let shouldApplyCustomVal = !customDefinedCdnMode || customDefinedCdnMode !== cdnMode;
-                
-                // If custom feature opt-in mode is set to force, custom defined value will be used regarless of cdn settings
-                if (customMode === FeatureOptInMode.force) {
-                    featureVal = details.cfgValue;
-                } else if (customMode === FeatureOptInMode.optIn) {
-                    if (shouldApplyCustomVal) {
-                        featureVal = details.cfgValue;
-                    }
-                } else {
-                    if (shouldApplyCustomVal) {
-                        featureVal = null;
-                    }
-                }
-
-                return featureVal;
-                
             }
 
             function _addEventListener() {

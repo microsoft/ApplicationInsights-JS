@@ -1,6 +1,7 @@
 import { IConfig } from "@microsoft/applicationinsights-common";
-import { IConfiguration } from "@microsoft/applicationinsights-core-js";
-import { isObject, objExtend, objForEachKey } from "@nevware21/ts-utils";
+import { FeatureOptInMode, IConfiguration, IFeatureOptIn } from "@microsoft/applicationinsights-core-js";
+import { getValueByKey, isObject, objExtend, objForEachKey } from "@nevware21/ts-utils";
+import { ICfgSyncCdnConfig } from "./Interfaces/ICfgSyncCdnConfig";
 import { NonOverrideCfg } from "./Interfaces/ICfgSyncConfig";
 
 /**
@@ -38,4 +39,39 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
 
     // if errors happen, do nothing
     return cfg;
+}
+
+export function getOptInFeatureVal(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
+    
+    if (!cdnCfg || !cdnCfg.enabled || !customOptInDetails || !customOptInDetails[field]) {
+        return null;
+    }
+
+    let cdnMode = null;
+    let featureVal = null;
+    let cdnConfig = null;
+
+    if (!!cdnCfg) {
+        cdnMode = cdnCfg.featureOptIn && cdnCfg.featureOptIn[field] || FeatureOptInMode.disable;
+        if (cdnCfg.config && cdnMode !== FeatureOptInMode.disable) {
+            cdnConfig = cdnCfg.config;
+            featureVal = getValueByKey(cdnConfig, field);
+        }
+    }
+    
+    let details = customOptInDetails[field];
+    let customMode = details.mode || FeatureOptInMode.disable;
+    let customDefinedCdnMode = details.cdnStatus;
+    
+    // If custom feature opt-in mode is set to force, custom defined value will be used regarless of cdn settings
+    if (customMode === FeatureOptInMode.force) {
+        featureVal = details.cfgValue;
+    } else if (customMode === FeatureOptInMode.optIn) {
+        if (customDefinedCdnMode && customDefinedCdnMode !== cdnMode) {
+            featureVal = details.cfgValue;
+        }
+    } else {
+        featureVal = null;
+    }
+    return featureVal;
 }

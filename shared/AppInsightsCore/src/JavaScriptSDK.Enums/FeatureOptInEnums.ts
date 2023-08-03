@@ -2,13 +2,13 @@ export const enum FeatureOptInMode {
     /**
      * try to disable feature
      */
-    disable = 0,
+    disable = 1,
     /**
      * try to opt in feature
      */
-    optIn = 1,
+    optIn = 2,
     /**
      * force to optin/disable feature
      */
-    force = 2
+    force = 3
 }
