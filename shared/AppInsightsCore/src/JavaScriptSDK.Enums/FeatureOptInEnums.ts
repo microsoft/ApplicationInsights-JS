@@ -1,14 +1,33 @@
 export const enum FeatureOptInMode {
     /**
-     * try to disable feature
+     * not set, completely depends on cdn cfg
      */
-    disable = 1,
+    none = 1,
     /**
-     * try to opt in feature
+     * try to not apply config from cdn
      */
-    optIn = 2,
+    disable = 2,
     /**
-     * force to optin/disable feature
+     * try to apply config from cdn
      */
-    force = 3
+    enable = 3
+}
+
+export const enum CdnFeatureMode {
+    /**
+     * not set, user defined/config defaults value will be used
+     */
+    none = 1,
+    /**
+     * config from cdn will Not be applied
+     */
+    disable = 2,
+    /**
+     * try to apply config from cdn
+     */
+    enable = 3,
+    /**
+     * force to apply config from cdn
+     */
+    force = 4
 }

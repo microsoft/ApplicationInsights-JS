@@ -1,4 +1,4 @@
-import { FeatureOptInMode, IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { CdnFeatureMode, IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 export interface ICfgSyncCdnConfig {
     /**
@@ -13,7 +13,7 @@ export interface ICfgSyncCdnConfig {
      * @example dynamicOptIn: {["extensionConfig.Analytics.disableAjaxTrackig"]:1}
      * @default undefined
      */
-    featureOptIn?: {[field: string]: FeatureOptInMode};
+    featureOptIn?: {[field: string]: ICdnFeatureOptIn};
     /**
      * Identifies IConfiguration that will be used for IConfigSync Plugin, especially throttleMgr Config
      * @default undefined
@@ -29,4 +29,16 @@ export interface ICfgSyncCdnConfig {
      * @default undefined
      */
     overrides?: {[field: string]: {[value: string]: any}};
+}
+
+export interface ICdnFeatureOptIn {
+    /**
+     * Identifies current cdn opt in mode
+     */
+    mode: CdnFeatureMode,
+    /**
+     * Identifies value should be set for the feature
+     * Default: undefined
+     */
+    value?: any
 }

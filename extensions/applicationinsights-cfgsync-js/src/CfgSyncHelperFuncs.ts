@@ -1,6 +1,8 @@
 import { IConfig } from "@microsoft/applicationinsights-common";
-import { FeatureOptInMode, IConfiguration, IFeatureOptIn } from "@microsoft/applicationinsights-core-js";
-import { getValueByKey, isObject, objExtend, objForEachKey } from "@nevware21/ts-utils";
+import {
+    CdnFeatureMode, FeatureOptInMode, IAppInsightsCore, IConfiguration, IFeatureOptIn
+} from "@microsoft/applicationinsights-core-js";
+import { isNullOrUndefined, isObject, objExtend, objForEachKey, setValueByKey } from "@nevware21/ts-utils";
 import { ICfgSyncCdnConfig } from "./Interfaces/ICfgSyncCdnConfig";
 import { NonOverrideCfg } from "./Interfaces/ICfgSyncConfig";
 
@@ -41,37 +43,75 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
     return cfg;
 }
 
-export function getOptInFeatureVal(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
+//                                cdn Mode (cdn Value = B, SDK Config Defaults = C)
+//                   |--------------------------------------------------------------------------|
+//                   |                    | none        | disabled    | enabled     | force     |
+//                   | ------------------ | ----------- | ----------- | ----------- | --------- |
+// | User Mode       | none               | A || C      | A || C      | B || A || C | B || C    |
+// (user Value = A)  | disabled           | A || C      | A || C      | A || C      | B || C    |
+//                   | enabled            | A || C      | A || C      | A || B || C | B || C    |
+//                   | none(blockCdn)     | A || C      | A || C      | A || C      | A || C    |
+//                   | disabled(blockCdn) | A || C      | A || C      | A || C      | A || C    |
+//                   | enabled(blockCdn)  | A || C      | A || C      | A || C      | A || C    |
+export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
     
-    if (!cdnCfg || !cdnCfg.enabled || !customOptInDetails || !customOptInDetails[field]) {
+    if (!cdnCfg || !cdnCfg.enabled || !cdnCfg.featureOptIn || !cdnCfg.featureOptIn[field] || !customOptInDetails || !customOptInDetails[field]) {
         return null;
     }
+ 
+    let cdnFeature = cdnCfg.featureOptIn[field];
+    let cdnMode = cdnFeature.mode || CdnFeatureMode.none;
+    let cdnFeatureVal = cdnFeature.value;
+    let customFeature = customOptInDetails[field];
+    let customMode = customFeature.mode || FeatureOptInMode.disable; // default custom mode is disable
+    let customFeatureVal = customFeature.cfgValue;
+    let blockCdn = customFeature.blockCdnCfg || false;
 
-    let cdnMode = null;
-    let featureVal = null;
-    let cdnConfig = null;
+    if (blockCdn) {
+        return customFeatureVal;
+    }
 
-    if (!!cdnCfg) {
-        cdnMode = cdnCfg.featureOptIn && cdnCfg.featureOptIn[field] || FeatureOptInMode.disable;
-        if (cdnCfg.config && cdnMode !== FeatureOptInMode.disable) {
-            cdnConfig = cdnCfg.config;
-            featureVal = getValueByKey(cdnConfig, field);
+    if (cdnMode === CdnFeatureMode.force) {
+        return cdnFeatureVal;
+    }
+    let featureVal = customFeatureVal;
+    if (customMode === FeatureOptInMode.none && cdnMode === CdnFeatureMode.enable) {
+        if (!isNullOrUndefined(cdnFeatureVal)) {
+            featureVal = cdnFeatureVal;
         }
     }
-    
-    let details = customOptInDetails[field];
-    let customMode = details.mode || FeatureOptInMode.disable;
-    let customDefinedCdnMode = details.cdnStatus;
-    
-    // If custom feature opt-in mode is set to force, custom defined value will be used regarless of cdn settings
-    if (customMode === FeatureOptInMode.force) {
-        featureVal = details.cfgValue;
-    } else if (customMode === FeatureOptInMode.optIn) {
-        if (customDefinedCdnMode && customDefinedCdnMode !== cdnMode) {
-            featureVal = details.cfgValue;
+
+    if (customMode === FeatureOptInMode.enable && cdnMode === CdnFeatureMode.enable) {
+        if (isNullOrUndefined(customFeatureVal)) {
+            featureVal = cdnFeatureVal;
         }
-    } else {
-        featureVal = null;
     }
+
     return featureVal;
+}
+
+
+
+// helper function to get cdn config with opt-in features
+export function getConfigFromCdn(cdnCfg: ICfgSyncCdnConfig, core: IAppInsightsCore) {
+    try {
+        if (!cdnCfg || !cdnCfg.enabled) {
+            return null;
+        }
+        if (!cdnCfg.featureOptIn) {
+            return cdnCfg.config;
+        }
+        let optInMap = cdnCfg.featureOptIn;
+        let cdnConfig = cdnCfg.config || {};
+        objForEachKey(optInMap, (key) => {
+            let featureVal = shouldOptInFeature(key, cdnCfg, core.config.featureOptIn);
+            if (!isNullOrUndefined(featureVal)) {
+                setValueByKey(cdnConfig, key, featureVal);
+            }
+        });
+        return cdnConfig;
+    } catch (e) {
+        // eslint-disable-next-line no-empty
+    }
+    return null;
 }

@@ -13,10 +13,9 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, objForEachKey, scheduleTimeout
+    ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, scheduleTimeout
 } from "@nevware21/ts-utils";
-import { getOptInFeatureVal, replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
-import { ICfgSyncCdnConfig } from "./Interfaces/ICfgSyncCdnConfig";
+import { getConfigFromCdn, replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import {
     ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
 } from "./Interfaces/ICfgSyncConfig";
@@ -291,7 +290,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         let JSON = getJSON();
                         if (JSON) {
                             let cdnCfg = JSON.parse(response); //comments are not allowed
-                            let cfg = _getConfigFromCdn(cdnCfg);
+                            let cfg = getConfigFromCdn(cdnCfg, _self.core);
                             cfg && _setCfg(cfg, isAutoSync);
                         }
                     } else {
@@ -313,29 +312,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 } catch (e) {
                     // eslint-disable-next-line no-empty
                 }
-            }
-
-            // helper function to get config for opt-in users from cdn config
-            function _getConfigFromCdn(cdnCfg: ICfgSyncCdnConfig) {
-                try {
-                    if (!cdnCfg || !cdnCfg.enabled) {
-                        return null;
-                    }
-                    let optInMap = cdnCfg.featureOptIn;
-                    let cdnConfig = cdnCfg.config || {};
-                    objForEachKey(optInMap, (key) => {
-                        let featureVal = getOptInFeatureVal(key, cdnCfg, _self.core.config.featureOptIn);
-                        if (isNullOrUndefined(featureVal)) {
-                            delete cdnConfig[key];
-                        } else {
-                            cdnConfig[key] = featureVal;
-                        }
-                    });
-                    return cdnConfig;
-                } catch (e) {
-                    // eslint-disable-next-line no-empty
-                }
-                return null;
             }
 
             function _addEventListener() {

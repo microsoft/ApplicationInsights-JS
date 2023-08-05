@@ -12,11 +12,10 @@ export interface IFeatureOptInDetails {
      */
     cfgValue?: any;
     /**
-     * define CdnOptInMode where feature value can be overriden by cdn settings
-     * if it is undefined, value of feature can be changed by any CdnOptInMode status
-     * @default undefined
+     * define if should block any changes from cdn cfg, if set to true, cfgValue will be applied under all scenarios
+     * @default false
      */
-    cdnStatus?: FeatureOptInMode
+    blockCdnCfg?: boolean;
 }
 
 export interface IFeatureOptIn {[feature: string]: IFeatureOptInDetails}

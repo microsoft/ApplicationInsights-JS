@@ -6,6 +6,7 @@
                 "CallbackType",
                 "eEventsDiscardedReason",
                 "FeatureOptInMode",
+                "CdnFeatureMode",
                 "eLoggingSeverity",
                 "_eInternalMessageId",
                 "SendRequestReason",

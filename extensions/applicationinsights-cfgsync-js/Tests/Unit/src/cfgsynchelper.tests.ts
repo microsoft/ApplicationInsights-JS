@@ -1,8 +1,8 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { NonOverrideCfg } from "../../../src/Interfaces/ICfgSyncConfig";
-import { AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IConfiguration, IFeatureOptIn, IFeatureOptInDetails, INotificationManager, IPlugin, ITelemetryItem, PerfManager } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, CdnFeatureMode, FeatureOptInMode, IAppInsightsCore, IConfiguration, IFeatureOptIn, IFeatureOptInDetails, INotificationManager, IPlugin, ITelemetryItem, PerfManager } from "@microsoft/applicationinsights-core-js";
 import { IConfig, IStorageBuffer } from "@microsoft/applicationinsights-common";
-import { getOptInFeatureVal, replaceByNonOverrideCfg } from "../../../src/CfgSyncHelperFuncs";
+import { getConfigFromCdn, replaceByNonOverrideCfg, shouldOptInFeature } from "../../../src/CfgSyncHelperFuncs";
 import { ICookieMgrConfig } from "@microsoft/applicationinsights-core-js/src/applicationinsights-core-js";
 import { ICfgSyncCdnConfig } from "../../../src/Interfaces/ICfgSyncCdnConfig";
 
@@ -432,15 +432,15 @@ export class CfgSyncHelperTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CfgSyncPluginHelper: getOptInFeatureVal should work as expected with empty or undefiend or cdn config is disabled",
+            name: "CfgSyncPluginHelper: shouldOptInFeature should work as expected with empty or undefiend or cdn config is disabled",
             useFakeTimers: true,
             test: () => {
 
                 //Case1: cdn cfg and custom cfg are both undefined or empty
-                let featureValue = getOptInFeatureVal("enableWParam");
+                let featureValue = shouldOptInFeature("enableWParam");
                 Assert.deepEqual(null, featureValue, "feature value should be null when cfg are undefined case1");
 
-                featureValue = getOptInFeatureVal("enableWParam", {}, {});
+                featureValue = shouldOptInFeature("enableWParam", {}, {});
                 Assert.deepEqual(null, featureValue, "feature value should be null when cfg are empty case1");
 
 
@@ -448,202 +448,378 @@ export class CfgSyncHelperTests extends AITestClass {
                 let cdnConfig = {
                     enabled: false
                 } as ICfgSyncCdnConfig;
-                featureValue = getOptInFeatureVal("enableWParam", cdnConfig);
+                featureValue = shouldOptInFeature("enableWParam", cdnConfig);
                 Assert.deepEqual(null, featureValue, "feature value should be null when custom cfg is undefined and cdn config is disabled case2");
                 cdnConfig = {
                     enabled: true
                 } as ICfgSyncCdnConfig;
-                featureValue = getOptInFeatureVal("enableWParam", cdnConfig, {});
+                featureValue = shouldOptInFeature("enableWParam", cdnConfig, {});
                 Assert.deepEqual(null, featureValue, "feature value should be null when custom cfg is empty and cdn config is enabled case2");
                 cdnConfig = {
                     enabled: true,
-                    featureOptIn:{["enableWParam"]: FeatureOptInMode.optIn},
+                    featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.enable}},
                     config: {
-                        enableWParam: true
+                        maxMessageLimit: 10
                     }
                 } as ICfgSyncCdnConfig;
-                featureValue = getOptInFeatureVal("enableWParam", cdnConfig);
+                featureValue = shouldOptInFeature("enableWParam", cdnConfig);
                 Assert.deepEqual(null, featureValue, "feature value should be null when custom cfg is undefined case2");
-                featureValue = getOptInFeatureVal("enableWP", cdnConfig);
+                featureValue = shouldOptInFeature("enableWP", cdnConfig);
                 Assert.deepEqual(null, featureValue, "feature value should be null field is not defined case2");
                 
 
                 //Case3: cdn config is undefined or empty
                 let customFeatureOptIn = {
-                    ["enableWParam"]: {mode: FeatureOptInMode.force, cfgValue: true} as IFeatureOptInDetails
+                    ["enableWParam"]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
                 }as IFeatureOptIn;
-                featureValue = getOptInFeatureVal("enableWParam", {}, customFeatureOptIn);
+                featureValue = shouldOptInFeature("enableWParam", {}, customFeatureOptIn);
                 Assert.deepEqual(null, featureValue, "feature value should be null case3");
 
 
                 //Case4: cdn config is disbaled
                 cdnConfig = {
                     enabled: false,
-                    featureOptIn:{["enableWParam"]: FeatureOptInMode.optIn},
+                    featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.disable}},
                     config: {
-                        enableWParam: true
+                        maxMessageLimit: 10
                     }
                 } as ICfgSyncCdnConfig;
                 customFeatureOptIn = {
-                    ["enableWParam"]: {mode: FeatureOptInMode.optIn, cfgValue: false, cdnStatus: FeatureOptInMode.force} as IFeatureOptInDetails
+                    ["enableWParam"]: {mode: FeatureOptInMode.enable, cfgValue: false} as IFeatureOptInDetails
                 }as IFeatureOptIn;
-                featureValue = getOptInFeatureVal("enableWParam", cdnConfig, customFeatureOptIn);
+                featureValue = shouldOptInFeature("enableWParam", cdnConfig, customFeatureOptIn);
                 Assert.deepEqual(null, featureValue, "feature value should be null case4");
+            }
+        });
+
+        this.testCase({
+            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set enabled and custom mode set to enable",
+            useFakeTimers: true,
+            test: () => {
+                let field = "enableWParam"
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+
+                // case 1
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(false, featureValue, "feature value should be cdn value case1");
+
+                // case 2
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(true, featureValue, "feature value should be custom value case2");
+
+                // case 3
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable, blockCdnCfg: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case3");
+
+                //case 4
+                cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(undefined, featureValue, "feature value should be undefined case4");
+            }
+        });
+
+        this.testCase({
+            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set enabled and custom mode set to none",
+            useFakeTimers: true,
+            test: () => {
+                let field = "enableWParam"
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+
+                // case 1
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.none} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(false, featureValue, "feature value should be cdn value case1");
+
+                // case 2
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.none, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(false, featureValue, "feature value should be cdn value case2");
+                
+                //case 3
+                cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.none, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(true, featureValue, "feature value should be custom value case3");
+
+                // case 4
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.none, blockCdnCfg: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case4");
+            }
+        });
+
+        this.testCase({
+            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set enabled and custom mode set to disable",
+            useFakeTimers: true,
+            test: () => {
+                let field = "enableWParam"
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+
+                // case 1
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.disable} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(undefined, featureValue, "feature value should be undefined case1");
+
+                // case 2
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(true, featureValue, "feature value should be true case2");
+
+            }
+        });
+
+        this.testCase({
+            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set to force",
+            useFakeTimers: true,
+            test: () => {
+                let field = "enableWParam"
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.force, value: false}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+
+                // case 1
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(false, featureValue, "feature value should be cdn value case1");
+
+                // case 2
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.disable, blockCdnCfg: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case2");
+
+                // case 3
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(false, featureValue, "feature value should be cdn value case3");
+
+                // case 4
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true, blockCdnCfg: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(true, featureValue, "feature value should be custom value case4");
+                
+            }
+        });
+
+        this.testCase({
+            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set  to none or disable",
+            useFakeTimers: true,
+            test: () => {
+                let field = "enableWParam"
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.disable, value: false}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+
+                // case 1
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.none} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case1");
+
+                // case 2
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(true, featureValue, "feature value should be custom value case2");
+                
+                //case 3
+                cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.none}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.disable} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case3");
+
+                // case 4
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.none, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(true, featureValue, "feature value should be custom value case4");
+
+                // case 5
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(true, featureValue, "feature value should be custom value case5");
             }
         });
 
 
         this.testCase({
-            name: "CfgSyncPluginHelper: getOptInFeatureVal should work as expected with cdn config is enabled",
+            name: "CfgSyncPluginHelper: getConfigFromCdn should get config correctly with none custom opt-in",
             useFakeTimers: true,
             test: () => {
-
-                let field = "enableWParam"
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin()
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                let field = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: FeatureOptInMode.optIn},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
                     config: {
-                        enableWParam: false
+                        maxMessageLimit: 10
                     }
                 } as ICfgSyncCdnConfig;
-                // case 1
-                let customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.force} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                let featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(undefined, featureValue, "feature value should be custom value with custom mode is set to force case1");
-                // case 2
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.force, cfgValue: true} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value with custom mode is set to force case2");
-                //case 3
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.force, cfgValue: true, cdnStatus: FeatureOptInMode.disable} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value with custom mode is set to force case3");
 
+                let config = {instrumentationKey: "test"} as IConfiguration;
+                core.initialize(config, [channel]);
 
-                cdnConfig = {
-                    enabled: true,
-                    featureOptIn:{[field]: FeatureOptInMode.optIn},
-                    config: {
-                        enableWParam: false
-                    }
-                } as ICfgSyncCdnConfig;
-                // case 1
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value with custom mode is set to optIn case1");
-                // case 2
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn, cfgValue: true} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value with custom mode is set to optIn case2");
-                // case 3
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn, cfgValue: true, cdnStatus: FeatureOptInMode.force} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value with custom mode is set to optIn case3");
-                // case 4
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn, cfgValue: true, cdnStatus: FeatureOptInMode.optIn} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value with custom mode is set to optIn case4");
-                // case 5
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn, cfgValue: true, cdnStatus: FeatureOptInMode.disable} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value with custom mode is set to optIn case5");
+                let actualCdnCfg = getConfigFromCdn(cdnConfig, core);
+                Assert.deepEqual(cdnConfig.config, actualCdnCfg, "cdn config should not contain feature");
 
-
-                cdnConfig = {
-                    enabled: true,
-                    featureOptIn:{[field]: FeatureOptInMode.disable},
-                    config: {
-                        enableWParam: false
-                    }
-                } as ICfgSyncCdnConfig;
-                // case 1
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(null, featureValue, "feature value should be cdn value with cdn mode is set to disable case1");
-                // case 2
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn, cfgValue: true} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(null, featureValue, "feature value should be cdn value with cdn mode is set to disable case2");
-                // case 3
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn, cfgValue: true, cdnStatus: FeatureOptInMode.force} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value with cdn mode is set to disable case3");
-                // case 4
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn, cfgValue: true, cdnStatus: FeatureOptInMode.optIn} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value with cdn mode is set to disable case4");
-                // case 5
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.optIn, cfgValue: true, cdnStatus: FeatureOptInMode.disable} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(null, featureValue, "feature value should be cdn value with cdn mode is set to disable case5");
-
-
-                cdnConfig = {
-                    enabled: true,
-                    featureOptIn:{[field]: FeatureOptInMode.optIn},
-                    config: {
-                        enableWParam: false
-                    }
-                } as ICfgSyncCdnConfig;
-                // case 1
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.disable} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(null, featureValue, "feature value should be null with custom mode is set to disable case1");
-                // case 2
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(null, featureValue, "feature value should be null with custom mode is set to disable case2");
-                // case 3
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true, cdnStatus: FeatureOptInMode.force} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(null, featureValue, "feature value should be null with custom mode is set to disable case3");
-                // case 4
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true, cdnStatus: FeatureOptInMode.optIn} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(null, featureValue, "feature value should be null with custom mode is set to disable case4");
-                // case 5
-                customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true, cdnStatus: FeatureOptInMode.disable} as IFeatureOptInDetails
-                } as IFeatureOptIn;
-                featureValue = getOptInFeatureVal(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(null, featureValue, "feature value should be null with custom mode is set to disable case5");
             }
-
         });
+
+        this.testCase({
+            name: "CfgSyncPluginHelper: getConfigFromCdn should get config correctly with custom opt-in",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin()
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                let field = "enableWParam";
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let config = {instrumentationKey: "test", featureOptIn: customFeatureOptIn} as IConfiguration;
+                core.initialize(config, [channel]);
+
+                let actualCdnCfg = getConfigFromCdn(cdnConfig, core);
+                let expectedCfg = {
+                    maxMessageLimit: 10,
+                    [field]: false
+                }
+                Assert.deepEqual(expectedCfg, actualCdnCfg, "cdn config should contain feature");
+                
+            }
+        });
+
+        this.testCase({
+            name: "CfgSyncPluginHelper: getConfigFromCdn should override config correctly with custom opt-in",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin()
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                let field = "enableWParam";
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    config: {
+                        maxMessageLimit: 10,
+                        [field]: true
+                    }
+                } as ICfgSyncCdnConfig;
+
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let config = {instrumentationKey: "test", featureOptIn: customFeatureOptIn} as IConfiguration;
+                core.initialize(config, [channel]);
+
+                let actualCdnCfg = getConfigFromCdn(cdnConfig, core);
+                let expectedCfg = {
+                    maxMessageLimit: 10,
+                    [field]: false
+                }
+                Assert.deepEqual(expectedCfg, actualCdnCfg, "cdn config should contain feature");
+                
+            }
+        });
+
 
     }
 }

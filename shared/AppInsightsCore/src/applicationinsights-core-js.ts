@@ -62,7 +62,7 @@ export { IPerfEvent } from "./JavaScriptSDK.Interfaces/IPerfEvent";
 export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/IPerfManager";
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
 export { IFeatureOptInDetails, IFeatureOptIn } from "./JavaScriptSDK.Interfaces/IFeatureOptIn";
-export { FeatureOptInMode } from "./JavaScriptSDK.Enums/FeatureOptInEnums"
+export { FeatureOptInMode, CdnFeatureMode } from "./JavaScriptSDK.Enums/FeatureOptInEnums"
 export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole, _logInternalMessage } from "./JavaScriptSDK/DiagnosticLogger";
 export {
     ProcessTelemetryContext, createProcessTelemetryContext
