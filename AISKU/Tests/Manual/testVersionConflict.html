@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>AISKU Sample</title>
+    <link rel="stylesheet" href="style/style.css"/>
+    <script type="text/javascript">
+      var connectionString = "YOUR_CONNECTION_STRING";
+    </script>
+
+
+<!-- <script src="./ai3.test.js"></script> -->
+<!-- <script src="./ai2.test.js"></script> -->
+<script src="./ai3.test.js"></script>
+
+
+  </head>
+  <body>
+    <h1>Microsoft Application Insights JavaScript SDK - AISKU</h1>
+    <script>
+      let appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: {connectionString: "InstrumentationKey=88888888", disableInstrumentationKeyValidation: true}});
+      appInsights.loadAppInsights();
+      window.appInsights = appInsights;
+    </script>
+    <!-- <script src="aisku-example-index.gbl.js"></script> -->
+  </body>
+</html>
