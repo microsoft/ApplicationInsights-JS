@@ -40,7 +40,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 
 
 > :bulb: **Note**
-> When multiple instances of Application Insights with different major version are active within a single session, errors may arise. For further details, please refer to the [version conflict doc](./versionConflict.md) for further details.
+> When multiple instances of Application Insights with different major version are active within a single session, errors may arise. For further details, please refer to the [version conflict doc](./versionConflict.md).
 
 ## Getting Started
 
