@@ -365,6 +365,18 @@ export interface IConfig {
     disableIkeyDeprecationMessage?: boolean;
 
     /**
+     * [Optional] Disable snippet version update message.
+     * @defaultValue true
+     */
+    disableSnippetVersionUpdateMessage?: boolean;
+
+     /**
+     * [Optional] Disable cdn deprecation error message.
+     * @defaultValue true
+     */
+     disableCdnDeprecationMessage?: boolean;
+
+    /**
      * [Optional] Flag to indicate whether the internal looking endpoints should be automatically
      * added to the `excludeRequestFromAutoTrackingPatterns` collection. (defaults to true).
      * This flag exists as the provided regex is generic and may unexpectedly match a domain that

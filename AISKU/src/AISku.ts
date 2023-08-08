@@ -8,7 +8,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
     IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
-    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, parseConnectionString
+    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
@@ -102,6 +102,7 @@ export class AppInsightsSku implements IApplicationInsights {
         let _core: IAppInsightsCore<IConfiguration & IConfig>;
         let _config: IConfiguration & IConfig;
         let _analyticsPlugin: AnalyticsPlugin;
+        let _throttleManager: ThrottleMgr;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -152,24 +153,42 @@ export class AppInsightsSku implements IApplicationInsights {
 
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
+                // init throttleManager only when enabled and only once
+                if (!_throttleManager){ //&& cfgHandler.cfg.disabled
+                    _throttleManager = new ThrottleMgr();
+                }
                 if (_config.connectionString) {
                     const cs = parseConnectionString(_config.connectionString);
-                    const ingest = cs.ingestionendpoint;
+                    const ingest = cs.ingestionendpoint; // 检查是不是旧的url
                     _config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : _config.endpointUrl; // only add /v2/track when from connectionstring
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
+                }
+                
+            
+                let isErrMessageDisabled = isNullOrUndefined(_config.disableIkeyDeprecationMessage) ? true : _config.disableIkeyDeprecationMessage;
+                if (!_config.connectionString && !isErrMessageDisabled) {
+                    _throttleManager.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
+                }
+
+                isErrMessageDisabled = isNullOrUndefined(_config.disableSnippetVersionUpdateMessage) ? true : _config.disableSnippetVersionUpdateMessage;
+                if (snippet.version != 3 && !isErrMessageDisabled) {
+                    _throttleManager.sendMessage( _eInternalMessageId.SnippetVersionNotice, "Snippet Version is not the most recent one, please get the latest one for better service.");
+                }
+
+                isErrMessageDisabled = isNullOrUndefined(_config.disableCdnDeprecationMessage) ? true : _config.disableCdnDeprecationMessage;
+                if (_findSdkSourceFile().includes("az416426.vo.msecnd.net") && !isErrMessageDisabled){
+                    _throttleManager.sendMessage(_eInternalMessageId.LegacyEndpointNotice,"Legacy endpoint is no longer supported, please update for better service.");
                 }
             }));
 
             // Outside of the onConfigChange as we only want to do this once
-            let isErrMessageDisabled = isNullOrUndefined(_config.disableIkeyDeprecationMessage) ? true : _config.disableIkeyDeprecationMessage;
-            if (!_config.connectionString && !isErrMessageDisabled) {
-                _throwInternal(_core.logger,
-                    eLoggingSeverity.CRITICAL,
-                    _eInternalMessageId.InstrumentationKeyDeprecation,
-                    "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
-            }
+            // siyu: throttle enable may be false now, so I move this into onConfigChange
 
             _self.snippet = snippet;
+
+            // _sendThrottleMessage = (msgID: _eInternalMessageId, message: string) => {
+            //     _throttleManager.sendMessage(msgID, message);
+            // };
 
             _self.flush = (async: boolean = true, callBack?: () => void) => {
                 let result: void | IPromise<void>;
@@ -463,6 +482,7 @@ export class AppInsightsSku implements IApplicationInsights {
                 properties = null;
                 _sender = null;
                 _snippetVersion = null;
+                _throttleManager = null;
             }
 
             function _removePageEventHandlers() {
