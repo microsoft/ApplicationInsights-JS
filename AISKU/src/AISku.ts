@@ -24,7 +24,7 @@ import {
 } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
-import { arrForEach, arrIndexOf, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
+import { arrForEach, arrIndexOf, objDefine, objForEachKey, strIncludes, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
     STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
@@ -177,7 +177,7 @@ export class AppInsightsSku implements IApplicationInsights {
                 }
 
                 isErrMessageDisabled = isNullOrUndefined(_config.disableCdnDeprecationMessage) ? true : _config.disableCdnDeprecationMessage;
-                if (_findSdkSourceFile().includes("az416426.vo.msecnd.net") && !isErrMessageDisabled){
+                if (strIncludes(_findSdkSourceFile(), "az416426.vo.msecnd.net") && !isErrMessageDisabled){
                     _throttleManager.sendMessage(_eInternalMessageId.LegacyEndpointNotice,"Legacy endpoint is no longer supported, please update for better service.");
                 }
             }));
