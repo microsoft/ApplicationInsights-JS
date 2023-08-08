@@ -172,7 +172,7 @@ export class AppInsightsSku implements IApplicationInsights {
                 }
 
                 isErrMessageDisabled = isNullOrUndefined(_config.disableSnippetVersionUpdateMessage) ? true : _config.disableSnippetVersionUpdateMessage;
-                if (snippet.version != 3 && !isErrMessageDisabled) {
+                if ((!snippet.version ||snippet.version != 3) && !isErrMessageDisabled) {
                     _throttleManager.sendMessage( _eInternalMessageId.SnippetVersionNotice, "Snippet Version is not the most recent one, please get the latest one for better service.");
                 }
 
