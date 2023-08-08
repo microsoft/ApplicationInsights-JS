@@ -164,6 +164,7 @@ export class AppInsightsSku implements IApplicationInsights {
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                 }
                 
+                // siyu: what about create a dic between _eInternalMessageId and message, or _eInternalMessageId and config.disableXXX
             
                 let isErrMessageDisabled = isNullOrUndefined(_config.disableIkeyDeprecationMessage) ? true : _config.disableIkeyDeprecationMessage;
                 if (!_config.connectionString && !isErrMessageDisabled) {
@@ -185,10 +186,6 @@ export class AppInsightsSku implements IApplicationInsights {
             // siyu: throttle enable may be false now, so I move this into onConfigChange
 
             _self.snippet = snippet;
-
-            // _sendThrottleMessage = (msgID: _eInternalMessageId, message: string) => {
-            //     _throttleManager.sendMessage(msgID, message);
-            // };
 
             _self.flush = (async: boolean = true, callBack?: () => void) => {
                 let result: void | IPromise<void>;
