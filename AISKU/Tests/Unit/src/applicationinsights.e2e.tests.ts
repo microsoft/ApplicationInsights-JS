@@ -5,6 +5,7 @@ import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig } from '@microsoft/applicationinsights-common';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
+import { CfgSyncPlugin, ICfgSyncPlugin } from '@microsoft/applicationinsights-cfgsync-js';
 
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -134,6 +135,7 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public registerTests() {
+        this.addThrottleTests();
         this.addDynamicConfigTests()
         this.addGenericE2ETests();
         this.addAnalyticsApiTests();
@@ -249,6 +251,17 @@ export class ApplicationInsightsTests extends AITestClass {
                     Assert.ok(this._ai[method], `${method} exists`);
                     Assert.equal('function', typeof this._ai[method], `${method} is a function`);
                 });
+            }
+        });
+    }
+
+    public addThrottleTests(): void {
+        this.testCase({
+            name: 'E2E.ThrottleMgrTests: ThrottleMgr should work as expected',
+            test: () => {
+                let cfgsync: ICfgSyncPlugin = this._ai.getPlugin<CfgSyncPlugin>("AppInsightsCfgSyncPlugin").plugin;
+                Assert.ok(cfgsync, "cfgSync should exist");
+
             }
         });
     }
