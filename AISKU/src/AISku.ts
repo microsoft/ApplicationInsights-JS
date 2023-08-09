@@ -8,7 +8,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
     IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
-    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, parseConnectionString
+    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, parseConnectionString, ThrottleMgr
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
@@ -23,6 +23,7 @@ import {
     IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { CfgSyncPlugin } from "@microsoft/applicationinsights-cfgsync-js"
 import { IPromise, createPromise } from "@nevware21/ts-async";
 import { arrForEach, arrIndexOf, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
@@ -102,6 +103,8 @@ export class AppInsightsSku implements IApplicationInsights {
         let _core: IAppInsightsCore<IConfiguration & IConfig>;
         let _config: IConfiguration & IConfig;
         let _analyticsPlugin: AnalyticsPlugin;
+        let _cfgSyncPlugin: CfgSyncPlugin;
+        let _throttleMgr: ThrottleMgr;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -132,6 +135,8 @@ export class AppInsightsSku implements IApplicationInsights {
             _config = cfgHandler.cfg;
 
             _analyticsPlugin = new AnalyticsPlugin();
+            _cfgSyncPlugin = new CfgSyncPlugin();
+       
 
             objDefine(_self, "appInsights", {
                 g: () => {
@@ -143,6 +148,7 @@ export class AppInsightsSku implements IApplicationInsights {
             dependencies = new DependenciesPlugin();
             _sender = new Sender();
             _core = new AppInsightsCore();
+            _throttleMgr = new ThrottleMgr({}, _core);
 
             objDefine(_self, "core", {
                 g: () => {
@@ -157,6 +163,9 @@ export class AppInsightsSku implements IApplicationInsights {
                     const ingest = cs.ingestionendpoint;
                     _config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : _config.endpointUrl; // only add /v2/track when from connectionstring
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
+                }
+                if (_config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
+                    _throttleMgr.onReadyState(true);
                 }
             }));
 
@@ -211,6 +220,10 @@ export class AppInsightsSku implements IApplicationInsights {
                         channel.flush(async);
                     }
                 });
+                if (!_throttleMgr.isReady()) {
+                    // set ready state to true will automaatically trigger flush()
+                    _throttleMgr.onReadyState(true);
+                }
             };
         
             _self.loadAppInsights = (legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights => {
@@ -463,6 +476,8 @@ export class AppInsightsSku implements IApplicationInsights {
                 properties = null;
                 _sender = null;
                 _snippetVersion = null;
+                _cfgSyncPlugin = null;
+                _throttleMgr = null;
             }
 
             function _removePageEventHandlers() {
