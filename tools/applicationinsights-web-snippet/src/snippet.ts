@@ -98,7 +98,7 @@ declare var cfg:ISnippetConfig;
             let ingest = conString[strIngestionendpoint];
             let endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
 
-            let message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
+            let message = "SDK LOAD Failure: Failed to load Application Insights SDK script via " + targetSrc + " (See stack for details)";
             let evts:IEnvelope[] = [];
             evts.push(_createException(iKey, message, targetSrc, endpointUrl));
             evts.push(_createInternal(iKey, message, targetSrc, endpointUrl));
@@ -183,6 +183,18 @@ declare var cfg:ISnippetConfig;
 
             return envelope;
         }
+
+
+        let cdnEndpoints = [
+            "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
+            "https://js.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
+		    "https://js.cdn.monitor.azure.com/scripts/b/ai.2.min.js",
+		    "https://js0.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
+		    "https://js0.cdn.monitor.azure.com/scripts/b/ai.2.min.js",
+		    // "https://js1.cdn.monitor.azure.com/scripts/b/ai.2.min.js", // not working
+		    "https://js2.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
+            "https://js2.cdn.monitor.azure.com/scripts/b/ai.2.min.js"  
+        ]
     
         // Assigning these to local variables allows them to be minified to save space:
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src
@@ -215,9 +227,9 @@ declare var cfg:ISnippetConfig;
                 }
             }
 
-            const _createScript = () => {
+            const _createScript = (src: string) => {
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
-                (scriptElement as any)["src"] = targetSrc;
+                (scriptElement as any)["src"] = src;
                 // Allocate Cross origin only if defined and available
                 let crossOrigin = cfg[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
@@ -235,7 +247,18 @@ declare var cfg:ISnippetConfig;
                 return scriptElement;
             }
 
-            let theScript = _createScript();
+            let theScript = _createScript(targetSrc);
+
+            if (loadFailed && targetSrc in cdnEndpoints){
+                for (const currentEndpoint of cdnEndpoints) {
+                    loadFailed = false;
+                    theScript = _createScript(currentEndpoint);
+                    if (!loadFailed) {
+                        break;
+                    }
+                }
+            }
+            
             if (cfg.ld && cfg.ld < 0) {
                 // if user wants to append tag to document head, blocking page load
                 let headNode = doc.getElementsByTagName("head")[0];
