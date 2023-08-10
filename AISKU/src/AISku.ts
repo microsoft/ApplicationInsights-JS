@@ -164,26 +164,12 @@ export class AppInsightsSku implements IApplicationInsights {
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                 }
                 
-                // siyu: what about create a dic between _eInternalMessageId and message, or _eInternalMessageId and config.disableXXX
-            
-                let isErrMessageDisabled = isNullOrUndefined(_config.disableIkeyDeprecationMessage) ? true : _config.disableIkeyDeprecationMessage;
+                let isErrMessageDisabled = isNullOrUndefined(_config.throttleCfgr.instrumentKey?.enabled) ? true : _config.disableIkeyDeprecationMessage;
                 if (!_config.connectionString && !isErrMessageDisabled) {
                     _throttleManager.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
                 }
 
-                isErrMessageDisabled = isNullOrUndefined(_config.disableSnippetVersionUpdateMessage) ? true : _config.disableSnippetVersionUpdateMessage;
-                if ((!snippet.version ||snippet.version != 3) && !isErrMessageDisabled) {
-                    _throttleManager.sendMessage( _eInternalMessageId.SnippetVersionNotice, "Snippet Version is not the most recent one, please get the latest one for better service.");
-                }
-
-                isErrMessageDisabled = isNullOrUndefined(_config.disableCdnDeprecationMessage) ? true : _config.disableCdnDeprecationMessage;
-                if (strIncludes(_findSdkSourceFile(), "az416426.vo.msecnd.net") && !isErrMessageDisabled){
-                    _throttleManager.sendMessage(_eInternalMessageId.LegacyEndpointNotice,"Legacy endpoint is no longer supported, please update for better service.");
-                }
             }));
-
-            // Outside of the onConfigChange as we only want to do this once
-            // siyu: throttle enable may be false now, so I move this into onConfigChange
 
             _self.snippet = snippet;
 
