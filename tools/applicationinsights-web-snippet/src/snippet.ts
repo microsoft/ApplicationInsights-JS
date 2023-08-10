@@ -188,12 +188,12 @@ declare var cfg:ISnippetConfig;
         let cdnEndpoints = [
             "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
             "https://js.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
-		    "https://js.cdn.monitor.azure.com/scripts/b/ai.2.min.js",
-		    "https://js0.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
-		    "https://js0.cdn.monitor.azure.com/scripts/b/ai.2.min.js",
-		    // "https://js1.cdn.monitor.azure.com/scripts/b/ai.2.min.js", // not working
-		    "https://js2.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
-            "https://js2.cdn.monitor.azure.com/scripts/b/ai.2.min.js"  
+            "https://js.cdn.monitor.azure.com/scripts/b/ai.2.min.js",
+            "https://js0.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
+            "https://js0.cdn.monitor.azure.com/scripts/b/ai.2.min.js",
+            // "https://js1.cdn.monitor.azure.com/scripts/b/ai.2.min.js", // not working
+            "https://js2.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
+            "https://js2.cdn.monitor.azure.com/scripts/b/ai.2.min.js"
         ]
     
         // Assigning these to local variables allows them to be minified to save space:
