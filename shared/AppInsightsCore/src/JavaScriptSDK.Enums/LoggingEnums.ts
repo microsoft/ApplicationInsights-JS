@@ -122,7 +122,8 @@ export const enum _eInternalMessageId {
     InMemoryStorageBufferFull = 105,
     InstrumentationKeyDeprecation = 106,
     ConfigWatcherException = 107,
-    DynamicConfigException = 108
+    DynamicConfigException = 108,
+    DefaultThrottleMsgKey = 109
 }
 
 export type _InternalMessageId = number | _eInternalMessageId;
