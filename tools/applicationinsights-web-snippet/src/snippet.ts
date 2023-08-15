@@ -185,15 +185,15 @@ declare var cfg:ISnippetConfig;
         }
 
 
-        let cdnEndpoints = [
-            "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
-            "https://js.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
-            "https://js.cdn.monitor.azure.com/scripts/b/ai.2.min.js",
-            "https://js0.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
-            "https://js0.cdn.monitor.azure.com/scripts/b/ai.2.min.js",
-            // "https://js1.cdn.monitor.azure.com/scripts/b/ai.2.min.js", // not working
-            "https://js2.cdn.applicationinsights.io/scripts/b/ai.2.min.js",
-            "https://js2.cdn.monitor.azure.com/scripts/b/ai.2.min.js"
+        let domains = [
+            "js.monitor.azure.com",
+            "js.cdn.applicationinsights.io",
+            "js.cdn.monitor.azure.com",
+            "js0.cdn.applicationinsights.io",
+            "js0.cdn.monitor.azure.com",
+            // "js1.cdn.monitor.azure.com",
+            "js2.cdn.applicationinsights.io",
+            "js2.cdn.monitor.azure.com"
         ]
     
         // Assigning these to local variables allows them to be minified to save space:
@@ -249,10 +249,10 @@ declare var cfg:ISnippetConfig;
 
             let theScript = _createScript(targetSrc);
 
-            if (loadFailed && targetSrc in cdnEndpoints){
-                for (const currentEndpoint of cdnEndpoints) {
+            if (loadFailed && domains.some(endpoint => targetSrc.includes(endpoint))){
+                for (const currentEndpoint of domains) {
                     loadFailed = false;
-                    theScript = _createScript(currentEndpoint);
+                    theScript = _createScript("https://" + currentEndpoint + "/scripts/b/ai.2.min.js");
                     if (!loadFailed) {
                         break;
                     }
