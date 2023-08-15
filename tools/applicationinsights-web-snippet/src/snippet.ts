@@ -249,7 +249,7 @@ declare var cfg:ISnippetConfig;
 
             let theScript = _createScript(targetSrc);
 
-            if (loadFailed && domains.some(endpoint => targetSrc.includes(endpoint))){
+            if (loadFailed && domains.some(endpoint => targetSrc.indexOf(endpoint) !== -1)){
                 for (const currentEndpoint of domains) {
                     loadFailed = false;
                     theScript = _createScript("https://" + currentEndpoint + "/scripts/b/ai.2.min.js");
