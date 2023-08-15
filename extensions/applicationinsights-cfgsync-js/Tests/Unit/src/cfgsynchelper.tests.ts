@@ -493,7 +493,7 @@ export class CfgSyncHelperTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set enabled and custom mode set to enable",
+            name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set enabled and custom mode set to enable",
             useFakeTimers: true,
             test: () => {
                 let field = "enableWParam"
@@ -543,7 +543,7 @@ export class CfgSyncHelperTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set enabled and custom mode set to none",
+            name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set enabled and custom mode set to none",
             useFakeTimers: true,
             test: () => {
                 let field = "enableWParam"
@@ -593,7 +593,7 @@ export class CfgSyncHelperTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set enabled and custom mode set to disable",
+            name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set enabled and custom mode set to disable",
             useFakeTimers: true,
             test: () => {
                 let field = "enableWParam"
@@ -623,7 +623,7 @@ export class CfgSyncHelperTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set to force",
+            name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set to force",
             useFakeTimers: true,
             test: () => {
                 let field = "enableWParam"
@@ -667,7 +667,7 @@ export class CfgSyncHelperTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CfgSyncPluginHelper: shouldOptInFeature should cdn mode set  to none or disable",
+            name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set to none or disable",
             useFakeTimers: true,
             test: () => {
                 let field = "enableWParam"
@@ -684,14 +684,21 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.none} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case1");
+                Assert.deepEqual(false, featureValue, "feature value should be custom value case1");
 
                 // case 2
                 customFeatureOptIn = {
                     [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value case2");
+                Assert.deepEqual(false, featureValue, "feature value should be custom value case2");
+
+                // case 2-1
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual(false, featureValue, "feature value should be custom value case2-1");
                 
                 //case 3
                 cdnConfig = {

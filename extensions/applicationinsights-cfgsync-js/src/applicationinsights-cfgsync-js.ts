@@ -1,4 +1,4 @@
-import { replaceByNonOverrideCfg, shouldOptInFeature, getConfigFromCdn } from "./CfgSyncHelperFuncs";
+import { getConfigFromCdn, replaceByNonOverrideCfg, shouldOptInFeature } from "./CfgSyncHelperFuncs";
 import { CfgSyncPlugin } from "./CfgSyncPlugin";
 import {
     ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction

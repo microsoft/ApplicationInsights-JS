@@ -47,9 +47,9 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
 //                   |--------------------------------------------------------------------------|
 //                   |                    | none        | disabled    | enabled     | force     |
 //                   | ------------------ | ----------- | ----------- | ----------- | --------- |
-// | User Mode       | none               | A || C      | A || C      | B || A || C | B || C    |
-// (user Value = A)  | disabled           | A || C      | A || C      | A || C      | B || C    |
-//                   | enabled            | A || C      | A || C      | A || B || C | B || C    |
+// | User Mode       | none               | A || C      | B || A || C | B || A || C | B || C    |
+// (user Value = A)  | disabled           | A || C      | B || A || C | A || C      | B || C    |
+//                   | enabled            | A || C      | B || A || C | A || B || C | B || C    |
 //                   | none(blockCdn)     | A || C      | A || C      | A || C      | A || C    |
 //                   | disabled(blockCdn) | A || C      | A || C      | A || C      | A || C    |
 //                   | enabled(blockCdn)  | A || C      | A || C      | A || C      | A || C    |
@@ -75,6 +75,12 @@ export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, cu
         return cdnFeatureVal;
     }
     let featureVal = customFeatureVal;
+    if (cdnMode === CdnFeatureMode.disable) {
+        if (!isNullOrUndefined(cdnFeatureVal)) {
+            featureVal = cdnFeatureVal;
+        }
+    }
+    
     if (customMode === FeatureOptInMode.none && cdnMode === CdnFeatureMode.enable) {
         if (!isNullOrUndefined(cdnFeatureVal)) {
             featureVal = cdnFeatureVal;

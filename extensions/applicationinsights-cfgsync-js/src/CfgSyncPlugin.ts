@@ -12,9 +12,7 @@ import {
     sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
-import {
-    ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, scheduleTimeout
-} from "@nevware21/ts-utils";
+import { ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import { getConfigFromCdn, replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import {
     ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
@@ -77,7 +75,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             // used for V2 to manaully trigger config udpate
             _self.setCfg = (config?: IConfiguration & IConfig) => {
-                return _setCfg(config, _broadcastChanges);
+                return _setCfg(config);
             }
 
             _self.sync = (customDetails?: any) => {
@@ -149,7 +147,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         _mainConfig = config;
                         
                         if (_broadcastChanges) {
-                            objExtend({}, config);
                             _sendCfgsyncEvents();
                         }
                     }
@@ -174,6 +171,10 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     _mainConfig = config;
                     if (!!isAutoSync) {
                         return _sendCfgsyncEvents();
+                    }
+                    if (_receiveChanges) {
+                        _self.core.updateCfg(config);
+                        return true;
                     }
                 }
                 return false;
@@ -328,7 +329,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                                 } else {
                                     let cfg = cfgEvent && cfgEvent.cfg;
                                     let newCfg = cfg && isPlainObject(cfg) && _replaceTartgetByKeys(cfg);
-                                    newCfg && _self.core.updateCfg(newCfg);
+                                    newCfg && _setCfg(newCfg);
                                 }
                             }, _evtNamespace, true);
 
