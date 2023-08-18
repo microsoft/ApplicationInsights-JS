@@ -4,6 +4,7 @@ import { IConfiguration, ICustomProperties, isNullOrUndefined } from "@microsoft
 import { DistributedTracingModes } from "../Enums";
 import { IRequestContext } from "./IRequestContext";
 import { IStorageBuffer } from "./IStorageBuffer";
+import { IThrottleMgrConfig } from "./IThrottleMgr";
 
 /**
  * Configuration settings for how telemetry is sent
@@ -371,6 +372,11 @@ export interface IConfig {
      * should not be excluded.
      */
     addIntEndpoints?: boolean;
+
+    /**
+     * [Optional] set throttle mgr configuration
+     */
+    throttleMgrCfg?: IThrottleMgrConfig;
 }
 
 export class ConfigurationManager {
