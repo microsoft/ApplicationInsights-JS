@@ -3,7 +3,7 @@ const child_process = require("child_process");
 
 const packageGroupDef = "./tools/release-tools/package_groups.json";
 let packageGroup;
-let dryRun = "";
+let isTest = false;
 
 function showHelp() {
     var scriptParts;
@@ -33,7 +33,7 @@ function parseArgs() {
         let theArg = process.argv[idx];
         if (theArg.startsWith("-")) {
             if (theArg === "-test") {
-                dryRun = "--dry-run";
+                isTest = true;
             } else {
                 console.error("!!! Unknown switch [" + theArg + "] detected");
                 return false;
@@ -59,18 +59,10 @@ function removeComments(text) {
     return text.replace(/^\s*\/\/\s.*$/gm, "");
 }
 
-function getNpmPackageName(packageJsonFile) {
+function getPackageJson(packageJsonFile) {
     var packageText = removeTrailingComma(fs.readFileSync(packageJsonFile, "utf-8"));
 
-    let packageJson = JSON.parse(packageText);
-    let packageName = packageJson.name;
-    let packageVersion = packageJson.version;
-
-    let theNpmPackageName = packageName + "-" + packageVersion;
-
-    theNpmPackageName = theNpmPackageName.replace("@", "").replace("/", "-");
-
-    return theNpmPackageName + ".tgz";
+    return JSON.parse(packageText);
 }
 
 function getGroupProjects() {
@@ -88,7 +80,7 @@ function getGroupProjects() {
 if (parseArgs()) {
     var packages = getGroupProjects();
 
-    console.log(`Publishing [${packageGroup}] packages => ${packages.length}`);
+    console.log(`Set latest tag [${packageGroup}] packages => ${packages.length}`);
     packages.forEach((packageRoot) => {
         let packageJsonFile = packageRoot + "/package.json";
 
@@ -97,19 +89,17 @@ if (parseArgs()) {
             throw new Error("!!! Source package.json doesn't exist [" + packageJsonFile + "]");
         }
 
+        let packageJson = getPackageJson(packageJsonFile);
+
         console.log("\n\n##################################################################");
-        console.log("Publishing - " + getNpmPackageName(packageJsonFile));
+        console.log("Setting latest tag - " + packageJson.name);
         console.log("##################################################################");
-        let npmPackageName = packageRoot + "/" + getNpmPackageName(packageJsonFile);
-        if (!fs.existsSync(npmPackageName)) {
-            console.error("!!! NPM Package not found [" + npmPackageName + "]");
-            throw new Error("!!! NPM Package not found [" + npmPackageName + "]");
-        }
         
-        console.log(`npm package present ${npmPackageName}`);
-        let npmCmd = `npm publish ${npmPackageName} --access public ${dryRun}`;
+        let npmCmd = `npm dist-tag add ${packageJson.name}@${packageJson.version} latest`;
         console.log(`Running: \"${npmCmd}\"`);
-        child_process.execSync(npmCmd);
+        if (!isTest) {
+            child_process.execSync(npmCmd);
+        }
     });
 } else {
     showHelp();
