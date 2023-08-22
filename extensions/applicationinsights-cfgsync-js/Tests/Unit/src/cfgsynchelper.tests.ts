@@ -454,7 +454,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     enabled: true
                 } as ICfgSyncCdnConfig;
                 featureValue = shouldOptInFeature("enableWParam", cdnConfig, {});
-                Assert.deepEqual(null, featureValue, "feature value should be null when custom cfg is empty and cdn config is enabled case2");
+                Assert.deepEqual(undefined, featureValue, "feature value should be null when custom cfg is empty and cdn config is enabled case2");
                 cdnConfig = {
                     enabled: true,
                     featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.enable}},
@@ -463,9 +463,9 @@ export class CfgSyncHelperTests extends AITestClass {
                     }
                 } as ICfgSyncCdnConfig;
                 featureValue = shouldOptInFeature("enableWParam", cdnConfig);
-                Assert.deepEqual(null, featureValue, "feature value should be null when custom cfg is undefined case2");
+                Assert.deepEqual(undefined, featureValue, "feature value should be null when custom cfg is undefined case2");
                 featureValue = shouldOptInFeature("enableWP", cdnConfig);
-                Assert.deepEqual(null, featureValue, "feature value should be null field is not defined case2");
+                Assert.deepEqual(undefined, featureValue, "feature value should be null field is not defined case2");
                 
 
                 //Case3: cdn config is undefined or empty
@@ -489,6 +489,28 @@ export class CfgSyncHelperTests extends AITestClass {
                 }as IFeatureOptIn;
                 featureValue = shouldOptInFeature("enableWParam", cdnConfig, customFeatureOptIn);
                 Assert.deepEqual(null, featureValue, "feature value should be null case4");
+
+                //Case5: cdn config has value and custom details is none
+                cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.enable, value: false}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+                featureValue = shouldOptInFeature("enableWParam", cdnConfig);
+                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case5");
+
+                cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.disable, value: false}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+                featureValue = shouldOptInFeature("enableWParam", cdnConfig);
+                Assert.deepEqual(false, featureValue, "feature value should be cdn value case5");
+
             }
         });
 

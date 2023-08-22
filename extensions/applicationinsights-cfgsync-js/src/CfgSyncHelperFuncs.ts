@@ -55,15 +55,17 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
 //                   | enabled(blockCdn)  | A || C      | A || C      | A || C      | A || C    |
 export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
     
-    if (!cdnCfg || !cdnCfg.enabled || !cdnCfg.featureOptIn || !cdnCfg.featureOptIn[field] || !customOptInDetails || !customOptInDetails[field]) {
+    if (!cdnCfg || !cdnCfg.enabled) {
         return null;
     }
  
-    let cdnFeature = cdnCfg.featureOptIn[field];
-    let cdnMode = cdnFeature.mode || CdnFeatureMode.none;
+    let featureOptIn= cdnCfg.featureOptIn || {};
+    let cdnFeature = featureOptIn[field] || {mode: CdnFeatureMode.none};
+    let cdnMode = cdnFeature.mode;
     let cdnFeatureVal = cdnFeature.value;
-    let customFeature = customOptInDetails[field];
-    let customMode = customFeature.mode || FeatureOptInMode.disable; // default custom mode is disable
+    let customOptIn = customOptInDetails || {};
+    let customFeature = customOptIn[field] || {mode: FeatureOptInMode.disable}; // default custom mode is disable
+    let customMode = customFeature.mode;
     let customFeatureVal = customFeature.cfgValue;
     let blockCdn = customFeature.blockCdnCfg || false;
 
@@ -74,26 +76,16 @@ export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, cu
     if (cdnMode === CdnFeatureMode.force) {
         return cdnFeatureVal;
     }
-    let featureVal = customFeatureVal;
-    if (cdnMode === CdnFeatureMode.disable) {
-        if (!isNullOrUndefined(cdnFeatureVal)) {
-            featureVal = cdnFeatureVal;
-        }
-    }
-    
-    if (customMode === FeatureOptInMode.none && cdnMode === CdnFeatureMode.enable) {
-        if (!isNullOrUndefined(cdnFeatureVal)) {
-            featureVal = cdnFeatureVal;
-        }
+
+    if (cdnMode === CdnFeatureMode.disable || (customMode === FeatureOptInMode.none && cdnMode === CdnFeatureMode.enable)) {
+        return isNullOrUndefined(cdnFeatureVal)? customFeatureVal : cdnFeatureVal;
     }
 
     if (customMode === FeatureOptInMode.enable && cdnMode === CdnFeatureMode.enable) {
-        if (isNullOrUndefined(customFeatureVal)) {
-            featureVal = cdnFeatureVal;
-        }
+        return isNullOrUndefined(customFeatureVal)?  cdnFeatureVal : customFeatureVal;
     }
 
-    return featureVal;
+    return customFeatureVal;
 }
 
 
