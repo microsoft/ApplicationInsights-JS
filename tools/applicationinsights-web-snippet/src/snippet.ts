@@ -184,7 +184,7 @@ declare var cfg:ISnippetConfig;
             return envelope;
         }
 
-
+        let domainRetryIndex = -1;
         let domains = [
             "js.monitor.azure.com",
             "js.cdn.applicationinsights.io",
@@ -193,7 +193,8 @@ declare var cfg:ISnippetConfig;
             "js0.cdn.monitor.azure.com",
             // "js1.cdn.monitor.azure.com",
             "js2.cdn.applicationinsights.io",
-            "js2.cdn.monitor.azure.com"
+            "js2.cdn.monitor.azure.com",
+            "az416426.vo.msecnd.net"
         ]
     
         // Assigning these to local variables allows them to be minified to save space:
@@ -206,12 +207,24 @@ declare var cfg:ISnippetConfig;
                 });
                 // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
             }
+            if (appInsights.cr){
+                for (var i = 0; i < domains.length; i++){
+                    if (targetSrc.indexOf(domains[i])){
+                        domainRetryIndex = 0;
+                        break;
+                    }
+             }
             const _handleError = (evt?: any) => {
-                loadFailed = true;
                 appInsights.queue = []; // Clear the queue
                 if (!handled) {
-                    handled = true;
-                    _reportFailure(targetSrc);
+                    // start retry
+                    if (domainRetryIndex > 0 && domainRetryIndex < domains.length){
+                        theScript = _createScript("https://" + domains[domainRetryIndex] + "/scripts/b/ai.2.min.js");
+                    } else {
+                        handled = true;
+                        loadFailed = true;
+                        _reportFailure(targetSrc);
+                    }
                 }
             }
 
@@ -225,6 +238,7 @@ declare var cfg:ISnippetConfig;
                         }
                     }, 500);
                 }
+                loadFailed = false;
             }
 
             const _createScript = (src: string) => {
@@ -249,16 +263,6 @@ declare var cfg:ISnippetConfig;
 
             let theScript = _createScript(targetSrc);
 
-            if (appInsights.cr && loadFailed && domains.some(endpoint => targetSrc.indexOf(endpoint) !== -1)){
-                for (const currentEndpoint of domains) {
-                    loadFailed = false;
-                    theScript = _createScript("https://" + currentEndpoint + "/scripts/b/ai.2.min.js");
-                    if (!loadFailed) {
-                        break;
-                    }
-                }
-            }
-            
             if (cfg.ld && cfg.ld < 0) {
                 // if user wants to append tag to document head, blocking page load
                 let headNode = doc.getElementsByTagName("head")[0];
