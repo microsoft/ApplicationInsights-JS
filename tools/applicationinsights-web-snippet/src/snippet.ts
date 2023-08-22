@@ -209,10 +209,7 @@ declare var cfg:ISnippetConfig;
 
             if (cfg.cr){
                 for (var i = 0; i < domains.length; i++){
-                    console.log("domains",domains[i])
                     if (targetSrc.indexOf(domains[i]) > 0){
-                        console.log("targetSrc.indexOf(domains[i])",targetSrc.indexOf(domains[i]))
-
                         domainRetryIndex = 0;
                         break;
                     }
@@ -226,7 +223,7 @@ declare var cfg:ISnippetConfig;
                     if (domainRetryIndex >= 0 && domainRetryIndex < domains.length){
                         console.log("_createScript",domainRetryIndex)
 
-                        theScript = _createScript("https://" + domains[domainRetryIndex] + "/scripts/b/ai.2.min.js");
+                        _createScript("https://" + domains[domainRetryIndex] + "/scripts/b/ai.2.min.js");
                         domainRetryIndex += 1;
                     } else {
                         handled = true;
@@ -280,8 +277,7 @@ declare var cfg:ISnippetConfig;
 
                 return scriptElement;
             }
-
-            let theScript = _createScript(targetSrc);
+            _createScript(targetSrc);
         }
     
         // capture initial cookie
