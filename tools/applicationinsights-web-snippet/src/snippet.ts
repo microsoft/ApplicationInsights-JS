@@ -191,10 +191,9 @@ declare var cfg:ISnippetConfig;
             "js.cdn.monitor.azure.com",
             "js0.cdn.applicationinsights.io",
             "js0.cdn.monitor.azure.com",
-            // "js1.cdn.monitor.azure.com",
             "js2.cdn.applicationinsights.io",
             "js2.cdn.monitor.azure.com",
-            "az416426.vo.msecnd.net"
+            "az416426.vo.msecnd.net" // this domain is supported but not recommended
         ]
     
         // Assigning these to local variables allows them to be minified to save space:
@@ -207,19 +206,28 @@ declare var cfg:ISnippetConfig;
                 });
                 // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
             }
-            if (appInsights.cr){
+
+            if (cfg.cr){
                 for (var i = 0; i < domains.length; i++){
-                    if (targetSrc.indexOf(domains[i])){
+                    console.log("domains",domains[i])
+                    if (targetSrc.indexOf(domains[i]) > 0){
+                        console.log("targetSrc.indexOf(domains[i])",targetSrc.indexOf(domains[i]))
+
                         domainRetryIndex = 0;
                         break;
                     }
-             }
+                }
+            }
+
             const _handleError = (evt?: any) => {
                 appInsights.queue = []; // Clear the queue
                 if (!handled) {
                     // start retry
-                    if (domainRetryIndex > 0 && domainRetryIndex < domains.length){
+                    if (domainRetryIndex >= 0 && domainRetryIndex < domains.length){
+                        console.log("_createScript",domainRetryIndex)
+
                         theScript = _createScript("https://" + domains[domainRetryIndex] + "/scripts/b/ai.2.min.js");
+                        domainRetryIndex += 1;
                     } else {
                         handled = true;
                         loadFailed = true;
@@ -258,21 +266,22 @@ declare var cfg:ISnippetConfig;
                     }
                 };
 
+                if (cfg.ld && cfg.ld < 0) {
+                    // if user wants to append tag to document head, blocking page load
+                    let headNode = doc.getElementsByTagName("head")[0];
+                    headNode.appendChild(scriptElement);
+                } else {
+                    setTimeout(function () {
+                        // Attempts to place the script tag in the same location as the first script on the page
+                        doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
+                    }, cfg.ld || 0);
+                }
+
+
                 return scriptElement;
             }
 
             let theScript = _createScript(targetSrc);
-
-            if (cfg.ld && cfg.ld < 0) {
-                // if user wants to append tag to document head, blocking page load
-                let headNode = doc.getElementsByTagName("head")[0];
-                headNode.appendChild(theScript);
-            } else {
-                setTimeout(function () {
-                    // Attempts to place the script tag in the same location as the first script on the page
-                    doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(theScript);
-                }, cfg.ld || 0);
-            }
         }
     
         // capture initial cookie
