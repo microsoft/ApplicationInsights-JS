@@ -26,7 +26,7 @@ export class ThrottleMgr {
     public flushAll: () => boolean;
     public config: IThrottleMgrConfig;
 
-    constructor(core: IAppInsightsCore, namePrefix?: string) {
+    constructor(core: IAppInsightsCore<IConfiguration & IConfig>, namePrefix?: string) {
         let _self = this;
         let _canUseLocalStorage: boolean;
         let _logger: IDiagnosticLogger | null | undefined;
@@ -37,6 +37,8 @@ export class ThrottleMgr {
         let _queue: {[msgKey: number]: Array<SendMsgParameter>};
         let _isReady: boolean = false;
         let _isSpecificDaysGiven: boolean = false;
+
+        console.log("init", core.config);
 
         _initConfig();
 
@@ -196,6 +198,8 @@ export class ThrottleMgr {
             _namePrefix = isNotNullOrUndefined(namePrefix)? namePrefix : "";
 
             core.addUnloadHook(onConfigChange<IConfig & IConfiguration>(core.config, (details) => {
+                console.log("199 current _core config", core.config.throttleMgrCfg);
+
                 let coreConfig = details.cfg;
                 _canUseLocalStorage = utlCanUseLocalStorage();
                 
