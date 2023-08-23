@@ -154,12 +154,7 @@ export class AppInsightsSku implements IApplicationInsights {
             });
 
             // Will get recalled if any referenced values are changed
-            _addUnloadHook(onConfigChange(cfgHandler, () => {
-                if (!_throttleMgr){ //&& cfgHandler.cfg.disabled
-                    console.log("current _core config", _core.config)
-                    console.log("current _core config", _config)
-                    _throttleMgr = new ThrottleMgr(_core);
-                }
+            _addUnloadHook(onConfigChange(_config, () => {
                 if (!_cfgSyncPlugin){
                     _cfgSyncPlugin = new CfgSyncPlugin();
                 }
@@ -168,19 +163,6 @@ export class AppInsightsSku implements IApplicationInsights {
                     const ingest = cs.ingestionendpoint;
                     _config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : _config.endpointUrl; // only add /v2/track when from connectionstring
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
-                }
-                console.log("aisku 170");
-                console.log("171 _config",_config.throttleMgrCfg);
-
-                if (_config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
-                    _throttleMgr.onReadyState(true);
-                    console.log("_throttleMgr READY", _throttleMgr.getConfig());
-
-                }
-                if (!_config.connectionString && !_config.messageSwitch?.disableIkeyDeprecationMessage) {
-                    console.log("inside sending");
-                    let c = _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
-                    console.log("is sent", c);
                 }
             }));
 
@@ -279,6 +261,22 @@ export class AppInsightsSku implements IApplicationInsights {
                     _self.emptyQueue();
                     _self.pollInternalLogs();
                     _self.addHousekeepingBeforeUnload(_self);
+                    _addUnloadHook(onConfigChange(_config, () => {
+                        if (!_throttleMgr){ //&& cfgHandler.cfg.disabled
+                            _throttleMgr = new ThrottleMgr(_core);
+                        }
+                        if (!_cfgSyncPlugin){
+                            _cfgSyncPlugin = new CfgSyncPlugin();
+                        }
+                        if (_config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
+                            _throttleMgr.onReadyState(true);
+        
+                        }
+                        if (!_config.connectionString && !_config.messageSwitch?.disableIkeyDeprecationMessage) {
+                            let c = _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
+                            console.log("is sent", c);
+                        }
+                    }));
                 });
         
                 return _self;

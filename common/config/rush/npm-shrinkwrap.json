@@ -13,8 +13,8 @@
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
-        "@nevware21/ts-async": ">= 0.2.4 < 2.x",
-        "@nevware21/ts-utils": ">= 0.9.6 < 2.x",
+        "@nevware21/ts-async": ">= 0.3.0 < 2.x",
+        "@nevware21/ts-utils": ">= 0.10.1 < 2.x",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
@@ -399,23 +399,17 @@
       }
     },
     "node_modules/@nevware21/ts-async": {
-      "version": "0.2.6",
-      "resolved": "https://registry.npmjs.org/@nevware21/ts-async/-/ts-async-0.2.6.tgz",
-      "integrity": "sha512-NCUqEZSbsy7LVtKlUScd/eTst6djkWauLlzoIPVKCOxalEBdO8lrgNRIm4Xy68JNudNN5faqa2WA12X8m0BVhA==",
+      "version": "0.3.0",
+      "resolved": "https://registry.npmjs.org/@nevware21/ts-async/-/ts-async-0.3.0.tgz",
+      "integrity": "sha512-ZUcgUH12LN/F6nzN0cYd0F/rJaMLmXr0EHVTyYfaYmK55bdwE4338uue4UiVoRqHVqNW4KDUrJc49iGogHKeWA==",
       "dependencies": {
-        "@nevware21/ts-utils": ">= 0.9.7 < 2.x"
-      },
-      "peerDependencies": {
-        "typescript": ">=1"
+        "@nevware21/ts-utils": ">= 0.10.0 < 2.x"
       }
     },
     "node_modules/@nevware21/ts-utils": {
-      "version": "0.9.8",
-      "resolved": "https://registry.npmjs.org/@nevware21/ts-utils/-/ts-utils-0.9.8.tgz",
-      "integrity": "sha512-kZ8s8hcn9jPVX/M7kSsBYrOGlHjqLahmxrG7QeKTk5paeVwfgKdvVCjj5Acb4UGb/ukU1G34U1Z3eb7bbVanyA==",
-      "peerDependencies": {
-        "typescript": ">=1"
-      }
+      "version": "0.10.1",
+      "resolved": "https://registry.npmjs.org/@nevware21/ts-utils/-/ts-utils-0.10.1.tgz",
+      "integrity": "sha512-pMny25NnF2/MJwdqC3Iyjm2pGIXNxni4AROpcqDeWa+td9JMUY4bUS9uU9XW+BoBRqTLUL+WURF9SOd/6OQzRg=="
     },
     "node_modules/@nodelib/fs.scandir": {
       "version": "2.1.5",
@@ -6304,18 +6298,17 @@
       "requires": {}
     },
     "@nevware21/ts-async": {
-      "version": "0.2.6",
-      "resolved": "https://registry.npmjs.org/@nevware21/ts-async/-/ts-async-0.2.6.tgz",
-      "integrity": "sha512-NCUqEZSbsy7LVtKlUScd/eTst6djkWauLlzoIPVKCOxalEBdO8lrgNRIm4Xy68JNudNN5faqa2WA12X8m0BVhA==",
+      "version": "0.3.0",
+      "resolved": "https://registry.npmjs.org/@nevware21/ts-async/-/ts-async-0.3.0.tgz",
+      "integrity": "sha512-ZUcgUH12LN/F6nzN0cYd0F/rJaMLmXr0EHVTyYfaYmK55bdwE4338uue4UiVoRqHVqNW4KDUrJc49iGogHKeWA==",
       "requires": {
-        "@nevware21/ts-utils": ">= 0.9.7 < 2.x"
+        "@nevware21/ts-utils": ">= 0.10.0 < 2.x"
       }
     },
     "@nevware21/ts-utils": {
-      "version": "0.9.8",
-      "resolved": "https://registry.npmjs.org/@nevware21/ts-utils/-/ts-utils-0.9.8.tgz",
-      "integrity": "sha512-kZ8s8hcn9jPVX/M7kSsBYrOGlHjqLahmxrG7QeKTk5paeVwfgKdvVCjj5Acb4UGb/ukU1G34U1Z3eb7bbVanyA==",
-      "requires": {}
+      "version": "0.10.1",
+      "resolved": "https://registry.npmjs.org/@nevware21/ts-utils/-/ts-utils-0.10.1.tgz",
+      "integrity": "sha512-pMny25NnF2/MJwdqC3Iyjm2pGIXNxni4AROpcqDeWa+td9JMUY4bUS9uU9XW+BoBRqTLUL+WURF9SOd/6OQzRg=="
     },
     "@nodelib/fs.scandir": {
       "version": "2.1.5",

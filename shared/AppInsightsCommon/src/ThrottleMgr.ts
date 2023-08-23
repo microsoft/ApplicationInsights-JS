@@ -38,8 +38,6 @@ export class ThrottleMgr {
         let _isReady: boolean = false;
         let _isSpecificDaysGiven: boolean = false;
 
-        console.log("init", core.config);
-
         _initConfig();
 
         // Special internal method to allow the unit tests and DebugPlugin to hook embedded objects
@@ -198,8 +196,6 @@ export class ThrottleMgr {
             _namePrefix = isNotNullOrUndefined(namePrefix)? namePrefix : "";
 
             core.addUnloadHook(onConfigChange<IConfig & IConfiguration>(core.config, (details) => {
-                console.log("199 current _core config", core.config.throttleMgrCfg);
-
                 let coreConfig = details.cfg;
                 _canUseLocalStorage = utlCanUseLocalStorage();
                 
