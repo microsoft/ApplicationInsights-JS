@@ -185,6 +185,7 @@ declare var cfg:ISnippetConfig;
         }
 
         let domainRetryIndex = -1;
+        let domainRetryCount = 0;
         let domains = [
             "js.monitor.azure.com",
             "js.cdn.applicationinsights.io",
@@ -210,7 +211,7 @@ declare var cfg:ISnippetConfig;
             if (cfg.cr){
                 for (var i = 0; i < domains.length; i++){
                     if (targetSrc.indexOf(domains[i]) > 0){
-                        domainRetryIndex = 0;
+                        domainRetryIndex = i;
                         break;
                     }
                 }
@@ -220,11 +221,10 @@ declare var cfg:ISnippetConfig;
                 appInsights.queue = []; // Clear the queue
                 if (!handled) {
                     // start retry
-                    if (domainRetryIndex >= 0 && domainRetryIndex < domains.length){
-                        console.log("_createScript",domainRetryIndex)
-
-                        _createScript("https://" + domains[domainRetryIndex] + "/scripts/b/ai.2.min.js");
-                        domainRetryIndex += 1;
+                    if (domainRetryIndex >= 0 && domainRetryCount < domains.length){
+                        let nextIdx = (domainRetryIndex + domainRetryCount + 1) % domains.length;
+                        _createScript("https://" + domains[nextIdx] + "/scripts/b/ai.2.min.js");
+                        domainRetryCount += 1;
                     } else {
                         handled = true;
                         loadFailed = true;
