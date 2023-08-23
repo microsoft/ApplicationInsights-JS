@@ -265,16 +265,17 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (!_throttleMgr){ //&& cfgHandler.cfg.disabled
                             _throttleMgr = new ThrottleMgr(_core);
                         }
-                        if (!_cfgSyncPlugin){
-                            _cfgSyncPlugin = new CfgSyncPlugin();
-                        }
                         if (_config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
                             _throttleMgr.onReadyState(true);
-        
                         }
                         if (!_config.connectionString && !_config.messageSwitch?.disableIkeyDeprecationMessage) {
-                            let c = _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
-                            console.log("is sent", c);
+                            _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
+                        }
+                        if (sdkSrc.indexOf("az416426") != -1 && !_config.messageSwitch?.disableCdnDeprecationMessage) {
+                            _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "Support for domain az41626 will end soon, use js.monitor.azure.com instead");
+                        }
+                        if (parseInt(_snippetVersion) < 6 && !_config.messageSwitch?.disableSnippetVersionUpdateMessage) {
+                            _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
                         }
                     }));
                 });
