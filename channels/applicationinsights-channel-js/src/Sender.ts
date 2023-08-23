@@ -2,7 +2,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IConfig, IEnvelope,
     ISample, IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace,
-    eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage
+    eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager,
@@ -237,6 +237,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 // This function will be re-called whenever any referenced configuration is changed
                 _self._addHook(onConfigChange(config, (details) => {
                     let config = details.cfg;
+                    if (config.storagePrefix){
+                        utlSetStoragePrefix(config.storagePrefix);
+                    }
                     let ctx = createProcessTelemetryContext(null, config, core);
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
 
@@ -372,7 +375,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _maxBatchInterval = senderConfig.maxBatchInterval;
                 }));
             };
-        
+            
             _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
                 let diagLogger = itemCtx.diagLog();

@@ -38,6 +38,10 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 | [2.x](https://github.com/microsoft/ApplicationInsights-JS/tree/master)<br/><sub>(master)</sub> | Feature freeze from March '2023, security fixes and critical bugs only.<br />Supports adding / removing extensions and full unloading/removal of the SDK after initialization. Last version to support ES3 (IE8+), also provides a v1.x compatible API proxy layer for upgrading from V1.x.
 | [1.0.x](https://github.com/microsoft/ApplicationInsights-JS/tree/legacy-v1)<br/><sub>(legacy-v1)</sub> | No longer actively maintained -- please Upgrade. The documentation for `applicationinsights-js@1.0.x` has moved [here](https://github.com/microsoft/ApplicationInsights-JS/tree/master/legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v2_UpgradeGuide.html). | Not actively maintained, please upgrade.
 
+
+> :bulb: **Note**
+> When multiple instances of Application Insights with different major version are active within a single session, errors may arise. For further details, please refer to the [version conflict doc](./versionConflict.md).
+
 ## Getting Started
 
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
@@ -366,6 +370,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | eventsLimitInMem | number | 10000 | [Optional] The number of events that can be kept in memory before the SDK starts to drop events when not using Session Storage (the default).
 | disableIkeyDeprecationMessage | boolean | true | [Optional]  Disable instrumentation Key deprecation error message. If true, error message will NOT be sent. **Note: instrumentation key support will end soon**, see aka.ms/IkeyMigrate for more details.
 | bufferOverride <br/><sub>since 2.8.12</sub> | IStorageBuffer | undefined | [Optional] Identifies a simple interface to allow you to override the storage mechanism used for tracking unsent and unacknowledged events, when not provided defaults to using SessionStorage interface. You MUST supply both the `getItem` and `setItem` functions when defined.
+| storagePrefix | string[] | undefined | [Optional] An optional value that will be added as name prefix for storage name. |
 
 ### ICookieMgrConfig
 

@@ -9,7 +9,8 @@ import {
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
     PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
-    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage
+    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage,
+    utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
@@ -20,7 +21,7 @@ import {
     isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { getPerformance, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -284,7 +285,22 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (doc) {
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
-        
+
+                let perf = getPerformance();
+                // Access the performance timing object
+                const navigationEntries = (perf && perf.getEntriesByType && perf.getEntriesByType("navigation"));
+
+                // Edge Case the navigation Entries may return an empty array and the timeOrigin is not supported on IE
+                if (navigationEntries && navigationEntries[0] && !isUndefined(perf.timeOrigin)) {
+                    // Get the value of loadEventStart
+                    const loadEventStart = (navigationEntries[0] as PerformanceNavigationTiming).loadEventStart;
+                    pageView.startTime =  new Date(perf.timeOrigin + loadEventStart);
+                } else {
+                    // calculate the start time manually
+                    let duration = ((properties || pageView.properties || {}).duration || 0);
+                    pageView.startTime = new Date(new Date().getTime() - duration);
+                }
+
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,
                     PageView.dataType,
@@ -292,9 +308,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.diagLog(),
                     properties,
                     systemProperties);
-        
+
                 _self.core.track(telemetryItem);
-        
                 // reset ajaxes counter
                 _trackAjaxAttempts = 0;
             };
@@ -617,6 +632,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                     _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
 
+                    if (config.storagePrefix){
+                        utlSetStoragePrefix(config.storagePrefix);
+                    }
                     _updateStorageUsage(_extConfig);
 
                     // _updateBrowserLinkTracking

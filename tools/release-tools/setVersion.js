@@ -380,6 +380,10 @@ function shouldProcess(name) {
         return updateDefPkgs;
     }
 
+    if (name.indexOf("tools/applicationinsights-web-snippet") !== -1) {
+        return updateDefPkgs;
+    }
+
     if (name === "package.json") {
         return updateDefPkgs;
     }
@@ -389,6 +393,7 @@ function shouldProcess(name) {
 
 function updatePublishConfig(package, newVersion) {
     let details = getVersionDetails(newVersion);
+    let majorVersion = package.version.split(".")[0];
 
     if (!details.type || details.type === "release") {
         if (package.publishConfig && package.publishConfig.tag) {
@@ -401,7 +406,15 @@ function updatePublishConfig(package, newVersion) {
         }
 
         // Set the publishing tag
-        package.publishConfig.tag = details.type;
+        if (details.type === "nightly" || details.type === "dev" || details.type === "beta" || details.type === "alpha") {
+            console.log(`   Type - [${details.type}] - ${majorVersion}`);
+            package.publishConfig.tag = details.type + (majorVersion !== "0" ? majorVersion : "");
+        } else {
+            console.log(`   Type - [${details.type}]`);
+            package.publishConfig.tag = details.type;
+        }
+
+        console.log(` Tag - [${package.publishConfig.tag}]`);
     }
 
     if (package.publishConfig && Object.keys(package.publishConfig).length === 0) {
