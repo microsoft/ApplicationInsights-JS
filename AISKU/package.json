@@ -64,6 +64,7 @@
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/applicationinsights-analytics-js": "3.0.2",
+        "@microsoft/applicationinsights-cfgsync-js": "0.0.1",
         "@microsoft/applicationinsights-channel-js": "3.0.2",
         "@microsoft/applicationinsights-common": "3.0.2",
         "@microsoft/applicationinsights-core-js": "3.0.2",

@@ -265,7 +265,8 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (!_throttleMgr){ //&& cfgHandler.cfg.disabled
                             _throttleMgr = new ThrottleMgr(_core);
                         }
-                        if (_config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
+                        
+                        if (_config.extensionConfig && !_config.throttleMgrCfg.disabled && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
                             _throttleMgr.onReadyState(true);
                         }
                         if (!_config.connectionString && !_config.messageSwitch?.disableIkeyDeprecationMessage) {
@@ -277,7 +278,7 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (parseInt(_snippetVersion) < 6 && !_config.messageSwitch?.disableSnippetVersionUpdateMessage) {
                             _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
                         }
-                        
+
                     }));
                 });
         
