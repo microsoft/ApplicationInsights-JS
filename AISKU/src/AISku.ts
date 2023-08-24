@@ -277,6 +277,7 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (parseInt(_snippetVersion) < 6 && !_config.messageSwitch?.disableSnippetVersionUpdateMessage) {
                             _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
                         }
+                        
                     }));
                 });
         
