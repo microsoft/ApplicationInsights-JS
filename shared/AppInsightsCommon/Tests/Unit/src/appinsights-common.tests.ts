@@ -8,10 +8,10 @@ import { ThrottleMgrTest } from "./ThrottleMgr.tests";
 
 export function runTests() {
     new ThrottleMgrTest().registerTests();
-    // new ApplicationInsightsTests().registerTests();
-    // new ExceptionTests().registerTests();
-    // new UtilTests().registerTests();
-    // new ConnectionStringParserTests().registerTests();
-    // new SeverityLevelTests().registerTests();
-    // new RequestHeadersTests().registerTests();
+    new ApplicationInsightsTests().registerTests();
+    new ExceptionTests().registerTests();
+    new UtilTests().registerTests();
+    new ConnectionStringParserTests().registerTests();
+    new SeverityLevelTests().registerTests();
+    new RequestHeadersTests().registerTests();
 }
