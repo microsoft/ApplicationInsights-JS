@@ -104,7 +104,9 @@ export function getConfigFromCdn(cdnCfg: ICfgSyncCdnConfig, core: IAppInsightsCo
         objForEachKey(optInMap, (key) => {
             let featureVal = shouldOptInFeature(key, cdnCfg, core.config.featureOptIn);
             if (!isNullOrUndefined(featureVal)) {
-                setValueByKey(cdnConfig, key, featureVal);
+                objForEachKey(featureVal, (config, val) => {
+                    setValueByKey(cdnConfig, config, val);
+                });
             }
         });
         return cdnConfig;

@@ -437,10 +437,10 @@ export class CfgSyncHelperTests extends AITestClass {
             test: () => {
 
                 //Case1: cdn cfg and custom cfg are both undefined or empty
-                let featureValue = shouldOptInFeature("enableWParam");
+                let featureValue = shouldOptInFeature("enableWParamFeature");
                 Assert.deepEqual(null, featureValue, "feature value should be null when cfg are undefined case1");
 
-                featureValue = shouldOptInFeature("enableWParam", {}, {});
+                featureValue = shouldOptInFeature("enableWParamFeature", {}, {});
                 Assert.deepEqual(null, featureValue, "feature value should be null when cfg are empty case1");
 
 
@@ -448,21 +448,21 @@ export class CfgSyncHelperTests extends AITestClass {
                 let cdnConfig = {
                     enabled: false
                 } as ICfgSyncCdnConfig;
-                featureValue = shouldOptInFeature("enableWParam", cdnConfig);
+                featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig);
                 Assert.deepEqual(null, featureValue, "feature value should be null when custom cfg is undefined and cdn config is disabled case2");
                 cdnConfig = {
                     enabled: true
                 } as ICfgSyncCdnConfig;
-                featureValue = shouldOptInFeature("enableWParam", cdnConfig, {});
+                featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig, {});
                 Assert.deepEqual(undefined, featureValue, "feature value should be null when custom cfg is empty and cdn config is enabled case2");
                 cdnConfig = {
                     enabled: true,
-                    featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.enable}},
+                    featureOptIn:{["enableWParamFeature"]: {mode: CdnFeatureMode.enable}},
                     config: {
                         maxMessageLimit: 10
                     }
                 } as ICfgSyncCdnConfig;
-                featureValue = shouldOptInFeature("enableWParam", cdnConfig);
+                featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig);
                 Assert.deepEqual(undefined, featureValue, "feature value should be null when custom cfg is undefined case2");
                 featureValue = shouldOptInFeature("enableWP", cdnConfig);
                 Assert.deepEqual(undefined, featureValue, "feature value should be null field is not defined case2");
@@ -470,46 +470,46 @@ export class CfgSyncHelperTests extends AITestClass {
 
                 //Case3: cdn config is undefined or empty
                 let customFeatureOptIn = {
-                    ["enableWParam"]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                    ["enableWParamFeature"]: {mode: FeatureOptInMode.enable, cfgValue: {["enableWParam"]: true}} as IFeatureOptInDetails
                 }as IFeatureOptIn;
-                featureValue = shouldOptInFeature("enableWParam", {}, customFeatureOptIn);
+                featureValue = shouldOptInFeature("enableWParamFeature", {}, customFeatureOptIn);
                 Assert.deepEqual(null, featureValue, "feature value should be null case3");
 
 
                 //Case4: cdn config is disbaled
                 cdnConfig = {
                     enabled: false,
-                    featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.disable}},
+                    featureOptIn:{["enableWParamFeature"]: {mode: CdnFeatureMode.disable}},
                     config: {
                         maxMessageLimit: 10
                     }
                 } as ICfgSyncCdnConfig;
                 customFeatureOptIn = {
-                    ["enableWParam"]: {mode: FeatureOptInMode.enable, cfgValue: false} as IFeatureOptInDetails
+                    ["enableWParamFeature"]: {mode: FeatureOptInMode.enable, cfgValue: {["enableWParam"]: false}} as IFeatureOptInDetails
                 }as IFeatureOptIn;
-                featureValue = shouldOptInFeature("enableWParam", cdnConfig, customFeatureOptIn);
+                featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig, customFeatureOptIn);
                 Assert.deepEqual(null, featureValue, "feature value should be null case4");
 
                 //Case5: cdn config has value and custom details is none
                 cdnConfig = {
                     enabled: true,
-                    featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.enable, value: false}},
+                    featureOptIn:{["enableWParamFeature"]: {mode: CdnFeatureMode.enable, value: {["enableWParam"]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
                 } as ICfgSyncCdnConfig;
-                featureValue = shouldOptInFeature("enableWParam", cdnConfig);
+                featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig);
                 Assert.deepEqual(undefined, featureValue, "feature value should be custom value case5");
 
                 cdnConfig = {
                     enabled: true,
-                    featureOptIn:{["enableWParam"]: {mode: CdnFeatureMode.disable, value: false}},
+                    featureOptIn:{["enableWParamFeature"]: {mode: CdnFeatureMode.disable, value: {["enableWParam"]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
                 } as ICfgSyncCdnConfig;
-                featureValue = shouldOptInFeature("enableWParam", cdnConfig);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value case5");
+                featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig);
+                Assert.deepEqual({["enableWParam"]: false}, featureValue, "feature value should be cdn value case5");
 
             }
         });
@@ -518,10 +518,11 @@ export class CfgSyncHelperTests extends AITestClass {
             name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set enabled and custom mode set to enable",
             useFakeTimers: true,
             test: () => {
-                let field = "enableWParam"
+                let field = "enableWParamFeature";
+                let valField = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: {[valField]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
@@ -532,14 +533,14 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.enable} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value case1");
+                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be cdn value case1");
 
                 // case 2
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value case2");
+                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be custom value case2");
 
                 // case 3
                 customFeatureOptIn = {
@@ -568,10 +569,11 @@ export class CfgSyncHelperTests extends AITestClass {
             name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set enabled and custom mode set to none",
             useFakeTimers: true,
             test: () => {
-                let field = "enableWParam"
+                let field = "enableWParamFeature";
+                let valField = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: {[valField]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
@@ -582,14 +584,14 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.none} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value case1");
+                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be cdn value case1");
 
                 // case 2
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.none, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.none, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value case2");
+                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be cdn value case2");
                 
                 //case 3
                 cdnConfig = {
@@ -600,10 +602,10 @@ export class CfgSyncHelperTests extends AITestClass {
                     }
                 } as ICfgSyncCdnConfig;
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.none, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.none, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value case3");
+                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be custom value case3");
 
                 // case 4
                 customFeatureOptIn = {
@@ -618,10 +620,11 @@ export class CfgSyncHelperTests extends AITestClass {
             name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set enabled and custom mode set to disable",
             useFakeTimers: true,
             test: () => {
-                let field = "enableWParam"
+                let field = "enableWParamFeature";
+                let valField = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: {[valField]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
@@ -636,10 +639,10 @@ export class CfgSyncHelperTests extends AITestClass {
 
                 // case 2
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.disable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be true case2");
+                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be true case2");
 
             }
         });
@@ -648,10 +651,11 @@ export class CfgSyncHelperTests extends AITestClass {
             name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set to force",
             useFakeTimers: true,
             test: () => {
-                let field = "enableWParam"
+                let field = "enableWParamFeature";
+                let valField = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: {mode: CdnFeatureMode.force, value: false}},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.force, value: {[valField]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
@@ -659,10 +663,10 @@ export class CfgSyncHelperTests extends AITestClass {
 
                 // case 1
                 let customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.disable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value case1");
+                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be cdn value case1");
 
                 // case 2
                 customFeatureOptIn = {
@@ -673,17 +677,17 @@ export class CfgSyncHelperTests extends AITestClass {
 
                 // case 3
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be cdn value case3");
+                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be cdn value case3");
 
                 // case 4
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true, blockCdnCfg: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: {[valField]: true}, blockCdnCfg: true} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value case4");
+                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be custom value case4");
                 
             }
         });
@@ -692,10 +696,11 @@ export class CfgSyncHelperTests extends AITestClass {
             name: "CfgSyncPluginHelper: shouldOptInFeature should work with cdn mode set to none or disable",
             useFakeTimers: true,
             test: () => {
-                let field = "enableWParam"
+                let field = "enableWParamFeature";
+                let valField = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: {mode: CdnFeatureMode.disable, value: false}},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.disable, value: {[valField]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
@@ -706,21 +711,21 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.none} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be custom value case1");
+                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be custom value case1");
 
                 // case 2
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be custom value case2");
+                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be custom value case2");
 
                 // case 2-1
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.disable, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.disable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(false, featureValue, "feature value should be custom value case2-1");
+                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be custom value case2-1");
                 
                 //case 3
                 cdnConfig = {
@@ -738,17 +743,17 @@ export class CfgSyncHelperTests extends AITestClass {
 
                 // case 4
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.none, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.none, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value case4");
+                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be custom value case4");
 
                 // case 5
                 customFeatureOptIn = {
-                    [field]: {mode: FeatureOptInMode.enable, cfgValue: true} as IFeatureOptInDetails
+                    [field]: {mode: FeatureOptInMode.enable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(true, featureValue, "feature value should be custom value case5");
+                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be custom value case5");
             }
         });
 
@@ -762,10 +767,11 @@ export class CfgSyncHelperTests extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
-                let field = "enableWParam";
+                let field = "enableWParamFeature";
+                let valField = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: {[valField]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
@@ -789,10 +795,11 @@ export class CfgSyncHelperTests extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
-                let field = "enableWParam";
+                let field = "enableWParamFeature";
+                let valField = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: {[valField]: false}}},
                     config: {
                         maxMessageLimit: 10
                     }
@@ -807,7 +814,7 @@ export class CfgSyncHelperTests extends AITestClass {
                 let actualCdnCfg = getConfigFromCdn(cdnConfig, core);
                 let expectedCfg = {
                     maxMessageLimit: 10,
-                    [field]: false
+                    [valField]: false
                 }
                 Assert.deepEqual(expectedCfg, actualCdnCfg, "cdn config should contain feature");
                 
@@ -823,13 +830,14 @@ export class CfgSyncHelperTests extends AITestClass {
                 this.onDone(() => {
                     core.unload(false);
                 });
-                let field = "enableWParam";
+                let field = "enableWParamFeature";
+                let valField = "enableWParam";
                 let cdnConfig = {
                     enabled: true,
-                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: false}},
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: {[valField]: false}}},
                     config: {
                         maxMessageLimit: 10,
-                        [field]: true
+                        [valField]: true
                     }
                 } as ICfgSyncCdnConfig;
 
@@ -842,7 +850,42 @@ export class CfgSyncHelperTests extends AITestClass {
                 let actualCdnCfg = getConfigFromCdn(cdnConfig, core);
                 let expectedCfg = {
                     maxMessageLimit: 10,
-                    [field]: false
+                    [valField]: false
+                }
+                Assert.deepEqual(expectedCfg, actualCdnCfg, "cdn config should contain feature");
+                
+            }
+        });
+
+        this.testCase({
+            name: "CfgSyncPluginHelper: getConfigFromCdn should override config correctly with mutiple layers custom opt-in values",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin()
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                let field = "throttleFeature";
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, value: {["throttle.1"]: false}}},
+                    config: {
+                        maxMessageLimit: 10,
+                        ["throttle"]: {1: true, 2: false}
+                    }
+                } as ICfgSyncCdnConfig;
+
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let config = {instrumentationKey: "test", featureOptIn: customFeatureOptIn} as IConfiguration;
+                core.initialize(config, [channel]);
+
+                let actualCdnCfg = getConfigFromCdn(cdnConfig, core);
+                let expectedCfg = {
+                    maxMessageLimit: 10,
+                    ["throttle"]: {1: false, 2: false}
                 }
                 Assert.deepEqual(expectedCfg, actualCdnCfg, "cdn config should contain feature");
                 
