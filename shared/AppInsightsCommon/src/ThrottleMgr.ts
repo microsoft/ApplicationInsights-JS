@@ -204,22 +204,9 @@ export class ThrottleMgr {
                 _canUseLocalStorage = utlCanUseLocalStorage();
                 
                 let configMgr = coreConfig.throttleMgrCfg || {};
-                //_config = _config || {} as any;
                 objForEachKey(configMgr, (key, cfg) => {
                     _setCfgByKey(parseInt(key), cfg)
                 });
-                // _config.disabled = !!configMgr.disabled;
-    
-                // let configInterval = configMgr.interval || {};
-                // _isSpecificDaysGiven = configInterval?.daysOfMonth && configInterval?.daysOfMonth.length > 0;
-                // _config.interval = _getIntervalConfig(configInterval);
-    
-                // let limit = {
-                //     samplingRate: configMgr.limit?.samplingRate || 100,
-                //     // dafault: every time sent only 1 event
-                //     maxSendNumber: configMgr.limit?.maxSendNumber || 1
-                // };
-                // _config.limit = limit;
         
             }));
         }
