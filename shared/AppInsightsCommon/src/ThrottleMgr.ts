@@ -30,7 +30,7 @@ export class ThrottleMgr {
         let _self = this;
         let _canUseLocalStorage: boolean;
         let _logger: IDiagnosticLogger | null | undefined;
-        let _config: IThrottleMgrConfig;
+        let _config: {[msgKey: number]: IThrottleMgrConfig};
         let _localStorageObj: {[msgKey: number]: IThrottleLocalStorageObj | null | undefined};
         let _isTriggered: {[msgKey: number]: boolean}; //_isTriggered is to make sure that we only trigger throttle once a day
         let _namePrefix: string;
@@ -57,7 +57,8 @@ export class ThrottleMgr {
          */
         _self.canThrottle = (msgId: _eInternalMessageId | number ): boolean => {
             let localObj = _getLocalStorageObjByKey(msgId);
-            return _canThrottle(_config, _canUseLocalStorage, localObj);
+            let cfg = _getCfgByKey(msgId);
+            return _canThrottle(cfg, _canUseLocalStorage, localObj);
         }
 
         /**
@@ -143,18 +144,19 @@ export class ThrottleMgr {
 
         function _flushMessage(msgID: _eInternalMessageId | number, message: string, severity?: eLoggingSeverity, saveUnsentMsg?: boolean) {
             if (_isReady) {
-                let isSampledIn = _canSampledIn();
+                let isSampledIn = _canSampledIn(msgID);
                 if (!isSampledIn) {
                     return;
                 }
+                let cfg = _getCfgByKey(msgID);
                 let localStorageObj = _getLocalStorageObjByKey(msgID);
-                let canThrottle = _canThrottle(_config, _canUseLocalStorage, localStorageObj);
+                let canThrottle = _canThrottle(cfg, _canUseLocalStorage, localStorageObj);
                 let throttled = false;
                 let number = 0;
                 let isTriggered = _isTrigger(msgID);
                 try {
                     if (canThrottle && !isTriggered) {
-                        number =  Math.min(_config.limit.maxSendNumber, localStorageObj.count + 1);
+                        number = Math.min(cfg.limit.maxSendNumber, localStorageObj.count + 1);
                         localStorageObj.count = 0;
                         throttled = true;
                         _isTriggered[msgID] = true;
@@ -193,6 +195,8 @@ export class ThrottleMgr {
             _isTriggered = {};
             _localStorageObj = {};
             _queue = {};
+            _config = {};
+            _setCfgByKey(_eInternalMessageId.DefaultThrottleMsgKey);
             _namePrefix = isNotNullOrUndefined(namePrefix)? namePrefix : "";
 
             core.addUnloadHook(onConfigChange<IConfig & IConfiguration>(core.config, (details) => {
@@ -200,21 +204,49 @@ export class ThrottleMgr {
                 _canUseLocalStorage = utlCanUseLocalStorage();
                 
                 let configMgr = coreConfig.throttleMgrCfg || {};
-                _config = {} as any;
-                _config.disabled = !!configMgr.disabled;
+                //_config = _config || {} as any;
+                objForEachKey(configMgr, (key, cfg) => {
+                    _setCfgByKey(parseInt(key), cfg)
+                });
+                // _config.disabled = !!configMgr.disabled;
     
-                let configInterval = configMgr.interval || {};
-                _isSpecificDaysGiven = configInterval?.daysOfMonth && configInterval?.daysOfMonth.length > 0;
-                _config.interval = _getIntervalConfig(configInterval);
+                // let configInterval = configMgr.interval || {};
+                // _isSpecificDaysGiven = configInterval?.daysOfMonth && configInterval?.daysOfMonth.length > 0;
+                // _config.interval = _getIntervalConfig(configInterval);
     
-                let limit = {
-                    samplingRate: configMgr.limit?.samplingRate || 100,
-                    // dafault: every time sent only 1 event
-                    maxSendNumber: configMgr.limit?.maxSendNumber || 1
-                };
-                _config.limit = limit;
+                // let limit = {
+                //     samplingRate: configMgr.limit?.samplingRate || 100,
+                //     // dafault: every time sent only 1 event
+                //     maxSendNumber: configMgr.limit?.maxSendNumber || 1
+                // };
+                // _config.limit = limit;
         
             }));
+        }
+
+        function _getCfgByKey(msgID: _eInternalMessageId | number) {
+            return _config[msgID] || _config[_eInternalMessageId.DefaultThrottleMsgKey];
+        }
+
+        function _setCfgByKey(msgID: _eInternalMessageId | number, config?: IThrottleMgrConfig) {
+            try {
+                let cfg = config || {};
+                let curCfg = {} as IThrottleMgrConfig;
+                curCfg.disabled = !!cfg.disabled;
+                let configInterval = cfg.interval || {};
+                _isSpecificDaysGiven = configInterval?.daysOfMonth && configInterval?.daysOfMonth.length > 0;
+                curCfg.interval = _getIntervalConfig(configInterval);
+                let limit = {
+                    samplingRate: cfg.limit?.samplingRate || 100,
+                    // dafault: every time sent only 1 event
+                    maxSendNumber: cfg.limit?.maxSendNumber || 1
+                };
+                curCfg.limit = limit;
+                _config[msgID] = curCfg;
+
+            } catch (e) {
+                // eslint-disable-next-line no-empty
+            }
         }
 
         function _getIntervalConfig(interval: IThrottleInterval) {
@@ -241,7 +273,7 @@ export class ThrottleMgr {
         }
 
         function _canThrottle(config: IThrottleMgrConfig, canUseLocalStorage: boolean, localStorageObj: IThrottleLocalStorageObj) {
-            if (!config.disabled && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
+            if (config && !config.disabled && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
                 let curDate = _getThrottleDate();
                 let date = localStorageObj.date;
                 let interval = config.interval;
@@ -336,7 +368,7 @@ export class ThrottleMgr {
             try {
                 return utlSetLocalStorage(logger, storageName, strTrim(JSON.stringify(obj)));
             } catch (e) {
-            //     // eslint-disable-next-line no-empty
+                // eslint-disable-next-line no-empty
             }
             return false;
         }
@@ -358,8 +390,14 @@ export class ThrottleMgr {
 
         // NOTE: config.limit.samplingRate is set to 4 decimal places,
         // so config.limit.samplingRate = 1 means 0.0001%
-        function _canSampledIn() {
-            return randomValue(1000000) <= _config.limit.samplingRate;
+        function _canSampledIn(msgID: _eInternalMessageId) {
+            try {
+                let cfg = _getCfgByKey(msgID)
+                return randomValue(1000000) <= cfg.limit.samplingRate;
+            } catch (e) {
+                // eslint-disable-next-line no-empty
+            }
+            return false;
         }
 
         function _getLocalStorageObjByKey(key: _eInternalMessageId | number) {
