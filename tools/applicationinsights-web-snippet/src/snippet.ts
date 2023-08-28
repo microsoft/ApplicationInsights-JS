@@ -221,7 +221,7 @@ declare var cfg:ISnippetConfig;
                 appInsights.queue = []; // Clear the queue
                 if (!handled) {
                     // start retry
-                    if (domainRetryIndex >= 0 && domainRetryCount < domains.length){ // domainRetryIndex will be negative when client using own domain (the supported domain list is defined above)
+                    if (domainRetryIndex >= 0 && domainRetryCount + 1 < domains.length){ // domainRetryIndex will be negative when client using own domain (the supported domain list is defined above)
                         let nextIdx = (domainRetryIndex + domainRetryCount + 1) % domains.length;
                         _createScript(targetSrc.replace(/^(.*\/\/)([\w\.]*)(\/.*)$/, function (_all, http, domain, qs) {
                             return http + domains[nextIdx] + qs;
