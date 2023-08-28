@@ -98,7 +98,7 @@ declare var cfg:ISnippetConfig;
             let ingest = conString[strIngestionendpoint];
             let endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
 
-            let message = "SDK LOAD Failure: Failed to load Application Insights SDK script via " + targetSrc + " (See stack for details)";
+            let message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
             let evts:IEnvelope[] = [];
             evts.push(_createException(iKey, message, targetSrc, endpointUrl));
             evts.push(_createInternal(iKey, message, targetSrc, endpointUrl));
@@ -208,7 +208,7 @@ declare var cfg:ISnippetConfig;
                 // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
             }
 
-            if (cfg.cr){
+            if (cfg.cr != false){
                 for (var i = 0; i < domains.length; i++){
                     if (targetSrc.indexOf(domains[i]) > 0){
                         domainRetryIndex = i;
@@ -221,9 +221,11 @@ declare var cfg:ISnippetConfig;
                 appInsights.queue = []; // Clear the queue
                 if (!handled) {
                     // start retry
-                    if (domainRetryIndex >= 0 && domainRetryCount < domains.length){
+                    if (domainRetryIndex >= 0 && domainRetryCount < domains.length){ // domainRetryIndex will be negative when client using own domain (the supported domain list is defined above)
                         let nextIdx = (domainRetryIndex + domainRetryCount + 1) % domains.length;
-                        _createScript("https://" + domains[nextIdx] + "/scripts/b/ai.2.min.js");
+                        _createScript(targetSrc.replace(/^(.*\/\/)([\w\.]*)(\/.*)$/, function (_all, http, domain, qs) {
+                            return http + domains[nextIdx] + qs;
+                        }));
                         domainRetryCount += 1;
                     } else {
                         handled = true;
