@@ -15,5 +15,4 @@ export interface Snippet {
     queue?: Array<() => void>;
     sv?: string;
     version?: number;
-    cr?: boolean; // cdn retry would be proceed if ture
 }
