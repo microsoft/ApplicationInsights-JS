@@ -55,19 +55,19 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
 //                                | disabled(blockCdn) | disabled    | disabled    | disabled    | disabled  |
 //                                | enabled(blockCdn)  | enabled     | enabled     | enabled     | enabled   |
 
-//                                cdn Mode (cdn Value = B, SDK Config Defaults = C)
+//                                cdn Mode (cdn feature Value = B, SDK Config Defaults = C (value from cdn config/defaults))
 //                   |--------------------------------------------------------------------------|
 //                   |                    | none        | disabled    | enabled     | force     |
 //                   | ------------------ | ----------- | ----------- | ----------- | --------- |
-// | User Mode       | none               | A || C      | C           | C           | B || C    |
-// (user Value = A)  | disabled           | C           | C           | C           | B || C    |
-//                   | enabled            | A || B || C | C           | A || B || C | B || C    |
+// | User Mode       | none               | A || C      | A || C      | A || C      | B || C    |
+// (user Value = A)  | disabled           | A || C      | A || C      | A || C      | B || C    |
+//                   | enabled            | A || B || C | A || C      | A || B || C | B || C    |
 //                   | none(blockCdn)     | A || C      | A || C      | A || C      | A || C    |
-//                   | disabled(blockCdn) | C           | C           | C           | C         |
+//                   | disabled(blockCdn) | A || C      | A || C      | A || C      | A || C    |
 //                   | enabled(blockCdn)  | A || C      | A || C      | A || C      | A || C    |
 
-export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
-    
+export function resolveCdnFeatureCfg(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
+    // cdn conifg value
     if (!cdnCfg || !cdnCfg.enabled) {
         return null;
     }
@@ -81,35 +81,55 @@ export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, cu
     let customMode = customFeature.mode;
     let customFeatureVal = customFeature.cfgValue;
     let blockCdn = !!customFeature.blockCdnCfg;
+    const fld = "featureOptIn.";
+    let mField = fld + field + ".mode";
+    let vField = fld + field + ".cfgValue";
 
     if (blockCdn) {
-        return customMode == FeatureOptInMode.disable? null : customFeatureVal;
+        return {
+            [mField]: customMode,
+            [vField]: customFeatureVal
+        };
     }
 
     if (cdnMode === CdnFeatureMode.force) {
-        return cdnFeatureVal;
+        return {
+            [mField]: FeatureOptInMode.enable,
+            [vField]: cdnFeatureVal
+        };
     }
 
     if (cdnMode === CdnFeatureMode.disable || customMode === FeatureOptInMode.disable) {
-        return null;
+        return {
+            [mField]: FeatureOptInMode.disable
+        };
     }
 
+
     if (customMode === FeatureOptInMode.enable) {
-        return customFeatureVal || cdnFeatureVal;
+        return {
+            [mField]: FeatureOptInMode.enable,
+            [vField]: isNullOrUndefined(customFeatureVal)? cdnFeatureVal : customFeatureVal
+        };
     }
 
     if (cdnMode === CdnFeatureMode.none && customMode === FeatureOptInMode.none) {
-        return customFeatureVal;
+        return {
+            [mField]: FeatureOptInMode.none,
+            [vField]: isNullOrUndefined(customFeatureVal)? cdnFeatureVal : customFeatureVal
+        };
     }
-    
-    return null;
+
+    return {
+        [mField]: FeatureOptInMode.disable
+    };
 
 }
 
 
 
 // helper function to get cdn config with opt-in features
-export function getConfigFromCdn(cdnCfg: ICfgSyncCdnConfig, core: IAppInsightsCore) {
+export function applyCdnfeatureCfg(cdnCfg: ICfgSyncCdnConfig, core: IAppInsightsCore) {
     try {
         if (!cdnCfg || !cdnCfg.enabled) {
             return null;
@@ -120,7 +140,7 @@ export function getConfigFromCdn(cdnCfg: ICfgSyncCdnConfig, core: IAppInsightsCo
         let optInMap = cdnCfg.featureOptIn;
         let cdnConfig = cdnCfg.config || {};
         objForEachKey(optInMap, (key) => {
-            let featureVal = shouldOptInFeature(key, cdnCfg, core.config.featureOptIn);
+            let featureVal = resolveCdnFeatureCfg(key, cdnCfg, core.config.featureOptIn);
             if (!isNullOrUndefined(featureVal)) {
                 objForEachKey(featureVal, (config, val) => {
                     setValueByKey(cdnConfig, config, val);

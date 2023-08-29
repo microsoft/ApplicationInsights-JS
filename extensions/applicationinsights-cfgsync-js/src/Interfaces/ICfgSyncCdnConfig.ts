@@ -16,6 +16,7 @@ export interface ICfgSyncCdnConfig {
      * @default undefined
      */
     config?: IConfiguration;
+
     /**
      * Identifies fields of IConfiguration should be overridden (not in use currently)
      * only override for opt-in instances when enabled is set to true
@@ -35,9 +36,7 @@ export interface ICdnFeatureOptIn {
     mode: CdnFeatureMode,
     /**
      * Identifies configuration values that should be set for the feature
-     * NOTE: should use flat string for fields, for example, if you want to set value for extensionConfig.Ananlytics.disableAjaxTrackig in configurations,
-     * you should use "extensionConfig.Ananlytics.disableAjaxTrackig" as field name: {["extensionConfig.Analytics.disableAjaxTrackig"]:1}
      * Default: undefined
      */
-    value?: {[field: string]: any}
+    value?: any
 }

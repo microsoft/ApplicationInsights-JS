@@ -13,7 +13,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
-import { getConfigFromCdn, replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
+import { applyCdnfeatureCfg, replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import {
     ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
 } from "./Interfaces/ICfgSyncConfig";
@@ -291,7 +291,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         let JSON = getJSON();
                         if (JSON) {
                             let cdnCfg = JSON.parse(response); //comments are not allowed
-                            let cfg = getConfigFromCdn(cdnCfg, _self.core);
+                            let cfg = applyCdnfeatureCfg(cdnCfg, _self.core);
                             cfg && _setCfg(cfg, isAutoSync);
                         }
                     } else {
