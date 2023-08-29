@@ -208,7 +208,7 @@ declare var cfg:ISnippetConfig;
                 // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
             }
 
-            if (cfg.cr != false){
+            if (cfg.cr !== false){
                 for (var i = 0; i < domains.length; i++){
                     if (targetSrc.indexOf(domains[i]) > 0){
                         domainRetryIndex = i;
