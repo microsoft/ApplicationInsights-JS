@@ -104,15 +104,6 @@ export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, cu
     
     return null;
 
-    // if (cdnMode === CdnFeatureMode.disable || (customMode === FeatureOptInMode.none && cdnMode === CdnFeatureMode.enable)) {
-    //     return isNullOrUndefined(cdnFeatureVal)? customFeatureVal : cdnFeatureVal;
-    // }
-
-    // if (customMode === FeatureOptInMode.enable && cdnMode === CdnFeatureMode.enable) {
-    //     return isNullOrUndefined(customFeatureVal)?  cdnFeatureVal : customFeatureVal;
-    // }
-
-    // return customFeatureVal;
 }
 
 
