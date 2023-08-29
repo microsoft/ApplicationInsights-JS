@@ -7,12 +7,10 @@ export interface IFeatureOptInDetails {
      */
     mode?: FeatureOptInMode;
     /**
-     * set config values of current feature
-     * NOTE: should use flat string for fields, for example, if you want to set value for extensionConfig.Ananlytics.disableAjaxTrackig in configurations,
-     * you should use "extensionConfig.Ananlytics.disableAjaxTrackig" as field name
+     * set values of current feature
      * @default undefined
      */
-    cfgValue?: {[field: string]: any};
+    cfgValue?: any;
     /**
      * define if should block any changes from cdn cfg, if set to true, cfgValue will be applied under all scenarios
      * @default false
