@@ -8,6 +8,7 @@ export interface ISnippetConfig {
     crossOrigin?: string;
     onInit?: any;
     cfg: IConfiguration;
+    cr?: boolean; // cdn retry would be proceed if ture
 }
 
 export interface Fields {
