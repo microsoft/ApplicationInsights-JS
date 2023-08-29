@@ -265,8 +265,8 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (!_throttleMgr){ //&& cfgHandler.cfg.disabled
                             _throttleMgr = new ThrottleMgr(_core);
                         }
-                        
-                        if (_config.extensionConfig && !_config.throttleMgrCfg.disabled && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
+                        //  && !_config.throttleMgrCfg.disabled
+                        if (_config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
                             _throttleMgr.onReadyState(true);
                         }
                         if (!_config.connectionString && !_config.messageSwitch?.disableIkeyDeprecationMessage) {
