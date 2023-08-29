@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 export {
-    AjaxMonitor as AjaxPlugin, IDependenciesPlugin, XMLHttpRequestInstrumented, IInstrumentationRequirements, DfltAjaxCorrelationHeaderExDomains
+    AjaxMonitor as AjaxPlugin, IDependenciesPlugin, XMLHttpRequestData, XMLHttpRequestInstrumented, IInstrumentationRequirements, DfltAjaxCorrelationHeaderExDomains
 } from "./ajax";
 export { ajaxRecord } from "./ajaxRecord";
 export { IDependencyHandler, IDependencyListenerHandler, IDependencyListenerDetails, DependencyListenerFunction } from "./DependencyListener";
