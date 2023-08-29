@@ -87,14 +87,43 @@ export class ThrottleMgrTest extends AITestClass {
                     } as IThrottleInterval
                 } as IThrottleMgrConfig;
                 let coreCfg = {
-                    instrumentationKey: "test",
-                    throttleMgrCfg: expectedconfig
+                    instrumentationKey: "test"
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(expectedconfig, actualConfig, "should get expected default config");
+                Assert.deepEqual(expectedconfig, actualConfig[_eInternalMessageId.DefaultThrottleMsgKey], "should get expected default config");
+                let isTriggered = throttleMgr.isTriggered(this._msgId);
+                Assert.equal(isTriggered, false, "should not be triggered");
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: Default config should be set from root with key",
+            test: () => {
+                let expectedconfig = {
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber: 1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 3,
+                        dayInterval: undefined,
+                        daysOfMonth: [28]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+                let coreCfg = {
+                    instrumentationKey: "test",
+                    throttleMgrCfg: {[this._msgId]: {}}
+                };
+                this._core.initialize(coreCfg, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedconfig, actualConfig[this._msgId], "should get expected default config");
+                Assert.deepEqual(expectedconfig, actualConfig[_eInternalMessageId.DefaultThrottleMsgKey], "should get expected default config");
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false, "should not be triggered");
             }
@@ -117,18 +146,50 @@ export class ThrottleMgrTest extends AITestClass {
                 } as IThrottleMgrConfig;
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: expectedconfig
+                    throttleMgrCfg: {[this._msgId]: expectedconfig}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(expectedconfig, actualConfig, "should get expected default config");
+                Assert.deepEqual(expectedconfig, actualConfig[this._msgId], "should get expected default config");
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false, "should not be triggered");
 
                 isTriggered = throttleMgr.isTriggered(109);
                 Assert.equal(isTriggered, false, "should not be triggered msg key 109");
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: None set msg keys - Default config should be used",
+            test: () => {
+                let date = new Date();
+                let expectedconfig = {
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber: 1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 1,
+                        dayInterval: undefined,
+                        daysOfMonth: [date.getUTCDate()]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+                let coreCfg = {
+                    instrumentationKey: "test",
+                    throttleMgrCfg: {[_eInternalMessageId.DefaultThrottleMsgKey]: expectedconfig}
+                };
+                this._core.initialize(coreCfg, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedconfig, actualConfig[_eInternalMessageId.DefaultThrottleMsgKey], "should get expected default config");
+                let isTriggered = throttleMgr.isTriggered(this._msgId);
+                Assert.equal(isTriggered, false, "should not be triggered");
+                let canThrottle = throttleMgr.canThrottle(this._msgId);
+                Assert.equal(canThrottle, true, "should be able to throttle");
             }
         });
 
@@ -151,13 +212,13 @@ export class ThrottleMgrTest extends AITestClass {
                 } as IThrottleMgrConfig;
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(config, actualConfig, "should get expected config");
+                Assert.deepEqual(config, actualConfig[this._msgId], "should get expected config");
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false, "should not be triggered");
                 let canThrottle = throttleMgr.canThrottle(this._msgId);
@@ -173,14 +234,91 @@ export class ThrottleMgrTest extends AITestClass {
                     dayInterval: undefined,
                     daysOfMonth: [date.getUTCDate() + 1]
                 } as IThrottleInterval;
-                this._core.config.throttleMgrCfg = config;
+                this._core.config.throttleMgrCfg = this._core.config.throttleMgrCfg || {};
+                this._core.config.throttleMgrCfg[this._msgId] = config;
                 this.clock.tick(1);
                 actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(config, actualConfig, "config should be updated dynamically");
+                Assert.deepEqual(config, actualConfig[this._msgId], "config should be updated dynamically");
                 canThrottle = throttleMgr.canThrottle(this._msgId);
                 Assert.deepEqual(canThrottle, false, "should not be able to throttle");
             }
         });
+
+        this.testCase({
+            name: "ThrottleMgrTest: Config should be updated dynamically with different keys",
+            useFakeTimers: true,
+            test: () => {
+                let date = new Date();
+                let msgId = 109;
+                let config = {
+                    disabled: false,
+                    limit: {
+                        samplingRate: 50,
+                        maxSendNumber: 100
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 1,
+                        dayInterval: undefined,
+                        daysOfMonth: [date.getUTCDate()]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let config1 = {
+                    disabled: false,
+                    limit: {
+                        samplingRate: 60,
+                        maxSendNumber: 101
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 1,
+                        dayInterval: undefined,
+                        daysOfMonth: [date.getUTCDate()]
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let coreCfg = {
+                    instrumentationKey: "test",
+                    throttleMgrCfg: {[this._msgId]: config, [msgId]: config1}
+                };
+                this._core.initialize(coreCfg, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.ok(actualConfig[_eInternalMessageId.DefaultThrottleMsgKey]);
+                Assert.deepEqual(config, actualConfig[this._msgId], "should get expected config");
+                Assert.deepEqual(config1, actualConfig[msgId], "should get expected config1");
+                let isTriggered = throttleMgr.isTriggered(this._msgId);
+                Assert.equal(isTriggered, false, "should not be triggered");
+                let canThrottle = throttleMgr.canThrottle(this._msgId);
+                Assert.deepEqual(canThrottle, true, "should be able to throttle");
+                isTriggered = throttleMgr.isTriggered(msgId);
+                Assert.equal(isTriggered, false, "should not be triggered test1");
+                canThrottle = throttleMgr.canThrottle(msgId);
+                Assert.deepEqual(canThrottle, true, "should be able to throttle test1");
+                
+                config.disabled = true;
+                config.limit =  {
+                    samplingRate: 80,
+                    maxSendNumber: 10
+                } as IThrottleLimit,
+                config.interval = {
+                    monthInterval: 3,
+                    dayInterval: undefined,
+                    daysOfMonth: [date.getUTCDate() + 1]
+                } as IThrottleInterval;
+                this._core.config.throttleMgrCfg = this._core.config.throttleMgrCfg || {};
+                this._core.config.throttleMgrCfg[this._msgId] = config;
+                this.clock.tick(1);
+                actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(config, actualConfig[this._msgId], "config should be updated dynamically");
+                Assert.deepEqual(config1, actualConfig[msgId], "config1 should not be updated dynamically");
+                canThrottle = throttleMgr.canThrottle(this._msgId);
+                Assert.deepEqual(canThrottle, false, "should not be able to throttle");
+                canThrottle = throttleMgr.canThrottle(msgId);
+                Assert.deepEqual(canThrottle, true, "should be able to throttle config1");
+            }
+        });
+
 
         this.testCase({
             name: "ThrottleMgrTest: flush",
@@ -201,14 +339,14 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: expectedconfig
+                    throttleMgrCfg: {[this._msgId]: expectedconfig}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
 
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(expectedconfig, actualConfig, "should get expected default config");
+                Assert.deepEqual(expectedconfig, actualConfig[this._msgId], "should get expected default config");
                 let isTriggered = throttleMgr.isTriggered(this._msgKey);
                 Assert.equal(isTriggered, false, "should not be triggered");
                 let canThrottle = throttleMgr.canThrottle(this._msgKey);
@@ -257,14 +395,15 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: expectedconfig
+                    throttleMgrCfg: {[this._msgId]: expectedconfig, [msgId]: expectedconfig}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
 
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(expectedconfig, actualConfig, "should get expected default config");
+                Assert.deepEqual(expectedconfig, actualConfig[this._msgId], "should get expected default config");
+                Assert.deepEqual(expectedconfig, actualConfig[msgId], "should get expected default config msgId");
                 let isTriggered = throttleMgr.isTriggered(this._msgKey);
                 Assert.equal(isTriggered, false, "should not be triggered");
                 let canThrottle = throttleMgr.canThrottle(this._msgKey);
@@ -327,13 +466,13 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(config, actualConfig);
+                Assert.deepEqual(config, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgKey);
                 Assert.equal(isTriggered, false);
@@ -359,14 +498,14 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: {}
+                    throttleMgrCfg: {[this._msgId]: {}}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
 
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(expectedConfig, actualConfig);
+                Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false);
@@ -403,14 +542,14 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
 
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(expectedConfig, actualConfig);
+                Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false);
@@ -447,13 +586,13 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(expectedConfig, actualConfig);
+                Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false);
@@ -486,13 +625,13 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
 
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(config, actualConfig);
+                Assert.deepEqual(config, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false);
@@ -523,13 +662,14 @@ export class ThrottleMgrTest extends AITestClass {
                 } as IThrottleMgrConfig;
 
                 let coreCfg = {
-                    instrumentationKey: "test"
+                    instrumentationKey: "test",
+                    throttleMgrCfg: {[this._msgId]: expectedConfig}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
 
                 let actualConfig = throttleMgr.getConfig();
-                Assert.deepEqual(expectedConfig, actualConfig);
+                Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false);
@@ -552,7 +692,7 @@ export class ThrottleMgrTest extends AITestClass {
                 } as IThrottleMgrConfig;
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
@@ -600,7 +740,7 @@ export class ThrottleMgrTest extends AITestClass {
                 } as IThrottleMgrConfig;
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
@@ -652,7 +792,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
@@ -700,7 +840,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
@@ -738,7 +878,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
@@ -778,7 +918,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
@@ -815,7 +955,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
@@ -867,7 +1007,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
@@ -918,7 +1058,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
@@ -1005,7 +1145,7 @@ export class ThrottleMgrTest extends AITestClass {
                 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
@@ -1072,7 +1212,93 @@ export class ThrottleMgrTest extends AITestClass {
                 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config, [msgId]: config}
+                };
+                this._core.initialize(coreCfg, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+
+                this.loggingSpy = this.sandbox.stub(this._core.logger, "throwInternal");
+
+
+                let canThrottle = throttleMgr.canThrottle(this._msgId);
+                Assert.ok(canThrottle, "can throttle");
+                canThrottle = throttleMgr.canThrottle(msgId);
+                Assert.ok(canThrottle, "can throttle test1");
+
+                let isTriggeredPre = throttleMgr.isTriggered(this._msgId);
+                Assert.equal(isTriggeredPre, false, "preTrigger");
+                isTriggeredPre = throttleMgr.isTriggered(msgId);
+                Assert.equal(isTriggeredPre, false, "preTrigger test1");
+
+                throttleMgr.onReadyState(true);
+
+                let result = throttleMgr.sendMessage(this._msgId, msg);
+                let count = this.loggingSpy.callCount
+                Assert.equal(count,1, "sendMsg count");
+                let expectedRlt = {
+                    isThrottled: true,
+                    throttleNum: 1
+                } as IThrottleResult
+                Assert.deepEqual(result, expectedRlt, "expected result");
+                result = throttleMgr.sendMessage(msgId, msg);
+                count = this.loggingSpy.callCount
+                Assert.equal(count,2, "sendMsg count test1");
+                expectedRlt = {
+                    isThrottled: true,
+                    throttleNum: 1
+                } as IThrottleResult
+                Assert.deepEqual(result, expectedRlt, "expected result test1");
+            
+                let val = window.localStorage[this._storageName];
+                let obj = JSON.parse(val);
+                compareDates(date, obj.date);
+                Assert.equal(0, obj.count, "local storage count");
+                compareDates(date, obj.preTriggerDate);
+                val = window.localStorage[storageName];
+                obj = JSON.parse(val);
+                compareDates(date, obj.date);
+                Assert.equal(0, obj.count, "local storage count test1");
+                compareDates(date, obj.preTriggerDate);
+
+                let isTriggeredPost = throttleMgr.isTriggered(this._msgId);
+                Assert.equal(isTriggeredPost, true, "trigger post");
+                isTriggeredPost = throttleMgr.isTriggered(msgId);
+                Assert.equal(isTriggeredPost, true, "trigger post test1");
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: None set mutiple keys - throw messages with correct number",
+            test: () => {
+                let msg = "Instrumentation key support will end soon, see aka.ms/IkeyMigrate";
+                let msgId = 109;
+                let storageName = "appInsightsThrottle-" + msgId;
+                let date = new Date();
+                let testStorageObj = {
+                    date: date,
+                    count: 5
+                }
+                let testStorageVal = JSON.stringify(testStorageObj);
+                window.localStorage[this._storageName] = testStorageVal;
+                window.localStorage[storageName] = testStorageVal;
+
+                let config = {
+                    disabled: false,
+                    limit: {
+                        samplingRate: 1000000,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 1,
+                        dayInterval: 1
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                
+                let coreCfg = {
+                    instrumentationKey: "test",
+                    throttleMgrCfg: {[_eInternalMessageId.DefaultThrottleMsgKey]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
@@ -1147,7 +1373,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 
@@ -1209,7 +1435,89 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let coreCfg = {
                     instrumentationKey: "test",
-                    throttleMgrCfg: config
+                    throttleMgrCfg: {[this._msgId]: config, [msgId]: config}
+                };
+                this._core.initialize(coreCfg, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+                this.loggingSpy = this.sandbox.stub(this._core.logger, "throwInternal");
+
+
+                let canThrottle = throttleMgr.canThrottle(this._msgId);
+                Assert.ok(canThrottle, "can throttle");
+                canThrottle = throttleMgr.canThrottle(msgId);
+                Assert.ok(canThrottle, "can throttle test1");
+
+                let isTriggeredPre = throttleMgr.isTriggered(this._msgId);
+                Assert.equal(isTriggeredPre, false, "is trigger");
+                isTriggeredPre = throttleMgr.isTriggered(msgId);
+                Assert.equal(isTriggeredPre, false, "is trigger test1");
+
+                throttleMgr.onReadyState(true);
+
+                let result = throttleMgr.sendMessage(this._msgId, msg);
+                let count = this.loggingSpy.callCount
+                Assert.equal(count,1, "sendMsg count");
+                let expectedRlt = {
+                    isThrottled: true,
+                    throttleNum: 1
+                } as IThrottleResult;
+                Assert.deepEqual(result, expectedRlt, "expected result");
+                result = throttleMgr.sendMessage(msgId, msg);
+                count = this.loggingSpy.callCount
+                Assert.equal(count,2, "sendMsg count test1");
+                Assert.deepEqual(result, expectedRlt, "expected result test1");
+
+                let isTriggeredPost = throttleMgr.isTriggered(this._msgId);
+                Assert.equal(isTriggeredPost, true, "trigger post");
+                let canThrottlePost = throttleMgr.canThrottle(this._msgId);
+                Assert.equal(canThrottlePost, true, "can throttle post");
+                isTriggeredPost = throttleMgr.isTriggered(msgId);
+                Assert.equal(isTriggeredPost, true, "trigger post test1");
+                canThrottlePost = throttleMgr.canThrottle(msgId);
+                Assert.equal(canThrottlePost, true, "can throttle post test1");
+
+                let retryRlt = throttleMgr.sendMessage(this._msgId, msg);
+                let retryCount = this.loggingSpy.callCount
+                Assert.equal(retryCount,2, "retrt count");
+                let expectedRetryRlt = {
+                    isThrottled: false,
+                    throttleNum: 0
+                } as IThrottleResult
+                Assert.deepEqual(retryRlt, expectedRetryRlt, "retry result");
+
+                retryRlt = throttleMgr.sendMessage(msgId, msg);
+                retryCount = this.loggingSpy.callCount
+                Assert.equal(retryCount,2, "retrt count test1");
+                expectedRetryRlt = {
+                    isThrottled: false,
+                    throttleNum: 0
+                } as IThrottleResult
+                Assert.deepEqual(retryRlt, expectedRetryRlt, "retry result test1");
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: None set mutiple msg keys - should throw messages 1 time within a day",
+            test: () => {
+                let msg = "Instrumentation key support will end soon, see aka.ms/IkeyMigrate";
+                let msgId = 109;
+
+                let config = {
+                    disabled: false,
+                    limit: {
+                        samplingRate: 1000000,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: 1,
+                        dayInterval: 1
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let coreCfg = {
+                    instrumentationKey: "test",
+                    throttleMgrCfg: {[_eInternalMessageId.DefaultThrottleMsgKey]: config}
                 };
                 this._core.initialize(coreCfg, [this._channel]);
 

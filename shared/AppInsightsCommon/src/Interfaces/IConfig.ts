@@ -374,9 +374,9 @@ export interface IConfig {
     addIntEndpoints?: boolean;
 
     /**
-     * [Optional] set throttle mgr configuration
+     * [Optional] Sets throttle mgr configuration by key
      */
-    throttleMgrCfg?: IThrottleMgrConfig;
+    throttleMgrCfg?: {[key: number]: IThrottleMgrConfig};
 }
 
 export class ConfigurationManager {
