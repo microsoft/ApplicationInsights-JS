@@ -478,17 +478,27 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 } else if (xhr) { // XHR
                     if (CorrelationIdHelper.canIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (_isUsingAIHeaders) {
-                            const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
-                            xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestIdHeader], id);
-                            if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
+                            if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.requestIdHeader])) {
+                                const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
+                                xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestIdHeader], id);
+                                if (_enableRequestHeaderTracking) {
+                                    ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
+                                }
+                            } else {
+                                _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
+                                    "Unable to set [" + RequestHeaders[eRequestHeaders.requestIdHeader] + "] as it has already been set by another instance");
                             }
                         }
                         const appId = _config.appId || (_context && _context.appId());
                         if (appId) {
-                            xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
-                            if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestContextHeader]] = RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId;
+                            if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.requestContextHeader])) {
+                                xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
+                                if (_enableRequestHeaderTracking) {
+                                    ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestContextHeader]] = RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId;
+                                }
+                            } else {
+                                _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
+                                    "Unable to set [" + RequestHeaders[eRequestHeaders.requestContextHeader] + "] as it has already been set by another instance");
                             }
                         }
                         if (_isUsingW3CHeaders) {
@@ -804,12 +814,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _hookProto(XMLHttpRequest, "setRequestHeader", {
                         ns: _evtNamespace,
                         req: (callDetails: IInstrumentCallDetails, header: string, value: string) => {
-                            if (!_disableAjaxTracking && _enableRequestHeaderTracking) {
+                            if (!_disableAjaxTracking) {
                                 let xhr = callDetails.inst as XMLHttpRequestInstrumented;
                                 let ajaxData = _getAjaxData(xhr, _ajaxDataId);
-                                if (_isMonitoredXhrInstance(xhr, ajaxData)) {
+                                if (ajaxData && _isMonitoredXhrInstance(xhr, ajaxData)) {
                                     _addSharedXhrHeaders(xhr, header, value);
-                                    if (_canIncludeHeaders(header)) {
+                                    if (_enableRequestHeaderTracking && _canIncludeHeaders(header)) {
                                         if (ajaxData) {
                                             ajaxData.requestHeaders[header] = value;
                                         }
