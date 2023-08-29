@@ -454,7 +454,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     enabled: true
                 } as ICfgSyncCdnConfig;
                 featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig, {});
-                Assert.deepEqual(undefined, featureValue, "feature value should be null when custom cfg is empty and cdn config is enabled case2");
+                Assert.deepEqual(null, featureValue, "feature value should be null when custom cfg is empty and cdn config is enabled case2");
                 cdnConfig = {
                     enabled: true,
                     featureOptIn:{["enableWParamFeature"]: {mode: CdnFeatureMode.enable}},
@@ -463,9 +463,9 @@ export class CfgSyncHelperTests extends AITestClass {
                     }
                 } as ICfgSyncCdnConfig;
                 featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig);
-                Assert.deepEqual(undefined, featureValue, "feature value should be null when custom cfg is undefined case2");
+                Assert.deepEqual(null, featureValue, "feature value should be null when custom cfg is undefined case2");
                 featureValue = shouldOptInFeature("enableWP", cdnConfig);
-                Assert.deepEqual(undefined, featureValue, "feature value should be null field is not defined case2");
+                Assert.deepEqual(null, featureValue, "feature value should be null when field is not defined case2");
                 
 
                 //Case3: cdn config is undefined or empty
@@ -499,7 +499,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     }
                 } as ICfgSyncCdnConfig;
                 featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig);
-                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case5");
+                Assert.deepEqual(null, featureValue, "feature value should be null case5");
 
                 cdnConfig = {
                     enabled: true,
@@ -509,7 +509,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     }
                 } as ICfgSyncCdnConfig;
                 featureValue = shouldOptInFeature("enableWParamFeature", cdnConfig);
-                Assert.deepEqual({["enableWParam"]: false}, featureValue, "feature value should be cdn value case5");
+                Assert.deepEqual(null, featureValue, "feature value should be null case5");
 
             }
         });
@@ -584,14 +584,14 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.none} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be cdn value case1");
+                Assert.deepEqual(null, featureValue, "feature value should be null case1");
 
                 // case 2
                 customFeatureOptIn = {
                     [field]: {mode: FeatureOptInMode.none, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be cdn value case2");
+                Assert.deepEqual(null, featureValue, "feature value should be null case2");
                 
                 //case 3
                 cdnConfig = {
@@ -605,7 +605,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.none, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be custom value case3");
+                Assert.deepEqual(null, featureValue, "feature value should be null case3");
 
                 // case 4
                 customFeatureOptIn = {
@@ -613,6 +613,20 @@ export class CfgSyncHelperTests extends AITestClass {
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
                 Assert.deepEqual(undefined, featureValue, "feature value should be custom value case4");
+
+                // case 5
+                cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.none}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+                customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.none, cfgValue: {[valField]: true}} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
+                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be custom value case5");
             }
         });
 
@@ -635,14 +649,14 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.disable} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(undefined, featureValue, "feature value should be undefined case1");
+                Assert.deepEqual(null, featureValue, "feature value should be null case1");
 
                 // case 2
                 customFeatureOptIn = {
                     [field]: {mode: FeatureOptInMode.disable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be true case2");
+                Assert.deepEqual(null, featureValue, "feature value should be null case2");
 
             }
         });
@@ -673,7 +687,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.disable, blockCdnCfg: true} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case2");
+                Assert.deepEqual(null, featureValue, "feature value should be custom value case2");
 
                 // case 3
                 customFeatureOptIn = {
@@ -711,21 +725,21 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.none} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 let featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be custom value case1");
+                Assert.deepEqual(null, featureValue, "feature value should be null case1");
 
                 // case 2
                 customFeatureOptIn = {
                     [field]: {mode: FeatureOptInMode.enable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be custom value case2");
+                Assert.deepEqual(null, featureValue, "feature value should be null case2");
 
                 // case 2-1
                 customFeatureOptIn = {
                     [field]: {mode: FeatureOptInMode.disable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual({[valField]: false}, featureValue, "feature value should be custom value case2-1");
+                Assert.deepEqual(null, featureValue, "feature value should be null case2-1");
                 
                 //case 3
                 cdnConfig = {
@@ -739,7 +753,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.disable} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual(undefined, featureValue, "feature value should be custom value case3");
+                Assert.deepEqual(null, featureValue, "feature value should be null case3");
 
                 // case 4
                 customFeatureOptIn = {
@@ -753,7 +767,7 @@ export class CfgSyncHelperTests extends AITestClass {
                     [field]: {mode: FeatureOptInMode.enable, cfgValue: {[valField]: true}} as IFeatureOptInDetails
                 } as IFeatureOptIn;
                 featureValue = shouldOptInFeature(field, cdnConfig, customFeatureOptIn);
-                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be custom value case5");
+                Assert.deepEqual({[valField]: true}, featureValue, "feature value should be null case5");
             }
         });
 

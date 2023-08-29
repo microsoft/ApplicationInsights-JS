@@ -43,16 +43,29 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
     return cfg;
 }
 
+
+//                                                     CDN Mode, value = B (CDN value = B)
+//                                |--------------------------------------------------------------------------|
+//                                |                    | none        | disabled    | enabled     | force     |
+//                                | ------------------ | ----------- | ----------- | ----------- | --------- |
+// | User Mode, value = A || C    | none               | none        | disabled    | disabled    | enabled   |
+// (user Value = A)               | disabled           | disabled    | disabled    | disabled    | enabled   |
+// (SDK Defaults = C)             | enabled            | enabled     | disabled    | enabled     | enabled   |
+//                                | none(blockCdn)     | none        | none        | none        | none      |
+//                                | disabled(blockCdn) | disabled    | disabled    | disabled    | disabled  |
+//                                | enabled(blockCdn)  | enabled     | enabled     | enabled     | enabled   |
+
 //                                cdn Mode (cdn Value = B, SDK Config Defaults = C)
 //                   |--------------------------------------------------------------------------|
 //                   |                    | none        | disabled    | enabled     | force     |
 //                   | ------------------ | ----------- | ----------- | ----------- | --------- |
-// | User Mode       | none               | A || C      | B || A || C | B || A || C | B || C    |
-// (user Value = A)  | disabled           | A || C      | B || A || C | A || C      | B || C    |
-//                   | enabled            | A || C      | B || A || C | A || B || C | B || C    |
+// | User Mode       | none               | A || C      | C           | C           | B || C    |
+// (user Value = A)  | disabled           | C           | C           | C           | B || C    |
+//                   | enabled            | A || B || C | C           | A || B || C | B || C    |
 //                   | none(blockCdn)     | A || C      | A || C      | A || C      | A || C    |
-//                   | disabled(blockCdn) | A || C      | A || C      | A || C      | A || C    |
+//                   | disabled(blockCdn) | C           | C           | C           | C         |
 //                   | enabled(blockCdn)  | A || C      | A || C      | A || C      | A || C    |
+
 export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
     
     if (!cdnCfg || !cdnCfg.enabled) {
@@ -67,25 +80,39 @@ export function shouldOptInFeature(field: string, cdnCfg?: ICfgSyncCdnConfig, cu
     let customFeature = customOptIn[field] || {mode: FeatureOptInMode.disable}; // default custom mode is disable
     let customMode = customFeature.mode;
     let customFeatureVal = customFeature.cfgValue;
-    let blockCdn = customFeature.blockCdnCfg || false;
+    let blockCdn = !!customFeature.blockCdnCfg;
 
     if (blockCdn) {
-        return customFeatureVal;
+        return customMode == FeatureOptInMode.disable? null : customFeatureVal;
     }
 
     if (cdnMode === CdnFeatureMode.force) {
         return cdnFeatureVal;
     }
 
-    if (cdnMode === CdnFeatureMode.disable || (customMode === FeatureOptInMode.none && cdnMode === CdnFeatureMode.enable)) {
-        return isNullOrUndefined(cdnFeatureVal)? customFeatureVal : cdnFeatureVal;
+    if (cdnMode === CdnFeatureMode.disable || customMode === FeatureOptInMode.disable) {
+        return null;
     }
 
-    if (customMode === FeatureOptInMode.enable && cdnMode === CdnFeatureMode.enable) {
-        return isNullOrUndefined(customFeatureVal)?  cdnFeatureVal : customFeatureVal;
+    if (customMode === FeatureOptInMode.enable) {
+        return customFeatureVal || cdnFeatureVal;
     }
 
-    return customFeatureVal;
+    if (cdnMode === CdnFeatureMode.none && customMode === FeatureOptInMode.none) {
+        return customFeatureVal;
+    }
+    
+    return null;
+
+    // if (cdnMode === CdnFeatureMode.disable || (customMode === FeatureOptInMode.none && cdnMode === CdnFeatureMode.enable)) {
+    //     return isNullOrUndefined(cdnFeatureVal)? customFeatureVal : cdnFeatureVal;
+    // }
+
+    // if (customMode === FeatureOptInMode.enable && cdnMode === CdnFeatureMode.enable) {
+    //     return isNullOrUndefined(customFeatureVal)?  cdnFeatureVal : customFeatureVal;
+    // }
+
+    // return customFeatureVal;
 }
 
 
