@@ -122,7 +122,7 @@ export function resolveCdnFeatureCfg(field: string, cdnCfg?: ICfgSyncCdnConfig, 
 
     return {
         [mField]: FeatureOptInMode.disable
-    }
+    };
 
 }
 
