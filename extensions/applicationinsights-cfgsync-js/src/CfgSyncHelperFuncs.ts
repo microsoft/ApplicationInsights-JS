@@ -55,16 +55,16 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
 //                                | disabled(blockCdn) | disabled    | disabled    | disabled    | disabled  |
 //                                | enabled(blockCdn)  | enabled     | enabled     | enabled     | enabled   |
 
-//                                cdn Mode (cdn feature Value = B, SDK Config Defaults = C (value from cdn config/defaults))
-//                   |--------------------------------------------------------------------------|
-//                   |                    | none        | disabled    | enabled     | force     |
-//                   | ------------------ | ----------- | ----------- | ----------- | --------- |
-// | User Mode       | none               | A || C      | A || C      | A || C      | B || C    |
-// (user Value = A)  | disabled           | A || C      | A || C      | A || C      | B || C    |
-//                   | enabled            | A || B || C | A || C      | A || B || C | B || C    |
-//                   | none(blockCdn)     | A || C      | A || C      | A || C      | A || C    |
-//                   | disabled(blockCdn) | A || C      | A || C      | A || C      | A || C    |
-//                   | enabled(blockCdn)  | A || C      | A || C      | A || C      | A || C    |
+//                                cdn Mode (cdn Value = B)
+//                   |-----------------------------------------------------------|
+//                   |                    | none    | disabled | enabled | force |
+//                   | ------------------ | --------| ---------| --------| ------|
+// | User Mode       | none               | A       | A        | A       | B     |
+// (user Value = A)  | disabled           | A       | A        | A       | B     |
+//                   | enabled            | A || B  | A        | A || B  | B     |
+//                   | none(blockCdn)     | A       | A        | A       | A     |
+//                   | disabled(blockCdn) | A       | A        | A       | A     |
+//                   | enabled(blockCdn)  | A       | A        | A       | A     |
 
 export function resolveCdnFeatureCfg(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
     // cdn conifg value

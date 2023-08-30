@@ -72,7 +72,8 @@ export class CfgSyncPluginTests extends AITestClass {
                     overrideFetchFn: udfVal,
                     onCfgChangeReceive: udfVal,
                     scheduleFetchTimeout: 1800000,
-                    nonOverrideConfigs: defaultNonOverrideCfg
+                    nonOverrideConfigs: defaultNonOverrideCfg,
+                    blockCdn: false
                 };
                 this.core.config.extensionConfig = this.core.config.extensionConfig || {};
                 let actualDefaults = this.core.config.extensionConfig[this.identifier];
@@ -81,6 +82,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 Assert.equal(targets[0], true, "auto broadcast is on by default");
                 Assert.equal(targets[1], false, "receive changes is off by default");
                 Assert.equal(targets[2], "ai_cfgsync", "default event name is set by default");
+                Assert.equal(targets[3], false, "default blockCdn is set by default");
                 Assert.equal(patchEvnSpy.callCount, 1, "event is dispatched for one time");
                 let curMainCfg = this.mainInst.getCfg();
                 Assert.deepEqual(curMainCfg, this.core.config, "main config should be set");
@@ -95,11 +97,13 @@ export class CfgSyncPluginTests extends AITestClass {
 
                 this.core.config.extensionConfig[this.identifier].syncMode = ICfgSyncMode.Receive;
                 this.core.config.extensionConfig[this.identifier].receiveChanges = true;
+                this.core.config.extensionConfig[this.identifier].blockCdn = true;
               
                 this.clock.tick(1);
                 targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], true, "auto sync should not be changed to false dynamically");
                 Assert.equal(targets[1], false, "receive changes should not be changed dynamically");
+                Assert.equal(targets[3], true, "blockCdn changes should be changed dynamically");
                 Assert.equal(patchEvnSpy.callCount, 3, "event dispatch should be called again");
                 curMainCfg = this.mainInst.getCfg();
                 Assert.deepEqual(curMainCfg, this.core.config, "main config should be set test2");
@@ -466,6 +470,58 @@ export class CfgSyncPluginTests extends AITestClass {
 
             }
         });
+
+        this.testCaseAsync({
+            name: "CfgSyncPlugin: should not fetch when blockCdn is set to true",
+            stepDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            steps: [ () => {
+                let doc = getGlobal();
+                this.onDone(() => {
+                    this.core.unload(false);
+                });
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve(new (doc as any).Response(JSON.stringify({}), {
+                            status: 400,
+                            headers: { "Content-type": "application/json" }
+                        }));
+                    }, 0);
+                });
+                let patchEvnSpy = this.sandbox.spy(doc, "dispatchEvent");
+                let fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this._config.extensionConfig  = { [this.identifier]: {
+                    cfgUrl: "testURL",
+                    scheduleFetchTimeout: 1000,
+                    blockCdn: true
+                }};
+                this._context["patchEvnSpy"] = patchEvnSpy;
+                this._context["fetchStub"] = fetchStub;
+                this.core.initialize(this._config, [this._channel]);
+               
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                let patchEvnSpy = this._context["patchEvnSpy"];
+                Assert.equal(fetchStub.callCount, 0, "fetch is shoild not be called");
+                Assert.equal(patchEvnSpy.callCount, 0, "no event should be dispatched 1 time");
+                if (fetchStub.called) {
+                    return false;
+                }
+                return true;
+            }, "response received", 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                let patchEvnSpy = this._context["patchEvnSpy"];
+               
+                Assert.equal(fetchStub.callCount, 0, "fetch is shoild not be called");
+                Assert.equal(patchEvnSpy.callCount, 0, "no event should be dispatched 1 time");
+                if (fetchStub.called) {
+                    return false;
+                }
+                return true;
+            }, "response received", 60, 100) as any)
+        });
+
     }
 }
 

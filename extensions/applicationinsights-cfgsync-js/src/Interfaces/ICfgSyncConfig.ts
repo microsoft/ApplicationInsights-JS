@@ -18,6 +18,12 @@ export interface ICfgSyncConfig {
      * If set, any core config changes will be ignored.
      */
     cfgUrl?: string;
+
+    /**
+     * Identifies if fetching cdn endpoint should be blocked
+     * Default to false.
+     */
+    blockCdn?: boolean;
     /**
      * Overrides callback function to handle event details when changes are received via eventListener.
      */
