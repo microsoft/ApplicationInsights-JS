@@ -26,6 +26,7 @@ const udfVal: undefined = undefined;
 let defaultNonOverrideCfg: NonOverrideCfg  = {instrumentationKey: true, connectionString: true, endpointUrl: true }
 const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     syncMode: ICfgSyncMode.Broadcast,
+    blockCdn: false,
     customEvtName: udfVal,
     cfgUrl: udfVal, // as long as it is set to NOT NUll, we will NOT use config from core
     overrideSyncFn: udfVal,
@@ -51,6 +52,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _timeoutHandle: ITimerHandler;
         let _receiveChanges: boolean;
         let _broadcastChanges: boolean;
+        let _blockCdn: boolean;
         let _fetchTimeout: number;
         let _retryCnt: number;
         let _onCfgChangeReceive: (event: ICfgSyncEvent) => void;
@@ -93,7 +95,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_broadcastChanges, _receiveChanges, _evtName];
+                return [_broadcastChanges, _receiveChanges, _evtName, _blockCdn];
             };
     
             function _initDefaults() {
@@ -107,6 +109,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _timeoutHandle = null;
                 _fetchTimeout = null;
                 _retryCnt = null;
+                _blockCdn = null;
                 _overrideFetchFn = null;
                 _overrideSyncFn = null;
                 _onCfgChangeReceive = null;
@@ -119,6 +122,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
+                    _blockCdn = !!_extensionConfig.blockCdn;
 
                     if (isNullOrUndefined(_receiveChanges)) {
                         _receiveChanges = _extensionConfig.syncMode === ICfgSyncMode.Receive;
@@ -235,7 +239,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             function _fetchSender(url: string, oncomplete: OnCompleteCallback, isAutoSync?:  boolean) {
                 let global = getGlobal();
                 let fetchFn = (global && global.fetch) || null;
-                if (url && fetchFn && isFunction(fetchFn)) {
+                if (url && fetchFn && isFunction(fetchFn) && !_blockCdn) {
                     try {
                         const init: RequestInit = {
                             method: STR_GET_METHOD
@@ -265,20 +269,22 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             function _xhrSender(url: string, oncomplete: OnCompleteCallback, isAutoSync?: boolean) {
                 try {
-                    let xhr = new XMLHttpRequest();
-                    xhr.open(STR_GET_METHOD, url);
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState === XMLHttpRequest.DONE) {
-                            _doOnComplete(oncomplete, xhr.status, xhr.responseText, isAutoSync);
-                        }
-                    };
-                    xhr.onerror = () => {
-                        _doOnComplete(oncomplete, 400);
-                    };
-                    xhr.ontimeout = () => {
-                        _doOnComplete(oncomplete, 400);
-                    };
-                    xhr.send();
+                    if (!_blockCdn) {
+                        let xhr = new XMLHttpRequest();
+                        xhr.open(STR_GET_METHOD, url);
+                        xhr.onreadystatechange = () => {
+                            if (xhr.readyState === XMLHttpRequest.DONE) {
+                                _doOnComplete(oncomplete, xhr.status, xhr.responseText, isAutoSync);
+                            }
+                        };
+                        xhr.onerror = () => {
+                            _doOnComplete(oncomplete, 400);
+                        };
+                        xhr.ontimeout = () => {
+                            _doOnComplete(oncomplete, 400);
+                        };
+                        xhr.send();
+                    }
                 } catch (e) {
                     // eslint-disable-next-line no-empty
                 }
