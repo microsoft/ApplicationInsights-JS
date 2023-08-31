@@ -45,26 +45,42 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
 
 
 //                                                     CDN Mode, value = B (CDN value = B)
-//                                |--------------------------------------------------------------------------|
-//                                |                    | none        | disabled    | enabled     | force     |
-//                                | ------------------ | ----------- | ----------- | ----------- | --------- |
-// | User Mode, value = A || C    | none               | none        | disabled    | disabled    | enabled   |
-// (user Value = A)               | disabled           | disabled    | disabled    | disabled    | enabled   |
-// (SDK Defaults = C)             | enabled            | enabled     | disabled    | enabled     | enabled   |
-//                                | none(blockCdn)     | none        | none        | none        | none      |
-//                                | disabled(blockCdn) | disabled    | disabled    | disabled    | disabled  |
-//                                | enabled(blockCdn)  | enabled     | enabled     | enabled     | enabled   |
+//                                |--------------------------------------------------------------------------|-----------|
+//                                |                    | none        | disabled    | enabled     | forceOn   | forceOff  |
+//                                | ------------------ | ----------- | ----------- | ----------- | --------- | --------- |
+// | User Mode, value = A         | none               | none        | disabled    | disabled    | enabled   | disabled  |
+// (user Value = A)               | disabled           | disabled    | disabled    | disabled    | enabled   | disabled  |
+//                                | enabled            | enabled     | disabled    | enabled     | enabled   | disabled  |
+//                                | none(blockCdn)     | none        | none        | none        | none      | none      |
+//                                | disabled(blockCdn) | disabled    | disabled    | disabled    | disabled  | disabled  |
+//                                | enabled(blockCdn)  | enabled     | enabled     | enabled     | enabled   | enabled   |
 
+// This matrix identifies how feature based overrides are selected (if present)
 //                                cdn Mode (cdn Value = B)
-//                   |-----------------------------------------------------------|
-//                   |                    | none    | disabled | enabled | force |
-//                   | ------------------ | --------| ---------| --------| ------|
-// | User Mode       | none               | A       | A        | A       | B     |
-// (user Value = A)  | disabled           | A       | A        | A       | B     |
-//                   | enabled            | A || B  | A        | A || B  | B     |
-//                   | none(blockCdn)     | A       | A        | A       | A     |
-//                   | disabled(blockCdn) | A       | A        | A       | A     |
-//                   | enabled(blockCdn)  | A       | A        | A       | A     |
+//                   |---------------------------------------------------------------------------|
+//                   |                    | none     | disabled | enabled  | forceOn  | forceOff |
+//                   | ------------------ | ---------| ---------| ---------| ---------|----------|
+// | User Mode       | none               | A        | A        | A || B   | B || A   | B || A   |
+// (user Value = A)  | disabled           | A        | A        | A        | B || A   | B || A   |
+//                   | enabled            | A        | A        | A || B   | B || A   | B || A   |
+//                   | none(blockCdn)     | A        | A        | A        | A        | A        |
+//                   | disabled(blockCdn) | A        | A        | A        | A        | A        |
+//                   | enabled(blockCdn)  | A        | A        | A        | A        | A        |
+// Note:
+// Where the "value" is an object (map) of encoded key/values which will be used to override the real configuration
+// A = either the user supplied enable/disable value (via the `config.featureOptIn[name]`) or if not defined by the user the SDK defaults of the same.
+// B = The enable/disable value obtained from the CDN for the named feature
+// These are evaluated based on the above matrix to either
+// - A (Always the user/sdk value)
+// - B (Always the value from the CDN)
+// - A || B (If A is null or undefined use the value from the CDN (B) otherwise A)
+// - B || A (If B is null or undefined use the user/SDK value otherwise use the value from the CDN)
+//
+// The result of the value may also be null / undefined, which means there are no overrides to apply when the feature is enabled
+const FLD = "featureOptIn.";
+const MODE = ".mode";
+const EFLD = ".cfgValue";
+const DFLD = ".disableCfgValue";
 
 export function resolveCdnFeatureCfg(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
     // cdn conifg value
@@ -76,52 +92,68 @@ export function resolveCdnFeatureCfg(field: string, cdnCfg?: ICfgSyncCdnConfig, 
     let cdnFeature = featureOptIn[field] || {mode: CdnFeatureMode.none};
     let cdnMode = cdnFeature.mode;
     let cdnFeatureVal = cdnFeature.value;
+    let cdnFeatureDisVal = cdnFeature.disableValue;
     let customOptIn = customOptInDetails || {};
     let customFeature = customOptIn[field] || {mode: FeatureOptInMode.disable}; // default custom mode is disable
     let customMode = customFeature.mode;
     let customFeatureVal = customFeature.cfgValue;
+    let customFeatureDisVal = customFeature.disableCfgValue;
     let blockCdn = !!customFeature.blockCdnCfg;
-    const fld = "featureOptIn.";
-    let mField = fld + field + ".mode";
-    let vField = fld + field + ".cfgValue";
+    let mField = FLD + field + MODE;
+    let vField = FLD + field + EFLD;
+    let vDisField = FLD + field + DFLD;
 
     if (blockCdn) {
         return {
             [mField]: customMode,
-            [vField]: customFeatureVal
+            [vField]: customFeatureVal,
+            [vDisField]: customFeatureDisVal
         };
     }
 
-    if (cdnMode === CdnFeatureMode.force) {
+    if (cdnMode === CdnFeatureMode.forceOn) {
         return {
             [mField]: FeatureOptInMode.enable,
-            [vField]: cdnFeatureVal
+            [vField]: cdnFeatureVal || customFeatureVal,
+            [vDisField]: cdnFeatureDisVal || customFeatureDisVal
+        };
+    }
+
+    if (cdnMode === CdnFeatureMode.forceOff) {
+        return {
+            [mField]: FeatureOptInMode.disable,
+            [vField]: cdnFeatureVal || customFeatureVal,
+            [vDisField]: cdnFeatureDisVal || customFeatureDisVal
         };
     }
 
     if (cdnMode === CdnFeatureMode.disable || customMode === FeatureOptInMode.disable) {
         return {
-            [mField]: FeatureOptInMode.disable
+            [mField]: FeatureOptInMode.disable,
+            [vField]:  customFeatureVal || cdnFeatureVal,
+            [vDisField]: customFeatureDisVal || cdnFeatureDisVal
         };
     }
 
 
-    if (customMode === FeatureOptInMode.enable) {
+    if (cdnMode === CdnFeatureMode.enable) {
         return {
             [mField]: FeatureOptInMode.enable,
-            [vField]: isNullOrUndefined(customFeatureVal)? cdnFeatureVal : customFeatureVal
+            [vField]:  customFeatureVal || cdnFeatureVal,
+            [vDisField]: customFeatureDisVal || cdnFeatureDisVal
         };
     }
 
     if (cdnMode === CdnFeatureMode.none && customMode === FeatureOptInMode.none) {
         return {
-            [mField]: FeatureOptInMode.none,
-            [vField]: isNullOrUndefined(customFeatureVal)? cdnFeatureVal : customFeatureVal
+            [mField]: FeatureOptInMode.none
         };
     }
 
     return {
-        [mField]: FeatureOptInMode.disable
+        [mField]: customMode,
+        [vField]: customFeatureVal,
+        [vDisField]: customFeatureDisVal
     };
 
 }
@@ -145,6 +177,7 @@ export function applyCdnfeatureCfg(cdnCfg: ICfgSyncCdnConfig, core: IAppInsights
                 objForEachKey(featureVal, (config, val) => {
                     setValueByKey(cdnConfig, config, val);
                 });
+                _overrideCdnCfgByFeature(key, featureVal, cdnConfig);
             }
         });
         return cdnConfig;
@@ -152,4 +185,25 @@ export function applyCdnfeatureCfg(cdnCfg: ICfgSyncCdnConfig, core: IAppInsights
         // eslint-disable-next-line no-empty
     }
     return null;
+}
+
+function _overrideCdnCfgByFeature(field: string, featureVal: any, config: IConfiguration & IConfig) {
+    let mode = featureVal[FLD + field + MODE];
+    let val =  featureVal[FLD + field + EFLD];
+    let dVal=  featureVal[FLD + field + DFLD];
+    let target = null;
+    if (mode === FeatureOptInMode.enable) {
+        target = val;
+    }
+
+    if (mode === FeatureOptInMode.disable) {
+        target = dVal;
+    }
+
+    if (target) {
+        objForEachKey(target, (key, cfg) => {
+            setValueByKey(config, key, cfg);
+        });
+    }
+
 }
