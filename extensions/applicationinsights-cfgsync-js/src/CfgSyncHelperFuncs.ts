@@ -48,7 +48,7 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
 //                                |--------------------------------------------------------------------------|-----------|
 //                                |                    | none        | disabled    | enabled     | forceOn   | forceOff  |
 //                                | ------------------ | ----------- | ----------- | ----------- | --------- | --------- |
-// | User Mode, value = A         | none               | none        | disabled    | disabled    | enabled   | disabled  |
+// | User Mode, value = A         | none               | none        | disabled    | enabled     | enabled   | disabled  |
 // (user Value = A)               | disabled           | disabled    | disabled    | disabled    | enabled   | disabled  |
 //                                | enabled            | enabled     | disabled    | enabled     | enabled   | disabled  |
 //                                | none(blockCdn)     | none        | none        | none        | none      | none      |
@@ -77,83 +77,62 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
 // - B || A (If B is null or undefined use the user/SDK value otherwise use the value from the CDN)
 //
 // The result of the value may also be null / undefined, which means there are no overrides to apply when the feature is enabled
-const FLD = "featureOptIn.";
-const MODE = ".mode";
-const EFLD = ".cfgValue";
-const DFLD = ".disableCfgValue";
+const F = "featureOptIn.";
+const M = ".mode";
+const ON = ".onCfg";
+const OFF = ".offCfg";
 
-export function resolveCdnFeatureCfg(field: string, cdnCfg?: ICfgSyncCdnConfig, customOptInDetails?: IFeatureOptIn) {
+export function resolveCdnFeatureCfg(field: string, cdnCfg?: ICfgSyncCdnConfig, userOptInDetails?: IFeatureOptIn) {
     // cdn conifg value
     if (!cdnCfg || !cdnCfg.enabled) {
         return null;
     }
- 
-    let featureOptIn= cdnCfg.featureOptIn || {};
-    let cdnFeature = featureOptIn[field] || {mode: CdnFeatureMode.none};
-    let cdnMode = cdnFeature.mode;
-    let cdnFeatureVal = cdnFeature.value;
-    let cdnFeatureDisVal = cdnFeature.disableValue;
-    let customOptIn = customOptInDetails || {};
-    let customFeature = customOptIn[field] || {mode: FeatureOptInMode.disable}; // default custom mode is disable
-    let customMode = customFeature.mode;
-    let customFeatureVal = customFeature.cfgValue;
-    let customFeatureDisVal = customFeature.disableCfgValue;
-    let blockCdn = !!customFeature.blockCdnCfg;
-    let mField = FLD + field + MODE;
-    let vField = FLD + field + EFLD;
-    let vDisField = FLD + field + DFLD;
 
-    if (blockCdn) {
-        return {
-            [mField]: customMode,
-            [vField]: customFeatureVal,
-            [vDisField]: customFeatureDisVal
-        };
+    let cdnFt = (cdnCfg.featureOptIn || {})[field] || {mode: CdnFeatureMode.none};
+    let cdnM = cdnFt.mode;
+    let cdnOnV = cdnFt.onCfg;
+    let cdnOffV = cdnFt.offCfg;
+    let userFt = (userOptInDetails || {})[field] || {mode: FeatureOptInMode.disable}; // default user mode is disable
+    let userM = userFt.mode;
+    let userOnV= userFt.onCfg;
+    let userOffV= userFt.offCfg;
+    let blockCdn = !!userFt.blockCdnCfg;
+    let mFld = F + field + M;
+    let onFld = F + field + ON;
+    let offFld = F + field + OFF;
+
+    let mode = userM;
+    let onV =  userOnV;
+    let offV = userOffV;
+
+    if (!blockCdn) {
+        if (cdnM === CdnFeatureMode.forceOn || cdnM === CdnFeatureMode.forceOff) {
+
+            mode = (cdnM == CdnFeatureMode.forceOn? FeatureOptInMode.enable : FeatureOptInMode.disable);
+            onV = cdnOnV || userOnV;
+            offV = cdnOffV || userOffV;
+
+        } else if (cdnM === CdnFeatureMode.disable || userM === FeatureOptInMode.disable) {
+            
+            mode = FeatureOptInMode.disable;
+            onV =  userOnV || cdnOnV;
+            offV = userOffV || cdnOffV;
+
+        } else if (cdnM === CdnFeatureMode.enable) {
+            mode = FeatureOptInMode.enable
+            onV =  userOnV || cdnOnV;
+            offV = userOffV || cdnOffV;
+
+        } else if (cdnM === CdnFeatureMode.none && userM === FeatureOptInMode.none) {
+            mode = FeatureOptInMode.none;
+        }
+
     }
-
-    if (cdnMode === CdnFeatureMode.forceOn) {
-        return {
-            [mField]: FeatureOptInMode.enable,
-            [vField]: cdnFeatureVal || customFeatureVal,
-            [vDisField]: cdnFeatureDisVal || customFeatureDisVal
-        };
-    }
-
-    if (cdnMode === CdnFeatureMode.forceOff) {
-        return {
-            [mField]: FeatureOptInMode.disable,
-            [vField]: cdnFeatureVal || customFeatureVal,
-            [vDisField]: cdnFeatureDisVal || customFeatureDisVal
-        };
-    }
-
-    if (cdnMode === CdnFeatureMode.disable || customMode === FeatureOptInMode.disable) {
-        return {
-            [mField]: FeatureOptInMode.disable,
-            [vField]:  customFeatureVal || cdnFeatureVal,
-            [vDisField]: customFeatureDisVal || cdnFeatureDisVal
-        };
-    }
-
-
-    if (cdnMode === CdnFeatureMode.enable) {
-        return {
-            [mField]: FeatureOptInMode.enable,
-            [vField]:  customFeatureVal || cdnFeatureVal,
-            [vDisField]: customFeatureDisVal || cdnFeatureDisVal
-        };
-    }
-
-    if (cdnMode === CdnFeatureMode.none && customMode === FeatureOptInMode.none) {
-        return {
-            [mField]: FeatureOptInMode.none
-        };
-    }
-
+    
     return {
-        [mField]: customMode,
-        [vField]: customFeatureVal,
-        [vDisField]: customFeatureDisVal
+        [mFld]: mode,
+        [onFld]: onV,
+        [offFld]: offV
     };
 
 }
@@ -187,10 +166,10 @@ export function applyCdnfeatureCfg(cdnCfg: ICfgSyncCdnConfig, core: IAppInsights
     return null;
 }
 
-function _overrideCdnCfgByFeature(field: string, featureVal: any, config: IConfiguration & IConfig) {
-    let mode = featureVal[FLD + field + MODE];
-    let val =  featureVal[FLD + field + EFLD];
-    let dVal=  featureVal[FLD + field + DFLD];
+function _overrideCdnCfgByFeature(field: string, ftVal: any, config: IConfiguration & IConfig) {
+    let mode = ftVal[F + field + M];
+    let val =  ftVal[F + field + ON];
+    let dVal=  ftVal[F + field + OFF];
     let target = null;
     if (mode === FeatureOptInMode.enable) {
         target = val;

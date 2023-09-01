@@ -60,6 +60,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _fetchFn: SendGetFunction;
         let _overrideFetchFn: SendGetFunction;
         let _overrideSyncFn: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
+        let _paused = false;
 
         dynamicProto(CfgSyncPlugin, this, (_self, _base) => {
 
@@ -73,6 +74,14 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             _self.getCfg = () => {
                 return _mainConfig;
+            }
+
+            _self.pause = () => {
+                _paused = true;
+            }
+
+            _self.resume = () => {
+                _paused = false;
             }
 
             // used for V2 to manaully trigger config udpate
@@ -182,10 +191,10 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             function _setCfg(config?: IConfiguration & IConfig, isAutoSync?: boolean) {
                 if (config) {
                     _mainConfig = config;
-                    if (!!isAutoSync) {
+                    if (!!isAutoSync && !_paused) {
                         return _sendCfgsyncEvents();
                     }
-                    if (_receiveChanges) {
+                    if (_receiveChanges && !_paused) {
                         _self.core.updateCfg(config);
                         return true;
                     }
@@ -433,6 +442,20 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
     public updateEventListenerName(eventName?: string): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    /**
+     * Pause the sending/receiving of events
+     */
+    public pause(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Resume the sending/receiving of events
+     */
+    public resume(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
    
     // /**
