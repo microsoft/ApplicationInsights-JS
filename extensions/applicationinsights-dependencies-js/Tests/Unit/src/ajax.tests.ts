@@ -2624,6 +2624,8 @@ export class AjaxTests extends AITestClass {
         this.testCase({
             name: "Ajax: should create and pass a single traceparent header if w3c is enabled with multiple instances",
             test: () => {
+                // Switch back to the "real" XMLHttpRequest so that the instrumentation hooks work
+                this.useFakeServer = false;
                 let _ajax2 = new AjaxMonitor();
                 let appInsightsFirst = new AppInsightsCore();
                 let coreConfig2 = {
@@ -2680,21 +2682,21 @@ export class AjaxTests extends AITestClass {
 
                 // Act
                 var xhr = new XMLHttpRequest();
-                var stub = this.sandbox.stub(xhr, "setRequestHeader");
+                var spy = this.sandbox.spy(xhr, "setRequestHeader");
                 xhr.open("GET", "http://www.example.com");
                 xhr.send();
 
-                // Assert that both headers are sent and that it was called by both instances (3 each)
-                Assert.equal(6, stub.callCount, "setRequestHeader called multiple times");
-                Assert.equal(true, stub.calledWith(RequestHeaders.requestIdHeader)); // AI
-                Assert.equal(true, stub.calledWith(RequestHeaders.traceParentHeader)); // W3C
-
-                let request = this._getXhrRequests();
-                Assert.equal(1, request.length);
+                // Assert that both headers are sent and that it was only called by the first instances (3 headers one only)
+                Assert.equal(3, spy.callCount, "setRequestHeader called multiple times");
+                Assert.equal(true, spy.calledWith(RequestHeaders.requestIdHeader)); // AI
+                Assert.equal(true, spy.calledWith(RequestHeaders.traceParentHeader)); // W3C
 
                 // Assert that the W3C header is included
-                Assert.equal(RequestHeaders.traceParentHeader, stub.args[2][0], "Validate the actual header sent");
-                Assert.ok(stub.args[2][1].indexOf("00-" + firstTraceId) != -1, "Validate the actual header sent - actual: [" + stub.args[2][1] + "], expected parent [" + firstExpectedTraceParent + "] - alt: " + coreExpectedTraceParent);
+                Assert.equal(RequestHeaders.traceParentHeader, spy.args[2][0], "Validate the actual header sent");
+                Assert.ok(spy.args[2][1].indexOf("00-" + firstTraceId) != -1, "Validate the actual header sent - actual: [" + spy.args[2][1] + "], expected parent [" + firstExpectedTraceParent + "] - alt: " + coreExpectedTraceParent);
+
+                Assert.equal(RequestHeaders.requestIdHeader, spy.args[0][0], "Validate the actual header sent");
+                Assert.ok(spy.args[0][1].indexOf("|" + firstTraceId + ".") != -1, "Validate the actual header sent - actual: [" + spy.args[0][1] + "], expected parent [" + firstExpectedTraceParent + "] - alt: " + coreExpectedTraceParent);
             }
         });
 
