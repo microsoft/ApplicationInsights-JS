@@ -12,10 +12,8 @@ import {
     sendCustomEvent
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
-import {
-    ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, objExtend, scheduleTimeout
-} from "@nevware21/ts-utils";
-import { replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
+import { ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
+import { applyCdnfeatureCfg, replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";
 import {
     ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
 } from "./Interfaces/ICfgSyncConfig";
@@ -28,6 +26,7 @@ const udfVal: undefined = undefined;
 let defaultNonOverrideCfg: NonOverrideCfg  = {instrumentationKey: true, connectionString: true, endpointUrl: true }
 const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     syncMode: ICfgSyncMode.Broadcast,
+    blkCdnCfg: udfVal,
     customEvtName: udfVal,
     cfgUrl: udfVal, // as long as it is set to NOT NUll, we will NOT use config from core
     overrideSyncFn: udfVal,
@@ -53,6 +52,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _timeoutHandle: ITimerHandler;
         let _receiveChanges: boolean;
         let _broadcastChanges: boolean;
+        let _blkCdnCfg: boolean;
         let _fetchTimeout: number;
         let _retryCnt: number;
         let _onCfgChangeReceive: (event: ICfgSyncEvent) => void;
@@ -60,6 +60,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _fetchFn: SendGetFunction;
         let _overrideFetchFn: SendGetFunction;
         let _overrideSyncFn: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
+        let _paused = false;
 
         dynamicProto(CfgSyncPlugin, this, (_self, _base) => {
 
@@ -75,9 +76,19 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 return _mainConfig;
             }
 
+            _self.pause = () => {
+                _paused = true;
+                _clearScheduledTimer();
+            }
+
+            _self.resume = () => {
+                _paused = false;
+                _setupTimer();
+            }
+
             // used for V2 to manaully trigger config udpate
             _self.setCfg = (config?: IConfiguration & IConfig) => {
-                return _setCfg(config, _broadcastChanges);
+                return _setCfg(config);
             }
 
             _self.sync = (customDetails?: any) => {
@@ -95,7 +106,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_broadcastChanges, _receiveChanges, _evtName];
+                return [_broadcastChanges, _receiveChanges, _evtName, _blkCdnCfg];
             };
     
             function _initDefaults() {
@@ -109,6 +120,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _timeoutHandle = null;
                 _fetchTimeout = null;
                 _retryCnt = null;
+                _blkCdnCfg = null;
                 _overrideFetchFn = null;
                 _overrideSyncFn = null;
                 _onCfgChangeReceive = null;
@@ -121,6 +133,16 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
+                    let preBlkCdn = _blkCdnCfg;
+                    _blkCdnCfg = !!_extensionConfig.blkCdnCfg;
+                    // avoid initial call
+                    if (!isNullOrUndefined(preBlkCdn) && preBlkCdn !== _blkCdnCfg) {
+                        if (!_blkCdnCfg && _cfgUrl) {
+                            _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
+                        } else {
+                            _clearScheduledTimer();
+                        }
+                    }
 
                     if (isNullOrUndefined(_receiveChanges)) {
                         _receiveChanges = _extensionConfig.syncMode === ICfgSyncMode.Receive;
@@ -149,7 +171,6 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         _mainConfig = config;
                         
                         if (_broadcastChanges) {
-                            objExtend({}, config);
                             _sendCfgsyncEvents();
                         }
                     }
@@ -160,11 +181,11 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _onCfgChangeReceive = _extensionConfig.onCfgChangeReceive;
                 _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs;
                 _fetchTimeout = _extensionConfig.scheduleFetchTimeout;
+                _fetchFn = _getFetchFnInterface();
+                _retryCnt = 0;
                 
                 // NOT support cfgURL change to avoid mutiple fetch calls
-                if (_cfgUrl) {
-                    _retryCnt = 0;
-                    _fetchFn = _getFetchFnInterface();
+                if (_cfgUrl && !_blkCdnCfg) {
                     _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
                 }
             }
@@ -172,8 +193,12 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             function _setCfg(config?: IConfiguration & IConfig, isAutoSync?: boolean) {
                 if (config) {
                     _mainConfig = config;
-                    if (!!isAutoSync) {
+                    if (!!isAutoSync && !_paused) {
                         return _sendCfgsyncEvents();
+                    }
+                    if (_receiveChanges && !_paused) {
+                        _self.core.updateCfg(config);
+                        return true;
                     }
                 }
                 return false;
@@ -289,7 +314,8 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         _retryCnt = 0; // any successful response will reset retry count to 0
                         let JSON = getJSON();
                         if (JSON) {
-                            let cfg = JSON.parse(response); //comments are not allowed
+                            let cdnCfg = JSON.parse(response); //comments are not allowed
+                            let cfg = applyCdnfeatureCfg(cdnCfg, _self.core);
                             cfg && _setCfg(cfg, isAutoSync);
                         }
                     } else {
@@ -327,7 +353,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                                 } else {
                                     let cfg = cfgEvent && cfgEvent.cfg;
                                     let newCfg = cfg && isPlainObject(cfg) && _replaceTartgetByKeys(cfg);
-                                    newCfg && _self.core.updateCfg(newCfg);
+                                    newCfg && _setCfg(newCfg);
                                 }
                             }, _evtNamespace, true);
 
@@ -337,6 +363,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     }
                 }
             }
+
             // 4 levels
             function _replaceTartgetByKeys<T=IConfiguration & IConfig>(cfg: T , level?: number) {
                 let _cfg: IConfiguration & IConfig = null;
@@ -417,6 +444,20 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
     public updateEventListenerName(eventName?: string): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    /**
+     * Pause the sending/receiving of events
+     */
+    public pause(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Resume the sending/receiving of events
+     */
+    public resume(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
    
     // /**

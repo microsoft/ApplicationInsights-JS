@@ -3,6 +3,7 @@
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
+import { IFeatureOptIn } from "./IFeatureOptIn";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
@@ -183,4 +184,10 @@ export interface IConfiguration {
      * @defaultValue undefined
      */
     storagePrefix?:string;
+
+    /**
+     * Custom optional value to opt in features
+     * @defaultValue undefined
+     */
+    featureOptIn?: IFeatureOptIn;
 }
