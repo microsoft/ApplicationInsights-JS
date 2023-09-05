@@ -902,6 +902,47 @@ export class CfgSyncHelperTests extends AITestClass {
             }
         });
 
+        this.testCase({
+            name: "CfgSyncPluginHelper: getConfigFromCdn should override enable and disaled config correctly with custom opt-in",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin()
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                let field = "enableWParamFeature";
+                let cdnConfig = {
+                    enabled: true,
+                    featureOptIn:{[field]: {mode: CdnFeatureMode.enable, onCfg: {["maxMessageLimit"]: 11}, offCfg: {["maxMessageLimit"]: 12}}},
+                    config: {
+                        maxMessageLimit: 10
+                    }
+                } as ICfgSyncCdnConfig;
+
+                let customFeatureOptIn = {
+                    [field]: {mode: FeatureOptInMode.enable, onCfg: {["maxMessageLimit"]: 13}, offCfg: {["maxMessageLimit"]: 14}} as IFeatureOptInDetails
+                } as IFeatureOptIn;
+                let config = {instrumentationKey: "test", featureOptIn: customFeatureOptIn} as IConfiguration;
+                core.initialize(config, [channel]);
+
+                let actualCdnCfg = applyCdnfeatureCfg(cdnConfig, core);
+                let expectedCfg = {
+                    maxMessageLimit: 13,
+                    featureOptIn: {[field]: {mode: FeatureOptInMode.enable,  onCfg: {["maxMessageLimit"]: 13}, offCfg: {["maxMessageLimit"]: 14}}}
+                }
+                Assert.deepEqual(expectedCfg, actualCdnCfg, "cdn config should contain feature");
+                Assert.deepEqual(cdnConfig.config?.maxMessageLimit, 13, "original cdn config object is updated");
+                core.updateCfg(actualCdnCfg as any);
+
+                this.clock.tick(1);
+                Assert.deepEqual(core.config.instrumentationKey, "test", "core ikey config");
+                Assert.deepEqual(core.config.maxMessageLimit, 13, "core maxMessageLimit config");
+                Assert.deepEqual(core.config.featureOptIn, expectedCfg.featureOptIn, "core featureOptIn config");
+                
+            }
+        });
+
     }
 }
 

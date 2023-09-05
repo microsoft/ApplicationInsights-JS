@@ -78,10 +78,12 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
             _self.pause = () => {
                 _paused = true;
+                _clearScheduledTimer();
             }
 
             _self.resume = () => {
                 _paused = false;
+                _setupTimer();
             }
 
             // used for V2 to manaully trigger config udpate

@@ -119,7 +119,7 @@ export function resolveCdnFeatureCfg(field: string, cdnCfg?: ICfgSyncCdnConfig, 
             offV = userOffV || cdnOffV;
 
         } else if (cdnM === CdnFeatureMode.enable) {
-            mode = FeatureOptInMode.enable
+            mode = FeatureOptInMode.enable;
             onV =  userOnV || cdnOnV;
             offV = userOffV || cdnOffV;
 
