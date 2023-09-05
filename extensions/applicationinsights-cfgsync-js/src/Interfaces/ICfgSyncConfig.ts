@@ -23,7 +23,7 @@ export interface ICfgSyncConfig {
      * Identifies if fetching cdn endpoint should be blocked
      * Default to false.
      */
-    blockCdn?: boolean;
+    blkCdnCfg?: boolean;
     /**
      * Overrides callback function to handle event details when changes are received via eventListener.
      */

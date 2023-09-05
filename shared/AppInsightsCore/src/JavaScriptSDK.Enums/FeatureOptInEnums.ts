@@ -26,8 +26,12 @@ export const enum CdnFeatureMode {
      * try to apply config from cdn
      */
     enable = 3,
-    /**
-     * force to apply config from cdn
+     /**
+     * force enable
      */
-    force = 4
+    forceOn = 4,
+     /**
+      * force disable
+      */
+    forceOff = 5
 }

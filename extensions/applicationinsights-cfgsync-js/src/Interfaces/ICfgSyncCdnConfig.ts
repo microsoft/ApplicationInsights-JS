@@ -35,8 +35,18 @@ export interface ICdnFeatureOptIn {
      */
     mode: CdnFeatureMode,
     /**
-     * Identifies configuration values that should be set for the feature
-     * Default: undefined
-     */
-    value?: any
+    * Identifies override configuration values when given feature is enabled
+    * NOTE: should use flat string for fields, for example, if you want to set value for extensionConfig.Ananlytics.disableAjaxTrackig in configurations,
+    * you should use "extensionConfig.Ananlytics.disableAjaxTrackig" as field name: {["extensionConfig.Analytics.disableAjaxTrackig"]:1}
+    * Default: undefined
+    */
+    value?: {[field: string]: any};
+    /**
+      * Identifies override configuration values when given feature is disabled
+      * NOTE: should use flat string for fields, for example, if you want to set value for extensionConfig.Ananlytics.disableAjaxTrackig in configurations,
+      * you should use "extensionConfig.Ananlytics.disableAjaxTrackig" as field name: {["extensionConfig.Analytics.disableAjaxTrackig"]:1}
+      * Default: undefined
+      */
+    disableValue?: {[field: string]: any};
+    
 }
