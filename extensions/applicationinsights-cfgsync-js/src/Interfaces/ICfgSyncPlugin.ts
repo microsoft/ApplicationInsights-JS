@@ -24,4 +24,12 @@ export declare interface ICfgSyncPlugin {
      * @param eventName new event name
      */
     updateEventListenerName(eventName?: string): boolean;
+    /**
+     * Pause the sending/receiving of events
+     */
+    pause(): void;
+     /**
+     * Resume the sending/receiving of events
+     */
+    resume(): void;
 }
