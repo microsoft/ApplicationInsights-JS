@@ -8,7 +8,7 @@ export function initListenerInstance1() {
         disableInstrumentationKeyValidation: false,
         maxMessageLimit: 20,
         messageSwitch: {"disableIkeyDeprecationMessage": false},
-        featureOptIn: {disableInstrumentationKeyValidation: {mode: 3, cfgValue:false}},
+        // featureOptIn: {disableInstrumentationKeyValidation: {mode: 3, cfgValue:false}},
         throttleMgrCfg: {
             limit: {
                 samplingRate: 3,

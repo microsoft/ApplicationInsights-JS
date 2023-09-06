@@ -269,7 +269,9 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (_config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
                             _throttleMgr.onReadyState(true);
                         }
+                        console.log("init called");
                         if (!_config.connectionString && !_config.messageSwitch?.disableIkeyDeprecationMessage) {
+                            console.log("InstrumentationKeyDeprecation");
                             _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
                         }
                         if (sdkSrc.indexOf("az416426") != -1 && !_config.messageSwitch?.disableCdnDeprecationMessage) {
