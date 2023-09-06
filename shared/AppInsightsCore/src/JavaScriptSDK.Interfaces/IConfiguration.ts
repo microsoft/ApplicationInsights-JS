@@ -190,4 +190,10 @@ export interface IConfiguration {
      * @defaultValue undefined
      */
     featureOptIn?: IFeatureOptIn;
+
+     /**
+     * Custom whether send message or not
+     * @defaultValue undefined
+     */
+     messageSwitch?: {[messageName: string]: boolean};
 }

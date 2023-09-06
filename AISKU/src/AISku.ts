@@ -4,11 +4,12 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
+import { CfgSyncPlugin } from "@microsoft/applicationinsights-cfgsync-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
     IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
-    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, parseConnectionString
+    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
@@ -102,6 +103,8 @@ export class AppInsightsSku implements IApplicationInsights {
         let _core: IAppInsightsCore<IConfiguration & IConfig>;
         let _config: IConfiguration & IConfig;
         let _analyticsPlugin: AnalyticsPlugin;
+        let _cfgSyncPlugin: CfgSyncPlugin;
+        let _throttleMgr: ThrottleMgr;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -152,6 +155,9 @@ export class AppInsightsSku implements IApplicationInsights {
 
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
+                if (!_cfgSyncPlugin){
+                    _cfgSyncPlugin = new CfgSyncPlugin();
+                }
                 if (_config.connectionString) {
                     const cs = parseConnectionString(_config.connectionString);
                     const ingest = cs.ingestionendpoint;
@@ -159,15 +165,6 @@ export class AppInsightsSku implements IApplicationInsights {
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                 }
             }));
-
-            // Outside of the onConfigChange as we only want to do this once
-            let isErrMessageDisabled = isNullOrUndefined(_config.disableIkeyDeprecationMessage) ? true : _config.disableIkeyDeprecationMessage;
-            if (!_config.connectionString && !isErrMessageDisabled) {
-                _throwInternal(_core.logger,
-                    eLoggingSeverity.CRITICAL,
-                    _eInternalMessageId.InstrumentationKeyDeprecation,
-                    "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
-            }
 
             _self.snippet = snippet;
 
@@ -212,6 +209,8 @@ export class AppInsightsSku implements IApplicationInsights {
                     }
                 });
             };
+
+
         
             _self.loadAppInsights = (legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights => {
                 if (legacyMode) {
@@ -245,8 +244,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
                     // initialize core
-                    _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin ], logger, notificationManager);
-                    objDefine(_self, "context", {
+                    _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);                    objDefine(_self, "context", {
                         g: () => properties.context
                     });
                     let sdkSrc = _findSdkSourceFile();
@@ -259,8 +257,31 @@ export class AppInsightsSku implements IApplicationInsights {
                     _self.emptyQueue();
                     _self.pollInternalLogs();
                     _self.addHousekeepingBeforeUnload(_self);
+
+                    _addUnloadHook(onConfigChange(_config, () => {
+                        if (!_throttleMgr){ //&& cfgHandler.cfg.disabled
+                            _throttleMgr = new ThrottleMgr(_core);
+                        }
+                        //  && !_config.throttleMgrCfg.disabled
+                        if (_throttleMgr && !_throttleMgr.isReady() && _config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
+                            // set ready state to true will automaatically trigger flush()
+                            _throttleMgr.onReadyState(true);
+                        }
+
+                        console.log("init called");
+                        if (!_config.connectionString && !_config.messageSwitch?.disableIkeyDeprecationMessage) {
+                            console.log("InstrumentationKeyDeprecation");
+                            _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
+                        }
+                        // if (sdkSrc.indexOf("az416426") != -1 && !_config.messageSwitch?.disableCdnDeprecationMessage) {
+                        //     _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "Support for domain az41626 will end soon, use js.monitor.azure.com instead");
+                        // }
+                        // if (parseInt(_snippetVersion) < 6 && !_config.messageSwitch?.disableSnippetVersionUpdateMessage) {
+                        //     _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
+                        // }
+    
+                    }));
                 });
-        
                 return _self;
             };
 
@@ -463,6 +484,8 @@ export class AppInsightsSku implements IApplicationInsights {
                 properties = null;
                 _sender = null;
                 _snippetVersion = null;
+                _cfgSyncPlugin = null;
+                _throttleMgr = null;
             }
 
             function _removePageEventHandlers() {
