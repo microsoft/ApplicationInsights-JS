@@ -224,11 +224,11 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (!isNullOrUndefined(_snippetVersion)) {
                             snippetVer += _snippetVersion;
                         }
-        
                         if (_self.context && _self.context.internal) {
                             _self.context.internal.snippetVer = snippetVer || "-";
                         }
-        
+                        console.log("_self.context.internal.snippetVer", _self.context.internal.snippetVer)
+
                         // apply updated properties to the global instance (snippet)
                         objForEachKey(_self, (field, value) => {
                             if (isString(field) &&
@@ -269,10 +269,8 @@ export class AppInsightsSku implements IApplicationInsights {
                             _throttleMgr.onReadyState(true);
                         }
 
-                        
                         if (!_iKeySentMessage){ //should not send again
                             if (!_config.connectionString && _config.messageSwitch?.disableIkeyDeprecationMessage === false) {
-                                console.log("sending");
                                 _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
                                 _iKeySentMessage = true;
                             }
@@ -281,6 +279,7 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (sdkSrc && sdkSrc.indexOf("az416426") != -1 && _config.messageSwitch?.disableCdnDeprecationMessage === false) {
                             _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "Support for domain az41626 will end soon, use js.monitor.azure.com instead");
                         }
+
                         if (parseInt(_snippetVersion) < 6 && _config.messageSwitch?.disableSnippetVersionUpdateMessage === false) {
                             _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
                         }
