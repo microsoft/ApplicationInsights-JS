@@ -259,7 +259,7 @@ export class AppInsightsSku implements IApplicationInsights {
                     _self.pollInternalLogs();
                     _self.addHousekeepingBeforeUnload(_self);
 
-                    _addUnloadHook(onConfigChange(_config, () => {
+                    _addUnloadHook(onConfigChange(cfgHandler, () => {
                         if (!_throttleMgr){ //&& cfgHandler.cfg.disabled
                             _throttleMgr = new ThrottleMgr(_core);
                         }
@@ -272,9 +272,10 @@ export class AppInsightsSku implements IApplicationInsights {
                         
                         if (!_iKeySentMessage){ //should not send again
                             if (!_config.connectionString && _config.messageSwitch?.disableIkeyDeprecationMessage === false) {
+                                console.log("sending");
                                 _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
+                                _iKeySentMessage = true;
                             }
-                            _iKeySentMessage = true;
                         }
                        
                         if (sdkSrc && sdkSrc.indexOf("az416426") != -1 && _config.messageSwitch?.disableCdnDeprecationMessage === false) {
@@ -489,6 +490,7 @@ export class AppInsightsSku implements IApplicationInsights {
                 _snippetVersion = null;
                 _cfgSyncPlugin = null;
                 _throttleMgr = null;
+                _iKeySentMessage = false;
             }
 
             function _removePageEventHandlers() {

@@ -72,7 +72,6 @@ export class ThrottleSentMessage extends AITestClass {
 
             let core = this._ai['core'];
             let coreLogger = core.logger;
-            console.log("---- test get logger", JSON.stringify(coreLogger));
             this.loggingSpy = this.sandbox.stub(coreLogger, 'throwInternal');
         } catch (e) {
             console.error('Failed to initialize');
@@ -94,6 +93,7 @@ export class ThrottleSentMessage extends AITestClass {
     public messageSentTests(): void {
         this.testCase({
             name: "ThrottleSentMessage: Message is sent when user use connection string",
+            useFakeTimers: true,
             test: () => {
                 Assert.ok(this._ai, 'ApplicationInsights SDK exists');
                 Assert.ok(this._ai.appInsights, 'App Analytics exists');
@@ -102,11 +102,32 @@ export class ThrottleSentMessage extends AITestClass {
                 Assert.ok(this._ai.appInsights.core, 'Core exists');
                 Assert.equal(true, this._ai.appInsights.core.isInitialized(),
                     'Core is initialized');
-                    Assert.ok(this.loggingSpy);
-                this.getAi.config.messageSwitch = {"disableIkeyDeprecationMessage": false};
-                this._ai['core'].config.messageSwitch = {"disableIkeyDeprecationMessage": false};
-                // message is sent, but cannot change the config
+
+                let config = this.getAi.config;
+                config.messageSwitch = {"disableIkeyDeprecationMessage": false};
+                this.clock.tick(1);
                 Assert.ok(this.loggingSpy.called);
+                Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, this.loggingSpy.args[0][1]);
+                Assert.equal("Instrumentation key support will end soon, see aka.ms/IkeyMigrate", this.loggingSpy.args[0][2]);
+
+            }
+        });
+        this.testCase({
+            name: "ThrottleSentMessage: Message will not be sent when user turn off message",
+            useFakeTimers: true,
+            test: () => {
+                Assert.ok(this._ai, 'ApplicationInsights SDK exists');
+                Assert.ok(this._ai.appInsights, 'App Analytics exists');
+                Assert.equal(true, this._ai.appInsights.isInitialized(), 'App Analytics is initialized');
+
+                Assert.ok(this._ai.appInsights.core, 'Core exists');
+                Assert.equal(true, this._ai.appInsights.core.isInitialized(),
+                    'Core is initialized');
+
+                let config = this.getAi.config;
+                config.messageSwitch = {"disableIkeyDeprecationMessage": true};
+                this.clock.tick(1);
+                Assert.equal(this.loggingSpy.callCount, 0);
             }
         });
     }
