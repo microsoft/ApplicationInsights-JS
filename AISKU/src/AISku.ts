@@ -106,6 +106,8 @@ export class AppInsightsSku implements IApplicationInsights {
         let _cfgSyncPlugin: CfgSyncPlugin;
         let _throttleMgr: ThrottleMgr;
         let _iKeySentMessage: boolean;
+        let _cdnSentMessage: boolean;
+        let _sdkVerSentMessage: boolean;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -260,7 +262,7 @@ export class AppInsightsSku implements IApplicationInsights {
                     _self.addHousekeepingBeforeUnload(_self);
 
                     _addUnloadHook(onConfigChange(cfgHandler, () => {
-                        if (!_throttleMgr){ //&& cfgHandler.cfg.disabled
+                        if (!_throttleMgr){
                             _throttleMgr = new ThrottleMgr(_core);
                         }
                         //  && !_config.throttleMgrCfg.disabled
@@ -269,20 +271,29 @@ export class AppInsightsSku implements IApplicationInsights {
                             _throttleMgr.onReadyState(true);
                         }
 
+                        let _messageSwitch = _config.messageSwitch;
+
                         if (!_iKeySentMessage){ //should not send again
-                            if (!_config.connectionString && _config.messageSwitch?.disableIkeyDeprecationMessage === false) {
+                            if (!_config.connectionString && _messageSwitch && _messageSwitch.disableIkeyDeprecationMessage === false) {
                                 _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
                                 _iKeySentMessage = true;
                             }
                         }
                        
-                        if (sdkSrc && sdkSrc.indexOf("az416426") != -1 && _config.messageSwitch?.disableCdnDeprecationMessage === false) {
-                            _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "Support for domain az41626 will end soon, use js.monitor.azure.com instead");
+                        if (!_cdnSentMessage){
+                            if (sdkSrc && sdkSrc.indexOf("az416426") != -1 && _messageSwitch && _messageSwitch.disableCdnDeprecationMessage === false) {
+                                _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "Support for domain az41626 will end soon, use js.monitor.azure.com instead");
+                                _cdnSentMessage = true;
+                            }
                         }
-
-                        if (parseInt(_snippetVersion) < 6 && _config.messageSwitch?.disableSnippetVersionUpdateMessage === false) {
-                            _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
+                       
+                        if (!_sdkVerSentMessage){
+                            if (parseInt(_snippetVersion) < 6 && _messageSwitch && _messageSwitch.disableSnippetVersionUpdateMessage === false) {
+                                _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
+                                _sdkVerSentMessage = true;
+                            }
                         }
+                        
                     }));
                 });
                 return _self;
@@ -490,6 +501,8 @@ export class AppInsightsSku implements IApplicationInsights {
                 _cfgSyncPlugin = null;
                 _throttleMgr = null;
                 _iKeySentMessage = false;
+                _cdnSentMessage = false;
+                _sdkVerSentMessage = false;
             }
 
             function _removePageEventHandlers() {

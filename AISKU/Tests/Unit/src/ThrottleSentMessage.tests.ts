@@ -49,9 +49,9 @@ export class ThrottleSentMessage extends AITestClass {
             convertUndefined: "test-value",
             disablePageUnloadEvents: [ "beforeunload" ],
             throttleMgrCfg: {
-                [_eInternalMessageId.InstrumentationKeyDeprecation as number]:tconfig,
-                [_eInternalMessageId.SnippetUpdate as number]:tconfig,
-                [_eInternalMessageId.CdnDeprecation as number]:tconfig
+                [_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig,
+                [_eInternalMessageId.SnippetUpdate]:tconfig,
+                [_eInternalMessageId.CdnDeprecation]:tconfig
             },
             messageSwitch: {"disableIkeyDeprecationMessage": true}
         };
