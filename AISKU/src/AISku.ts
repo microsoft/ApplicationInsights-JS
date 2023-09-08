@@ -16,8 +16,9 @@ import {
     IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin, ITelemetryInitializerHandler,
     ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId,
     _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfValidate, createDynamicConfig, createProcessTelemetryContext,
-    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString,
-    mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
+    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined,
+    isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener,
+    removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -271,24 +272,23 @@ export class AppInsightsSku implements IApplicationInsights {
                             _throttleMgr.onReadyState(true);
                         }
 
-                        let _messageSwitch = _config.messageSwitch;
-
                         if (!_iKeySentMessage){ //should not send again
-                            if (!_config.connectionString && _messageSwitch && _messageSwitch.disableIkeyDeprecationMessage === false) {
+                            if (!_config.connectionString && !isFeatureEnabled("disableIkeyDeprecationMessage", _config)) {
                                 _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
                                 _iKeySentMessage = true;
                             }
                         }
                        
                         if (!_cdnSentMessage){
-                            if (sdkSrc && sdkSrc.indexOf("az416426") != -1 && _messageSwitch && _messageSwitch.disableCdnDeprecationMessage === false) {
+                            if (sdkSrc && sdkSrc.indexOf("az416426") != -1 && !isFeatureEnabled("disableCdnDeprecationMessage", _config)) {
                                 _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "Support for domain az41626 will end soon, use js.monitor.azure.com instead");
                                 _cdnSentMessage = true;
                             }
                         }
                        
                         if (!_sdkVerSentMessage){
-                            if (parseInt(_snippetVersion) < 6 && _messageSwitch && _messageSwitch.disableSnippetVersionUpdateMessage === false) {
+                            console.log("--isFeatureEnabled", !isFeatureEnabled("disableSnippetVersionUpdateMessage", _config));
+                            if (parseInt(_snippetVersion) < 6 && !isFeatureEnabled("disableSnippetVersionUpdateMessage", _config)) {
                                 _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
                                 _sdkVerSentMessage = true;
                             }
