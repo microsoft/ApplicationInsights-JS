@@ -5,6 +5,7 @@ import {
     arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isObject, isPlainObject, isString,
     isUndefined, objDeepFreeze, objDefine, objForEachKey, objHasOwn, strIndexOf
 } from "@nevware21/ts-utils";
+import { FeatureOptInMode, IFeatureOptIn } from "../applicationinsights-core-js";
 import { STR_EMPTY } from "./InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
@@ -347,3 +348,14 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
 }
 
 export const asString = asString21;
+
+export function isFeatureEnable(feature?: string, optInMap?: IFeatureOptIn): boolean {
+    let rlt = false;
+    if (feature && optInMap && optInMap[feature]) {
+        let ft = optInMap[feature];
+        let mode = ft && ft.mode;
+        // NOTE: None will be considered as true
+        rlt = (mode == FeatureOptInMode.enable) || (mode == FeatureOptInMode.none);
+    }
+    return rlt;
+}
