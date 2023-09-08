@@ -8,15 +8,10 @@ import { FeatureOptInMode, newId } from '@microsoft/applicationinsights-core-js'
 import { createSnippetV6 } from './testSnippetV6';
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
-const TestConnectionString = 'InstrumentationKey=b7170927-2d1c-44f1-acec-59f4e1751c11';
 
 export class ThrottleSentMessage extends AITestClass {
     private _ai: IApplicationInsights;
     private getAi: ApplicationInsights;
-    private sessionPrefix: string = newId();
-    private loggingSpy: SinonSpy;
-
-    private delay = 100;
     private _config: IConfiguration | IConfig;
     private _logger;
 
@@ -53,7 +48,7 @@ export class ThrottleSentMessage extends AITestClass {
                 [_eInternalMessageId.SnippetUpdate]:tconfig,
                 [_eInternalMessageId.CdnDeprecation]:tconfig
             },
-            featureOptIn:{["disableIkeyDeprecationMessage"]: {mode: FeatureOptInMode.enable}}
+            featureOptIn:{["disableIkeyDeprecationMessage"]: {mode: FeatureOptInMode.enable},["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.enable}}
         };
 
         return config;
@@ -88,7 +83,6 @@ export class ThrottleSentMessage extends AITestClass {
     public registerTests() {
         this.ikeyMessageTests();
         this.snippetVerMessageTests();
-        // this.addAsyncTests();
     }
 
     public ikeyMessageTests(): void {
@@ -142,16 +136,16 @@ export class ThrottleSentMessage extends AITestClass {
 
                     let getcore = snippet['core'];
                     let getcoreLogger = getcore.logger;
+
                     let loggingSpy = this.sandbox.stub(getcoreLogger, 'throwInternal');
 
 // notice: if featureOptIn does not exist before, the onconfigchange would not be called
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
                     snippet.config.featureOptIn = {["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.disable}}
                     this.clock.tick(1);
-                    // Assert.ok(loggingSpy.called);
-                    console.log("what happened", JSON.stringify(loggingSpy.args));
-                    // Assert.equal(_eInternalMessageId.SnippetUpdate, loggingSpy.args[0][1]);
-                    // loggingSpy.reset();
+                    Assert.ok(loggingSpy.called);
+                    Assert.equal(_eInternalMessageId.SnippetUpdate, loggingSpy.args[0][1]);
+                    loggingSpy.reset();
             }
         });
 
@@ -168,10 +162,10 @@ export class ThrottleSentMessage extends AITestClass {
                     let loggingSpy = this.sandbox.stub(getcoreLogger, 'throwInternal');
 
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
-                    // snippet.config.featureOptIn = {["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.disable}}
-                    // this.clock.tick(1);
-                    // Assert.equal(loggingSpy.callCount, 0);
-                    // loggingSpy.reset();
+                    snippet.config.featureOptIn = {["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.disable}}
+                    this.clock.tick(1);
+                    Assert.equal(loggingSpy.callCount, 0);
+                    loggingSpy.reset();
             }
         });
 

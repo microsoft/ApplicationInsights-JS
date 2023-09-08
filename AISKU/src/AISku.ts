@@ -287,7 +287,6 @@ export class AppInsightsSku implements IApplicationInsights {
                         }
                        
                         if (!_sdkVerSentMessage){
-                            console.log("--isFeatureEnabled", !isFeatureEnabled("disableSnippetVersionUpdateMessage", _config));
                             if (parseInt(_snippetVersion) < 6 && !isFeatureEnabled("disableSnippetVersionUpdateMessage", _config)) {
                                 _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
                                 _sdkVerSentMessage = true;
