@@ -26,7 +26,7 @@ export { runTargetUnload, doUnloadAll } from "./JavaScriptSDK/AsyncUtils";
 export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
-    isNotUndefined, isNotNullOrUndefined, objExtend
+    isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled
 } from "./JavaScriptSDK/HelperFuncs";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,

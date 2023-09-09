@@ -5,6 +5,8 @@ import {
     arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isObject, isPlainObject, isString,
     isUndefined, objDeepFreeze, objDefine, objForEachKey, objHasOwn, strIndexOf
 } from "@nevware21/ts-utils";
+import { FeatureOptInMode } from "../JavaScriptSDK.Enums/FeatureOptInEnums";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { STR_EMPTY } from "./InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
@@ -347,3 +349,14 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
 }
 
 export const asString = asString21;
+
+export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T): boolean {
+    let rlt = false;
+    let ft = cfg && cfg.featureOptIn && cfg.featureOptIn[feature];
+    if (feature && ft) {
+        let mode = ft.mode;
+        // NOTE: None will be considered as true
+        rlt = (mode == FeatureOptInMode.enable) || (mode == FeatureOptInMode.none);
+    }
+    return rlt;
+}
