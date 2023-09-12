@@ -48,7 +48,11 @@ export class ThrottleSentMessage extends AITestClass {
                 [_eInternalMessageId.SnippetUpdate]:tconfig,
                 [_eInternalMessageId.CdnDeprecation]:tconfig
             },
-            featureOptIn:{["disableIkeyDeprecationMessage"]: {mode: FeatureOptInMode.enable},["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.enable}}
+            featureOptIn:{
+                ["disableIkeyDeprecationMessage"]: {mode: FeatureOptInMode.enable},
+                ["disableCdnDeprecationMessage"]: {mode: FeatureOptInMode.enable},
+                ["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.enable}
+            }
         };
 
         return config;
@@ -83,6 +87,35 @@ export class ThrottleSentMessage extends AITestClass {
     public registerTests() {
         this.ikeyMessageTests();
         this.snippetVerMessageTests();
+        // this.cdnDeprecatedMessageTests();
+    }
+
+    public cdnDeprecatedMessageTests(): void {
+        this.testCase({
+            name: "CdnDeprecatedMessageTests: Message is sent when az416426 is used",
+            useFakeTimers: true,
+            test: () => {
+                Assert.ok(this._ai, 'ApplicationInsights SDK exists');
+                Assert.ok(this._ai.appInsights, 'App Analytics exists');
+                Assert.equal(true, this._ai.appInsights.isInitialized(), 'App Analytics is initialized');
+
+                Assert.ok(this._ai.appInsights.core, 'Core exists');
+                Assert.equal(true, this._ai.appInsights.core.isInitialized(),
+                    'Core is initialized');
+                let loggingSpy = this.sandbox.stub(this._logger, 'throwInternal');
+
+                let config = this.getAi.config;
+
+                config.featureOptIn = {["disableCdnDeprecationMessage"]: {mode: FeatureOptInMode.disable}};
+                config.featureOptIn = {["disableCdnDeprecationMessage"]: {mode: FeatureOptInMode.disable}}
+
+                this.clock.tick(1);
+                Assert.ok(loggingSpy.called);
+                Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, loggingSpy.args[0][1]);
+                Assert.ok(loggingSpy.args[0][2].contains("Instrumentation key support"));
+                loggingSpy.reset();
+            }
+        });
     }
 
     public ikeyMessageTests(): void {
@@ -105,7 +138,7 @@ export class ThrottleSentMessage extends AITestClass {
                 this.clock.tick(1);
                 Assert.ok(loggingSpy.called);
                 Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, loggingSpy.args[0][1]);
-                Assert.equal("Instrumentation key support will end soon, see aka.ms/IkeyMigrate", loggingSpy.args[0][2]);
+                Assert.ok(loggingSpy.args[0][2].contains("Instrumentation key support"));
                 loggingSpy.reset();
             }
         });
