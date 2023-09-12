@@ -281,14 +281,14 @@ export class AppInsightsSku implements IApplicationInsights {
                        
                         if (!_cdnSentMessage){
                             if (sdkSrc && sdkSrc.indexOf("az416426") != -1 && !isFeatureEnabled("disableCdnDeprecationMessage", _config)) {
-                                _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "Support for domain az41626 will end soon, use js.monitor.azure.com instead");
+                                _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "Support for this domain will end soon, https://aka.ms/JsActiveCdn");
                                 _cdnSentMessage = true;
                             }
                         }
                        
                         if (!_sdkVerSentMessage){
                             if (parseInt(_snippetVersion) < 6 && !isFeatureEnabled("disableSnippetVersionUpdateMessage", _config)) {
-                                _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://github.com/microsoft/ApplicationInsights-JS");
+                                _throttleMgr.sendMessage( _eInternalMessageId.SnippetUpdate, "Snippet ver is updated, see https://aka.ms/SnippetVer");
                                 _sdkVerSentMessage = true;
                             }
                         }
