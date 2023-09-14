@@ -287,7 +287,7 @@ export class AppInsightsSku implements IApplicationInsights {
                         }
                        
                         if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled("SdkLoaderVer", _config)) {
-                            _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "See Snippet ver update info at aka.ms/SnippetVer");
+                            _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
                             _sdkVerSentMessage = true;
                         }
                         
