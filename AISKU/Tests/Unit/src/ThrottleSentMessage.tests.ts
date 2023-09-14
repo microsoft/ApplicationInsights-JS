@@ -45,13 +45,8 @@ export class ThrottleSentMessage extends AITestClass {
             disablePageUnloadEvents: [ "beforeunload" ],
             throttleMgrCfg: {
                 [_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig,
-                [_eInternalMessageId.SnippetUpdate]:tconfig,
+                [_eInternalMessageId.SdkLdrUpdate]:tconfig,
                 [_eInternalMessageId.CdnDeprecation]:tconfig
-            },
-            featureOptIn:{
-                ["disableIkeyDeprecationMessage"]: {mode: FeatureOptInMode.enable},
-                ["disableCdnDeprecationMessage"]: {mode: FeatureOptInMode.enable},
-                ["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.enable}
             }
         };
 
@@ -106,8 +101,8 @@ export class ThrottleSentMessage extends AITestClass {
 
                 let config = this.getAi.config;
 
-                config.featureOptIn = {["disableCdnDeprecationMessage"]: {mode: FeatureOptInMode.disable}};
-                config.featureOptIn = {["disableCdnDeprecationMessage"]: {mode: FeatureOptInMode.disable}}
+                config.featureOptIn = {["CdnUsage"]: {mode: FeatureOptInMode.enable}};
+                config.featureOptIn = {["CdnUsage"]: {mode: FeatureOptInMode.enable}}
 
                 this.clock.tick(1);
                 Assert.ok(loggingSpy.called);
@@ -134,11 +129,12 @@ export class ThrottleSentMessage extends AITestClass {
 
                 let config = this.getAi.config;
 
-                config.featureOptIn = {["disableIkeyDeprecationMessage"]: {mode: FeatureOptInMode.disable}}
+                config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.enable}}
                 this.clock.tick(1);
                 Assert.ok(loggingSpy.called);
                 Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, loggingSpy.args[0][1]);
-                Assert.ok(loggingSpy.args[0][2].contains("Instrumentation key support"));
+                let message= loggingSpy.args[0][2];
+                Assert.ok(message.includes("Instrumentation key"));
                 loggingSpy.reset();
             }
         });
@@ -151,7 +147,7 @@ export class ThrottleSentMessage extends AITestClass {
                 Assert.equal(true, this._ai.appInsights.core.isInitialized(),
                     'Core is initialized');
                 let config = this.getAi.config;
-                config.featureOptIn = {["disableIkeyDeprecationMessage"]: {mode: FeatureOptInMode.enable}}
+                config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.disable}}
                 this.clock.tick(1);
                 Assert.equal(loggingSpy.callCount, 0);
                 loggingSpy.reset();
@@ -174,10 +170,10 @@ export class ThrottleSentMessage extends AITestClass {
 
 // notice: if featureOptIn does not exist before, the onconfigchange would not be called
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
-                    snippet.config.featureOptIn = {["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.disable}}
+                    snippet.config.featureOptIn = {["SdkLoaderVer"]: {mode: FeatureOptInMode.enable}}
                     this.clock.tick(1);
                     Assert.ok(loggingSpy.called);
-                    Assert.equal(_eInternalMessageId.SnippetUpdate, loggingSpy.args[0][1]);
+                    Assert.equal(_eInternalMessageId.SdkLdrUpdate, loggingSpy.args[0][1]);
                     loggingSpy.reset();
             }
         });
@@ -195,7 +191,7 @@ export class ThrottleSentMessage extends AITestClass {
                     let loggingSpy = this.sandbox.stub(getcoreLogger, 'throwInternal');
 
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
-                    snippet.config.featureOptIn = {["disableSnippetVersionUpdateMessage"]: {mode: FeatureOptInMode.disable}}
+                    snippet.config.featureOptIn = {["SdkLoaderVer"]: {mode: FeatureOptInMode.enable}}
                     this.clock.tick(1);
                     Assert.equal(loggingSpy.callCount, 0);
                     loggingSpy.reset();

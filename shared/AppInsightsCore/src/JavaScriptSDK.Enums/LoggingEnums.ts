@@ -125,7 +125,7 @@ export const enum _eInternalMessageId {
     DynamicConfigException = 108,
     DefaultThrottleMsgKey = 109,
     CdnDeprecation = 110,
-    SnippetUpdate = 111
+    SdkLdrUpdate = 111
 }
 
 export type _InternalMessageId = number | _eInternalMessageId;
