@@ -62,9 +62,9 @@ const getIntro = (format, theNameSpace, moduleName, theVersion) => {
         let nsTokens = getCommonNamespace(theNameSpace.browser, theNameSpace.gbl);
         theIntro += "(function (global, factory) {\n";
         let prefix = "    ";
-        theIntro += prefix + "var undef = \"undefined\";\n";
         if (format === "umd") {
             // UMD supports loading via requirejs and 
+            theIntro += prefix + "var undef = \"undefined\";\n";
             theIntro += prefix + "typeof exports === \"object\" && typeof module !== undef ? factory(exports) :\n";
             theIntro += prefix + "typeof define === \"function\" && define.amd ? define([\"exports\"], factory) :\n";
             theIntro += prefix + "(function(global){\n";
@@ -138,6 +138,7 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             extend: true,
             freeze: false,
             sourcemap: true,
+            strict: false,
             intro: getIntro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver),
             outro: getOutro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver)
         },
