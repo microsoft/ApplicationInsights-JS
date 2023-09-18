@@ -52,7 +52,7 @@ const generateBackground = (isProduction) => {
             uglify({
                 ie8: true,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes: 3,
@@ -111,7 +111,7 @@ const generatePopup = (isProduction) => {
             uglify({
                 ie8: true,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes: 3,
@@ -154,7 +154,7 @@ const generateContentLoad = () => {
             uglify({
                 ie8: true,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes: 3,
@@ -199,7 +199,7 @@ const generatePageHelper = () => {
             uglify({
                 ie8: true,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes: 3,

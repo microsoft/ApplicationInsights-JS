@@ -46,7 +46,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       uglify({
         ie8: true,
         ie: true,
-        toplevel: true,
+        toplevel: false,
         compress: {
           ie: true,
           passes:3,
@@ -95,7 +95,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
         uglify({
           ie8: true,
           ie: true,
-          toplevel: true,
+          toplevel: false,
           compress: {
             ie: true,
             passes:3,
@@ -113,7 +113,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
         minify({
           ie8: true,
           ie: true,
-          toplevel: true,
+          toplevel: false,
           compress: {
             ie: true,
             passes:3,

@@ -169,7 +169,7 @@ const browserRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             uglify({
                 ie8: true,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes:3,
@@ -228,7 +228,7 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             uglify({
                 ie8: true,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes:3,
