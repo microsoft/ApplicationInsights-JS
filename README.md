@@ -18,8 +18,8 @@
 [![GitHub Workflow Status (master)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
-[![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?label=minified%20size)](https://js.monitor.azure.com/scripts/b/ai.2.min.js)
-[![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://js.monitor.azure.com/scripts/b/ai.2.min.js)
+[![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/3.min.js.svg?label=minified%20size)](https://js.monitor.azure.com/scripts/b/ai.3.min.js)
+[![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://js.monitor.azure.com/scripts/b/ai.3.min.js)
 
 ## Before Getting Started
 
@@ -76,12 +76,12 @@ appInsights.trackPageView(); // Manually call trackPageView to establish the cur
 
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 
-The current version of the snippet is version 6, the version is identified by the "sv:" in the script.
+The current version of the snippet is version 7, the version is identified by the "sv:" in the script.
 
 ```html
 <script type="text/javascript">
-!function(v,y,T){var S=v.location,k="script",D="instrumentationKey",C="ingestionendpoint",I="disableExceptionTracking",E="ai.device.",b="toLowerCase",w=(D[b](),"crossOrigin"),N="POST",e="appInsightsSDK",t=T.name||"appInsights",n=((T.name||v[e])&&(v[e]=t),v[t]||function(l){var u=!1,d=!1,g={initialize:!0,queue:[],sv:"6",version:2,config:l};function m(e,t){var n={},a="Browser";return n[E+"id"]=a[b](),n[E+"type"]=a,n["ai.operation.name"]=S&&S.pathname||"_unknown_",n["ai.internal.sdkVersion"]="javascript:snippet_"+(g.sv||g.version),{time:(a=new Date).getUTCFullYear()+"-"+i(1+a.getUTCMonth())+"-"+i(a.getUTCDate())+"T"+i(a.getUTCHours())+":"+i(a.getUTCMinutes())+":"+i(a.getUTCSeconds())+"."+(a.getUTCMilliseconds()/1e3).toFixed(3).slice(2,5)+"Z",iKey:e,name:"Microsoft.ApplicationInsights."+e.replace(/-/g,"")+"."+t,sampleRate:100,tags:n,data:{baseData:{ver:2}}};function i(e){e=""+e;return 1===e.length?"0"+e:e}}var e,n,f=l.url||T.src;function a(e){var t,n,a,i,o,s,r,c,p;u=!0,g.queue=[],d||(d=!0,i=f,r=(c=function(){var e,t={},n=l.connectionString;if(n)for(var a=n.split(";"),i=0;i<a.length;i++){var o=a[i].split("=");2===o.length&&(t[o[0][b]()]=o[1])}return t[C]||(t[C]="https://"+((e=(n=t.endpointsuffix)?t.location:null)?e+".":"")+"dc."+(n||"services.visualstudio.com")),t}()).instrumentationkey||l[D]||"",c=(c=c[C])?c+"/v2/track":l.endpointUrl,(p=[]).push((t="SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)",n=i,o=c,(s=(a=m(r,"Exception")).data).baseType="ExceptionData",s.baseData.exceptions=[{typeName:"SDKLoadFailed",message:t.replace(/\./g,"-"),hasFullStack:!1,stack:t+"\nSnippet failed to load ["+n+"] -- Telemetry is disabled\nHelp Link: https://go.microsoft.com/fwlink/?linkid=2128109\nHost: "+(S&&S.pathname||"_unknown_")+"\nEndpoint: "+o,parsedStack:[]}],a)),p.push((s=i,t=c,(o=(n=m(r,"Message")).data).baseType="MessageData",(a=o.baseData).message='AI (Internal): 99 message:"'+("SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details) ("+s+")").replace(/\"/g,"")+'"',a.properties={endpoint:t},n)),i=p,r=c,JSON&&((o=v.fetch)&&!T.useXhr?o(r,{method:N,body:JSON.stringify(i),mode:"cors"}):XMLHttpRequest&&((s=new XMLHttpRequest).open(N,r),s.setRequestHeader("Content-type","application/json"),s.send(JSON.stringify(i)))))}function i(e,t){d||setTimeout(function(){!t&&g.core||a()},500)}f&&((n=y.createElement(k)).src=f,!(o=T[w])&&""!==o||"undefined"==n[w]||(n[w]=o),n.onload=i,n.onerror=a,n.onreadystatechange=function(e,t){"loaded"!==n.readyState&&"complete"!==n.readyState||i(0,t)},e=n,T.ld<0?y.getElementsByTagName("head")[0].appendChild(e):setTimeout(function(){y.getElementsByTagName(k)[0].parentNode.appendChild(e)},T.ld||0));try{g.cookie=y.cookie}catch(h){}function t(e){for(;e.length;)!function(t){g[t]=function(){var e=arguments;u||g.queue.push(function(){g[t].apply(g,e)})}}(e.pop())}var s,r,o="track",c="TrackPage",p="TrackEvent",o=(t([o+"Event",o+"PageView",o+"Exception",o+"Trace",o+"DependencyData",o+"Metric",o+"PageViewPerformance","start"+c,"stop"+c,"start"+p,"stop"+p,"addTelemetryInitializer","setAuthenticatedUserContext","clearAuthenticatedUserContext","flush"]),g.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4},(l.extensionConfig||{}).ApplicationInsightsAnalytics||{});return!0!==l[I]&&!0!==o[I]&&(t(["_"+(s="onerror")]),r=v[s],v[s]=function(e,t,n,a,i){var o=r&&r(e,t,n,a,i);return!0!==o&&g["_"+s]({message:e,url:t,lineNumber:n,columnNumber:a,error:i,evt:v.event}),o},l.autoExceptionInstrumented=!0),g}(T.cfg));function a(){T.onInit&&T.onInit(n)}(v[t]=n).queue&&0===n.queue.length?(n.queue.push(a),n.trackPageView({})):a()}(window,document,{
-src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
+!function(v,y,T){var S=v.location,k="script",D="instrumentationKey",C="ingestionendpoint",I="disableExceptionTracking",E="ai.device.",b="toLowerCase",w=(D[b](),"crossOrigin"),N="POST",e="appInsightsSDK",t=T.name||"appInsights",n=((T.name||v[e])&&(v[e]=t),v[t]||function(l){var u=!1,d=!1,g={initialize:!0,queue:[],sv:"7",version:2,config:l};function m(e,t){var n={},a="Browser";return n[E+"id"]=a[b](),n[E+"type"]=a,n["ai.operation.name"]=S&&S.pathname||"_unknown_",n["ai.internal.sdkVersion"]="javascript:snippet_"+(g.sv||g.version),{time:(a=new Date).getUTCFullYear()+"-"+i(1+a.getUTCMonth())+"-"+i(a.getUTCDate())+"T"+i(a.getUTCHours())+":"+i(a.getUTCMinutes())+":"+i(a.getUTCSeconds())+"."+(a.getUTCMilliseconds()/1e3).toFixed(3).slice(2,5)+"Z",iKey:e,name:"Microsoft.ApplicationInsights."+e.replace(/-/g,"")+"."+t,sampleRate:100,tags:n,data:{baseData:{ver:2}}};function i(e){e=""+e;return 1===e.length?"0"+e:e}}var e,n,f=l.url||T.src;function a(e){var t,n,a,i,o,s,r,c,p;u=!0,g.queue=[],d||(d=!0,i=f,r=(c=function(){var e,t={},n=l.connectionString;if(n)for(var a=n.split(";"),i=0;i<a.length;i++){var o=a[i].split("=");2===o.length&&(t[o[0][b]()]=o[1])}return t[C]||(t[C]="https://"+((e=(n=t.endpointsuffix)?t.location:null)?e+".":"")+"dc."+(n||"services.visualstudio.com")),t}()).instrumentationkey||l[D]||"",c=(c=c[C])?c+"/v2/track":l.endpointUrl,(p=[]).push((t="SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)",n=i,o=c,(s=(a=m(r,"Exception")).data).baseType="ExceptionData",s.baseData.exceptions=[{typeName:"SDKLoadFailed",message:t.replace(/\./g,"-"),hasFullStack:!1,stack:t+"\nSnippet failed to load ["+n+"] -- Telemetry is disabled\nHelp Link: https://go.microsoft.com/fwlink/?linkid=2128109\nHost: "+(S&&S.pathname||"_unknown_")+"\nEndpoint: "+o,parsedStack:[]}],a)),p.push((s=i,t=c,(o=(n=m(r,"Message")).data).baseType="MessageData",(a=o.baseData).message='AI (Internal): 99 message:"'+("SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details) ("+s+")").replace(/\"/g,"")+'"',a.properties={endpoint:t},n)),i=p,r=c,JSON&&((o=v.fetch)&&!T.useXhr?o(r,{method:N,body:JSON.stringify(i),mode:"cors"}):XMLHttpRequest&&((s=new XMLHttpRequest).open(N,r),s.setRequestHeader("Content-type","application/json"),s.send(JSON.stringify(i)))))}function i(e,t){d||setTimeout(function(){!t&&g.core||a()},500)}f&&((n=y.createElement(k)).src=f,!(o=T[w])&&""!==o||"undefined"==n[w]||(n[w]=o),n.onload=i,n.onerror=a,n.onreadystatechange=function(e,t){"loaded"!==n.readyState&&"complete"!==n.readyState||i(0,t)},e=n,T.ld<0?y.getElementsByTagName("head")[0].appendChild(e):setTimeout(function(){y.getElementsByTagName(k)[0].parentNode.appendChild(e)},T.ld||0));try{g.cookie=y.cookie}catch(h){}function t(e){for(;e.length;)!function(t){g[t]=function(){var e=arguments;u||g.queue.push(function(){g[t].apply(g,e)})}}(e.pop())}var s,r,o="track",c="TrackPage",p="TrackEvent",o=(t([o+"Event",o+"PageView",o+"Exception",o+"Trace",o+"DependencyData",o+"Metric",o+"PageViewPerformance","start"+c,"stop"+c,"start"+p,"stop"+p,"addTelemetryInitializer","setAuthenticatedUserContext","clearAuthenticatedUserContext","flush"]),g.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4},(l.extensionConfig||{}).ApplicationInsightsAnalytics||{});return!0!==l[I]&&!0!==o[I]&&(t(["_"+(s="onerror")]),r=v[s],v[s]=function(e,t,n,a,i){var o=r&&r(e,t,n,a,i);return!0!==o&&g["_"+s]({message:e,url:t,lineNumber:n,columnNumber:a,error:i,evt:v.event}),o},l.autoExceptionInstrumented=!0),g}(T.cfg));function a(){T.onInit&&T.onInit(n)}(v[t]=n).queue&&0===n.queue.length?(n.queue.push(a),n.trackPageView({})):a()}(window,document,{
+src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js", // The SDK URL Source
 // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
 // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
 // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
@@ -129,7 +129,7 @@ The available configuration options are: -
 | ld | number in ms *[optional]* | Defines the load delay to wait before attempting to load the SDK. Default value is 0ms and any negative value will immediately add a script tag to the &lt;head&gt; region of the page, which will then block the page load event until to script is loaded (or fails).
 | useXhr | boolean *[optional]* | This setting is used only for reporting SDK load failures. Reporting will first attempt to use fetch() if available and then fallback to XHR, setting this value to true just bypasses the fetch check. Use of this value is only be required if your application is being used in an environment where fetch would fail to send the failure events.
 | crossOrigin | string *[optional]* | By including this setting, the script tag added to download the SDK will include the crossOrigin attribute with this string value. When not defined (the default) no crossOrigin attribute is added. Recommended values are not defined (the default); ""; or "anonymous" (For all valid values see [HTML attribute: crossorigin](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin) documentation)
-| onInit | function(aiSdk) { ... } *[optional]* | This callback function which is called after the main SDK script has been successfully loaded and initialized from the CDN (based on the src value), it is passed a reference to the sdk instance that it is being called for and it is also called _before_ the first initial page view. If the SDK has already been loaded and initialized this callback will still be called. NOTE: As this callback is called during the processing of the sdk.queue array you CANNOT add any additional items to the queue as they will be ignored and dropped. (Added as part of snippet version 5 -- the sv:"#" value within the snippet script, the current version is 6)
+| onInit | function(aiSdk) { ... } *[optional]* | This callback function which is called after the main SDK script has been successfully loaded and initialized from the CDN (based on the src value), it is passed a reference to the sdk instance that it is being called for and it is also called _before_ the first initial page view. If the SDK has already been loaded and initialized this callback will still be called. NOTE: As this callback is called during the processing of the sdk.queue array you CANNOT add any additional items to the queue as they will be ignored and dropped. (Added as part of snippet version 5 -- the sv:"#" value within the snippet script, the current version is 7)
 | cfg | object **[required]** | The configuration passed to the Application Insights SDK during initialization.
 
 #### Example using the snippet onInit callback
@@ -137,7 +137,7 @@ The available configuration options are: -
 ```html
 <script type="text/javascript">
 !function(T,l,y){<!-- Removed the Snippet code for brevity -->}(window,document,{
-src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
+src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
 crossOrigin: "anonymous",
 onInit: function (sdk) {
   sdk.addTelemetryInitializer(function (envelope) {
@@ -158,7 +158,7 @@ All active CDN endpoints contain all of the previous (and future) versions of th
 
 | State | CDN Endpoint | Description
 |-------|--------------|--------------------
-| Primary | https://js.monitor.azure.com/scripts/b/ai.2.min.js | Provides additional resiliency, allowing us to redirect to a different CDN provider should there be an unexpected issue (if required).
+| Primary | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Provides additional resiliency, allowing us to redirect to a different CDN provider should there be an unexpected issue (if required).
 | ~~Legacy/Backup~~<br />:exclamation: Deprecated | ~~https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js~~ | Due to the legacy nature of this URL / Domain, __if there is an unexpected issue (outage) with this domain, your application will need to be updated and deployed to use the new URL__.<br />:exclamation: Due to #1813 this URL is now being classified as Deprecated and we will be actively making changes to the SDK to warnings in your telemetry if we detect this domain being used.
 
 ### Connection String Setup
@@ -538,7 +538,7 @@ While the script downloads from the CDN, all tracking of your page is queued. On
 > Summary:
 >
 > - ![current npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)
-> - ![gzip compressed size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip)
+> - ![gzip compressed size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js.svg?compression=gzip)
 > - **~15 ms** overall initialization time
 > - **Zero** tracking missed during life cycle of page
 
@@ -554,7 +554,7 @@ This situation can also occur when the scripts are loaded lazily, late or dynami
 
 To support this usage pattern we also produce and publish to the CDN endpoints an [iife (Immediately Invoked Function Expression)](https://www.codeproject.com/Articles/5265230/Understanding-all-JavaScript-Module-Formats-and-To#iife-module-javascript-module-pattern) module so that the SDK is always executed and initialized.
 
-To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name.
+To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name. (Note: Since version 7, the gbl modules is set to be default.)
 
 These modules are also included in the NPM packages within the ```bundle``` folder.
 
@@ -562,18 +562,18 @@ Example (not complete) CDN paths for the current major version.
 
 | Module | Default Module | IIFE Module
 |--------|----------------|--------------
-| [AISku<br/>(Main Sdk)](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU) | http://js.monitor.azure.com/scripts/b/ai.2.min.js | http://js.monitor.azure.com/scripts/b/ai.2.gbl.min.js
-| [Click Analytics Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-clickanalytics-js) | http://js.monitor.azure.com/scripts/b/ext/ai.clck.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.clck.2.gbl.min.js
-| [Debug Plugin Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-debugplugin-js) | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.gbl.min.js
-| [Perf Mark/Measure Manager Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-perfmarkmeasure-js) | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.2.gbl.min.js
+| [AISku<br/>(Main Sdk)](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU) | http://js.monitor.azure.com/scripts/b/ai.3.min.js | http://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js
+| [Click Analytics Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-clickanalytics-js) | http://js.monitor.azure.com/scripts/b/ext/ai.clck.3.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.clck.3.gbl.min.js
+| [Debug Plugin Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-debugplugin-js) | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.3.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.3.gbl.min.js
+| [Perf Mark/Measure Manager Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-perfmarkmeasure-js) | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.3.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.3.gbl.min.js
 
 
 As part of the CDN deployment and promoting new versions as the default we also provide both minor and explicit versions of all modules, so each published module will also include the following versions and formats. The example names are assuming version 3 as the current major version and 3.1 and the current minor.
 
 | Major | Minor | Patch (Explicit) | Description
 |------|--------|------------------|-----------------
-| ```ai.2.min.js``` | ```ai.2.7.min.js``` | ```ai.2.7.2.min.js``` | Minified UMD version
-| ```ai.2.gbl.min.js``` | ```ai.2.7.gbl.min.js``` | ```ai.2.7.2.gbl.min.js``` | Minified IIFE version
+| ```ai.3.min.js``` | ```ai.2.7.min.js``` | ```ai.2.7.2.min.js``` | Minified UMD version
+| ```ai.3.gbl.min.js``` | ```ai.2.7.gbl.min.js``` | ```ai.2.7.2.gbl.min.js``` | Minified IIFE version
 
 And the process of Promoting (or rolling back) a deployed version is simply a case of replacing the major and minor version of the script with the current explicit version
 
@@ -582,14 +582,14 @@ And the process of Promoting (or rolling back) a deployed version is simply a ca
 We support 2 basic approaches for debugging the SDK via the CDN hosted scripts
 
 - Every Module includes a ```//# sourceMappingURL=xxxx``` at the end of the file and has the referenced map file uploaded to the CDN.
-- We also publish unminified versions of every module, just drop the ```.min``` from the script name (eg. ```https://js.monitor.azure.com/scripts/b/ai.2.js```)
+- We also publish unminified versions of every module, just drop the ```.min``` from the script name (eg. ```https://js.monitor.azure.com/scripts/b/ai.3.gbl.js```)
 
 | Major | Minor | Patch (Explicit) | Description
 |------|--------|------------------|-----------------
-| ```ai.2.min.js.map``` | ```ai.2.7.min.js.map``` | ```ai.2.7.2.min.js.map``` | Map file for the UMD versions
-| ```ai.2.gbl.min.js.map``` | ```ai.2.7.gbl.min.js.map``` | ```ai.2.7.2.gbl.min.js.map``` | Map file for the IIFE versions
-| ```ai.2.js``` | ```ai.2.7.js``` | ```ai.2.7.2.js``` | Unminified UMD versions
-| ```ai.2.gbl.js``` | ```ai.2.7.gbl.js``` | ```ai.2.7.2.gbl.js``` | Unminified IIFE versions
+| ```ai.3.min.js.map``` | ```ai.2.7.min.js.map``` | ```ai.2.7.2.min.js.map``` | Map file for the UMD versions
+| ```ai.3.gbl.min.js.map``` | ```ai.2.7.gbl.min.js.map``` | ```ai.2.7.2.gbl.min.js.map``` | Map file for the IIFE versions
+| ```ai.3.js``` | ```ai.2.7.js``` | ```ai.2.7.2.js``` | Unminified UMD versions
+| ```ai.3.gbl.js``` | ```ai.2.7.gbl.js``` | ```ai.2.7.2.gbl.js``` | Unminified IIFE versions
 
 ## Nightly Builds
 
@@ -630,13 +630,13 @@ When a new release is deployed the following occurs as part of the release
 
 - NPM packages are created and published to [NpmJs](https://www.npmjs.com/package/@microsoft/applicationinsights-web)
 - The new explicit versioned files (eg. `ai.2.7.2.js`; `ai.2.7.2.min.js`; `ai.2.7.2.gbl.min.js`; `ai.2.7.2.min.js.map`; etc) are uploaded to all cdn endpoints URL's (public, next and beta - details below)
-- We then go through a deployment process of "promoting" the new version to the "Major" (`ai.2.min.js`) and "Minor" (`ai.2.x.min.js`) release URL's to upgrade everyone to the newly released version based on the schedule listed below
+- We then go through a deployment process of "promoting" the new version to the "Major" (`ai.3.gbl.min.js`) and "Minor" (`ai.3.x.gbl.min.js`) release URL's to upgrade everyone to the newly released version based on the schedule listed below
 
 | Endpoint | Url | Schedule
 |----------|-------------|--------
-| Beta | https://js.monitor.azure.com/beta/ai.2.min.js | Same day as the NPM release
-| Next | https://js.monitor.azure.com/next/ai.2.min.js | One additional work day after the `beta` URL promotion.
-| Public | https://js.monitor.azure.com/scripts/b/ai.2.min.js | Another One additional work day after the `next` URL promotion, (so 2 work days after initial release) unless this falls on the last work day of the week (eg. Friday) in which case it will be delayed until the first work day of the next work week.
+| Beta | https://js.monitor.azure.com/beta/ai.3.gbl.min.js | Same day as the NPM release
+| Next | https://js.monitor.azure.com/next/ai.3.gbl.min.js | One additional work day after the `beta` URL promotion.
+| Public | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Another One additional work day after the `next` URL promotion, (so 2 work days after initial release) unless this falls on the last work day of the week (eg. Friday) in which case it will be delayed until the first work day of the next work week.
 
 The milestones for each release should include both the deployment plan (as it's about to be released) or the final release times as with [v2.7.2](https://github.com/microsoft/ApplicationInsights-JS/milestone/58)
 
