@@ -2,6 +2,19 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.16 (Sep 19th, 2023)
+
+### Changelog
+
+- #2155 [Master] Bug [AI/1DS] New minified bundles are corrupting global scope (p1 issue)
+- #2151 Bug 25182794: [AI] Minified CDN version has an extra "use strict" outside of the closure
+- #2120 Missing traceparent header when running multiple SDK instances
+  - #2140 [Master][Bug] Missing traceparent header when running multiple SDK instances #2120
+  - #2143 [Master][Part 2] Missing traceparent header when running multiple SDK instances #2120
+- #2149 [BUG] Fetch with empty string as first parameter ignores second parameter when fetch tracking is enabled
+  - #2154 [Master][BUG] Fetch with empty string as first parameter ignores second parameter when fetch tracking is enabled #2149
+- #2128 [Master] Update publishing config to avoid resetting the "latest" version for older releases
+
 ## 2.8.15 (Aug 3rd, 2023)
 
 ### Changelog
