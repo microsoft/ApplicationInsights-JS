@@ -77,7 +77,7 @@ export class ThrottleSentMessage extends AITestClass {
     public registerTests() {
         this.ikeyMessageTests();
         this.snippetVerMessageTests();
-        // this.cdnDeprecatedMessageTests();
+        this.cdnDeprecatedMessageTests();
     }
 
     public cdnDeprecatedMessageTests(): void {
@@ -96,14 +96,19 @@ export class ThrottleSentMessage extends AITestClass {
 
                 let config = this.getAi.config;
 
+                config.throttleMgrCfg= {[_eInternalMessageId.CdnDeprecation]:tconfig};
                 config.featureOptIn = {["CdnUsage"]: {mode: FeatureOptInMode.enable}};
-                config.featureOptIn = {["CdnUsage"]: {mode: FeatureOptInMode.enable}}
-
+                this.clock.tick(12); // wait enough time for negative test
+                Assert.equal(loggingSpy.callCount, 0);
+                config.featureOptIn = {["CdnUsage"]: {mode: FeatureOptInMode.enable},["iKeyUsage"]: {mode: FeatureOptInMode.enable}};
+                // TODO: throttleMgrCfg change would not call aisku onconfig change, but will call throttleMgr onconfig change
+                config.throttleMgrCfg= {[_eInternalMessageId.CdnDeprecation]:tconfig, [_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig};
+                this._ai.context.internal.sdkSrc = "az416426";
                 this.clock.tick(1);
                 Assert.ok(loggingSpy.called);
-                Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, loggingSpy.args[0][1]);
-                Assert.ok(loggingSpy.args[0][2].contains("Instrumentation key support"));
-                loggingSpy.reset();
+                Assert.equal(_eInternalMessageId.CdnDeprecation, loggingSpy.args[0][1]);
+                let message= loggingSpy.args[0][2];
+                Assert.ok(message.includes("Cdn"));
             }
         });
     }
@@ -137,7 +142,6 @@ export class ThrottleSentMessage extends AITestClass {
                 Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, loggingSpy.args[0][1]);
                 let message= loggingSpy.args[0][2];
                 Assert.ok(message.includes("Instrumentation key"));
-                loggingSpy.reset();
             }
         });
         this.testCase({
@@ -151,9 +155,8 @@ export class ThrottleSentMessage extends AITestClass {
                 let config = this.getAi.config;
                 config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig};
                 config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.disable}}
-                this.clock.tick(1);
+                this.clock.tick(12); // wait enough time for negative test
                 Assert.equal(loggingSpy.callCount, 0);
-                loggingSpy.reset();
             }
         });
     }
@@ -178,7 +181,6 @@ export class ThrottleSentMessage extends AITestClass {
                     this.clock.tick(1);
                     Assert.ok(loggingSpy.called);
                     Assert.equal(_eInternalMessageId.SdkLdrUpdate, loggingSpy.args[0][1]);
-                    loggingSpy.reset();
             }
         });
 
@@ -197,9 +199,8 @@ export class ThrottleSentMessage extends AITestClass {
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
                     snippet.config.throttleMgrCfg= {[_eInternalMessageId.SdkLdrUpdate]:tconfig};
                     snippet.config.featureOptIn = {["SdkLoaderVer"]: {mode: FeatureOptInMode.enable}}
-                    this.clock.tick(1);
+                    this.clock.tick(12); // wait enough time for negative test
                     Assert.equal(loggingSpy.callCount, 0);
-                    loggingSpy.reset();
             }
         });
 

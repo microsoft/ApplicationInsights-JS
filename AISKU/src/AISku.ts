@@ -303,8 +303,8 @@ export class AppInsightsSku implements IApplicationInsights {
                             _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "See Instrumentation key support at aka.ms/IkeyMigrate");
                             _iKeySentMessage = true;
                         }
-                       
-                        if (!_cdnSentMessage && sdkSrc && sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled(CDN_USAGE, _config)) {
+
+                        if (!_cdnSentMessage && _self.context.internal.sdkSrc && _self.context.internal.sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled(CDN_USAGE, _config)) {
                             _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "See Cdn support notice at aka.ms/JsActiveCdn");
                             _cdnSentMessage = true;
                         }
