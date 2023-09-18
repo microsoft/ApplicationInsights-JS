@@ -100,9 +100,9 @@ export class ThrottleSentMessage extends AITestClass {
                 config.featureOptIn = {["CdnUsage"]: {mode: FeatureOptInMode.enable}};
                 this.clock.tick(12); // wait enough time for negative test
                 Assert.equal(loggingSpy.callCount, 0);
+                // first enable featureOptin, then enable throttleMsg
                 config.featureOptIn = {["CdnUsage"]: {mode: FeatureOptInMode.enable},["iKeyUsage"]: {mode: FeatureOptInMode.enable}};
-                // TODO: throttleMgrCfg change would not call aisku onconfig change, but will call throttleMgr onconfig change
-                config.throttleMgrCfg= {[_eInternalMessageId.CdnDeprecation]:tconfig, [_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig};
+                config.throttleMgrCfg= {[_eInternalMessageId.CdnDeprecation]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                 this._ai.context.internal.sdkSrc = "az416426";
                 this.clock.tick(1);
                 Assert.ok(loggingSpy.called);
@@ -131,9 +131,8 @@ export class ThrottleSentMessage extends AITestClass {
 
                 // test throttleCfg has controll on message sending
 
-                config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig};
+                config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                 this.clock.tick(1);
-
                 // TODO: the sequence of these two changes cannot be reversed 
                 config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.enable}};
                 this.clock.tick(1);
@@ -153,7 +152,7 @@ export class ThrottleSentMessage extends AITestClass {
                 Assert.equal(true, this._ai.appInsights.core.isInitialized(),
                     'Core is initialized');
                 let config = this.getAi.config;
-                config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig};
+                config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                 config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.disable}}
                 this.clock.tick(12); // wait enough time for negative test
                 Assert.equal(loggingSpy.callCount, 0);
@@ -176,7 +175,7 @@ export class ThrottleSentMessage extends AITestClass {
 
 // notice: if featureOptIn does not exist before, the onconfigchange would not be called
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
-                    snippet.config.throttleMgrCfg= {[_eInternalMessageId.SdkLdrUpdate]:tconfig};
+                    snippet.config.throttleMgrCfg= {[_eInternalMessageId.SdkLdrUpdate]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                     snippet.config.featureOptIn = {["SdkLoaderVer"]: {mode: FeatureOptInMode.enable}}
                     this.clock.tick(1);
                     Assert.ok(loggingSpy.called);
@@ -197,7 +196,7 @@ export class ThrottleSentMessage extends AITestClass {
                     let loggingSpy = this.sandbox.stub(getcoreLogger, 'throwInternal');
 
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
-                    snippet.config.throttleMgrCfg= {[_eInternalMessageId.SdkLdrUpdate]:tconfig};
+                    snippet.config.throttleMgrCfg= {[_eInternalMessageId.SdkLdrUpdate]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                     snippet.config.featureOptIn = {["SdkLoaderVer"]: {mode: FeatureOptInMode.enable}}
                     this.clock.tick(12); // wait enough time for negative test
                     Assert.equal(loggingSpy.callCount, 0);

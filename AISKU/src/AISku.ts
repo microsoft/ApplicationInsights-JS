@@ -53,7 +53,7 @@ const SDK_LOADER_VER = "SdkLoaderVer";
 const UNDEFINED_VALUE: undefined = undefined;
 
 const default_throttle_config = {
-    disabled: false,
+    disabled: true,
     limit: {
         samplingRate: 100,
         maxSendNumber: 1
@@ -76,7 +76,8 @@ const defaultConfigValues: IConfigDefaults<IConfiguration|IConfig> = {
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable}
     },
-    throttleMgrCfg: {
+    throttleMgrCfg:{
+        [_eInternalMessageId.DefaultThrottleMsgKey]:default_throttle_config,
         [_eInternalMessageId.InstrumentationKeyDeprecation]:default_throttle_config,
         [_eInternalMessageId.SdkLdrUpdate]:default_throttle_config,
         [_eInternalMessageId.CdnDeprecation]:default_throttle_config
@@ -289,28 +290,36 @@ export class AppInsightsSku implements IApplicationInsights {
                     _self.addHousekeepingBeforeUnload(_self);
 
                     _addUnloadHook(onConfigChange(cfgHandler, () => {
-                        if (!_throttleMgr.isReady() && _config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
+                        var defaultEnable = false;;
+                        if (_config.throttleMgrCfg[_eInternalMessageId.DefaultThrottleMsgKey]){
+                            defaultEnable = !_config.throttleMgrCfg[_eInternalMessageId.DefaultThrottleMsgKey].disabled;
+                        }
+
+                        if (!_throttleMgr.isReady() && _config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier] && defaultEnable) {
                             // set ready state to true will automatically trigger flush()
                             _throttleMgr.onReadyState(true);
                         }
 
-                        if (_throttleMgr.isReady()){
-                            _throttleMgr.flushAll();
-                        }
-
+                        var result;
                         if (!_iKeySentMessage && !_config.connectionString && isFeatureEnabled(IKEY_USAGE, _config)) {
-                            _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "See Instrumentation key support at aka.ms/IkeyMigrate");
-                            _iKeySentMessage = true;
+                            result = _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "See Instrumentation key support at aka.ms/IkeyMigrate");
+                            if (result && result.isThrottled){
+                                _iKeySentMessage = true;
+                            }
                         }
 
                         if (!_cdnSentMessage && _self.context.internal.sdkSrc && _self.context.internal.sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled(CDN_USAGE, _config)) {
-                            _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "See Cdn support notice at aka.ms/JsActiveCdn");
-                            _cdnSentMessage = true;
+                            result = _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "See Cdn support notice at aka.ms/JsActiveCdn");
+                            if (result && result.isThrottled){
+                                _cdnSentMessage = true;
+                            }
                         }
                        
                         if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled(SDK_LOADER_VER, _config)) {
-                            _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
-                            _sdkVerSentMessage = true;
+                            result = _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
+                            if (result && result.isThrottled){
+                                _sdkVerSentMessage = true;
+                            }
                         }
                         
                     }));
