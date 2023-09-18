@@ -9,6 +9,18 @@ import { createSnippetV6 } from './testSnippetV6';
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
+const tconfig = {
+    disabled: false,
+    limit: {
+        samplingRate: 1000000,
+        maxSendNumber:100
+    } as IThrottleLimit,
+    interval: {
+        monthInterval: 1,
+        dayInterval: undefined
+    } as IThrottleInterval
+} as IThrottleMgrConfig;
+
 export class ThrottleSentMessage extends AITestClass {
     private _ai: IApplicationInsights;
     private getAi: ApplicationInsights;
@@ -20,17 +32,6 @@ export class ThrottleSentMessage extends AITestClass {
     }
 
     public _getTestConfig() {
-        let tconfig = {
-            disabled: false,
-            limit: {
-                samplingRate: 1000000,
-                maxSendNumber:100
-            } as IThrottleLimit,
-            interval: {
-                monthInterval: 1,
-                dayInterval: undefined
-            } as IThrottleInterval
-        } as IThrottleMgrConfig;
         let config: IConfiguration | IConfig = {
             instrumentationKey: TestInstrumentationKey,
             disableAjaxTracking: false,
@@ -42,14 +43,8 @@ export class ThrottleSentMessage extends AITestClass {
             enableCorsCorrelation: true,
             samplingPercentage: 50,
             convertUndefined: "test-value",
-            disablePageUnloadEvents: [ "beforeunload" ],
-            throttleMgrCfg: {
-                [_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig,
-                [_eInternalMessageId.SdkLdrUpdate]:tconfig,
-                [_eInternalMessageId.CdnDeprecation]:tconfig
-            }
+            disablePageUnloadEvents: [ "beforeunload" ]
         };
-
         return config;
     }
 
@@ -129,8 +124,15 @@ export class ThrottleSentMessage extends AITestClass {
 
                 let config = this.getAi.config;
 
-                config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.enable}}
+                // test throttleCfg has controll on message sending
+
+                config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig};
                 this.clock.tick(1);
+
+                // TODO: the sequence of these two changes cannot be reversed 
+                config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.enable}};
+                this.clock.tick(1);
+
                 Assert.ok(loggingSpy.called);
                 Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, loggingSpy.args[0][1]);
                 let message= loggingSpy.args[0][2];
@@ -147,6 +149,7 @@ export class ThrottleSentMessage extends AITestClass {
                 Assert.equal(true, this._ai.appInsights.core.isInitialized(),
                     'Core is initialized');
                 let config = this.getAi.config;
+                config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig};
                 config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.disable}}
                 this.clock.tick(1);
                 Assert.equal(loggingSpy.callCount, 0);
@@ -170,6 +173,7 @@ export class ThrottleSentMessage extends AITestClass {
 
 // notice: if featureOptIn does not exist before, the onconfigchange would not be called
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
+                    snippet.config.throttleMgrCfg= {[_eInternalMessageId.SdkLdrUpdate]:tconfig};
                     snippet.config.featureOptIn = {["SdkLoaderVer"]: {mode: FeatureOptInMode.enable}}
                     this.clock.tick(1);
                     Assert.ok(loggingSpy.called);
@@ -191,6 +195,7 @@ export class ThrottleSentMessage extends AITestClass {
                     let loggingSpy = this.sandbox.stub(getcoreLogger, 'throwInternal');
 
                     Assert.equal(true, snippet.appInsights.isInitialized(), "isInitialized");
+                    snippet.config.throttleMgrCfg= {[_eInternalMessageId.SdkLdrUpdate]:tconfig};
                     snippet.config.featureOptIn = {["SdkLoaderVer"]: {mode: FeatureOptInMode.enable}}
                     this.clock.tick(1);
                     Assert.equal(loggingSpy.callCount, 0);

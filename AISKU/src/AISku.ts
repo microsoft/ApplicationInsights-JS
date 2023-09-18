@@ -46,19 +46,41 @@ const _ignoreUpdateSnippetProperties = [
     STR_SNIPPET, "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults"
 ];
 
+const IKEY_USAGE = "iKeyUsage";
+const CDN_USAGE = "CdnUsage";
+const SDK_LOADER_VER = "SdkLoaderVer";
+
 const UNDEFINED_VALUE: undefined = undefined;
+
+const default_throttle_config = {
+    disabled: false,
+    limit: {
+        samplingRate: 100,
+        maxSendNumber: 1
+    },
+    interval: {
+        monthInterval: 3,
+        dayInterval: undefined,
+        daysOfMonth: [28]
+    }
+};
 
 // We need to include all properties that we only reference that we want to be dynamically updatable here
 // So they are converted even when not specified in the passed configuration
-const defaultConfigValues: IConfigDefaults<IConfiguration> = {
+const defaultConfigValues: IConfigDefaults<IConfiguration|IConfig> = {
     connectionString: UNDEFINED_VALUE,
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
     diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
     featureOptIn:{
-        ["iKeyUsage"]: {mode: FeatureOptInMode.disable},
-        ["CdnUsage"]: {mode: FeatureOptInMode.disable},
-        ["SdkLoaderVer"]: {mode: FeatureOptInMode.disable}
+        [IKEY_USAGE]: {mode: FeatureOptInMode.disable},
+        [CDN_USAGE]: {mode: FeatureOptInMode.disable},
+        [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable}
+    },
+    throttleMgrCfg: {
+        [_eInternalMessageId.InstrumentationKeyDeprecation]:default_throttle_config,
+        [_eInternalMessageId.SdkLdrUpdate]:default_throttle_config,
+        [_eInternalMessageId.CdnDeprecation]:default_throttle_config
     }
 };
 
@@ -164,9 +186,6 @@ export class AppInsightsSku implements IApplicationInsights {
 
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
-                if (!_cfgSyncPlugin){
-                    _cfgSyncPlugin = new CfgSyncPlugin();
-                }
                 if (_config.connectionString) {
                     const cs = parseConnectionString(_config.connectionString);
                     const ingest = cs.ingestionendpoint;
@@ -271,22 +290,26 @@ export class AppInsightsSku implements IApplicationInsights {
                     _self.addHousekeepingBeforeUnload(_self);
 
                     _addUnloadHook(onConfigChange(cfgHandler, () => {
-                        if (_throttleMgr && !_throttleMgr.isReady() && _config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
-                            // set ready state to true will automaatically trigger flush()
+                        if (!_throttleMgr.isReady() && _config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier]) {
+                            // set ready state to true will automatically trigger flush()
                             _throttleMgr.onReadyState(true);
                         }
 
-                        if (!_iKeySentMessage && !_config.connectionString && isFeatureEnabled("iKeyUsage", _config)) {
+                        if (_throttleMgr.isReady()){
+                            _throttleMgr.flushAll();
+                        }
+
+                        if (!_iKeySentMessage && !_config.connectionString && isFeatureEnabled(IKEY_USAGE, _config)) {
                             _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "See Instrumentation key support at aka.ms/IkeyMigrate");
                             _iKeySentMessage = true;
                         }
                        
-                        if (!_cdnSentMessage && sdkSrc && sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled("CdnUsage", _config)) {
+                        if (!_cdnSentMessage && sdkSrc && sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled(CDN_USAGE, _config)) {
                             _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "See Cdn support notice at aka.ms/JsActiveCdn");
                             _cdnSentMessage = true;
                         }
                        
-                        if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled("SdkLoaderVer", _config)) {
+                        if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled(SDK_LOADER_VER, _config)) {
                             _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
                             _sdkVerSentMessage = true;
                         }
