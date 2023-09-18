@@ -434,7 +434,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 _processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init);
 
-                if (input) { // Fetch
+                if (input || input === "") { // Fetch
                     if (CorrelationIdHelper.canIncludeCorrelationHeader(_config, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (!init) {
                             init = {};
@@ -1224,7 +1224,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let result: string = "";
                 try {
                     if (!isNullOrUndefined(input)) {
-                        if (typeof (input) === "string") {
+                        if (isString(input)) {
                             result += `(url: '${input}')`;
                         } else {
                             result += `(url: '${input.url}')`;

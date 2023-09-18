@@ -1542,7 +1542,124 @@ export class AjaxTests extends AITestClass {
             }]
         });
 
+        this.testCaseAsync({
+            name: "Fetch: instrumentation handles empty string",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
 
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.equal(false, throwSpy.called, "We should not have failed internally");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                    Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
+
+                    // Assert that the HTTP method was preserved
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    Assert.equal("post", fetchCalls[0].init?.method, "Has post method");
+
+                    testContext.testDone();
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: instrumentation handles empty string with traceId",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+                let expectedTraceId = generateW3CId();
+                let expectedSpanId = generateW3CId().substring(0, 16);
+                traceCtx!.setTraceId(expectedTraceId);
+                traceCtx!.setSpanId(expectedSpanId);
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.equal(false, throwSpy.called, "We should not have failed internally");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                    Assert.equal(expectedTraceId, dependencyFields[0].sysProperties!.trace.traceID, "system properties traceId");
+                    Assert.equal(expectedSpanId, dependencyFields[0].sysProperties!.trace.parentID, "system properties spanId");
+
+                    // Assert that the HTTP method was preserved
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    Assert.equal("post", fetchCalls[0].init?.method, "Has post method");
+
+                    testContext.testDone();
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+        
         this.testCase({
             name: "Fetch: fetch keeps custom headers",
             test: () => {
