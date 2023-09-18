@@ -410,7 +410,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 _processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init);
 
-                if (input) { // Fetch
+                if (input || input === "") { // Fetch
                     if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                         if (!init) {
                             init = {};
