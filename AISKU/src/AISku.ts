@@ -4,19 +4,21 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
+import { CfgSyncPlugin } from "@microsoft/applicationinsights-cfgsync-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
     IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
-    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, parseConnectionString
+    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDiagnosticLogger,
-    IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin, ITelemetryInitializerHandler,
-    ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId,
-    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfValidate, createDynamicConfig, createProcessTelemetryContext,
-    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFunction, isNullOrUndefined, isReactNative, isString,
-    mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
+    AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties,
+    IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin,
+    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction,
+    _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfValidate, createDynamicConfig,
+    createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled,
+    isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
+    removePageHideEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -44,15 +46,42 @@ const _ignoreUpdateSnippetProperties = [
     STR_SNIPPET, "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults"
 ];
 
+const IKEY_USAGE = "iKeyUsage";
+const CDN_USAGE = "CdnUsage";
+const SDK_LOADER_VER = "SdkLoaderVer";
+
 const UNDEFINED_VALUE: undefined = undefined;
+
+const default_throttle_config = {
+    disabled: true,
+    limit: {
+        samplingRate: 100,
+        maxSendNumber: 1
+    },
+    interval: {
+        monthInterval: 3,
+        daysOfMonth: [28]
+    }
+};
 
 // We need to include all properties that we only reference that we want to be dynamically updatable here
 // So they are converted even when not specified in the passed configuration
-const defaultConfigValues: IConfigDefaults<IConfiguration> = {
+const defaultConfigValues: IConfigDefaults<IConfiguration|IConfig> = {
     connectionString: UNDEFINED_VALUE,
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
-    diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000)
+    diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
+    featureOptIn:{
+        [IKEY_USAGE]: {mode: FeatureOptInMode.disable},
+        [CDN_USAGE]: {mode: FeatureOptInMode.disable},
+        [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable}
+    },
+    throttleMgrCfg:{
+        [_eInternalMessageId.DefaultThrottleMsgKey]:default_throttle_config,
+        [_eInternalMessageId.InstrumentationKeyDeprecation]:default_throttle_config,
+        [_eInternalMessageId.SdkLdrUpdate]:default_throttle_config,
+        [_eInternalMessageId.CdnDeprecation]:default_throttle_config
+    }
 };
 
 function _chkDiagLevel(value: number) {
@@ -102,6 +131,11 @@ export class AppInsightsSku implements IApplicationInsights {
         let _core: IAppInsightsCore<IConfiguration & IConfig>;
         let _config: IConfiguration & IConfig;
         let _analyticsPlugin: AnalyticsPlugin;
+        let _cfgSyncPlugin: CfgSyncPlugin;
+        let _throttleMgr: ThrottleMgr;
+        let _iKeySentMessage: boolean;
+        let _cdnSentMessage: boolean;
+        let _sdkVerSentMessage: boolean;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -160,15 +194,6 @@ export class AppInsightsSku implements IApplicationInsights {
                 }
             }));
 
-            // Outside of the onConfigChange as we only want to do this once
-            let isErrMessageDisabled = isNullOrUndefined(_config.disableIkeyDeprecationMessage) ? true : _config.disableIkeyDeprecationMessage;
-            if (!_config.connectionString && !isErrMessageDisabled) {
-                _throwInternal(_core.logger,
-                    eLoggingSeverity.CRITICAL,
-                    _eInternalMessageId.InstrumentationKeyDeprecation,
-                    "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
-            }
-
             _self.snippet = snippet;
 
             _self.flush = (async: boolean = true, callBack?: () => void) => {
@@ -212,6 +237,8 @@ export class AppInsightsSku implements IApplicationInsights {
                     }
                 });
             };
+
+
         
             _self.loadAppInsights = (legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights => {
                 if (legacyMode) {
@@ -224,11 +251,10 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (!isNullOrUndefined(_snippetVersion)) {
                             snippetVer += _snippetVersion;
                         }
-        
                         if (_self.context && _self.context.internal) {
                             _self.context.internal.snippetVer = snippetVer || "-";
                         }
-        
+
                         // apply updated properties to the global instance (snippet)
                         objForEachKey(_self, (field, value) => {
                             if (isString(field) &&
@@ -245,10 +271,13 @@ export class AppInsightsSku implements IApplicationInsights {
 
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
                     // initialize core
-                    _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin ], logger, notificationManager);
+                    _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
                     objDefine(_self, "context", {
                         g: () => properties.context
                     });
+                    if (!_throttleMgr){
+                        _throttleMgr = new ThrottleMgr(_core);
+                    }
                     let sdkSrc = _findSdkSourceFile();
                     if (sdkSrc && _self.context) {
                         _self.context.internal.sdkSrc = sdkSrc;
@@ -259,8 +288,42 @@ export class AppInsightsSku implements IApplicationInsights {
                     _self.emptyQueue();
                     _self.pollInternalLogs();
                     _self.addHousekeepingBeforeUnload(_self);
+
+                    _addUnloadHook(onConfigChange(cfgHandler, () => {
+                        var defaultEnable = false;;
+                        if (_config.throttleMgrCfg[_eInternalMessageId.DefaultThrottleMsgKey]){
+                            defaultEnable = !_config.throttleMgrCfg[_eInternalMessageId.DefaultThrottleMsgKey].disabled;
+                        }
+
+                        if (!_throttleMgr.isReady() && _config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier] && defaultEnable) {
+                            // set ready state to true will automatically trigger flush()
+                            _throttleMgr.onReadyState(true);
+                        }
+
+                        var result;
+                        if (!_iKeySentMessage && !_config.connectionString && isFeatureEnabled(IKEY_USAGE, _config)) {
+                            result = _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "See Instrumentation key support at aka.ms/IkeyMigrate");
+                            if (result && result.isThrottled){
+                                _iKeySentMessage = true;
+                            }
+                        }
+
+                        if (!_cdnSentMessage && _self.context.internal.sdkSrc && _self.context.internal.sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled(CDN_USAGE, _config)) {
+                            result = _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "See Cdn support notice at aka.ms/JsActiveCdn");
+                            if (result && result.isThrottled){
+                                _cdnSentMessage = true;
+                            }
+                        }
+                       
+                        if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled(SDK_LOADER_VER, _config)) {
+                            result = _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
+                            if (result && result.isThrottled){
+                                _sdkVerSentMessage = true;
+                            }
+                        }
+                        
+                    }));
                 });
-        
                 return _self;
             };
 
@@ -463,6 +526,11 @@ export class AppInsightsSku implements IApplicationInsights {
                 properties = null;
                 _sender = null;
                 _snippetVersion = null;
+                _throttleMgr = null;
+                _iKeySentMessage = false;
+                _cdnSentMessage = false;
+                _sdkVerSentMessage = false;
+                _cfgSyncPlugin = new CfgSyncPlugin();
             }
 
             function _removePageEventHandlers() {
