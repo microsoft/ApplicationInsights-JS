@@ -60,7 +60,6 @@ const default_throttle_config = {
     },
     interval: {
         monthInterval: 3,
-        dayInterval: undefined,
         daysOfMonth: [28]
     }
 };
