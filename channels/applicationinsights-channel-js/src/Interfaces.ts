@@ -1,5 +1,5 @@
 import { IStorageBuffer } from "@microsoft/applicationinsights-common";
-import { ISenderOverride } from "@microsoft/applicationinsights-core-js";
+import { IXHROverride } from "@microsoft/applicationinsights-core-js";
 
 export interface ISenderConfig {
     /**
@@ -104,7 +104,7 @@ export interface ISenderConfig {
      * The payload data (first argument) now also includes any configured 'timeout' (defaults to undefined) and whether you should avoid
      * creating any synchronous XHR requests 'disableXhr' (defaults to false/undefined)
      */
-    httpXHROverride?: ISenderOverride;
+    httpXHROverride?: IXHROverride;
 
     /**
      * [Optional] By default during unload (or when you specify to use sendBeacon() or sync fetch (with keep-alive) for an event) the SDK

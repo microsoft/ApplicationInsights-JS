@@ -54,3 +54,22 @@ export const enum SendRequestReason {
      */
     MaxQueuedEvents = 20
 }
+
+export const enum TransportType {
+    /**
+     * Use the default available api
+     */
+    NotSet = 0,
+    /**
+     * Use XMLHttpRequest or XMLDomainRequest if available
+     */
+    Xhr = 1,
+    /**
+     * Use the Fetch api if available
+     */
+    Fetch = 2,
+    /**
+     * Use sendBeacon api if available
+     */
+    Beacon = 3
+}
