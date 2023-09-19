@@ -290,7 +290,7 @@ export class AppInsightsSku implements IApplicationInsights {
                     _self.addHousekeepingBeforeUnload(_self);
 
                     _addUnloadHook(onConfigChange(cfgHandler, () => {
-                        var defaultEnable = false;;
+                        var defaultEnable = false;
                         if (_config.throttleMgrCfg[_eInternalMessageId.DefaultThrottleMsgKey]){
                             defaultEnable = !_config.throttleMgrCfg[_eInternalMessageId.DefaultThrottleMsgKey].disabled;
                         }

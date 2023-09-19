@@ -172,15 +172,15 @@ The previously exported namespaced globals have been replaced with a reduced set
 #### Exported Globals (NPM)
 
 - IUtil; Util
-  - Use the individual `utl` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
+  - Use the individual `utl` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/main/TreeShakingRecommendations.md).
 - ICorrelationIdHelper; CorrelationIdHelper
-  - Use the individual `correlationId` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
+  - Use the individual `correlationId` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/main/TreeShakingRecommendations.md).
 - IDateTimeUtils; DateTimeUtils;
-  - Use the individual `dateTimeUtils` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
+  - Use the individual `dateTimeUtils` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/main/TreeShakingRecommendations.md).
 - IUrlHelper; UrlHelper
-  - Use the individual `url` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
+  - Use the individual `url` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/main/TreeShakingRecommendations.md).
 - IDataSanitizer, DataSanitizer
-  - Use the individual `dataSanitizer` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
+  - Use the individual `dataSanitizer` prefixed functions that are also exported in later v2 releases documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/main/TreeShakingRecommendations.md).
 
 ### @microsoft/applicationinsights-core-js
 
@@ -192,7 +192,7 @@ All previously `@deprecated` marked functions and the legacy "global" cookie han
 - ICoreUtils; CoreUtils
   - See the replacements documented in the [Tree Shaking Recommendations](https://microsoft.github.io/ApplicationInsights-JS/TreeShakingRecommendations.html).
 - IEventHelper; EventHelper
-  - See the replacements documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/master/TreeShakingRecommendations.md).
+  - See the replacements documented in the [Tree Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/main/TreeShakingRecommendations.md).
 - EnumMap, createEnumMap
   - Removed as not used internally, use the ts-utils support versions if required
 -`hasOwnProperty()`
