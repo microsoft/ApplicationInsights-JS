@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "2.8.15",
+    "version": "2.8.16",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -65,5 +65,8 @@
         "typedoc": "^0.23.22",
         "typescript": "^4.9.3",
         "whatwg-fetch": "^3.6.2"
+    },
+    "publishConfig": {
+        "tag": "release2"
     }
 }
