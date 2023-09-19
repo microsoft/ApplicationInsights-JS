@@ -121,7 +121,7 @@ const getOutro = (format, theNameSpace, moduleName, version) => {
     return theOutro;
 }
 
-const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', useStrict = true) => {
+const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', useStrict = true, topLevel = false) => {
     var outPath = isOneDs ? "bundle" : "browser";
     var thePostfix = `${postfix}`;
     if (libVersion) {
@@ -171,7 +171,7 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
             uglify({
                 ie8: false,
                 ie: true,
-                toplevel: true,
+                toplevel: topLevel,
                 compress: {
                     ie: true,
                     passes:3,
@@ -191,7 +191,7 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
     return browserRollupConfig;
 };
 
-const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, isProduction) => {
+const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, isProduction, topLevel = false) => {
 
     // console.log(`Node: ${targetType}, ${entryInputName}`);
     var outputPath = `dist/${targetType}/${outputName}.js`;
@@ -229,7 +229,7 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             uglify({
                 ie8: false,
                 ie: true,
-                toplevel: true,
+                toplevel: topLevel,
                 compress: {
                     ie: true,
                     passes:3,
@@ -303,6 +303,7 @@ export function createConfig(banner, cfg, importCheckNames, isOneDs) {
         let browserPostfix = browserCfg.postfix || '';
         let browserTeam = browserCfg.teamExt || '';
         let useStrict = browserCfg.useStrict === undefined ? true : browserCfg.useStrict;
+        let topLevel = !!browserCfg.topLevel;
 
         if (cfg.version) {
             var version = cfg.version.split(".");
@@ -318,10 +319,10 @@ export function createConfig(banner, cfg, importCheckNames, isOneDs) {
         let entryPoint = `${inputPath}/${cfg.browser.entryPoint}`;
 
         tasks.push(
-            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam, useStrict),
-            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, majorVersion, false, browserFmt, browserPostfix, browserTeam, useStrict),
-            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, true, browserFmt, browserPostfix, browserTeam, useStrict),
-            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, false, browserFmt, browserPostfix, browserTeam, useStrict)
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, majorVersion, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel)
         );
     }
 
@@ -378,6 +379,7 @@ export function createUnVersionedConfig(banner, cfg, importCheckName, isOneDs) {
         let browserPostfix = browserCfg.postfix || '';
         let browserTeam = browserCfg.teamExt || '';
         let useStrict = browserCfg.useStrict === undefined ? true : browserCfg.useStrict;
+        let topLevel = !!browserCfg.topLevel;
 
         if (cfg.version) {
             var version = cfg.version.split(".");
@@ -392,8 +394,8 @@ export function createUnVersionedConfig(banner, cfg, importCheckName, isOneDs) {
         let entryPoint = `${inputPath}/${cfg.browser.entryPoint}`;
 
         tasks.push(
-            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, useStrict),
-            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, useStrict)
+            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
+            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel)
         );
     }
 
