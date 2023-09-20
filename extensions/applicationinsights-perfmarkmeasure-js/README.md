@@ -17,7 +17,7 @@ See the [basic documentation](https://github.com/microsoft/ApplicationInsights-J
 Install npm package:
 
 ```bash
-npm install --save @microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js @microsoft/applicationinsights-web
+npm install --save @microsoft/applicationinsights-perfmarkmeasure-js @microsoft/applicationinsights-web
 ```
 
 ```js
@@ -40,7 +40,7 @@ appInsights.core.setPerfMgr(perfManager);
 ### Direct usage with the doPerf() helper
 
 ```js
-import { doPerf, PerfMarkMeasureManager } from '@microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js';
+import { doPerf, PerfMarkMeasureManager } from '@microsoft/applicationinsights-perfmarkmeasure-js';
 
 const perfManager = new PerfMarkMeasureManager();
 
@@ -57,7 +57,7 @@ doPerf(perfManager, () => "code", (perfEvent) => {
 
 ```js
 import { INotificationManager  } from '@microsoft/applicationinsights-core-js';
-import { doPerf, IPerfEvent, PerfMarkMeasureManager } from '@microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js';
+import { doPerf, IPerfEvent, PerfMarkMeasureManager } from '@microsoft/applicationinsights-perfmarkmeasure-js';
 
 let perfEvents: IPerfEvent[] = [];
 const perfManager = new PerfMarkMeasureManager(
@@ -123,7 +123,7 @@ Example with config
 
 ```typescript
 import { doPerf } from '@microsoft/applicationinsights-core-js';
-import { PerfMarkMeasureManager } from '@microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js';
+import { PerfMarkMeasureManager } from '@microsoft/applicationinsights-perfmarkmeasure-js';
 
 const perfManager = new PerfMarkMeasureManager({
     useMarks: true,

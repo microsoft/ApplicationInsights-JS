@@ -127,4 +127,4 @@ Quick check: Using a browser that supports Developer tools (F12), validate on th
 
 ## <a name="next"></a> Next steps
 * [Get additional help by filing an issue on GitHub](https://github.com/Microsoft/ApplicationInsights-JS/issues)
-* [Back to Snippet setup](https://github.com/microsoft/ApplicationInsights-JS/blob/master/README.md#reporting-script-load-failures)
+* [Back to Snippet setup](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md#reporting-script-load-failures)

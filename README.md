@@ -15,7 +15,7 @@
     ms.topic="article"
     ms.date="08/24/2015"/>
 
-[![GitHub Workflow Status (master)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
 [![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/3.min.js.svg?label=minified%20size)](https://js.monitor.azure.com/scripts/b/ai.3.min.js)
@@ -109,7 +109,7 @@ For details on this exception see [SDK Load Failure](docs/SdkLoadFailure.md) pag
 
 Reporting of this failure as an exception to the portal does not use the configuration option ```disableExceptionTracking``` from the application insights configuration and therefore if this failure occurs it will always be reported by the snippet, even when the window.onerror support is disabled.
 
-Reporting of SDK load exceptions is specifically NOT supported on IE 8 (or less). This assists with reducing the minified size of the snippet by assuming that most environments are not exclusively IE 8 or less. If you have this requirement and you wish to receive these exceptions, you will need to either include a fetch poly fill or create you own snippet version that uses ```XDomainRequest``` instead of ```XMLHttpRequest```, it is recommended that you use the [provided snippet source code](https://github.com/microsoft/ApplicationInsights-JS/blob/master/AISKU/snippet/snippet.js) as a starting point.
+Reporting of SDK load exceptions is specifically NOT supported on IE 8 (or less). This assists with reducing the minified size of the snippet by assuming that most environments are not exclusively IE 8 or less. If you have this requirement and you wish to receive these exceptions, you will need to either include a fetch poly fill or create you own snippet version that uses ```XDomainRequest``` instead of ```XMLHttpRequest```, it is recommended that you use the [provided snippet source code](https://github.com/microsoft/ApplicationInsights-JS/blob/main/AISKU/snippet/snippet.js) as a starting point.
 
 > :bulb: **Note**
 >
@@ -561,20 +561,19 @@ These modules are also included in the NPM packages within the ```bundle``` fold
 
 Example (not complete) CDN paths for the current major version.
 
-| Module | Default Module | IIFE Module
+| Module | Default Module (Supports loading via requireJs) | IIFE Module
 |--------|----------------|--------------
-| [AISku<br/>(Main Sdk)](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU) | http://js.monitor.azure.com/scripts/b/ai.3.min.js | http://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js
-| [Click Analytics Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-clickanalytics-js) | http://js.monitor.azure.com/scripts/b/ext/ai.clck.3.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.clck.3.gbl.min.js
-| [Debug Plugin Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-debugplugin-js) | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.3.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.3.gbl.min.js
-| [Perf Mark/Measure Manager Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-perfmarkmeasure-js) | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.3.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.3.gbl.min.js
-
+| [AISku<br/>(Main Sdk)](https://github.com/microsoft/ApplicationInsights-JS/tree/main/AISKU) | http://js.monitor.azure.com/scripts/b/ai.3.min.js<br/> http://js.monitor.azure.com/scripts/b/ai.2.min.js | http://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js <br />http://js.monitor.azure.com/scripts/b/ai.2.gbl.min.js
+| [Click Analytics Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-clickanalytics-js) | http://js.monitor.azure.com/scripts/b/ext/ai.clck.3.min.js<br />http://js.monitor.azure.com/scripts/b/ext/ai.clck.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.clck.3.gbl.min.js<br />http://js.monitor.azure.com/scripts/b/ext/ai.clck.2.gbl.min.js
+| [Debug Plugin Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-debugplugin-js) | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.3.min.js<br />http://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.dbg.3.gbl.min.js<br />http://js.monitor.azure.com/scripts/b/ext/ai.dbg.2.gbl.min.js
+| [Perf Mark/Measure Manager Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-perfmarkmeasure-js) | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.3.min.js<br />http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.2.min.js | http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.3.gbl.min.js<br />http://js.monitor.azure.com/scripts/b/ext/ai.prfmm-mgr.2.gbl.min.js
 
 As part of the CDN deployment and promoting new versions as the default we also provide both minor and explicit versions of all modules, so each published module will also include the following versions and formats. The example names are assuming version 3 as the current major version and 3.1 and the current minor.
 
 | Major | Minor | Patch (Explicit) | Description
 |------|--------|------------------|-----------------
-| ```ai.3.min.js``` | ```ai.2.7.min.js``` | ```ai.2.7.2.min.js``` | Minified UMD version
-| ```ai.3.gbl.min.js``` | ```ai.2.7.gbl.min.js``` | ```ai.2.7.2.gbl.min.js``` | Minified IIFE version
+| ```ai.3.min.js```<br />```ai.2.min.js``` | ```ai.3.0.min.js```<br />```ai.2.8.min.js``` | ```ai.3.0.2.min.js```<br />```ai.2.8.16.min.js``` | Minified UMD version
+| ```ai.3.gbl.min.js```<br />```ai.2.gbl.min.js``` | ```ai.3.0.gbl.min.js```<br />```ai.2.8.gbl.min.js``` | ```ai.3.0.2.gbl.min.js```<br />```ai.2.8.16.gbl.min.js``` | Minified IIFE version<br/>(Recommended for v3.x)
 
 And the process of Promoting (or rolling back) a deployed version is simply a case of replacing the major and minor version of the script with the current explicit version
 
@@ -587,10 +586,10 @@ We support 2 basic approaches for debugging the SDK via the CDN hosted scripts
 
 | Major | Minor | Patch (Explicit) | Description
 |------|--------|------------------|-----------------
-| ```ai.3.min.js.map``` | ```ai.2.7.min.js.map``` | ```ai.2.7.2.min.js.map``` | Map file for the UMD versions
-| ```ai.3.gbl.min.js.map``` | ```ai.2.7.gbl.min.js.map``` | ```ai.2.7.2.gbl.min.js.map``` | Map file for the IIFE versions
-| ```ai.3.js``` | ```ai.2.7.js``` | ```ai.2.7.2.js``` | Unminified UMD versions
-| ```ai.3.gbl.js``` | ```ai.2.7.gbl.js``` | ```ai.2.7.2.gbl.js``` | Unminified IIFE versions
+| ```ai.3.min.js.map```<br />```ai.2.min.js.map``` | ```ai.3.0.min.js.map```<br />```ai.2.8.min.js.map``` | ```ai.3.0.2.min.js.map```<br />```ai.2.8.16.min.js.map``` | Map file for the UMD versions
+| ```ai.3.gbl.min.js.map```<br />```ai.2.gbl.min.js.map``` | ```ai.3.0.gbl.min.js.map```<br />```ai.2.8.gbl.min.js.map``` | ```ai.3.0.2.gbl.min.js.map```<br />```ai.2.8.16.gbl.min.js.map``` | Map file for the IIFE versions
+| ```ai.3.js```<br />```ai.2.js``` | ```ai.3.0.js```<br />```ai.2.8.js``` | ```ai.3.0.2.js```<br />```ai.2.8.16.js``` | Unminified UMD versions
+| ```ai.3.gbl.js```<br />```ai.2.gbl.js``` | ```ai.3.0.gbl.js```<br />```ai.2.8.gbl.js``` | ```ai.3.0.2.gbl.js```<br />```ai.2.8.16.gbl.js``` | Unminified IIFE versions
 
 ## Nightly Builds
 
@@ -612,10 +611,10 @@ So to access simply update the URL used when downloading the required module.
 
 | Module | Nightly Build
 |--------|----------------
-| [AISku (Main Sdk)](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU) | http://js.monitor.azure.com/nightly/ai.2-nightly.min.js
-| [Click Analytics Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-clickanalytics-js) | http://js.monitor.azure.com/nightly/ext/ai.clck.2-nightly.min.js
-| [Debug Plugin Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-debugplugin-js) | http://js.monitor.azure.com/nightly/ext/ai.dbg.2-nightly.min.js
-| [Perf Mark/Measure Manager Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-perfmarkmeasure-js) | http://js.monitor.azure.com/nightly/ext/ai.prfmm-mgr.2-nightly.min.js
+| [AISku (Main Sdk)](https://github.com/microsoft/ApplicationInsights-JS/tree/main/AISKU) | http://js.monitor.azure.com/nightly/ai.2-nightly.min.js
+| [Click Analytics Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-clickanalytics-js) | http://js.monitor.azure.com/nightly/ext/ai.clck.2-nightly.min.js
+| [Debug Plugin Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-debugplugin-js) | http://js.monitor.azure.com/nightly/ext/ai.dbg.2-nightly.min.js
+| [Perf Mark/Measure Manager Extension](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-perfmarkmeasure-js) | http://js.monitor.azure.com/nightly/ext/ai.prfmm-mgr.2-nightly.min.js
 
 As with the normal release process the nightly builds also include major, minor, explicit, IIFE (```.gbl```), *.map and unminified versions, these are primarily available for validating changes between builds.
 
