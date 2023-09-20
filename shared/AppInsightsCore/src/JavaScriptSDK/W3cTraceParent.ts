@@ -62,10 +62,11 @@ export function createTraceParent(traceId?: string, spanId?: string, flags?: num
 /**
  * Attempt to parse the provided string as a W3C TraceParent header value (https://www.w3.org/TR/trace-context/#traceparent-header)
  *
- * @param value
+ * @param value - The value to be parsed
+ * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
  * @returns
  */
-export function parseTraceParent(value: string): ITraceParent {
+export function parseTraceParent(value: string, selectIdx?: number): ITraceParent {
     if (!value) {
         // Don't pass a null/undefined or empty string
         return null;
@@ -79,6 +80,11 @@ export function parseTraceParent(value: string): ITraceParent {
     if (!value || !isString(value) || value.length > 8192) {
         // limit potential processing based on total length
         return null;
+    }
+
+    if (value.indexOf(",") !== -1) {
+        let values = value.split(",");
+        value = values[selectIdx > 0 && values.length > selectIdx ? selectIdx : 0];
     }
 
     // See https://www.w3.org/TR/trace-context/#versioning-of-traceparent
@@ -184,13 +190,14 @@ export function formatTraceParent(value: ITraceParent) {
 
 /**
  * Helper function to fetch the passed traceparent from the page, looking for it as a meta-tag or a Server-Timing header.
+ * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
  * @returns
  */
-export function findW3cTraceParent(): ITraceParent {
+export function findW3cTraceParent(selectIdx?: number): ITraceParent {
     const name = "traceparent";
-    let traceParent: ITraceParent = parseTraceParent(findMetaTag(name));
+    let traceParent: ITraceParent = parseTraceParent(findMetaTag(name), selectIdx);
     if (!traceParent) {
-        traceParent = parseTraceParent(findNamedServerTiming(name))
+        traceParent = parseTraceParent(findNamedServerTiming(name), selectIdx)
     }
 
     return traceParent;

@@ -183,6 +183,19 @@ declare var cfg:ISnippetConfig;
 
             return envelope;
         }
+
+        let domainRetryIndex = -1;
+        let domainRetryCount = 0;
+        let domains = [
+            "js.monitor.azure.com",
+            "js.cdn.applicationinsights.io",
+            "js.cdn.monitor.azure.com",
+            "js0.cdn.applicationinsights.io",
+            "js0.cdn.monitor.azure.com",
+            "js2.cdn.applicationinsights.io",
+            "js2.cdn.monitor.azure.com",
+            "az416426.vo.msecnd.net" // this domain is supported but not recommended
+        ]
     
         // Assigning these to local variables allows them to be minified to save space:
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src
@@ -194,12 +207,31 @@ declare var cfg:ISnippetConfig;
                 });
                 // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
             }
+
+            if (cfg.cr !== false){
+                for (var i = 0; i < domains.length; i++){
+                    if (targetSrc.indexOf(domains[i]) > 0){
+                        domainRetryIndex = i;
+                        break;
+                    }
+                }
+            }
+
             const _handleError = (evt?: any) => {
-                loadFailed = true;
                 appInsights.queue = []; // Clear the queue
                 if (!handled) {
-                    handled = true;
-                    _reportFailure(targetSrc);
+                    // start retry
+                    if (domainRetryIndex >= 0 && domainRetryCount + 1 < domains.length){ // domainRetryIndex will be negative when client using own domain (the supported domain list is defined above)
+                        let nextIdx = (domainRetryIndex + domainRetryCount + 1) % domains.length;
+                        _createScript(targetSrc.replace(/^(.*\/\/)([\w\.]*)(\/.*)$/, function (_all, http, domain, qs) {
+                            return http + domains[nextIdx] + qs;
+                        }));
+                        domainRetryCount += 1;
+                    } else {
+                        handled = true;
+                        loadFailed = true;
+                        _reportFailure(targetSrc);
+                    }
                 }
             }
 
@@ -213,11 +245,12 @@ declare var cfg:ISnippetConfig;
                         }
                     }, 500);
                 }
+                loadFailed = false;
             }
 
-            const _createScript = () => {
+            const _createScript = (src: string) => {
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
-                (scriptElement as any)["src"] = targetSrc;
+                (scriptElement as any)["src"] = src;
                 // Allocate Cross origin only if defined and available
                 let crossOrigin = cfg[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
@@ -232,20 +265,21 @@ declare var cfg:ISnippetConfig;
                     }
                 };
 
+                if (cfg.ld && cfg.ld < 0) {
+                    // if user wants to append tag to document head, blocking page load
+                    let headNode = doc.getElementsByTagName("head")[0];
+                    headNode.appendChild(scriptElement);
+                } else {
+                    setTimeout(function () {
+                        // Attempts to place the script tag in the same location as the first script on the page
+                        doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
+                    }, cfg.ld || 0);
+                }
+
+
                 return scriptElement;
             }
-
-            let theScript = _createScript();
-            if (cfg.ld && cfg.ld < 0) {
-                // if user wants to append tag to document head, blocking page load
-                let headNode = doc.getElementsByTagName("head")[0];
-                headNode.appendChild(theScript);
-            } else {
-                setTimeout(function () {
-                    // Attempts to place the script tag in the same location as the first script on the page
-                    doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(theScript);
-                }, cfg.ld || 0);
-            }
+            _createScript(targetSrc);
         }
     
         // capture initial cookie

@@ -27,7 +27,7 @@ export { runTargetUnload, doUnloadAll } from "./JavaScriptSDK/AsyncUtils";
 export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
-    isNotUndefined, isNotNullOrUndefined, objExtend
+    isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled
 } from "./JavaScriptSDK/HelperFuncs";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
@@ -62,6 +62,8 @@ export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationMa
 export { IPerfEvent } from "./JavaScriptSDK.Interfaces/IPerfEvent";
 export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/IPerfManager";
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
+export { IFeatureOptInDetails, IFeatureOptIn } from "./JavaScriptSDK.Interfaces/IFeatureOptIn";
+export { FeatureOptInMode, CdnFeatureMode } from "./JavaScriptSDK.Enums/FeatureOptInEnums"
 export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole, _logInternalMessage } from "./JavaScriptSDK/DiagnosticLogger";
 export {
     ProcessTelemetryContext, createProcessTelemetryContext
