@@ -365,14 +365,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     
                     if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported()) {
                         // Config is set to always used beacon sending
-                        httpInterface = _getSenderInterface([TransportType.Beacon], false)
+                        httpInterface = _getSenderInterface([TransportType.Beacon], false);
                     }
 
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface);
     
                     _self._sender = (payload: string[], isAsync: boolean) => {
                         return _getSender(httpInterface, payload, isAsync);
-                    }
+                    };
 
                     if (_alwaysUseCustomSend) {
                         syncInterface = customInterface;
@@ -387,7 +387,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if (syncInterface) {
                         _syncUnloadSender = (payload: string[], isAsync: boolean) => {
                             return _getSender(syncInterface, payload, isAsync);
-                        }
+                        };
                     }
 
                     if (!_syncUnloadSender) {
@@ -651,7 +651,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             }
 
             function _getSenderInterface(transports: TransportType[], syncSupport: boolean): IXHROverride {
-                let transportType: TransportType = TransportType.NotSet;
+                let transportType: TransportType = null;
                 let sendPostFunc: SendPOSTFunction = null;
                 let lp = 0;
                 while (sendPostFunc == null && lp < transports.length) {
