@@ -1,8 +1,8 @@
-> ***Important:*** If you are looking to add Application Insights to your website/app, please see the [applicationinsights-web](https://github.com/microsoft/ApplicationInsights-JS/tree/master/AISKU#application-insights-javascript-sdk-beta-sdk) repository to learn how to get started.
+> ***Important:*** If you are looking to add Application Insights to your website/app, please see the [applicationinsights-web](https://github.com/microsoft/ApplicationInsights-JS/tree/main/AISKU#application-insights-javascript-sdk-beta-sdk) repository to learn how to get started.
 
 # Microsoft Application Insights JavaScript SDK - Core
 
-[![GitHub Workflow Status (master)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-core-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-core-js)
 

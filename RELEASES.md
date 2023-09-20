@@ -2,6 +2,46 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.3 (Sep 20th, 2023)
+
+### Changelog
+
+- #2157 [Main] Bug New minified bundles are corrupting global scope
+- #2120 Missing traceparent header when running multiple SDK instances
+  - #2144 [Main][Part 2] Missing traceparent header when running multiple SDK instances #2120
+  - #2141 [Main][Bug] Missing traceparent header when running multiple SDK instances #2120
+- #2149 [BUG] Fetch with empty string as first parameter ignores second parameter when fetch tracking is enabled
+  - #2152 [main] allow empty string as first parameter to fetch
+- #2127 [Main] Add automated ability to reset the npm latest tag to a specific build
+- #2106 Consider export IClickAnalyticsConfiguration from the click plugin?
+- #2086 [BUG] Field 'fileName' on type 'StackFrame' is too long. Expected: 1024 characters
+  - #2118 [Main] [BUG] Field 'fileName' on type 'StackFrame' is too long. Expected: 1024 characters #2086
+- #2094 _getVerifiedStorageObject - contentious sessionStorage element
+  - #2110 [main] add prefix before storage name when setting it
+- #2137 [Main] Fix: edge case where the navigation entry is not present
+- #2135 Update @nevware21 base versions
+- #2104 [main] Use the navigation entry timeing for page load event start time
+- #2116 [Main] Fixup setVersion to support automated nightly release
+- #2097 disablePageUnloadEvents lost somewhere #2097
+- Internal Task 15757413: [VSCode] [1DS] Move 1DS Core and 1DS Post to GitHub #2102
+- #2089 [BUG] The v3.x exporting of the TelemetryContext does not export the sessionManager "type"
+- [BUG] Readme Issue for perfmarkmeasure @microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js@ #2150
+- #2139 V3 Public CDN URL
+- #2093 Update project clean to make faster
+
+- Add support for service level notifications (disabled by default in this release, will be enabled by default in a future release)
+  - #2147 [main] throttle manager in aisku sending message
+  - #2133 [Main][Task]24841107: Refactor throttleMgr to support multiple message keys
+  - #2090 [Main][Task]17874465:Support Config sync across instances
+  - #2125 [Main][Task]24677395:add configurations for CDN to enable specific users opt-in implementation
+  - #2115 [Main][Task]24662146: cfgSync plugin improvement: timer handling for fetch/xhr
+
+- SDK Loader Updates (version 7 - will be published after this release is deployed to the CDN)
+  - #2091 rework web snippet (Convert to TypeScript)
+  - #2099 change loader src when detect IE
+  - #2098 Extend the config part in Min
+  - #2131 [main] Adding round robin retry for snippet script src loading
+
 ## 3.0.2 (May 23rd, 2023)
 
 ### Changelog

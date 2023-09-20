@@ -1414,7 +1414,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(baseData.ver);
                 QUnit.assert.equal(2, baseData.ver);
 
-                QUnit.assert.equal("javascript:3.0.2", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                QUnit.assert.equal("javascript:3.0.3", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
             }
         })
 
