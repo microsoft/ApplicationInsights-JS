@@ -96,7 +96,9 @@ The current version of the snippet is version 7, the version is identified by th
 
 > :bulb: **Note**
 >
-> For readability and to reduce possible JavaScript errors, all of the possible configuration options are listed on a new line in snippet code above, if you don't want to change the value of a commented line it can be removed.
+> 1. For readability and to reduce possible JavaScript errors, all of the possible configuration options are listed on a new line in snippet code above, if you don't want to change the value of a commented line it can be removed.
+>
+> 2. ConnectionString format should follow "InstrumentationKey=xxxx;...." If the string provided does not meet this format, the sdk load process would fail
 
 #### Reporting Script load exceptions
 
