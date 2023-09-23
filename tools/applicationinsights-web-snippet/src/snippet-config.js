@@ -1,5 +1,5 @@
 {
-    src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
+    src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
     // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
     // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
     // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
