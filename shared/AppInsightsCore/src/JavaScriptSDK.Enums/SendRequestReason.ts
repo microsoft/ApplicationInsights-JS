@@ -7,7 +7,7 @@ export const enum SendRequestReason {
     /**
      * No specific reason was specified
      */
-    Undefined       = 0,
+    Undefined = 0,
 
     /**
      * Events are being sent based on the normal event schedule / timer.

@@ -1,4 +1,5 @@
 import { IPromise } from "@nevware21/ts-async";
+import { SendRequestReason } from "../applicationinsights-core-js";
 
 /** IPayloadData describes interface of payload sent via POST channel */
 export interface IPayloadData {
@@ -8,6 +9,7 @@ export interface IPayloadData {
     timeout?: number;
     disableXhrSync?: boolean;
     disableFetchKeepAlive?: boolean;
+    sendReason?: SendRequestReason;
 }
 
 /**
@@ -26,7 +28,6 @@ export type OnCompleteCallback = (status: number, headers: { [headerName: string
 * The IXHROverride interface overrides the way HTTP requests are sent.
 */
 export interface IXHROverride {
-
    sendPOST: SendPOSTFunction;
 }
 
