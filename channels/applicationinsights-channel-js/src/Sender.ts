@@ -354,7 +354,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                   
                     // *****************************************************************************************************************
                     //NOTE: shoud we remove fallback sender?
-                    let xhrInterface = { sendPOST: _xhrSender} as IXHROverride
+                    let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
                     fallbackInterface = httpInterface || xhrInterface;
     
                     // always fallback to XHR
@@ -379,7 +379,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
                     syncInterface = _alwaysUseCustomSend? customInterface : (_getSenderInterface([TransportType.Beacon, TransportType.Xhr], true) || customInterface);
 
-                    if (_alwaysUseCustomSend || !_syncUnloadSender) {
+                    if ((_alwaysUseCustomSend || !_syncUnloadSender) && syncInterface) {
                         _syncUnloadSender = (payload: string[], isAsync: boolean) => {
                             return _getSender(syncInterface, payload, isAsync);
                         };
