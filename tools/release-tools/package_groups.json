@@ -15,6 +15,7 @@
         "./extensions/applicationinsights-clickanalytics-js",
         "./extensions/applicationinsights-perfmarkmeasure-js",
         "./extensions/applicationinsights-debugplugin-js",
+        "./extensions/applicationinsights-cfgsync-js",
         "./channels/tee-channel-js",
         "./shared/1ds-core-js",
         "./channels/1ds-post-js"
@@ -35,7 +36,11 @@
         "./extensions/applicationinsights-clickanalytics-js",
         "./extensions/applicationinsights-perfmarkmeasure-js",
         "./extensions/applicationinsights-debugplugin-js",
+        "./extensions/applicationinsights-cfgsync-js",
         "./channels/tee-channel-js"
+    ],
+    "cfgSync": [
+        "./extensions/applicationinsights-cfgsync-js"
     ],
     // Rollup packages
     "rollup-es": [
