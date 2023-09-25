@@ -1186,8 +1186,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 if (input instanceof Request) {
                     ajaxData.requestUrl = input ? input.url : "";
-                } else if (input === "") {
-                    ajaxData.requestUrl = window.location.href.split("#")[0];
+                } else if (input === "" ) {
+                    const location = getLocation();
+                    ajaxData.requestUrl = location?.href?.split("#")[0] || input;
                 } else {
                     ajaxData.requestUrl = input;
                 }
