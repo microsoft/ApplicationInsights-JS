@@ -15,7 +15,7 @@ import {
     dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
     isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf, strSubstr, strSubstring } from "@nevware21/ts-utils";
+import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf, strSplit, strSubstr, strSubstring } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
 import {
     DependencyListenerFunction, IDependencyHandler, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler
@@ -1184,11 +1184,20 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ajaxData.requestSentTime = dateTimeUtilsNow();
                 ajaxData.errorStatusText = _enableAjaxErrorStatusText;
 
+                let requestUrl: string;
                 if (input instanceof Request) {
-                    ajaxData.requestUrl = input ? input.url : "";
+                    requestUrl = (input||{}).url || "";
                 } else {
-                    ajaxData.requestUrl = input;
+                    requestUrl = input;
                 }
+                if (requestUrl === "" ) {
+                    const location = getLocation();
+                    if (location && location.href) {
+                        requestUrl = strSplit(location.href, "#")[0];
+                    }
+                }
+
+                ajaxData.requestUrl = requestUrl;
 
                 let method = "GET";
                 if (init && init.method) {
