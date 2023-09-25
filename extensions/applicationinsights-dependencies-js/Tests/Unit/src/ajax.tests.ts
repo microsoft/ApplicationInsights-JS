@@ -1670,6 +1670,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
                     Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
+                    Assert.equal(window.location.href.split("#")[0], dependencyFields[0].dependency.target, "Target is captured.");
 
                     // Assert that the HTTP method was preserved
                     Assert.equal(1, fetchCalls.length);
@@ -1732,11 +1733,16 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
                     Assert.equal(expectedTraceId, dependencyFields[0].sysProperties!.trace.traceID, "system properties traceId");
                     Assert.equal(expectedSpanId, dependencyFields[0].sysProperties!.trace.parentID, "system properties spanId");
+                    Assert.equal(window.location.href.split("#")[0], dependencyFields[0].dependency.target, "Target is captured.");
 
                     // Assert that the HTTP method was preserved
                     Assert.equal(1, fetchCalls.length);
                     Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
                     Assert.equal("post", fetchCalls[0].init?.method, "Has post method");
+                    let headers:Headers = fetchCalls[0].init.headers as Headers;
+                    Assert.notEqual(undefined, headers, "has headers");
+                    Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header should be present"); // AI
+                    Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
 
                     testContext.testDone();
                 }, () => {
