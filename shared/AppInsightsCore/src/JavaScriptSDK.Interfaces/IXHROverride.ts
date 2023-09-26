@@ -18,9 +18,9 @@ export interface IPayloadData {
 * @param oncomplete - The function to call once the request has completed whether a success, failure or timeout
 * @param sync - A boolean flag indicating whether the request should be sent as a synchronous request.
 */
-export type SendPOSTFunction = (payload: IPayloadData, oncomplete: (status: number, headers: { [headerName: string]: string; }, response?: string) => void, sync?: boolean) => void | IPromise<boolean>;
+export type SendPOSTFunction = (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => void | IPromise<boolean>;
 
-export type OnCompleteCallback = (status: number, headers: { [headerName: string]: string }, response?: string) => void;
+export type OnCompleteCallback = (status: number, headers: { [headerName: string]: string; }, response?: string) => void;
 
 
 

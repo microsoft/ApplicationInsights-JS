@@ -152,7 +152,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _stamp_specific_redirects: number;
         let _headers: { [name: string]: string };
         let _syncFetchPayload = 0;              // Keep track of the outstanding sync fetch payload total (as sync fetch has limits)
-        let _fallbackSender: SenderFunction;    // The sender to use if the payload size is too large
         let _syncUnloadSender: SenderFunction;  // The identified sender to use for the synchronous unload stage
         let _offlineListener: IOfflineListener;
         let _evtNamespace: string | string[];
@@ -173,6 +172,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _alwaysUseCustomSend: boolean;
         let _disableXhr: boolean;
         let _fetchKeepAlive: boolean;
+        let _xhrSend: SenderFunction;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -347,20 +347,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     let customInterface = senderConfig.httpXHROverride;
                     let httpInterface: IXHROverride = null;
-                    let fallbackInterface: IXHROverride = null;
                     let syncInterface: IXHROverride = null;
                     httpInterface = _getSenderInterface([TransportType.Xhr, TransportType.Fetch], false);
                   
-                    // *****************************************************************************************************************
-                    //NOTE: shoud we remove fallback sender? (it seems still needed for oversize payload)
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
-
-                    fallbackInterface = httpInterface || xhrInterface;
-    
-                    // always fallback to XHR
-                    _fallbackSender = (payload: string[], isAsync: boolean) => {
-                        return _doSend(fallbackInterface, payload, isAsync);
+                    _xhrSend = (payload: string[], isAsync: boolean) => {
+                        return _doSend(xhrInterface, payload, isAsync);
                     };
+    
     
                     if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported()) {
                         // Config is set to always used beacon sending
@@ -386,7 +380,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
 
                     if (!_syncUnloadSender) {
-                        _syncUnloadSender = _fallbackSender;
+                        _syncUnloadSender = _xhrSend;
                     }
 
                     _disableTelemetry = senderConfig.disableTelemetry;
@@ -680,13 +674,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _getOnComplete(payload: string[], status: number, headers: {[headerName: string]: string;}, response?: string) {
 
                 // ***********************************************************************************************
-                //Note: status code should be discussed
-                if (status === 200) {
+                //TODO: handle other status codes
+                if (status === 200 && payload) {
                     _self._onSuccess(payload, payload.length);
                 }
-                if (status === 400) {
-                    _self._onError(payload, response);
-                }
+                response && _self._onError(payload, response);
             }
 
             function _doSend(sendInterface: IXHROverride, payload: string[], isAsync: boolean): void | IPromise<boolean> {
@@ -892,7 +884,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
     
                         if (droppedPayload.length > 0) {
-                            _fallbackSender && _fallbackSender(droppedPayload, true);
+                            _xhrSend && _xhrSend(droppedPayload, true);
                             _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                         }
                     }
@@ -975,7 +967,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _beaconSender(payloadData, onComplete, !isAsync);
                     } else {
                         // Payload is going to be too big so just try and send via XHR
-                        _fallbackSender && _fallbackSender(payload, true);
+                        _xhrSend && _xhrSend(payload, true);
                         _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
                     }
                 }
@@ -1319,7 +1311,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 _serializer = null;
                 _stamp_specific_redirects = 0;
                 _syncFetchPayload = 0;
-                _fallbackSender = null;
                 _syncUnloadSender = null;
                 _evtNamespace = null;
                 _endpointUrl = null;
@@ -1335,6 +1326,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 _namePrefix = UNDEFINED_VALUE;
                 _disableXhr = false;
                 _fetchKeepAlive = false;
+                _xhrSend = null;
 
                 objDefine(_self, "_senderConfig", {
                     g: function() {

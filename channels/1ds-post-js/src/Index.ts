@@ -6,13 +6,15 @@
 */
 
 import {
-    BE_PROFILE, IChannelConfiguration, IPayloadData, IPostChannel, IXHROverride, NRT_PROFILE, PayloadListenerFunction,
-    PayloadPreprocessorFunction, RT_PROFILE, SendPOSTFunction
+    BE_PROFILE, IChannelConfiguration, IPostChannel, NRT_PROFILE, PayloadListenerFunction,
+    PayloadPreprocessorFunction, RT_PROFILE
 } from "./DataModels";
 import { PostChannel } from "./PostChannel";
+
+import  { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "@microsoft/1ds-core-js";
 
 export {
     PostChannel, IChannelConfiguration,
     BE_PROFILE, NRT_PROFILE, RT_PROFILE, IXHROverride, IPostChannel,
-    SendPOSTFunction, IPayloadData, PayloadPreprocessorFunction, PayloadListenerFunction
+    SendPOSTFunction, IPayloadData, PayloadPreprocessorFunction, PayloadListenerFunction, OnCompleteCallback
 };

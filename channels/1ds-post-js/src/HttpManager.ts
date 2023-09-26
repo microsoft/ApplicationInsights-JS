@@ -5,7 +5,8 @@
 */
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    EventSendType, FullVersionString, IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IExtendedConfiguration, IPerfEvent, IUnloadHook,
+    EventSendType, FullVersionString, IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IExtendedConfiguration, IPayloadData, IPerfEvent, IUnloadHook,
+    IXHROverride, OnCompleteCallback, SendPOSTFunction,
     SendRequestReason, TransportType, _eExtendedInternalMessageId, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow,
     doPerf, dumpObj, eLoggingSeverity, extend, getLocation, getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported,
     isFetchSupported, isNullOrUndefined, isNumber, isReactNative, isString, isUndefined, isValueAssigned, isXhrSupported, objForEachKey,
@@ -15,8 +16,8 @@ import { arrAppend } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
 import {
-    EventBatchNotificationReason, IChannelConfiguration, ICollectorResult, IPayloadData, IPostChannel, IPostTransmissionTelemetryItem,
-    IXHROverride, PayloadListenerFunction, PayloadPreprocessorFunction, SendPOSTFunction
+    EventBatchNotificationReason, IChannelConfiguration, ICollectorResult, IPostChannel, IPostTransmissionTelemetryItem,
+    PayloadListenerFunction, PayloadPreprocessorFunction
 } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import {
@@ -77,7 +78,6 @@ _addCollectorHeaderQsMapping(STR_TIME_DELTA_TO_APPLY, STR_TIME_DELTA_TO_APPLY);
 _addCollectorHeaderQsMapping(STR_UPLOAD_TIME, STR_UPLOAD_TIME);
 _addCollectorHeaderQsMapping(STR_AUTH_XTOKEN, STR_AUTH_XTOKEN);
 
-type OnCompleteCallback = (status: number, headers: { [headerName: string]: string }, response?: string) => void;
 
 function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     try {
