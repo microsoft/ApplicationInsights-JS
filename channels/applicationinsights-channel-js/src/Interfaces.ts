@@ -100,10 +100,10 @@ export interface ISenderConfig {
      * [Optional] The HTTP override that should be used to send requests, as an IXHROverride object.
      * By default during the unload of a page or if the event specifies that it wants to use sendBeacon() or sync fetch (with keep-alive),
      * this override will NOT be called.
-     * If onunloadDisableFetch and onunloadDisableBeacon are true, You can now change this behavior by enabling the 'alwaysUseXhrOverride' configuration value.
+     * If alwaysUseXhrOverride configuration value is set to true, the override will always be used.
      * The payload data (first argument) now also includes any configured 'timeout' (defaults to undefined) and whether you should avoid
-     * @since 3.0.4
      * creating any synchronous XHR requests 'disableXhr' (defaults to false/undefined)
+     * @since 3.0.4
      */
     httpXHROverride?: IXHROverride;
 
