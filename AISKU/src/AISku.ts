@@ -9,15 +9,16 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
     IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
-    ITelemetryContext as Common_ITelemetryContext, ITraceTelemetry, PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
+    ITelemetryContext as Common_ITelemetryContext, IThrottleMgrConfig, ITraceTelemetry, PropertiesPluginIdentifier, ThrottleMgr,
+    parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin,
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction,
-    _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfValidate, createDynamicConfig,
-    createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled,
-    isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
+    _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
+    createDynamicConfig, createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray,
+    isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
     removePageHideEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
@@ -62,7 +63,7 @@ const default_throttle_config = {
         monthInterval: 3,
         daysOfMonth: [28]
     }
-};
+} as IThrottleMgrConfig;
 
 // We need to include all properties that we only reference that we want to be dynamically updatable here
 // So they are converted even when not specified in the passed configuration
@@ -76,12 +77,14 @@ const defaultConfigValues: IConfigDefaults<IConfiguration|IConfig> = {
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable}
     },
-    throttleMgrCfg:{
-        [_eInternalMessageId.DefaultThrottleMsgKey]:default_throttle_config,
-        [_eInternalMessageId.InstrumentationKeyDeprecation]:default_throttle_config,
-        [_eInternalMessageId.SdkLdrUpdate]:default_throttle_config,
-        [_eInternalMessageId.CdnDeprecation]:default_throttle_config
-    }
+    throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
+        {
+            [_eInternalMessageId.DefaultThrottleMsgKey]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
+            [_eInternalMessageId.InstrumentationKeyDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
+            [_eInternalMessageId.SdkLdrUpdate]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
+            [_eInternalMessageId.CdnDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config)
+        }
+    )
 };
 
 function _chkDiagLevel(value: number) {
