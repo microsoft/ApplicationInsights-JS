@@ -17,6 +17,7 @@ const tconfig = {
     } as IThrottleLimit,
     interval: {
         monthInterval: 1,
+        daysOfMonth: [1], // must add here
         dayInterval: undefined
     } as IThrottleInterval
 } as IThrottleMgrConfig;
@@ -75,9 +76,9 @@ export class ThrottleSentMessage extends AITestClass {
     }
 
     public registerTests() {
+        this.cdnDeprecatedMessageTests();
         this.ikeyMessageTests();
         this.snippetVerMessageTests();
-        this.cdnDeprecatedMessageTests();
     }
 
     public cdnDeprecatedMessageTests(): void {
