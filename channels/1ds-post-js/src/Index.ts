@@ -5,13 +5,11 @@
 * File to export public classes.
 */
 
+import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "@microsoft/1ds-core-js";
 import {
-    BE_PROFILE, IChannelConfiguration, IPostChannel, NRT_PROFILE, PayloadListenerFunction,
-    PayloadPreprocessorFunction, RT_PROFILE
+    BE_PROFILE, IChannelConfiguration, IPostChannel, NRT_PROFILE, PayloadListenerFunction, PayloadPreprocessorFunction, RT_PROFILE
 } from "./DataModels";
 import { PostChannel } from "./PostChannel";
-
-import  { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "@microsoft/1ds-core-js";
 
 export {
     PostChannel, IChannelConfiguration,

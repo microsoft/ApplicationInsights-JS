@@ -5,12 +5,12 @@
 */
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    EventSendType, FullVersionString, IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IExtendedConfiguration, IPayloadData, IPerfEvent, IUnloadHook,
-    IXHROverride, OnCompleteCallback, SendPOSTFunction,
-    SendRequestReason, TransportType, _eExtendedInternalMessageId, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow,
-    doPerf, dumpObj, eLoggingSeverity, extend, getLocation, getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported,
-    isFetchSupported, isNullOrUndefined, isNumber, isReactNative, isString, isUndefined, isValueAssigned, isXhrSupported, objForEachKey,
-    objKeys, onConfigChange, openXhr, strTrim, strUndefined, useXDomainRequest
+    EventSendType, FullVersionString, IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IExtendedConfiguration, IPayloadData, IPerfEvent,
+    IUnloadHook, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType, _eExtendedInternalMessageId,
+    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend, getLocation,
+    getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isNumber, isReactNative,
+    isString, isUndefined, isValueAssigned, isXhrSupported, objForEachKey, objKeys, onConfigChange, openXhr, strTrim, strUndefined,
+    useXDomainRequest
 } from "@microsoft/1ds-core-js";
 import { arrAppend } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";

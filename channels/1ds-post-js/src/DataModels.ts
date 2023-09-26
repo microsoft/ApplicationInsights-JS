@@ -5,9 +5,9 @@
 * File containing the interfaces for Post channel module.
 */
 import {
-    IDiagnosticLogger, IExtendedTelemetryItem, IProcessTelemetryContext, ITelemetryPlugin, IUnloadHook, IValueSanitizer, IPayloadData, IXHROverride
+    IDiagnosticLogger, IExtendedTelemetryItem, IPayloadData, IProcessTelemetryContext, ITelemetryPlugin, IUnloadHook, IValueSanitizer,
+    IXHROverride
 } from "@microsoft/1ds-core-js";
-
 
 /**
  * Defines the function signature for the Payload Preprocessor.

@@ -1,7 +1,7 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { IExtendedConfiguration, NotificationManager, AppInsightsCore, EventLatency, ITelemetryItem, IExtendedTelemetryItem, SendRequestReason, EventSendType, isFetchSupported, objKeys, arrForEach, isBeaconsSupported } from '@microsoft/1ds-core-js';
-import { PostChannel, IXHROverride, } from '../../../src/Index';
-import { IPostTransmissionTelemetryItem, IPayloadData, IChannelConfiguration } from '../../../src/DataModels';
+import { PostChannel, IXHROverride, IPayloadData } from '../../../src/Index';
+import { IPostTransmissionTelemetryItem, IChannelConfiguration } from '../../../src/DataModels';
 import { SinonSpy } from 'sinon';
 
 interface IEventsSendRequests {
