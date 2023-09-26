@@ -102,6 +102,7 @@ export interface ISenderConfig {
      * this override will NOT be called.
      * If onunloadDisableFetch and onunloadDisableBeacon are true, You can now change this behavior by enabling the 'alwaysUseXhrOverride' configuration value.
      * The payload data (first argument) now also includes any configured 'timeout' (defaults to undefined) and whether you should avoid
+     * @since 3.0.4
      * creating any synchronous XHR requests 'disableXhr' (defaults to false/undefined)
      */
     httpXHROverride?: IXHROverride;
@@ -111,6 +112,7 @@ export interface ISenderConfig {
      * ignores any provided httpXhrOverride and attempts to use sendBeacon() or fetch(with keep-alive) when they are available.
      * When this configuration option is true any provided httpXhrOverride will always be used, so any provided httpXhrOverride will
      * also need to "handle" the synchronous unload scenario.
+     * @since 3.0.4
      */
     alwaysUseXhrOverride?: boolean;
 }
