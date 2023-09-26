@@ -234,6 +234,62 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Channel Config: Invalid paylod Sender should not be sent",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let sentPayloadData: any[] = [];
+                var xhrOverride: IXHROverride = {
+                    sendPOST: (payload: IPayloadData, oncomplete: (status: number, headers: {[headerName: string]: string;}, response?: string) => void, sync?: boolean) => {
+                        sentPayloadData.push({payload: payload, sync: sync});
+                    }
+                };
+
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: xhrOverride,
+                            alwaysUseXhrOverride: true
+                        }
+                    }
+                }
+                let testBatch: string[] = ["test", "test1"];
+           
+                core.initialize(coreConfig, [this._sender]);
+
+                QUnit.assert.deepEqual(xhrOverride, this._sender._senderConfig.httpXHROverride, "Channel httpXHROverride config is set");
+                QUnit.assert.deepEqual(true, this._sender._senderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is set");
+                // case 1: payload is null
+                this._sender._sender(null as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test1");
+                this._sender._sender(null as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test1");
+
+                // case 2: payload is none array
+                this._sender._sender({} as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test2");
+                this._sender._sender({} as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test2");
+
+                // case 3: payload is an empty array
+                this._sender._sender([] as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test3");
+                this._sender._sender([] as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test3");
+
+                
+                this._sender._sender(testBatch, true);
+                QUnit.assert.equal(1, sentPayloadData.length, "httpXHROverride is called test4");
+                this._sender._sender(testBatch, false);
+                QUnit.assert.equal(2, sentPayloadData.length, "httpXHROverride is called once sync test4");
+                
+                
+            }
+        });
+
+
+        this.testCase({
             name: "Channel Config: sessionStorage change from true to false can be handled correctly",
             useFakeTimers: true,
             test: () => {

@@ -173,7 +173,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _alwaysUseCustomSend: boolean;
         let _disableXhr: boolean;
         let _fetchKeepAlive: boolean;
-        let _onComplete: OnCompleteCallback;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -353,13 +352,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     httpInterface = _getSenderInterface([TransportType.Xhr, TransportType.Fetch], false);
                   
                     // *****************************************************************************************************************
-                    //NOTE: shoud we remove fallback sender?
+                    //NOTE: shoud we remove fallback sender? (it seems still needed for oversize payload)
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
+
                     fallbackInterface = httpInterface || xhrInterface;
     
                     // always fallback to XHR
                     _fallbackSender = (payload: string[], isAsync: boolean) => {
-                        return _getSender(fallbackInterface, payload, isAsync);
+                        return _doSend(fallbackInterface, payload, isAsync);
                     };
     
                     if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported()) {
@@ -370,7 +370,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
     
                     _self._sender = (payload: string[], isAsync: boolean) => {
-                        return _getSender(httpInterface, payload, isAsync);
+                        return _doSend(httpInterface, payload, isAsync);
                     };
 
                     if (_fetchKeepAlive) {
@@ -381,7 +381,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     if ((_alwaysUseCustomSend || !_syncUnloadSender) && syncInterface) {
                         _syncUnloadSender = (payload: string[], isAsync: boolean) => {
-                            return _getSender(syncInterface, payload, isAsync);
+                            return _doSend(syncInterface, payload, isAsync);
                         };
                     }
 
@@ -689,18 +689,18 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
             }
 
-            function _getSender(sendInterface: IXHROverride, payload: string[], isAsync: boolean): void | IPromise<boolean> {
-                _onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
+            function _doSend(sendInterface: IXHROverride, payload: string[], isAsync: boolean): void | IPromise<boolean> {
+                let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
                     return _getOnComplete(payload, status, headers, response);
                 }
                 let payloadData = _getPayload(payload);
                 
                 let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST;
-                if (sendPostFunc) {
+                if (sendPostFunc && payloadData) {
                     // ***********************************************************************************************
                     // mark payload as sent at the beginning of calling each send function
                     _self._buffer.markAsSent(payload);
-                    return sendPostFunc(payloadData, _onComplete, !isAsync);
+                    return sendPostFunc(payloadData, onComplete, !isAsync);
                 }
                 return null;
             }
@@ -832,13 +832,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             }
         
             function _doUnloadSend(payload: string[], isAsync: boolean) {
+                let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
+                    return _getOnComplete(payload, status, headers, response);
+                }
                 if (_syncUnloadSender) {
                     // We are unloading so always call the sender with sync set to false
                     _syncUnloadSender(payload, false);
                 } else {
                     // Fallback to the previous beacon Sender (which causes a CORB warning on chrome now)
                     let payloadData = _getPayload(payload)
-                    _beaconSender(payloadData, _onComplete, !isAsync);
+                    _beaconSender(payloadData, onComplete, !isAsync);
                 }
             }
 
@@ -955,6 +958,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
 
             function _fetchKeepAliveSender(payload: string[], isAsync: boolean) {
+                let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
+                    return _getOnComplete(payload, status, headers, response);
+                }
                 if (isArray(payload)) {
                     let payloadSize = payload.length;
                     for (let lp = 0; lp < payload.length; lp++) {
@@ -963,10 +969,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let payloadData = _getPayload(payload);
 
                     if ((_syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {
-                        _doFetchSender(payloadData, _onComplete, true);
+                        _doFetchSender(payloadData, onComplete, true);
                     } else if (isBeaconsSupported()) {
                         // Fallback to beacon sender as we at least get told which events can't be scheduled
-                        _beaconSender(payloadData, _onComplete, !isAsync);
+                        _beaconSender(payloadData, onComplete, !isAsync);
                     } else {
                         // Payload is going to be too big so just try and send via XHR
                         _fallbackSender && _fallbackSender(payload, true);
