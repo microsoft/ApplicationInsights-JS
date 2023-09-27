@@ -66,7 +66,8 @@ export {
     // Dynamic Config definitions
     IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn, IDynamicConfigHandler, IDynamicPropertyHandler,
     IWatchDetails, IWatcherHandler, WatcherFunction,
-    createDynamicConfig, onConfigChange, getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion
+    createDynamicConfig, onConfigChange, getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion,
+    IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction
 } from "@microsoft/applicationinsights-core-js";
 
 export {

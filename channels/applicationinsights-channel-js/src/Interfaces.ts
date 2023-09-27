@@ -1,4 +1,5 @@
 import { IStorageBuffer } from "@microsoft/applicationinsights-common";
+import { IXHROverride } from "@microsoft/applicationinsights-core-js";
 
 export interface ISenderConfig {
     /**
@@ -94,6 +95,26 @@ export interface ISenderConfig {
      * @since 3.0.1
      */
     enableSendPromise?: boolean;
+
+    /**
+     * [Optional] The HTTP override that should be used to send requests, as an IXHROverride object.
+     * By default during the unload of a page or if the event specifies that it wants to use sendBeacon() or sync fetch (with keep-alive),
+     * this override will NOT be called.
+     * If alwaysUseXhrOverride configuration value is set to true, the override will always be used.
+     * The payload data (first argument) now also includes any configured 'timeout' (defaults to undefined) and whether you should avoid
+     * creating any synchronous XHR requests 'disableXhr' (defaults to false/undefined)
+     * @since 3.0.4
+     */
+    httpXHROverride?: IXHROverride;
+
+    /**
+     * [Optional] By default during unload (or when you specify to use sendBeacon() or sync fetch (with keep-alive) for an event) the SDK
+     * ignores any provided httpXhrOverride and attempts to use sendBeacon() or fetch(with keep-alive) when they are available.
+     * When this configuration option is true any provided httpXhrOverride will always be used, so any provided httpXhrOverride will
+     * also need to "handle" the synchronous unload scenario.
+     * @since 3.0.4
+     */
+    alwaysUseXhrOverride?: boolean;
 }
 
 export interface IBackendResponse {
