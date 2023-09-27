@@ -438,7 +438,7 @@ As part of changes being introduced in version 2.6.0 we are deprecating and remo
 
 ## Service Notification
 
-As part of changes being introduced in version 3.0.3, we are intergrating [cfgSync plugin](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-cfgsync-js) and [throttle manager](./docs/ThrottleMgr.md) to AISKU. By default, these components will be disabled unless you choose to opt in experimental features via the `featureOptIn` of your root config.
+As part of changes being introduced in version 3.0.3, we are intergrating [cfgSync plugin](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-cfgsync-js) and [throttle manager](./docs/ThrottleMgr.md) to AISKU. By default, these components will be disabled during the current initial release, but they will be enabled by default in future releases once extensive production level testing is completed.
 
 ## Single Page Applications
 
