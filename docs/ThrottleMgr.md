@@ -48,7 +48,7 @@ const defaultThrottleMsgKey = _eInternalMessageId.DefaultThrottleMsgKey;
 const instrumentationKeyDeprecation = _eInternalMessageId.InstrumentationKeyDeprecation;
 const cdnDeprecation = _eInternalMessageId.CdnDeprecation;
 
-/* if specific message id throttle confid is not defined, default (_eInternalMessageId.DefaultThrottleMsgKey) config will be used */
+/* if specific message id throttle config is not defined, defaultThrottleMsgKey config will be used */
 let throttleCfg = {
     [defaultThrottleMsgKey]: defaultThrottleCfg,
     [instrumentationKeyDeprecation]: iKeyDeprecaredMsgThrottleCfg
@@ -74,7 +74,7 @@ When calling `sendMessage()`, if throttling should happen based on throttle conf
 /* return if instrumentationKeyDeprecation message should be throttled or not currently based on throttleCfg[instrumentationKeyDeprecation] */
 throttleMgr.canThrottle(instrumentationKeyDeprecation);
 
-/* return if cdnDeprecation message should be throttled or not currently. Since throttle manager config for cdnDeprecation is not defined, therefore defaultThrottleMsgKey config will be used */
+/* return if cdnDeprecation message should be throttled or not currently. Since throttle manager config for cdnDeprecation is not defined, defaultThrottleMsgKey config will be used */
 throttleMgr.canThrottle(cdnDeprecation);
 
 /* return if the instrumentationKeyDeprecation message has been triggered or not on the current date. For each key, throttling will only be triggered once per day.*/
