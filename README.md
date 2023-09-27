@@ -374,6 +374,8 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | disableIkeyDeprecationMessage | boolean | true | [Optional]  Disable instrumentation Key deprecation error message. If true, error message will NOT be sent. **Note: instrumentation key support will end soon**, see aka.ms/IkeyMigrate for more details.
 | bufferOverride <br/><sub>since 2.8.12</sub> | IStorageBuffer | undefined | [Optional] Identifies a simple interface to allow you to override the storage mechanism used for tracking unsent and unacknowledged events, when not provided defaults to using SessionStorage interface. You MUST supply both the `getItem` and `setItem` functions when defined.
 | storagePrefix | string[] | undefined | [Optional] An optional value that will be added as name prefix for storage name. |
+| featureOptIn <br/><sub>since 3.0.3</sub> | IFeatureOptIn | undefined | [Optional]  Set Feature opt in details. |
+| throttleMgrCfg <br/><sub>since 3.0.3</sub> | `{[key: number]: IThrottleMgrConfig}` | undefined | [Optional]  Set throttle mgr configuration by key. |
 
 ### ICookieMgrConfig
 
@@ -433,6 +435,10 @@ So you will need to only call or access the manager from within the onInit() cal
 As part of changes being introduced in version 2.6.0 we are deprecating and removing the *internal* usages of the static helper classes `CoreUtils`, `EventHelper`, `Util`, `UrlHelper`, `DateTimeUtils` and `ConnectionStringParser` to provide better support for tree-shaking algorithms so that unused code can be safely dropped when using NPM packages.
 
 [See Tree-Shaking Recommendations](TreeShakingRecommendations.md)
+
+## Service Notification
+
+As part of changes being introduced in version 3.0.3, we are intergrating [cfgSync plugin](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-cfgsync-js) and [throttle manager](./docs/ThrottleMgr.md) to AISKU. By default, these components will be disabled unless you choose to opt in experimental features via the `featureOptIn` of your root config.
 
 ## Single Page Applications
 
