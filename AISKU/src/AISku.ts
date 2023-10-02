@@ -9,8 +9,8 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
     IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
-    ITelemetryContext as Common_ITelemetryContext, IThrottleMgrConfig, ITraceTelemetry, PropertiesPluginIdentifier, ThrottleMgr,
-    parseConnectionString
+    ITelemetryContext as Common_ITelemetryContext, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceTelemetry,
+    PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties,
@@ -53,16 +53,20 @@ const SDK_LOADER_VER = "SdkLoaderVer";
 
 const UNDEFINED_VALUE: undefined = undefined;
 
+const default_limit = {
+    samplingRate: 100,
+    maxSendNumber: 1
+} as IThrottleLimit;
+
+const default_interval = {
+    monthInterval: 3,
+    daysOfMonth: [28]
+} as IThrottleInterval;
+
 const default_throttle_config = {
     disabled: true,
-    limit: {
-        samplingRate: 100,
-        maxSendNumber: 1
-    },
-    interval: {
-        monthInterval: 3,
-        daysOfMonth: [28]
-    }
+    limit: cfgDfMerge<IThrottleLimit>(default_limit),
+    interval: cfgDfMerge<IThrottleInterval>(default_interval)
 } as IThrottleMgrConfig;
 
 // We need to include all properties that we only reference that we want to be dynamically updatable here

@@ -83,7 +83,7 @@ export class ThrottleSentMessage extends AITestClass {
 
     public cdnDeprecatedMessageTests(): void {
         this.testCase({
-            name: "CdnDeprecatedMessageTests: Message is sent when az416426 is used",
+            name: "ThrottleSentMessage: Message is sent when az416426 is used",
             useFakeTimers: true,
             test: () => {
                 Assert.ok(this._ai, 'ApplicationInsights SDK exists');
