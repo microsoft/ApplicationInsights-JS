@@ -51,6 +51,9 @@ export class ThrottleSentMessage extends AITestClass {
 
     public testInitialize() {
         try {
+            if (window.localStorage){
+                window.localStorage.clear();
+            }
             this.useFakeServer = false;
             this._config = this._getTestConfig();
 
@@ -73,6 +76,9 @@ export class ThrottleSentMessage extends AITestClass {
             // force unload
             this._ai.unload(false);
         }
+        if (window.localStorage){
+            window.localStorage.clear();
+        }
     }
 
     public registerTests() {
@@ -83,7 +89,7 @@ export class ThrottleSentMessage extends AITestClass {
 
     public cdnDeprecatedMessageTests(): void {
         this.testCase({
-            name: "CdnDeprecatedMessageTests: Message is sent when az416426 is used",
+            name: "ThrottleSentMessage: Message is sent when az416426 is used",
             useFakeTimers: true,
             test: () => {
                 Assert.ok(this._ai, 'ApplicationInsights SDK exists');
