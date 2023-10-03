@@ -4,25 +4,13 @@ import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from '@microsof
 import { SinonSpy } from 'sinon';
 import { AppInsightsSku } from '../../../src/AISku';
 import { createSnippetV5 } from './testSnippetV5';
-import { FeatureOptInMode, getGlobal, getGlobalInst, isFunction, newId } from '@microsoft/applicationinsights-core-js';
+import { CdnFeatureMode, FeatureOptInMode, getGlobal, getGlobalInst, isFunction, newId } from '@microsoft/applicationinsights-core-js';
 import { createSnippetV6 } from './testSnippetV6';
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from '@microsoft/applicationinsights-cfgsync-js';
 import { createSyncPromise } from '@nevware21/ts-async';
+import { ICfgSyncCdnConfig } from '@microsoft/applicationinsights-cfgsync-js/src/Interfaces/ICfgSyncCdnConfig';
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
-
-const tconfig = {
-    disabled: false,
-    limit: {
-        samplingRate: 1,
-        maxSendNumber:100
-    } as IThrottleLimit,
-    interval: {
-        monthInterval: 1,
-        daysOfMonth: [1], // must add here
-        dayInterval: undefined
-    } as IThrottleInterval
-} as IThrottleMgrConfig;
 
 const default_throttle_config = {
     disabled: true,
@@ -36,64 +24,61 @@ const default_throttle_config = {
     }
 } as IThrottleMgrConfig;
 
-const config = {
-    instrumentationKey:"testIkey",
-    enableAjaxPerfTracking: true,
-    throttleMgrCfg: {
-        109: { 
-            disabled: false,
-            limit: { 
-                samplingRate: 1000000,
-                maxSendNumber: 1
-            },
-            interval: {
-                monthInterval: 1,
-                daysOfMonth:[1]
-            }
+const throttleCfg = {
+    109: { 
+        disabled: false,
+        limit: { 
+            samplingRate: 1000000,
+            maxSendNumber: 2
         },
-        106: { 
-            disabled: false,
-            limit: { 
-                samplingRate: 1000000,
-                maxSendNumber: 1
-            },
-            interval: {
-                monthInterval: 1,
-                daysOfMonth:[1]
-            }
+        interval: {
+            monthInterval: 2,
+            daysOfMonth:[1]
+        }
+    },
+    106: { 
+        disabled: false,
+        limit: { 
+            samplingRate: 1000000,
+            maxSendNumber: 2
+        },
+        interval: {
+            monthInterval: 2,
+            daysOfMonth:[1]
         }
     }
-} as IConfiguration & IConfig;
+}
 
-const cdnOptinConfig = {
-    instrumentationKey:"testIkey",
-    enableAjaxPerfTracking: true,
-    throttleMgrCfg: {
-        109: { 
-            disabled: true,
-            limit: { 
-                samplingRate: 1000000,
-                maxSendNumber: 1
-            },
-            interval: {
-                monthInterval: 1,
-                daysOfMonth:[1]
-            }
+const throttleCfgDisable = {
+    109: { 
+        disabled: true,
+        limit: { 
+            samplingRate: 1000000,
+            maxSendNumber: 4
         },
-        106: { 
-            disabled: true,
-            limit: { 
-                samplingRate: 1000000,
-                maxSendNumber: 1
-            },
-            interval: {
-                monthInterval: 1,
-                daysOfMonth:[1]
-            }
+        interval: {
+            monthInterval: 4,
+            daysOfMonth:[1]
+        }
+    },
+    106: { 
+        disabled: true,
+        limit: { 
+            samplingRate: 1000000,
+            maxSendNumber: 4
+        },
+        interval: {
+            monthInterval: 4,
+            daysOfMonth:[1]
         }
     }
-} as IConfiguration & IConfig;
+}
 
+const sampleConfig = {
+    instrumentationKey:"testIkey",
+    enableAjaxPerfTracking: true,
+    throttleMgrCfg: throttleCfg
+} as IConfiguration & IConfig;
 
 
 export class CdnThrottle extends AITestClass {
@@ -105,6 +90,7 @@ export class CdnThrottle extends AITestClass {
     init: ApplicationInsights;
     private res: any;
     private _fetch: any;
+    loggingSpy: any;
 
     constructor() {
         super("CdnThrottle");
@@ -133,13 +119,33 @@ export class CdnThrottle extends AITestClass {
             let doc = getGlobal();
             let cdnCfg = {
                 enabled: true,
-                config: config
+                config: sampleConfig
             } as ICfgSyncConfig;
             let cdnFeatureOptInCfg = {
                 enabled: true,
-                config: cdnOptinConfig
+                featureOptIn:{
+                    ["enableWParamFeature"]: {mode: CdnFeatureMode.enable, onCfg: {["maxMessageLimit"]: 11}, offCfg: {["maxMessageLimit"]: 12}},
+                    ["iKeyUsage"]: {
+                    mode: CdnFeatureMode.enable,
+                    onCfg: {
+                        "throttleMgrCfg.106.disabled":false,
+                        "throttleMgrCfg.109.disabled":false,
+                    },
+                    offCfg: {
+                        "throttleMgrCfg.106.disabled":true,
+                        "throttleMgrCfg.109.disabled":true,
+                    }
+                }},
+                config: {
+                    maxMessageLimit: 10,
+                    throttleMgrCfg: throttleCfgDisable
+                }
             } as ICfgSyncConfig;
             doc["res"] = new (doc as any).Response(JSON.stringify(cdnCfg), {
+                status: 200,
+                headers: { "Content-type": "application/json" }
+            });
+            doc["res2"] = new (doc as any).Response(JSON.stringify(cdnFeatureOptInCfg), {
                 status: 200,
                 headers: { "Content-type": "application/json" }
             });
@@ -227,7 +233,7 @@ export class CdnThrottle extends AITestClass {
                 if (this.fetchStub.called){
                     let plugin = this._ai.appInsights['core'].getPlugin<CfgSyncPlugin>(this.identifier).plugin;
                     let newCfg = plugin.getCfg();
-                    Assert.equal(JSON.stringify(newCfg.throttleMgrCfg), JSON.stringify(config.throttleMgrCfg));
+                    Assert.equal(JSON.stringify(newCfg.throttleMgrCfg), JSON.stringify(sampleConfig.throttleMgrCfg));
                     // cdn should not be changed
                     let cdnCfg = this.init.config.throttleMgrCfg[_eInternalMessageId.CdnDeprecation];
                     Assert.equal(JSON.stringify(cdnCfg), JSON.stringify(default_throttle_config));
@@ -283,17 +289,91 @@ export class CdnThrottle extends AITestClass {
                 if (this.fetchStub.called){
                     let plugin = this._ai.appInsights['core'].getPlugin<CfgSyncPlugin>(this.identifier).plugin;
                     let newCfg = plugin.getCfg();
-                    Assert.equal(JSON.stringify(newCfg.throttleMgrCfg), JSON.stringify(config.throttleMgrCfg));
+                    Assert.equal(JSON.stringify(newCfg.throttleMgrCfg), JSON.stringify(sampleConfig.throttleMgrCfg));
                     // cdn should not be overwritten
                     let cdnCfg = this.init.config.throttleMgrCfg[_eInternalMessageId.CdnDeprecation];
                     Assert.equal(JSON.stringify(cdnCfg), JSON.stringify(default_throttle_config));
                     let ikeyCfg = this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation];
-                    Assert.equal(JSON.stringify(ikeyCfg), JSON.stringify(config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation]));
+                    Assert.equal(JSON.stringify(ikeyCfg), JSON.stringify(sampleConfig.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation]));
                     return true;
                 }
                 return false;
             }, "response received", 60, 1000) as any)
         });
+
+        this.testCaseAsync({
+            name: "CfgSyncPlugin: customer enable feature opt in, then the config in cdn feature opt in is applied",
+            stepDelay: 10,
+            useFakeTimers: true,
+            steps: [ () => {
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res2"]);
+                    }, 0);
+                });
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this.init = new ApplicationInsights({
+                    config:   {
+                        instrumentationKey: TestInstrumentationKey,
+                        extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
+                            syncMode: ICfgSyncMode.Receive,
+                            cfgUrl: "testurl"
+                        }},
+                        featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.enable}, 
+                        ["enableWParamFeature"]: {mode: FeatureOptInMode.enable}}
+                    }
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+            }].concat(PollingAssert.createPollingAssert(() => {
+   
+                if (this.fetchStub.called){
+                    Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation].disabled, false);
+                    Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.CdnDeprecation].disabled, true);
+                    Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation].limit?.maxSendNumber, throttleCfgDisable[_eInternalMessageId.InstrumentationKeyDeprecation].limit?.maxSendNumber);
+                    return true;
+                }
+                return false;
+            }, "response received", 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "CfgSyncPlugin: customer disable feature opt in, the origin config on cdn will apply",
+            stepDelay: 10,
+            useFakeTimers: true,
+            steps: [ () => {
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res2"]);
+                    }, 0);
+                });
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this.init = new ApplicationInsights({
+                    config:   {
+                        instrumentationKey: TestInstrumentationKey,
+                        extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
+                            syncMode: ICfgSyncMode.Receive,
+                            cfgUrl: "testurl"
+                        }},
+                        featureOptIn : {
+                        ["enableWParamFeature"]: {mode: FeatureOptInMode.enable}}
+                    }
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+            }].concat(PollingAssert.createPollingAssert(() => {
+                if (this.fetchStub.called){
+                    Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation].disabled, true);
+                    Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.CdnDeprecation].disabled, true);
+                    Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation].limit?.maxSendNumber, throttleCfgDisable[_eInternalMessageId.InstrumentationKeyDeprecation].limit?.maxSendNumber);
+                    return true;
+                }
+                return false;
+            }, "response received", 60, 1000) as any)
+        });
+       
        
     }
 }
