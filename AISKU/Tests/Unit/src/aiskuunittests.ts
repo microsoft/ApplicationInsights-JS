@@ -19,6 +19,6 @@ export function runTests() {
     new SenderE2ETests().registerTests();
     new SnippetInitializationTests(false).registerTests();
     new SnippetInitializationTests(true).registerTests();
-    // new ThrottleSentMessage().registerTests();
+    new ThrottleSentMessage().registerTests();
     new CdnThrottle().registerTests();
 }

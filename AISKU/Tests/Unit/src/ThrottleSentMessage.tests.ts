@@ -51,6 +51,9 @@ export class ThrottleSentMessage extends AITestClass {
 
     public testInitialize() {
         try {
+            if (window.localStorage){
+                window.localStorage.clear();
+            }
             this.useFakeServer = false;
             this._config = this._getTestConfig();
 
@@ -72,6 +75,9 @@ export class ThrottleSentMessage extends AITestClass {
         if (this._ai && this._ai.unload) {
             // force unload
             this._ai.unload(false);
+        }
+        if (window.localStorage){
+            window.localStorage.clear();
         }
     }
 

@@ -65,6 +65,35 @@ const config = {
     }
 } as IConfiguration & IConfig;
 
+const cdnOptinConfig = {
+    instrumentationKey:"testIkey",
+    enableAjaxPerfTracking: true,
+    throttleMgrCfg: {
+        109: { 
+            disabled: true,
+            limit: { 
+                samplingRate: 1000000,
+                maxSendNumber: 1
+            },
+            interval: {
+                monthInterval: 1,
+                daysOfMonth:[1]
+            }
+        },
+        106: { 
+            disabled: true,
+            limit: { 
+                samplingRate: 1000000,
+                maxSendNumber: 1
+            },
+            interval: {
+                monthInterval: 1,
+                daysOfMonth:[1]
+            }
+        }
+    }
+} as IConfiguration & IConfig;
+
 
 
 export class CdnThrottle extends AITestClass {
@@ -95,6 +124,9 @@ export class CdnThrottle extends AITestClass {
 
     public testInitialize() {
         try {
+            if (window.localStorage){
+                window.localStorage.clear();
+            }
             this.identifier = "AppInsightsCfgSyncPlugin";
             this._config = this._getTestConfig();
             this._fetch = getGlobalInst("fetch");
@@ -102,6 +134,10 @@ export class CdnThrottle extends AITestClass {
             let cdnCfg = {
                 enabled: true,
                 config: config
+            } as ICfgSyncConfig;
+            let cdnFeatureOptInCfg = {
+                enabled: true,
+                config: cdnOptinConfig
             } as ICfgSyncConfig;
             doc["res"] = new (doc as any).Response(JSON.stringify(cdnCfg), {
                 status: 200,
@@ -118,6 +154,9 @@ export class CdnThrottle extends AITestClass {
         }   
         this.fetchStub = null;
         getGlobal().fetch = this._fetch;
+        if (window.localStorage){
+            window.localStorage.clear();
+        }
     }
 
     public registerTests() {
@@ -255,11 +294,7 @@ export class CdnThrottle extends AITestClass {
                 return false;
             }, "response received", 60, 1000) as any)
         });
-
        
-
-
-
     }
 }
 
