@@ -1,8 +1,8 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { HttpManager } from "../../../src/HttpManager";
 import { AppInsightsCore, EventSendType, IExtendedConfiguration, SendRequestReason, TransportType, isBeaconsSupported } from "@microsoft/1ds-core-js";
-import { PostChannel, IXHROverride } from "../../../src/Index";
-import { IPostTransmissionTelemetryItem, IPayloadData, EventBatchNotificationReason, IChannelConfiguration } from "../../../src/DataModels";
+import { PostChannel, IXHROverride, IPayloadData } from "../../../src/Index";
+import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from "../../../src/DataModels";
 import { EventBatch } from "../../../src/EventBatch";
 
 interface EventDetail {

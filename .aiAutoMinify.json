@@ -10,6 +10,7 @@
                 "eLoggingSeverity",
                 "_eInternalMessageId",
                 "SendRequestReason",
+                "TransportType",
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason"
             ]

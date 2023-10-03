@@ -3,7 +3,7 @@ import { Sender } from "../../../src/Sender";
 import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, getGlobalInst,  safeGetLogger, getJSON, isString, isArray, arrForEach, isBeaconsSupported } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, getGlobalInst,  safeGetLogger, getJSON, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData, isFetchSupported} from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { ISenderConfig } from "../../../src/Interfaces";
 
@@ -118,6 +118,8 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(undefined, defaultSenderConfig.customHeaders, "Channel default customHeaders config is set");
                 QUnit.assert.equal(undefined, defaultSenderConfig.convertUndefined, "Channel default convertUndefined config is set");
                 QUnit.assert.equal(10000, defaultSenderConfig.eventsLimitInMem, "Channel default eventsLimitInMem config is set");
+                QUnit.assert.equal(undefined, defaultSenderConfig.httpXHROverride, "Channel default httpXHROverride config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.alwaysUseXhrOverride, "Channel default alwaysUseXhrOverride config is set");
 
                 //check dynamic config
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -131,7 +133,8 @@ export class SenderTests extends AITestClass {
                     isRetryDisabled: true,
                     disableXhr: true,
                     samplingPercentage: 90,
-                    customHeaders: [{header: "header1",value:"value1"}]
+                    customHeaders: [{header: "header1",value:"value1"}],
+                    alwaysUseXhrOverride: true
                 }
                 core.config.extensionConfig[id] = config;
                 this.clock.tick(1);
@@ -145,6 +148,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(true, curSenderConfig.isRetryDisabled, "Channel isRetryDisabled config is dynamically set");
                 QUnit.assert.equal(90, curSenderConfig.samplingPercentage, "Channel samplingPercentage config is dynamically set");
                 QUnit.assert.deepEqual([{header: "header1",value:"value1"}], curSenderConfig.customHeaders, "Channel customHeaders config is dynamically set");
+                QUnit.assert.deepEqual(true, curSenderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is dynamically set");
 
                 core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = undefined;
                 core.config.extensionConfig[this._sender.identifier].endpointUrl = undefined;
@@ -153,6 +157,137 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false,  this._sender._senderConfig.emitLineDelimitedJson, "Channel default emitLineDelimitedJson config is set");
             }
         });
+
+        this.testCase({
+            name: "Channel Config: Sender override can be handled correctly",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let sentPayloadData: any[] = [];
+                var xhrOverride: IXHROverride = {
+                    sendPOST: (payload: IPayloadData, oncomplete: (status: number, headers: {[headerName: string]: string;}, response?: string) => void, sync?: boolean) => {
+                        sentPayloadData.push({payload: payload, sync: sync});
+                    }
+                };
+
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: xhrOverride
+                        }
+                    }
+                }
+                let testBatch: string[] = ["test", "test1"];
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "test",
+                    baseType: "some type",
+                    baseData: {}
+                };
+                core.initialize(coreConfig, [this._sender]);
+
+                // with always override to false
+                QUnit.assert.deepEqual(xhrOverride, this._sender._senderConfig.httpXHROverride, "Channel httpXHROverride config is set");
+                QUnit.assert.deepEqual(false, this._sender._senderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is set");
+                this._sender._sender(testBatch, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once with always override to false");
+                this._sender._sender(testBatch, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once  with always override to false test1");
+
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+                this._sender.onunloadFlush();
+                QUnit.assert.deepEqual(0, sentPayloadData.length, "httpXHROverride should not be called again test2");
+
+
+                // with always override to true
+                core.config.extensionConfig = core.config.extensionConfig || {};
+                core.config.extensionConfig[this._sender.identifier].alwaysUseXhrOverride = true;
+                this.clock.tick(1);
+                QUnit.assert.deepEqual(true, this._sender._senderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is set to true dynamically");
+                this._sender._sender(testBatch, true);
+                QUnit.assert.deepEqual(1, sentPayloadData.length, "httpXHROverride should be called with always override to true");
+                let payload = sentPayloadData[0].payload;
+                let sync = sentPayloadData[0].sync;
+                QUnit.assert.equal(false, sync, "Channel httpXHROverride sync is called with false during send test1 (sender interface should be opposite with the sender)");
+                QUnit.assert.deepEqual(testBatch, payload.oriPayload, "Channel httpXHROverride sync is called with expected original payload");
+                QUnit.assert.deepEqual(this._sender._buffer.batchPayloads(testBatch),payload.data, "Channel httpXHROverride sync is called with expected batch payload");
+
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+                this._sender.onunloadFlush();
+                QUnit.assert.deepEqual(2, sentPayloadData.length, "httpXHROverride should be called");
+                let data = sentPayloadData[1].payload.oriPayload;
+                payload = JSON.parse(data[0]);
+                QUnit.assert.deepEqual("test", payload.iKey, "httpXHROverride should send expected payload test1");
+                sync = sentPayloadData[1].sync;
+                QUnit.assert.equal(true, sync, "Channel httpXHROverride sync is called with true during send test2 (sender interface should be opposite with the sender)");
+                
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Invalid paylod Sender should not be sent",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let sentPayloadData: any[] = [];
+                var xhrOverride: IXHROverride = {
+                    sendPOST: (payload: IPayloadData, oncomplete: (status: number, headers: {[headerName: string]: string;}, response?: string) => void, sync?: boolean) => {
+                        sentPayloadData.push({payload: payload, sync: sync});
+                    }
+                };
+
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: xhrOverride,
+                            alwaysUseXhrOverride: true
+                        }
+                    }
+                }
+                let testBatch: string[] = ["test", "test1"];
+           
+                core.initialize(coreConfig, [this._sender]);
+
+                QUnit.assert.deepEqual(xhrOverride, this._sender._senderConfig.httpXHROverride, "Channel httpXHROverride config is set");
+                QUnit.assert.deepEqual(true, this._sender._senderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is set");
+                // case 1: payload is null
+                this._sender._sender(null as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test1");
+                this._sender._sender(null as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test1");
+
+                // case 2: payload is none array
+                this._sender._sender({} as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test2");
+                this._sender._sender({} as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test2");
+
+                // case 3: payload is an empty array
+                this._sender._sender([] as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test3");
+                this._sender._sender([] as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test3");
+
+                
+                this._sender._sender(testBatch, true);
+                QUnit.assert.equal(1, sentPayloadData.length, "httpXHROverride is called test4");
+                this._sender._sender(testBatch, false);
+                QUnit.assert.equal(2, sentPayloadData.length, "httpXHROverride is called once sync test4");
+                
+                
+            }
+        });
+
 
         this.testCase({
             name: "Channel Config: sessionStorage change from true to false can be handled correctly",

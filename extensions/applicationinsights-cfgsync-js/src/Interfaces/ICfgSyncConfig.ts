@@ -4,47 +4,49 @@ import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 export interface ICfgSyncConfig {
     /**
      * Identifies whether instance should receive or broadcast config changes
-     * Default to broadcast
+     * @default Broadcast
      */
     syncMode?: ICfgSyncMode;
     /**
-     * Identifies event name that changes will be sent out with. And all listener instances will listen to event details under this name.
-     * Default to cfgsync.
+     * Event name for sending or listening to configuration change details
+     * @default ai_cfgsync
      */
     customEvtName?: string;
      /**
-     * Identifies endpoint to get config rather than core config.
-     * Default to null.
-     * If set, any core config changes will be ignored.
+     * CDN endpoint for fetching configuration. If cfgUrl is defined, instance will NOT listen to core configuration changes.
+     * @default null
      */
     cfgUrl?: string;
-
     /**
-     * Identifies if fetching cdn endpoint should be blocked
-     * Default to false.
+     * Determines if fetching the CDN endpoint should be blocked or not.
+     * @default false
      */
     blkCdnCfg?: boolean;
     /**
-     * Overrides callback function to handle event details when changes are received via eventListener.
+     *  Overrides callback function to handle event details when changes are received via event listener.
+     * @default null
      */
     onCfgChangeReceive?: (event?: ICfgSyncEvent) => void;
     /**
-     * Overrides sync() function to broadcast changes.
+     * Overrides sync() function to broadcast changes.\
+     * @default null
      */
     overrideSyncFn?: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
     /**
-     * Overrides fetch function to get config from cfgUrl.
+     * Overrides fetch function to get config from cfgUrl when cfgUrl is defined.
+     * @default null
      */
     overrideFetchFn?: SendGetFunction;
     /**
-     * Identifies configs that should NOT be changed by other instances.
-     * Default to {instrumentationKey: true, connectionString: true, endpointUrl: true }
+     * When current instance is set with syncMode: `Receive`, config fields under nonOverrideConfigs will NOT be changed by any confif details sent out from other instances.
+     * @default {instrumentationKey:true,connectionString:true,endpointUrl:true}
      */
     nonOverrideConfigs?: NonOverrideCfg;
     /**
-     * Identifies time interval (in ms) that should fetch from cfgUrl.
+     * Identifies the time interval (in milliseconds) for fetching config details from cfgUrl when cfgUrl is defined.
      * Default to 30 mins, 30*60*1000ms.
-     * If set to 0, fetch will only be called once during initialization.
+     * If set to 0, the fetch operation will only be called once during initialization.
+     * @default 30mins (30*60*1000ms)
      */
     scheduleFetchTimeout?: number;
 }
