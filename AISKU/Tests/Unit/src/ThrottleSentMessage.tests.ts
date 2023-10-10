@@ -112,10 +112,41 @@ export class ThrottleSentMessage extends AITestClass {
                 config.throttleMgrCfg= {[_eInternalMessageId.CdnDeprecation]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                 this._ai.context.internal.sdkSrc = "az416426";
                 this.clock.tick(1);
-                Assert.ok(loggingSpy.called);
+                Assert.equal(loggingSpy.called, 1);
                 Assert.equal(_eInternalMessageId.CdnDeprecation, loggingSpy.args[0][1]);
                 let message= loggingSpy.args[0][2];
                 Assert.ok(message.includes("Cdn"));
+            }
+        });
+        this.testCase({
+        name: "ThrottleSentMessage: Message will not be sent again when other config change",
+        useFakeTimers: true,
+            test: () => {
+                Assert.ok(this._ai, 'ApplicationInsights SDK exists');
+                Assert.ok(this._ai.appInsights, 'App Analytics exists');
+                Assert.equal(true, this._ai.appInsights.isInitialized(), 'App Analytics is initialized');
+
+                Assert.ok(this._ai.appInsights.core, 'Core exists');
+                Assert.equal(true, this._ai.appInsights.core.isInitialized(),
+                    'Core is initialized');
+                let loggingSpy = this.sandbox.stub(this._logger, 'throwInternal');
+
+                let config = this.getAi.config;
+
+                config.throttleMgrCfg= {[_eInternalMessageId.CdnDeprecation]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
+                config.featureOptIn = {["CdnUsage"]: {mode: FeatureOptInMode.enable},["iKeyUsage"]: {mode: FeatureOptInMode.enable}};
+                this._ai.context.internal.sdkSrc = "az416426";
+                this.clock.tick(1);
+                Assert.equal(loggingSpy.called, 1);
+                console.log("is called", loggingSpy.callCount);
+                Assert.equal(_eInternalMessageId.CdnDeprecation, loggingSpy.args[0][1]);
+                let message= loggingSpy.args[0][2];
+                Assert.ok(message.includes("Cdn"));
+                
+                config.instrumentationKey = "newinstrumentkey";
+                this.clock.tick(1);
+                Assert.equal(loggingSpy.called, 1);
+
             }
         });
     }
@@ -144,7 +175,7 @@ export class ThrottleSentMessage extends AITestClass {
                 config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.enable}};
                 this.clock.tick(1);
 
-                Assert.ok(loggingSpy.called);
+                Assert.equal(loggingSpy.called, 1);
                 Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, loggingSpy.args[0][1]);
                 let message= loggingSpy.args[0][2];
                 Assert.ok(message.includes("Instrumentation key"));
@@ -185,7 +216,7 @@ export class ThrottleSentMessage extends AITestClass {
                     snippet.config.throttleMgrCfg= {[_eInternalMessageId.SdkLdrUpdate]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                     snippet.config.featureOptIn = {["SdkLoaderVer"]: {mode: FeatureOptInMode.enable}}
                     this.clock.tick(1);
-                    Assert.ok(loggingSpy.called);
+                    Assert.equal(loggingSpy.called, 1);
                     Assert.equal(_eInternalMessageId.SdkLdrUpdate, loggingSpy.args[0][1]);
             }
         });

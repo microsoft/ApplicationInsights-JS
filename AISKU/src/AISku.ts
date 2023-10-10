@@ -310,23 +310,17 @@ export class AppInsightsSku implements IApplicationInsights {
                         var result;
                         if (!_iKeySentMessage && !_config.connectionString && isFeatureEnabled(IKEY_USAGE, _config)) {
                             result = _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "See Instrumentation key support at aka.ms/IkeyMigrate");
-                            if (result && result.isThrottled){
-                                _iKeySentMessage = true;
-                            }
+                            _iKeySentMessage = true;
                         }
 
                         if (!_cdnSentMessage && _self.context.internal.sdkSrc && _self.context.internal.sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled(CDN_USAGE, _config)) {
                             result = _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "See Cdn support notice at aka.ms/JsActiveCdn");
-                            if (result && result.isThrottled){
-                                _cdnSentMessage = true;
-                            }
+                            _cdnSentMessage = true;
                         }
                        
                         if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled(SDK_LOADER_VER, _config)) {
                             result = _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
-                            if (result && result.isThrottled){
-                                _sdkVerSentMessage = true;
-                            }
+                            _sdkVerSentMessage = true;
                         }
                         
                     }));

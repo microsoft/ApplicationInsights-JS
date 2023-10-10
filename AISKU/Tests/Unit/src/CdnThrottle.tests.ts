@@ -195,12 +195,12 @@ export class CdnThrottle extends AITestClass {
                     let core = this._ai['core'];
                     let _logger = core.logger;
                     let loggingSpy = this.sandbox.stub(_logger, 'throwInternal');
-                    Assert.ok(!loggingSpy.called);
+                    Assert.equal(loggingSpy.called, 0);
 
                     // now enable feature
                     this.init.config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.enable}};
                     this.clock.tick(1);
-                    Assert.ok(loggingSpy.called);
+                    Assert.equal(loggingSpy.called, 1);
                     Assert.equal(_eInternalMessageId.InstrumentationKeyDeprecation, loggingSpy.args[0][1]);
                     let message= loggingSpy.args[0][2];
                     Assert.ok(message.includes("Instrumentation key"));
