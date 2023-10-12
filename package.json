@@ -30,7 +30,8 @@
         "ai-restore": "node common/scripts/install-run-rush.js ai-restore",
         "npm-pack": "node common/scripts/install-run-rush.js npm-pack --verbose",
         "npm-publish": "node ./tools/release-tools/npm_publish.js",
-        "npm-set-latest": "node ./tools/release-tools/npm_set_latest.js"
+        "npm-set-latest": "node ./tools/release-tools/npm_set_latest.js",
+        "gh-status": "node ./tools/status-tools/github-status.js"
     },
     "repository": {
         "type": "git",
