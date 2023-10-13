@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrReduce, objKeys } from "@microsoft/applicationinsights-core-js";
+import { arrReduce, objKeys, strEndsWith } from "@microsoft/applicationinsights-core-js";
 import { DEFAULT_BREEZE_ENDPOINT } from "./Constants";
 import { ConnectionString, ConnectionStringKey } from "./Interfaces/ConnectionString";
 
@@ -37,6 +37,10 @@ export function parseConnectionString(connectionString?: string): ConnectionStri
 
         // apply the default endpoints
         result.ingestionendpoint = result.ingestionendpoint || DEFAULT_BREEZE_ENDPOINT;
+        
+        if (strEndsWith(result.ingestionendpoint, "/")) {
+            result.ingestionendpoint = result.ingestionendpoint.slice(0,-1);
+        }
     }
 
     return result;
