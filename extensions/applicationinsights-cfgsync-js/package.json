@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-cfgsync-js",
-    "version": "0.0.2",
+    "version": "3.0.3",
     "description": "Microsoft Application Insights CfgSync Plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
