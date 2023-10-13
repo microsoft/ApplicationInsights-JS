@@ -4,7 +4,7 @@
 import {
     IDiagnosticLogger, arrForEach, arrMap, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { strIndexOf } from "@nevware21/ts-utils";
+import { getWindow, strIndexOf } from "@nevware21/ts-utils";
 import { strNotSpecified } from "../Constants";
 import { FieldType } from "../Enums";
 import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";
@@ -156,7 +156,7 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
                 details = errorObj;
             } else if (_isStackDetails(errorObj[strStackDetails])) {
                 details = errorObj[strStackDetails];
-            } else if (window && window["opera"] && errorObj[strMessage]) {
+            } else if (getWindow() && getWindow()["opera"] && errorObj[strMessage]) {
                 // Opera
                 details = _getOperaStack(errorObj.message);
             } else if (errorObj["reason"] && errorObj.reason[strStack]) {
