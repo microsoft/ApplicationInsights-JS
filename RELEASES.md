@@ -17,6 +17,7 @@
 - #2169 [Main][Task]24499172: add throttle manager doc 
 - #2170 [Main][Task]24499174: Add service notification doc 
 - #2173 Add Issue state reporting script 
+- #2174 [main] remove double slash for endPointUrl
 
 ## 3.0.3 (Sep 20th, 2023)
 
