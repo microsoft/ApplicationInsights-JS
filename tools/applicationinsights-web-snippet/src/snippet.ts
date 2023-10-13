@@ -96,6 +96,9 @@ declare var cfg:ISnippetConfig;
             let conString = _parseConnectionString();
             let iKey = conString[strConStringIKey] || aiConfig[strInstrumentationKey] || strEmpty;
             let ingest = conString[strIngestionendpoint];
+            if (ingest && ingest.slice(-1) === "/"){
+                ingest = ingest.slice(0,-1);
+            }
             let endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
 
             let message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
