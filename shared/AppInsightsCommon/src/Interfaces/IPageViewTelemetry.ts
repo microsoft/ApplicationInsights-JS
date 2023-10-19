@@ -47,6 +47,11 @@ export interface IPageViewTelemetry extends IPartC {
      * iKey String - custom defined iKey.
      */
       iKey?: string;
+
+    /**
+     * Time first page view is triggered
+    */
+    startTime?: Date;
 }
 
 
