@@ -9,7 +9,7 @@ import {
     IAppInsightsCore, IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
     arrForEach, dumpObj, eLoggingSeverity, getDocument, getExceptionName, getLocation, isNullOrUndefined
 } from "@microsoft/applicationinsights-core-js";
-import { ITimerHandler, isWebWorker, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, getPerformance, isUndefined, isWebWorker, scheduleTimeout } from "@nevware21/ts-utils";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 
 /**
@@ -35,6 +35,7 @@ export class PageViewManager {
             let queueTimer: ITimerHandler = null;
             let itemQueue: Array<() => boolean> = [];
             let pageViewPerformanceSent: boolean = false;
+            let firstPageViewSent: boolean = false;
             let _logger: IDiagnosticLogger;
                     
             if (core) {
@@ -94,6 +95,24 @@ export class PageViewManager {
                 if (isNullOrUndefined(uri) || typeof uri !== "string") {
                     let location = getLocation();
                     uri = pageView.uri = location && location.href || "";
+                }
+
+                if (!firstPageViewSent){
+                    let perf = getPerformance();
+                    // Access the performance timing object
+                    const navigationEntries = (perf && perf.getEntriesByType && perf.getEntriesByType("navigation"));
+    
+                    // Edge Case the navigation Entries may return an empty array and the timeOrigin is not supported on IE
+                    if (navigationEntries && navigationEntries[0] && !isUndefined(perf.timeOrigin)) {
+                        // Get the value of loadEventStart
+                        const loadEventStart = (navigationEntries[0] as PerformanceNavigationTiming).loadEventStart;
+                        pageView.startTime =  new Date(perf.timeOrigin + loadEventStart);
+                    } else {
+                        // calculate the start time manually
+                        let duration = ((customProperties || pageView.properties || {}).duration || 0);
+                        pageView.startTime = new Date(new Date().getTime() - duration);
+                    }
+                    firstPageViewSent = true;
                 }
         
                 // case 1a. if performance timing is not supported by the browser, send the page view telemetry with the duration provided by the user. If the user

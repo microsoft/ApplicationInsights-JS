@@ -37,6 +37,10 @@ export interface IPageViewPerformanceTelemetry extends IPartC {
      * DOM processing time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
      */
     domProcessing?: string;
+     /**
+     * Time first page view is triggered
+     */
+    startTime?: Date;
 }
 
 export interface IPageViewPerformanceTelemetryInternal extends IPageViewPerformanceTelemetry {
