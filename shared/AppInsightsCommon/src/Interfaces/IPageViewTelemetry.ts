@@ -47,6 +47,11 @@ export interface IPageViewTelemetry extends IPartC {
      * iKey String - custom defined iKey.
      */
       iKey?: string;
+
+    /**
+     * Time first page view is triggered
+    */
+    startTime?: Date;
 }
 
 
@@ -62,5 +67,4 @@ export interface IPageViewTelemetryInternal extends IPageViewTelemetry {
      * Version of the part B schema, todo: set this value in trackpageView
      */
     ver?: string;
-    startTime?: Date;
 }
