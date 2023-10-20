@@ -21,7 +21,7 @@ import {
     isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { getPerformance, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -284,6 +284,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 let doc = getDocument();
                 if (doc) {
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
+                }
+                if (isNullOrUndefined(pageView.startTime)) {
+                    // calculate the start time manually
+                    let duration = ((properties || pageView.properties || {}).duration || 0);
+                    pageView.startTime = new Date(new Date().getTime() - duration);
                 }
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,
