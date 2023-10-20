@@ -18,6 +18,9 @@
 - #2170 [Main][Task]24499174: Add service notification doc 
 - #2173 Add Issue state reporting script 
 - #2174 [main] remove double slash for endPointUrl
+- #2177 [Main]Set CfgSync version to 3.0.3 
+- #2178 [main] use helper func to get window 
+- #2183 [main] fix startTime timestamp 
 
 ## 3.0.3 (Sep 20th, 2023)
 
