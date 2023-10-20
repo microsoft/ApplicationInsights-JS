@@ -78,11 +78,11 @@
         },
         "@microsoft/applicationinsights-cfgsync-js": {
             "package": "extensions/applicationinsights-cfgsync-js/package.json",
-            "release": "0.0.3"
+            "release": "3.0.4"
         },
         "@microsoft/applicationinsights-example-cfgsync": {
             "package": "examples/cfgSync/package.json",
-            "release": "0.0.3"
+            "release": "3.0.4"
         },
         "@microsoft/1ds-post-js": {
             "package": "channels/1ds-post-js/package.json",
