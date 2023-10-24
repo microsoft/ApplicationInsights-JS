@@ -207,7 +207,6 @@ export class HttpManager {
         let _responseHandlers: Array<(responseText: string) => void> = [];
         let _isInitialized: boolean;
         let _timeoutWrapper: ITimeoutOverrideWrapper;
-        let _persistStorage: boolean;
 
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
@@ -255,6 +254,11 @@ export class HttpManager {
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
+                        
+                        if (!!core.getPlugin("LocalStorage")) {
+                            // Always disable fetch keep alive when persisten storage is available
+                            _disableFetchKeepAlive = true;
+                        }
             
                         _useBeacons = !isReactNative(); // Only use beacons if not running in React Native
                         _serializer = new Serializer(_core, valueSanitizer, stringifyObjects, enableCompoundKey);
@@ -313,11 +317,6 @@ export class HttpManager {
                             [EventSendType.SyncFetch]: fetchSyncHttpInterface || _getSenderInterface([TransportType.Fetch, TransportType.Beacon], true) || syncHttpInterface || _getSenderInterface([TransportType.Xhr], true)
                         };
                     }));
-
-                    _persistStorage = !!core.getPlugin("LocalStorage");
-                    if (_persistStorage){
-                        _useBeacons = false;
-                    }
 
                     _isInitialized = true;
                 }
@@ -442,7 +441,6 @@ export class HttpManager {
                 _responseHandlers = [];
                 _isInitialized = false;
                 _timeoutWrapper = createTimeoutWrapper();
-                _persistStorage = false;
             }
     
             function _fetchSendPost(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
@@ -603,8 +601,10 @@ export class HttpManager {
                     let nav = getNavigator();
                     if (!nav.sendBeacon(theUrl, payload.data)) {
                         if (thePayload) {
+                            let persistStorage = !!_core.getPlugin("Localstorage");
                             // Failed to send entire payload so try and split data and try to send as much events as possible
                             let droppedBatches: EventBatch[] = [];
+                            let sentBatches: EventBatch[] = [];
                             arrForEach(thePayload.batches, (theBatch) => {
                                 if (droppedBatches && theBatch && theBatch.count() > 0) {
                                     let theEvents = theBatch.events();
@@ -613,6 +613,8 @@ export class HttpManager {
                                             // Can't send anymore, so split the batch and drop the rest
                                             droppedBatches.push(theBatch.split(lp));
                                             break;
+                                        } else {
+                                            sentBatches.push(theBatch.split(lp));
                                         }
                                     }
                                 } else {
@@ -621,10 +623,14 @@ export class HttpManager {
                                 }
                             });
 
-                            if (!_persistStorage){ // when we have persistStorage, we would not even go into this func
-                                _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                            if (sentBatches.length > 0) {
+                                // Update the payload with the sent batches
+                                thePayload.sentEvts = sentBatches;
                             }
 
+                            if (!persistStorage) {
+                                _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                            }
                         } else {
                             status = 0;
                         }
@@ -1215,7 +1221,9 @@ export class HttpManager {
                         _postManager._backOffTransmission();
                     }
 
+                    let theBatches = thePayload.batches;
                     if (batchReason === EventBatchNotificationReason.Complete) {
+                        theBatches = thePayload.sentEvts || thePayload.batches;
                         if (!backOffTrans && !thePayload.isSync) {
                             // We have a successful async response, so the lets open the floodgates
                             // The reason for checking isSync is to avoid unblocking if beacon send occurred as it
@@ -1223,11 +1231,11 @@ export class HttpManager {
                             _postManager._clearBackOff();
                         }
 
-                        _addCompleteTimings(thePayload.batches);
+                        _addCompleteTimings(theBatches);
                     }
 
                     // Send the notifications synchronously
-                    _sendBatchesNotification(thePayload.batches, batchReason, thePayload.sendType, true);
+                    _sendBatchesNotification(theBatches, batchReason, thePayload.sendType, true);
 
                 } finally {
                     if (thePayload.sendType === EventSendType.Batched) {
