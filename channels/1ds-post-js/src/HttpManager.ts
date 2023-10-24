@@ -313,6 +313,11 @@ export class HttpManager {
                         };
                     }));
 
+                    _persistStorage = !!core.getPlugin("LocalStorage");
+                    if (_persistStorage){
+                        _useBeacons = false;
+                    }
+
                     _isInitialized = true;
                 }
             };
@@ -436,6 +441,7 @@ export class HttpManager {
                 _responseHandlers = [];
                 _isInitialized = false;
                 _timeoutWrapper = createTimeoutWrapper();
+                _persistStorage = false;
             }
     
             function _fetchSendPost(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
@@ -614,7 +620,10 @@ export class HttpManager {
                                 }
                             });
 
-                            _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                            if (!_persistStorage){ // when we have persistStorage, we would not even go into this func
+                                _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                            }
+
                         } else {
                             status = 0;
                         }
