@@ -482,14 +482,19 @@ export class HttpManager {
                     if (response.body) {
                         response.text().then(function(text) {
                             responseText = text;
+                            if (!responseHandled) {
+                                responseHandled = true;
+                                _doOnComplete(oncomplete, response.status, headerMap, responseText);
+                                _handleCollectorResponse(responseText);
+                            }
                         });
+                    } else {
+                        if (!responseHandled) {
+                            responseHandled = true;
+                            _doOnComplete(oncomplete, 0, {});
+                        }
                     }
-
-                    if (!responseHandled) {
-                        responseHandled = true;
-                        _doOnComplete(oncomplete, response.status, headerMap, responseText);
-                        _handleCollectorResponse(responseText);
-                    }
+                  
                 }).catch((error) => {
                     // In case there is an error in the request. Set the status to 0
                     // so that the events can be retried later.
