@@ -207,6 +207,7 @@ export class HttpManager {
         let _responseHandlers: Array<(responseText: string) => void> = [];
         let _isInitialized: boolean;
         let _timeoutWrapper: ITimeoutOverrideWrapper;
+        let _persistStorage: boolean;
 
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
