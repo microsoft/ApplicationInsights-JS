@@ -2,6 +2,26 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.4 (Oct 16th, 2023)
+
+### Changelog
+
+- CfgSyncPlugin improvment
+  - #2166 [main] correct throttle configdefault setting in aisku 
+  - #2168 [Main][Task]24499167: add cfgSync plugin doc 
+  - #2171 [main] test aisku config could correctly merge new config fetch from cdn 
+  - #2175 [main] Update Service Notifications to not send message twice 
+
+- #2160 [Main] Include Config sync in publish group 
+- #2165 [main] use proper URL for tracking when fetch is passed an empty string 
+- #2169 [Main][Task]24499172: add throttle manager doc 
+- #2170 [Main][Task]24499174: Add service notification doc 
+- #2173 Add Issue state reporting script 
+- #2174 [main] remove double slash for endPointUrl
+- #2177 [Main]Set CfgSync version to 3.0.3 
+- #2178 [main] use helper func to get window 
+- #2183 [main] fix startTime timestamp 
+
 ## 3.0.3 (Sep 20th, 2023)
 
 ### Changelog
