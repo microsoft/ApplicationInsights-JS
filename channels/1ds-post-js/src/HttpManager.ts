@@ -470,7 +470,7 @@ export class HttpManager {
                     requestInit.headers = payload.headers;
                 }
 
-                const handleResponse = (status, headerMap, responseText) => {
+                const handleResponse = (status: number, headerMap: { [x: string]: string; }, responseText: string) => {
                     if (!responseHandled) {
                         responseHandled = true;
                         _doOnComplete(oncomplete, status, headerMap, responseText);
@@ -478,7 +478,7 @@ export class HttpManager {
                     }
                 };
             
-                const handleError = (error) => {
+                const handleError = () => {
                     // In case there is an error in the request. Set the status to 0
                     // so that the events can be retried later.
                     if (!responseHandled) {
