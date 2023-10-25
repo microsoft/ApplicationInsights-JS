@@ -1,6 +1,6 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { HttpManager } from "../../../src/HttpManager";
-import { AppInsightsCore, EventSendType, IExtendedConfiguration, SendRequestReason, TransportType, isBeaconsSupported } from "@microsoft/1ds-core-js";
+import { AppInsightsCore, BaseTelemetryPlugin, EventSendType, IAppInsightsCore, IConfiguration, IExtendedConfiguration, IPlugin, IProcessTelemetryContext, ITelemetryItem, SendRequestReason, TransportType, isBeaconsSupported } from "@microsoft/1ds-core-js";
 import { PostChannel, IXHROverride, IPayloadData } from "../../../src/Index";
 import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from "../../../src/DataModels";
 import { EventBatch } from "../../../src/EventBatch";
@@ -554,6 +554,53 @@ export class HttpManagerTest extends AITestClass {
                     QUnit.assert.equal(beaconCalls.length, 1, "Expect thant sendBeacon was called")
                 }
             });
+
+            this.testCase({
+                name: "135beacon for teardown is not used when localStorage is provided",
+                useFakeTimers: true,
+                test: () => {
+                    let beaconCalls = [];
+                    this.hookSendBeacon((url, data) => {
+                        beaconCalls.push({
+                            url,
+                            data,
+                        });
+                        return true;
+                    });
+                    var fetchCalls = this.hookFetch((resolve) => {
+                        setTimeout(function() {
+                            resolve();
+                        }, 0);
+                    });
+    
+                        var manager: HttpManager = new HttpManager(500, 2, 1, {
+                        requeue: _requeueNotification,
+                        send: _sendNotification,
+                        sent: _sentNotification,
+                        drop: _dropNotification
+                    });
+                    let localStorage = new LocalStorageChannel();
+                    console.log("--------------create local sotrage");
+
+                    const cbSpy = this.sandbox.spy();
+                    this.core.config.extensionConfig![this.postManager.identifier].payloadListener = cbSpy;
+                    this.core.addPlugin(localStorage);
+
+                    this.core.config.endpointUrl = "testEndpoint";
+                    manager.initialize(this.core.config, this.core, this.postManager);
+                    QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0]._transport, TransportType.Xhr, "Make sure that XHR was actually selected as the transport");
+    
+                    manager.addBatch(EventBatch.create("testToken", [this._createEvent()]));
+                    QUnit.assert.ok(cbSpy.notCalled); // precondition
+                    manager.teardown();
+                    QUnit.assert.ok(cbSpy.calledOnce, "listener should be called when the manager makes an HTTP request");
+                    QUnit.assert.ok(cbSpy.args[0][2], "listener should have been told its a sync request");
+                    QUnit.assert.ok(cbSpy.args[0][3], "listener should have been told its a beacon request");
+                    QUnit.assert.equal(fetchCalls.length, 0, "Make sure fetch was not called as beacons should be used for teardown");
+                    QUnit.assert.equal(beaconCalls.length, 1, "Expect thant sendBeacon was called")
+                }
+            });
+
 
             this.testCase({
                 name: "payloadListener called during teardown without xhr override using fetch",
@@ -1879,6 +1926,7 @@ export class HttpManagerTest extends AITestClass {
                     QUnit.assert.equal(this._requeueEvents.length, 0);
                     QUnit.assert.notEqual(beaconCalls[0].url, "");
                     QUnit.assert.equal(beaconCalls[0].data, "{\"name\":\"testEvent1\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}\n{\"name\":\"testEvent2\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}\n{\"name\":\"testEvent3\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}");
+                    console.log("1929", testBatch.events()[0]);
                     QUnit.assert.equal(testBatch.events()[0].sendAttempt, 1);
                     QUnit.assert.notEqual(beaconCalls[1].url, "");
                     QUnit.assert.equal(beaconCalls[1].data, "{\"name\":\"testEvent1\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}");
@@ -2419,4 +2467,12 @@ export class HttpManagerTest extends AITestClass {
 
         return testEvent;
     }
+}
+
+class LocalStorageChannel  extends BaseTelemetryPlugin implements IPlugin {
+    processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext | undefined): void {
+        throw new Error("Method not implemented.");
+    }
+    public identifier: string = "LocalStorage";    
+    
 }

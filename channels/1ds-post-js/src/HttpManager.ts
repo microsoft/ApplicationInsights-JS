@@ -254,6 +254,7 @@ export class HttpManager {
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
+
                         
                         if (!!core.getPlugin("LocalStorage")) {
                             // Always disable fetch keep alive when persisten storage is available
@@ -601,7 +602,7 @@ export class HttpManager {
                     let nav = getNavigator();
                     if (!nav.sendBeacon(theUrl, payload.data)) {
                         if (thePayload) {
-                            let persistStorage = !!_core.getPlugin("Localstorage");
+                            let persistStorage = !!_core.getPlugin("LocalStorage");
                             // Failed to send entire payload so try and split data and try to send as much events as possible
                             let droppedBatches: EventBatch[] = [];
                             let sentBatches: EventBatch[] = [];
@@ -614,7 +615,7 @@ export class HttpManager {
                                             droppedBatches.push(theBatch.split(lp));
                                             break;
                                         } else {
-                                            sentBatches.push(theBatch.split(lp));
+                                            sentBatches.push(theBatch[lp]);
                                         }
                                     }
                                 } else {
@@ -627,7 +628,7 @@ export class HttpManager {
                                 // Update the payload with the sent batches
                                 thePayload.sentEvts = sentBatches;
                             }
-
+                            
                             if (!persistStorage) {
                                 _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
                             }
