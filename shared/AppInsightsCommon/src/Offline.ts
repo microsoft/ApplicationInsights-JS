@@ -81,6 +81,9 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
 
     function _setOnlineState(isOnline: boolean){
         _onlineStatus = isOnline;
+        listenerList.forEach((callback: OfflineCallback) => {
+            callback();
+        });
     }
 
     function _isOnline(): boolean {
