@@ -1,26 +1,26 @@
 import {
-    IUnloadHook,
-    createUniqueNamespace, eventOff, eventOn, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined, mergeEvtNamespace
+    IUnloadHook, createUniqueNamespace, eventOff, eventOn, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined,
+    mergeEvtNamespace
 } from "@microsoft/applicationinsights-core-js";
 
 export type OfflineCallback = () => void;
-export const enum eOfflineValue { 
-    Unknown = 0, 
-    Online = 1, 
-    Offline = 2 
-};
-export interface IOfflineState { 
-    readonly isOnline: boolean; 
-    readonly rState: eOfflineValue; // runtime state 
-    readonly uState: eOfflineValue;// user state 
-};
-export declare function OfflineCallback(state?: IOfflineState): void;  
+export const enum eOfflineValue {
+    Unknown = 0,
+    Online = 1,
+    Offline = 2
+}
+export interface IOfflineState {
+    readonly isOnline: boolean;
+    readonly rState: eOfflineValue; // runtime state
+    readonly uState: eOfflineValue;// user state
+}
+export declare function OfflineCallback(state?: IOfflineState): void;
 export interface IOfflineListener {
     isOnline: () => boolean;
     isListening: () => boolean;
     unload: () => void;
     _setOnlineState: (isOnline: boolean) => void;
-    addListener(callback: OfflineCallback): IUnloadHook;  
+    addListener(callback: OfflineCallback): IUnloadHook;
     namespace?: string;
 }
 
