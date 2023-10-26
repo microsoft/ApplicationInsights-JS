@@ -556,7 +556,7 @@ export class HttpManagerTest extends AITestClass {
             });
 
             this.testCase({
-                name: "135beacon for teardown is not used when localStorage is provided",
+                name: "SendBeacon would not drop batches when local storage is available",
                 useFakeTimers: true,
                 test: () => {
                     let beaconCalls = [];
@@ -565,7 +565,7 @@ export class HttpManagerTest extends AITestClass {
                             url,
                             data,
                         });
-                        return true;
+                        return false;
                     });
                     var fetchCalls = this.hookFetch((resolve) => {
                         setTimeout(function() {
@@ -573,34 +573,51 @@ export class HttpManagerTest extends AITestClass {
                         }, 0);
                     });
     
-                        var manager: HttpManager = new HttpManager(500, 2, 1, {
+                    var xhrOverride: IXHROverride = {
+                        sendPOST: (payload: IPayloadData,
+                            oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) => {
+                            //Error code
+                            oncomplete(0, null);
+                        }
+                    };
+                    let testBatch = EventBatch.create("testToken", [this._createEvent()]);
+
+                    var manager: HttpManager = new HttpManager(500, 2, 1, {
                         requeue: _requeueNotification,
                         send: _sendNotification,
                         sent: _sentNotification,
                         drop: _dropNotification
                     });
-                    let localStorage = new LocalStorageChannel();
-                    console.log("--------------create local sotrage");
-
-                    const cbSpy = this.sandbox.spy();
-                    this.core.config.extensionConfig![this.postManager.identifier].payloadListener = cbSpy;
-                    this.core.addPlugin(localStorage);
-
+                   
+                    this.core.config.extensionConfig![this.postManager.identifier].httpXHROverride = xhrOverride;
                     this.core.config.endpointUrl = "testEndpoint";
                     manager.initialize(this.core.config, this.core, this.postManager);
-                    QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0]._transport, TransportType.Xhr, "Make sure that XHR was actually selected as the transport");
+                    QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0], xhrOverride, "Make sure that the override is used as the internal transport");
+                    QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0]._transport, undefined, "Make sure that no transport value is defined");
     
-                    manager.addBatch(EventBatch.create("testToken", [this._createEvent()]));
-                    QUnit.assert.ok(cbSpy.notCalled); // precondition
-                    manager.teardown();
-                    QUnit.assert.ok(cbSpy.calledOnce, "listener should be called when the manager makes an HTTP request");
-                    QUnit.assert.ok(cbSpy.args[0][2], "listener should have been told its a sync request");
-                    QUnit.assert.ok(cbSpy.args[0][3], "listener should have been told its a beacon request");
-                    QUnit.assert.equal(fetchCalls.length, 0, "Make sure fetch was not called as beacons should be used for teardown");
-                    QUnit.assert.equal(beaconCalls.length, 1, "Expect thant sendBeacon was called")
+                    manager.sendSynchronousBatch(testBatch, EventSendType.SendBeacon);
+                    QUnit.assert.equal(this._requeueEvents.length, 0, "Send Beacon doesn't Requeue failed events");
+
+                    QUnit.assert.equal(beaconCalls.length, 2, "Two Beacon attempts should have occurred");
+                    QUnit.assert.equal(fetchCalls.length, 0, "No fetch calls should have occurred");
+                    // Without local storage, after the second failure, baecon will be dropped
+                    QUnit.assert.equal(this._dropEvents.length, 1, "No batches have been dropped");
+
+                    let localStorage = new TestLocalStorageChannel();
+                    this.core.addPlugin(localStorage);
+                    let testBatch2 = EventBatch.create("testToken", [this._createEvent("testEvent1"), this._createEvent("testEvent2"), this._createEvent("testEvent3")]);
+
+                    this.clock.tick(1);
+                    
+                    manager.sendSynchronousBatch(testBatch2, EventSendType.SendBeacon);
+                    QUnit.assert.equal(this._requeueEvents.length, 0, "Send Beacon doesn't Requeue failed events");
+
+                    QUnit.assert.equal(beaconCalls.length, 4, "Four Beacon attempts should have occurred");
+                    QUnit.assert.equal(fetchCalls.length, 0, "No fetch calls should have occurred");
+                    // With local storage, failed sending request will not cause the batch to get dropped
+                    QUnit.assert.equal(this._dropEvents.length, 1, "This time batche will not be dropped");
                 }
             });
-
 
             this.testCase({
                 name: "payloadListener called during teardown without xhr override using fetch",
@@ -2469,7 +2486,7 @@ export class HttpManagerTest extends AITestClass {
     }
 }
 
-class LocalStorageChannel  extends BaseTelemetryPlugin implements IPlugin {
+class TestLocalStorageChannel extends BaseTelemetryPlugin implements IPlugin {
     processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext | undefined): void {
         throw new Error("Method not implemented.");
     }
