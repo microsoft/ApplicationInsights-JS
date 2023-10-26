@@ -1,11 +1,27 @@
 import {
+    IUnloadHook,
     createUniqueNamespace, eventOff, eventOn, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined, mergeEvtNamespace
 } from "@microsoft/applicationinsights-core-js";
 
+export type OfflineCallback = () => void;
+export const enum eOfflineValue { 
+    Unknown = 0, 
+    Online = 1, 
+    Offline = 2 
+};
+export interface IOfflineState { 
+    readonly isOnline: boolean; 
+    readonly rState: eOfflineValue; // runtime state 
+    readonly uState: eOfflineValue;// user state 
+};
+export declare function OfflineCallback(state?: IOfflineState): void;  
 export interface IOfflineListener {
     isOnline: () => boolean;
     isListening: () => boolean;
     unload: () => void;
+    _setOnlineState: (isOnline: boolean) => void;
+    addListener(callback: OfflineCallback): IUnloadHook;  
+    namespace?: string;
 }
 
 function _disableEvents(target: any, evtNamespace: string | string[]) {
@@ -21,6 +37,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     var _navigator = getNavigator();        // Gets the window.navigator or workerNavigator depending on the global
     let _isListening: boolean = false;
     let _onlineStatus: boolean = true;
+    let listenerList = new Set<OfflineCallback>();
     let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineListener"), parentEvtNamespace);
 
     try {
@@ -53,21 +70,17 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     function _enableEvents(target: any): boolean {
         let enabled = false;
         if (target) {
-            enabled = eventOn(target, "online", _setOnline, _evtNamespace);
+            enabled = eventOn(target, "online", _setOnlineState(true), _evtNamespace);
             if (enabled) {
-                eventOn(target, "offline", _setOffline, _evtNamespace);
+                eventOn(target, "offline", _setOnlineState(false), _evtNamespace);
             }
         }
 
         return enabled;
     }
 
-    function _setOnline() {
-        _onlineStatus = true;
-    }
-
-    function _setOffline() {
-        _onlineStatus = false;
+    function _setOnlineState(isOnline: boolean): void{
+        _onlineStatus = isOnline;
     }
 
     function _isOnline(): boolean {
@@ -98,9 +111,20 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         }
     }
 
+    function addListener(callback: OfflineCallback) {
+        listenerList.add(callback);
+        return {
+            rm: () => {
+                listenerList.delete(callback);
+            }
+        };
+    }
+
     return {
         isOnline: _isOnline,
         isListening: () => _isListening,
-        unload: _unload
+        unload: _unload,
+        _setOnlineState: _setOnlineState,
+        addListener: addListener
     };
 }
