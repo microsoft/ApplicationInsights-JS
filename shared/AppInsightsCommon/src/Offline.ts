@@ -79,7 +79,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         return enabled;
     }
 
-    function _setOnlineState(isOnline: boolean): void{
+    function _setOnlineState(isOnline: boolean){
         _onlineStatus = isOnline;
     }
 
