@@ -173,7 +173,12 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         listenerList.push(callback);
         return {
             rm: () => {
-                listenerList.splice(listenerList.indexOf(callback), 1);
+                let index = listenerList.indexOf(callback);
+                if (index > -1){
+                    return listenerList.splice(index, 1);
+                } else {
+                    return;
+                }
             }
         };
     }
