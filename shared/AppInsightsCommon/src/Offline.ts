@@ -3,24 +3,45 @@ import {
     mergeEvtNamespace
 } from "@microsoft/applicationinsights-core-js";
 
-export type OfflineCallback = () => void;
+
+/**
+ * this is the callback that will be called when the network status changes
+ * @param onlineState this is the current network running state
+ */
+export type OfflineCallback = (onlineState: boolean) => void;
+
+/**
+ * This is the enum for the different network states current ai is experiencing
+ */
 export const enum eOfflineValue {
     Unknown = 0,
     Online = 1,
     Offline = 2
 }
+/**
+ * This is the interface for the Offline state
+ * runtime state is retrieved from the browser state
+ * user state is set by the user
+*/
+// export interface IOfflineState {
+//     readonly isOnline: boolean;
+//     readonly rState: eOfflineValue; // runtime state
+//     readonly uState: eOfflineValue; // user state
+// }
+
 export interface IOfflineState {
-    readonly isOnline: boolean;
-    readonly rState: eOfflineValue; // runtime state
-    readonly uState: eOfflineValue;// user state
+    isOnline: boolean;
+    rState: eOfflineValue; // runtime state
+    uState: eOfflineValue; // user state
 }
-export declare function OfflineCallback(state?: IOfflineState): void;
+
+
 export interface IOfflineListener {
     isOnline: () => boolean;
     isListening: () => boolean;
     unload: () => void;
-    _setOnlineState: (isOnline: boolean) => void;
     addListener(callback: OfflineCallback): IUnloadHook;
+    userSetOnlineState: (uState: eOfflineValue) => void;
     namespace?: string;
 }
 
@@ -37,7 +58,12 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     var _navigator = getNavigator();        // Gets the window.navigator or workerNavigator depending on the global
     let _isListening: boolean = false;
     let _onlineStatus: boolean = true;
-    let listenerList = new Set<OfflineCallback>();
+    let listenerList: OfflineCallback[] = [];
+    let offlineState: IOfflineState = {
+        isOnline: _isNavOnline(), 
+        rState: eOfflineValue.Online, 
+        uState: eOfflineValue.Unknown
+    };
     let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineListener"), parentEvtNamespace);
 
     try {
@@ -70,30 +96,60 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     function _enableEvents(target: any): boolean {
         let enabled = false;
         if (target) {
-            enabled = eventOn(target, "online", _setOnlineState(true), _evtNamespace);
+            enabled = eventOn(target, "online", _setOnline, _evtNamespace);
             if (enabled) {
-                eventOn(target, "offline", _setOnlineState(false), _evtNamespace);
+                eventOn(target, "offline", _setOffline, _evtNamespace);
             }
         }
-
         return enabled;
     }
 
-    function _setOnlineState(isOnline: boolean){
-        _onlineStatus = isOnline;
-        listenerList.forEach((callback: OfflineCallback) => {
-            callback();
-        });
+    function _isOnline(){
+        return offlineState.isOnline;
     }
 
-    function _isOnline(): boolean {
+    function currentState(){
+        if (offlineState.uState === eOfflineValue.Online || offlineState.rState === eOfflineValue.Online) {
+            return true;
+        } else if (offlineState.uState === eOfflineValue.Offline || offlineState.rState === eOfflineValue.Offline){
+            return false;
+        }
+        return true; // if both unknown, then we assume the network is good
+    }
+
+    function listnerNoticeCheck(){
+        // we were offline and are now online or we were online and now offline
+        if (_isOnline() !== currentState()) {
+            offlineState.isOnline = currentState(); // use the resolved state to update
+            // send all the callbacks with the current state
+            listenerList.forEach((callback: OfflineCallback) => {
+                callback(offlineState.isOnline);
+            });
+        }
+    }
+
+    function userSetOnlineState(uState: eOfflineValue){
+        offlineState.uState = uState;
+        listnerNoticeCheck();
+    }
+
+    function _setOnline() {
+        offlineState.rState = eOfflineValue.Online;
+        listnerNoticeCheck();
+    }
+
+    function _setOffline() {
+        offlineState.rState = eOfflineValue.Offline;
+        listnerNoticeCheck();
+    }
+
+    function _isNavOnline(): boolean {
         let result = true;
         if (_isListening) {
             result = _onlineStatus
         } else if (_navigator && !isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
             result = _navigator.onLine;
         }
-
         return result;
     }
 
@@ -109,16 +165,15 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
                     _disableEvents(target, _evtNamespace);
                 }
             }
-
             _isListening = false;
         }
     }
 
     function addListener(callback: OfflineCallback) {
-        listenerList.add(callback);
+        listenerList.push(callback);
         return {
             rm: () => {
-                listenerList.delete(callback);
+                listenerList.splice(listenerList.indexOf(callback), 1);
             }
         };
     }
@@ -127,7 +182,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         isOnline: _isOnline,
         isListening: () => _isListening,
         unload: _unload,
-        _setOnlineState: _setOnlineState,
-        addListener: addListener
+        addListener: addListener,
+        userSetOnlineState: userSetOnlineState
     };
 }

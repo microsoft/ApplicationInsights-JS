@@ -72,7 +72,7 @@ export {
 } from "./StorageHelperFuncs";
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./UrlHelperFuncs";
 export { IThrottleLimit, IThrottleInterval, IThrottleMgrConfig, IThrottleLocalStorageObj, IThrottleResult } from "./Interfaces/IThrottleMgr";
-export { IOfflineListener, createOfflineListener } from "./Offline";
+export { IOfflineListener, createOfflineListener, IOfflineState, eOfflineValue, OfflineCallback } from "./Offline";
 
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
