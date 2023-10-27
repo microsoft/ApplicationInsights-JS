@@ -1999,7 +1999,6 @@ export class HttpManagerTest extends AITestClass {
                     QUnit.assert.equal(this._requeueEvents.length, 0);
                     QUnit.assert.notEqual(beaconCalls[0].url, "");
                     QUnit.assert.equal(beaconCalls[0].data, "{\"name\":\"testEvent1\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}\n{\"name\":\"testEvent2\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}\n{\"name\":\"testEvent3\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}");
-                    console.log("1929", testBatch.events()[0]);
                     QUnit.assert.equal(testBatch.events()[0].sendAttempt, 1);
                     QUnit.assert.notEqual(beaconCalls[1].url, "");
                     QUnit.assert.equal(beaconCalls[1].data, "{\"name\":\"testEvent1\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}");
