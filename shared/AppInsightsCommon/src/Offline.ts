@@ -52,8 +52,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     let listenerList: OfflineCallback[] = [];
 
     // Set the initial state
-    let _onlineStatus: boolean = _isNavOnline();
-    let rState: eOfflineValue = eOfflineValue.Online;
+    let _onlineStatus: eOfflineValue = _isNavOnline() ? eOfflineValue.Online : eOfflineValue.Offline;
     let uState: eOfflineValue = eOfflineValue.Offline;
 
     let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineListener"), parentEvtNamespace);
@@ -77,7 +76,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         if (_isListening) {
             // We are listening to events so lets set the current status rather than assuming we are online #1538
             if (_navigator && !isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
-                _onlineStatus = _navigator.onLine;
+                _onlineStatus = _navigator.onLine ? eOfflineValue.Online : eOfflineValue.Offline;
             }
         }
     } catch (e) {
@@ -97,11 +96,11 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     }
 
     function _isOnline(){
-        return _onlineStatus;
+        return currentState();
     }
 
     function currentState(){
-        if (uState === eOfflineValue.Offline || rState === eOfflineValue.Offline){
+        if (uState === eOfflineValue.Offline || _onlineStatus === eOfflineValue.Offline){
             return false;
         }
         return true; // if both unknown, then we assume the network is good
@@ -110,12 +109,11 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     function listnerNoticeCheck(){
         // we were offline and are now online or we were online and now offline
         if (_isOnline() !== currentState()) {
-            _onlineStatus = currentState(); // use the resolved state to update
             // send all the callbacks with the current state
             arrForEach(listenerList, (callback: OfflineCallback) => {
                 let offlineState: IOfflineState = {
-                    isOnline: _onlineStatus,
-                    rState: rState,
+                    isOnline: currentState(),
+                    rState: _onlineStatus,
                     uState: uState
                 };
                 callback(offlineState);
@@ -129,21 +127,21 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     }
 
     function _setOnline() {
-        rState = eOfflineValue.Online;
+        _onlineStatus = eOfflineValue.Online;
         listnerNoticeCheck();
     }
 
     function _setOffline() {
-        rState = eOfflineValue.Offline;
+        _onlineStatus = eOfflineValue.Offline;
         listnerNoticeCheck();
     }
 
-    function _isNavOnline(): boolean {
-        let result = true;
+    function _isNavOnline(): eOfflineValue {
+        let result = eOfflineValue.Online;
         if (_isListening) {
-            result = _onlineStatus
+            result = _onlineStatus;
         } else if (_navigator && !isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
-            result = _navigator.onLine;
+            result = _navigator.onLine ? eOfflineValue.Online : eOfflineValue.Offline;
         }
         return result;
     }
