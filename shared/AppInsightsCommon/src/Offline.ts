@@ -52,8 +52,13 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     let listenerList: OfflineCallback[] = [];
 
     // Set the initial state
-    let _currentState: boolean = _isNavOnline();
+
+    // current state would be updated each time rState or uState is changed
+    // it is a resolved value of rState and uState
+    let _currentState: boolean = _isNavOnline(); 
+    // rState is changed by the browser, both via events and when we check the navigator.onLine property
     let rState: eOfflineValue = eOfflineValue.Online;
+    // ustate is changed by the user calling setOnlineState
     let uState: eOfflineValue = eOfflineValue.Offline;
 
     let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineListener"), parentEvtNamespace);
