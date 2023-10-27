@@ -476,6 +476,23 @@ export class HttpManager {
                     requestInit.headers = payload.headers;
                 }
 
+                const handleResponse = (status: number, headerMap: { [x: string]: string; }, responseText: string) => {
+                    if (!responseHandled) {
+                        responseHandled = true;
+                        _doOnComplete(oncomplete, status, headerMap, responseText);
+                        _handleCollectorResponse(responseText);
+                    }
+                };
+            
+                const handleError = () => {
+                    // In case there is an error in the request. Set the status to 0
+                    // so that the events can be retried later.
+                    if (!responseHandled) {
+                            responseHandled = true;
+                            _doOnComplete(oncomplete, 0, {});
+                        }
+                    };
+
                 fetch(theUrl, requestInit).then((response) => {
                     let headerMap = {};
                     let responseText = STR_EMPTY;
@@ -488,22 +505,12 @@ export class HttpManager {
                     if (response.body) {
                         response.text().then(function(text) {
                             responseText = text;
-                        });
+                            handleResponse(response.status, headerMap, responseText);
+                        }, handleError);
+                    } else {
+                        handleResponse(response.status, headerMap, "");
                     }
-
-                    if (!responseHandled) {
-                        responseHandled = true;
-                        _doOnComplete(oncomplete, response.status, headerMap, responseText);
-                        _handleCollectorResponse(responseText);
-                    }
-                }).catch((error) => {
-                    // In case there is an error in the request. Set the status to 0
-                    // so that the events can be retried later.
-                    if (!responseHandled) {
-                        responseHandled = true;
-                        _doOnComplete(oncomplete, 0, {});
-                    }
-                });
+                }).catch(handleError);
 
                 if (ignoreResponse && !responseHandled) {
                     // Assume success during unload processing
