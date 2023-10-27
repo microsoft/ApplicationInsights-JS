@@ -711,7 +711,7 @@
     "node_modules/@rush-temp/applicationinsights-chrome-debug-extension": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-chrome-debug-extension.tgz",
-      "integrity": "sha512-2a5jg95QnpLTEJcqc24WAtL1xKMrC/5FV1UAsay+AWCAsIBR6TXLK//I6DuQhiCU5otvfC9YHz9pZyBHjJYwRg==",
+      "integrity": "sha512-/zHLFcVbR8Purmm8nN4NEaZm9bJ5VhwzrG1xEUnRZqgNn5zHALc3pKLwIcGT3Im2c6pdZmozgCpHJsJ4FRk7Tg==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -739,7 +739,6 @@
         "rollup-plugin-copy": "^3.4.0",
         "rollup-plugin-peer-deps-external": "^2.2.4",
         "scheduler": "~0.11.2",
-        "typedoc": "^0.24.8",
         "typescript": "^4.9.3"
       }
     },
@@ -1688,9 +1687,9 @@
       "integrity": "sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q=="
     },
     "node_modules/acorn": {
-      "version": "8.11.1",
-      "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.11.1.tgz",
-      "integrity": "sha512-IJTNCJMRHfRfb8un89z1QtS0x890C2QUrUxFMK8zy+RizcId6mfnqOf68Bu9YkDgpLYuvCm6aYbwDatXVZPjMQ==",
+      "version": "8.11.2",
+      "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.11.2.tgz",
+      "integrity": "sha512-nc0Axzp/0FILLEVsm4fNwLCwMttvhEI263QtVPQcbpfZZ3ts0hLsZGOpE6czNlid7CJ9MlyH8reXkpsf3YUY4w==",
       "peer": true,
       "bin": {
         "acorn": "bin/acorn"
@@ -2087,9 +2086,9 @@
       }
     },
     "node_modules/caniuse-lite": {
-      "version": "1.0.30001554",
-      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001554.tgz",
-      "integrity": "sha512-A2E3U//MBwbJVzebddm1YfNp7Nud5Ip+IPn4BozBmn4KqVX7AvluoIDFWjsv5OkGnKUXQVmMSoMKLa3ScCblcQ==",
+      "version": "1.0.30001555",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001555.tgz",
+      "integrity": "sha512-NzbUFKUnJ3DTcq6YyZB6+qqhfD112uR3uoEnkmfzm2wVzUNsFkU7AwBjKQ654Sp5cau0JxhFyRSn/tQZ+XfygA==",
       "funding": [
         {
           "type": "opencollective",
@@ -2472,9 +2471,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.568",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.568.tgz",
-      "integrity": "sha512-3TCOv8+BY6Ltpt1/CmGBMups2IdKOyfEmz4J8yIS4xLSeMm0Rf+psSaxLuswG9qMKt+XbNbmADybtXGpTFlbDg=="
+      "version": "1.4.569",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.569.tgz",
+      "integrity": "sha512-LsrJjZ0IbVy12ApW3gpYpcmHS3iRxH4bkKOW98y1/D+3cvDUWGcbzbsFinfUS8knpcZk/PG/2p/RnkMCYN7PVg=="
     },
     "node_modules/encodeurl": {
       "version": "1.0.2",
@@ -6606,7 +6605,7 @@
     },
     "@rush-temp/applicationinsights-chrome-debug-extension": {
       "version": "file:projects\\applicationinsights-chrome-debug-extension.tgz",
-      "integrity": "sha512-2a5jg95QnpLTEJcqc24WAtL1xKMrC/5FV1UAsay+AWCAsIBR6TXLK//I6DuQhiCU5otvfC9YHz9pZyBHjJYwRg==",
+      "integrity": "sha512-/zHLFcVbR8Purmm8nN4NEaZm9bJ5VhwzrG1xEUnRZqgNn5zHALc3pKLwIcGT3Im2c6pdZmozgCpHJsJ4FRk7Tg==",
       "requires": {
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -6634,7 +6633,6 @@
         "rollup-plugin-copy": "^3.4.0",
         "rollup-plugin-peer-deps-external": "^2.2.4",
         "scheduler": "~0.11.2",
-        "typedoc": "^0.24.8",
         "typescript": "^4.9.3"
       }
     },
@@ -7456,9 +7454,9 @@
       "integrity": "sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q=="
     },
     "acorn": {
-      "version": "8.11.1",
-      "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.11.1.tgz",
-      "integrity": "sha512-IJTNCJMRHfRfb8un89z1QtS0x890C2QUrUxFMK8zy+RizcId6mfnqOf68Bu9YkDgpLYuvCm6aYbwDatXVZPjMQ==",
+      "version": "8.11.2",
+      "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.11.2.tgz",
+      "integrity": "sha512-nc0Axzp/0FILLEVsm4fNwLCwMttvhEI263QtVPQcbpfZZ3ts0hLsZGOpE6czNlid7CJ9MlyH8reXkpsf3YUY4w==",
       "peer": true
     },
     "acorn-jsx": {
@@ -7731,9 +7729,9 @@
       "integrity": "sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ=="
     },
     "caniuse-lite": {
-      "version": "1.0.30001554",
-      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001554.tgz",
-      "integrity": "sha512-A2E3U//MBwbJVzebddm1YfNp7Nud5Ip+IPn4BozBmn4KqVX7AvluoIDFWjsv5OkGnKUXQVmMSoMKLa3ScCblcQ=="
+      "version": "1.0.30001555",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001555.tgz",
+      "integrity": "sha512-NzbUFKUnJ3DTcq6YyZB6+qqhfD112uR3uoEnkmfzm2wVzUNsFkU7AwBjKQ654Sp5cau0JxhFyRSn/tQZ+XfygA=="
     },
     "chalk": {
       "version": "4.1.2",
@@ -8013,9 +8011,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "electron-to-chromium": {
-      "version": "1.4.568",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.568.tgz",
-      "integrity": "sha512-3TCOv8+BY6Ltpt1/CmGBMups2IdKOyfEmz4J8yIS4xLSeMm0Rf+psSaxLuswG9qMKt+XbNbmADybtXGpTFlbDg=="
+      "version": "1.4.569",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.569.tgz",
+      "integrity": "sha512-LsrJjZ0IbVy12ApW3gpYpcmHS3iRxH4bkKOW98y1/D+3cvDUWGcbzbsFinfUS8knpcZk/PG/2p/RnkMCYN7PVg=="
     },
     "encodeurl": {
       "version": "1.0.2",
