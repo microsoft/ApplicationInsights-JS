@@ -33,7 +33,7 @@ export interface IOfflineListener {
     isListening: () => boolean;
     unload: () => void;
     addListener(callback: OfflineCallback): IUnloadHook;
-    userSetOnlineState: (uState: eOfflineValue) => void;
+    setOnlineState : (uState: eOfflineValue) => void;
     namespace?: string;
 }
 
@@ -123,7 +123,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         }
     }
 
-    function userSetOnlineState(uState: eOfflineValue){
+    function setOnlineState (uState: eOfflineValue){
         this.uState = uState;
         listnerNoticeCheck();
     }
@@ -184,6 +184,6 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         isListening: () => _isListening,
         unload: _unload,
         addListener: addListener,
-        userSetOnlineState: userSetOnlineState
+        setOnlineState : setOnlineState 
     };
 }
