@@ -3,12 +3,11 @@ import {
     mergeEvtNamespace
 } from "@microsoft/applicationinsights-core-js";
 
-
 /**
  * this is the callback that will be called when the network status changes
  * @param onlineState this is the current network running state
  */
-export type OfflineCallback = (onlineState: boolean) => void;
+export type OfflineCallback = (onlineState: IOfflineState) => void;
 
 /**
  * This is the enum for the different network states current ai is experiencing
@@ -23,18 +22,11 @@ export const enum eOfflineValue {
  * runtime state is retrieved from the browser state
  * user state is set by the user
 */
-// export interface IOfflineState {
-//     readonly isOnline: boolean;
-//     readonly rState: eOfflineValue; // runtime state
-//     readonly uState: eOfflineValue; // user state
-// }
-
 export interface IOfflineState {
-    isOnline: boolean;
-    rState: eOfflineValue; // runtime state
-    uState: eOfflineValue; // user state
+    readonly isOnline: boolean;
+    readonly rState: eOfflineValue; // runtime state
+    readonly uState: eOfflineValue; // user state
 }
-
 
 export interface IOfflineListener {
     isOnline: () => boolean;
@@ -57,13 +49,13 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     let _document = getDocument();
     var _navigator = getNavigator();        // Gets the window.navigator or workerNavigator depending on the global
     let _isListening: boolean = false;
-    let _onlineStatus: boolean = true;
     let listenerList: OfflineCallback[] = [];
-    let offlineState: IOfflineState = {
-        isOnline: _isNavOnline(), 
-        rState: eOfflineValue.Online, 
-        uState: eOfflineValue.Unknown
-    };
+
+    // Set the initial state
+    let _onlineStatus: boolean = _isNavOnline();
+    let rState: eOfflineValue = eOfflineValue.Online;
+    let uState: eOfflineValue = eOfflineValue.Offline;
+
     let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineListener"), parentEvtNamespace);
 
     try {
@@ -105,13 +97,11 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     }
 
     function _isOnline(){
-        return offlineState.isOnline;
+        return _onlineStatus;
     }
 
     function currentState(){
-        if (offlineState.uState === eOfflineValue.Online || offlineState.rState === eOfflineValue.Online) {
-            return true;
-        } else if (offlineState.uState === eOfflineValue.Offline || offlineState.rState === eOfflineValue.Offline){
+        if (uState === eOfflineValue.Offline || rState === eOfflineValue.Offline){
             return false;
         }
         return true; // if both unknown, then we assume the network is good
@@ -120,26 +110,31 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     function listnerNoticeCheck(){
         // we were offline and are now online or we were online and now offline
         if (_isOnline() !== currentState()) {
-            offlineState.isOnline = currentState(); // use the resolved state to update
+            _onlineStatus = currentState(); // use the resolved state to update
             // send all the callbacks with the current state
             listenerList.forEach((callback: OfflineCallback) => {
-                callback(offlineState.isOnline);
+                let offlineState: IOfflineState = {
+                    isOnline: _onlineStatus,
+                    rState: rState,
+                    uState: uState
+                };
+                callback(offlineState);
             });
         }
     }
 
     function userSetOnlineState(uState: eOfflineValue){
-        offlineState.uState = uState;
+        this.uState = uState;
         listnerNoticeCheck();
     }
 
     function _setOnline() {
-        offlineState.rState = eOfflineValue.Online;
+        rState = eOfflineValue.Online;
         listnerNoticeCheck();
     }
 
     function _setOffline() {
-        offlineState.rState = eOfflineValue.Offline;
+        rState = eOfflineValue.Offline;
         listnerNoticeCheck();
     }
 
@@ -171,6 +166,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
 
     function addListener(callback: OfflineCallback) {
         listenerList.push(callback);
+        // Define rm as an instance of IUnloadHook
         return {
             rm: () => {
                 let index = listenerList.indexOf(callback);
