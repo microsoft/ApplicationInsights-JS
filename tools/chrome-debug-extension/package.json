@@ -37,7 +37,8 @@
         "pack": "node ../../tools/release-tools/zipbrowser.js ai.chrome-ext dist",
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt chromedebugextension-min",
-        "ai-restore": "grunt chromedebugextension-restore"
+        "ai-restore": "grunt chromedebugextension-restore",
+        "api-docs": "typedoc"
     },
     "private": false,
     "license": "MIT",
@@ -71,6 +72,7 @@
         "rollup-plugin-copy": "^3.4.0",
         "rollup-plugin-peer-deps-external": "^2.2.4",
         "rollup": "^3.20.0",
+        "typedoc": "^0.24.8",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "typescript": "^4.9.3",

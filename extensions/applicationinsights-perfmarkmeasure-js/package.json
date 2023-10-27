@@ -25,7 +25,8 @@
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt perfmarkmeasure-min",
         "ai-restore": "grunt perfmarkmeasure-restore",
-        "npm-pack": "npm pack"
+        "npm-pack": "npm pack",
+        "api-docs": "typedoc"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
@@ -41,6 +42,7 @@
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
+        "typedoc": "^0.24.8",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
