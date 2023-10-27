@@ -55,7 +55,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
 
     // current state would be updated each time rState or uState is changed
     // it is a resolved value of rState and uState
-    let _currentState: boolean = _isNavOnline(); 
+    let _currentState: boolean = _isNavOnline();
     // rState is changed by the browser, both via events and when we check the navigator.onLine property
     let rState: eOfflineValue = eOfflineValue.Online;
     // ustate is changed by the user calling setOnlineState
@@ -190,6 +190,6 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         isListening: () => _isListening,
         unload: _unload,
         addListener: addListener,
-        setOnlineState : setOnlineState 
+        setOnlineState : setOnlineState
     };
 }
