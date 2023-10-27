@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../docs/webSdk/applicationinsights-web-basic",
+    "out": "../../docs/extensions/applicationinsights-web-basic",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",
