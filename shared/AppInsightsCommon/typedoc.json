@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../docs/webSdk/applicationinsights-common",
+    "out": "../../docs/webSdk/applicationinsights-common",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",
