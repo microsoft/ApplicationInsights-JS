@@ -23,8 +23,7 @@
         "test": "grunt websnippettests",
         "lint": "tslint -p tsconfig.json",
         "npm-pack": "npm pack",
-        "ai-restore": "grunt snippet-restore",
-        "api-docs": "typedoc"
+        "ai-restore": "grunt snippet-restore"
     },
     "license": "MIT",
     "devDependencies": {
