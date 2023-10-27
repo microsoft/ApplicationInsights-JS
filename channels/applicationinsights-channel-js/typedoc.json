@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../docs/webSdk/applicationinsights-channel-js",
+    "out": "../../docs/webSdk/applicationinsights-channel-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",
