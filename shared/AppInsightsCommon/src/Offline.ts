@@ -1,5 +1,5 @@
 import {
-    IUnloadHook, createUniqueNamespace, eventOff, eventOn, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined,
+    IUnloadHook, arrForEach, createUniqueNamespace, eventOff, eventOn, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined,
     mergeEvtNamespace
 } from "@microsoft/applicationinsights-core-js";
 
@@ -112,7 +112,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         if (_isOnline() !== currentState()) {
             _onlineStatus = currentState(); // use the resolved state to update
             // send all the callbacks with the current state
-            listenerList.forEach((callback: OfflineCallback) => {
+            arrForEach(listenerList, (callback: OfflineCallback) => {
                 let offlineState: IOfflineState = {
                     isOnline: _onlineStatus,
                     rState: rState,
