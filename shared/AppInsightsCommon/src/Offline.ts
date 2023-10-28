@@ -32,9 +32,8 @@ export interface IOfflineListener {
     isOnline: () => boolean;
     isListening: () => boolean;
     unload: () => void;
-    addListener(callback: OfflineCallback): IUnloadHook;
+    addListener: (callback: OfflineCallback) => IUnloadHook;
     setOnlineState : (uState: eOfflineValue) => void;
-    namespace?: string;
 }
 
 function _disableEvents(target: any, evtNamespace: string | string[]) {
@@ -53,13 +52,14 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
 
     // Set the initial state
 
-    // current state would be updated each time rState or uState is changed
-    // it is a resolved value of rState and uState
-    let _currentState: boolean = _isNavOnline();
+
     // rState is changed by the browser, both via events and when we check the navigator.onLine property
-    let rState: eOfflineValue = eOfflineValue.Online;
+    let rState: eOfflineValue = _isNavOnline();
     // ustate is changed by the user calling setOnlineState
-    let uState: eOfflineValue = eOfflineValue.Offline;
+    let uState: eOfflineValue = eOfflineValue.Unknown;
+        // current state would be updated each time rState or uState is changed
+    // it is a resolved value of rState and uState
+    let _currentState: boolean = calCurrentState();
 
     let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineListener"), parentEvtNamespace);
 
@@ -144,14 +144,14 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         listnerNoticeCheck();
     }
 
-    function _isNavOnline(): boolean {
+    function _isNavOnline(): eOfflineValue {
         let result = true;
         if (_isListening) {
-            result = _currentState
+            result = _currentState;
         } else if (_navigator && !isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
             result = _navigator.onLine;
         }
-        return result;
+        return result ? eOfflineValue.Online : eOfflineValue.Offline;
     }
 
     function _unload() {
