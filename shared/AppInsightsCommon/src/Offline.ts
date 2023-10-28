@@ -57,7 +57,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     let rState: eOfflineValue = _isNavOnline();
     // ustate is changed by the user calling setOnlineState
     let uState: eOfflineValue = eOfflineValue.Unknown;
-        // current state would be updated each time rState or uState is changed
+    // current state would be updated each time rState or uState is changed
     // it is a resolved value of rState and uState
     let _currentState: boolean = calCurrentState();
 
