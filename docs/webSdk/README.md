@@ -40,3 +40,7 @@ Placeholder for auto-generated API documentation
 [Performance Mark and Measure Manager plugin](./applicationinsights-perfmarkmeasure-js/index.html)
 
 [Properties plugin](./applicationinsights-properties-js/index.html)
+
+## tools
+
+[Web Snippet](./applicationinsights-web-snippet/index.html)

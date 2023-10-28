@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/tools/applicationinsights-web-snippet",
+    "out": "../../docs/webSdk/applicationinsights-web-snippet",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",
