@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/extensions/applicationinsights-perfmarkmeasure-js",
+    "out": "../../docs/webSdk/applicationinsights-perfmarkmeasure-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",

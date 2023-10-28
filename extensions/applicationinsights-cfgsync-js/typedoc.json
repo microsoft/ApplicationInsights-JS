@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/extensions/applicationinsights-cfgsync-js",
+    "out": "../../docs/webSdk/applicationinsights-cfgsync-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",

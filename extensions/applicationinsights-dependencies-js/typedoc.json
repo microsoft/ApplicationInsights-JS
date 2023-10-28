@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/extensions/applicationinsights-dependencies-js",
+    "out": "../../docs/webSdk/applicationinsights-dependencies-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",

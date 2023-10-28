@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/extensions/applicationinsights-analytics-js",
+    "out": "../../docs/webSdk/applicationinsights-analytics-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",

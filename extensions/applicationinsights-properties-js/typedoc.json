@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/extensions/applicationinsights-properties-js",
+    "out": "../../docs/webSdk/applicationinsights-properties-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",

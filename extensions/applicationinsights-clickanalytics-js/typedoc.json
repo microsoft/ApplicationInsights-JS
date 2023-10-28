@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/extensions/applicationinsights-clickanalytics-js",
+    "out": "../../docs/webSdk/applicationinsights-clickanalytics-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",
