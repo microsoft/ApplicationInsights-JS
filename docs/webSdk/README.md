@@ -25,8 +25,6 @@ Placeholder for auto-generated API documentation
 
 ## Extensions
 
-[1DS Core](./1ds-core-js/index.html)
-
 [Web Analytics](./applicationinsights-analytics-js/index.html)
 
 [CfgSync Plugin](./applicationinsights-cfgsync-js/index.html)
