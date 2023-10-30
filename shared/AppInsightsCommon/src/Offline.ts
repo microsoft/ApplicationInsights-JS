@@ -51,10 +51,12 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     let listenerList: OfflineCallback[] = [];
 
     // Set the initial state
-
-
     // rState is changed by the browser, both via events and when we check the navigator.onLine property
-    let rState: eOfflineValue = _isNavOnline();
+    let rState: eOfflineValue = eOfflineValue.Online;
+    if (_navigator && !isNullOrUndefined(_navigator.onLine) && !_navigator.onLine) { // navigator.onLine is undefined in react-native
+        rState = eOfflineValue.Offline;
+    }
+
     // ustate is changed by the user calling setOnlineState
     let uState: eOfflineValue = eOfflineValue.Unknown;
     // current state would be updated each time rState or uState is changed
@@ -142,16 +144,6 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
     function _setOffline() {
         rState = eOfflineValue.Offline;
         listnerNoticeCheck();
-    }
-
-    function _isNavOnline(): eOfflineValue {
-        let result = true;
-        if (_isListening) {
-            result = _currentState;
-        } else if (_navigator && !isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
-            result = _navigator.onLine;
-        }
-        return result ? eOfflineValue.Online : eOfflineValue.Offline;
     }
 
     function _unload() {
