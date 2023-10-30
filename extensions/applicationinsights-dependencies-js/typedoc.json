@@ -51,7 +51,7 @@
     },
     "navigationLinks": {
         "GitHub": "https://github.com/Microsoft/ApplicationInsights-JS",
-        "npm": "https://www.npmjs.com/package/@microsoft/applicationinsights-web-basic"
+        "npm": "https://www.npmjs.com/package/@microsoft/applicationinsights-dependencies-js"
     },
     "visibilityFilters": {
         "protected": false,
