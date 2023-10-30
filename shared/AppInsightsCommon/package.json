@@ -25,7 +25,8 @@
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt common-min",
         "ai-restore": "grunt common-restore",
-        "npm-pack": "npm pack"
+        "npm-pack": "npm pack",
+        "api-docs": "typedoc"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
@@ -44,6 +45,7 @@
         "rollup": "^3.20.0",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
+        "typedoc": "^0.24.8",
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
         "sinon": "^7.3.1"
