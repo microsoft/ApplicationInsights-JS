@@ -128,8 +128,8 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         }
     }
 
-    function setOnlineState (uState: eOfflineValue){
-        this.uState = uState;
+    function setOnlineState (newState: eOfflineValue){
+        uState = newState;
         listnerNoticeCheck();
     }
 
