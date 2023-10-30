@@ -7,7 +7,7 @@ Placeholder for auto-generated API documentation
 
 [Application Insights Web Sku](./applicationinsights-web/index.html)
 
-[Application Insights Javascript SDK core and channel](./applicationinsights-web-basic/index.html)
+[Microsoft Application Insights JavaScript SDK - Web Basic](./applicationinsights-web-basic/index.html)
 
 ## Components
 

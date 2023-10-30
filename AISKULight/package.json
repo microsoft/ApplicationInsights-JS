@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
     "version": "3.0.4",
-    "description": "Microsoft Application Insights Javascript SDK core and channel",
+    "description": "Microsoft Application Insights JavaScript SDK - Web Basic",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
     "main": "dist/es5/applicationinsights-web-basic.js",
