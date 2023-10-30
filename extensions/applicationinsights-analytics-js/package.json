@@ -25,7 +25,8 @@
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt ai-min",
         "ai-restore": "grunt ai-restore",
-        "npm-pack": "npm pack"
+        "npm-pack": "npm pack",
+        "api-docs": "typedoc"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
@@ -50,6 +51,7 @@
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "qunit": "^2.11.2",
+        "typedoc": "^0.24.8",
         "sinon": "^7.3.1"
     },
     "peerDependencies": {
