@@ -80,13 +80,6 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
                 }
             }
         }
-
-        if (_isListening) {
-            // We are listening to events so lets set the current status rather than assuming we are online #1538
-            if (_navigator && !isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
-                _currentState = _navigator.onLine;
-            }
-        }
     } catch (e) {
         // this makes react-native less angry
         _isListening = false;
@@ -126,7 +119,11 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
                     rState: rState,
                     uState: uState
                 };
-                callback(offlineState);
+                try {
+                    callback(offlineState);
+                } catch (e) {
+                    // Do nothing, just making sure we run all of the callbacks
+                }
             });
         }
     }
