@@ -254,6 +254,12 @@ export class HttpManager {
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
+
+                        
+                        if (!!core.getPlugin("LocalStorage")) {
+                            // Always disable fetch keep alive when persisten storage is available
+                            _disableFetchKeepAlive = true;
+                        }
             
                         _useBeacons = !isReactNative(); // Only use beacons if not running in React Native
                         _serializer = new Serializer(_core, valueSanitizer, stringifyObjects, enableCompoundKey);
@@ -470,6 +476,23 @@ export class HttpManager {
                     requestInit.headers = payload.headers;
                 }
 
+                const handleResponse = (status: number, headerMap: { [x: string]: string; }, responseText: string) => {
+                    if (!responseHandled) {
+                        responseHandled = true;
+                        _doOnComplete(oncomplete, status, headerMap, responseText);
+                        _handleCollectorResponse(responseText);
+                    }
+                };
+            
+                const handleError = () => {
+                    // In case there is an error in the request. Set the status to 0
+                    // so that the events can be retried later.
+                    if (!responseHandled) {
+                            responseHandled = true;
+                            _doOnComplete(oncomplete, 0, {});
+                        }
+                    };
+
                 fetch(theUrl, requestInit).then((response) => {
                     let headerMap = {};
                     let responseText = STR_EMPTY;
@@ -482,22 +505,12 @@ export class HttpManager {
                     if (response.body) {
                         response.text().then(function(text) {
                             responseText = text;
-                        });
+                            handleResponse(response.status, headerMap, responseText);
+                        }, handleError);
+                    } else {
+                        handleResponse(response.status, headerMap, "");
                     }
-
-                    if (!responseHandled) {
-                        responseHandled = true;
-                        _doOnComplete(oncomplete, response.status, headerMap, responseText);
-                        _handleCollectorResponse(responseText);
-                    }
-                }).catch((error) => {
-                    // In case there is an error in the request. Set the status to 0
-                    // so that the events can be retried later.
-                    if (!responseHandled) {
-                        responseHandled = true;
-                        _doOnComplete(oncomplete, 0, {});
-                    }
-                });
+                }).catch(handleError);
 
                 if (ignoreResponse && !responseHandled) {
                     // Assume success during unload processing
@@ -596,8 +609,10 @@ export class HttpManager {
                     let nav = getNavigator();
                     if (!nav.sendBeacon(theUrl, payload.data)) {
                         if (thePayload) {
+                            let persistStorage = !!_core.getPlugin("LocalStorage");
                             // Failed to send entire payload so try and split data and try to send as much events as possible
                             let droppedBatches: EventBatch[] = [];
+                            let sentBatches: EventBatch[] = [];
                             arrForEach(thePayload.batches, (theBatch) => {
                                 if (droppedBatches && theBatch && theBatch.count() > 0) {
                                     let theEvents = theBatch.events();
@@ -606,6 +621,8 @@ export class HttpManager {
                                             // Can't send anymore, so split the batch and drop the rest
                                             droppedBatches.push(theBatch.split(lp));
                                             break;
+                                        } else {
+                                            sentBatches.push(theBatch[lp]);
                                         }
                                     }
                                 } else {
@@ -614,7 +631,14 @@ export class HttpManager {
                                 }
                             });
 
-                            _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                            if (sentBatches.length > 0) {
+                                // Update the payload with the sent batches
+                                thePayload.sentEvts = sentBatches;
+                            }
+                            
+                            if (!persistStorage) {
+                                _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                            }
                         } else {
                             status = 0;
                         }
@@ -1205,7 +1229,9 @@ export class HttpManager {
                         _postManager._backOffTransmission();
                     }
 
+                    let theBatches = thePayload.batches;
                     if (batchReason === EventBatchNotificationReason.Complete) {
+                        theBatches = thePayload.sentEvts || thePayload.batches;
                         if (!backOffTrans && !thePayload.isSync) {
                             // We have a successful async response, so the lets open the floodgates
                             // The reason for checking isSync is to avoid unblocking if beacon send occurred as it
@@ -1213,11 +1239,11 @@ export class HttpManager {
                             _postManager._clearBackOff();
                         }
 
-                        _addCompleteTimings(thePayload.batches);
+                        _addCompleteTimings(theBatches);
                     }
 
                     // Send the notifications synchronously
-                    _sendBatchesNotification(thePayload.batches, batchReason, thePayload.sendType, true);
+                    _sendBatchesNotification(theBatches, batchReason, thePayload.sendType, true);
 
                 } finally {
                     if (thePayload.sendType === EventSendType.Batched) {
