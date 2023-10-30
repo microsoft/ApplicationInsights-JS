@@ -70,6 +70,11 @@ export interface ISerializedPayload {
     batches: EventBatch[];
 
     /**
+     * The events that have been sent if not the full payload
+     */
+    sentEvts?: EventBatch[];
+
+    /**
      * The number of events in the payload
      */
     numEvents: number;
