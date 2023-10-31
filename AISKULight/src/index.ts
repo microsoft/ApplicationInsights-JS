@@ -54,6 +54,7 @@ export class ApplicationInsights {
             _initialize();
           
             _self.initialize = _initialize;
+            _self.track = _track;
         
             proxyFunctions(_self, core, [
                 "track",
@@ -85,6 +86,14 @@ export class ApplicationInsights {
                 core.initialize(_config, [new Sender()]);
             }
         });
+
+        function _track(item: ITelemetryItem) {
+            if (item && item.baseData) {
+                // to pass sender.processTelemetry()
+                item.baseType = item.baseType || "EventData";
+            }
+            core.track(item);
+        }
     }
 
     /**
