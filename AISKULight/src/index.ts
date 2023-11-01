@@ -218,4 +218,4 @@ export {
     IPageViewPerformanceTelemetry,
     ITraceTelemetry
 } from "@microsoft/applicationinsights-common";
-export { Sender } from "@microsoft/applicationinsights-channel-js";
+export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";
