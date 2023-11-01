@@ -2,6 +2,16 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.5 (Nov 1st, 2023)
+
+### Changelog
+
+- #2184 [main] deactive send beacon when local storage is available 
+- #2185 [main] retrieve reponseText when fetch in HttpManager
+- #2188[main] generate typedoc
+- #2190[Main][Task]25648004: Export ISenderConfig from Sender
+- #2191[Main][Task]25649658: Update AISKU Light to add default baseType and baseData when calling track function 
+
 ## 3.0.4 (Oct 16th, 2023)
 
 ### Changelog
