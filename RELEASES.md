@@ -8,9 +8,9 @@
 
 - #2184 [main] deactive send beacon when local storage is available 
 - #2185 [main] retrieve reponseText when fetch in HttpManager
-- #2188[main] generate typedoc
-- #2190[Main][Task]25648004: Export ISenderConfig from Sender
-- #2191[Main][Task]25649658: Update AISKU Light to add default baseType and baseData when calling track function 
+- #2188 [main] generate typedoc
+- #2190 [Main][Task]25648004: Export ISenderConfig from Sender
+- #2191 [Main][Task]25649658: Update AISKU Light to add default baseType and baseData when calling track function 
 
 ## 3.0.4 (Oct 16th, 2023)
 
