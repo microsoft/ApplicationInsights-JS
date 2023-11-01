@@ -488,10 +488,10 @@ export class HttpManager {
                     // In case there is an error in the request. Set the status to 0
                     // so that the events can be retried later.
                     if (!responseHandled) {
-                            responseHandled = true;
-                            _doOnComplete(oncomplete, 0, {});
-                        }
-                    };
+                        responseHandled = true;
+                        _doOnComplete(oncomplete, 0, {});
+                    }
+                };
 
                 fetch(theUrl, requestInit).then((response) => {
                     let headerMap = {};
