@@ -54,9 +54,9 @@ export class ApplicationInsights {
             _initialize();
           
             _self.initialize = _initialize;
+            _self.track = _track;
         
             proxyFunctions(_self, core, [
-                "track",
                 "flush",
                 "pollInternalLogs",
                 "stopPollingInternalLogs",
@@ -85,6 +85,15 @@ export class ApplicationInsights {
                 core.initialize(_config, [new Sender()]);
             }
         });
+
+        function _track(item: ITelemetryItem) {
+            if (item) {
+                // to pass sender.processTelemetry()
+                item.baseData = item.baseData || {};
+                item.baseType = item.baseType || "EventData";
+            }
+            core.track(item);
+        }
     }
 
     /**
@@ -218,4 +227,4 @@ export {
     IPageViewPerformanceTelemetry,
     ITraceTelemetry
 } from "@microsoft/applicationinsights-common";
-export { Sender } from "@microsoft/applicationinsights-channel-js";
+export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";
