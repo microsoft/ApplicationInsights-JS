@@ -14,7 +14,7 @@ import {
     useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isNumber, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
@@ -53,6 +53,17 @@ function isOverrideFn(httpXHROverride: any) {
     return httpXHROverride && httpXHROverride.sendPOST;
 }
 
+function _prependTransports(theTransports: TransportType[], newTransports: TransportType | TransportType[]) {
+    if (newTransports) {
+        if (isNumber(newTransports)) {
+            theTransports = [newTransports as TransportType].concat(theTransports);
+        } else if (isArray(newTransports)) {
+            theTransports = newTransports.concat(theTransports);
+        }
+    }
+    return theTransports;
+}
+
 const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepFreeze({
     // Use the default value (handles empty string in the configuration)
     endpointUrl: cfgDfValidate(isTruthy, DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH),
@@ -74,7 +85,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     eventsLimitInMem: 10000,
     bufferOverride: false,
     httpXHROverride: { isVal: isOverrideFn, v:UNDEFINED_VALUE },
-    alwaysUseXhrOverride: cfgDfBoolean()
+    alwaysUseXhrOverride: cfgDfBoolean(),
+    transports: UNDEFINED_VALUE,
 });
 
 function _chkSampling(value: number) {
@@ -348,7 +360,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let customInterface = senderConfig.httpXHROverride;
                     let httpInterface: IXHROverride = null;
                     let syncInterface: IXHROverride = null;
-                    httpInterface = _getSenderInterface([TransportType.Xhr, TransportType.Fetch], false);
+
+                    // Prefix any user requested transport(s) values
+                    let theTransports: TransportType[] = _prependTransports([TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
+                    httpInterface = _getSenderInterface(theTransports, false);
                   
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
                     _xhrSend = (payload: string[], isAsync: boolean) => {
