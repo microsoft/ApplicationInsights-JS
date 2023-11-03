@@ -23,6 +23,7 @@
                 "eStorageType",
                 "FieldType",
                 "eDistributedTracingModes",
+                "eOfflineValue",
                 "eRequestHeaders",
                 "DataPointType",
                 "DependencyKind",
