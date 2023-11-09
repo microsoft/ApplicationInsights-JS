@@ -121,6 +121,13 @@ export interface ISenderConfig {
      * This is used during initialization to identify the requested send transport, it will be ignored if a httpXHROverride is provided.
      */
       transports?: number | number[];
+
+       /**
+     * [Optional] Either an array or single value identifying the requested TransportType type(s) that should be used during unload or events
+     * marked as sendBeacon. This is used during initialization to identify the requested send transport, it will be ignored if a httpXHROverride
+     * is provided and alwaysUseXhrOverride is true.
+     */
+      unloadTransports?: number | number[];
 }
 
 export interface IBackendResponse {
