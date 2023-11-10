@@ -366,6 +366,12 @@ export interface IConfig {
     disableIkeyDeprecationMessage?: boolean;
 
     /**
+     * [Optional] Sets to true if user wants to disable sending internal log message 'SendBrowserInfoOnUserInit'
+     * default to be false for versions 2.8.x and 3.0.x, true for versions 3.1.x and later
+     */
+    disableUserInitMessage?: boolean;
+
+    /**
      * [Optional] Flag to indicate whether the internal looking endpoints should be automatically
      * added to the `excludeRequestFromAutoTrackingPatterns` collection. (defaults to true).
      * This flag exists as the provided regex is generic and may unexpectedly match a domain that
