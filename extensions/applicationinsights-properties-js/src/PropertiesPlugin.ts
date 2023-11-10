@@ -129,7 +129,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 _disableUserInitMessage = false;
             }
 
-            function _populateDefaults(config: IConfiguration) {
+            function _populateDefaults(config: IConfiguration & IConfig) {
                 let identifier = _self.identifier;
                 let core = _self.core;
 
