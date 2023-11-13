@@ -373,8 +373,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     
                     if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported()) {
                         // Config is set to always used beacon sending
-                        let beaconUnloadTransports = _prependTransports([TransportType.Beacon], senderConfig.unloadTransports);
-                        httpInterface = _getSenderInterface(beaconUnloadTransports, true);
+                        httpInterface = _getSenderInterface([TransportType.Beacon], false);
                     }
 
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
@@ -387,7 +386,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         // Try and use the fetch with keepalive
                         _syncUnloadSender = _fetchKeepAliveSender;
                     }
-
+                    
                     let syncTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr], senderConfig.transports);
                     syncInterface = _getSenderInterface(syncTransports, true);
                     syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
