@@ -52,6 +52,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
         let _distributedTraceCtx: IDistributedTraceContext;
         let _previousTraceCtx: IDistributedTraceContext;
         let _context: IPropTelemetryContext;
+        let _disableUserInitMessage: boolean;
 
         dynamicProto(PropertiesPlugin, this, (_self, _base) => {
 
@@ -98,8 +99,10 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
     
                     if (userCtx && userCtx.isNewUser) {
                         userCtx.isNewUser = false;
-                        const message = new _InternalLogMessage(_eInternalMessageId.SendBrowserInfoOnUserInit, ((getNavigator()||{} as any).userAgent||""));
-                        _logInternalMessage(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, message);
+                        if (!_disableUserInitMessage){
+                            const message = new _InternalLogMessage(_eInternalMessageId.SendBrowserInfoOnUserInit, ((getNavigator()||{} as any).userAgent||""));
+                            _logInternalMessage(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, message);
+                        }
                     }
     
                     _self.processNext(event, itemCtx);
@@ -123,9 +126,10 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 _distributedTraceCtx = null;
                 _previousTraceCtx = null;
                 _context = null;
+                _disableUserInitMessage = false;
             }
 
-            function _populateDefaults(config: IConfiguration) {
+            function _populateDefaults(config: IConfiguration & IConfig) {
                 let identifier = _self.identifier;
                 let core = _self.core;
 
@@ -135,6 +139,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                     if (config.storagePrefix){
                         utlSetStoragePrefix(config.storagePrefix);
                     }
+                    _disableUserInitMessage = config.disableUserInitMessage || false;
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
 
                     // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class
