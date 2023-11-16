@@ -363,6 +363,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     // Prefix any user requested transport(s) values
                     let theTransports: TransportType[] = _prependTransports([TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
+                    if (senderConfig.isBeaconApiDisabled){
+                        // remove beacon from theTransports
+                        theTransports = theTransports.filter(transport => transport !== TransportType.Beacon);
+                    }
+
                     httpInterface = _getSenderInterface(theTransports, false);
                   
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
@@ -377,6 +382,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
 
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
+
+                  
     
                     _self._sender = (payload: string[], isAsync: boolean) => {
                         return _doSend(httpInterface, payload, isAsync);
@@ -387,7 +394,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _syncUnloadSender = _fetchKeepAliveSender;
                     }
                     
-                    let syncTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr], senderConfig.transports);
+                    let syncTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr], senderConfig.unloadTransports);
                     syncInterface = _getSenderInterface(syncTransports, true);
                     syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
 
