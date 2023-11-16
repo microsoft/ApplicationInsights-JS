@@ -369,8 +369,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         theTransports = theTransports.filter(transport => transport !== TransportType.Beacon);
                     }
 
-                    console.log("first tt", theTransports[0])
-
                     httpInterface = _getSenderInterface(theTransports, false);
                   
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
