@@ -414,7 +414,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
 
                     if (!_syncUnloadSender) {
-                        console.log("should not come here")
                         _syncUnloadSender = _xhrSend;
                     }
 
@@ -679,9 +678,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 let transportType: TransportType = null;
                 let sendPostFunc: SendPOSTFunction = null;
                 let lp = 0;
-                console.log("transports", transports.length, transports);
                 while (sendPostFunc == null && lp < transports.length) {
-                    console.log("transportType", transports[lp], " lp ", lp);
                     transportType = transports[lp];
                     if (!_disableXhr && transportType === TransportType.Xhr) {
                         if (useXDomainRequest()) {
@@ -690,20 +687,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         } else if (isXhrSupported()) {
                             sendPostFunc = _xhrSender;
                         }
-                        console.log("xhr", lp);
-
                     } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport)) {
                         sendPostFunc = _fetchSender;
-                        console.log("fetch", lp);
-
                     } else if (isBeaconsSupported() && transportType === TransportType.Beacon) {
                         sendPostFunc = _beaconSender;
-                        console.log("beacon", lp);
-
                     }
 
                     lp++;
-                    console.log("what happened", lp)
                 }
 
                 if (sendPostFunc) {
