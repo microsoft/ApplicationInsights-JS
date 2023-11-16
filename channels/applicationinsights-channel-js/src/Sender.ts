@@ -171,6 +171,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _orgEndpointUrl: string;
         let _maxBatchSizeInBytes: number;
         let _beaconSupported: boolean;
+        let _beaconOnUnloadSupported: boolean;
+        let _beaconNormalSupported: boolean;
         let _customHeaders: Array<{header: string, value: string}>;
         let _disableTelemetry: boolean;
         let _instrumentationKey: string;
@@ -293,6 +295,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
                     _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
+                    _beaconOnUnloadSupported = senderConfig.onunloadDisableBeacon === false  && isBeaconsSupported();
+                    _beaconNormalSupported = senderConfig.isBeaconApiDisabled === false && isBeaconsSupported();
+
                     _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     _disableXhr = !!senderConfig.disableXhr;
                     
@@ -361,13 +366,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let httpInterface: IXHROverride = null;
                     let syncInterface: IXHROverride = null;
 
-                    // Prefix any user requested transport(s) values
-                    let theTransports: TransportType[] = _prependTransports([TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
-
-                    if (senderConfig.isBeaconApiDisabled || !isBeaconsSupported()){
-                        // remove beacon from theTransports
-                        theTransports = theTransports.filter(transport => transport !== TransportType.Beacon);
-                    }
+                    // User requested transport(s) values > Beacon > Fetch > XHR
+                    // Beacon would be filtered out if user has set disableBeaconApi to true at _getSenderInterface 
+                    let theTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
 
                     httpInterface = _getSenderInterface(theTransports, false);
                   
@@ -376,12 +377,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         return _doSend(xhrInterface, payload, isAsync);
                     };
     
-                    // prioritize beacon over fetch and xhr
-                    if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported() && !senderConfig.transports) {
-                        // Config is set to always used beacon sending unless customer provided their own transport options
-                        httpInterface = _getSenderInterface([TransportType.Beacon], false);
-                    }
-
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
 
                     _self._sender = (payload: string[], isAsync: boolean) => {
@@ -398,10 +393,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         // remove fetch from theTransports
                         syncTransports = syncTransports.filter(transport => transport !== TransportType.Fetch);
                     }
-                    if (senderConfig.isBeaconApiDisabled || !isBeaconsSupported()){
-                        // remove beacon from theTransports
-                        syncTransports = syncTransports.filter(transport => transport !== TransportType.Beacon);
-                    }
+
                     syncInterface = _getSenderInterface(syncTransports, true);
                     syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
                    
@@ -687,7 +679,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport)) {
                         sendPostFunc = _fetchSender;
-                    } else if (isBeaconsSupported() && transportType === TransportType.Beacon) {
+                    } else if (transportType === TransportType.Beacon && (syncSupport && _beaconOnUnloadSupported || !syncSupport && _beaconNormalSupported)) {
                         sendPostFunc = _beaconSender;
                     }
 
