@@ -1091,63 +1091,224 @@ export class SenderTests extends AITestClass {
             }
         });
 
+        
         this.testCase({
-            name: 'BeaconAPI is not used when isBeaconApiDisabled flag is false but payload size is over 64k, fall off to xhr sender',
-            useFakeTimers: true,
+            name: 'Unload Transport Type: User provide fetch in unloadtransports, but it is disabled, so we should use beacon',
             test: () => {
+                let window = getGlobalInst("window");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
                 let sendBeaconCalled = false;
                 this.hookSendBeacon((url: string) => {
                     sendBeaconCalled = true;
-                    return false;
+                    return true;
                 });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled: false,
+                    disableXhr: false,
+                    onunloadDisableFetch: true,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    unloadTransports: [TransportType.Fetch]
+                } as ISenderConfig;
 
                 const sender = new Sender();
                 const cr = new AppInsightsCore();
-                cr["logger"] = new DiagnosticLogger();
-                const MAX_PROPERTIES_SIZE = 8000;
-                const payload = new Array(MAX_PROPERTIES_SIZE).join('a');
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
 
-                sender.initialize({
-                    instrumentationKey: 'abc',
-                    isBeaconApiDisabled: false
-                }, cr, []);
+                cr.initialize(coreConfig, [sender]);
+
                 this.onDone(() => {
                     sender.teardown();
                 });
 
-                const telemetryItems: ITelemetryItem[] = [];
-                for (let i = 0; i < 8; i ++) {
-                    const telemetryItem: ITelemetryItem = {
-                        name: 'fake item',
-                        iKey: 'iKey',
-                        baseType: 'some type',
-                        baseData: {},
-                        data: {
-                            properties: {
-                                payload
-                            }
-                        }
-                    };
-                    telemetryItems[i] = telemetryItem;
-                }
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
 
                 QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
                 try {
-                    for (let i = 0; i < 8; i++) {
-                        sender.processTelemetry(telemetryItems[i], null);
-                    }
-                    sender.flush();
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.onunloadFlush();
                 } catch(e) {
                     QUnit.assert.ok(false);
                 }
 
-                this.clock.tick(15000);
+                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API should be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(!fetchstub.called, "fetch sender is blocked");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
 
-                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API is enabled but payload is over size, Beacon API is called");
-                QUnit.assert.ok(this._getXhrRequests().length > 0, "xhr sender is called when payload is over size");
+        this.testCase({
+            name: 'Unload Transport Type: User provide fetch in unloadtransports, we should use fetch',
+            test: () => {
+                let window = getGlobalInst("window");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled: false,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    unloadTransports: [TransportType.Fetch]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API should not be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(fetchstub.called, "fetch sender is called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+
+       
+        this.testCase({
+            name: 'Unload Transport Type: User provide beacon in unloadtransports, we should use beacon',
+            test: () => {
+                let window = getGlobalInst("window");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled: false,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    unloadTransports: [TransportType.Beacon]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API should be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(!fetchstub.called, "fetch sender is not called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
             }
         });
 
@@ -1275,79 +1436,7 @@ export class SenderTests extends AITestClass {
             }
         });
 
-        // this.testCase({
-        //     name: 'Transport Type: isBeaconApiDisabled is false and User provide beacon in transports, we should pick beacon',
-        //     test: () => {
-        //         let window = getGlobalInst("window");
-        //         let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
-        //         let fetchstub = this.sandbox.stub((window as any), "fetch");
-
-        //         let sendBeaconCalled = false;
-        //         this.hookSendBeacon((url: string) => {
-        //             sendBeaconCalled = true;
-        //             return false;
-        //         });
-
-        //         let config = {
-        //             endpointUrl: "https//: test",
-        //             emitLineDelimitedJson: false,
-        //             maxBatchInterval: 15000,
-        //             maxBatchSizeInBytes: 102400,
-        //             disableTelemetry: false,
-        //             enableSessionStorageBuffer: true,
-        //             isRetryDisabled: false,
-        //             isBeaconApiDisabled: false,
-        //             disableXhr: false,
-        //             onunloadDisableFetch: false,
-        //             onunloadDisableBeacon: false,
-        //             instrumentationKey:"key",
-        //             namePrefix: "",
-        //             samplingPercentage: 100,
-        //             customHeaders: [{header:"header",value:"val" }],
-        //             convertUndefined: "",
-        //             eventsLimitInMem: 10000,
-        //             transports: [TransportType.Beacon]
-        //         } as ISenderConfig;
-
-        //         const sender = new Sender();
-        //         const cr = new AppInsightsCore();
-        //         var coreConfig = {
-        //             instrumentationKey: "",
-        //             extensionConfig: {[sender.identifier]: config}
-        //         };
-
-        //         cr.initialize(coreConfig, [sender]);
-
-        //         this.onDone(() => {
-        //             sender.teardown();
-        //         });
-
-        //         const telemetryItem: ITelemetryItem = {
-        //             name: 'fake item',
-        //             iKey: 'iKey',
-        //             baseType: 'some type',
-        //             baseData: {}
-        //         };
-
-        //         QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
-        //         QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
-        //         QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
-
-        //         try {
-        //             sender.processTelemetry(telemetryItem, null);
-        //             sender.flush();
-        //         } catch(e) {
-        //             QUnit.assert.ok(false);
-        //         }
-
-        //         QUnit.assert.equal(true, sendBeaconCalled, "Beacon API is enabled, Beacon API is called");
-        //         QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
-        //         QUnit.assert.ok(!fetchstub.called, "fetch sender is not called");
-        //         // store it back
-        //         (window as any).XMLHttpRequest = fakeXMLHttpRequest;
-        //     }
-        // });
-
+ 
 
         this.testCase({
             name: 'Transport Type: disableXhr is false, and user provide xhr in transports',
@@ -2254,33 +2343,33 @@ export class SenderTests extends AITestClass {
             }
         });
 
-        // this.testCase({
-        //     name: 'Offline watcher responds to offline events (window.addEventListener)',
-        //     useFakeTimers: true,
-        //     test: () => {
-        //         // Setup
-        //         const offlineEvent = new Event('offline');
-        //         const onlineEvent = new Event('online');
+        this.testCase({
+            name: 'Offline watcher responds to offline events (window.addEventListener)',
+            useFakeTimers: true,
+            test: () => {
+                // Setup
+                const offlineEvent = new Event('offline');
+                const onlineEvent = new Event('online');
 
-        //         // Verify precondition
-        //         QUnit.assert.ok(this._offline.isListening());
-        //         QUnit.assert.ok(this._offline.isOnline());
+                // Verify precondition
+                QUnit.assert.ok(this._offline.isListening());
+                QUnit.assert.ok(this._offline.isOnline());
 
-        //         // Act - Go offline
-        //         window.dispatchEvent(offlineEvent);
-        //         this.clock.tick(1);
+                // Act - Go offline
+                window.dispatchEvent(offlineEvent);
+                this.clock.tick(1);
 
-        //         // Verify offline
-        //         QUnit.assert.ok(!this._offline.isOnline());
+                // Verify offline
+                QUnit.assert.ok(!this._offline.isOnline());
 
-        //         // Act - Go online
-        //         window.dispatchEvent(onlineEvent);
-        //         this.clock.tick(1);
+                // Act - Go online
+                window.dispatchEvent(onlineEvent);
+                this.clock.tick(1);
 
-        //         // Verify online
-        //         QUnit.assert.ok(this._offline.isOnline());
-        //     }
-        // });
+                // Verify online
+                QUnit.assert.ok(this._offline.isOnline());
+            }
+        });
 
         this.testCase({
             name: "AppInsightsTests: AppInsights Envelope created for Page View with new web extension",

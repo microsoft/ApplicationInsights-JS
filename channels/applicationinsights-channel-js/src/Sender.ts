@@ -363,10 +363,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     // Prefix any user requested transport(s) values
                     let theTransports: TransportType[] = _prependTransports([TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
-                    if (senderConfig.isBeaconApiDisabled){
+
+                    if (senderConfig.isBeaconApiDisabled || !isBeaconsSupported()){
                         // remove beacon from theTransports
                         theTransports = theTransports.filter(transport => transport !== TransportType.Beacon);
                     }
+
+                    console.log("first tt", theTransports[0])
 
                     httpInterface = _getSenderInterface(theTransports, false);
                   
@@ -375,16 +378,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         return _doSend(xhrInterface, payload, isAsync);
                     };
     
-    
-                    if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported()) {
-                        // Config is set to always used beacon sending
+                    // prioritize beacon over fetch and xhr
+                    if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported() && !senderConfig.transports) {
+                        // Config is set to always used beacon sending unless customer provided their own transport options
                         httpInterface = _getSenderInterface([TransportType.Beacon], false);
                     }
 
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
 
-                  
-    
                     _self._sender = (payload: string[], isAsync: boolean) => {
                         return _doSend(httpInterface, payload, isAsync);
                     };
@@ -395,16 +396,25 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
                     
                     let syncTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr], senderConfig.unloadTransports);
+                    if (!_fetchKeepAlive){
+                        // remove fetch from theTransports
+                        syncTransports = syncTransports.filter(transport => transport !== TransportType.Fetch);
+                    }
+                    if (senderConfig.isBeaconApiDisabled || !isBeaconsSupported()){
+                        // remove beacon from theTransports
+                        syncTransports = syncTransports.filter(transport => transport !== TransportType.Beacon);
+                    }
                     syncInterface = _getSenderInterface(syncTransports, true);
                     syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
-
-                    if ((_alwaysUseCustomSend || !_syncUnloadSender) && syncInterface) {
+                   
+                    if ((_alwaysUseCustomSend || senderConfig.unloadTransports || !_syncUnloadSender) && syncInterface) {
                         _syncUnloadSender = (payload: string[], isAsync: boolean) => {
                             return _doSend(syncInterface, payload, isAsync);
                         };
                     }
 
                     if (!_syncUnloadSender) {
+                        console.log("should not come here")
                         _syncUnloadSender = _xhrSend;
                     }
 
@@ -669,7 +679,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 let transportType: TransportType = null;
                 let sendPostFunc: SendPOSTFunction = null;
                 let lp = 0;
+                console.log("transports", transports.length, transports);
                 while (sendPostFunc == null && lp < transports.length) {
+                    console.log("transportType", transports[lp], " lp ", lp);
                     transportType = transports[lp];
                     if (!_disableXhr && transportType === TransportType.Xhr) {
                         if (useXDomainRequest()) {
@@ -678,13 +690,20 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         } else if (isXhrSupported()) {
                             sendPostFunc = _xhrSender;
                         }
+                        console.log("xhr", lp);
+
                     } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport)) {
                         sendPostFunc = _fetchSender;
+                        console.log("fetch", lp);
+
                     } else if (isBeaconsSupported() && transportType === TransportType.Beacon) {
                         sendPostFunc = _beaconSender;
+                        console.log("beacon", lp);
+
                     }
 
                     lp++;
+                    console.log("what happened", lp)
                 }
 
                 if (sendPostFunc) {
