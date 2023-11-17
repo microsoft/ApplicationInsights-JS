@@ -86,7 +86,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     bufferOverride: false,
     httpXHROverride: { isVal: isOverrideFn, v:UNDEFINED_VALUE },
     alwaysUseXhrOverride: cfgDfBoolean(),
-    transports: UNDEFINED_VALUE,
+    transports: UNDEFINED_VALUE
 });
 
 function _chkSampling(value: number) {
@@ -367,7 +367,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let syncInterface: IXHROverride = null;
 
                     // User requested transport(s) values > Beacon > Fetch > XHR
-                    // Beacon would be filtered out if user has set disableBeaconApi to true at _getSenderInterface 
+                    // Beacon would be filtered out if user has set disableBeaconApi to true at _getSenderInterface
                     let theTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
 
                     httpInterface = _getSenderInterface(theTransports, false);

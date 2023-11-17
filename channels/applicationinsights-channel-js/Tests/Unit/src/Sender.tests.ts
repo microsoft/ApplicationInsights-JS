@@ -2343,33 +2343,33 @@ export class SenderTests extends AITestClass {
             }
         });
 
-        // this.testCase({
-        //     name: 'Offline watcher responds to offline events (window.addEventListener)',
-        //     useFakeTimers: true,
-        //     test: () => {
-        //         // Setup
-        //         const offlineEvent = new Event('offline');
-        //         const onlineEvent = new Event('online');
+        this.testCase({
+            name: 'Offline watcher responds to offline events (window.addEventListener)',
+            useFakeTimers: true,
+            test: () => {
+                // Setup
+                const offlineEvent = new Event('offline');
+                const onlineEvent = new Event('online');
 
-        //         // Verify precondition
-        //         QUnit.assert.ok(this._offline.isListening());
-        //         QUnit.assert.ok(this._offline.isOnline());
+                // Verify precondition
+                QUnit.assert.ok(this._offline.isListening());
+                QUnit.assert.ok(this._offline.isOnline());
 
-        //         // Act - Go offline
-        //         window.dispatchEvent(offlineEvent);
-        //         this.clock.tick(1);
+                // Act - Go offline
+                window.dispatchEvent(offlineEvent);
+                this.clock.tick(1);
 
-        //         // Verify offline
-        //         QUnit.assert.ok(!this._offline.isOnline());
+                // Verify offline
+                QUnit.assert.ok(!this._offline.isOnline());
 
-        //         // Act - Go online
-        //         window.dispatchEvent(onlineEvent);
-        //         this.clock.tick(1);
+                // Act - Go online
+                window.dispatchEvent(onlineEvent);
+                this.clock.tick(1);
 
-        //         // Verify online
-        //         QUnit.assert.ok(this._offline.isOnline());
-        //     }
-        // });
+                // Verify online
+                QUnit.assert.ok(this._offline.isOnline());
+            }
+        });
 
         this.testCase({
             name: "AppInsightsTests: AppInsights Envelope created for Page View with new web extension",
