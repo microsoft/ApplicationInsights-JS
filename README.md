@@ -565,7 +565,7 @@ If user is loading the Application Insights from the CDN via a script tag with r
 
 To support this usage pattern we also produce and publish to the CDN endpoints an [iife (Immediately Invoked Function Expression)](https://www.codeproject.com/Articles/5265230/Understanding-all-JavaScript-Module-Formats-and-To#iife-module-javascript-module-pattern) module so that the SDK is always executed and initialized.
 
-To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name. (Note: Since version 7, the gbl modules is set to be default. Because of the potential [problem](#module-formats) caused by require.js)
+To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name. (Note: Since version 7, the gbl modules is set to be default to solve the potential [problem](#module-formats) caused by require.js)
 
 These modules are also included in the NPM packages within the ```bundle``` folder.
 
