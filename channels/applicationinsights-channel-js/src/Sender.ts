@@ -679,7 +679,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport)) {
                         sendPostFunc = _fetchSender;
-                    } else if (transportType === TransportType.Beacon && (syncSupport && _beaconOnUnloadSupported || !syncSupport && _beaconNormalSupported)) {
+                    } else if (transportType === TransportType.Beacon && (syncSupport ? _beaconOnUnloadSupported : _beaconNormalSupported)) {
                         sendPostFunc = _beaconSender;
                     }
 
