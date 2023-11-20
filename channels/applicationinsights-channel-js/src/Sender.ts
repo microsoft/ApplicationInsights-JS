@@ -15,7 +15,7 @@ import {
     useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isNumber, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
@@ -53,6 +53,17 @@ function isOverrideFn(httpXHROverride: any) {
     return httpXHROverride && httpXHROverride.sendPOST;
 }
 
+function _prependTransports(theTransports: TransportType[], newTransports: TransportType | TransportType[]) {
+    if (newTransports) {
+        if (isNumber(newTransports)) {
+            theTransports = [newTransports as TransportType].concat(theTransports);
+        } else if (isArray(newTransports)) {
+            theTransports = newTransports.concat(theTransports);
+        }
+    }
+    return theTransports;
+}
+
 const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepFreeze({
     // Use the default value (handles empty string in the configuration)
     endpointUrl: cfgDfValidate(isTruthy, DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH),
@@ -74,7 +85,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     eventsLimitInMem: 10000,
     bufferOverride: false,
     httpXHROverride: { isVal: isOverrideFn, v:UNDEFINED_VALUE },
-    alwaysUseXhrOverride: cfgDfBoolean()
+    alwaysUseXhrOverride: cfgDfBoolean(),
+    transports: UNDEFINED_VALUE
 });
 
 function _chkSampling(value: number) {
@@ -159,6 +171,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _orgEndpointUrl: string;
         let _maxBatchSizeInBytes: number;
         let _beaconSupported: boolean;
+        let _beaconOnUnloadSupported: boolean;
+        let _beaconNormalSupported: boolean;
         let _customHeaders: Array<{header: string, value: string}>;
         let _disableTelemetry: boolean;
         let _instrumentationKey: string;
@@ -281,6 +295,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
                     _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
+                    _beaconOnUnloadSupported = senderConfig.onunloadDisableBeacon === false  && isBeaconsSupported();
+                    _beaconNormalSupported = senderConfig.isBeaconApiDisabled === false && isBeaconsSupported();
+
                     _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     _disableXhr = !!senderConfig.disableXhr;
                     
@@ -348,21 +365,20 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let customInterface = senderConfig.httpXHROverride;
                     let httpInterface: IXHROverride = null;
                     let syncInterface: IXHROverride = null;
-                    httpInterface = _getSenderInterface([TransportType.Xhr, TransportType.Fetch], false);
+
+                    // User requested transport(s) values > Beacon > Fetch > XHR
+                    // Beacon would be filtered out if user has set disableBeaconApi to true at _getSenderInterface
+                    let theTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
+
+                    httpInterface = _getSenderInterface(theTransports, false);
                   
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
                     _xhrSend = (payload: string[], isAsync: boolean) => {
                         return _doSend(xhrInterface, payload, isAsync);
                     };
     
-    
-                    if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported()) {
-                        // Config is set to always used beacon sending
-                        httpInterface = _getSenderInterface([TransportType.Beacon], false);
-                    }
-
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
-    
+
                     _self._sender = (payload: string[], isAsync: boolean) => {
                         return _doSend(httpInterface, payload, isAsync);
                     };
@@ -371,9 +387,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         // Try and use the fetch with keepalive
                         _syncUnloadSender = _fetchKeepAliveSender;
                     }
-                    syncInterface = _alwaysUseCustomSend? customInterface : (_getSenderInterface([TransportType.Beacon, TransportType.Xhr], true) || customInterface);
+                    
+                    let syncTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr], senderConfig.unloadTransports);
+                    if (!_fetchKeepAlive){
+                        // remove fetch from theTransports
+                        syncTransports = syncTransports.filter(transport => transport !== TransportType.Fetch);
+                    }
 
-                    if ((_alwaysUseCustomSend || !_syncUnloadSender) && syncInterface) {
+                    syncInterface = _getSenderInterface(syncTransports, true);
+                    syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
+                   
+                    if ((_alwaysUseCustomSend || senderConfig.unloadTransports || !_syncUnloadSender) && syncInterface) {
                         _syncUnloadSender = (payload: string[], isAsync: boolean) => {
                             return _doSend(syncInterface, payload, isAsync);
                         };
@@ -655,7 +679,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport)) {
                         sendPostFunc = _fetchSender;
-                    } else if (isBeaconsSupported() && transportType === TransportType.Beacon) {
+                    } else if (transportType === TransportType.Beacon && (syncSupport ? _beaconOnUnloadSupported : _beaconNormalSupported)) {
                         sendPostFunc = _beaconSender;
                     }
 
