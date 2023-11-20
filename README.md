@@ -561,11 +561,11 @@ eg. ```var aiSdk = require("@microsoft/applicationinsights-web");```
 
 This situation can also occur when the scripts are loaded lazily, late or dynamically (__and__ RequireJs is present) as this can cause a race condition between the SDK and RequireJS, which will cause the same issue if RequireJS is loaded first.
 
-If user is loading the Application Insights from the CDN via a script tag with require js running by other scripts, error may occur. A typical error could be "Error: Mismatched anonymous define() module". The root reason is explained [here](https://requirejs.org/docs/errors.html#mismatch).
+If users load Application Insights from the CDN via a script tag with require js running by other scripts, errors may occur. A typical error could be "Error: Mismatched anonymous define() module". The root reason is explained [here](https://requirejs.org/docs/errors.html#mismatch).
 
 To support this usage pattern we also produce and publish to the CDN endpoints an [iife (Immediately Invoked Function Expression)](https://www.codeproject.com/Articles/5265230/Understanding-all-JavaScript-Module-Formats-and-To#iife-module-javascript-module-pattern) module so that the SDK is always executed and initialized.
 
-To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name. (Note: Since version 7, the gbl modules is set to be default to solve the potential [problem](#module-formats) caused by require.js)
+To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name. (Note: Since version 7, the gbl modules is set as default module to solve the potential [problem](#module-formats) caused by require.js)
 
 These modules are also included in the NPM packages within the ```bundle``` folder.
 
