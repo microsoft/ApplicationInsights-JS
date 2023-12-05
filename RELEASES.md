@@ -16,21 +16,25 @@
 
 ### Changelog
 
+- #2162 [BUG] window is not defined at _getStackFromErrorObj 
+- #2163 [BUG] Using App Insights connection string leads to double slash 
+- #2164 [BUG] Fetch with empty string as first parameter does not include traceparent and does not successfully save dependency to Application Insights
+- #2165 [main] use proper URL for tracking when fetch is passed an empty string 
+- #2180  [BUG] Same timestamp on multiple pageView-events after upgrade to 3.0.3 
 - CfgSyncPlugin improvment
   - #2166 [main] correct throttle configdefault setting in aisku 
   - #2168 [Main][Task]24499167: add cfgSync plugin doc 
   - #2171 [main] test aisku config could correctly merge new config fetch from cdn 
   - #2175 [main] Update Service Notifications to not send message twice 
-
-- #2160 [Main] Include Config sync in publish group 
-- #2165 [main] use proper URL for tracking when fetch is passed an empty string 
-- #2169 [Main][Task]24499172: add throttle manager doc 
-- #2170 [Main][Task]24499174: Add service notification doc 
-- #2173 Add Issue state reporting script 
-- #2174 [main] remove double slash for endPointUrl
-- #2177 [Main]Set CfgSync version to 3.0.3 
-- #2178 [main] use helper func to get window 
-- #2183 [main] fix startTime timestamp 
+  - #2177 [Main]Set CfgSync version to 3.0.3 
+  - #2160 [Main] Include Config sync in publish group 
+- Documentation update
+  - #2169 [Main][Task]24499172: add throttle manager doc 
+  - #2170 [Main][Task]24499174: Add service notification doc 
+- Github workflow improvement 
+  - #2173 Add Issue state reporting script 
+- Sender Update
+  - #2113 [Main][Task]16238553: Provide an override option for the Sender
 
 ## 3.0.3 (Sep 20th, 2023)
 
