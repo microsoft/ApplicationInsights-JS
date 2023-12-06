@@ -93,7 +93,7 @@ declare var cfg:ISnippetConfig;
         }
 
         function _reportFailure(targetSrc:string) {
-            if(cfg.disableSdkLoadError === true) {
+            if(cfg.dle === true) {
                 return;
             }
             let conString = _parseConnectionString();
