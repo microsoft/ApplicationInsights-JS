@@ -115,6 +115,13 @@ export interface ISenderConfig {
      * @since 3.0.4
      */
     alwaysUseXhrOverride?: boolean;
+
+    /**
+     * [Optional] Disable events splitting during sendbeacon.
+     * Default: false
+     * @since 3.0.6
+     */
+    disableSendBeaconSplit?: boolean;
 }
 
 export interface IBackendResponse {
