@@ -119,7 +119,7 @@ export interface ISenderConfig {
     /**
      * [Optional] Disable events splitting during sendbeacon.
      * Default: false
-     * @since 3.0.5
+     * @since 3.0.6
      */
     disableSendBeaconSplit?: boolean;
 
