@@ -85,6 +85,7 @@ The current version of the snippet is version 7, the version is identified by th
     // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
     // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
     // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
+    // disableSdkLoadError: true, // Prevent the SDK from reporting load failure,
     crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
     // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
     cfg: { // Application Insights Configuration
