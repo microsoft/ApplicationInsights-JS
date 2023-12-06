@@ -116,6 +116,13 @@ export interface ISenderConfig {
      */
     alwaysUseXhrOverride?: boolean;
 
+    /**
+     * [Optional] Disable events splitting during sendbeacon.
+     * Default: false
+     * @since 3.0.5
+     */
+    disableSendBeaconSplit?: boolean;
+
       /**
      * [Optional] Either an array or single value identifying the requested TransportType type that should be used.
      * This is used during initialization to identify the requested send transport, it will be ignored if a httpXHROverride is provided.
@@ -128,6 +135,8 @@ export interface ISenderConfig {
      * is provided and alwaysUseXhrOverride is true.
      */
       unloadTransports?: number | number[];
+
+   
 }
 
 export interface IBackendResponse {
