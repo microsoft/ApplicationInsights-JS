@@ -2,6 +2,17 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.6 (Dec 7th, 2023)
+
+This release fixes an issue with the `sendBeacon` usage during page unload, where the SDK was not correctly splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload.
+
+### Changelog
+
+- #2195 [BUG] Beacon sender causes flood of thousands of requests on page unload
+- #2201 [BUG] applicationinsights.azure.com/v2/track making hundreds of thousands of requests when third party cookies are disabled
+- #2205 [BUG] Duplicate customEvent entries
+- #2204 [BUG] Beacon sender reports error for success when diagnostics are enabled
+
 ## 3.0.5 (Nov 1st, 2023)
 
 ### Changelog
