@@ -684,8 +684,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 //TODO: handle other status codes
                 if (status === 200 && payload) {
                     _self._onSuccess(payload, payload.length);
+                } else {
+                    response && _self._onError(payload, response);
                 }
-                response && _self._onError(payload, response);
             }
 
             function _doSend(sendInterface: IXHROverride, payload: string[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
