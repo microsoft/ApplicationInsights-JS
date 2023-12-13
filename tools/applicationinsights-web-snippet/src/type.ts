@@ -9,6 +9,7 @@ export interface ISnippetConfig {
     onInit?: any;
     cfg: IConfiguration;
     cr?: boolean; // cdn retry would be proceed if ture
+    dle?: boolean; // Custom optional value to disable sdk load error to be sent
 }
 
 export interface Fields {
