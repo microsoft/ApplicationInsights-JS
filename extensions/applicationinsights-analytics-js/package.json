@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-analytics-js",
-    "version": "3.0.6",
+    "version": "3.0.7",
     "description": "Microsoft Application Insights JavaScript SDK - Web Analytics",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -32,8 +32,8 @@
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
-        "@microsoft/applicationinsights-properties-js": "3.0.6",
-        "@microsoft/applicationinsights-channel-js": "3.0.6",
+        "@microsoft/applicationinsights-properties-js": "3.0.7",
+        "@microsoft/applicationinsights-channel-js": "3.0.7",
         "@microsoft/api-extractor": "^7.18.19",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
@@ -60,8 +60,8 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.2",
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-core-js": "3.0.6",
-        "@microsoft/applicationinsights-common": "3.0.6",
+        "@microsoft/applicationinsights-core-js": "3.0.7",
+        "@microsoft/applicationinsights-common": "3.0.7",
         "@nevware21/ts-utils": ">= 0.10.1 < 2.x"
     },
     "license": "MIT"
