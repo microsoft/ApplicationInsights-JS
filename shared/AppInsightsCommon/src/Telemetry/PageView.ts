@@ -25,7 +25,7 @@ export class PageView implements IPageViewData, ISerializable {
         measurements: FieldType.Default,
         id: FieldType.Default
     }
-
+    
     /**
      * Schema version
      */

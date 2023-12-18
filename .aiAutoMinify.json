@@ -90,6 +90,13 @@
             "constEnums": [
                 "EventBatchNotificationReason"
             ]
+        },
+        "@microsoft/applicationinsights-offlinechannel-js": {
+            "constEnums": [
+                "eStorageType",
+                "eBatchSendStatus",
+                "eBatchStoreStatus"
+            ]
         }
     }
 }

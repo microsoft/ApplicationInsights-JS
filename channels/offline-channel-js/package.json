@@ -1,0 +1,62 @@
+{
+    "name": "@microsoft/applicationinsights-offlinechannel-js",
+    "version": "0.0.1",
+    "description": "Microsoft Application Insights JavaScript SDK Offline Channel",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
+    "author": "Microsoft Application Insights Team",
+    "main": "dist/es5/applicationinsights-offlinechannel-js.js",
+    "module": "dist-es5/applicationinsights-offlinechannel-js.js",
+    "types": "types/applicationinsights-offlinechannel-js.d.ts",
+    "sideEffects": false,
+    "repository": "github:Microsoft/applicationinsights-js",
+    "scripts": {
+        "clean": "git clean -xdf",
+        "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
+        "build:esm": "grunt offlinechannel",
+        "build:browser": "rollup -c rollup.config.js --bundleConfigAsCjs",
+        "rebuild": "npm run build",
+        "test": "grunt offlinechanneltest",
+        "mintest": "grunt offlinechannel-mintest",
+        "lint": "tslint -p tsconfig.json",
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights JavaScript SDK Offline Channel\"",
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "ai-min": "grunt offlinechannel-min",
+        "ai-restore": "grunt offlinechannel-restore",
+        "npm-pack": "npm pack",
+        "api-docs": "typedoc"
+    },
+    "dependencies": {
+        "@microsoft/dynamicproto-js": "^2.0.2",
+        "@microsoft/applicationinsights-shims": "3.0.1",
+        "@microsoft/applicationinsights-core-js": "3.0.5",
+        "@microsoft/applicationinsights-common": "3.0.5",
+        "@nevware21/ts-utils": ">= 0.10.1 < 2.x",
+        "@nevware21/ts-async": ">= 0.3.0 < 2.x"
+    },
+    "peerDependencies": {
+        "tslib": "*"
+    },
+    "devDependencies": {
+        "@microsoft/ai-test-framework": "0.0.1",
+        "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.2",
+        "@microsoft/api-extractor": "^7.18.19",
+        "@types/sinon": "4.3.3",
+        "grunt": "^1.5.3",
+        "grunt-cli": "^1.4.3",
+        "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@nevware21/grunt-eslint-ts": "^0.2.2",
+        "globby": "^11.0.0",
+        "magic-string": "^0.25.7",
+        "@rollup/plugin-commonjs": "^24.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@rollup/plugin-replace": "^5.0.2",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup": "^3.20.0",
+        "typescript": "^4.9.3",
+        "tslib": "^2.0.0",
+        "sinon": "^7.3.1",
+        "typedoc": "^0.24.8"
+    },
+    "license": "MIT"
+}
