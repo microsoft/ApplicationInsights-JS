@@ -129,14 +129,14 @@ Quick check: Using a browser that supports Developer tools (F12), validate on th
 * [Get additional help by filing an issue on GitHub](https://github.com/Microsoft/ApplicationInsights-JS/issues)
 * [Back to Snippet setup](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md#reporting-script-load-failures)
 
-## Other Script caused loading failure (by require js)
+## Sdk Initialization Failure Due to RequireJs
 
-If users load Application Insights from the CDN via a script tag with require js running by other scripts, errors may occur. A typical error could be "Error: Mismatched anonymous define() module".
-Check [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md#module-formats) for more details.
+If you encounter the error message "Error: Mismatched anonymous define() module" reported from the snippet, it is likely due to a conflict with RequireJs. This occurs when the runtime has already loaded RequireJs, preventing the proper initialization of the SDK. Refer to the documentation [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md#module-formats) for more detailed information.
+
 
 ### Troubleshooting
 - Check if other script is calling require js
 - Check if require js is loaded first before script is loaded
 
-### Suggested walkaround solution
-- if using load from cdn, instead of using 3.x.x.min.js, use 3.x.x.gbl.min.js instead. 
+### Recommended Workaround Solution
+- Instead of using 3.x.x.min.js or 2.x.x.js, opt for 3.x.x.gbl.min.js or 2.x.x.glb.js. 
