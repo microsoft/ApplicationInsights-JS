@@ -135,8 +135,8 @@ If you're experiencing issues with Application Insights not loading properly, it
 
 
 ### Troubleshooting
-- Check if other script is calling require js
-- Check if require js is loaded first before script is loaded
+- Check if another script is calling require js
+- Check if RequireJS is loaded first before script is loaded
 
 ### Recommended Workaround Solution
 - Instead of using 3.x.x.min.js or 2.x.x.js, opt for 3.x.x.gbl.min.js or 2.x.x.glb.js. 
