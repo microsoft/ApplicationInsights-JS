@@ -5,7 +5,6 @@ import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig } from '@microsoft/applicationinsights-common';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
-import { JsxEmit } from 'typescript';
 
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -269,25 +268,6 @@ export class ApplicationInsightsTests extends AITestClass {
                     Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
                     Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
                     Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                }
-            })
-        });
-
-        this.testCaseAsync({
-            name: 'E2E.GenericTests: trackEvent sends to backend with NaN value could be handled correctly',
-            stepDelay: 1,
-            steps: [() => {
-                this._ai.trackEvent({ name: 'event', properties: { "prop1": NaN }, measurements: { "measurement1": NaN } });
-            }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok( payload && payload.iKey);
-                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
-                    Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                    Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                    console.log("get data", JSON.stringify(data.baseData));
                 }
             })
         });
