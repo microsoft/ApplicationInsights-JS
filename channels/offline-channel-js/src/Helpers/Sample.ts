@@ -1,5 +1,7 @@
 import { ContextTagKeys, ISample, Metric } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, eLoggingSeverity, safeGetLogger } from "@microsoft/applicationinsights-core-js";
+import {
+    IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, eLoggingSeverity, safeGetLogger
+} from "@microsoft/applicationinsights-core-js";
 
 // ************************************************************************************************************
 // TODO: move to common
@@ -115,6 +117,3 @@ export class Sample implements ISample {
         return isSampledIn;
     }
 }
-
-
-

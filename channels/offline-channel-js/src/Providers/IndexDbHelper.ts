@@ -1,9 +1,14 @@
-import { arrForEach, getGlobal, isFunction, isPromiseLike, isString } from "@nevware21/ts-utils";
-import { CursorProcessResult, IDbContext, IIndexedDbDetails, IIndexedDbOpenDbContext, IIndexedDbSimpleQuery, IIndexedDbStoreActionContext, IProcessCursorState } from "../Interfaces/IOfflineIndexDb";
-import { IInternalDbSchema } from "../Interfaces/IOfflineBatch";
-import { createAsyncPromise,ITaskScheduler, createTaskScheduler, IPromise, StartQueuedTaskFn, doAwait, doAwaitResponse, createAsyncRejectedPromise, createAsyncResolvedPromise } from "@nevware21/ts-async";
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IDiagnosticLogger, getGlobalInst } from "@microsoft/applicationinsights-core-js";
+import {
+    IPromise, StartQueuedTaskFn, createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createTaskScheduler, doAwait,
+    doAwaitResponse
+} from "@nevware21/ts-async";
+import { getGlobal, isFunction, isPromiseLike, isString } from "@nevware21/ts-utils";
+import {
+    CursorProcessResult, IDbContext, IIndexedDbDetails, IIndexedDbOpenDbContext, IIndexedDbSimpleQuery, IIndexedDbStoreActionContext,
+    IProcessCursorState
+} from "../Interfaces/IOfflineIndexDb";
 
 const IndexedDBNames: string[] = ["indexedDB"/*, 'mozIndexedDB', 'webkitIndexedDB', 'msIndexedDb'*/];
 const DbReadWrite = "readwrite";
@@ -11,6 +16,10 @@ const Result = "result";
 const ErrorMessageUnableToOpenDb = "DBError: Unable to open database";
 const ErrorMessageDbUpgradeRequired = "DBError: Database upgrade required";
 const ErrorMessageDbNotOpen = "Database is not open";
+const ErrorMessageDbDoesNotExist = "DBError: Database does not exist";
+const ErrorMessageFailedToOpenCursor = "DBError: Failed to Open Cursor";
+const ErrorMessageFailedToDeleteDatabase = "DBError: Failed to delete the database";
+const ErrorMessageDbNotSupported = "DBError: Feature not supported";
 
 //window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
 //window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
@@ -118,13 +127,26 @@ function _debugLog(dbName: string, message: string) {
     }
 }
 
+/**
+ * Helper method to map an Event rejection to a reject with a message, this is mainly for terminal errors where the
+ * IndexedDb API returns an event which we are going to ignore
+ * @param rejectMessage
+ * @param rejectFunc
+ */
+function _eventReject(dbName: string, rejectMessage: string, rejectFunc: (reason?: any) => void, evtName: string) {
+    return function(evt: Event) {
+        rejectFunc(new Error(rejectMessage));
+        _debugLog(dbName, "[" + evtName + "] event rejected");
+    };
+}
+
 
 // This helper is designed to allow multiple database implementation
 // The IndexedDB provider will be using only one database with different stores.
 // for each transaction, will open a new connection
 export class IndexedDbHelper<C> {
     
-    constructor(sch: IInternalDbSchema, diagLog?: IDiagnosticLogger) {
+    constructor(diagLog?: IDiagnosticLogger) {
         let _dbFactory = getDbFactory() || null;
 
         dynamicProto(IndexedDbHelper, this, (_this) => {
@@ -132,7 +154,6 @@ export class IndexedDbHelper<C> {
             _this.isAvailable = (): boolean => {
                 return !!_dbFactory;
             };
-
             
             /**
              * Schedules the opening of the database if not already open
@@ -171,14 +192,13 @@ export class IndexedDbHelper<C> {
                         }
                         // TODO: add function to handle version change
                         function _databaseUpgrade(db: IDBDatabase, dbOpenRequest: IDBOpenDBRequest, ev?: Event) {
+                            _debugLog(dbName, "db upgrade called")
                             let upgDbCtx = _createDbCtx(null, db, dbOpenRequest, true, true);
 
                             if (!versionChangeFunc) {
                                 try {
-                                    dbOpenRequest.onerror = ev.preventDefault || ev.stopPropagation; // prevent on error before txn abort
                                     dbOpenRequest.transaction && dbOpenRequest.transaction.abort();
                                     dbOpenRequest.result && dbOpenRequest.result.close(); // close database to unblock others
-                                    // should we delete the database here since it will always use older version of schema
                                 } finally {
                                     openReject(new Error(ErrorMessageDbUpgradeRequired));
                                 }
@@ -191,9 +211,12 @@ export class IndexedDbHelper<C> {
                                     // Special case handling, when a DB is first created calling createObjectStore() will
                                     // automatically start a version change transaction which will block all other transactions
                                     // from getting created, so we save the auto opened on here for reuse as part of opening the store
+                                    _debugLog(upgDbCtx.dbName, "on version change success")
                                     if (!upgDbCtx.txn) {
                                         upgDbCtx.txn = dbOpenRequest.transaction;
+                                        _debugLog(upgDbCtx.dbName, "added open request")
                                     }
+                                    
                                 } else {
                                     // Abort the upgrade event
                                     try {
@@ -213,20 +236,24 @@ export class IndexedDbHelper<C> {
 
                             db.onabort = (evt: Event) => {
                                 //_warnLog(diagLog, dbName, "onabort -- closing the Db");
+                                _debugLog(dbName, "onabort -- closing the Db");
                                 opDbCtx.remove(db);
                             };
                             db.onerror = (evt: Event) => {
                                 //_warnLog(diagLog, dbName, "onerror -- closing the Db");
+                                _debugLog(dbName, "onerror -- closing the Db");
                                 opDbCtx.remove(db);
                             };
                             // Need to "cast" to any as the tsc compiler is complaining
                             (db as any).onclose = (evt: Event) => {
                                 //_warnLog(diagLog, dbName, "onclose -- closing the Db");
+                                _debugLog(dbName, "onclose -- closing the Db");
                                 opDbCtx.remove(db);
                             };
                             db.onversionchange = (evt: Event) => {
 
                                 //_warnLog(diagLog, dbName, "onversionchange -- force closing the Db");
+                                _debugLog(dbName, "onversionchange -- force closing the Db");
                                 db.close();
                                 opDbCtx.remove(db);
                             };
@@ -265,31 +292,36 @@ export class IndexedDbHelper<C> {
                             // - We are attempting to open the db as a different version but it's already open
                             dbOpenRequest.onblocked = (evt: Event) => {
                                 //_warnLog(diagLog, dbName, "Db Open Blocked event [" + evtName + "] - " + (dbOpenRequest.error || ""));
+                                _debugLog(dbName, "Db Open Blocked event [" + evtName + "] - " + (dbOpenRequest.error || ""))
                                 openReject(new Error(ErrorMessageUnableToOpenDb));
                             };
                             dbOpenRequest.onerror = (evt: Event) => {
                                 //_warnLog(diagLog, dbName, "Db Open Error event [" + evtName + "] - " + (dbOpenRequest.error || ""));
+                                _debugLog( dbName,"Db Open Error event [" + evtName + "] - " + (dbOpenRequest.error || ""))
                                 openReject(new Error(ErrorMessageUnableToOpenDb));
                             };
                             dbOpenRequest.onupgradeneeded = (evt: Event) => {
-                                //_debugLog(dbName, "Db Open Create/Upgrade needed event [" + evtName + "]");
+                                _debugLog(dbName, "Db Open Create/Upgrade needed event [" + evtName + "]");
                                 try {
                                     let db = evt.target[Result] || dbOpenRequest.result;
+                                   
                                     if (!db) {
+                                        _debugLog(dbName, "no db");
                                         openReject(new Error(ErrorMessageUnableToOpenDb));
                                         return;
                                     }
 
                                     _databaseUpgrade(db, dbOpenRequest, evt);
                                 } catch (e) {
-                                    //_eventReject(dbName, ErrorMessageUnableToOpenDb, openReject, evtName)(e);
+                                    _eventReject(dbName, ErrorMessageUnableToOpenDb, openReject, evtName)(e);
                                 }
                             };
 
                             dbOpenRequest.onsuccess = (evt) => {
+                                _debugLog(dbName, "Db Open sucess [" + evtName + "]");
                                 let db = evt.target[Result];
                                 if (!db) {
-                                    //openReject(new Error(ErrorMessageUnableToOpenDb));
+                                    openReject(new Error(ErrorMessageUnableToOpenDb));
                                     return;
                                 }
                                 _databaseOpen(db, dbOpenRequest);
@@ -297,6 +329,107 @@ export class IndexedDbHelper<C> {
                         }
                     });
                 });
+            };
+
+            _this.closeDb = (dbName: string): void => {
+                // Schedule the close so we don't interrupt an previous scheduled operations
+                _debugLog(dbName, "close db");
+                _scheduleEvent(dbName, "closeDb", (evtName) => {
+                    let dbCtx = _getDbContext(dbName);
+                    let dbHdls = dbCtx.dbHdl;
+                    let len = dbHdls.length;
+                    if (len > 0) {
+                        for (let lp = 0; lp < len; lp++) {
+                            // Just call close the db.onclose() event should take care of decrementing and removing the references
+                            dbHdls[lp].close();
+                        }
+                        dbCtx.dbHdl = [];
+                    }
+
+                    return 1;
+                }).catch((reason) => {
+                    // Handle promise rejection to avoid an unhandled rejection event
+                });
+            };
+
+            _this.deleteDb = (dbName: string): boolean | IPromise<boolean> => {
+                if (_dbFactory == null) {
+                    return false;
+                }
+
+                return _scheduleEvent<boolean>(dbName, "deleteDb", (evtName) => {
+                    // Implicitly close any open db first as this WILL block the deleting
+                    let dbCtx = _getDbContext(dbName);
+                    let dbHdls = dbCtx.dbHdl;
+                    let len = dbHdls.length;
+                    if (len > 0) {
+                        //_warnLog(diagLog, dbName, "Db is open [" + len + "] force closing");
+                        _debugLog(dbName, "Db is open [" + len + "] force closing");
+                        for (let lp = 0; lp < len; lp++) {
+                            // Just call close the db.onclose() event should take care of decrementing and removing the references
+                            dbHdls[lp].close();
+                        }
+
+                        // Clear all of the existing handles as we have forced closed them and for compatibility we can't
+                        // rely on the db onclose event
+                        dbCtx.dbHdl = [];
+                    }
+
+                    return createAsyncPromise<boolean>((deleteResolve, deleteReject) => {
+                        // Attempting to delete the Db, only after we wait so that any outstanding operations can finish
+                        setTimeout(() => {
+                            try {
+                                _debugLog(dbName, "[" + evtName + "] starting");
+
+                                let dbRequest = _dbFactory.deleteDatabase(dbName);
+                                dbRequest.onerror = (evt: Event) => {
+                                    //_warnLog(diagLog, dbName, "[" + evtName + "] error!!");
+                                    deleteReject(new Error(ErrorMessageFailedToDeleteDatabase));
+                                };
+                                dbRequest.onblocked = (evt: Event) => {
+                                    //_warnLog(diagLog, dbName, "[" + evtName + "] blocked!!");
+                                    deleteReject(new Error(ErrorMessageFailedToDeleteDatabase));
+                                };
+                                dbRequest.onupgradeneeded = (evt: Event) => {
+                                    //_warnLog(diagLog, dbName, "[" + evtName + "] upgrade needed!!");
+                                    deleteReject(new Error(ErrorMessageFailedToDeleteDatabase));
+                                };
+                                dbRequest.onsuccess = (evt: Event) => {
+                                    _debugLog(dbName, "[" + evtName + "] complete");
+                                    deleteResolve(true);
+                                };
+                                _debugLog(dbName, "[" + evtName + "] started");
+                            } catch (e) {
+                                //_warnLog(diagLog, dbName, "[" + evtName + "] threw - " + e);
+                                deleteReject(new Error(ErrorMessageFailedToDeleteDatabase + " - " + e));
+                            }
+                        }, 0);
+                    });
+                });
+            };
+
+            _this.getDbDetails = (dbName: string): IPromise<IIndexedDbDetails> => {
+                return _scheduleEvent<IIndexedDbDetails>(dbName, "getDbDetails", (evtName) => {
+                    if (_dbFactory == null || !(_dbFactory as any).databases) {
+                        // Either IndexedDb is not supported or databases is not supported
+                        return createAsyncRejectedPromise<IIndexedDbDetails>(new Error(ErrorMessageDbNotSupported));
+                    }
+
+                    return createAsyncPromise<IIndexedDbDetails>((databasesResolve, databasesReject) => {
+                        // databases() is still experimental, so it's not fully available
+                        // The promise will reject if there is a JS error
+                        let dbPromise = (_dbFactory as any).databases();
+                        dbPromise.then((databases) => {
+                            for (let lp = 0; lp < databases.length; lp++) {
+                                if (databases[lp].name === dbName) {
+                                    databasesResolve(databases[lp]);
+                                    return;
+                                }
+                            }
+                            databasesReject(new Error(ErrorMessageDbDoesNotExist));
+                        }, databasesReject);
+                    });
+                }, 2000);
             };
 
             function _createStoreContext(openDbCtx: IIndexedDbOpenDbContext<C>, eventTable: string): IIndexedDbStoreActionContext<C> {
@@ -372,7 +505,7 @@ export class IndexedDbHelper<C> {
             function _openCursor<T>(
                 openDbCtx: IIndexedDbOpenDbContext<C>,
                 eventTable: string,
-                query: string|IIndexedDbSimpleQuery,
+                query: string | IIndexedDbSimpleQuery,
                 processFunc?: (state: IProcessCursorState<C>, value: T, values: T[]) => CursorProcessResult): IPromise<T[]> {
 
                 // While the open DB promise may have been resolved we still might not have opened the DB (This is to ensure that
@@ -461,6 +594,7 @@ export class IndexedDbHelper<C> {
 
         
     }
+    
     /**
      * Identifies whether an IndexedDb api is available
      */
@@ -477,32 +611,46 @@ export class IndexedDbHelper<C> {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return;
     }
+
+
+    /**
+     * Request that any open database handles for the named database be closed.
+     * This method will return immediately, however, the scheduled event to close the open Db handles will not occur until all outstanding database operations
+     * (openDb, deleteDb, getDbDetails) started by IndexedDbHelper for the named db have completed. This will NOT affect or wait for any open database handles
+     * which have been directly opened by the IndexedDB Api.
+     * @param dbName The name of the database to close, no error will be returned if the database does not exist or was not opened.
+     */
+    public closeDb(dbName: string): void {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Request that the named database should be deleted, this implicitly closes any previously opened database that was opened via IndexedDBHelper.
+     * It will also wait for all Promise objects from previous openDb, closeDb, getDbDetails to complete (resolve or reject) before attempting to
+     * perform the delete operation. This operation may block or fail if the database is opened outstide of the IndexedDbHelper
+     * The returned promise will be resolved or rejected depending on the outcome of the delete operation.
+     * @param dbName The name of the database to delete
+     */
+    public deleteDb(dbName: string): boolean | IPromise<boolean> {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return;
+    }
+
+    /**
+     * Attempt to return the details (version) of the named database if possible.
+     * This method requires that the underlying browser support draft specification for IDBFactory.databases, if this is not supported then the returned
+     * Promise will be rejected with an error message stating that the feature is not supported.
+     * The returned Promise will be resolved with the details if available or rejected on error.
+     * @param dbName The name of the database to request the details for
+     */
+    public getDbDetails(dbName: string): IPromise<IIndexedDbDetails> {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return;
+    }
 }
 
-// should be called during on onupgradeneeded for initialization or version change
-export function addDbSchema(db: IDBDatabase, sch: IInternalDbSchema) {
-    createAsyncPromise((resolve, reject) => {
-        try {
-            if (!db) {
-                reject("error");
-            }
-            if (!db.objectStoreNames.contains(sch.name)) {
-                let store = db.createObjectStore(sch.st, sch.key);
-                
-                // for current implementation, index will not be used
-            }
-            db.onversionchange = (ev) => {
-                db.close();
-            };
 
-            db.onerror = (ev) => {
-                reject("error");
-            };
-        } catch (e) {
-            reject(e);
-        }
-    });
-}
+
 
 /**
  * Internal value used by the SimpleQuery to identify the type of search being performed
@@ -648,6 +796,3 @@ class SimpleQuery implements IIndexedDbSimpleQuery {
      */
     public isMatch?(value: any): boolean;
 }
-
-
-

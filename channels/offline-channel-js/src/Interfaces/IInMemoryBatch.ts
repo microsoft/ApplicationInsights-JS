@@ -1,22 +1,20 @@
 import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { eEventPersistenceValue } from "./IOfflineProvider";
 
 export interface IInMemoryBatch {
     /**
      * Enqueue the payload
      */
-    addEvent: (evt: IPostTransmissionTelemetryItem) => void;
+    addEvent: (evt: IPostTransmissionTelemetryItem | ITelemetryItem) => void;
     /**
      * Returns the number of elements in the buffer
      */
     count: () => number;
-    /**
-     * Returns the current size of the serialized buffer
-     */
-    size: () => number;
+
     /**
      * Returns items stored in the buffer
      */
-    getItems: () => IPostTransmissionTelemetryItem[];
+    getItems: () => IPostTransmissionTelemetryItem[] | ITelemetryItem[];
     
     /**
      * Split this batch into 2 with any events > fromEvent returned in the new batch and all other
@@ -31,14 +29,11 @@ export interface IInMemoryBatch {
      * @param evts new events to be added
      * @param evtsLimitInMem new evtsLimitInMem
      */
-    createNew(endpoint: string, evts?: IPostTransmissionTelemetryItem[], evtsLimitInMem?: number): IInMemoryBatch;
+    createNew(endpoint: string, evts?: IPostTransmissionTelemetryItem[] | ITelemetryItem[], evtsLimitInMem?: number): IInMemoryBatch;
 
 }
 
 export interface IPostTransmissionTelemetryItem extends ITelemetryItem {
-    /**
-     * The number of times the telemtry item has been attempted to be sent.
-     */
-    sendAttempt?: number;
-    ikey?: string;
+
+    persistence?: eEventPersistenceValue
 }

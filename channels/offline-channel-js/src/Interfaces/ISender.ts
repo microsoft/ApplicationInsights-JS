@@ -1,5 +1,5 @@
 import { IStorageBuffer } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, IProcessTelemetryContext, ITelemetryPlugin, IXHROverride } from "@microsoft/applicationinsights-core-js";
+import { IXHROverride } from "@microsoft/applicationinsights-core-js";
 
 // ***********************************************************************************************************
 // TODO: remove all interfaces here to common
@@ -174,5 +174,3 @@ export interface IResponseError {
     readonly statusCode: number;
     readonly message: string;
 }
-
-

@@ -1,12 +1,11 @@
 
-// NOTE: Most interfaces here should be moved to core eventually.
-
 import { IOfflineListener } from "@microsoft/applicationinsights-common";
-import { IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride } from "@microsoft/applicationinsights-core-js";
+import {
+    IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride
+} from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
-import { IStorageTelemetryItem } from "./IOfflineProvider";
 
-
+// NOTE: Most interfaces here should be moved to core eventually.
 
 // Internal interfaces, should not be exported
 export interface IInternalDbSchema {
@@ -47,7 +46,8 @@ export const enum eStorageType {
 export const enum eBatchSendStatus {
     Complete = 1,
     Retry = 2,
-    Failure = 3
+    Drop = 3,
+    Failure = 4
  }
  
 
@@ -90,7 +90,7 @@ export declare type OfflineBatchCallback = (response: IOfflineBatchResponse) => 
 
 export interface IOfflineBatchHandler {
     storeBatch(batch: IPayloadData, cb?: OfflineBatchStoreCallback, sync?: boolean): undefined | boolean | IPromise<IOfflineBatchStoreResponse>;
-    sendNextBatch(cb?: OfflineBatchCallback, sync?: boolean, xhrOverride?: IXHROverride): undefined | boolean | IPromise<IOfflineBatchResponse>;
+    sendNextBatch(cb?: OfflineBatchCallback, sync?: boolean, xhrOverride?: IXHROverride, cnt?: number): undefined | boolean | IPromise<IOfflineBatchResponse>;
     hasStoredBatch(callback?: (hasBatches: boolean) => void): undefined | boolean | IPromise<boolean>;
     cleanStorage(cb?:(res: IOfflineBatchCleanResponse) => void ): undefined | boolean | IPromise<IOfflineBatchCleanResponse>;
     teardown(unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState): void

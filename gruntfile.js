@@ -515,7 +515,9 @@ module.exports = function (grunt) {
     
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
-            "offlinechannel":       { path: "./channels/offline-channel-js" },
+            "offlinechannel":       {
+                                        path: "./channels/offline-channel-js"
+                                    },
             "teechannel":           { path: "./channels/tee-channel-js" },
             "1dsPost":              {
                                         path: "./channels/1ds-post-js",

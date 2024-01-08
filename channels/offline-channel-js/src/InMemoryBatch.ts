@@ -1,6 +1,9 @@
-import { IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
-import { IInMemoryBatch, IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, eLoggingSeverity, isNullOrUndefined
+} from "@microsoft/applicationinsights-core-js";
+import { IInMemoryBatch, IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
+
 
 export class InMemoryBatch implements IInMemoryBatch {
 
@@ -11,21 +14,24 @@ export class InMemoryBatch implements IInMemoryBatch {
 
         dynamicProto(InMemoryBatch, this, (_self) => {
 
+
             _self.endpoint = () =>{
                 return endpoint;
             }
+
+            _self["_getDbgPlgTargets"] = () => {
+                return [_bufferFullMessageSent];
+            };
+
             
-            _self.addEvent = (payload: IPostTransmissionTelemetryItem) => {
-                // evtsLimitInMem can be 0
-                // *********************************************************************************************************
-                // TODO: should we validate here?
-                if (!isNullOrUndefined(evtsLimitInMem) && _self.size() >= evtsLimitInMem) {
+            _self.addEvent = (payload: IPostTransmissionTelemetryItem | ITelemetryItem) => {
+                if (!isNullOrUndefined(evtsLimitInMem) && _self.count() >= evtsLimitInMem) {
                     // sent internal log only once
                     if (!_bufferFullMessageSent) {
                         _throwInternal(logger,
                             eLoggingSeverity.WARNING,
                             _eInternalMessageId.InMemoryStorageBufferFull,
-                            "Maximum offline in-memory buffer size reached: " + _self.size(),
+                            "Maximum offline in-memory buffer count reached: " + _self.count(),
                             true);
                         _bufferFullMessageSent = true;
                     }
@@ -39,20 +45,6 @@ export class InMemoryBatch implements IInMemoryBatch {
                 return _buffer.length;
             };
 
-            _self.size = (): number => {
-                let size = _buffer.length;
-                // *********************************************************************************************************
-                // cfg: maxSizePerBatch
-                // TODO: add maxBatch, default 64 (should be serializer size)
-                // [TODO] serializer do the payload size (size per batch)
-                // if batch too large, chop it by serializer
-                for (let lp = 0; lp < _buffer.length; lp++) {
-                    size += _buffer[lp].data.length;
-                }
-
-                return size;
-            };
-
             _self.clear = () => {
                 _buffer = [];
                 _bufferFullMessageSent = false;
@@ -63,7 +55,7 @@ export class InMemoryBatch implements IInMemoryBatch {
             };
 
             _self.split = (fromEvt: number, numEvts?: number) => {
-                // Create a new batch with the same iKey
+                // Create a new batch with the same endpointUrl
                 let theEvts: IPostTransmissionTelemetryItem[];
                 if (fromEvt < _buffer.length) {
                     let cnt = _buffer.length - fromEvt;
@@ -84,7 +76,7 @@ export class InMemoryBatch implements IInMemoryBatch {
         });
     }
 
-    public addEvent(payload: IPostTransmissionTelemetryItem) {
+    public addEvent(payload: IPostTransmissionTelemetryItem | ITelemetryItem) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
     public endpoint() {
@@ -97,16 +89,11 @@ export class InMemoryBatch implements IInMemoryBatch {
         return 0;
     }
 
-    public size(): number {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return 0;
-    }
-
     public clear() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public getItems(): IPostTransmissionTelemetryItem[] {
+    public getItems(): IPostTransmissionTelemetryItem[] | ITelemetryItem[] {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
@@ -128,9 +115,8 @@ export class InMemoryBatch implements IInMemoryBatch {
      * @param evts new events to be added
      * @param addCurEvts if it is set to true, current itemss will be transferred to the new batch
      */
-    public createNew(endpoint: string, evts?: IPostTransmissionTelemetryItem[], evtsLimitInMem?: number) {
+    public createNew(endpoint: string, evts?: IPostTransmissionTelemetryItem[] | ITelemetryItem, evtsLimitInMem?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 }
-

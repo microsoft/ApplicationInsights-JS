@@ -1,7 +1,6 @@
-import { IPayloadData, IProcessTelemetryContext, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { IPayloadData, IProcessTelemetryContext } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import { ISenderConfig } from "./ISender";
-
 
 /**
  * Identifies the Storage Providers used by the LocalStorageChannel
@@ -36,7 +35,7 @@ export interface ILocalStorageConfiguration {
     /**
      * [Optional] The storage key that should be used when storing events in (window||globalThis||self).localStorage.
      */
-    storageKey?: string;
+    storageKeyPrefix?: string;
 
     /**
      * [Optional] Identifies the minimum level that will be cached in the local storage channel, any events that do not
@@ -71,9 +70,9 @@ export interface ILocalStorageConfiguration {
     eventsLimitInMem?: number;
     /**
      * [Optional] Identifies if should clean the previous events when opeining a new storage.
-     * If not provided, default is true
+     * If not provided, default is false
      */
-    AutoClean?: number;
+    autoClean?: boolean;
     /**
      * [Optional] Identifies max size for sendng payload each time.
      * If not provided, default is 5Mb/ 5000000 bytes
@@ -81,26 +80,33 @@ export interface ILocalStorageConfiguration {
     maxSentInBytes?: number;
 
     inMemoMaxTime?: number;
+    inStorageMaxTime?: number;
     maxRetry?: number;
     // TODO: figure out offline sender config
     // if "channel" is provided, we looking for plugin(id).cfg
     // if not, we set default to sender/post(assume it is passed in)
     senderId?: string;
+    maxBatchsize?: number;
+    // if not defined, will use the value from online sender
+    senderCfg?: IOfflineSenderConfig;
+    maxSentBatchInterval?: number;
 }
 
-/**
- * An interface used to represent the database in local storage.
- */
-export interface IStorageJSON  {
-    /**
-     * The events that are stored in local storage. These are grouped by priority.
-     */
-    events: { [priority: string]: { [id: string]: IStorageTelemetryItem } };
+export interface IOfflineSenderConfig extends ISenderConfig {
+    retryCodes?: number[];
+    primaryOnlineChannelId?: string;
+}
+
+
+export interface IStorageJSON {
+    
     /**
      * The timestamp at which the storage was last accessed.
      */
-    lastAccessTime: number;
+    lastAccessTime?: number;
+    evts?: { [id: string]: IStorageTelemetryItem }; // id is the timestamp value
 }
+
 
 /**
  * The EventPersistence contains a set of values that specify the event's persistence.
@@ -116,19 +122,29 @@ export declare const enum eEventPersistenceValue {
     Critical = 2
 }
 
-/**
- * An interface which extends the telemetry event to track storage id.
- */
-// TODO: should be exts from IPayloadData
-export interface IStorageTelemetryItem extends ITelemetryItem {
+export interface IStorageTelemetryItem extends IPayloadData {
     /**
      * The storage id of the telemetry item that has been attempted to be sent.
      */
-    id: string;
-    pd?: IPayloadData;
-    persistence?: number | eEventPersistenceValue;
+    id?: string | number | null | undefined;
     iKey?: string;
     sync?: boolean;
+    criticalCnt?: number;
+    isArr?: boolean;
+    attempCnt?: number;
+}
+
+
+export interface IInternalPayloadData extends IPayloadData {
+    /**
+     * The storage id of the telemetry item that has been attempted to be sent.
+     */
+    id?: string;
+    persistence?: number | eEventPersistenceValue;
+    iKey?: string;
+    attempt?: number;
+    isArr?: boolean;
+    criticalCnt?: number;
 }
 
 /**
@@ -138,7 +154,7 @@ export interface ILocalStorageProviderContext {
     /**
      * Identifies the context for the current event
      */
-    itemCtx: IProcessTelemetryContext;
+    itemCtx?: IProcessTelemetryContext;
 
     /**
      * Identifies the local storage config that should be used to initialize the provider
@@ -151,6 +167,7 @@ export interface ILocalStorageProviderContext {
      * The primary use case for setting this value is for unit testing.
      */
     id?: string;
+    endpoint?: string;
 }
 
 /*
@@ -173,7 +190,7 @@ export interface IOfflineProvider {
      * Get all of the currently cached events from the storage mechanism
      * @return Either a Promise (for asynchronous process) or just the array of items
      */
-    getAllEvents(): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]>;
+    getAllEvents(cnt?: number): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]>;
 
 
     /**
@@ -199,6 +216,11 @@ export interface IOfflineProvider {
      * @return Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
      */
     clear(): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]>;
+
+    /**
+     * Removes all entries with stroage time longer than inStorageMaxTime from the storage provider
+     */
+    clean(disable?: boolean): boolean | IPromise<boolean>;
 
     /**
      * Shuts-down the telemetry plugin. This is usually called when telemetry is shut down.

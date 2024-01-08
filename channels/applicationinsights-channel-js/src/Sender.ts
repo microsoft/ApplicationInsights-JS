@@ -491,6 +491,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 // hand off the telemetry item to the next plugin
                 _self.processNext(telemetryItem, itemCtx);
             };
+
+            _self.isCompletelyIdle = () => {
+                return !_paused && _syncFetchPayload === 0 && _self._buffer.count() === 0;
+            }
         
             /**
              * xhr state changes
@@ -1450,4 +1454,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     public addHeader(name: string, value: string) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
+
+    /**
+     * Check if there are no active requests being sent.
+     * @returns True if idle, false otherwise.
+     */
+    public isCompletelyIdle(): boolean {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return false;
+    }
+
 }

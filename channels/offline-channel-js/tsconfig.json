@@ -19,9 +19,8 @@
         "rootDir": "./src"
     },
     "include": [
-        "./src/**/*.ts"
-, "src/Helpers"    ],
+        "./src/**/*.ts"],
     "exclude": [
-        "node_modules/"
+        "node_modules/**"
     ]
 }
