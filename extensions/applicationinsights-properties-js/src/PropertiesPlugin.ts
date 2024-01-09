@@ -139,7 +139,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                     if (config.storagePrefix){
                         utlSetStoragePrefix(config.storagePrefix);
                     }
-                    _disableUserInitMessage = config.disableUserInitMessage || true;
+                    _disableUserInitMessage = config.disableUserInitMessage === false ? false : true;
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
 
                     // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class

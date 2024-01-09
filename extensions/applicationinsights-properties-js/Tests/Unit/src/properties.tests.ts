@@ -637,15 +637,13 @@ export class PropertiesTests extends AITestClass {
             name: 'User: track is triggered if user context is first time initialized and _disableUserInitMessage is set to false',
             useFakeTimers: true,
             test: () => {
-                // setup
                 var setCookieStub = this.sandbox.stub(this as any, "_setCookie").callsFake(() => {});
-                var loggingStub = this.sandbox.stub(this.core.logger, "logInternalMessage");
-
-                // Act
                 Assert.ok(setCookieStub.notCalled, 'Cookie not yet generated');
-                Assert.ok(loggingStub.notCalled, 'logInternalMessage is not yet triggered');
-                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+                this.core.initialize(this.getEmptyConfig(), [this.properties]);
                 Assert.ok(setCookieStub.called, 'Cookie generated');
+
+                var loggingStub = this.sandbox.stub(this.core.logger, "logInternalMessage");
+                Assert.ok(loggingStub.notCalled, 'logInternalMessage is not yet triggered');
 
                 this.core.config["disableUserInitMessage"] = false;
                 this.clock.tick(1000);
