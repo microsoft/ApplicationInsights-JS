@@ -2034,12 +2034,6 @@ export class SenderTests extends AITestClass {
                     return true;
                 });
 
-                // let fetchCalls = this.hookFetch((resolve) => {
-                //     setTimeout(function() {
-                //         resolve();
-                //     }, 0);
-                // });
-
                 const sender = new Sender();
                 const cr = new AppInsightsCore();
 
