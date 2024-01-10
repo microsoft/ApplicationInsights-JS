@@ -123,7 +123,11 @@ function _extractPropsAndMeasurements(data: { [key: string]: any }, properties: 
     if (!isNullOrUndefined(data)) {
         objForEachKey(data, (key, value) => {
             if (isNumber(value)) {
-                measurements[key] = value;
+                if (isNaN(value)) {
+                    properties[key] = "NaN";
+                } else {
+                    measurements[key] = value;
+                }
             } else if (isString(value)) {
                 properties[key] = value;
             } else if (hasJSON()) {

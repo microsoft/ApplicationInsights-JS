@@ -1,27 +1,31 @@
 /*!
- * Application Insights JavaScript SDK - Web, 3.0.2
+ * Application Insights JavaScript SDK - Web, 3.0.6
  * Copyright (c) Microsoft and contributors. All rights reserved.
  */
 (function (global, factory) {
     var undef = "undefined";
-    var nsKey, key, nm, theExports = {}, modName = "es5_ai_3_0_2", msMod="__ms$mod__";
-    var mods={}, modDetail=mods[modName]={}, ver="3.0.2";
-    var baseNs=global, nsKey="Microsoft", baseNs=baseNs[nsKey]=(baseNs[nsKey]||{});
-    // Versioned namespace "Microsoft.ApplicationInsights3"
-    var exportNs=baseNs, nsKey="ApplicationInsights3", exportNs=exportNs[nsKey]=(exportNs[nsKey]||{});
-    // Global namespace "Microsoft.ApplicationInsights"
-    var destNs=baseNs, nsKey="ApplicationInsights", destNs=destNs[nsKey]=(destNs[nsKey]||{});
-    var expNsDetail=(exportNs[msMod]=(exportNs[msMod] || {})), expNameVer=(expNsDetail["v"]=(expNsDetail["v"] || []));
-    var destNsDetail=(destNs[msMod]=(destNs[msMod] || {})), destNameVer=(destNsDetail["v"]=(destNsDetail["v"] || []));
-    (destNsDetail["o"]=(destNsDetail["o"] || [])).push(mods);
-    factory(theExports);
-    for(var key in theExports) {
-        // Always set the imported value into the "export" versioned namespace (last-write wins)
-        nm="x", exportNs[key]=theExports[key], expNameVer[key]=ver;
-        // Copy over any named element that is not already present (first-write wins)
-        typeof destNs[key]===undef ? (nm="n", destNs[key]=theExports[key]) && (destNameVer[key]=ver) : !destNameVer[key] && (destNameVer[key]="---");
-        (modDetail[nm] = (modDetail[nm] || [])).push(key);
-    }
+    typeof exports === "object" && typeof module !== undef ? factory(exports) :
+    typeof define === "function" && define.amd ? define(["exports"], factory) :
+    (function(global){
+        var nsKey, key, nm, theExports = {}, modName = "es5_ai_3_0_6", msMod="__ms$mod__";
+        var mods={}, modDetail=mods[modName]={}, ver="3.0.6";
+        var baseNs=global, nsKey="Microsoft", baseNs=baseNs[nsKey]=(baseNs[nsKey]||{});
+        // Versioned namespace "Microsoft.ApplicationInsights3"
+        var exportNs=baseNs, nsKey="ApplicationInsights3", exportNs=exportNs[nsKey]=(exportNs[nsKey]||{});
+        // Global namespace "Microsoft.ApplicationInsights"
+        var destNs=baseNs, nsKey="ApplicationInsights", destNs=destNs[nsKey]=(destNs[nsKey]||{});
+        var expNsDetail=(exportNs[msMod]=(exportNs[msMod] || {})), expNameVer=(expNsDetail["v"]=(expNsDetail["v"] || []));
+        var destNsDetail=(destNs[msMod]=(destNs[msMod] || {})), destNameVer=(destNsDetail["v"]=(destNsDetail["v"] || []));
+        (destNsDetail["o"]=(destNsDetail["o"] || [])).push(mods);
+        factory(theExports);
+        for(var key in theExports) {
+            // Always set the imported value into the "export" versioned namespace (last-write wins)
+            nm="x", exportNs[key]=theExports[key], expNameVer[key]=ver;
+            // Copy over any named element that is not already present (first-write wins)
+            typeof destNs[key]===undef ? (nm="n", destNs[key]=theExports[key]) && (destNameVer[key]=ver) : !destNameVer[key] && (destNameVer[key]="---");
+            (modDetail[nm] = (modDetail[nm] || [])).push(key);
+        }
+    })(typeof globalThis !== undef ? globalThis : global || self);
 })(this, (function (exports) {
 'use strict';
 
@@ -41,11 +45,13 @@ var CONSTRUCTOR = "constructor";
 var SYMBOL = "Symbol";
 var POLYFILL_TAG = "_polyfill";
 var INDEX_OF = "indexOf";
+var LAST_INDEX_OF = "lastIndexOf";
 var LENGTH = "length";
 var DONE = "done";
 var VALUE = "value";
 var NAME = "name";
 var SLICE = "slice";
+var CALL = "call";
 var ObjClass$1 = Object;
 var ObjProto$1 = ObjClass$1[PROTOTYPE];
 var StrCls = String;
@@ -77,7 +83,7 @@ function _createObjIs(theName) {
     };
 }
 function objToString(value) {
-    return ObjProto$1.toString.call(value);
+    return ObjProto$1.toString[CALL](value);
 }
 function isUndefined(value) {
     return typeof value === UNDEFINED || value === UNDEFINED;
@@ -91,11 +97,11 @@ function isStrictNullOrUndefined(value) {
 function isDefined(arg) {
     return !!arg || arg !== UNDEF_VALUE;
 }
-var isPrimitiveType = function (theType) {
+function isPrimitiveType(theType) {
     return theType !== OBJECT && PRIMITIVE_TYPES.indexOf(theType) !== -1;
-};
-var isString = _createIs(STRING);
-var isFunction = _createIs(FUNCTION);
+}
+var isString = ( _createIs(STRING));
+var isFunction = ( _createIs(FUNCTION));
 function isObject(value) {
     if (!value && isNullOrUndefined(value)) {
         return false;
@@ -103,12 +109,12 @@ function isObject(value) {
     return !!value && typeof value === OBJECT;
 }
 var isArray = ArrCls.isArray;
-var isDate = _createObjIs("Date");
-var isNumber = _createIs(NUMBER);
-var isBoolean = _createIs(BOOLEAN);
-var isError = _createObjIs("Error");
+var isDate = ( _createObjIs("Date"));
+var isNumber = ( _createIs(NUMBER));
+var isBoolean = ( _createIs(BOOLEAN));
+var isError = ( _createObjIs("Error"));
 function isPromiseLike(value) {
-    return !!value && isFunction(value.then);
+    return !!(value && value.then && isFunction(value.then));
 }
 function isTruthy(value) {
     return !(!value || safeGet(function () { return !(value && (0 + value)); }, !value));
@@ -117,7 +123,7 @@ function isTruthy(value) {
 var objGetOwnPropertyDescriptor = ObjClass$1.getOwnPropertyDescriptor;
 
 function objHasOwnProperty(obj, prop) {
-    return obj && ObjProto$1.hasOwnProperty.call(obj, prop);
+    return obj && ObjProto$1.hasOwnProperty[CALL](obj, prop);
 }
 
 var objHasOwn = ObjClass$1["hasOwn"] || polyObjHasOwn;
@@ -129,7 +135,7 @@ function objForEachKey(theObject, callbackfn, thisArg) {
     if (theObject && isObject(theObject)) {
         for (var prop in theObject) {
             if (objHasOwn(theObject, prop)) {
-                if (callbackfn.call(thisArg || theObject, prop, theObject[prop]) === -1) {
+                if (callbackfn[CALL](thisArg || theObject, prop, theObject[prop]) === -1) {
                     break;
                 }
             }
@@ -154,8 +160,12 @@ function throwTypeError(message) {
 }
 
 var _objFreeze = ObjClass$1["freeze"];
-var _doNothing = function (value) { return value; };
-var _getProto = function (value) { return value[__PROTO__] || NULL_VALUE; };
+function _doNothing(value) {
+    return value;
+}
+function _getProto(value) {
+    return value[__PROTO__] || NULL_VALUE;
+}
 var objAssign = ObjClass$1["assign"];
 function objKeys(value) {
     if (!isObject(value) || value === NULL_VALUE) {
@@ -194,7 +204,7 @@ function createTypeMap(values) {
     return createSimpleMap(values);
 }
 
-var _wellKnownSymbolMap = createEnumKeyMap({
+var _wellKnownSymbolMap =  createEnumKeyMap({
     asyncIterator: 0 ,
     hasInstance: 1 ,
     isConcatSpreadable: 2 ,
@@ -254,36 +264,39 @@ function dumpObj(object, format) {
     return objToString(object) + ": " + propertyValueDump;
 }
 
-var _arrSlice = ArrProto[SLICE];
-var _throwMissingFunction = function (funcName, thisArg) {
+var _slice;
+function _throwMissingFunction(funcName, thisArg) {
     throwTypeError("'" + asString(funcName) + "' not defined for " + dumpObj(thisArg));
-};
-var _unwrapInstFunction = function (funcName) {
+}
+function _unwrapInstFunction(funcName) {
+    _slice = _slice || ArrProto[SLICE];
     return function (thisArg) {
-        return thisArg[funcName].apply(thisArg, _arrSlice.call(arguments, 1));
+        return thisArg[funcName].apply(thisArg, _slice[CALL](arguments, 1));
     };
-};
-var _unwrapFunction = function (funcName, clsProto) {
+}
+function _unwrapFunction(funcName, clsProto) {
+    _slice = _slice || ArrProto[SLICE];
     var clsFn = clsProto && clsProto[funcName];
     return function (thisArg) {
         var theFunc = (thisArg && thisArg[funcName]) || clsFn;
         if (theFunc) {
-            return theFunc.apply(thisArg, _arrSlice.call(arguments, 1));
+            return theFunc.apply(thisArg, _slice[CALL](arguments, 1));
         }
         _throwMissingFunction(funcName, thisArg);
     };
-};
-var _unwrapFunctionWithPoly = function (funcName, clsProto, polyFunc) {
+}
+function _unwrapFunctionWithPoly(funcName, clsProto, polyFunc) {
+    _slice = _slice || ArrProto[SLICE];
     var clsFn = clsProto && clsProto[funcName];
     return function (thisArg) {
         var theFunc = (thisArg && thisArg[funcName]) || clsFn;
         if (theFunc || polyFunc) {
             var theArgs = arguments;
-            return (theFunc || polyFunc).apply(thisArg, theFunc ? _arrSlice.call(theArgs, 1) : theArgs);
+            return (theFunc || polyFunc).apply(thisArg, theFunc ? _slice[CALL](theArgs, 1) : theArgs);
         }
         _throwMissingFunction(funcName, thisArg);
     };
-};
+}
 function _unwrapProp(propName) {
     return function (thisArg) {
         return thisArg[propName];
@@ -292,10 +305,10 @@ function _unwrapProp(propName) {
 
 var mathMax = MathCls.max;
 
-var strSlice = _unwrapFunction(SLICE, StrProto);
+var strSlice = ( _unwrapFunction(SLICE, StrProto));
 
-var strSubstring = _unwrapFunction("substring", StrProto);
-var strSubstr = _unwrapFunctionWithPoly("substr", StrProto, polyStrSubstr);
+var strSubstring = ( _unwrapFunction("substring", StrProto));
+var strSubstr = ( _unwrapFunctionWithPoly("substr", StrProto, polyStrSubstr));
 function polyStrSubstr(value, start, length) {
     if (isNullOrUndefined(value)) {
         throwTypeError("'polyStrSubstr called with invalid " + dumpObj(value));
@@ -316,6 +329,7 @@ function strLeft(value, count) {
     return strSubstring(value, 0, count);
 }
 
+var UNIQUE_REGISTRY_ID = "_urid";
 var _polySymbols;
 function _globalSymbolRegistry() {
     if (!_polySymbols) {
@@ -335,10 +349,12 @@ function polyNewSymbol(description) {
 }
 function polySymbolFor(key) {
     var registry = _globalSymbolRegistry();
-    if (!objHasOwn(registry, key)) {
-        var newSymbol = polyNewSymbol(key);
-        registry.k[key] = newSymbol;
-        registry.s[newSymbol] = asString(key);
+    if (!objHasOwn(registry.k, key)) {
+        var newSymbol_1 = polyNewSymbol(key);
+        var regId_1 = objKeys(registry.s).length;
+        newSymbol_1[UNIQUE_REGISTRY_ID] = function () { return regId_1 + "_" + newSymbol_1.toString(); };
+        registry.k[key] = newSymbol_1;
+        registry.s[newSymbol_1[UNIQUE_REGISTRY_ID]()] = asString(key);
     }
     return registry.k[key];
 }
@@ -424,12 +440,14 @@ var _cachedNavigator;
 var _cachedHistory;
 var _isWebWorker;
 var _isNode;
-var lazySafeGetInst = function (name) { return safeGetLazy(function () { return getInst(name) || UNDEF_VALUE; }, UNDEF_VALUE); };
-var getGlobal = function (useCached) {
+function lazySafeGetInst(name) {
+    return safeGetLazy(function () { return getInst(name) || UNDEF_VALUE; }, UNDEF_VALUE);
+}
+function getGlobal(useCached) {
     (!_cachedGlobal || useCached === false || (_globalLazyTestHooks && _globalLazyTestHooks.lzy && !_cachedGlobal.b)) && (_cachedGlobal = safeGetLazy(_getGlobalValue, NULL_VALUE));
     return _cachedGlobal.v;
-};
-var getInst = function (name, useCached) {
+}
+function getInst(name, useCached) {
     var gbl = (!_cachedGlobal || useCached === false) ? getGlobal(useCached) : _cachedGlobal.v;
     if (gbl && gbl[name]) {
         return gbl[name];
@@ -438,42 +456,50 @@ var getInst = function (name, useCached) {
         return _cachedWindow.v;
     }
     return NULL_VALUE;
-};
-var hasDocument = function () { return !!getDocument(); };
-var getDocument = function () {
+}
+function hasDocument() {
+    return !!getDocument();
+}
+function getDocument() {
     (!_cachedDocument || (_globalLazyTestHooks && _globalLazyTestHooks.lzy && !_cachedDocument.b)) && (_cachedDocument = lazySafeGetInst("document"));
     return _cachedDocument.v;
-};
-var hasWindow = function () { return !!getWindow(); };
-var getWindow = function () {
+}
+function hasWindow() {
+    return !!getWindow();
+}
+function getWindow() {
     (!_cachedWindow || (_globalLazyTestHooks && _globalLazyTestHooks.lzy && !_cachedWindow.b)) && (_cachedWindow = lazySafeGetInst(WINDOW));
     return _cachedWindow.v;
-};
-var hasNavigator = function () { return !!getNavigator(); };
-var getNavigator = function () {
+}
+function hasNavigator() {
+    return !!getNavigator();
+}
+function getNavigator() {
     (!_cachedNavigator || (_globalLazyTestHooks && _globalLazyTestHooks.lzy && !_cachedNavigator.b)) && (_cachedNavigator = lazySafeGetInst("navigator"));
     return _cachedNavigator.v;
-};
-var hasHistory = function () { return !!getHistory(); };
-var getHistory = function () {
+}
+function hasHistory() {
+    return !!getHistory();
+}
+function getHistory() {
     (!_cachedHistory || (_globalLazyTestHooks && _globalLazyTestHooks.lzy && !_cachedHistory.b)) && (_cachedHistory = lazySafeGetInst("history"));
     return _cachedHistory.v;
-};
-var isNode = function () {
+}
+function isNode() {
     !_isNode && (_isNode = safeGetLazy(function () { return !!(process && (process.versions || {}).node); }, false));
     return _isNode.v;
-};
-var isWebWorker = function () {
+}
+function isWebWorker() {
     !_isWebWorker && (_isWebWorker = safeGetLazy(function () { return !!(self && self instanceof WorkerGlobalScope); }, false));
     return _isWebWorker.v;
-};
+}
 
 var _symbol;
 var _symbolFor;
 var _symbolKeyFor;
 function _getSymbolValue(name) {
     return safeGetLazy(function () {
-        return (_symbol.v ? _symbol[name] : UNDEF_VALUE);
+        return (_symbol.v ? _symbol.v[name] : UNDEF_VALUE);
     }, UNDEF_VALUE);
 }
 function hasSymbol() {
@@ -520,7 +546,7 @@ function iterForOf(iter, callbackfn, thisArg) {
             try {
                 var count = 0;
                 while (!(iterResult = iter.next())[DONE]) {
-                    if (callbackfn.call(thisArg || iter, iterResult[VALUE], count, iter) === -1) {
+                    if (callbackfn[CALL](thisArg || iter, iterResult[VALUE], count, iter) === -1) {
                         break;
                     }
                     count++;
@@ -549,7 +575,7 @@ function iterForOf(iter, callbackfn, thisArg) {
     }
 }
 
-var fnApply = _unwrapInstFunction("apply");
+var fnApply = ( _unwrapInstFunction("apply"));
 
 function arrAppend(target, elms) {
     if (!isUndefined(elms) && target) {
@@ -573,7 +599,7 @@ function arrForEach(theArray, callbackfn, thisArg) {
         var len = theArray[LENGTH] >>> 0;
         for (var idx = 0; idx < len; idx++) {
             if (idx in theArray) {
-                if (callbackfn.call(thisArg || theArray, theArray[idx], idx, theArray) === -1) {
+                if (callbackfn[CALL](thisArg || theArray, theArray[idx], idx, theArray) === -1) {
                     break;
                 }
             }
@@ -581,18 +607,16 @@ function arrForEach(theArray, callbackfn, thisArg) {
     }
 }
 
-var arrIndexOf = _unwrapFunction(INDEX_OF, ArrProto);
+var arrIndexOf = ( _unwrapFunction(INDEX_OF, ArrProto));
+( _unwrapFunction(LAST_INDEX_OF, ArrProto));
 
-var arrMap = _unwrapFunction("map", ArrProto);
+var arrMap = ( _unwrapFunction("map", ArrProto));
 
-var arrSlice = _unwrapFunction(SLICE, ArrProto);
+var arrSlice = ( _unwrapFunction(SLICE, ArrProto));
 
-var fnCall = _unwrapInstFunction("call");
+var arrReduce = ( _unwrapFunction("reduce", ArrProto));
 
-var arrReduce = _unwrapFunction("reduce", ArrProto);
-
-var _objCreate = ObjClass$1["create"];
-var objCreate = _objCreate || polyObjCreate;
+var objCreate = ObjClass$1["create"] || polyObjCreate;
 function polyObjCreate(obj) {
     if (!obj) {
         return {};
@@ -619,7 +643,7 @@ function objSetPrototypeOf(obj, proto) {
     return fn(obj, proto);
 }
 
-var _createCustomError = function (name, d, b) {
+function _createCustomError(name, d, b) {
     _safeDefineName(d, name);
     d = objSetPrototypeOf(d, b);
     function __() {
@@ -628,7 +652,7 @@ var _createCustomError = function (name, d, b) {
     }
     d[PROTOTYPE] = b === NULL_VALUE ? objCreate(b) : (__[PROTOTYPE] = b[PROTOTYPE], new __());
     return d;
-};
+}
 var _safeSetName = function (baseClass, name) {
     try {
         name && (baseClass[NAME] = name);
@@ -693,9 +717,13 @@ function _createTrimFn(exp) {
         return value;
     };
 }
-var polyStrTrim = _createTrimFn(/^\s+|(?=\s)\s+$/g);
+var polyStrTrim = ( _createTrimFn(/^\s+|(?=\s)\s+$/g));
+var polyStrTrimStart = ( _createTrimFn(/^\s+/g));
+var polyStrTrimEnd = ( _createTrimFn(/(?=\s)\s+$/g));
 
-var strTrim = _unwrapFunctionWithPoly("trim", StrProto, polyStrTrim);
+var strTrim = ( _unwrapFunctionWithPoly("trim", StrProto, polyStrTrim));
+( _unwrapFunctionWithPoly("trimStart", StrProto, polyStrTrimStart));
+( _unwrapFunctionWithPoly("trimEnd", StrProto, polyStrTrimEnd));
 
 var _fnToString;
 var _objCtrFnString;
@@ -711,7 +739,7 @@ function isPlainObject(value) {
     if (value !== _gblWindow) {
         if (!_objCtrFnString) {
             _fnToString = Function[PROTOTYPE].toString;
-            _objCtrFnString = fnCall(_fnToString, ObjClass$1);
+            _objCtrFnString = _fnToString[CALL](ObjClass$1);
         }
         try {
             var proto = objGetPrototypeOf(value);
@@ -720,7 +748,7 @@ function isPlainObject(value) {
                 if (objHasOwnProperty(proto, CONSTRUCTOR)) {
                     proto = proto[CONSTRUCTOR];
                 }
-                result = proto && typeof proto === FUNCTION && _fnToString.call(proto) === _objCtrFnString;
+                result = proto && typeof proto === FUNCTION && _fnToString[CALL](proto) === _objCtrFnString;
             }
         }
         catch (ex) {
@@ -798,12 +826,12 @@ function _deepCopy(visitMap, value, ctx, key) {
             });
             var idx = 0;
             var handler = userHandler;
-            while (!fnCall(handler || (idx < defaultDeepCopyHandlers.length ? defaultDeepCopyHandlers[idx++] : _defaultDeepCopyHandler), ctx, details)) {
+            while (!(handler || (idx < defaultDeepCopyHandlers.length ? defaultDeepCopyHandlers[idx++] : _defaultDeepCopyHandler))[CALL](ctx, details)) {
                 handler = NULL_VALUE;
             }
         });
     }
-    if (userHandler && fnCall(userHandler, ctx, details)) {
+    if (userHandler && userHandler[CALL](ctx, details)) {
         return details.result;
     }
     return value;
@@ -874,8 +902,11 @@ function _doExtend(target, theArgs) {
 function deepExtend(target, obj1, obj2, obj3, obj4, obj5, obj6) {
     return _doExtend(objDeepCopy(target) || {}, arrSlice(arguments));
 }
+function objExtend$1(target, obj1, obj2, obj3, obj4, obj5, obj6) {
+    return _doExtend(target || {}, arrSlice(arguments));
+}
 
-var getLength = _unwrapProp(LENGTH);
+var getLength = ( _unwrapProp(LENGTH));
 
 var _perf;
 function getPerformance() {
@@ -883,7 +914,29 @@ function getPerformance() {
     return _perf.v;
 }
 
-var strEndsWith = _unwrapFunctionWithPoly("endsWith", StrProto, polyStrEndsWith);
+function polyStrSymSplit(value, splitter, limit) {
+    var splitFn = splitter && splitter[getKnownSymbol(9 )];
+    return splitFn ? splitFn(value, limit) : [value];
+}
+
+var strSplit = ( _unwrapFunction("split", StrProto));
+( _unwrapFunctionWithPoly("split", StrProto, !hasSymbol() ? polyStrSymSplit : null));
+
+function setValueByKey(target, path, value) {
+    if (target && path) {
+        var parts = strSplit(path, ".");
+        var lastKey = parts.pop();
+        arrForEach(parts, function (key) {
+            if (isNullOrUndefined(target[key])) {
+                target[key] = {};
+            }
+            target = target[key];
+        });
+        target[lastKey] = value;
+    }
+}
+
+var strEndsWith = ( _unwrapFunctionWithPoly("endsWith", StrProto, polyStrEndsWith));
 function polyStrEndsWith(value, searchString, length) {
     if (!isString(value)) {
         throwTypeError("'" + dumpObj(value) + "' is not a string");
@@ -895,7 +948,8 @@ function polyStrEndsWith(value, searchString, length) {
     return strSubstring(value, end - chkLen, end) === searchValue;
 }
 
-var strIndexOf = _unwrapFunction(INDEX_OF, StrProto);
+var strIndexOf = ( _unwrapFunction(INDEX_OF, StrProto));
+( _unwrapFunction(LAST_INDEX_OF, StrProto));
 
 var REF = "ref";
 var UNREF = "un" + REF;
@@ -1003,7 +1057,7 @@ var _DYN_SET_DF = "setDf";
 var _DYN_WATCH = "watch";
 var _DYN_LOGGER = "logger";
 var _DYN_APPLY = "apply";
-var _DYN_PUSH$1 = "push";
+var _DYN_PUSH$2 = "push";
 var _DYN_SPLICE = "splice";
 var _DYN_HDLR = "hdlr";
 var _DYN_CANCEL = "cancel";
@@ -1119,7 +1173,7 @@ function __spreadArrayFn(to, from) {
     return to;
 }
 
-var _a$9;
+var _a$a;
 var Constructor = 'constructor';
 var Prototype = 'prototype';
 var strFunction = 'function';
@@ -1142,10 +1196,10 @@ var _objGetPrototypeOf = Obj["getPrototypeOf"];
 var _objGetOwnProps = Obj["getOwnPropertyNames"];
 var _gbl = getGlobal();
 var _gblInst = _gbl[DynProtoGlobalSettings] || (_gbl[DynProtoGlobalSettings] = {
-    o: (_a$9 = {},
-        _a$9[strSetInstFuncs] = true,
-        _a$9[strUseBaseInst] = true,
-        _a$9),
+    o: (_a$a = {},
+        _a$a[strSetInstFuncs] = true,
+        _a$a[strUseBaseInst] = true,
+        _a$a),
     n: 1000
 });
 function _isObjectOrArrayPrototype(target) {
@@ -1367,15 +1421,15 @@ dynamicProto[DynProtoDefaultOptions] = _gblInst.o;
 
 function doAwaitResponse(value, cb) {
     return doAwait(value, function (value) {
-        cb && cb({
+        return cb ? cb({
             value: value,
             rejected: false
-        });
+        }) : value;
     }, function (reason) {
-        cb && cb({
+        return cb ? cb({
             rejected: true,
             reason: reason
-        });
+        }) : reason;
     });
 }
 function doAwait(value, resolveFn, rejectFn, finallyFn) {
@@ -1386,10 +1440,12 @@ function doAwait(value, resolveFn, rejectFn, finallyFn) {
         }
     }
     else {
-        resolveFn && resolveFn(value);
+        if (resolveFn) {
+            result = resolveFn(value);
+        }
     }
     if (finallyFn) {
-        result = doFinally(result, finallyFn);
+        doFinally(result, finallyFn);
     }
     return result;
 }
@@ -1903,6 +1959,15 @@ function objExtend(obj1, obj2, obj3, obj4, obj5, obj6) {
     }
     return extended;
 }
+function isFeatureEnabled(feature, cfg) {
+    var rlt = false;
+    var ft = cfg && cfg.featureOptIn && cfg.featureOptIn[feature];
+    if (feature && ft) {
+        var mode = ft.mode;
+        rlt = (mode == 3 ) || (mode == 1 );
+    }
+    return rlt;
+}
 
 var strDocumentMode = "documentMode";
 var strLocation = "location";
@@ -2079,6 +2144,40 @@ function findNamedServerTiming(name) {
     }
     return value;
 }
+function dispatchEvent(target, evnt) {
+    if (target && target.dispatchEvent && evnt) {
+        target.dispatchEvent(evnt);
+        return true;
+    }
+    return false;
+}
+function createCustomDomEvent(eventName, details) {
+    var event = null;
+    var detail = { detail: details || null };
+    if (isFunction(CustomEvent)) {
+        event = new CustomEvent(eventName, detail);
+    }
+    else {
+        var doc = getDocument();
+        if (doc && doc.createEvent) {
+            event = doc.createEvent("CustomEvent");
+            event.initCustomEvent(eventName, true, true, detail);
+        }
+    }
+    return event;
+}
+function sendCustomEvent(evtName, cfg, customDetails) {
+    var global = getGlobal();
+    if (global && global.CustomEvent) {
+        try {
+            var details = { cfg: cfg || null, customDetails: customDetails || null };
+            return dispatchEvent(global, createCustomDomEvent(evtName, details));
+        }
+        catch (e) {
+        }
+    }
+    return false;
+}
 
 var UInt32Mask = 0x100000000;
 var MaxUInt32 = 0xffffffff;
@@ -2156,7 +2255,7 @@ function newId(maxLength) {
     return result;
 }
 
-var version = '3.0.2';
+var version = '3.0.6';
 var instanceName = "." + newId(6);
 var _dataUid = 0;
 function _canAcceptData(target) {
@@ -2434,7 +2533,7 @@ function _createDynamicProperty(state, theConfig, name, value) {
         trk: function (handler) {
             if (handler && handler.fn) {
                 if (arrIndexOf(detail.h, handler) === -1) {
-                    detail.h[_DYN_PUSH$1 ](handler);
+                    detail.h[_DYN_PUSH$2 ](handler);
                 }
                 state.trk(handler, detail);
             }
@@ -2646,7 +2745,7 @@ function _createState(cfgHandler) {
                             _useHandler(handler, handler.fn);
                         }
                         catch (e) {
-                            watcherFailures_1[_DYN_PUSH$1 ](e);
+                            watcherFailures_1[_DYN_PUSH$2 ](e);
                         }
                     }
                 }
@@ -2656,7 +2755,7 @@ function _createState(cfgHandler) {
                     _notifyWatchers();
                 }
                 catch (e) {
-                    watcherFailures_1[_DYN_PUSH$1 ](e);
+                    watcherFailures_1[_DYN_PUSH$2 ](e);
                 }
             }
             if (watcherFailures_1[_DYN_LENGTH$5 ] > 0) {
@@ -2678,7 +2777,7 @@ function _createState(cfgHandler) {
             for (var idx = 0; idx < detail.h[_DYN_LENGTH$5 ]; idx++) {
                 var handler = detail.h[idx];
                 if (handler && arrIndexOf(_waitingHandlers, handler) === -1) {
-                    _waitingHandlers[_DYN_PUSH$1 ](handler);
+                    _waitingHandlers[_DYN_PUSH$2 ](handler);
                 }
             }
         }
@@ -2687,7 +2786,7 @@ function _createState(cfgHandler) {
         if (handler) {
             var details = handler[dynamicPropertyDetail] = handler[dynamicPropertyDetail] || [];
             if (arrIndexOf(details, detail) === -1) {
-                details[_DYN_PUSH$1 ](detail);
+                details[_DYN_PUSH$2 ](detail);
             }
         }
     }
@@ -2931,7 +3030,7 @@ function getDebugListener(config) {
     return _debugListener;
 }
 
-var _a$8;
+var _a$9;
 var STR_WARN_TO_CONSOLE = "warnToConsole";
 var AiNonUserActionablePrefix = "AI (Internal): ";
 var AiUserActionablePrefix = "AI: ";
@@ -2942,12 +3041,12 @@ var defaultValues$3 = {
     maxMessageLimit: 25,
     enableDebug: false
 };
-var _logFuncs = (_a$8 = {},
-    _a$8[0 ] = null,
-    _a$8[1 ] = "errorToConsole",
-    _a$8[2 ] = STR_WARN_TO_CONSOLE,
-    _a$8[3 ] = "debugToConsole",
-    _a$8);
+var _logFuncs = (_a$9 = {},
+    _a$9[0 ] = null,
+    _a$9[1 ] = "errorToConsole",
+    _a$9[2 ] = STR_WARN_TO_CONSOLE,
+    _a$9[3 ] = "debugToConsole",
+    _a$9);
 function _sanitizeDiagnosticText(text) {
     if (text) {
         return "\"" + text[_DYN_REPLACE ](/\"/g, STR_EMPTY) + "\"";
@@ -3065,14 +3164,14 @@ var DiagnosticLogger = /** @class */ (function () {
                 }
                 if (logMessage) {
                     if (severity <= _loggingLevelTelemetry) {
-                        _self.queue[_DYN_PUSH$1 ](message);
+                        _self.queue[_DYN_PUSH$2 ](message);
                         _messageCount++;
                         _debugExtMsg((severity === 1  ? "error" : "warn"), message);
                     }
                     if (_messageCount === _maxInternalMessageLimit) {
                         var throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                         var throttleMessage = new _InternalLogMessage(23 , throttleLimitMessage, false);
-                        _self.queue[_DYN_PUSH$1 ](throttleMessage);
+                        _self.queue[_DYN_PUSH$2 ](throttleMessage);
                         if (severity === 1 ) {
                             _self.errorToConsole(throttleLimitMessage);
                         }
@@ -3119,7 +3218,7 @@ function _logInternalMessage(logger, severity, message) {
     _getLogger(logger)[_DYN_LOG_INTERNAL_MESSAGE ](severity, message);
 }
 
-var _a$7, _b$1;
+var _a$8, _b$2;
 var strToGMTString = "toGMTString";
 var strToUTCString = "toUTCString";
 var strCookie = "cookie";
@@ -3133,19 +3232,19 @@ var _parsedCookieValue = null;
 var _doc;
 var _cookieCache = {};
 var _globalCookieConfig = {};
-var rootDefaultConfig = (_a$7 = {
-        cookieCfg: cfgDfMerge((_b$1 = {},
-            _b$1[STR_DOMAIN] = { fb: "cookieDomain", dfVal: isNotNullOrUndefined },
-            _b$1.path = { fb: "cookiePath", dfVal: isNotNullOrUndefined },
-            _b$1.enabled = UNDEFINED_VALUE$2,
-            _b$1.ignoreCookies = UNDEFINED_VALUE$2,
-            _b$1.blockedCookies = UNDEFINED_VALUE$2,
-            _b$1)),
+var rootDefaultConfig = (_a$8 = {
+        cookieCfg: cfgDfMerge((_b$2 = {},
+            _b$2[STR_DOMAIN] = { fb: "cookieDomain", dfVal: isNotNullOrUndefined },
+            _b$2.path = { fb: "cookiePath", dfVal: isNotNullOrUndefined },
+            _b$2.enabled = UNDEFINED_VALUE$2,
+            _b$2.ignoreCookies = UNDEFINED_VALUE$2,
+            _b$2.blockedCookies = UNDEFINED_VALUE$2,
+            _b$2)),
         cookieDomain: UNDEFINED_VALUE$2,
         cookiePath: UNDEFINED_VALUE$2
     },
-    _a$7[strDisableCookiesUsage] = UNDEFINED_VALUE$2,
-    _a$7);
+    _a$8[strDisableCookiesUsage] = UNDEFINED_VALUE$2,
+    _a$8);
 function _getDoc() {
     !_doc && (_doc = getLazy(function () { return getDocument(); }));
 }
@@ -3449,7 +3548,7 @@ var NotificationManager = /** @class */ (function () {
                 g: function () { return _listeners; }
             });
             _self[_DYN_ADD_NOTIFICATION_LIS1 ] = function (listener) {
-                _listeners[_DYN_PUSH$1 ](listener);
+                _listeners[_DYN_PUSH$2 ](listener);
             };
             _self[_DYN_REMOVE_NOTIFICATION_2 ] = function (listener) {
                 var index = arrIndexOf(_listeners, listener);
@@ -3500,7 +3599,7 @@ var NotificationManager = /** @class */ (function () {
                         if (!waiting) {
                             waiting = [];
                         }
-                        waiting[_DYN_PUSH$1 ](asyncUnload);
+                        waiting[_DYN_PUSH$2 ](asyncUnload);
                     }
                 });
                 if (waiting) {
@@ -3640,7 +3739,7 @@ function doPerf(mgrSource, getSource, func, details, isAsync) {
                                 children = [];
                                 currentActive[_DYN_SET_CTX ](PerfEvent[strChildrenContextKey], children);
                             }
-                            children[_DYN_PUSH$1 ](perfEvt);
+                            children[_DYN_PUSH$2 ](perfEvt);
                         }
                     }
                     perfMgr[_DYN_SET_CTX ](doPerfActiveKey, perfEvt);
@@ -3725,7 +3824,7 @@ function createTraceParent(traceId, spanId, flags, version) {
         _a.traceFlags = flags >= 0 && flags <= 0xFF ? flags : 1,
         _a;
 }
-function parseTraceParent(value) {
+function parseTraceParent(value, selectIdx) {
     var _a;
     if (!value) {
         return null;
@@ -3735,6 +3834,10 @@ function parseTraceParent(value) {
     }
     if (!value || !isString(value) || value[_DYN_LENGTH$5 ] > 8192) {
         return null;
+    }
+    if (value.indexOf(",") !== -1) {
+        var values = value[_DYN_SPLIT$1 ](",");
+        value = values[selectIdx > 0 && values[_DYN_LENGTH$5 ] > selectIdx ? selectIdx : 0];
     }
     var match = TRACE_PARENT_REGEX.exec(strTrim(value));
     if (!match ||
@@ -3771,11 +3874,11 @@ function formatTraceParent(value) {
     }
     return "";
 }
-function findW3cTraceParent() {
+function findW3cTraceParent(selectIdx) {
     var name = "traceparent";
-    var traceParent = parseTraceParent(findMetaTag(name));
+    var traceParent = parseTraceParent(findMetaTag(name), selectIdx);
     if (!traceParent) {
-        traceParent = parseTraceParent(findNamedServerTiming(name));
+        traceParent = parseTraceParent(findNamedServerTiming(name), selectIdx);
     }
     return traceParent;
 }
@@ -3801,7 +3904,7 @@ function initializePlugins(processContext, extensions) {
                 isInitialized = thePlugin[_DYN_IS_INITIALIZED ]();
             }
             if (!isInitialized) {
-                initPlugins[_DYN_PUSH$1 ](thePlugin);
+                initPlugins[_DYN_PUSH$2 ](thePlugin);
             }
             lastPlugin = thePlugin;
             proxy = proxy[_DYN_GET_NEXT ]();
@@ -3929,7 +4032,7 @@ function _createInternalContext(telemetryChain, dynamicHandler, core, startAt) {
             args[_i - 2] = arguments[_i];
         }
         if (onComplete) {
-            _onComplete[_DYN_PUSH$1 ]({
+            _onComplete[_DYN_PUSH$2 ]({
                 func: onComplete,
                 self: !isUndefined(that) ? that : context.ctx,
                 args: args
@@ -4238,7 +4341,7 @@ function createUnloadHandlerContainer() {
     var handlers = [];
     function _addHandler(handler) {
         if (handler) {
-            handlers[_DYN_PUSH$1 ](handler);
+            handlers[_DYN_PUSH$2 ](handler);
         }
     }
     function _runHandlers(unloadCtx, unloadState) {
@@ -4283,11 +4386,11 @@ function createUnloadHookContainer() {
     };
 }
 
-var _a$6;
+var _a$7;
 var strGetPlugin = "getPlugin";
-var defaultValues$1 = (_a$6 = {},
-    _a$6[STR_EXTENSION_CONFIG] = { isVal: isNotNullOrUndefined, v: {} },
-    _a$6);
+var defaultValues$1 = (_a$7 = {},
+    _a$7[STR_EXTENSION_CONFIG] = { isVal: isNotNullOrUndefined, v: {} },
+    _a$7);
 var BaseTelemetryPlugin = /** @class */ (function () {
     function BaseTelemetryPlugin() {
         var _self = this;
@@ -4493,21 +4596,21 @@ var TelemetryInitializerPlugin = /** @class */ (function (_super) {
     return TelemetryInitializerPlugin;
 }(BaseTelemetryPlugin));
 
-var _a$5;
+var _a$6;
 var strValidationError = "Plugins must provide initialize method";
 var strNotificationManager = "_notificationManager";
 var strSdkUnloadingError = "SDK is still unloading...";
 var strSdkNotInitialized = "SDK is not initialized";
-var defaultConfig = objDeepFreeze((_a$5 = {
+var defaultConfig = objDeepFreeze((_a$6 = {
         cookieCfg: {}
     },
-    _a$5[STR_EXTENSIONS] = { rdOnly: true, ref: true, v: [] },
-    _a$5[STR_CHANNELS] = { rdOnly: true, ref: true, v: [] },
-    _a$5[STR_EXTENSION_CONFIG] = { ref: true, v: {} },
-    _a$5[STR_CREATE_PERF_MGR] = UNDEFINED_VALUE$2,
-    _a$5.loggingLevelConsole = 0 ,
-    _a$5.diagnosticLogInterval = UNDEFINED_VALUE$2,
-    _a$5));
+    _a$6[STR_EXTENSIONS] = { rdOnly: true, ref: true, v: [] },
+    _a$6[STR_CHANNELS] = { rdOnly: true, ref: true, v: [] },
+    _a$6[STR_EXTENSION_CONFIG] = { ref: true, v: {} },
+    _a$6[STR_CREATE_PERF_MGR] = UNDEFINED_VALUE$2,
+    _a$6.loggingLevelConsole = 0 ,
+    _a$6.diagnosticLogInterval = UNDEFINED_VALUE$2,
+    _a$6));
 function _createPerfManager(core, notificationMgr) {
     return new PerfManager(notificationMgr);
 }
@@ -4531,10 +4634,10 @@ function _validateExtensions(logger, channelPriority, allExtensions) {
             }
         }
         if (!extPriority || extPriority < channelPriority) {
-            coreExtensions[_DYN_PUSH$1 ](ext);
+            coreExtensions[_DYN_PUSH$2 ](ext);
         }
         else {
-            channels[_DYN_PUSH$1 ](ext);
+            channels[_DYN_PUSH$2 ](ext);
         }
     });
     return _a = {},
@@ -4593,7 +4696,7 @@ function _addDelayedCfgListener(listeners, newWatcher) {
                 }
             }
         };
-        listeners[_DYN_PUSH$1 ](theListener);
+        listeners[_DYN_PUSH$2 ](theListener);
     }
     return theListener;
 }
@@ -4667,7 +4770,7 @@ var AppInsightsCore = /** @class */ (function () {
                 _self[_DYN_LOGGER ] = logger;
                 var cfgExtensions = config[STR_EXTENSIONS ];
                 _configExtensions = [];
-                _configExtensions[_DYN_PUSH$1 ].apply(_configExtensions, __spreadArrayFn(__spreadArrayFn([], extensions, false), cfgExtensions));
+                _configExtensions[_DYN_PUSH$2 ].apply(_configExtensions, __spreadArrayFn(__spreadArrayFn([], extensions, false), cfgExtensions));
                 _channelConfig = config[STR_CHANNELS ];
                 _initPluginChain(null);
                 if (!_channels || _channels[_DYN_LENGTH$5 ] === 0) {
@@ -4689,7 +4792,7 @@ var AppInsightsCore = /** @class */ (function () {
                 var controls = [];
                 if (_channels) {
                     arrForEach(_channels, function (channel) {
-                        controls[_DYN_PUSH$1 ](channel);
+                        controls[_DYN_PUSH$2 ](channel);
                     });
                 }
                 return objFreeze(controls);
@@ -4711,7 +4814,7 @@ var AppInsightsCore = /** @class */ (function () {
                         _createTelCtx()[_DYN_PROCESS_NEXT ](telemetryItem);
                     }
                     else {
-                        _eventQueue[_DYN_PUSH$1 ](telemetryItem);
+                        _eventQueue[_DYN_PUSH$2 ](telemetryItem);
                     }
                 }, function () { return ({ item: telemetryItem }); }, !(telemetryItem.sync));
             };
@@ -4866,7 +4969,7 @@ var AppInsightsCore = /** @class */ (function () {
                     reason: 16
                 };
                 function _addPlugin(removed) {
-                    _configExtensions[_DYN_PUSH$1 ](plugin);
+                    _configExtensions[_DYN_PUSH$2 ](plugin);
                     updateState.added = [plugin];
                     _initPluginChain(updateState);
                     addCb && addCb(true);
@@ -4965,7 +5068,7 @@ var AppInsightsCore = /** @class */ (function () {
                         arrForEach(plugins, function (plugin) {
                             if (plugin[_DYN_IDENTIFIER ] && plugin[_DYN_VERSION$1 ] && !thePlugins[plugin.identifier]) {
                                 var ver = plugin[_DYN_IDENTIFIER ] + "=" + plugin[_DYN_VERSION$1 ];
-                                _pluginVersionStringArr[_DYN_PUSH$1 ](ver);
+                                _pluginVersionStringArr[_DYN_PUSH$2 ](ver);
                                 thePlugins[plugin.identifier] = plugin;
                             }
                         });
@@ -5089,7 +5192,7 @@ var AppInsightsCore = /** @class */ (function () {
                         return -1;
                     }
                     if (ext.getChannel) {
-                        channelHosts[_DYN_PUSH$1 ](ext);
+                        channelHosts[_DYN_PUSH$2 ](ext);
                     }
                 });
                 if (!thePlugin && channelHosts[_DYN_LENGTH$5 ] > 0) {
@@ -5137,7 +5240,7 @@ var AppInsightsCore = /** @class */ (function () {
                 if (!_pluginChain) {
                     var extensions = (_extensions || []).slice();
                     if (arrIndexOf(extensions, _telemetryInitializerPlugin) === -1) {
-                        extensions[_DYN_PUSH$1 ](_telemetryInitializerPlugin);
+                        extensions[_DYN_PUSH$2 ](_telemetryInitializerPlugin);
                     }
                     _pluginChain = createTelemetryProxyChain(sortPlugins(extensions), _configHandler.cfg, _self);
                 }
@@ -5152,7 +5255,7 @@ var AppInsightsCore = /** @class */ (function () {
                         var newConfigExtensions = [];
                         arrForEach(_configExtensions, function (plugin, idx) {
                             if (!_isPluginPresent(plugin, thePlugins)) {
-                                newConfigExtensions[_DYN_PUSH$1 ](plugin);
+                                newConfigExtensions[_DYN_PUSH$2 ](plugin);
                             }
                             else {
                                 removed = true;
@@ -5167,13 +5270,13 @@ var AppInsightsCore = /** @class */ (function () {
                                 var newQueue = [];
                                 arrForEach(queue, function (channel) {
                                     if (!_isPluginPresent(channel, thePlugins)) {
-                                        newQueue[_DYN_PUSH$1 ](channel);
+                                        newQueue[_DYN_PUSH$2 ](channel);
                                     }
                                     else {
                                         removed = true;
                                     }
                                 });
-                                newChannelConfig[_DYN_PUSH$1 ](newQueue);
+                                newChannelConfig[_DYN_PUSH$2 ](newQueue);
                             });
                             _channelConfig = newChannelConfig;
                         }
@@ -5451,7 +5554,7 @@ function eventOn(target, eventName, handlerRef, evtNamespace, useCapture) {
                     _a[_DYN_HANDLER ] = handlerRef,
                     _a.capture = useCapture,
                     _a);
-                _getRegisteredEvents(target, evtName.type)[_DYN_PUSH$1 ](registeredEvent);
+                _getRegisteredEvents(target, evtName.type)[_DYN_PUSH$2 ](registeredEvent);
             }
         }
         catch (e) {
@@ -5634,7 +5737,7 @@ function _createFunctionHook(aiHook) {
         funcArgs.evt = getInst("event");
         function _createArgs(target, theArgs) {
             _arrLoop(theArgs, function (arg) {
-                target[_DYN_PUSH$1 ](arg);
+                target[_DYN_PUSH$2 ](arg);
             });
             return target;
         }
@@ -5704,7 +5807,7 @@ function _createInstrumentHook(owner, funcName, fn, callbacks) {
         }
     };
     aiHook.i++;
-    aiHook.h[_DYN_PUSH$1 ](theHook);
+    aiHook.h[_DYN_PUSH$2 ](theHook);
     return theHook;
 }
 function InstrumentFunc(target, funcName, callbacks, checkPrototype, checkParentProto) {
@@ -5756,16 +5859,23 @@ var _DYN_LENGTH$4 = "length";
 var _DYN_TO_LOWER_CASE$1 = "toLowerCase";
 var _DYN_INGESTIONENDPOINT = "ingestionendpoint";
 var _DYN_TO_STRING$2 = "toString";
+var _DYN_PUSH$1 = "push";
 var _DYN_REMOVE_ITEM = "removeItem";
 var _DYN_NAME$2 = "name";
 var _DYN_MESSAGE$1 = "message";
 var _DYN_COUNT$1 = "count";
+var _DYN_PRE_TRIGGER_DATE = "preTriggerDate";
+var _DYN_DISABLED = "disabled";
+var _DYN_INTERVAL = "interval";
+var _DYN_DAYS_OF_MONTH = "daysOfMonth";
+var _DYN_DATE = "date";
+var _DYN_GET_UTCDATE = "getUTCDate";
 var _DYN_STRINGIFY$1 = "stringify";
 var _DYN_PATHNAME = "pathname";
 var _DYN_CORRELATION_HEADER_E0 = "correlationHeaderExcludePatterns";
 var _DYN_EXCEPTIONS = "exceptions";
 var _DYN_PARSED_STACK = "parsedStack";
-var _DYN_PROPERTIES = "properties";
+var _DYN_PROPERTIES$1 = "properties";
 var _DYN_MEASUREMENTS$1 = "measurements";
 var _DYN_SIZE_IN_BYTES = "sizeInBytes";
 var _DYN_TYPE_NAME = "typeName";
@@ -6264,6 +6374,330 @@ function utlRemoveSessionStorage(logger, name) {
     return false;
 }
 
+var THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
+var ThrottleMgr = /** @class */ (function () {
+    function ThrottleMgr(core, namePrefix) {
+        var _self = this;
+        var _canUseLocalStorage;
+        var _logger;
+        var _config;
+        var _localStorageObj;
+        var _isTriggered;
+        var _namePrefix;
+        var _queue;
+        var _isReady = false;
+        var _isSpecificDaysGiven = false;
+        _initConfig();
+        _self["_getDbgPlgTargets"] = function () {
+            return [_queue];
+        };
+        _self.getConfig = function () {
+            return _config;
+        };
+        _self.canThrottle = function (msgId) {
+            var localObj = _getLocalStorageObjByKey(msgId);
+            var cfg = _getCfgByKey(msgId);
+            return _canThrottle(cfg, _canUseLocalStorage, localObj);
+        };
+        _self.isTriggered = function (msgId) {
+            return _isTrigger(msgId);
+        };
+        _self.isReady = function () {
+            return _isReady;
+        };
+        _self.flush = function (msgId) {
+            try {
+                var queue = _getQueueByKey(msgId);
+                if (queue && queue[_DYN_LENGTH$4 ] > 0) {
+                    var items = queue.slice(0);
+                    _queue[msgId] = [];
+                    arrForEach(items, function (item) {
+                        _flushMessage(item.msgID, item[_DYN_MESSAGE$1 ], item.severity, false);
+                    });
+                    return true;
+                }
+            }
+            catch (err) {
+            }
+            return false;
+        };
+        _self.flushAll = function () {
+            try {
+                if (_queue) {
+                    var result_1 = true;
+                    objForEachKey(_queue, function (key) {
+                        var isFlushed = _self.flush(parseInt(key));
+                        result_1 = result_1 && isFlushed;
+                    });
+                    return result_1;
+                }
+            }
+            catch (err) {
+            }
+            return false;
+        };
+        _self.onReadyState = function (isReady, flushAll) {
+            if (flushAll === void 0) { flushAll = true; }
+            _isReady = isNullOrUndefined(isReady) ? true : isReady;
+            if (_isReady && flushAll) {
+                return _self.flushAll();
+            }
+            return null;
+        };
+        _self.sendMessage = function (msgID, message, severity) {
+            return _flushMessage(msgID, message, severity, true);
+        };
+        function _flushMessage(msgID, message, severity, saveUnsentMsg) {
+            if (_isReady) {
+                var isSampledIn = _canSampledIn(msgID);
+                if (!isSampledIn) {
+                    return;
+                }
+                var cfg = _getCfgByKey(msgID);
+                var localStorageObj = _getLocalStorageObjByKey(msgID);
+                var canThrottle = _canThrottle(cfg, _canUseLocalStorage, localStorageObj);
+                var throttled = false;
+                var number = 0;
+                var isTriggered = _isTrigger(msgID);
+                try {
+                    if (canThrottle && !isTriggered) {
+                        number = Math.min(cfg.limit.maxSendNumber, localStorageObj[_DYN_COUNT$1 ] + 1);
+                        localStorageObj[_DYN_COUNT$1 ] = 0;
+                        throttled = true;
+                        _isTriggered[msgID] = true;
+                        localStorageObj[_DYN_PRE_TRIGGER_DATE ] = new Date();
+                    }
+                    else {
+                        _isTriggered[msgID] = canThrottle;
+                        localStorageObj[_DYN_COUNT$1 ] += 1;
+                    }
+                    var localStorageName = _getLocalStorageName(msgID);
+                    _resetLocalStorage(_logger, localStorageName, localStorageObj);
+                    for (var i = 0; i < number; i++) {
+                        _sendMessage(msgID, _logger, message, severity);
+                    }
+                }
+                catch (e) {
+                }
+                return {
+                    isThrottled: throttled,
+                    throttleNum: number
+                };
+            }
+            else {
+                if (!!saveUnsentMsg) {
+                    var queue = _getQueueByKey(msgID);
+                    queue[_DYN_PUSH$1 ]({
+                        msgID: msgID,
+                        message: message,
+                        severity: severity
+                    });
+                }
+            }
+            return null;
+        }
+        function _initConfig() {
+            _logger = safeGetLogger(core);
+            _isTriggered = {};
+            _localStorageObj = {};
+            _queue = {};
+            _config = {};
+            _setCfgByKey(109 );
+            _namePrefix = isNotNullOrUndefined(namePrefix) ? namePrefix : "";
+            core.addUnloadHook(onConfigChange(core.config, function (details) {
+                var coreConfig = details.cfg;
+                _canUseLocalStorage = utlCanUseLocalStorage();
+                var configMgr = coreConfig.throttleMgrCfg || {};
+                objForEachKey(configMgr, function (key, cfg) {
+                    _setCfgByKey(parseInt(key), cfg);
+                });
+            }));
+        }
+        function _getCfgByKey(msgID) {
+            return _config[msgID] || _config[109 ];
+        }
+        function _setCfgByKey(msgID, config) {
+            var _a, _b;
+            try {
+                var cfg = config || {};
+                var curCfg = {};
+                curCfg[_DYN_DISABLED ] = !!cfg[_DYN_DISABLED ];
+                var configInterval = cfg[_DYN_INTERVAL ] || {};
+                _isSpecificDaysGiven = (configInterval === null || configInterval === void 0 ? void 0 : configInterval.daysOfMonth) && (configInterval === null || configInterval === void 0 ? void 0 : configInterval.daysOfMonth[_DYN_LENGTH$4 ]) > 0;
+                curCfg[_DYN_INTERVAL ] = _getIntervalConfig(configInterval);
+                var limit = {
+                    samplingRate: ((_a = cfg.limit) === null || _a === void 0 ? void 0 : _a.samplingRate) || 100,
+                    maxSendNumber: ((_b = cfg.limit) === null || _b === void 0 ? void 0 : _b.maxSendNumber) || 1
+                };
+                curCfg.limit = limit;
+                _config[msgID] = curCfg;
+            }
+            catch (e) {
+            }
+        }
+        function _getIntervalConfig(interval) {
+            interval = interval || {};
+            var monthInterval = interval === null || interval === void 0 ? void 0 : interval.monthInterval;
+            var dayInterval = interval === null || interval === void 0 ? void 0 : interval.dayInterval;
+            if (isNullOrUndefined(monthInterval) && isNullOrUndefined(dayInterval)) {
+                interval.monthInterval = 3;
+                if (!_isSpecificDaysGiven) {
+                    interval[_DYN_DAYS_OF_MONTH ] = [28];
+                    _isSpecificDaysGiven = true;
+                }
+            }
+            interval = {
+                monthInterval: interval === null || interval === void 0 ? void 0 : interval.monthInterval,
+                dayInterval: interval === null || interval === void 0 ? void 0 : interval.dayInterval,
+                daysOfMonth: interval === null || interval === void 0 ? void 0 : interval.daysOfMonth
+            };
+            return interval;
+        }
+        function _canThrottle(config, canUseLocalStorage, localStorageObj) {
+            if (config && !config[_DYN_DISABLED ] && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
+                var curDate = _getThrottleDate();
+                var date = localStorageObj[_DYN_DATE ];
+                var interval = config[_DYN_INTERVAL ];
+                var monthCheck = 1;
+                if (interval === null || interval === void 0 ? void 0 : interval.monthInterval) {
+                    var monthExpand = (curDate.getUTCFullYear() - date.getUTCFullYear()) * 12 + curDate.getUTCMonth() - date.getUTCMonth();
+                    monthCheck = _checkInterval(interval.monthInterval, 0, monthExpand);
+                }
+                var dayCheck = 1;
+                if (_isSpecificDaysGiven) {
+                    dayCheck = arrIndexOf(interval[_DYN_DAYS_OF_MONTH ], curDate[_DYN_GET_UTCDATE ]());
+                }
+                else if (interval === null || interval === void 0 ? void 0 : interval.dayInterval) {
+                    var daySpan = Math.floor((curDate.getTime() - date.getTime()) / 86400000);
+                    dayCheck = _checkInterval(interval.dayInterval, 0, daySpan);
+                }
+                return monthCheck >= 0 && dayCheck >= 0;
+            }
+            return false;
+        }
+        function _getLocalStorageName(msgKey, prefix) {
+            var fix = isNotNullOrUndefined(prefix) ? prefix : "";
+            if (msgKey) {
+                return THROTTLE_STORAGE_PREFIX + fix + "-" + msgKey;
+            }
+            return null;
+        }
+        function _isTriggeredOnCurDate(preTriggerDate) {
+            try {
+                if (preTriggerDate) {
+                    var curDate = new Date();
+                    return preTriggerDate.getUTCFullYear() === curDate.getUTCFullYear() &&
+                        preTriggerDate.getUTCMonth() === curDate.getUTCMonth() &&
+                        preTriggerDate[_DYN_GET_UTCDATE ]() === curDate[_DYN_GET_UTCDATE ]();
+                }
+            }
+            catch (e) {
+            }
+            return false;
+        }
+        function _getLocalStorageObj(value, logger, storageName) {
+            try {
+                var storageObj = {
+                    date: _getThrottleDate(),
+                    count: 0
+                };
+                if (value) {
+                    var obj = JSON.parse(value);
+                    var curObj = {
+                        date: _getThrottleDate(obj[_DYN_DATE ]) || storageObj[_DYN_DATE ],
+                        count: obj[_DYN_COUNT$1 ] || storageObj[_DYN_COUNT$1 ],
+                        preTriggerDate: obj.preTriggerDate ? _getThrottleDate(obj[_DYN_PRE_TRIGGER_DATE ]) : undefined
+                    };
+                    return curObj;
+                }
+                else {
+                    _resetLocalStorage(logger, storageName, storageObj);
+                    return storageObj;
+                }
+            }
+            catch (e) {
+            }
+            return null;
+        }
+        function _getThrottleDate(dateStr) {
+            try {
+                if (dateStr) {
+                    var date = new Date(dateStr);
+                    if (!isNaN(date.getDate())) {
+                        return date;
+                    }
+                }
+                else {
+                    return new Date();
+                }
+            }
+            catch (e) {
+            }
+            return null;
+        }
+        function _resetLocalStorage(logger, storageName, obj) {
+            try {
+                return utlSetLocalStorage(logger, storageName, strTrim(JSON[_DYN_STRINGIFY$1 ](obj)));
+            }
+            catch (e) {
+            }
+            return false;
+        }
+        function _checkInterval(interval, start, current) {
+            if (interval <= 0) {
+                return 1;
+            }
+            return (current >= start) && (current - start) % interval == 0 ? Math.floor((current - start) / interval) + 1 : -1;
+        }
+        function _sendMessage(msgID, logger, message, severity) {
+            _throwInternal(logger, severity || 1 , msgID, message);
+        }
+        function _canSampledIn(msgID) {
+            try {
+                var cfg = _getCfgByKey(msgID);
+                return randomValue(1000000) <= cfg.limit.samplingRate;
+            }
+            catch (e) {
+            }
+            return false;
+        }
+        function _getLocalStorageObjByKey(key) {
+            try {
+                var curObj = _localStorageObj[key];
+                if (!curObj) {
+                    var localStorageName = _getLocalStorageName(key, _namePrefix);
+                    curObj = _getLocalStorageObj(utlGetLocalStorage(_logger, localStorageName), _logger, localStorageName);
+                    _localStorageObj[key] = curObj;
+                }
+                return _localStorageObj[key];
+            }
+            catch (e) {
+            }
+            return null;
+        }
+        function _isTrigger(key) {
+            var isTrigger = _isTriggered[key];
+            if (isNullOrUndefined(isTrigger)) {
+                isTrigger = false;
+                var localStorageObj = _getLocalStorageObjByKey(key);
+                if (localStorageObj) {
+                    isTrigger = _isTriggeredOnCurDate(localStorageObj[_DYN_PRE_TRIGGER_DATE ]);
+                }
+                _isTriggered[key] = isTrigger;
+            }
+            return _isTriggered[key];
+        }
+        function _getQueueByKey(key) {
+            _queue = _queue || {};
+            if (isNullOrUndefined(_queue[key])) {
+                _queue[key] = [];
+            }
+            return _queue[key];
+        }
+    }
+    return ThrottleMgr;
+}());
+
 var _FIELDS_SEPARATOR = ";";
 var _FIELD_KEY_VALUE_SEPARATOR = "=";
 function parseConnectionString(connectionString) {
@@ -6286,6 +6720,9 @@ function parseConnectionString(connectionString) {
             result[_DYN_INGESTIONENDPOINT ] = result[_DYN_INGESTIONENDPOINT ] || ("https://" + locationPrefix + "dc." + result.endpointsuffix);
         }
         result[_DYN_INGESTIONENDPOINT ] = result[_DYN_INGESTIONENDPOINT ] || DEFAULT_BREEZE_ENDPOINT;
+        if (strEndsWith(result[_DYN_INGESTIONENDPOINT ], "/")) {
+            result[_DYN_INGESTIONENDPOINT ] = result[_DYN_INGESTIONENDPOINT ].slice(0, -1);
+        }
     }
     return result;
 }
@@ -6325,7 +6762,7 @@ var Event$1 = /** @class */ (function () {
         var _self = this;
         _self.ver = 2;
         _self[_DYN_NAME$2 ] = dataSanitizeString(logger, name) || strNotSpecified;
-        _self[_DYN_PROPERTIES ] = dataSanitizeProperties(logger, properties);
+        _self[_DYN_PROPERTIES$1 ] = dataSanitizeProperties(logger, properties);
         _self[_DYN_MEASUREMENTS$1 ] = dataSanitizeMeasurements(logger, measurements);
     }
     Event.envelopeType = "Microsoft.ApplicationInsights.{0}.Event";
@@ -6426,7 +6863,7 @@ function _getOperaStack(errorMessage) {
             entry += "@" + lines[lp + 1];
             lp++;
         }
-        stack.push(entry);
+        stack[_DYN_PUSH$1 ](entry);
     }
     return {
         src: errorMessage,
@@ -6452,7 +6889,7 @@ function _getStackFromErrorObj(errorObj) {
             else if (_isStackDetails(errorObj[strStackDetails])) {
                 details = errorObj[strStackDetails];
             }
-            else if (window && window["opera"] && errorObj[strMessage]) {
+            else if (getWindow() && getWindow()["opera"] && errorObj[strMessage]) {
                 details = _getOperaStack(errorObj[_DYN_MESSAGE$1 ]);
             }
             else if (errorObj["reason"] && errorObj.reason[strStack]) {
@@ -6509,7 +6946,7 @@ function _parseStack(stack) {
             if (_StackFrame.regex.test(theFrame)) {
                 var parsedFrame = new _StackFrame(theFrame, level_1++);
                 totalSizeInBytes_1 += parsedFrame[_DYN_SIZE_IN_BYTES ];
-                parsedStack.push(parsedFrame);
+                parsedStack[_DYN_PUSH$1 ](parsedFrame);
             }
         });
         var exceptionParsedStackThreshold = 32 * 1024;
@@ -6593,7 +7030,7 @@ var Exception = /** @class */ (function () {
                 properties = {};
             }
             _self[_DYN_EXCEPTIONS ] = [new _ExceptionDetails(logger, exception, properties)];
-            _self[_DYN_PROPERTIES ] = dataSanitizeProperties(logger, properties);
+            _self[_DYN_PROPERTIES$1 ] = dataSanitizeProperties(logger, properties);
             _self[_DYN_MEASUREMENTS$1 ] = dataSanitizeMeasurements(logger, measurements);
             if (severityLevel) {
                 _self[_DYN_SEVERITY_LEVEL ] = severityLevel;
@@ -6604,7 +7041,7 @@ var Exception = /** @class */ (function () {
         }
         else {
             _self[_DYN_EXCEPTIONS ] = exception[_DYN_EXCEPTIONS ] || [];
-            _self[_DYN_PROPERTIES ] = exception[_DYN_PROPERTIES ];
+            _self[_DYN_PROPERTIES$1 ] = exception[_DYN_PROPERTIES$1 ];
             _self[_DYN_MEASUREMENTS$1 ] = exception[_DYN_MEASUREMENTS$1 ];
             if (exception[_DYN_SEVERITY_LEVEL ]) {
                 _self[_DYN_SEVERITY_LEVEL ] = exception[_DYN_SEVERITY_LEVEL ];
@@ -6836,7 +7273,7 @@ var Metric = /** @class */ (function () {
         dataPoint.value = value;
         dataPoint.stdDev = isNaN(stdDev) || stdDev === null ? undefined : stdDev;
         _self.metrics = [dataPoint];
-        _self[_DYN_PROPERTIES ] = dataSanitizeProperties(logger, properties);
+        _self[_DYN_PROPERTIES$1 ] = dataSanitizeProperties(logger, properties);
         _self[_DYN_MEASUREMENTS$1 ] = dataSanitizeMeasurements(logger, measurements);
     }
     Metric.envelopeType = "Microsoft.ApplicationInsights.{0}.Metric";
@@ -6884,7 +7321,7 @@ var PageView = /** @class */ (function () {
         if (!isNaN(durationMs)) {
             _self[_DYN_DURATION$1 ] = msToTimeSpan(durationMs);
         }
-        _self[_DYN_PROPERTIES ] = dataSanitizeProperties(logger, properties);
+        _self[_DYN_PROPERTIES$1 ] = dataSanitizeProperties(logger, properties);
         _self[_DYN_MEASUREMENTS$1 ] = dataSanitizeMeasurements(logger, measurements);
     }
     PageView.envelopeType = "Microsoft.ApplicationInsights.{0}.Pageview";
@@ -6932,7 +7369,7 @@ var RemoteDependencyData = /** @class */ (function () {
             _self.target = "".concat(_self.target, " | ").concat(correlationContext);
         }
         _self[_DYN_NAME$2 ] = dataSanitizeString(logger, dependencyFields[_DYN_NAME$2 ]);
-        _self[_DYN_PROPERTIES ] = dataSanitizeProperties(logger, properties);
+        _self[_DYN_PROPERTIES$1 ] = dataSanitizeProperties(logger, properties);
         _self[_DYN_MEASUREMENTS$1 ] = dataSanitizeMeasurements(logger, measurements);
     }
     RemoteDependencyData.envelopeType = "Microsoft.ApplicationInsights.{0}.RemoteDependency";
@@ -6952,7 +7389,7 @@ var Trace = /** @class */ (function () {
         _self.ver = 2;
         message = message || strNotSpecified;
         _self[_DYN_MESSAGE$1 ] = dataSanitizeMessage(logger, message);
-        _self[_DYN_PROPERTIES ] = dataSanitizeProperties(logger, properties);
+        _self[_DYN_PROPERTIES$1 ] = dataSanitizeProperties(logger, properties);
         _self[_DYN_MEASUREMENTS$1 ] = dataSanitizeMeasurements(logger, measurements);
         if (severityLevel) {
             _self[_DYN_SEVERITY_LEVEL ] = severityLevel;
@@ -6982,7 +7419,7 @@ var PageViewPerformance = /** @class */ (function () {
         _self.ver = 2;
         _self.url = dataSanitizeUrl(logger, url);
         _self[_DYN_NAME$2 ] = dataSanitizeString(logger, name) || strNotSpecified;
-        _self[_DYN_PROPERTIES ] = dataSanitizeProperties(logger, properties);
+        _self[_DYN_PROPERTIES$1 ] = dataSanitizeProperties(logger, properties);
         _self[_DYN_MEASUREMENTS$1 ] = dataSanitizeMeasurements(logger, measurements);
         if (cs4BaseData) {
             _self.domProcessing = cs4BaseData.domProcessing;
@@ -7157,6 +7594,122 @@ function createDomEvent(eventName) {
     return event;
 }
 
+function _disableEvents(target, evtNamespace) {
+    eventOff(target, null, null, evtNamespace);
+}
+function createOfflineListener(parentEvtNamespace) {
+    var _document = getDocument();
+    var _navigator = getNavigator();
+    var _isListening = false;
+    var listenerList = [];
+    var rState = 1 ;
+    if (_navigator && !isNullOrUndefined(_navigator.onLine) && !_navigator.onLine) {
+        rState = 2 ;
+    }
+    var uState = 0 ;
+    var _currentState = calCurrentState();
+    var _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineListener"), parentEvtNamespace);
+    try {
+        if (_enableEvents(getWindow())) {
+            _isListening = true;
+        }
+        if (_document) {
+            var target = _document.body || _document;
+            if (target.ononline) {
+                if (_enableEvents(target)) {
+                    _isListening = true;
+                }
+            }
+        }
+    }
+    catch (e) {
+        _isListening = false;
+    }
+    function _enableEvents(target) {
+        var enabled = false;
+        if (target) {
+            enabled = eventOn(target, "online", _setOnline, _evtNamespace);
+            if (enabled) {
+                eventOn(target, "offline", _setOffline, _evtNamespace);
+            }
+        }
+        return enabled;
+    }
+    function _isOnline() {
+        return _currentState;
+    }
+    function calCurrentState() {
+        if (uState === 2  || rState === 2 ) {
+            return false;
+        }
+        return true;
+    }
+    function listnerNoticeCheck() {
+        var newState = calCurrentState();
+        if (_currentState !== newState) {
+            _currentState = newState;
+            arrForEach(listenerList, function (callback) {
+                var offlineState = {
+                    isOnline: _currentState,
+                    rState: rState,
+                    uState: uState
+                };
+                try {
+                    callback(offlineState);
+                }
+                catch (e) {
+                }
+            });
+        }
+    }
+    function setOnlineState(newState) {
+        uState = newState;
+        listnerNoticeCheck();
+    }
+    function _setOnline() {
+        rState = 1 ;
+        listnerNoticeCheck();
+    }
+    function _setOffline() {
+        rState = 2 ;
+        listnerNoticeCheck();
+    }
+    function _unload() {
+        var win = getWindow();
+        if (win && _isListening) {
+            _disableEvents(win, _evtNamespace);
+            if (_document) {
+                var target = _document.body || _document;
+                if (!isUndefined(target.ononline)) {
+                    _disableEvents(target, _evtNamespace);
+                }
+            }
+            _isListening = false;
+        }
+    }
+    function addListener(callback) {
+        listenerList[_DYN_PUSH$1 ](callback);
+        return {
+            rm: function () {
+                var index = listenerList.indexOf(callback);
+                if (index > -1) {
+                    return listenerList.splice(index, 1);
+                }
+                else {
+                    return;
+                }
+            }
+        };
+    }
+    return {
+        isOnline: _isOnline,
+        isListening: function () { return _isListening; },
+        unload: _unload,
+        addListener: addListener,
+        setOnlineState: setOnlineState
+    };
+}
+
 var PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 var BreezeChannelIdentifier = "AppInsightsChannelPlugin";
 var AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";
@@ -7172,8 +7725,8 @@ var _DYN_TRACK = "track";
 var _DYN_TRACK_PAGE_VIEW = "trackPageView";
 var _DYN_TRACK_PREVIOUS_PAGE_1 = "trackPreviousPageVisit";
 var _DYN_SEND_PAGE_VIEW_INTER2 = "sendPageViewInternal";
-var _DYN_GET_ENTRIES_BY_TYPE = "getEntriesByType";
 var _DYN_START_TIME$1 = "startTime";
+var _DYN_PROPERTIES = "properties";
 var _DYN_DURATION = "duration";
 var _DYN_SEND_PAGE_VIEW_PERFO3 = "sendPageViewPerformanceInternal";
 var _DYN_POPULATE_PAGE_VIEW_P4 = "populatePageViewPerformanceEvent";
@@ -7195,6 +7748,7 @@ var _DYN_LENGTH$3 = "length";
 var _DYN_ENABLE_AUTO_ROUTE_TR11 = "enableAutoRouteTracking";
 var _DYN_ENABLE_UNHANDLED_PRO12 = "enableUnhandledPromiseRejectionTracking";
 var _DYN_AUTO_UNHANDLED_PROMI13 = "autoUnhandledPromiseInstrumented";
+var _DYN_GET_ENTRIES_BY_TYPE = "getEntriesByType";
 var _DYN_IS_PERFORMANCE_TIMIN14 = "isPerformanceTimingSupported";
 var _DYN_GET_PERFORMANCE_TIMI15 = "getPerformanceTiming";
 var _DYN_NAVIGATION_START = "navigationStart";
@@ -7213,6 +7767,7 @@ var PageViewManager = /** @class */ (function () {
             var queueTimer = null;
             var itemQueue = [];
             var pageViewPerformanceSent = false;
+            var firstPageViewSent = false;
             var _logger;
             if (core) {
                 _logger = core.logger;
@@ -7261,6 +7816,19 @@ var PageViewManager = /** @class */ (function () {
                 if (isNullOrUndefined(uri) || typeof uri !== "string") {
                     var location_1 = getLocation();
                     uri = pageView.uri = location_1 && location_1[_DYN_HREF ] || "";
+                }
+                if (!firstPageViewSent) {
+                    var perf = getPerformance();
+                    var navigationEntries = (perf && perf[_DYN_GET_ENTRIES_BY_TYPE ] && perf[_DYN_GET_ENTRIES_BY_TYPE ]("navigation"));
+                    if (navigationEntries && navigationEntries[0] && !isUndefined(perf.timeOrigin)) {
+                        var loadEventStart = navigationEntries[0].loadEventStart;
+                        pageView[_DYN_START_TIME$1 ] = new Date(perf.timeOrigin + loadEventStart);
+                    }
+                    else {
+                        var duration_1 = ((customProperties || pageView[_DYN_PROPERTIES ] || {})[_DYN_DURATION ] || 0);
+                        pageView[_DYN_START_TIME$1 ] = new Date(new Date().getTime() - duration_1);
+                    }
+                    firstPageViewSent = true;
                 }
                 if (!pageViewPerformanceManager[_DYN_IS_PERFORMANCE_TIMIN14 ]()) {
                     appInsights[_DYN_SEND_PAGE_VIEW_INTER2 ](pageView, customProperties);
@@ -7363,7 +7931,7 @@ function _isPerformanceTimingSupported() {
 }
 function _isPerformanceNavigationTimingSupported() {
     var perf = getPerformance();
-    return perf && perf[_DYN_GET_ENTRIES_BY_TYPE ] && perf[_DYN_GET_ENTRIES_BY_TYPE ]("navigation")[_DYN_LENGTH$3 ] > 0;
+    return perf && perf.getEntriesByType && perf.getEntriesByType("navigation")[_DYN_LENGTH$3 ] > 0;
 }
 function _isPerformanceTimingDataReady() {
     var perf = getPerformance();
@@ -7568,7 +8136,7 @@ var Timing = /** @class */ (function () {
     return Timing;
 }());
 
-var _a$4;
+var _a$5;
 var strEvent = "event";
 function _dispatchEvent(target, evnt) {
     if (target && target.dispatchEvent && evnt) {
@@ -7586,24 +8154,24 @@ function _getReason(error) {
     return error || "";
 }
 var MinMilliSeconds = 60000;
-var defaultValues = objDeepFreeze((_a$4 = {
+var defaultValues = objDeepFreeze((_a$5 = {
         sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
         sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
         disableExceptionTracking: cfgDfBoolean()
     },
-    _a$4[_DYN_AUTO_TRACK_PAGE_VISI9 ] = cfgDfBoolean(),
-    _a$4[_DYN_OVERRIDE_PAGE_VIEW_D8 ] = cfgDfBoolean(),
-    _a$4[_DYN_ENABLE_UNHANDLED_PRO12 ] = cfgDfBoolean(),
-    _a$4[_DYN_AUTO_UNHANDLED_PROMI13 ] = false,
-    _a$4.samplingPercentage = cfgDfValidate(_chkSampling$1, 100),
-    _a$4[_DYN_IS_STORAGE_USE_DISAB0 ] = cfgDfBoolean(),
-    _a$4[_DYN_IS_BROWSER_LINK_TRAC10 ] = cfgDfBoolean(),
-    _a$4[_DYN_ENABLE_AUTO_ROUTE_TR11 ] = cfgDfBoolean(),
-    _a$4.namePrefix = cfgDfString(),
-    _a$4.enableDebug = cfgDfBoolean(),
-    _a$4.disableFlushOnBeforeUnload = cfgDfBoolean(),
-    _a$4.disableFlushOnUnload = cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
-    _a$4));
+    _a$5[_DYN_AUTO_TRACK_PAGE_VISI9 ] = cfgDfBoolean(),
+    _a$5[_DYN_OVERRIDE_PAGE_VIEW_D8 ] = cfgDfBoolean(),
+    _a$5[_DYN_ENABLE_UNHANDLED_PRO12 ] = cfgDfBoolean(),
+    _a$5[_DYN_AUTO_UNHANDLED_PROMI13 ] = false,
+    _a$5.samplingPercentage = cfgDfValidate(_chkSampling$1, 100),
+    _a$5[_DYN_IS_STORAGE_USE_DISAB0 ] = cfgDfBoolean(),
+    _a$5[_DYN_IS_BROWSER_LINK_TRAC10 ] = cfgDfBoolean(),
+    _a$5[_DYN_ENABLE_AUTO_ROUTE_TR11 ] = cfgDfBoolean(),
+    _a$5.namePrefix = cfgDfString(),
+    _a$5.enableDebug = cfgDfBoolean(),
+    _a$5.disableFlushOnBeforeUnload = cfgDfBoolean(),
+    _a$5.disableFlushOnUnload = cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
+    _a$5));
 function _chkConfigMilliseconds(value, defValue) {
     value = value || defValue;
     if (value < MinMilliSeconds) {
@@ -7719,15 +8287,8 @@ var AnalyticsPlugin = /** @class */ (function (_super) {
                 if (doc) {
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
-                var perf = getPerformance();
-                var navigationEntries = (perf && perf[_DYN_GET_ENTRIES_BY_TYPE ] && perf[_DYN_GET_ENTRIES_BY_TYPE ]("navigation"));
-                if (navigationEntries) {
-                    var navigationEntry = navigationEntries[0];
-                    var loadEventStart = navigationEntry.loadEventStart;
-                    pageView[_DYN_START_TIME$1 ] = new Date(perf.timeOrigin + loadEventStart);
-                }
-                else {
-                    var duration = ((properties || pageView.properties || {})[_DYN_DURATION ] || 0);
+                if (isNullOrUndefined(pageView[_DYN_START_TIME$1 ])) {
+                    var duration = ((properties || pageView[_DYN_PROPERTIES ] || {})[_DYN_DURATION ] || 0);
                     pageView[_DYN_START_TIME$1 ] = new Date(new Date().getTime() - duration);
                 }
                 var telemetryItem = createTelemetryItem(pageView, PageView[_DYN_DATA_TYPE$1 ], PageView[_DYN_ENVELOPE_TYPE$1 ], _self[_DYN_DIAG_LOG$1 ](), properties, systemProperties);
@@ -7783,7 +8344,7 @@ var AnalyticsPlugin = /** @class */ (function (_super) {
                     isError(exception) && exception ||
                     { name: (exception && typeof exception), message: exception || strNotSpecified };
                 exception = exception || {};
-                var exceptionPartB = new Exception(_self[_DYN_DIAG_LOG$1 ](), theError, exception.properties || customProperties, exception.measurements, exception.severityLevel, exception.id).toInterface();
+                var exceptionPartB = new Exception(_self[_DYN_DIAG_LOG$1 ](), theError, exception[_DYN_PROPERTIES ] || customProperties, exception.measurements, exception.severityLevel, exception.id).toInterface();
                 var telemetryItem = createTelemetryItem(exceptionPartB, Exception[_DYN_DATA_TYPE$1 ], Exception[_DYN_ENVELOPE_TYPE$1 ], _self[_DYN_DIAG_LOG$1 ](), customProperties, systemProperties);
                 _self[_DYN_CORE$1 ][_DYN_TRACK ](telemetryItem);
             };
@@ -8107,8 +8668,471 @@ var AnalyticsPlugin = /** @class */ (function (_super) {
         });
         return _this;
     }
-    AnalyticsPlugin.Version = '3.0.2';
+    AnalyticsPlugin.Version = '3.0.6';
     return AnalyticsPlugin;
+}(BaseTelemetryPlugin));
+
+var _DYN_FEATURE_OPT_IN = "featureOptIn";
+var _DYN_ON_CFG_CHANGE_RECEIV0 = "onCfgChangeReceive";
+var _DYN_NON_OVERRIDE_CONFIGS = "nonOverrideConfigs";
+var _DYN_SCHEDULE_FETCH_TIMEO1 = "scheduleFetchTimeout";
+
+function replaceByNonOverrideCfg(cfg, nonOverrideConfigs, curLevel, maxLevel) {
+    try {
+        var exceedMaxLevel = curLevel > maxLevel;
+        if (exceedMaxLevel) {
+            cfg = null;
+        }
+        var curCfg_1 = curLevel == 0 ? objExtend$1({}, cfg) : cfg;
+        if (curCfg_1 && nonOverrideConfigs && !exceedMaxLevel) {
+            objForEachKey(curCfg_1, function (key) {
+                var nonOverrideVal = nonOverrideConfigs[key];
+                if (!!nonOverrideVal) {
+                    if (isObject(curCfg_1[key]) && isObject(nonOverrideVal)) {
+                        curCfg_1[key] = replaceByNonOverrideCfg(curCfg_1[key], nonOverrideVal, ++curLevel, maxLevel);
+                    }
+                    else {
+                        delete curCfg_1[key];
+                    }
+                }
+            });
+        }
+        return curCfg_1;
+    }
+    catch (e) {
+    }
+    return cfg;
+}
+var F = "featureOptIn.";
+var M = ".mode";
+var ON = ".onCfg";
+var OFF = ".offCfg";
+function resolveCdnFeatureCfg(field, cdnCfg, userOptInDetails) {
+    var _a;
+    if (!cdnCfg || !cdnCfg.enabled) {
+        return null;
+    }
+    var cdnFt = (cdnCfg[_DYN_FEATURE_OPT_IN ] || {})[field] || { mode: 1  };
+    var cdnM = cdnFt.mode;
+    var cdnOnV = cdnFt.onCfg;
+    var cdnOffV = cdnFt.offCfg;
+    var userFt = (userOptInDetails || {})[field] || { mode: 2  };
+    var userM = userFt.mode;
+    var userOnV = userFt.onCfg;
+    var userOffV = userFt.offCfg;
+    var blockCdn = !!userFt.blockCdnCfg;
+    var mFld = F + field + M;
+    var onFld = F + field + ON;
+    var offFld = F + field + OFF;
+    var mode = userM;
+    var onV = userOnV;
+    var offV = userOffV;
+    if (!blockCdn) {
+        if (cdnM === 4  || cdnM === 5 ) {
+            mode = (cdnM == 4  ? 3  : 2 );
+            onV = cdnOnV || userOnV;
+            offV = cdnOffV || userOffV;
+        }
+        else if (cdnM === 2  || userM === 2 ) {
+            mode = 2 ;
+            onV = userOnV || cdnOnV;
+            offV = userOffV || cdnOffV;
+        }
+        else if (cdnM === 3 ) {
+            mode = 3 ;
+            onV = userOnV || cdnOnV;
+            offV = userOffV || cdnOffV;
+        }
+        else if (cdnM === 1  && userM === 1 ) {
+            mode = 1 ;
+        }
+    }
+    return _a = {},
+        _a[mFld] = mode,
+        _a[onFld] = onV,
+        _a[offFld] = offV,
+        _a;
+}
+function applyCdnfeatureCfg(cdnCfg, core) {
+    try {
+        if (!cdnCfg || !cdnCfg.enabled) {
+            return null;
+        }
+        if (!cdnCfg[_DYN_FEATURE_OPT_IN ]) {
+            return cdnCfg.config;
+        }
+        var optInMap = cdnCfg[_DYN_FEATURE_OPT_IN ];
+        var cdnConfig_1 = cdnCfg.config || {};
+        objForEachKey(optInMap, function (key) {
+            var featureVal = resolveCdnFeatureCfg(key, cdnCfg, core.config[_DYN_FEATURE_OPT_IN ]);
+            if (!isNullOrUndefined(featureVal)) {
+                objForEachKey(featureVal, function (config, val) {
+                    setValueByKey(cdnConfig_1, config, val);
+                });
+                _overrideCdnCfgByFeature(key, featureVal, cdnConfig_1);
+            }
+        });
+        return cdnConfig_1;
+    }
+    catch (e) {
+    }
+    return null;
+}
+function _overrideCdnCfgByFeature(field, ftVal, config) {
+    var mode = ftVal[F + field + M];
+    var val = ftVal[F + field + ON];
+    var dVal = ftVal[F + field + OFF];
+    var target = null;
+    if (mode === 3 ) {
+        target = val;
+    }
+    if (mode === 2 ) {
+        target = dVal;
+    }
+    if (target) {
+        objForEachKey(target, function (key, cfg) {
+            setValueByKey(config, key, cfg);
+        });
+    }
+}
+
+var _a$4;
+var EVENT_NAME = "ai_cfgsync";
+var STR_GET_METHOD = "GET";
+var FETCH_TIMEOUT = 1800000;
+var udfVal = undefined;
+var defaultNonOverrideCfg = { instrumentationKey: true, connectionString: true, endpointUrl: true };
+var _defaultConfig$2 = objDeepFreeze((_a$4 = {
+        syncMode: 1 ,
+        blkCdnCfg: udfVal,
+        customEvtName: udfVal,
+        cfgUrl: udfVal,
+        overrideSyncFn: udfVal,
+        overrideFetchFn: udfVal
+    },
+    _a$4[_DYN_ON_CFG_CHANGE_RECEIV0 ] = udfVal,
+    _a$4[_DYN_SCHEDULE_FETCH_TIMEO1 ] = FETCH_TIMEOUT,
+    _a$4[_DYN_NON_OVERRIDE_CONFIGS ] = defaultNonOverrideCfg,
+    _a$4));
+var CfgSyncPlugin = /** @class */ (function (_super) {
+    __extendsFn(CfgSyncPlugin, _super);
+    function CfgSyncPlugin() {
+        var _this = _super.call(this) || this;
+        _this.priority = 198;
+        _this.identifier = "AppInsightsCfgSyncPlugin";
+        var _extensionConfig;
+        var _mainConfig;
+        var _evtName;
+        var _evtNamespace;
+        var _cfgUrl;
+        var _timeoutHandle;
+        var _receiveChanges;
+        var _broadcastChanges;
+        var _blkCdnCfg;
+        var _fetchTimeout;
+        var _retryCnt;
+        var _onCfgChangeReceive;
+        var _nonOverrideConfigs;
+        var _fetchFn;
+        var _overrideFetchFn;
+        var _overrideSyncFn;
+        var _paused = false;
+        dynamicProto(CfgSyncPlugin, _this, function (_self, _base) {
+            _initDefaults();
+            _self.initialize = function (config, core, extensions, pluginChain) {
+                _base.initialize(config, core, extensions, pluginChain);
+                _evtNamespace = mergeEvtNamespace(createUniqueNamespace(_self.identifier), core.evtNamespace && core.evtNamespace());
+                _populateDefaults(config);
+            };
+            _self.getCfg = function () {
+                return _mainConfig;
+            };
+            _self.pause = function () {
+                _paused = true;
+                _clearScheduledTimer();
+            };
+            _self.resume = function () {
+                _paused = false;
+                _setupTimer();
+            };
+            _self.setCfg = function (config) {
+                return _setCfg(config);
+            };
+            _self.sync = function (customDetails) {
+                return _sendCfgsyncEvents(customDetails);
+            };
+            _self.updateEventListenerName = function (eventName) {
+                return _updateEventListenerName(eventName);
+            };
+            _self._doTeardown = function (unloadCtx, unloadState) {
+                _eventOff();
+                _clearScheduledTimer();
+                _initDefaults();
+            };
+            _self["_getDbgPlgTargets"] = function () {
+                return [_broadcastChanges, _receiveChanges, _evtName, _blkCdnCfg];
+            };
+            function _initDefaults() {
+                _mainConfig = null;
+                _evtName = null;
+                _evtNamespace = null;
+                _cfgUrl = null;
+                _receiveChanges = null;
+                _broadcastChanges = null;
+                _nonOverrideConfigs = null;
+                _timeoutHandle = null;
+                _fetchTimeout = null;
+                _retryCnt = null;
+                _blkCdnCfg = null;
+                _overrideFetchFn = null;
+                _overrideSyncFn = null;
+                _onCfgChangeReceive = null;
+            }
+            function _populateDefaults(config) {
+                var identifier = _self.identifier;
+                var core = _self.core;
+                _self._addHook(onConfigChange(config, function () {
+                    var ctx = createProcessTelemetryContext(null, config, core);
+                    _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig$2);
+                    var preBlkCdn = _blkCdnCfg;
+                    _blkCdnCfg = !!_extensionConfig.blkCdnCfg;
+                    if (!isNullOrUndefined(preBlkCdn) && preBlkCdn !== _blkCdnCfg) {
+                        if (!_blkCdnCfg && _cfgUrl) {
+                            _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
+                        }
+                        else {
+                            _clearScheduledTimer();
+                        }
+                    }
+                    if (isNullOrUndefined(_receiveChanges)) {
+                        _receiveChanges = _extensionConfig.syncMode === 2 ;
+                    }
+                    if (isNullOrUndefined(_broadcastChanges)) {
+                        _broadcastChanges = _extensionConfig.syncMode === 1 ;
+                    }
+                    var newEvtName = _extensionConfig.customEvtName || EVENT_NAME;
+                    if (_evtName !== newEvtName) {
+                        if (_receiveChanges) {
+                            _updateEventListenerName(newEvtName);
+                        }
+                        else {
+                            _eventOff();
+                            _evtName = newEvtName;
+                        }
+                    }
+                    if (isNullOrUndefined(_cfgUrl)) {
+                        _cfgUrl = _extensionConfig.cfgUrl;
+                    }
+                    if (!_cfgUrl) {
+                        _mainConfig = config;
+                        if (_broadcastChanges) {
+                            _sendCfgsyncEvents();
+                        }
+                    }
+                }));
+                _overrideSyncFn = _extensionConfig.overrideSyncFn;
+                _overrideFetchFn = _extensionConfig.overrideFetchFn;
+                _onCfgChangeReceive = _extensionConfig[_DYN_ON_CFG_CHANGE_RECEIV0 ];
+                _nonOverrideConfigs = _extensionConfig[_DYN_NON_OVERRIDE_CONFIGS ];
+                _fetchTimeout = _extensionConfig[_DYN_SCHEDULE_FETCH_TIMEO1 ];
+                _fetchFn = _getFetchFnInterface();
+                _retryCnt = 0;
+                if (_cfgUrl && !_blkCdnCfg) {
+                    _fetchFn && _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
+                }
+            }
+            function _setCfg(config, isAutoSync) {
+                if (config) {
+                    _mainConfig = config;
+                    if (!!isAutoSync && !_paused) {
+                        return _sendCfgsyncEvents();
+                    }
+                    if (_receiveChanges && !_paused) {
+                        _self.core.updateCfg(config);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            function _eventOff() {
+                try {
+                    var global_1 = getGlobal();
+                    if (global_1) {
+                        eventOff(global_1, null, null, _evtNamespace);
+                    }
+                }
+                catch (e) {
+                }
+            }
+            function _sendCfgsyncEvents(customDetails) {
+                try {
+                    if (!!_overrideSyncFn && isFunction(_overrideSyncFn)) {
+                        return _overrideSyncFn(_mainConfig, customDetails);
+                    }
+                    return sendCustomEvent(_evtName, _mainConfig, customDetails);
+                }
+                catch (e) {
+                }
+                return false;
+            }
+            function _updateEventListenerName(name) {
+                try {
+                    _eventOff();
+                    if (name) {
+                        _evtName = name;
+                        _addEventListener();
+                    }
+                    return true;
+                }
+                catch (e) {
+                }
+                return false;
+            }
+            function _getFetchFnInterface() {
+                var _fetchFn = _overrideFetchFn;
+                if (isNullOrUndefined(_fetchFn)) {
+                    if (isFetchSupported()) {
+                        _fetchFn = _fetchSender;
+                    }
+                    else if (isXhrSupported()) {
+                        _fetchFn = _xhrSender;
+                    }
+                }
+                return _fetchFn;
+            }
+            function _fetchSender(url, oncomplete, isAutoSync) {
+                var global = getGlobal();
+                var fetchFn = (global && global.fetch) || null;
+                if (url && fetchFn && isFunction(fetchFn)) {
+                    try {
+                        var init = {
+                            method: STR_GET_METHOD
+                        };
+                        var request = new Request(url, init);
+                        doAwaitResponse(fetch(request), function (result) {
+                            var response = result.value;
+                            if (!result.rejected) {
+                                if (response.ok) {
+                                    doAwaitResponse(response.text(), function (res) {
+                                        _doOnComplete(oncomplete, response.status, res.value, isAutoSync);
+                                    });
+                                }
+                                else {
+                                    _doOnComplete(oncomplete, response.status, null, isAutoSync);
+                                }
+                            }
+                            else {
+                                _doOnComplete(oncomplete, 400);
+                            }
+                        });
+                    }
+                    catch (e) {
+                    }
+                }
+            }
+            function _xhrSender(url, oncomplete, isAutoSync) {
+                try {
+                    var xhr_1 = new XMLHttpRequest();
+                    xhr_1.open(STR_GET_METHOD, url);
+                    xhr_1.onreadystatechange = function () {
+                        if (xhr_1.readyState === XMLHttpRequest.DONE) {
+                            _doOnComplete(oncomplete, xhr_1.status, xhr_1.responseText, isAutoSync);
+                        }
+                    };
+                    xhr_1.onerror = function () {
+                        _doOnComplete(oncomplete, 400);
+                    };
+                    xhr_1.ontimeout = function () {
+                        _doOnComplete(oncomplete, 400);
+                    };
+                    xhr_1.send();
+                }
+                catch (e) {
+                }
+            }
+            function _onFetchComplete(status, response, isAutoSync) {
+                try {
+                    if (status >= 200 && status < 400 && response) {
+                        _retryCnt = 0;
+                        var JSON_1 = getJSON();
+                        if (JSON_1) {
+                            var cdnCfg = JSON_1.parse(response);
+                            var cfg = applyCdnfeatureCfg(cdnCfg, _self.core);
+                            cfg && _setCfg(cfg, isAutoSync);
+                        }
+                    }
+                    else {
+                        _retryCnt++;
+                    }
+                    if (_retryCnt < 3) {
+                        _setupTimer();
+                    }
+                }
+                catch (e) {
+                }
+            }
+            function _doOnComplete(oncomplete, status, response, isAutoSync) {
+                try {
+                    oncomplete(status, response, isAutoSync);
+                }
+                catch (e) {
+                }
+            }
+            function _addEventListener() {
+                if (_receiveChanges) {
+                    var global_2 = getGlobal();
+                    if (global_2) {
+                        try {
+                            eventOn(global_2, _evtName, function (event) {
+                                var cfgEvent = event && event.detail;
+                                if (_onCfgChangeReceive && cfgEvent) {
+                                    _onCfgChangeReceive(cfgEvent);
+                                }
+                                else {
+                                    var cfg = cfgEvent && cfgEvent.cfg;
+                                    var newCfg = cfg && isPlainObject(cfg) && _replaceTartgetByKeys(cfg);
+                                    newCfg && _setCfg(newCfg);
+                                }
+                            }, _evtNamespace, true);
+                        }
+                        catch (e) {
+                        }
+                    }
+                }
+            }
+            function _replaceTartgetByKeys(cfg, level) {
+                var _cfg = null;
+                try {
+                    if (cfg) {
+                        _cfg = replaceByNonOverrideCfg(cfg, _nonOverrideConfigs, 0, 5);
+                    }
+                }
+                catch (e) {
+                }
+                return _cfg;
+            }
+            function _setupTimer() {
+                if (!_timeoutHandle && _fetchTimeout) {
+                    _timeoutHandle = scheduleTimeout(function () {
+                        _timeoutHandle = null;
+                        _fetchFn(_cfgUrl, _onFetchComplete, _broadcastChanges);
+                    }, _fetchTimeout);
+                    _timeoutHandle.unref();
+                }
+            }
+            function _clearScheduledTimer() {
+                _timeoutHandle && _timeoutHandle.cancel();
+                _timeoutHandle = null;
+                _retryCnt = 0;
+            }
+            _self.processTelemetry = function (env, itemCtx) {
+                _self.processNext(env, itemCtx);
+            };
+        });
+        return _this;
+    }
+    CfgSyncPlugin.__ieDyn=1;
+    return CfgSyncPlugin;
 }(BaseTelemetryPlugin));
 
 var STR_DURATION$1 = "duration";
@@ -8124,8 +9148,6 @@ var _DYN_MEASUREMENTS = "measurements";
 var _DYN_DATA_TYPE = "dataType";
 var _DYN_ENVELOPE_TYPE = "envelopeType";
 var _DYN_TO_STRING = "toString";
-var _DYN_ON_LINE = "onLine";
-var _DYN_IS_ONLINE = "isOnline";
 var _DYN__GET = "_get";
 var _DYN_ENQUEUE = "enqueue";
 var _DYN_COUNT = "count";
@@ -8140,7 +9162,9 @@ var _DYN_CLEAR_SENT = "clearSent";
 var _DYN_BUFFER_OVERRIDE = "bufferOverride";
 var _DYN__BUFFER__KEY = "BUFFER_KEY";
 var _DYN__SENT__BUFFER__KEY = "SENT_BUFFER_KEY";
+var _DYN_CONCAT = "concat";
 var _DYN__MAX__BUFFER__SIZE = "MAX_BUFFER_SIZE";
+var _DYN_SEND_POST = "sendPOST";
 var _DYN_TRIGGER_SEND = "triggerSend";
 var _DYN_DIAG_LOG = "diagLog";
 var _DYN__SENDER = "_sender";
@@ -8148,21 +9172,24 @@ var _DYN_CUSTOM_HEADERS = "customHeaders";
 var _DYN_MAX_BATCH_SIZE_IN_BY1 = "maxBatchSizeInBytes";
 var _DYN_ONUNLOAD_DISABLE_BEA2 = "onunloadDisableBeacon";
 var _DYN_IS_BEACON_API_DISABL3 = "isBeaconApiDisabled";
-var _DYN_ENABLE_SESSION_STORA4 = "enableSessionStorageBuffer";
+var _DYN_ALWAYS_USE_XHR_OVERR4 = "alwaysUseXhrOverride";
+var _DYN_ENABLE_SESSION_STORA5 = "enableSessionStorageBuffer";
 var _DYN__BUFFER = "_buffer";
+var _DYN_ONUNLOAD_DISABLE_FET6 = "onunloadDisableFetch";
+var _DYN_DISABLE_SEND_BEACON_7 = "disableSendBeaconSplit";
 var _DYN_INSTRUMENTATION_KEY$1 = "instrumentationKey";
-var _DYN_DISABLE_XHR = "disableXhr";
-var _DYN_ONUNLOAD_DISABLE_FET5 = "onunloadDisableFetch";
+var _DYN_UNLOAD_TRANSPORTS = "unloadTransports";
 var _DYN_CONVERT_UNDEFINED = "convertUndefined";
 var _DYN_MAX_BATCH_INTERVAL = "maxBatchInterval";
 var _DYN_BASE_TYPE = "baseType";
 var _DYN_SAMPLE_RATE = "sampleRate";
-var _DYN__XHR_READY_STATE_CHA6 = "_xhrReadyStateChange";
+var _DYN__XHR_READY_STATE_CHA8 = "_xhrReadyStateChange";
 var _DYN__ON_ERROR = "_onError";
 var _DYN__ON_PARTIAL_SUCCESS = "_onPartialSuccess";
 var _DYN__ON_SUCCESS = "_onSuccess";
 var _DYN_ITEMS_ACCEPTED = "itemsAccepted";
 var _DYN_ITEMS_RECEIVED = "itemsReceived";
+var _DYN_ORI_PAYLOAD = "oriPayload";
 var _DYN_SET_REQUEST_HEADER$1 = "setRequestHeader";
 var _DYN_EVENTS_SEND_REQUEST = "eventsSendRequest";
 var _DYN_GET_SAMPLING_SCORE = "getSamplingScore";
@@ -8277,7 +9304,7 @@ function EnvelopeCreatorInit(logger, telemetryItem) {
     }
 }
 var EnvelopeCreator = {
-    Version: '3.0.2'
+    Version: '3.0.6'
 };
 function DependencyEnvelopeCreator(logger, telemetryItem, customUndefinedValue) {
     EnvelopeCreatorInit(logger, telemetryItem);
@@ -8426,83 +9453,6 @@ function TraceEnvelopeCreator(logger, telemetryItem, customUndefinedValue) {
     return _createEnvelope(logger, Trace[_DYN_ENVELOPE_TYPE ], telemetryItem, data);
 }
 
-function _disableEvents(target, evtNamespace) {
-    eventOff(target, null, null, evtNamespace);
-}
-function createOfflineListener(parentEvtNamespace) {
-    var _a;
-    var _document = getDocument();
-    var _navigator = getNavigator();
-    var _isListening = false;
-    var _onlineStatus = true;
-    var _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineListener"), parentEvtNamespace);
-    try {
-        if (_enableEvents(getWindow())) {
-            _isListening = true;
-        }
-        if (_document) {
-            var target = _document.body || _document;
-            if (target.ononline) {
-                if (_enableEvents(target)) {
-                    _isListening = true;
-                }
-            }
-        }
-        if (_isListening) {
-            if (_navigator && !isNullOrUndefined(_navigator[_DYN_ON_LINE ])) {
-                _onlineStatus = _navigator[_DYN_ON_LINE ];
-            }
-        }
-    }
-    catch (e) {
-        _isListening = false;
-    }
-    function _enableEvents(target) {
-        var enabled = false;
-        if (target) {
-            enabled = eventOn(target, "online", _setOnline, _evtNamespace);
-            if (enabled) {
-                eventOn(target, "offline", _setOffline, _evtNamespace);
-            }
-        }
-        return enabled;
-    }
-    function _setOnline() {
-        _onlineStatus = true;
-    }
-    function _setOffline() {
-        _onlineStatus = false;
-    }
-    function _isOnline() {
-        var result = true;
-        if (_isListening) {
-            result = _onlineStatus;
-        }
-        else if (_navigator && !isNullOrUndefined(_navigator[_DYN_ON_LINE ])) {
-            result = _navigator[_DYN_ON_LINE ];
-        }
-        return result;
-    }
-    function _unload() {
-        var win = getWindow();
-        if (win && _isListening) {
-            _disableEvents(win, _evtNamespace);
-            if (_document) {
-                var target = _document.body || _document;
-                if (!isUndefined(target.ononline)) {
-                    _disableEvents(target, _evtNamespace);
-                }
-            }
-            _isListening = false;
-        }
-    }
-    return _a = {},
-        _a[_DYN_IS_ONLINE ] = _isOnline,
-        _a.isListening = function () { return _isListening; },
-        _a.unload = _unload,
-        _a;
-}
-
 var BaseSendBuffer = /** @class */ (function () {
     function BaseSendBuffer(logger, config) {
         var _buffer = [];
@@ -8595,7 +9545,7 @@ var SessionStorageSendBuffer = /** @class */ (function (_super) {
         dynamicProto(SessionStorageSendBuffer, _this, function (_self, _base) {
             var bufferItems = _getBuffer(SessionStorageSendBuffer[_DYN__BUFFER__KEY ]);
             var notDeliveredItems = _getBuffer(SessionStorageSendBuffer[_DYN__SENT__BUFFER__KEY ]);
-            var buffer = _self._set(bufferItems.concat(notDeliveredItems));
+            var buffer = _self._set(bufferItems[_DYN_CONCAT ](notDeliveredItems));
             if (buffer[_DYN_LENGTH$2 ] > SessionStorageSendBuffer[_DYN__MAX__BUFFER__SIZE ]) {
                 buffer[_DYN_LENGTH$2 ] = SessionStorageSendBuffer[_DYN__MAX__BUFFER__SIZE ];
             }
@@ -8622,7 +9572,7 @@ var SessionStorageSendBuffer = /** @class */ (function (_super) {
                 _setBuffer(SessionStorageSendBuffer[_DYN__BUFFER__KEY ], _self._set(_removePayloadsFromBuffer(payload, _self[_DYN__GET ]())));
                 var sentElements = _getBuffer(SessionStorageSendBuffer[_DYN__SENT__BUFFER__KEY ]);
                 if (sentElements instanceof Array && payload instanceof Array) {
-                    sentElements = sentElements.concat(payload);
+                    sentElements = sentElements[_DYN_CONCAT ](payload);
                     if (sentElements[_DYN_LENGTH$2 ] > SessionStorageSendBuffer[_DYN__MAX__BUFFER__SIZE ]) {
                         _throwInternal(logger, 1 , 67 , "Sent buffer reached its maximum size: " + sentElements[_DYN_LENGTH$2 ], true);
                         sentElements[_DYN_LENGTH$2 ] = SessionStorageSendBuffer[_DYN__MAX__BUFFER__SIZE ];
@@ -8726,9 +9676,11 @@ var Serializer = /** @class */ (function () {
                 }
                 if (!source.aiDataContract) {
                     if (name === "measurements") {
+                        console.log("measurements");
                         output = _serializeStringMap(source, "number", name);
                     }
                     else if (name === "properties") {
+                        console.log("properties");
                         output = _serializeStringMap(source, "string", name);
                     }
                     else if (name === "tags") {
@@ -8803,6 +9755,7 @@ var Serializer = /** @class */ (function () {
                     output = {};
                     objForEachKey(map, function (field, value) {
                         if (expectedType === "string") {
+                            console.log("string", value);
                             if (value === undefined) {
                                 output[field] = "undefined";
                             }
@@ -8817,16 +9770,21 @@ var Serializer = /** @class */ (function () {
                             }
                         }
                         else if (expectedType === "number") {
+                            console.log("number", field, value);
                             if (value === undefined) {
+                                console.log("number undefined", value);
                                 output[field] = "undefined";
                             }
                             else if (value === null) {
+                                console.log("number null", value);
                                 output[field] = "null";
                             }
                             else {
                                 var num = parseFloat(value);
+                                console.log("number covert", num);
+                                console.log("isNaN(num)", isNaN(num));
                                 if (isNaN(num)) {
-                                    output[field] = "NaN";
+                                    output[field] = "another";
                                 }
                                 else {
                                     output[field] = num;
@@ -8860,7 +9818,7 @@ var HashCodeScoreGenerator = /** @class */ (function () {
             return 0;
         }
         while (input[_DYN_LENGTH$2 ] < MIN_INPUT_LENGTH) {
-            input = input.concat(input);
+            input = input[_DYN_CONCAT ](input);
         }
         var hash = 5381;
         for (var i = 0; i < input[_DYN_LENGTH$2 ]; ++i) {
@@ -8927,7 +9885,7 @@ var Sample = /** @class */ (function () {
     return Sample;
 }());
 
-var _a$3, _b;
+var _a$3, _b$1;
 var UNDEFINED_VALUE$1 = undefined;
 var FetchSyncRequestSizeLimitBytes = 65000;
 function _getResponseText(xhr) {
@@ -8938,6 +9896,20 @@ function _getResponseText(xhr) {
     }
     return null;
 }
+function isOverrideFn(httpXHROverride) {
+    return httpXHROverride && httpXHROverride[_DYN_SEND_POST ];
+}
+function _prependTransports(theTransports, newTransports) {
+    if (newTransports) {
+        if (isNumber(newTransports)) {
+            theTransports = [newTransports][_DYN_CONCAT ](theTransports);
+        }
+        else if (isArray(newTransports)) {
+            theTransports = newTransports[_DYN_CONCAT ](theTransports);
+        }
+    }
+    return theTransports;
+}
 var defaultAppInsightsChannelConfig = objDeepFreeze((_a$3 = {
         endpointUrl: cfgDfValidate(isTruthy, DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH)
     },
@@ -8945,11 +9917,12 @@ var defaultAppInsightsChannelConfig = objDeepFreeze((_a$3 = {
     _a$3[_DYN_MAX_BATCH_INTERVAL ] = 15000,
     _a$3[_DYN_MAX_BATCH_SIZE_IN_BY1 ] = 102400,
     _a$3.disableTelemetry = cfgDfBoolean(),
-    _a$3[_DYN_ENABLE_SESSION_STORA4 ] = cfgDfBoolean(true),
+    _a$3[_DYN_ENABLE_SESSION_STORA5 ] = cfgDfBoolean(true),
     _a$3.isRetryDisabled = cfgDfBoolean(),
     _a$3[_DYN_IS_BEACON_API_DISABL3 ] = cfgDfBoolean(true),
-    _a$3[_DYN_DISABLE_XHR ] = cfgDfBoolean(),
-    _a$3[_DYN_ONUNLOAD_DISABLE_FET5 ] = cfgDfBoolean(),
+    _a$3[_DYN_DISABLE_SEND_BEACON_7 ] = cfgDfBoolean(),
+    _a$3.disableXhr = cfgDfBoolean(),
+    _a$3[_DYN_ONUNLOAD_DISABLE_FET6 ] = cfgDfBoolean(),
     _a$3[_DYN_ONUNLOAD_DISABLE_BEA2 ] = cfgDfBoolean(),
     _a$3[_DYN_INSTRUMENTATION_KEY$1 ] = UNDEFINED_VALUE$1,
     _a$3.namePrefix = UNDEFINED_VALUE$1,
@@ -8958,19 +9931,22 @@ var defaultAppInsightsChannelConfig = objDeepFreeze((_a$3 = {
     _a$3[_DYN_CONVERT_UNDEFINED ] = UNDEFINED_VALUE$1,
     _a$3[_DYN_EVENTS_LIMIT_IN_MEM ] = 10000,
     _a$3[_DYN_BUFFER_OVERRIDE ] = false,
+    _a$3.httpXHROverride = { isVal: isOverrideFn, v: UNDEFINED_VALUE$1 },
+    _a$3[_DYN_ALWAYS_USE_XHR_OVERR4 ] = cfgDfBoolean(),
+    _a$3.transports = UNDEFINED_VALUE$1,
     _a$3));
 function _chkSampling(value) {
     return !isNaN(value) && value > 0 && value <= 100;
 }
-var EnvelopeTypeCreator = (_b = {},
-    _b[Event$1.dataType] = EventEnvelopeCreator,
-    _b[Trace.dataType] = TraceEnvelopeCreator,
-    _b[PageView.dataType] = PageViewEnvelopeCreator,
-    _b[PageViewPerformance.dataType] = PageViewPerformanceEnvelopeCreator,
-    _b[Exception.dataType] = ExceptionEnvelopeCreator,
-    _b[Metric.dataType] = MetricEnvelopeCreator,
-    _b[RemoteDependencyData.dataType] = DependencyEnvelopeCreator,
-    _b);
+var EnvelopeTypeCreator = (_b$1 = {},
+    _b$1[Event$1.dataType] = EventEnvelopeCreator,
+    _b$1[Trace.dataType] = TraceEnvelopeCreator,
+    _b$1[PageView.dataType] = PageViewEnvelopeCreator,
+    _b$1[PageViewPerformance.dataType] = PageViewPerformanceEnvelopeCreator,
+    _b$1[Exception.dataType] = ExceptionEnvelopeCreator,
+    _b$1[Metric.dataType] = MetricEnvelopeCreator,
+    _b$1[RemoteDependencyData.dataType] = DependencyEnvelopeCreator,
+    _b$1);
 var Sender = /** @class */ (function (_super) {
     __extendsFn(Sender, _super);
     function Sender() {
@@ -8985,7 +9961,6 @@ var Sender = /** @class */ (function (_super) {
         var _stamp_specific_redirects;
         var _headers;
         var _syncFetchPayload = 0;
-        var _fallbackSender;
         var _syncUnloadSender;
         var _offlineListener;
         var _evtNamespace;
@@ -8993,6 +9968,8 @@ var Sender = /** @class */ (function (_super) {
         var _orgEndpointUrl;
         var _maxBatchSizeInBytes;
         var _beaconSupported;
+        var _beaconOnUnloadSupported;
+        var _beaconNormalSupported;
         var _customHeaders;
         var _disableTelemetry;
         var _instrumentationKey;
@@ -9003,6 +9980,12 @@ var Sender = /** @class */ (function (_super) {
         var _bufferOverrideUsed;
         var _namePrefix;
         var _enableSendPromise;
+        var _alwaysUseCustomSend;
+        var _disableXhr;
+        var _fetchKeepAlive;
+        var _xhrSend;
+        var _fallbackSend;
+        var _disableBeaconSplit;
         dynamicProto(Sender, _this, function (_self, _base) {
             _initDefaults();
             _self.pause = function () {
@@ -9031,7 +10014,7 @@ var Sender = /** @class */ (function (_super) {
             };
             _self.onunloadFlush = function () {
                 if (!_paused) {
-                    if (_beaconSupported) {
+                    if (_beaconSupported || _alwaysUseCustomSend) {
                         try {
                             return _self[_DYN_TRIGGER_SEND ](true, _doUnloadSend, 2 );
                         }
@@ -9083,8 +10066,12 @@ var Sender = /** @class */ (function (_super) {
                     }
                     _maxBatchSizeInBytes = senderConfig[_DYN_MAX_BATCH_SIZE_IN_BY1 ];
                     _beaconSupported = (senderConfig[_DYN_ONUNLOAD_DISABLE_BEA2 ] === false || senderConfig[_DYN_IS_BEACON_API_DISABL3 ] === false) && isBeaconsSupported();
+                    _beaconOnUnloadSupported = senderConfig[_DYN_ONUNLOAD_DISABLE_BEA2 ] === false && isBeaconsSupported();
+                    _beaconNormalSupported = senderConfig[_DYN_IS_BEACON_API_DISABL3 ] === false && isBeaconsSupported();
+                    _alwaysUseCustomSend = senderConfig[_DYN_ALWAYS_USE_XHR_OVERR4 ];
+                    _disableXhr = !!senderConfig.disableXhr;
                     var bufferOverride = senderConfig[_DYN_BUFFER_OVERRIDE ];
-                    var canUseSessionStorage = !!senderConfig[_DYN_ENABLE_SESSION_STORA4 ] &&
+                    var canUseSessionStorage = !!senderConfig[_DYN_ENABLE_SESSION_STORA5 ] &&
                         (!!bufferOverride || utlCanUseSessionStorage());
                     var namePrefix = senderConfig.namePrefix;
                     var shouldUpdate = (canUseSessionStorage !== _sessionStorageUsed)
@@ -9108,6 +10095,8 @@ var Sender = /** @class */ (function (_super) {
                     _namePrefix = namePrefix;
                     _sessionStorageUsed = canUseSessionStorage;
                     _bufferOverrideUsed = bufferOverride;
+                    _fetchKeepAlive = !senderConfig[_DYN_ONUNLOAD_DISABLE_FET6 ] && isFetchSupported(true);
+                    _disableBeaconSplit = !!senderConfig[_DYN_DISABLE_SEND_BEACON_7 ];
                     _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
                     _instrumentationKey = senderConfig[_DYN_INSTRUMENTATION_KEY$1 ];
                     if (!_validateInstrumentationKey(_instrumentationKey, config)) {
@@ -9123,35 +10112,38 @@ var Sender = /** @class */ (function (_super) {
                         _customHeaders = null;
                     }
                     _enableSendPromise = senderConfig.enableSendPromise;
-                    var sendPostFunc = null;
-                    if (!senderConfig[_DYN_DISABLE_XHR ] && useXDomainRequest()) {
-                        sendPostFunc = _xdrSender;
-                    }
-                    else if (!senderConfig[_DYN_DISABLE_XHR ] && isXhrSupported()) {
-                        sendPostFunc = _xhrSender;
-                    }
-                    if (!sendPostFunc && isFetchSupported()) {
-                        sendPostFunc = _fetchSender;
-                    }
-                    _fallbackSender = sendPostFunc || _xhrSender;
-                    if (!senderConfig[_DYN_IS_BEACON_API_DISABL3 ] && isBeaconsSupported()) {
-                        sendPostFunc = _beaconSender;
-                    }
-                    _self[_DYN__SENDER ] = sendPostFunc || _xhrSender;
-                    if (!senderConfig[_DYN_ONUNLOAD_DISABLE_FET5 ] && isFetchSupported(true)) {
+                    var customInterface = senderConfig.httpXHROverride;
+                    var httpInterface = null;
+                    var syncInterface = null;
+                    var theTransports = _prependTransports([3 , 1 , 2 ], senderConfig.transports);
+                    httpInterface = _getSenderInterface(theTransports, false);
+                    var xhrInterface = { sendPOST: _xhrSender };
+                    _xhrSend = function (payload, isAsync) {
+                        return _doSend(xhrInterface, payload, isAsync);
+                    };
+                    _fallbackSend = function (payload, isAsync) {
+                        return _doSend(xhrInterface, payload, isAsync, false);
+                    };
+                    httpInterface = _alwaysUseCustomSend ? customInterface : (httpInterface || customInterface || xhrInterface);
+                    _self[_DYN__SENDER ] = function (payload, isAsync) {
+                        return _doSend(httpInterface, payload, isAsync);
+                    };
+                    if (_fetchKeepAlive) {
                         _syncUnloadSender = _fetchKeepAliveSender;
                     }
-                    else if (isBeaconsSupported()) {
-                        _syncUnloadSender = _beaconSender;
+                    var syncTransports = _prependTransports([3 , 1 ], senderConfig[_DYN_UNLOAD_TRANSPORTS ]);
+                    if (!_fetchKeepAlive) {
+                        syncTransports = syncTransports.filter(function (transport) { return transport !== 2 ; });
                     }
-                    else if (!senderConfig[_DYN_DISABLE_XHR ] && useXDomainRequest()) {
-                        _syncUnloadSender = _xdrSender;
+                    syncInterface = _getSenderInterface(syncTransports, true);
+                    syncInterface = _alwaysUseCustomSend ? customInterface : (syncInterface || customInterface);
+                    if ((_alwaysUseCustomSend || senderConfig[_DYN_UNLOAD_TRANSPORTS ] || !_syncUnloadSender) && syncInterface) {
+                        _syncUnloadSender = function (payload, isAsync) {
+                            return _doSend(syncInterface, payload, isAsync);
+                        };
                     }
-                    else if (!senderConfig[_DYN_DISABLE_XHR ] && isXhrSupported()) {
-                        _syncUnloadSender = _xhrSender;
-                    }
-                    else {
-                        _syncUnloadSender = _fallbackSender;
+                    if (!_syncUnloadSender) {
+                        _syncUnloadSender = _xhrSend;
                     }
                     _disableTelemetry = senderConfig.disableTelemetry;
                     _convertUndefined = senderConfig[_DYN_CONVERT_UNDEFINED ] || UNDEFINED_VALUE$1;
@@ -9223,7 +10215,7 @@ var Sender = /** @class */ (function (_super) {
                 }
                 _self.processNext(telemetryItem, itemCtx);
             };
-            _self[_DYN__XHR_READY_STATE_CHA6 ] = function (xhr, payload, countOfItemsInPayload) {
+            _self[_DYN__XHR_READY_STATE_CHA8 ] = function (xhr, payload, countOfItemsInPayload) {
                 if (xhr.readyState === 4) {
                     _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, _formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
                 }
@@ -9319,10 +10311,82 @@ var Sender = /** @class */ (function (_super) {
             function _isSampledIn(envelope) {
                 return _self._sample.isSampledIn(envelope);
             }
+            function _getSenderInterface(transports, syncSupport) {
+                var _a;
+                var transportType = null;
+                var sendPostFunc = null;
+                var lp = 0;
+                while (sendPostFunc == null && lp < transports[_DYN_LENGTH$2 ]) {
+                    transportType = transports[lp];
+                    if (!_disableXhr && transportType === 1 ) {
+                        if (useXDomainRequest()) {
+                            sendPostFunc = _xdrSender;
+                        }
+                        else if (isXhrSupported()) {
+                            sendPostFunc = _xhrSender;
+                        }
+                    }
+                    else if (transportType === 2  && isFetchSupported(syncSupport)) {
+                        sendPostFunc = _fetchSender;
+                    }
+                    else if (transportType === 3  && (syncSupport ? _beaconOnUnloadSupported : _beaconNormalSupported)) {
+                        sendPostFunc = _beaconSender;
+                    }
+                    lp++;
+                }
+                if (sendPostFunc) {
+                    return _a = {},
+                        _a[_DYN_SEND_POST ] = sendPostFunc,
+                        _a;
+                }
+                return null;
+            }
+            function _getOnComplete(payload, status, headers, response) {
+                if (status === 200 && payload) {
+                    _self._onSuccess(payload, payload[_DYN_LENGTH$2 ]);
+                }
+                else {
+                    response && _self[_DYN__ON_ERROR ](payload, response);
+                }
+            }
+            function _doSend(sendInterface, payload, isAsync, markAsSent) {
+                if (markAsSent === void 0) { markAsSent = true; }
+                var onComplete = function (status, headers, response) {
+                    return _getOnComplete(payload, status, headers, response);
+                };
+                var payloadData = _getPayload(payload);
+                var sendPostFunc = sendInterface && sendInterface[_DYN_SEND_POST ];
+                if (sendPostFunc && payloadData) {
+                    if (markAsSent) {
+                        _self._buffer[_DYN_MARK_AS_SENT ](payload);
+                    }
+                    return sendPostFunc(payloadData, onComplete, !isAsync);
+                }
+                return null;
+            }
+            function _getPayload(payload) {
+                var _a;
+                if (isArray(payload) && payload[_DYN_LENGTH$2 ] > 0) {
+                    var batch = _self._buffer[_DYN_BATCH_PAYLOADS ](payload);
+                    var payloadData = (_a = {},
+                        _a[_DYN_DATA ] = batch,
+                        _a.urlString = _endpointUrl,
+                        _a.headers = _headers,
+                        _a.disableXhrSync = _disableXhr,
+                        _a.disableFetchKeepAlive = !_fetchKeepAlive,
+                        _a[_DYN_ORI_PAYLOAD ] = payload,
+                        _a);
+                    return payloadData;
+                }
+                return null;
+            }
+            function _fetchSender(payload, oncomplete, sync) {
+                return _doFetchSender(payload, oncomplete, false);
+            }
             function _checkMaxSize(incomingPayload) {
                 var incomingSize = incomingPayload ? incomingPayload[_DYN_LENGTH$2 ] : 0;
                 if ((_self[_DYN__BUFFER ].size() + incomingSize) > _maxBatchSizeInBytes) {
-                    if (!_offlineListener || _offlineListener[_DYN_IS_ONLINE ]()) {
+                    if (!_offlineListener || _offlineListener.isOnline()) {
                         _self[_DYN_TRIGGER_SEND ](true, null, 10 );
                     }
                     return true;
@@ -9353,7 +10417,7 @@ var Sender = /** @class */ (function (_super) {
                         _self[_DYN__ON_ERROR ](payload, errorMessage);
                     }
                 }
-                else if (_offlineListener && !_offlineListener[_DYN_IS_ONLINE ]()) {
+                else if (_offlineListener && !_offlineListener.isOnline()) {
                     if (!_isRetryDisabled) {
                         var offlineBackOffMultiplier = 10;
                         _resendPayload(payload, offlineBackOffMultiplier);
@@ -9392,45 +10456,61 @@ var Sender = /** @class */ (function (_super) {
                 }
                 return false;
             }
+            function _doOnComplete(oncomplete, status, headers, response) {
+                try {
+                    oncomplete(status, headers, response);
+                }
+                catch (e) {
+                }
+            }
             function _doUnloadSend(payload, isAsync) {
                 if (_syncUnloadSender) {
                     _syncUnloadSender(payload, false);
                 }
                 else {
-                    _beaconSender(payload);
+                    var payloadData = _getPayload(payload);
+                    _beaconSender(payloadData);
                 }
             }
-            function _doBeaconSend(payload) {
+            function _doBeaconSend(payload, oncomplete) {
                 var nav = getNavigator();
-                var buffer = _self[_DYN__BUFFER ];
                 var url = _endpointUrl;
-                var batch = _self._buffer[_DYN_BATCH_PAYLOADS ](payload);
+                var buffer = _self[_DYN__BUFFER ];
+                var batch = buffer[_DYN_BATCH_PAYLOADS ](payload);
                 var plainTextBatch = new Blob([batch], { type: "text/plain;charset=UTF-8" });
                 var queued = nav.sendBeacon(url, plainTextBatch);
                 if (queued) {
-                    buffer[_DYN_MARK_AS_SENT ](payload);
                     _self._onSuccess(payload, payload[_DYN_LENGTH$2 ]);
                 }
                 return queued;
             }
-            function _beaconSender(payload, isAsync) {
-                if (isArray(payload) && payload[_DYN_LENGTH$2 ] > 0) {
-                    if (!_doBeaconSend(payload)) {
-                        var droppedPayload = [];
-                        for (var lp = 0; lp < payload[_DYN_LENGTH$2 ]; lp++) {
-                            var thePayload = payload[lp];
-                            if (!_doBeaconSend([thePayload])) {
-                                droppedPayload[_DYN_PUSH ](thePayload);
+            function _beaconSender(payload, oncomplete, sync) {
+                var internalPayload = payload;
+                var data = internalPayload && internalPayload[_DYN_ORI_PAYLOAD ];
+                if (isArray(data) && data[_DYN_LENGTH$2 ] > 0) {
+                    if (!_doBeaconSend(data)) {
+                        if (!_disableBeaconSplit) {
+                            var droppedPayload = [];
+                            for (var lp = 0; lp < data[_DYN_LENGTH$2 ]; lp++) {
+                                var thePayload = data[lp];
+                                if (!_doBeaconSend([thePayload])) {
+                                    droppedPayload[_DYN_PUSH ](thePayload);
+                                }
+                            }
+                            if (droppedPayload[_DYN_LENGTH$2 ] > 0) {
+                                _fallbackSend && _fallbackSend(droppedPayload, true);
+                                _throwInternal(_self[_DYN_DIAG_LOG ](), 2 , 40 , ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                             }
                         }
-                        if (droppedPayload[_DYN_LENGTH$2 ] > 0) {
-                            _fallbackSender && _fallbackSender(droppedPayload, true);
+                        else {
+                            _fallbackSend && _fallbackSend(data, true);
                             _throwInternal(_self[_DYN_DIAG_LOG ](), 2 , 40 , ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                         }
                     }
                 }
             }
-            function _xhrSender(payload, isAsync) {
+            function _xhrSender(payload, oncomplete, sync) {
+                var internalPayload = payload;
                 var thePromise;
                 var resolveFunc;
                 var rejectFunc;
@@ -9441,7 +10521,7 @@ var Sender = /** @class */ (function (_super) {
                 }
                 catch (e) {
                 }
-                xhr.open("POST", endPointUrl, isAsync);
+                xhr.open("POST", endPointUrl, !sync);
                 xhr[_DYN_SET_REQUEST_HEADER$1 ]("Content-type", "application/json");
                 if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
                     xhr[_DYN_SET_REQUEST_HEADER$1 ](RequestHeaders[6 ], RequestHeaders[7 ]);
@@ -9450,51 +10530,53 @@ var Sender = /** @class */ (function (_super) {
                     xhr[_DYN_SET_REQUEST_HEADER$1 ](headerName, _headers[headerName]);
                 });
                 xhr.onreadystatechange = function () {
-                    _self._xhrReadyStateChange(xhr, payload, payload[_DYN_LENGTH$2 ]);
+                    var oriPayload = internalPayload[_DYN_ORI_PAYLOAD ];
+                    _self._xhrReadyStateChange(xhr, oriPayload, oriPayload[_DYN_LENGTH$2 ]);
                     if (xhr.readyState === 4) {
                         resolveFunc && resolveFunc(true);
                     }
                 };
                 xhr.onerror = function (event) {
-                    _self[_DYN__ON_ERROR ](payload, _formatErrorMessageXhr(xhr), event);
+                    _doOnComplete(oncomplete, 400, {}, _formatErrorMessageXhr(xhr));
                     rejectFunc && rejectFunc(event);
                 };
-                if (isAsync && _enableSendPromise) {
+                if (!sync && _enableSendPromise) {
                     thePromise = createPromise(function (resolve, reject) {
                         resolveFunc = resolve;
                         rejectFunc = reject;
                     });
                 }
-                var batch = _self._buffer[_DYN_BATCH_PAYLOADS ](payload);
-                xhr.send(batch);
-                _self._buffer[_DYN_MARK_AS_SENT ](payload);
+                xhr.send(payload[_DYN_DATA ]);
                 return thePromise;
             }
             function _fetchKeepAliveSender(payload, isAsync) {
+                var onComplete = function (status, headers, response) {
+                    return _getOnComplete(payload, status, headers, response);
+                };
                 if (isArray(payload)) {
                     var payloadSize = payload[_DYN_LENGTH$2 ];
                     for (var lp = 0; lp < payload[_DYN_LENGTH$2 ]; lp++) {
                         payloadSize += payload[lp][_DYN_LENGTH$2 ];
                     }
+                    var payloadData = _getPayload(payload);
+                    _self._buffer[_DYN_MARK_AS_SENT ](payload);
                     if ((_syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {
-                        _doFetchSender(payload, false);
+                        _doFetchSender(payloadData, onComplete, true);
                     }
                     else if (isBeaconsSupported()) {
-                        _beaconSender(payload);
+                        _beaconSender(payloadData);
                     }
                     else {
-                        _fallbackSender && _fallbackSender(payload, true);
+                        _fallbackSend && _fallbackSend(payload, true);
                         _throwInternal(_self[_DYN_DIAG_LOG ](), 2 , 40 , ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
                     }
                 }
             }
-            function _fetchSender(payload, isAsync) {
-                return _doFetchSender(payload, true);
-            }
-            function _doFetchSender(payload, isAsync) {
+            function _doFetchSender(payload, oncomplete, sync) {
                 var _a;
                 var endPointUrl = _endpointUrl;
-                var batch = _self._buffer[_DYN_BATCH_PAYLOADS ](payload);
+                var internalPayload = payload;
+                var batch = internalPayload[_DYN_DATA ];
                 var plainTextBatch = new Blob([batch], { type: "application/json" });
                 var thePromise;
                 var resolveFunc;
@@ -9517,7 +10599,7 @@ var Sender = /** @class */ (function (_super) {
                     _a[DisabledPropertyName] = true
                 ,
                     _a);
-                if (!isAsync) {
+                if (sync) {
                     init.keepalive = true;
                     ignoreResponse = true;
                     _syncFetchPayload += batchLength;
@@ -9528,8 +10610,7 @@ var Sender = /** @class */ (function (_super) {
                 }
                 catch (e) {
                 }
-                _self._buffer[_DYN_MARK_AS_SENT ](payload);
-                if (isAsync && _enableSendPromise) {
+                if (!sync && _enableSendPromise) {
                     thePromise = createPromise(function (resolve, reject) {
                         resolveFunc = resolve;
                         rejectFunc = reject;
@@ -9537,7 +10618,7 @@ var Sender = /** @class */ (function (_super) {
                 }
                 try {
                     doAwaitResponse(fetch(request), function (result) {
-                        if (!isAsync) {
+                        if (sync) {
                             _syncFetchPayload -= batchLength;
                             batchLength = 0;
                         }
@@ -9546,18 +10627,19 @@ var Sender = /** @class */ (function (_super) {
                             if (!result.rejected) {
                                 var response_1 = result.value;
                                 if (!response_1.ok) {
-                                    _self[_DYN__ON_ERROR ](payload, response_1.statusText);
+                                    _doOnComplete(oncomplete, 400, {}, response_1.statusText);
                                     resolveFunc && resolveFunc(false);
                                 }
                                 else {
                                     doAwaitResponse(response_1.text(), function (resp) {
-                                        _checkResponsStatus(response_1.status, payload, response_1.url, payload[_DYN_LENGTH$2 ], response_1.statusText, resp.value || "");
+                                        var oriPayload = internalPayload[_DYN_ORI_PAYLOAD ];
+                                        _checkResponsStatus(response_1.status, oriPayload, response_1.url, oriPayload[_DYN_LENGTH$2 ], response_1.statusText, resp.value || "");
                                         resolveFunc && resolveFunc(true);
                                     });
                                 }
                             }
                             else {
-                                _self[_DYN__ON_ERROR ](payload, result.reason && result.reason.message);
+                                _doOnComplete(oncomplete, 400, {}, result.reason && result.reason.message);
                                 rejectFunc && rejectFunc(result.reason);
                             }
                         }
@@ -9565,13 +10647,13 @@ var Sender = /** @class */ (function (_super) {
                 }
                 catch (e) {
                     if (!responseHandled) {
-                        _self[_DYN__ON_ERROR ](payload, dumpObj(e));
+                        _doOnComplete(oncomplete, 400, {}, dumpObj(e));
                         rejectFunc && rejectFunc(e);
                     }
                 }
                 if (ignoreResponse && !responseHandled) {
                     responseHandled = true;
-                    _self._onSuccess(payload, payload[_DYN_LENGTH$2 ]);
+                    _doOnComplete(oncomplete, 200, {});
                     resolveFunc && resolveFunc(true);
                 }
                 return thePromise;
@@ -9654,24 +10736,28 @@ var Sender = /** @class */ (function (_super) {
                 }
                 return message;
             }
-            function _xdrSender(payload, isAsync) {
-                var buffer = _self[_DYN__BUFFER ];
+            function _xdrSender(payload, oncomplete, sync) {
+                var internalPayload = payload;
                 var _window = getWindow();
                 var xdr = new XDomainRequest();
-                xdr.onload = function () { return _self._xdrOnLoad(xdr, payload); };
-                xdr.onerror = function (event) { return _self[_DYN__ON_ERROR ](payload, _formatErrorMessageXdr(xdr), event); };
+                var data = internalPayload[_DYN_DATA ];
+                xdr.onload = function () {
+                    var oriPayload = internalPayload[_DYN_ORI_PAYLOAD ];
+                    _self._xdrOnLoad(xdr, oriPayload);
+                };
+                xdr.onerror = function () {
+                    _doOnComplete(oncomplete, 400, {}, _formatErrorMessageXdr(xdr));
+                };
                 var hostingProtocol = _window && _window.location && _window.location.protocol || "";
                 if (_endpointUrl.lastIndexOf(hostingProtocol, 0) !== 0) {
                     _throwInternal(_self[_DYN_DIAG_LOG ](), 2 , 40 , ". " +
                         "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
-                    buffer[_DYN_CLEAR ]();
+                    _self._buffer[_DYN_CLEAR ]();
                     return;
                 }
                 var endpointUrl = _endpointUrl.replace(/^(https?:)/, "");
                 xdr.open("POST", endpointUrl);
-                var batch = buffer[_DYN_BATCH_PAYLOADS ](payload);
-                xdr.send(batch);
-                buffer[_DYN_MARK_AS_SENT ](payload);
+                xdr.send(data);
             }
             function _formatErrorMessageXdr(xdr, message) {
                 if (xdr) {
@@ -9721,7 +10807,6 @@ var Sender = /** @class */ (function (_super) {
                 _serializer = null;
                 _stamp_specific_redirects = 0;
                 _syncFetchPayload = 0;
-                _fallbackSender = null;
                 _syncUnloadSender = null;
                 _evtNamespace = null;
                 _endpointUrl = null;
@@ -9735,6 +10820,11 @@ var Sender = /** @class */ (function (_super) {
                 _isRetryDisabled = false;
                 _sessionStorageUsed = null;
                 _namePrefix = UNDEFINED_VALUE$1;
+                _disableXhr = false;
+                _fetchKeepAlive = false;
+                _disableBeaconSplit = false;
+                _xhrSend = null;
+                _fallbackSend = null;
                 objDefine(_self, "_senderConfig", {
                     g: function () {
                         return objExtend({}, defaultAppInsightsChannelConfig);
@@ -10063,7 +11153,7 @@ var ajaxRecord = /** @class */ (function () {
 var _a$2;
 var AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 var strDiagLog = "diagLog";
-var strAjaxData = "ajaxData";
+var AJAX_DATA_CONTAINER = "_ajaxData";
 var STR_FETCH = "fetch";
 var ERROR_HEADER = "Failed to monitor XMLHttpRequest";
 var ERROR_PREFIX = ", monitoring data for this ajax call ";
@@ -10083,8 +11173,8 @@ function _supportsFetch() {
     }
     return _global[STR_FETCH];
 }
-function _supportsAjaxMonitoring(ajaxMonitorInstance) {
-    var _a;
+function _supportsAjaxMonitoring(ajaxMonitorInstance, ajaxDataId) {
+    var _a, _b;
     var result = false;
     if (isXhrSupported()) {
         var proto = XMLHttpRequest[strShimPrototype];
@@ -10100,24 +11190,63 @@ function _supportsAjaxMonitoring(ajaxMonitorInstance) {
     if (result) {
         try {
             var xhr = new XMLHttpRequest();
-            xhr[strAjaxData] = {};
+            var xhrData = {
+                xh: [],
+                i: (_a = {},
+                    _a[ajaxDataId] = {},
+                    _a)
+            };
+            xhr[AJAX_DATA_CONTAINER] = xhrData;
             var theOpen = XMLHttpRequest[strShimPrototype].open;
             XMLHttpRequest[strShimPrototype].open = theOpen;
         }
         catch (e) {
             result = false;
-            _throwInternalCritical(ajaxMonitorInstance, 15 , "Failed to enable XMLHttpRequest monitoring, extension is not supported", (_a = {},
-                _a[_DYN_EXCEPTION ] = dumpObj(e),
-                _a));
+            _throwInternalCritical(ajaxMonitorInstance, 15 , "Failed to enable XMLHttpRequest monitoring, extension is not supported", (_b = {},
+                _b[_DYN_EXCEPTION ] = dumpObj(e),
+                _b));
         }
     }
     return result;
 }
-function _getFailedAjaxDiagnosticsMessage(xhr) {
+var _getAjaxData = function (xhr, ajaxDataId) {
+    if (xhr && ajaxDataId && xhr[AJAX_DATA_CONTAINER]) {
+        return (xhr[AJAX_DATA_CONTAINER].i || {})[ajaxDataId];
+    }
+    return null;
+};
+var _addSharedXhrHeaders = function (xhr, name, value) {
+    if (xhr) {
+        var headers = (xhr[AJAX_DATA_CONTAINER] || {}).xh;
+        if (headers) {
+            headers.push({
+                n: name,
+                v: value
+            });
+        }
+    }
+};
+var _isHeaderSet = function (xhr, name) {
+    var isPresent = false;
+    if (xhr) {
+        var headers = (xhr[AJAX_DATA_CONTAINER] || {}).xh;
+        if (headers) {
+            arrForEach(headers, function (header) {
+                if (header.n === name) {
+                    isPresent = true;
+                    return -1;
+                }
+            });
+        }
+    }
+    return isPresent;
+};
+function _getFailedAjaxDiagnosticsMessage(xhr, ajaxDataId) {
     var result = "";
     try {
-        if (xhr && xhr[strAjaxData] && xhr[strAjaxData][_DYN_REQUEST_URL ]) {
-            result += "(url: '" + xhr[strAjaxData][_DYN_REQUEST_URL ] + "')";
+        var ajaxData = _getAjaxData(xhr, ajaxDataId);
+        if (ajaxData && ajaxData[_DYN_REQUEST_URL ]) {
+            result += "(url: '" + ajaxData[_DYN_REQUEST_URL ] + "')";
         }
     }
     catch (e) {
@@ -10131,12 +11260,12 @@ function _throwInternalWarning(ajaxMonitorInstance, msgId, message, properties, 
     _throwInternal(ajaxMonitorInstance[strDiagLog](), 2 , msgId, message, properties, isUserAct);
 }
 function _createErrorCallbackFunc(ajaxMonitorInstance, internalMessage, message) {
-    return function (args) {
+    return function (callDetails) {
         var _a;
         _throwInternalCritical(ajaxMonitorInstance, internalMessage, message, (_a = {
-                ajaxDiagnosticsMessage: _getFailedAjaxDiagnosticsMessage(args[_DYN_INST ])
+                ajaxDiagnosticsMessage: _getFailedAjaxDiagnosticsMessage(callDetails[_DYN_INST ], ajaxMonitorInstance._ajaxDataId)
             },
-            _a[_DYN_EXCEPTION ] = dumpObj(args.err),
+            _a[_DYN_EXCEPTION ] = dumpObj(callDetails.err),
             _a));
     };
 }
@@ -10261,6 +11390,7 @@ var AjaxMonitor = /** @class */ (function (_super) {
         var _excludeRequestFromAutoTrackingPatterns;
         var _addRequestContext;
         var _evtNamespace;
+        var _ajaxDataId;
         var _dependencyHandlerId;
         var _dependencyListeners;
         var _dependencyInitializers;
@@ -10292,7 +11422,7 @@ var AjaxMonitor = /** @class */ (function (_super) {
             _self[_DYN_INCLUDE_CORRELATION_2 ] = function (ajaxData, input, init, xhr) {
                 var currentWindowHost = _self["_currentWindowHost"] || _currentWindowHost;
                 _processDependencyListeners(_dependencyListeners, _self[_DYN_CORE ], ajaxData, xhr, input, init);
-                if (input) {
+                if (input || input === "") {
                     if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData[_DYN_GET_ABSOLUTE_URL ](), currentWindowHost)) {
                         if (!init) {
                             init = {};
@@ -10330,17 +11460,27 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 else if (xhr) {
                     if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData[_DYN_GET_ABSOLUTE_URL ](), currentWindowHost)) {
                         if (_isUsingAIHeaders) {
-                            var id = "|" + ajaxData[_DYN_TRACE_ID ] + "." + ajaxData[_DYN_SPAN_ID ];
-                            xhr[_DYN_SET_REQUEST_HEADER ](RequestHeaders[3 ], id);
-                            if (_enableRequestHeaderTracking) {
-                                ajaxData[_DYN_REQUEST_HEADERS ][RequestHeaders[3 ]] = id;
+                            if (!_isHeaderSet(xhr, RequestHeaders[3 ])) {
+                                var id = "|" + ajaxData[_DYN_TRACE_ID ] + "." + ajaxData[_DYN_SPAN_ID ];
+                                xhr[_DYN_SET_REQUEST_HEADER ](RequestHeaders[3 ], id);
+                                if (_enableRequestHeaderTracking) {
+                                    ajaxData[_DYN_REQUEST_HEADERS ][RequestHeaders[3 ]] = id;
+                                }
+                            }
+                            else {
+                                _throwInternalWarning(_self, 71 , "Unable to set [" + RequestHeaders[3 ] + "] as it has already been set by another instance");
                             }
                         }
                         var appId = _appId || (_context && _context.appId());
                         if (appId) {
-                            xhr[_DYN_SET_REQUEST_HEADER ](RequestHeaders[0 ], RequestHeaders[2 ] + appId);
-                            if (_enableRequestHeaderTracking) {
-                                ajaxData[_DYN_REQUEST_HEADERS ][RequestHeaders[0 ]] = RequestHeaders[2 ] + appId;
+                            if (!_isHeaderSet(xhr, RequestHeaders[0 ])) {
+                                xhr[_DYN_SET_REQUEST_HEADER ](RequestHeaders[0 ], RequestHeaders[2 ] + appId);
+                                if (_enableRequestHeaderTracking) {
+                                    ajaxData[_DYN_REQUEST_HEADERS ][RequestHeaders[0 ]] = RequestHeaders[2 ] + appId;
+                                }
+                            }
+                            else {
+                                _throwInternalWarning(_self, 71 , "Unable to set [" + RequestHeaders[0 ] + "] as it has already been set by another instance");
                             }
                         }
                         if (_isUsingW3CHeaders) {
@@ -10348,10 +11488,15 @@ var AjaxMonitor = /** @class */ (function (_super) {
                             if (isNullOrUndefined(traceFlags)) {
                                 traceFlags = 0x01;
                             }
-                            var traceParent = formatTraceParent(createTraceParent(ajaxData[_DYN_TRACE_ID ], ajaxData[_DYN_SPAN_ID ], traceFlags));
-                            xhr[_DYN_SET_REQUEST_HEADER ](RequestHeaders[4 ], traceParent);
-                            if (_enableRequestHeaderTracking) {
-                                ajaxData[_DYN_REQUEST_HEADERS ][RequestHeaders[4 ]] = traceParent;
+                            if (!_isHeaderSet(xhr, RequestHeaders[4 ])) {
+                                var traceParent = formatTraceParent(createTraceParent(ajaxData[_DYN_TRACE_ID ], ajaxData[_DYN_SPAN_ID ], traceFlags));
+                                xhr[_DYN_SET_REQUEST_HEADER ](RequestHeaders[4 ], traceParent);
+                                if (_enableRequestHeaderTracking) {
+                                    ajaxData[_DYN_REQUEST_HEADERS ][RequestHeaders[4 ]] = traceParent;
+                                }
+                            }
+                            else {
+                                _throwInternalWarning(_self, 71 , "Unable to set [" + RequestHeaders[4 ] + "] as it has already been set by another instance");
                             }
                         }
                     }
@@ -10409,6 +11554,8 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 _dependencyHandlerId = 0;
                 _dependencyListeners = [];
                 _dependencyInitializers = [];
+                _ajaxDataId = createUniqueNamespace("ajaxData");
+                _self._ajaxDataId = _ajaxDataId;
                 _ignoreHeaders = null;
                 _maxAjaxPerfLookupAttempts = 1;
                 _ajaxPerfLookupDelay = 1;
@@ -10545,7 +11692,7 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 _addHook(InstrumentProto(target, funcName, callbacks));
             }
             function _instrumentXhr() {
-                if (!_supportsAjaxMonitoring(_self)) {
+                if (!_supportsAjaxMonitoring(_self, _ajaxDataId)) {
                     return;
                 }
                 _self[_DYN__ADD_HOOK ](onConfigChange(_extensionConfig, function () {
@@ -10554,15 +11701,15 @@ var AjaxMonitor = /** @class */ (function (_super) {
                     if (!_disableAjaxTracking && !_xhrInitialized) {
                         _hookProto(XMLHttpRequest, "open", {
                             ns: _evtNamespace,
-                            req: function (args, method, url, async) {
+                            req: function (callDetails, method, url, async) {
                                 if (!_disableAjaxTracking) {
-                                    var xhr = args[_DYN_INST ];
-                                    var ajaxData = xhr[strAjaxData];
-                                    if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, true)) {
+                                    var xhr = callDetails[_DYN_INST ];
+                                    var ajaxData = _getAjaxData(xhr, _ajaxDataId);
+                                    if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, ajaxData, true)) {
                                         if (!ajaxData || !ajaxData.xhrMonitoringState[_DYN_OPEN_DONE ]) {
-                                            _openHandler(xhr, method, url, async);
+                                            ajaxData = _openHandler(xhr, method, url, async);
                                         }
-                                        _attachToOnReadyStateChange(xhr);
+                                        _attachToOnReadyStateChange(xhr, ajaxData);
                                     }
                                 }
                             },
@@ -10570,11 +11717,11 @@ var AjaxMonitor = /** @class */ (function (_super) {
                         });
                         _hookProto(XMLHttpRequest, "send", {
                             ns: _evtNamespace,
-                            req: function (args, context) {
+                            req: function (callDetails, context) {
                                 if (!_disableAjaxTracking) {
-                                    var xhr = args[_DYN_INST ];
-                                    var ajaxData = xhr[strAjaxData];
-                                    if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState[_DYN_SEND_DONE ]) {
+                                    var xhr = callDetails[_DYN_INST ];
+                                    var ajaxData = _getAjaxData(xhr, _ajaxDataId);
+                                    if (_isMonitoredXhrInstance(xhr, ajaxData) && !ajaxData.xhrMonitoringState[_DYN_SEND_DONE ]) {
                                         _createMarkId("xhr", ajaxData);
                                         ajaxData[_DYN_REQUEST_SENT_TIME ] = dateTimeUtilsNow();
                                         _self[_DYN_INCLUDE_CORRELATION_2 ](ajaxData, undefined, undefined, xhr);
@@ -10586,11 +11733,11 @@ var AjaxMonitor = /** @class */ (function (_super) {
                         });
                         _hookProto(XMLHttpRequest, "abort", {
                             ns: _evtNamespace,
-                            req: function (args) {
+                            req: function (callDetails) {
                                 if (!_disableAjaxTracking) {
-                                    var xhr = args[_DYN_INST ];
-                                    var ajaxData = xhr[strAjaxData];
-                                    if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState[_DYN_ABORT_DONE ]) {
+                                    var xhr = callDetails[_DYN_INST ];
+                                    var ajaxData = _getAjaxData(xhr, _ajaxDataId);
+                                    if (_isMonitoredXhrInstance(xhr, ajaxData) && !ajaxData.xhrMonitoringState[_DYN_ABORT_DONE ]) {
                                         ajaxData[_DYN_ABORTED ] = 1;
                                         ajaxData.xhrMonitoringState[_DYN_ABORT_DONE ] = true;
                                     }
@@ -10600,11 +11747,17 @@ var AjaxMonitor = /** @class */ (function (_super) {
                         });
                         _hookProto(XMLHttpRequest, "setRequestHeader", {
                             ns: _evtNamespace,
-                            req: function (args, header, value) {
-                                if (!_disableAjaxTracking && _enableRequestHeaderTracking) {
-                                    var xhr = args[_DYN_INST ];
-                                    if (_isMonitoredXhrInstance(xhr) && _canIncludeHeaders(header)) {
-                                        xhr[strAjaxData][_DYN_REQUEST_HEADERS ][header] = value;
+                            req: function (callDetails, header, value) {
+                                if (!_disableAjaxTracking) {
+                                    var xhr = callDetails[_DYN_INST ];
+                                    var ajaxData = _getAjaxData(xhr, _ajaxDataId);
+                                    if (ajaxData && _isMonitoredXhrInstance(xhr, ajaxData)) {
+                                        _addSharedXhrHeaders(xhr, header, value);
+                                        if (_enableRequestHeaderTracking && _canIncludeHeaders(header)) {
+                                            if (ajaxData) {
+                                                ajaxData[_DYN_REQUEST_HEADERS ][header] = value;
+                                            }
+                                        }
                                     }
                                 }
                             },
@@ -10659,11 +11812,11 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 }
                 return isDisabled;
             }
-            function _isMonitoredXhrInstance(xhr, excludeAjaxDataValidation) {
+            function _isMonitoredXhrInstance(xhr, ajaxData, excludeAjaxDataValidation) {
                 var ajaxValidation = true;
                 var initialized = _xhrInitialized;
                 if (!isNullOrUndefined(xhr)) {
-                    ajaxValidation = excludeAjaxDataValidation === true || !isNullOrUndefined(xhr[strAjaxData]);
+                    ajaxValidation = excludeAjaxDataValidation === true || !isNullOrUndefined(ajaxData);
                 }
                 return initialized
                     && ajaxValidation;
@@ -10683,7 +11836,9 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 var distributedTraceCtx = _getDistributedTraceCtx();
                 var traceID = (distributedTraceCtx && distributedTraceCtx[_DYN_GET_TRACE_ID ]()) || generateW3CId();
                 var spanID = strSubstr(generateW3CId(), 0, 16);
-                var ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog](), (_a = _self.core) === null || _a === void 0 ? void 0 : _a.getTraceCtx());
+                var xhrRequestData = xhr[AJAX_DATA_CONTAINER] = (xhr[AJAX_DATA_CONTAINER] || { xh: [], i: {} });
+                var ajaxDataCntr = xhrRequestData.i = (xhrRequestData.i || {});
+                var ajaxData = ajaxDataCntr[_ajaxDataId] = (ajaxDataCntr[_ajaxDataId] || new ajaxRecord(traceID, spanID, _self[strDiagLog](), (_a = _self.core) === null || _a === void 0 ? void 0 : _a.getTraceCtx()));
                 ajaxData[_DYN_TRACE_FLAGS ] = distributedTraceCtx && distributedTraceCtx[_DYN_GET_TRACE_FLAGS ]();
                 ajaxData[_DYN_METHOD ] = method;
                 ajaxData[_DYN_REQUEST_URL ] = url;
@@ -10691,13 +11846,13 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 ajaxData[_DYN_REQUEST_HEADERS ] = {};
                 ajaxData.async = async;
                 ajaxData[_DYN_ERROR_STATUS_TEXT ] = _enableAjaxErrorStatusText;
-                xhr[strAjaxData] = ajaxData;
+                return ajaxData;
             }
-            function _attachToOnReadyStateChange(xhr) {
-                xhr[strAjaxData].xhrMonitoringState[_DYN_STATE_CHANGE_ATTACHE13 ] = eventOn(xhr, "readystatechange", function () {
+            function _attachToOnReadyStateChange(xhr, ajaxData) {
+                ajaxData.xhrMonitoringState[_DYN_STATE_CHANGE_ATTACHE13 ] = eventOn(xhr, "readystatechange", function () {
                     var _a;
                     try {
-                        if (xhr && xhr.readyState === 4 && _isMonitoredXhrInstance(xhr)) {
+                        if (xhr && xhr.readyState === 4 && _isMonitoredXhrInstance(xhr, ajaxData)) {
                             _onAjaxComplete(xhr);
                         }
                     }
@@ -10705,7 +11860,7 @@ var AjaxMonitor = /** @class */ (function (_super) {
                         var exceptionText = dumpObj(e);
                         if (!exceptionText || _indexOf(exceptionText[_DYN_TO_LOWER_CASE ](), "c00c023f") === -1) {
                             _throwInternalCritical(_self, 16 , ERROR_HEADER + " 'readystatechange' event handler" + ERROR_POSTFIX, (_a = {},
-                                _a[_DYN_AJAX_DIAGNOSTICS_MES16 ] = _getFailedAjaxDiagnosticsMessage(xhr),
+                                _a[_DYN_AJAX_DIAGNOSTICS_MES16 ] = _getFailedAjaxDiagnosticsMessage(xhr, _ajaxDataId),
                                 _a[_DYN_EXCEPTION ] = exceptionText,
                                 _a));
                         }
@@ -10724,12 +11879,12 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 return null;
             }
             function _onAjaxComplete(xhr) {
-                var ajaxData = xhr[strAjaxData];
+                var ajaxData = _getAjaxData(xhr, _ajaxDataId);
                 ajaxData[_DYN_RESPONSE_FINISHED_TI14 ] = dateTimeUtilsNow();
                 ajaxData[_DYN_STATUS ] = xhr[_DYN_STATUS ];
                 function _reportXhrError(e, failedProps) {
                     var errorProps = failedProps || {};
-                    errorProps["ajaxDiagnosticsMessage"] = _getFailedAjaxDiagnosticsMessage(xhr);
+                    errorProps["ajaxDiagnosticsMessage"] = _getFailedAjaxDiagnosticsMessage(xhr, _ajaxDataId);
                     if (e) {
                         errorProps["exception"] = dumpObj(e);
                     }
@@ -10791,7 +11946,11 @@ var AjaxMonitor = /** @class */ (function (_super) {
                     }
                     finally {
                         try {
-                            xhr[strAjaxData] = null;
+                            var xhrRequestData = (xhr[AJAX_DATA_CONTAINER] || { i: {} });
+                            var ajaxDataCntr = (xhrRequestData.i || {});
+                            if (ajaxDataCntr[_ajaxDataId]) {
+                                ajaxDataCntr[_ajaxDataId] = null;
+                            }
                         }
                         catch (e) {
                         }
@@ -10814,7 +11973,7 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 }
                 catch (e) {
                     _throwInternalWarning(_self, 18 , CORRELATION_HEADER_ERROR, (_a = {},
-                        _a[_DYN_AJAX_DIAGNOSTICS_MES16 ] = _getFailedAjaxDiagnosticsMessage(xhr),
+                        _a[_DYN_AJAX_DIAGNOSTICS_MES16 ] = _getFailedAjaxDiagnosticsMessage(xhr, _ajaxDataId),
                         _a[_DYN_EXCEPTION ] = dumpObj(e),
                         _a));
                 }
@@ -10893,12 +12052,20 @@ var AjaxMonitor = /** @class */ (function (_super) {
                 ajaxData[_DYN_TRACE_FLAGS ] = distributedTraceCtx && distributedTraceCtx[_DYN_GET_TRACE_FLAGS ]();
                 ajaxData[_DYN_REQUEST_SENT_TIME ] = dateTimeUtilsNow();
                 ajaxData[_DYN_ERROR_STATUS_TEXT ] = _enableAjaxErrorStatusText;
+                var requestUrl;
                 if (input instanceof Request) {
-                    ajaxData[_DYN_REQUEST_URL ] = input ? input.url : "";
+                    requestUrl = (input || {}).url || "";
                 }
                 else {
-                    ajaxData[_DYN_REQUEST_URL ] = input;
+                    requestUrl = input;
                 }
+                if (requestUrl === "") {
+                    var location_1 = getLocation();
+                    if (location_1 && location_1.href) {
+                        requestUrl = strSplit(location_1.href, "#")[0];
+                    }
+                }
+                ajaxData[_DYN_REQUEST_URL ] = requestUrl;
                 var method = "GET";
                 if (init && init[_DYN_METHOD ]) {
                     method = init[_DYN_METHOD ];
@@ -11041,7 +12208,7 @@ var Device = /** @class */ (function () {
     return Device;
 }());
 
-var Version = '3.0.2';
+var Version = '3.0.6';
 var Internal = /** @class */ (function () {
     function Internal(config, unloadHookContainer) {
         var _this = this;
@@ -11504,6 +12671,7 @@ var PropertiesPlugin = /** @class */ (function (_super) {
         var _distributedTraceCtx;
         var _previousTraceCtx;
         var _context;
+        var _disableUserInitMessage;
         dynamicProto(PropertiesPlugin, _this, function (_self, _base) {
             _initDefaults();
             objDefine(_self, "context", {
@@ -11534,8 +12702,10 @@ var PropertiesPlugin = /** @class */ (function (_super) {
                     _processTelemetryInternal(event, itemCtx);
                     if (userCtx && userCtx[_DYN_IS_NEW_USER ]) {
                         userCtx[_DYN_IS_NEW_USER ] = false;
-                        var message = new _InternalLogMessage(72 , ((getNavigator() || {}).userAgent || ""));
-                        _logInternalMessage(itemCtx.diagLog(), 1 , message);
+                        if (!_disableUserInitMessage) {
+                            var message = new _InternalLogMessage(72 , ((getNavigator() || {}).userAgent || ""));
+                            _logInternalMessage(itemCtx.diagLog(), 1 , message);
+                        }
                     }
                     _self.processNext(event, itemCtx);
                 }
@@ -11555,6 +12725,7 @@ var PropertiesPlugin = /** @class */ (function (_super) {
                 _distributedTraceCtx = null;
                 _previousTraceCtx = null;
                 _context = null;
+                _disableUserInitMessage = false;
             }
             function _populateDefaults(config) {
                 var identifier = _self.identifier;
@@ -11564,6 +12735,7 @@ var PropertiesPlugin = /** @class */ (function (_super) {
                     if (config.storagePrefix) {
                         utlSetStoragePrefix(config.storagePrefix);
                     }
+                    _disableUserInitMessage = config.disableUserInitMessage || false;
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
                     _self["_extConfig"] = _extensionConfig;
                 }));
@@ -11626,23 +12798,50 @@ var _DYN_QUEUE = "queue";
 var _DYN_CONNECTION_STRING = "connectionString";
 var _DYN_ENDPOINT_URL = "endpointUrl";
 var _DYN_INSTRUMENTATION_KEY = "instrumentationKey";
-var _DYN_DISABLE_IKEY_DEPRECA0 = "disableIkeyDeprecationMessage";
 var _DYN_ONUNLOAD_FLUSH = "onunloadFlush";
 var _DYN_CONTEXT = "context";
-var _DYN_ADD_HOUSEKEEPING_BEF1 = "addHousekeepingBeforeUnload";
-var _DYN_UPDATE_SNIPPET_DEFIN2 = "updateSnippetDefinitions";
+var _DYN_ADD_HOUSEKEEPING_BEF0 = "addHousekeepingBeforeUnload";
+var _DYN_SEND_MESSAGE = "sendMessage";
+var _DYN_UPDATE_SNIPPET_DEFIN1 = "updateSnippetDefinitions";
 
-var _a;
+var _a, _b, _c;
 var _internalSdkSrc;
 var _ignoreUpdateSnippetProperties = [
     STR_SNIPPET, "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults"
 ];
+var IKEY_USAGE = "iKeyUsage";
+var CDN_USAGE = "CdnUsage";
+var SDK_LOADER_VER = "SdkLoaderVer";
 var UNDEFINED_VALUE = undefined;
+var default_limit = {
+    samplingRate: 100,
+    maxSendNumber: 1
+};
+var default_interval = {
+    monthInterval: 3,
+    daysOfMonth: [28]
+};
+var default_throttle_config = {
+    disabled: true,
+    limit: cfgDfMerge(default_limit),
+    interval: cfgDfMerge(default_interval)
+};
 var defaultConfigValues = (_a = {},
     _a[_DYN_CONNECTION_STRING ] = UNDEFINED_VALUE,
     _a[_DYN_ENDPOINT_URL ] = UNDEFINED_VALUE,
     _a[_DYN_INSTRUMENTATION_KEY ] = UNDEFINED_VALUE,
     _a.diagnosticLogInterval = cfgDfValidate(_chkDiagLevel, 10000),
+    _a.featureOptIn = (_b = {},
+        _b[IKEY_USAGE] = { mode: 2  },
+        _b[CDN_USAGE] = { mode: 2  },
+        _b[SDK_LOADER_VER] = { mode: 2  },
+        _b),
+    _a.throttleMgrCfg = cfgDfMerge((_c = {},
+        _c[109 ] = cfgDfMerge(default_throttle_config),
+        _c[106 ] = cfgDfMerge(default_throttle_config),
+        _c[111 ] = cfgDfMerge(default_throttle_config),
+        _c[110 ] = cfgDfMerge(default_throttle_config),
+        _c)),
     _a);
 function _chkDiagLevel(value) {
     return value && value > 0;
@@ -11659,6 +12858,11 @@ var AppInsightsSku = /** @class */ (function () {
         var _core;
         var _config;
         var _analyticsPlugin;
+        var _cfgSyncPlugin;
+        var _throttleMgr;
+        var _iKeySentMessage;
+        var _cdnSentMessage;
+        var _sdkVerSentMessage;
         dynamicProto(AppInsightsSku, this, function (_self) {
             _initDefaults();
             objDefine(_self, "config", {
@@ -11704,10 +12908,6 @@ var AppInsightsSku = /** @class */ (function () {
                     _config[_DYN_INSTRUMENTATION_KEY ] = cs.instrumentationkey || _config[_DYN_INSTRUMENTATION_KEY ];
                 }
             }));
-            var isErrMessageDisabled = isNullOrUndefined(_config[_DYN_DISABLE_IKEY_DEPRECA0 ]) ? true : _config[_DYN_DISABLE_IKEY_DEPRECA0 ];
-            if (!_config[_DYN_CONNECTION_STRING ] && !isErrMessageDisabled) {
-                _throwInternal(_core.logger, 1 , 106 , "Instrumentation key support will end soon, see aka.ms/IkeyMigrate");
-            }
             _self[STR_SNIPPET ] = snippet;
             _self[STR_FLUSH ] = function (async, callBack) {
                 if (async === void 0) { async = true; }
@@ -11773,10 +12973,13 @@ var AppInsightsSku = /** @class */ (function () {
                     }
                 }
                 doPerf(_self.core, function () { return "AISKU.loadAppInsights"; }, function () {
-                    _core.initialize(_config, [_sender, properties, dependencies, _analyticsPlugin], logger, notificationManager);
+                    _core.initialize(_config, [_sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
                     objDefine(_self, "context", {
                         g: function () { return properties[_DYN_CONTEXT ]; }
                     });
+                    if (!_throttleMgr) {
+                        _throttleMgr = new ThrottleMgr(_core);
+                    }
                     var sdkSrc = _findSdkSourceFile();
                     if (sdkSrc && _self[_DYN_CONTEXT ]) {
                         _self[_DYN_CONTEXT ].internal.sdkSrc = sdkSrc;
@@ -11784,11 +12987,32 @@ var AppInsightsSku = /** @class */ (function () {
                     _updateSnippetProperties(_self[STR_SNIPPET ]);
                     _self.emptyQueue();
                     _self[STR_POLL_INTERNAL_LOGS ]();
-                    _self[_DYN_ADD_HOUSEKEEPING_BEF1 ](_self);
+                    _self[_DYN_ADD_HOUSEKEEPING_BEF0 ](_self);
+                    _addUnloadHook(onConfigChange(cfgHandler, function () {
+                        var defaultEnable = false;
+                        if (_config.throttleMgrCfg[109 ]) {
+                            defaultEnable = !_config.throttleMgrCfg[109 ].disabled;
+                        }
+                        if (!_throttleMgr.isReady() && _config.extensionConfig && _config.extensionConfig[_cfgSyncPlugin.identifier] && defaultEnable) {
+                            _throttleMgr.onReadyState(true);
+                        }
+                        if (!_iKeySentMessage && !_config[_DYN_CONNECTION_STRING ] && isFeatureEnabled(IKEY_USAGE, _config)) {
+                            _throttleMgr[_DYN_SEND_MESSAGE ](106 , "See Instrumentation key support at aka.ms/IkeyMigrate");
+                            _iKeySentMessage = true;
+                        }
+                        if (!_cdnSentMessage && _self[_DYN_CONTEXT ].internal.sdkSrc && _self[_DYN_CONTEXT ].internal.sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled(CDN_USAGE, _config)) {
+                            _throttleMgr[_DYN_SEND_MESSAGE ](110 , "See Cdn support notice at aka.ms/JsActiveCdn");
+                            _cdnSentMessage = true;
+                        }
+                        if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled(SDK_LOADER_VER, _config)) {
+                            _throttleMgr[_DYN_SEND_MESSAGE ](111 , "An updated Sdk Loader is available, see aka.ms/SnippetVer");
+                            _sdkVerSentMessage = true;
+                        }
+                    }));
                 });
                 return _self;
             };
-            _self[_DYN_UPDATE_SNIPPET_DEFIN2 ] = function (snippet) {
+            _self[_DYN_UPDATE_SNIPPET_DEFIN1 ] = function (snippet) {
                 proxyAssign(snippet, _self, function (name) {
                     return name && arrIndexOf(_ignoreUpdateSnippetProperties, name) === -1;
                 });
@@ -11812,7 +13036,7 @@ var AppInsightsSku = /** @class */ (function () {
                     }
                 }
             };
-            _self[_DYN_ADD_HOUSEKEEPING_BEF1 ] = function (appInsightsInstance) {
+            _self[_DYN_ADD_HOUSEKEEPING_BEF0 ] = function (appInsightsInstance) {
                 if (hasWindow() || hasDocument()) {
                     var performHousekeeping_1 = function () {
                         appInsightsInstance[_DYN_ONUNLOAD_FLUSH ](false);
@@ -11925,6 +13149,11 @@ var AppInsightsSku = /** @class */ (function () {
                 properties = null;
                 _sender = null;
                 _snippetVersion = null;
+                _throttleMgr = null;
+                _iKeySentMessage = false;
+                _cdnSentMessage = false;
+                _sdkVerSentMessage = false;
+                _cfgSyncPlugin = new CfgSyncPlugin();
             }
             function _removePageEventHandlers() {
                 if (_houseKeepingNamespace) {
@@ -11994,7 +13223,7 @@ var ApplicationInsightsContainer = /** @class */ (function () {
     ApplicationInsightsContainer.getAppInsights = function (snippet, version) {
         var theSku = new AppInsightsSku(snippet);
         if (version >= 2.0) {
-            theSku[_DYN_UPDATE_SNIPPET_DEFIN2 ](snippet);
+            theSku[_DYN_UPDATE_SNIPPET_DEFIN1 ](snippet);
             theSku.loadAppInsights(false);
             return theSku;
         }
@@ -12062,4 +13291,4 @@ exports.randomValue = randomValue;
 exports.removeEventHandler = removeEventHandler;
 
 }));
-//# sourceMappingURL=ai.3.0.2.gbl.js.map
+//# sourceMappingURL=ai.3.0.6.js.map
