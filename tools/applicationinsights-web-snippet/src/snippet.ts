@@ -93,6 +93,9 @@ declare var cfg:ISnippetConfig;
         }
 
         function _reportFailure(targetSrc:string) {
+            if(cfg.dle === true) {
+                return;
+            }
             let conString = _parseConnectionString();
             let iKey = conString[strConStringIKey] || aiConfig[strInstrumentationKey] || strEmpty;
             let ingest = conString[strIngestionendpoint];

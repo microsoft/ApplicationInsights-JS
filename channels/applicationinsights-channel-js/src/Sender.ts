@@ -1004,8 +1004,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         payloadSize += payload[lp].length;
                     }
                     let payloadData = _getPayload(payload);
-
                     _self._buffer.markAsSent(payload);
+
                     if ((_syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {
                         _doFetchSender(payloadData, onComplete, true);
                     } else if (isBeaconsSupported()) {
