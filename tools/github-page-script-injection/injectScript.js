@@ -7,7 +7,6 @@ const processFolder = (folderPath) => {
 
   files.forEach((file) => {
     const filePath = path.join(folderPath, file);
-    console.log(` ${filePath}`);
 
     if (fs.statSync(filePath).isDirectory()) {
       // If the current path is a directory, recursively process it
@@ -15,7 +14,6 @@ const processFolder = (folderPath) => {
     } else if (path.extname(file) === '.html') {
       // If it's an HTML file, inject the script
       console.log(`process ${filePath}`);
-
       injectScript(filePath);
     }
   });
@@ -24,7 +22,18 @@ const processFolder = (folderPath) => {
 
 // Start processing from the 'docs' folder
 const docsFolder = path.join(__dirname, '../../docs');
+
+// Prepare the script content to be injected
+const scriptFilePath = path.join(__dirname, '../applicationinsights-web-snippet/build/output/snippet.min.js');
+let scriptContent = fs.readFileSync(scriptFilePath, 'utf8');
+
+// Define the connection string to replace the placeholder
+const connectionString = 'InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/';
+
+// Replace the placeholder string with the actual connection string
+scriptContent = scriptContent.replace('YOUR_CONNECTION_STRING', connectionString);
 processFolder(docsFolder);
+
 
 function injectScript(filePath) {
   fs.readFile(filePath, 'utf8', (err, data) => {
@@ -32,10 +41,6 @@ function injectScript(filePath) {
       console.error('Error reading file:', err);
       return;
     }
-
-    // Read the script content from a file
-    const scriptFilePath = path.join(__dirname, 'script.js');
-    const scriptContent = fs.readFileSync(scriptFilePath, 'utf8');
 
     // Check if the script content is already present in the file
     const fileContent = fs.readFileSync(filePath, 'utf8');
@@ -46,7 +51,7 @@ function injectScript(filePath) {
       return;
     }
     // Create the modified content by inserting the script tag right before the closing head tag
-    const modifiedContent = data.replace(/(<\/head[^>]*)/i, `\n${scriptContent}\n$1`);
+    const modifiedContent = data.replace(/(<\/head[^>]*)/i, `\n<script>${scriptContent}</script>\n$1`);
     // Save the modified content back to the file
     fs.writeFile(filePath, modifiedContent, (err) => {
       if (err) {
