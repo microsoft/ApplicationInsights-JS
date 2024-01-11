@@ -34,7 +34,7 @@
     "sideEffects": false,
     "devDependencies": {
         "@types/qunit": "^2.19.3",
-        "@microsoft/dynamicproto-js": "^2.0.2",
+        "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "grunt": "^1.5.3",
