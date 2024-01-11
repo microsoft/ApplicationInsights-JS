@@ -53,9 +53,6 @@ export function createTelemetryItem<T>(item: T,
     // Part C
     if (!isNullOrUndefined(customProperties)) {
         objForEachKey(customProperties, (prop, value) => {
-            if (Number.isNaN(value)) {
-                value = "NaN";
-            }
             telemetryItem.data[prop] = value;
         });
     }
