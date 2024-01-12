@@ -74,7 +74,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     enableSessionStorageBuffer: cfgDfBoolean(true),
     isRetryDisabled: cfgDfBoolean(),
     isBeaconApiDisabled: cfgDfBoolean(true),
-    disableSendBeaconSplit: cfgDfBoolean(),
+    disableSendBeaconSplit: cfgDfBoolean(true),
     disableXhr: cfgDfBoolean(),
     onunloadDisableFetch: cfgDfBoolean(),
     onunloadDisableBeacon: cfgDfBoolean(),
@@ -866,8 +866,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // We are unloading so always call the sender with sync set to false
                     _syncUnloadSender(payload, false);
                 } else {
+                    
                     // Fallback to the previous beacon Sender (which causes a CORB warning on chrome now)
-                    let payloadData = _getPayload(payload)
+                    let payloadData = _getPayload(payload);
+                    _self._buffer.markAsSent(payload);
                     _beaconSender(payloadData, onComplete, !isAsync);
                 }
             }

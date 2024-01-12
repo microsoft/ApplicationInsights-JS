@@ -121,7 +121,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(10000, defaultSenderConfig.eventsLimitInMem, "Channel default eventsLimitInMem config is set");
                 QUnit.assert.equal(undefined, defaultSenderConfig.httpXHROverride, "Channel default httpXHROverride config is set");
                 QUnit.assert.equal(false, defaultSenderConfig.alwaysUseXhrOverride, "Channel default alwaysUseXhrOverride config is set");
-                QUnit.assert.equal(false, defaultSenderConfig.disableSendBeaconSplit, "Channel default disableSendBeaconSplit config is set");
+                QUnit.assert.equal(true, defaultSenderConfig.disableSendBeaconSplit, "Channel default disableSendBeaconSplit config is set");
 
                 //check dynamic config
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -137,7 +137,7 @@ export class SenderTests extends AITestClass {
                     samplingPercentage: 90,
                     customHeaders: [{header: "header1",value:"value1"}],
                     alwaysUseXhrOverride: true,
-                    disableSendBeaconSplit: true
+                    disableSendBeaconSplit: false
                 }
                 core.config.extensionConfig[id] = config;
                 this.clock.tick(1);
@@ -152,7 +152,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(90, curSenderConfig.samplingPercentage, "Channel samplingPercentage config is dynamically set");
                 QUnit.assert.deepEqual([{header: "header1",value:"value1"}], curSenderConfig.customHeaders, "Channel customHeaders config is dynamically set");
                 QUnit.assert.deepEqual(true, curSenderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is dynamically set");
-                QUnit.assert.equal(true, curSenderConfig.disableSendBeaconSplit, "Channel disableSendBeaconSplit config is dynamically set");
+                QUnit.assert.equal(false, curSenderConfig.disableSendBeaconSplit, "Channel disableSendBeaconSplit config is dynamically set");
 
                 core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = undefined;
                 core.config.extensionConfig[this._sender.identifier].endpointUrl = undefined;
@@ -1701,7 +1701,8 @@ export class SenderTests extends AITestClass {
                     extensionConfig: {
                         [sender.identifier]: {
                             onunloadDisableFetch: true,
-                            disableXhr: true
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
                             // to make sure beacon is used
                         }
                     }
@@ -1782,7 +1783,9 @@ export class SenderTests extends AITestClass {
                     extensionConfig: {
                         [sender.identifier]: {
                             onunloadDisableFetch: true,
-                            disableXhr: true
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                            
                             // to make sure beacon is used
                         }
                     }
@@ -1875,7 +1878,8 @@ export class SenderTests extends AITestClass {
                     instrumentationKey: "abc",
                     extensionConfig: {
                         [sender.identifier]: {
-                            disableXhr: true
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
                         }
                     }
                     
@@ -1958,7 +1962,8 @@ export class SenderTests extends AITestClass {
                     instrumentationKey: "abc",
                     extensionConfig: {
                         [sender.identifier]: {
-                            disableXhr: true
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
                         }
                     }
                     
@@ -2012,6 +2017,189 @@ export class SenderTests extends AITestClass {
                 
             }
         });
+
+        this.testCase({
+            name: "Onunloadflush: send payloads with fetch.",
+            test: () => {
+                let window = getWindow();
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
+                let sendBeaconCalled = 0;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled += 1;
+                    return true;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            onunloadDisableFetch: false,
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                            // to make sure beacon is used
+                        }
+                    }
+
+                }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "large item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {
+                        name: "large item"
+
+                    }
+                };
+
+                const telemetryItem1: ITelemetryItem = {
+                    name: "smell item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {
+                        name: "small item"
+
+                    }
+                };
+
+
+                let buffer = sender._buffer;
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.processTelemetry(telemetryItem1, null);
+                    QUnit.assert.equal(2, buffer.getItems().length, "sender buffer should have two payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    QUnit.assert.equal(bufferItems.length, 2, "sender buffer should have two payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API should not be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender should not be called");
+                QUnit.assert.equal(true, fetchstub.called, "fetch sender is called");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                QUnit.assert.equal(2, sentItems.length, "sent buffer should have two payload");
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+
+            }
+        });
+
+        this.testCase({
+            name: "Onunloadflush: send payloads with beacon.",
+            test: () => {
+                let window = getWindow();
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
+                let sendBeaconCalled = 0;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled += 1;
+                    return false;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            onunloadDisableFetch: true,
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                            // to make sure beacon is used
+                        }
+                    }
+
+                }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "small item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {
+                        name: "small item"
+                    }
+                };
+
+                const telemetryItem1: ITelemetryItem = {
+                    name: "large item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {
+                        name: "large item"
+                    }
+                };
+
+
+                let buffer = sender._buffer;
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.processTelemetry(telemetryItem1, null);
+                    QUnit.assert.equal(2, buffer.getItems().length, "sender buffer should have two payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    QUnit.assert.equal(bufferItems.length, 2, "sender buffer should have two payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(3, sendBeaconCalled, "Beacon API should be called");
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender should not be called");
+                QUnit.assert.equal(false, fetchstub.called, "fetch sender is called");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                QUnit.assert.equal(2, sentItems.length, "sent buffer should not have two payload");
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+
+            }
+        });
+
 
         this.testCase({
             name: 'FetchAPI is used when isBeaconApiDisabled flag is true and disableXhr flag is true , use fetch sender.',
