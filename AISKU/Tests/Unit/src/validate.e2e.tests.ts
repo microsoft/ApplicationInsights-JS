@@ -80,6 +80,35 @@ export class ValidateE2ETests extends AITestClass {
         });
 
         this.testCaseAsync({
+            name: 'E2E.GenericTests: trackEvent sends to backend with NaN value could be handled correctly',
+            stepDelay: this.delay,
+            steps: [
+                () => {
+                    const customeProperties = {
+                        nanValue: NaN,
+                    }
+                    this._ai.trackEvent({ name: 'event', properties: { "prop1": NaN, "prop2": NaN }}, customeProperties);
+                }]
+                .concat(this.waitForResponse())
+                .concat(this.boilerPlateAsserts)
+                .concat(() => {
+                    const acceptedItems = this.getPayloadMessages(this.successSpy).length;
+                    Assert.equal(1, acceptedItems, "backend should accept two events");
+                    if (acceptedItems != 1) {
+                        this.dumpPayloadMessages(this.successSpy);
+                    }
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data && data.baseData);
+                        Assert.equal(null, data.baseData.measurements["nanValue"]);
+                        Assert.equal("NaN", data.baseData.properties["prop1"]);
+                    }
+                })
+        });
+
+        this.testCaseAsync({
             name: "Validate that track event takes all type of characters",
             stepDelay: this.delay,
             steps: [
