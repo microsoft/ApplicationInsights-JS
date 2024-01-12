@@ -9,12 +9,13 @@ const processFolder = (folderPath) => {
     const filePath = path.join(folderPath, file);
 
     if (fs.statSync(filePath).isDirectory()) {
-      // If the current path is a directory, recursively process it
       processFolder(filePath);
     } else if (path.extname(file) === '.html') {
-      // If it's an HTML file, inject the script
       console.log(`process ${filePath}`);
       injectScript(filePath);
+    } else if (path.extname(file) === '.md') {
+      console.log(`process ${filePath}`);
+      injectHtml(filePath);
     }
   });
 };
@@ -27,13 +28,42 @@ const docsFolder = path.join(__dirname, '../../docs');
 const scriptFilePath = path.join(__dirname, '../applicationinsights-web-snippet/build/output/snippet.min.js');
 let scriptContent = fs.readFileSync(scriptFilePath, 'utf8');
 
-// Define the connection string to replace the placeholder
-const connectionString = 'InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/';
-
 // Replace the placeholder string with the actual connection string
+const connectionString = 'InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/';
 scriptContent = scriptContent.replace('YOUR_CONNECTION_STRING', connectionString);
+scriptContent = `<script type="text/javascript">${scriptContent}</script>`;
+
+// write this file into _include folder so that later github would reject it inside markdown files
+const includeFolderFile = path.join(__dirname, '../../_includes/snippet.html');
+fs.writeFileSync(includeFolderFile, scriptContent, 'utf8');
+
+// recursively process all html files under docs folder
 processFolder(docsFolder);
 
+function injectHtml(filePath) {
+  // Read the content of the Markdown file
+  const markdownContent = fs.readFileSync(filePath, 'utf8');
+
+  // Specify the injection string
+  const injectionString = `
+  <details>
+    <summary></summary>
+
+  \`\`\`html
+  {% include script.html %}
+  \`\`\`
+
+  </details>
+  `;
+
+  // Append the injection string to the end of the Markdown content
+  const updatedContent = `${markdownContent}\n\n${injectionString}`;
+
+  // Write the updated content back to the file
+  fs.writeFileSync(filePath, updatedContent, 'utf8');
+
+  console.log(`Markdown file injection completed for ${filePath}`);
+}
 
 function injectScript(filePath) {
   fs.readFile(filePath, 'utf8', (err, data) => {
@@ -51,7 +81,7 @@ function injectScript(filePath) {
       return;
     }
     // Create the modified content by inserting the script tag right before the closing head tag
-    const modifiedContent = data.replace(/(<\/head[^>]*)/i, `\n<script>${scriptContent}</script>\n$1`);
+    const modifiedContent = data.replace(/(<\/head[^>]*)/i, `\n${scriptContent}\n$1`);
     // Save the modified content back to the file
     fs.writeFile(filePath, modifiedContent, (err) => {
       if (err) {

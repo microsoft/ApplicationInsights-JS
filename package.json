@@ -32,7 +32,8 @@
         "npm-publish": "node ./tools/release-tools/npm_publish.js",
         "npm-set-latest": "node ./tools/release-tools/npm_set_latest.js",
         "gh-status": "node ./tools/status-tools/github-status.js",
-        "script-inject": "node tools/github-page-script-injection/injectScript.js"
+        "script-inject": "node tools/github-page-script-injection/injectScript.js",
+        "api-docs": "rush api-docs && npm run script-inject"
     },
     "repository": {
         "type": "git",
