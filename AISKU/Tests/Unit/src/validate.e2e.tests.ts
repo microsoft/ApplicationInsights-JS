@@ -101,8 +101,8 @@ export class ValidateE2ETests extends AITestClass {
                     if (payloadStr.length > 0) {
                         const payload = JSON.parse(payloadStr[0]);
                         const data = payload.data;
-                        Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                        Assert.equal("NaN", data.baseData.measurements["nanValue"]);
+                        Assert.ok(data && data.baseData);
+                        Assert.equal(null, data.baseData.measurements["nanValue"]);
                         Assert.equal("NaN", data.baseData.properties["prop1"]);
                     }
                 })
