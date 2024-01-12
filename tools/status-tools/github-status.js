@@ -1,6 +1,7 @@
 const fs = require("fs");
 const child_process = require("child_process");
 const NO_LABELS = "<No Labels>";
+const NO_MILESTONE = "<No Milestone>";
 const DEFAULT_LABELS = [ "bug", "enhancement", "feature", "question", "documentation", "duplicate", "invalid", "wontfix" ];
 
 let _startMonth = 0;
@@ -12,6 +13,7 @@ let _labels = null;
 let _noLabels = false;
 let _missingLabels = false;
 let _prevMonths = 6;
+let _dump = false;
 
 function showHelp() {
     var scriptParts;
@@ -38,6 +40,7 @@ function showHelp() {
     console.log(" -noLabels                           - Don't report on any labels (overrides -l, -px and -all)");
     console.log(" -missingLabels                      - Identify issues with no assigned labels");
     console.log(" -noDefault                          - Don't add the default labels (bug,enhancement,feature,question,documentation,duplicate,invalid,wontfix)");
+    console.log(" -dump                               - Dump the raw JSON data to a file (issues.json)")
     console.log(" -? | -h | -help                     - This help message");
     console.log("");
     console.log("Examples:");
@@ -129,6 +132,8 @@ function parseArgs() {
                 if (_prevMonths < 1) {
                     _prevMonths = 1;
                 }
+            } else if (theArg === "-dump") {
+                _dump = true;
             } else {
                 console.error("!!! Unknown switch [" + theArg + "] detected");
                 return false;
@@ -266,7 +271,7 @@ function dumpCount(label, issues, firstYear, lastYear, lastMonth, name) {
     }
 }
 
-function sumValues(issues, createdAt, closedAt) {
+function sumValues(issues, createdAt, closedAt, issue) {
     let openYear = createdAt.getFullYear();
     let openMonth = String(createdAt.getMonth() + 1).padStart(2, "0");
     let year = issues[openYear] = issues[openYear] || { cnt: 0, opened: 0, closed: 0 };
@@ -276,7 +281,29 @@ function sumValues(issues, createdAt, closedAt) {
     let month = year[openMonth] = year[openMonth] || { cnt: 0, opened: 0, closed: 0 };
     month.opened++;
     month.cnt++;
-    
+    if (issue) {
+        let openIssues = month.openedIssues = (month.openedIssues || {});
+
+        if (issue.milestone) {
+            openIssues = openIssues[issue.milestone.title] = openIssues[issue.milestone.title] || [];
+        } else {
+            openIssues = openIssues[NO_MILESTONE] = openIssues[NO_MILESTONE] || [];
+        }
+
+        let labels = "";
+        if (issue.labels) {
+            issue.labels.forEach(label => {
+                labels += (labels ? ", " : "") + label.name;
+            });
+        }
+
+        if (!closedAt) {
+            openIssues.push(`#${issue.number} ${labels ? "[" + labels + "]" : ""} :${issue.title}`);
+        } else {
+            openIssues.push(`#${issue.number} ${labels ? "[" + labels + "]" : ""} =<(Closed)>=- :${issue.title}`);
+        }
+    }
+
     if (closedAt) {
         let closeYear = closedAt.getFullYear();
         let closeMonth = String(closedAt.getMonth() + 1).padStart(2, "0");
@@ -287,6 +314,34 @@ function sumValues(issues, createdAt, closedAt) {
         let month = year[closeMonth] = year[closeMonth] || { cnt: 0, opened: 0, closed: 0 };
         month.closed++;
         month.cnt--;
+
+        if (issue) {
+            let closedIssues = month.closedIssues = (month.closedIssues || {});
+            if (issue.milestone) {
+                closedIssues = closedIssues[issue.milestone.title] = closedIssues[issue.milestone.title] || [];
+            } else {
+                closedIssues = closedIssues[NO_MILESTONE] = closedIssues[NO_MILESTONE] || [];
+            }
+
+            closedIssues.push(`#${issue.number} - ${issue.title}`);
+        }
+    }
+}
+
+function writeFile(filename, data, extension, overwrite = true, idx = 0) {
+    let newFilename = filename + (idx ? ("-" + idx) : "") + "." + extension;
+
+    if (!overwrite && fs.existsSync(newFilename)) {
+        console.log(" -- Existing " + newFilename);
+        writeFile(filename, data, extension, overwrite, idx + 1);
+        return;
+    }
+
+    try {
+        fs.writeFileSync(newFilename, data);
+    } catch (e) {
+        console.error(` -- Failed to write newFilename - ${e}`);
+        writeFile(filename, data, extension, overwrite, idx + 1);
     }
 }
 
@@ -325,7 +380,7 @@ function processIssues(issues) {
             }
         }
 
-        sumValues(openIssues, createdAt, closedAt);
+        sumValues(openIssues, createdAt, closedAt, issue);
         if (!_noLabels && issue.labels && issue.labels.length > 0) {
             issue.labels.forEach(label => {
                 if (!_labels || _labels.includes(label.name)) {
@@ -360,6 +415,8 @@ function processIssues(issues) {
         _startMonth = (yr * 100) + mon;
     }
 
+    let filename = `issues-${_startMonth + 1}-${lastMonth + 1}`;
+
     logMessage(`Reporting from: ${_startMonth + 1} to ${lastMonth + 1}`);
     logHeader("Issues", firstYear, lastYear, lastMonth, openIssues);
     dumpCount("New", openIssues, firstYear, lastYear, lastMonth, "opened");
@@ -371,7 +428,16 @@ function processIssues(issues) {
     });
     //console.log(JSON.stringify(labels, null, 4));
 
-    return lastMonth;
+
+    if (_dump) {
+        console.log("Dumping raw JSON data to: " + filename + "-dump");
+        writeFile(filename + "-dump", JSON.stringify(openIssues, null, 4), "json", true);
+
+        console.log("Dumping raw JSON data to: " + filename + "-issues");
+        writeFile(filename + "-issues", JSON.stringify(issues, null, 4), "json", true);
+    }
+
+    return filename;
 }
 
 if (parseArgs()) {
@@ -382,15 +448,11 @@ if (parseArgs()) {
     console.log(`Running: \"${npmCmd}\"`);
     try {
         let output = child_process.execSync(npmCmd);
-        let lastMonth = processIssues(JSON.parse(output));
+        let filename = processIssues(JSON.parse(output));
     
         if (_csv) {
-            fs.writeFileSync(`issues-${_startMonth + 1}-${lastMonth + 1}.csv`, _csvOutput, (err, data) => {
-                if (err) {
-                    console.error(err);
-                    throw `Failed to write ${dtsFileRollup}`;
-                }
-            });
+            console.log("Writing CSV data to: " + filename);
+            writeFile(filename, _csvOutput, "csv", true);
         }
     } catch (e) {
         console.error("This command requires the Github CLI to be installed and configured.");
