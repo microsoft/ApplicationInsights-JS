@@ -126,7 +126,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 _distributedTraceCtx = null;
                 _previousTraceCtx = null;
                 _context = null;
-                _disableUserInitMessage = false;
+                _disableUserInitMessage = true;
             }
 
             function _populateDefaults(config: IConfiguration & IConfig) {
@@ -139,7 +139,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                     if (config.storagePrefix){
                         utlSetStoragePrefix(config.storagePrefix);
                     }
-                    _disableUserInitMessage = config.disableUserInitMessage || false;
+                    _disableUserInitMessage = config.disableUserInitMessage === false ? false : true;
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
 
                     // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class
