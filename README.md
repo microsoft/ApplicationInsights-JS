@@ -345,7 +345,8 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | isBeaconApiDisabled | boolean | true | If false, the SDK will send all telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |
 | disableXhr | boolean | false | Don't use XMLHttpRequest or XDomainRequest (for IE < 9) by default instead attempt to use fetch() or sendBeacon. If no other transport is available it will still use XMLHttpRequest |
 | onunloadDisableBeacon | boolean | false | Default false. when tab is closed, the SDK will send all remaining telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |
-| onunloadDisableFetch | boolean | false | If fetch keepalive is supported do not use it for sending events during unload, it may still fallback to fetch() without keepalive |
+| onunloadDisableFetch | boolean | false | If fetch keepalive is supported do not use it for sending events during unload, it may still fallback to fetch() without keepalive || 
+| disableSendBeaconSplit<br>(Since 3.0.8 sets to true)| boolean | true | Default true. If true, the SDK will not split events across multiple beacons during unload if the initial beacon request fails. |
 | sdkExtension | string | null | Sets the sdk extension name. Only alphabetic characters are allowed. The extension name is added as a prefix to the 'ai.internal.sdkVersion' tag (e.g. 'ext_javascript:2.0.0'). Default is null. |
 | isBrowserLinkTrackingEnabled | boolean | false | Default is false. If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. |
 | appId | string | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requests. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
