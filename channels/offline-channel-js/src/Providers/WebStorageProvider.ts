@@ -1,24 +1,27 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IPayloadData, IProcessTelemetryContext, IUnloadHookContainer, getGlobal, getJSON, newGuid, objKeys, onConfigChange
+    IProcessTelemetryContext, IUnloadHookContainer, getGlobal, getJSON, isNotNullOrUndefined, objKeys, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise, createAsyncRejectedPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { getEndpointDomian } from "../Helpers/Utils";
-import { ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineProvider, IStorageJSON, IStorageTelemetryItem } from "../Interfaces/IOfflineProvider";
+import { IPromise, createAsyncRejectedPromise } from "@nevware21/ts-async";
+import { getEndpointDomian, getTimeId } from "../Helpers/Utils";
+import {
+    ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineProvider, IStorageJSON, IStorageTelemetryItem
+} from "../Interfaces/IOfflineProvider";
 import { PayloadHelper } from "../PayloadHelper";
 
+//TODO: move all const to one file
 const EventsToDropAtOneTime = 10;
 const Version = "1";
-//const AccessThresholdInMs = 600000; // 10 mins
 const DefaultStorageKey = "AIOffline";
 const DefaultMaxStorageSizeInBytes = 5000000;
 const MaxCriticalEvtsDropCnt = 2;
 const DefaultMaxInStorageTime = 10080000; //7*24*60*60*1000 7days
+// [Optional for version 1]: TODO: order event by time
 
 interface IJsonStoreDetails {
     key: string;
-    db: IStorageJSON;            // May be null
+    db: IStorageJSON;
 }
 
 // Private helper methods that are not exposed as class methods
@@ -74,22 +77,21 @@ function _forEachMap<T>(map: { [key: string]: T }, callback: (value: T, key: str
 }
 
 
-// will drop batch with no critical evts first
-//TODO: should we consider max storage time here?
-
+// will drop batches with no critical evts first
 function _dropEventsUpToPersistence(
     maxCnt: number,
-    events: { [id: string]: IStorageTelemetryItem }): boolean {
+    events: { [id: string]: IStorageTelemetryItem },
+    eventsToDropAtOneTime: number): boolean {
     let dropKeys = [];
     let persistenceCnt = 0;
     let droppedEvents = 0;
-    while (persistenceCnt <= maxCnt && droppedEvents < EventsToDropAtOneTime) {
+    while (persistenceCnt <= maxCnt && droppedEvents < eventsToDropAtOneTime) {
         _forEachMap<IStorageTelemetryItem>(events, (evt, key) => {
             if (evt.criticalCnt === persistenceCnt) {
                 dropKeys.push(key);
                 droppedEvents++;
             }
-            return (droppedEvents < EventsToDropAtOneTime);
+            return (droppedEvents < eventsToDropAtOneTime);
         });
 
         if (droppedEvents > 0) {
@@ -107,7 +109,8 @@ function _dropEventsUpToPersistence(
 
 function _dropMaxTimeEvents(
     maxStorageTime: number,
-    events: { [id: string]: IStorageTelemetryItem }): boolean {
+    events: { [id: string]: IStorageTelemetryItem },
+    eventsToDropAtOneTime): boolean {
     let dropKeys = [];
     let droppedEvents = 0;
     let currentTime = (new Date()).getTime() + 1; // handle appended random float number
@@ -118,7 +121,7 @@ function _dropMaxTimeEvents(
                 dropKeys.push(key);
                 droppedEvents++;
             }
-            return (droppedEvents < EventsToDropAtOneTime);
+            return (droppedEvents < eventsToDropAtOneTime);
         });
     
         if (droppedEvents > 0) {
@@ -134,6 +137,9 @@ function _dropMaxTimeEvents(
 
     return droppedEvents > 0;
 }
+
+
+
 /**
  * Class that implements storing of events using the WebStorage Api ((window||globalThis||self).localstorage, (window||globalThis||self).sessionStorage).
  */
@@ -148,31 +154,29 @@ export class WebStorageProvider implements IOfflineProvider {
         dynamicProto(WebStorageProvider, this, (_this) => {
             let _storage: Storage = null;
             let _storageKeyPrefix: string = DefaultStorageKey;
-            let _storageId: string = null;
-            let _iKey: string = null;
             let _maxStorageSizeInBytes: number = DefaultMaxStorageSizeInBytes;
             let _payloadHelper: PayloadHelper = null;
             let _storageKey: string = null;
             let _endpoint: string = null;
             let _maxStorageTime: number = null;
+            let _eventDropPerTime: number = null;
+            let _maxCriticalCnt: number = null;
 
             _this.id = id;
 
             _storage = _getAvailableStorage(storageType) || null;
 
             _this["_getDbgPlgTargets"] = () => {
-                return [_storageKey, _maxStorageSizeInBytes];
+                return [_storageKey, _maxStorageSizeInBytes, _maxStorageTime];
             };
 
             _this.initialize = (providerContext: ILocalStorageProviderContext, endpointUrl?: string) => {
                 if (!_storage) {
                     return false;
                 }
-                // Fetch and setup the configuration
+               
                 let storageConfig: ILocalStorageConfiguration = providerContext.storageConfig;
-                _storageId = _this.id || providerContext.id || newGuid();
                 let itemCtx = providerContext.itemCtx;
-                _iKey = itemCtx.getCfg().instrumentationKey;
                 _payloadHelper = new PayloadHelper(itemCtx.diagLog());
                 _endpoint = getEndpointDomian(endpointUrl || providerContext.endpoint);
                 let autoClean = !!storageConfig.autoClean;
@@ -180,31 +184,28 @@ export class WebStorageProvider implements IOfflineProvider {
                 let unloadHook = onConfigChange(storageConfig, () => {
                     _maxStorageSizeInBytes = storageConfig.maxStorageSizeInBytes || DefaultMaxStorageSizeInBytes; // value checks and defaults should be applied during core config
                     _maxStorageTime = storageConfig.inStorageMaxTime || DefaultMaxInStorageTime; // TODO: handle 0
-                    // TODO: handle versoin Upgrade
-                    //_checkVersion();
+                    let dropNum = storageConfig.EventsToDropPerTime;
+                    _eventDropPerTime = isNotNullOrUndefined(dropNum)? dropNum : EventsToDropAtOneTime;
+                    _maxCriticalCnt = storageConfig.maxCriticalEvtsDropCnt || MaxCriticalEvtsDropCnt;
                 });
                 unloadHookContainer && unloadHookContainer.add(unloadHook);
 
-                // currently, won't handle endpoint change
+                // currently, won't handle endpoint change here
                 // new endpoint will open a new db
-                // endpoint change will be handled at offline batch lavel
+                // endpoint change will be handled at offline batch level
                 // namePrefix should not contain any "_"
                 _storageKeyPrefix = storageConfig.storageKeyPrefix || DefaultStorageKey;
                 _storageKey = _storageKeyPrefix + "_" + Version + "_" + _endpoint;
 
                 if (autoClean) {
-                    // TODO: handle error here
-                    doAwaitResponse(_this.clean(), (response) => {
-                        if (response.rejected) {
-                            return false;
-                        }
-                    })
+                    // won't wait response here
                     _this.clean();
                 }
 
                 
                 // TODO: handle versoin Upgrade
                 //_checkVersion();
+             
 
                 return true;
             };
@@ -221,38 +222,66 @@ export class WebStorageProvider implements IOfflineProvider {
              */
             _this.getAllEvents = (cnt?: number) => {
                 try {
-                    let allItems: IStorageTelemetryItem[] = [];
-                    let theStore = _fetchStoredDb(_storageKey).db;
-                    if (theStore) {
-                        let events = theStore.evts;
-                        _forEachMap(events, (evt) => {
-                            if (evt) {
-                                if (evt.isArr) {
-                                    evt = _payloadHelper.base64ToArr(evt);
-                                }
-                                allItems.push(evt);
-                            }
-                            if(cnt && allItems && allItems.length == cnt) {
-                                return false;
-                            }
-                            return true;
-                        });
+                    if (!_storage) {
+                        // if not init, return null
+                        return;
                     }
-                    return allItems;
+                    return _getEvts(cnt);
+                    
                 } catch (e) {
                     return createAsyncRejectedPromise(e);
                 }
             };
+
+            
+            /**
+             * Get Next cached event from the storage mechanism
+             */
+            _this.getNextBatch = () => {
+                try {
+                    if (!_storage) {
+                        // if not init, return null
+                        return;
+                    }
+                    return _getEvts(1);
+                    
+                } catch (e) {
+                    return createAsyncRejectedPromise(e);
+                }
+            };
+
+            function _getEvts(cnt?: number) {
+                let allItems: IStorageTelemetryItem[] = [];
+                let theStore = _fetchStoredDb(_storageKey).db;
+                if (theStore) {
+                    let events = theStore.evts;
+                    _forEachMap(events, (evt) => {
+                        if (evt) {
+                            if (evt.isArr) {
+                                evt = _payloadHelper.base64ToArr(evt);
+                            }
+                            allItems.push(evt);
+                        }
+                        if(cnt && allItems && allItems.length == cnt) {
+                            return false;
+                        }
+                        return true;
+                    });
+                }
+                return  allItems;
+                    
+            }
+
 
             /**
              * Stores the value into the storage using the specified key.
              * @param key - The key value to use for the value
              * @param value - The actual value of the request
              */
-            _this.addEvent = (key: string, evt: IStorageTelemetryItem, itemCtx: IProcessTelemetryContext): IStorageTelemetryItem | IPromise<IStorageTelemetryItem> => {
+            _this.addEvent = (key: string, evt: IStorageTelemetryItem, itemCtx: IProcessTelemetryContext)  => {
                 try {
                     let theStore = _fetchStoredDb(_storageKey);
-                    evt.id = evt.id || _getTimeId();
+                    evt.id = evt.id || getTimeId();
                     evt.criticalCnt = evt.criticalCnt || 0;
                     let events = theStore.db.evts;
                     let id = evt.id;
@@ -271,7 +300,7 @@ export class WebStorageProvider implements IOfflineProvider {
                         // Could not not add events to storage assuming its full, so drop events to make space
                         // or max size exceeded
                         delete events[id];
-                        if (!_dropEventsUpToPersistence(MaxCriticalEvtsDropCnt, events)) {
+                        if (!_dropEventsUpToPersistence(_maxCriticalCnt, events, _eventDropPerTime)) {
                         // Can't free any space for event
                             return createAsyncRejectedPromise(new Error("Unable to free up event space"));
                         }
@@ -285,7 +314,7 @@ export class WebStorageProvider implements IOfflineProvider {
              * Removes the value associated with the provided key
              * @param evts - The events to be removed
              */
-            _this.removeEvents = (evts: IStorageTelemetryItem[]): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> => {
+            _this.removeEvents = (evts: IStorageTelemetryItem[]) => {
                 try {
                     let theStore = _fetchStoredDb(_storageKey, false);
                     let currentDb = theStore.db;
@@ -305,8 +334,9 @@ export class WebStorageProvider implements IOfflineProvider {
                             // Storage corrupted
                         }
 
-                        // If we get here there was some form of storage failure so try and remove everything to "fix" the db
+                        // failure here so try and remove db to unblock following events
                         evts = _clearDatabase(theStore.key);
+                        
                     }
 
                     return evts;
@@ -318,7 +348,7 @@ export class WebStorageProvider implements IOfflineProvider {
             /**
              * Removes all entries from the storage provider for the current endpoint and returns them as part of the response, if there are any.
              */
-            _this.clear = (): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> => {
+            _this.clear = () => {
                 try {
                     let removedItems: IStorageTelemetryItem[] = [];
                     let theStore = _fetchStoredDb(_storageKey, false);
@@ -333,7 +363,6 @@ export class WebStorageProvider implements IOfflineProvider {
 
                             return true;
                         });
-                        // Get the events in priority order with Critical first
 
                         _updateStoredDb(theStore);
                     }
@@ -345,13 +374,13 @@ export class WebStorageProvider implements IOfflineProvider {
                 }
             };
 
-            _this.clean = (): boolean | IPromise<boolean> => {
+            _this.clean = () => {
                 let storeDetails = _fetchStoredDb(_storageKey, false);
                 let currentDb = storeDetails.db;
                 if (currentDb) {
                     let events = currentDb.evts;
                     try {
-                        let isDropped = _dropMaxTimeEvents(_maxStorageTime, events);
+                        let isDropped = _dropMaxTimeEvents(_maxStorageTime, events, _eventDropPerTime);
                         if (isDropped) {
                             return _updateStoredDb(storeDetails);
                         }
@@ -398,18 +427,11 @@ export class WebStorageProvider implements IOfflineProvider {
                 };
             }
 
-            function _getTimeId(): string {
-                let time = (new Date()).getTime();
-                // append random digits to avoid same timestamp value
-                let random = Math.random().toString().slice(3,6);
-                return time + "." + random;
-            }
-
             function _fetchStoredDb(dbKey: string, returnDefault = true): IJsonStoreDetails {
                 let dbToStore: IStorageJSON = null;
                 if (_storage) {
                     let previousDb = _storage.getItem(dbKey);
-
+                 
                     if (previousDb) {
                         try {
                             dbToStore = getJSON().parse(previousDb);
@@ -510,10 +532,19 @@ export class WebStorageProvider implements IOfflineProvider {
     /**
      * Get all of the currently cached events from the storage mechanism
      */
-    public getAllEvents(cnt?: number): any[] | IPromise<any[]> {
+    public getAllEvents(cnt?: number): IStorageTelemetryItem[] | IPromise< IStorageTelemetryItem[]> | null {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }
+
+    /**
+     * Get the Next one cached batch from the storage mechanism
+     */
+    public getNextBatch(): IStorageTelemetryItem[] | IPromise< IStorageTelemetryItem[]> | null {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
 
     /**
      * Stores the value into the storage using the specified key.
@@ -523,7 +554,7 @@ export class WebStorageProvider implements IOfflineProvider {
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
      */
-    public addEvent(key: string, evt: any, itemCtx: IProcessTelemetryContext): any | IPromise<any> {
+    public addEvent(key: string, evt: any, itemCtx: IProcessTelemetryContext): IStorageTelemetryItem | IPromise<IStorageTelemetryItem> | null {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return;
     }
@@ -532,7 +563,7 @@ export class WebStorageProvider implements IOfflineProvider {
      * Removes the value associated with the provided key
      * @param evts - The events to be removed
      */
-    public removeEvents(evts: any[]): any[] | IPromise<any[]> {
+    public removeEvents(evts: any[]): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return;
     }
@@ -540,7 +571,7 @@ export class WebStorageProvider implements IOfflineProvider {
     /**
      * Removes all entries from the storage provider, if there are any.
      */
-    public clear(): any[] | IPromise<any[]> {
+    public clear(): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return;
     }

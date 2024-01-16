@@ -1,19 +1,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js"
 import {
-    IDiagnosticLogger, IPayloadData, _eInternalMessageId, _throwInternal, eLoggingSeverity, isFunction
+    IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, isFunction
 } from "@microsoft/applicationinsights-core-js";
 import { base64Decode, base64Encode } from "./Helpers/Utils";
-
-interface IStorageTelemetryItem extends IPayloadData {
-    /**
-     * The storage id of the telemetry item that has been attempted to be sent.
-     */
-    id?: string | number | null | undefined;
-    iKey?: string;
-    sync?: boolean;
-    criticalCnt?: number;
-    isArr?: boolean;
-}
+import { IStorageTelemetryItem } from "./Interfaces/IOfflineProvider";
 
 export class PayloadHelper {
 

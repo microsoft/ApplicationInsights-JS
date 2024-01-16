@@ -1,10 +1,10 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IPayloadData, IProcessTelemetryContext, IUnloadHookContainer, eLoggingSeverity, isNumber, newGuid, onConfigChange
+    IProcessTelemetryContext, IUnloadHookContainer, eLoggingSeverity, isNotNullOrUndefined, isNumber, newGuid, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncAllPromise, createAsyncPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
-import { getEndpointDomian } from "../Helpers/Utils";
+import { getEndpointDomian, getTimeId } from "../Helpers/Utils";
 import {
     CursorProcessResult, IIndexedDbOpenDbContext, IIndexedDbStoreActionContext, IProcessCursorState
 } from "../Interfaces/IOfflineIndexDb";
@@ -13,22 +13,18 @@ import {
 } from "../Interfaces/IOfflineProvider";
 import { IndexedDbHelper } from "./IndexDbHelper";
 
+//TODO: move all const to one file
 const EventsToDropAtOneTime = 10;                   // If we fail to add a new event this is the max number of events we will attempt to remove to make space
 const StoreVersion = 1;                             // The Current version for the stored items, this will be used in the future for versioning
-const AccessThresholdInMs = 600000;                 // 10 mins
 const OrhpanedEventThresholdInMs = 10080000;        // 7 days
 const MaxSizeLimit = 5000000;                       // 5Mb
 const UnknowniKey = "Unknown";
-const DefaultMaxStorageItems = -1;
 const ErrorMessageUnableToAddEvent = "DBError: Unable to add event";
-const ErrorMessageUnableToUpdateiKey = "DBError: Unable to update iKey";
-const DbNamePrefix = "AppInsightsOffline";
 const MaxCriticalEvtsDropCnt = 2;
 
 export const DefaultDbName = "AIOffline";  // Db Name including the version number on the end so that if we ever have to upgrade old and new code can co-exist
 export const DbVersion = 1;                         // The Current version of the database (Used to trigger upgrades)
 export const EventObjectStoreName = "Evts";
-export const IKeyObjectStoreName = "iKey";
 
 
 /**
@@ -68,8 +64,8 @@ interface IProviderDbContext {
     iKey: string;               // The current iKey for the events
     storageId: string;
     id?: string | number | undefined | null; // The current id/endpoint for the events
-    iKeyPrefix?: () => string;   // Returns the prefix applied to all events of the current iKey
-    evtKeyPrefix?: () => string; // Returns the current prefix to apply to events
+    iKeyPrefix?: () => string;   // Returns the prefix applied to all events of the current iKey (used by 1ds)
+    evtKeyPrefix?: () => string; // Returns the current prefix to apply to events (used by 1ds)
 }
 
 function _getTime() {
@@ -77,22 +73,9 @@ function _getTime() {
 }
 
 
-/**
- * Helper method to map an Event rejection to a reject with a message, this is mainly for terminal errors where the
- * IndexedDb API returns an event which we are going to ignore
- * @param rejectMessage
- * @param rejectFunc
- */
-function _eventReject(rejectMessage: string, rejectFunc: (reason?: any) => void) {
-    return function(evt: Event) {
-        return rejectFunc(new Error(rejectMessage));
-    };
-}
-
 function _createDb(db: IDBDatabase) {
     // data in the same db must have same endpoint url
     if (!db.objectStoreNames.contains(EventObjectStoreName)) {
-        // since we have in Memory timer, so time for each Ipayload data should be different.
         let evtStore = db.createObjectStore(EventObjectStoreName, { keyPath: "id" });
         evtStore.createIndex("criticalCnt", "criticalCnt", { unique: false });
     }
@@ -136,9 +119,6 @@ function _getId(key: string | number , values: IStorageTelemetryItem[]|IIndexedD
 
 function _cursorContinueEvent(cursorState: IProcessCursorState<IProviderDbContext>, value?: IIndexedDbItem) {
     return (evt: any) => {
-        if (value) {
-            // add to local storage
-        }
         return cursorState.continue();
     };
 }
@@ -167,17 +147,16 @@ function _getAllEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, curso
 
 
 // if shouldDelete function is not provided, will delete all events
-function _deleteEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, eventPrefixQuery: string, shouldDelete?: (value: IIndexedDbItem) => boolean): IPromise<IIndexedDbItem[]> {
+function _deleteEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, eventPrefixQuery: string, shouldDelete: (value: IIndexedDbItem) => boolean): IPromise<IIndexedDbItem[]> {
     // Open the Event object store
     return dbCtx.openCursor<IIndexedDbItem>(
         EventObjectStoreName,
         eventPrefixQuery,
         (deleteCursorState, value: IIndexedDbItem, values: IIndexedDbItem[]) => {
-            if (!!shouldDelete || shouldDelete(value)) {
+            if (shouldDelete(value)) {
                 values.push(value);
                 return _cursorDeleteAndContinue(deleteCursorState, value);
             }
-
             return CursorProcessResult.Continue;
         });
 }
@@ -185,10 +164,8 @@ function _deleteEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, event
 
 function _dropMaxTimeEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, maxTime?: number): IPromise<IIndexedDbItem[]> {
     return createAsyncPromise<IIndexedDbItem[]>((deleteEvtsResolve, deleteEvtsReject) => {
-
-
         return _deleteEvents(dbCtx, null, (value) => {
-            if (!value || !value.evt || !value.evt.id) {
+            if (!value || !value.evt) {
                 return true;
             }
 
@@ -209,10 +186,9 @@ function _dropMaxTimeEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, 
 }
 
 
-function _dropEventsUpToPersistence(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, priority: number): IPromise<number> {
+function _dropEventsUpToPersistence(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, maxpriorityCnt: number, maxDropCnt: number): IPromise<number> {
     return createAsyncPromise<number>((dropEventsResolve, dropEventsReject) => {
         let droppedEvents = 0;
-        let keyPrefix = dbCtx.ctx.evtKeyPrefix();
 
         function _resolveWithDroppedEvents() {
             dropEventsResolve(droppedEvents);
@@ -252,11 +228,9 @@ function _dropEventsUpToPersistence(dbCtx: IIndexedDbOpenDbContext<IProviderDbCo
             EventObjectStoreName,
             null,
             (cursorState, value: IIndexedDbItem, values: IIndexedDbItem[]) => {
-                //if (value.evt.persistence <= priority && value.key.indexOf(keyPrefix) === 0) {
-                if (value.key.indexOf(keyPrefix) === 0) {
+                if (value.evt.criticalCnt <= maxpriorityCnt) {
                     _addEventByTime(values, value);
-                    if (values.length > EventsToDropAtOneTime) {
-                        // remove last one
+                    if (values.length > maxDropCnt) {
                         values.splice(values.length - 1, 1);
                     }
                 }
@@ -285,15 +259,13 @@ export class IndexedDbProvider implements IOfflineProvider {
             let _dbName: string = null;
             let _iKey: string = UnknowniKey;
             let _storageId: string = null;              // Used as a unique id so that when active on multiple tabs (threads) the apps don't corrupts each other
-            let _activeiKeyPrefix: string = null;
-            let _activeEventPrefix: string = null;
-            let _maxStorageItems: number = DefaultMaxStorageItems;
-            let _numStoredItems = 0;
-            let _autoClean = null;
-            let _maxSentSize = MaxSizeLimit;
-            let _endpoint = null;
-            let _storageKeyPrefix = null;
-            let _maxStorageTime = null;
+            let _autoClean: boolean = null;
+            let _endpoint: string = null;
+            let _storageKeyPrefix: string = null;
+            let _maxStorageTime: number = null;
+            let _eventDropPerTime: number = null;
+            let _maxCriticalCnt: number = null;
+            let _maxStorageSizeInBytes: number = null;
         
             _this.id = id;
 
@@ -301,7 +273,6 @@ export class IndexedDbProvider implements IOfflineProvider {
                 let diagLog = providerContext.itemCtx.diagLog();
                 _indexedDb = new IndexedDbHelper<IProviderDbContext>(diagLog);
                 if (!_indexedDb.isAvailable()) {
-                    // Not needed so clear it out
                     _indexedDb = null;
                     return false;
                 }
@@ -311,8 +282,6 @@ export class IndexedDbProvider implements IOfflineProvider {
 
                 let storageConfig: ILocalStorageConfiguration = providerContext.storageConfig;
                 _storageId = _this.id || providerContext.id || newGuid();
-                _activeiKeyPrefix = _iKey + "::";
-                _activeEventPrefix = _activeiKeyPrefix + _storageId + "::";
 
                
                 _endpoint = getEndpointDomian(providerContext.endpoint);
@@ -329,18 +298,17 @@ export class IndexedDbProvider implements IOfflineProvider {
                
 
                 let unloadHook = onConfigChange(storageConfig, () => {
-                    _maxStorageItems = storageConfig.maxStorageItems;
-                    _maxStorageTime = storageConfig.inStorageMaxTime || OrhpanedEventThresholdInMs;
-                   
-                    _maxSentSize = storageConfig.maxSentInBytes || _maxSentSize; // TODO: handle 0
+                    _maxStorageTime = storageConfig.inStorageMaxTime || OrhpanedEventThresholdInMs; // TODO: handle 0
+                    _maxStorageSizeInBytes = storageConfig.maxStorageSizeInBytes || MaxSizeLimit; // value checks and defaults should be applied during core config
+                    let dropNum = storageConfig.EventsToDropPerTime;
+                    _eventDropPerTime = isNotNullOrUndefined(dropNum)? dropNum : EventsToDropAtOneTime;
+                    _maxCriticalCnt = storageConfig.maxCriticalEvtsDropCnt || MaxCriticalEvtsDropCnt;
 
-                    // TODO: currently, db name changes are not handling (only handle initialization)
                     
                 });
                 unloadHookContainer && unloadHookContainer.add(unloadHook);
 
                 if (_dbName) {
-                
                   
                     doAwaitResponse(_this.clean(!_autoClean), (response) => {
                         _openDb(
@@ -351,10 +319,9 @@ export class IndexedDbProvider implements IOfflineProvider {
                                 // All done, but as initialize isn't waiting just ignore
                             },
                             (reason) => {
-                                // We failed for some reason so lets clear and stop using indexedDb
+                                // clear and stop using indexedDb
                                 diagLog.warnToConsole("IndexedDbProvider failed to initialize - " + (reason || "<unknown>"));
                                 _indexedDb = null;
-                                return false;
                             });
                     });
                     
@@ -364,7 +331,7 @@ export class IndexedDbProvider implements IOfflineProvider {
             };
 
             _this["_getDbgPlgTargets"] = () => {
-                return [_dbName];
+                return [_dbName, _maxStorageSizeInBytes, _maxStorageTime, _indexedDb];
             };
 
             /**
@@ -388,9 +355,28 @@ export class IndexedDbProvider implements IOfflineProvider {
                     return createAsyncPromise<IStorageTelemetryItem[]>((allEventsResolve, allEventsReject) => {
                         _getAllEvents(dbCtx, null, cnt).then(
                             (values: IIndexedDbItem[]) => {
-                                _numStoredItems = values.length;
-                                //TODO: orderEventsByPriority
-                                //allEventsResolve(_orderEventsByPriority(values));
+                                //TODO: orderEvents By CriticalCnt
+                                allEventsResolve(_getEvents(values));
+                            },
+                            allEventsReject);
+                    });
+                });
+            };
+
+            /**
+             * Get all of the currently cached events( with given number) from the storage mechanism
+             */
+            _this.getNextBatch = () => {
+                if (_indexedDb == null || !_indexedDb.isAvailable()) {
+                    return [];
+                }
+
+                // Start an asynchronous set of events to access the Db, this first one will wait until all current outstanding
+                // events are completed or rejected
+                return _openDb<IStorageTelemetryItem[]>((dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>) => {
+                    return createAsyncPromise<IStorageTelemetryItem[]>((allEventsResolve, allEventsReject) => {
+                        _getAllEvents(dbCtx, null, 1).then(
+                            (values: IIndexedDbItem[]) => {
                                 allEventsResolve(_getEvents(values));
                             },
                             allEventsReject);
@@ -403,19 +389,18 @@ export class IndexedDbProvider implements IOfflineProvider {
              * @param key - The key value to use for the value
              * @param value - The actual value of the request
              */
-            _this.addEvent = (key: string, item: IStorageTelemetryItem, itemCtx: IProcessTelemetryContext): IStorageTelemetryItem | IPromise<IStorageTelemetryItem> => {
+            _this.addEvent = (key: string, item: IStorageTelemetryItem, itemCtx: IProcessTelemetryContext) => {
                 if (_indexedDb == null || !_indexedDb.isAvailable()) {
                     return item;
                 }
 
-                item.id = item.id || _getTimeId();
+                item.id = item.id || getTimeId();
                 item.criticalCnt = item.criticalCnt || 0;
 
                 return _openDb<IStorageTelemetryItem>(
                     (dbCtx) => {
                         let eventKey = key || item.id;
                         let dbItem: IIndexedDbItem = {
-                            key: dbCtx.ctx.evtKeyPrefix() + eventKey,
                             id: eventKey,
                             evt: item,
                             tm: _getTime(),
@@ -429,7 +414,7 @@ export class IndexedDbProvider implements IOfflineProvider {
              * Removes the values
              * @param evts
              */
-            _this.removeEvents = (evts: IStorageTelemetryItem[]): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> => {
+            _this.removeEvents = (evts: IStorageTelemetryItem[]) => {
                 if (_indexedDb == null || !_indexedDb.isAvailable()) {
                     return [];
                 }
@@ -457,12 +442,10 @@ export class IndexedDbProvider implements IOfflineProvider {
                               
                                 return CursorProcessResult.Continue;
                             });
-                    }).then((values: IIndexedDbItem[]) => {
-                        _numStoredItems -= removedEvents.length;
+                    }).then(() => {
                         removeEventsResolve(removedEvents);                         // Resolve the RemoveEvents call promise
                     },
-                    (evt: Event) => {
-                        _numStoredItems -= removedEvents.length;
+                    (reason) => {
                         removeEventsResolve(removedEvents);                         // Resolve the RemoveEvents call promise
                     });
                 });
@@ -471,7 +454,7 @@ export class IndexedDbProvider implements IOfflineProvider {
             /**
              * Removes all entries from the storage provider and returns them as part of the response, if there are any.
              */
-            _this.clear = (disable?: boolean): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> => {
+            _this.clear = (disable?: boolean) => {
                 if (_indexedDb == null || !_indexedDb.isAvailable() || !!disable) {
                     return [];
                 }
@@ -479,20 +462,21 @@ export class IndexedDbProvider implements IOfflineProvider {
                 return createAsyncPromise<IStorageTelemetryItem[]>((clearResolve, clearReject) => {
                     _openDb<IIndexedDbItem[]>((dbCtx) => {
                         //delete all evts
-                        // TODO: add query
                         return _deleteEvents(dbCtx, null, (value) => {
                             return true; // TODO: add conditions
                         });
                     }).then(
                         (values: IIndexedDbItem[]) => {
-                            //clearResolve(_orderEventsByPriority(values));
                             clearResolve(_getEvents(values));
-                        },
-                        clearReject);
+                        }, (reason) => {
+                            clearResolve([]);
+
+                        }
+                    );
                 });
             };
 
-            _this.clean = (disable?: boolean): boolean | IPromise<boolean> => {
+            _this.clean = (disable?: boolean) => {
                 if (_indexedDb == null || !_indexedDb.isAvailable() || !!disable) {
                     return false;
                 }
@@ -502,13 +486,14 @@ export class IndexedDbProvider implements IOfflineProvider {
                         if (dbCtx.isNew) {
                             return [];
                         }
-                        // TODO: add query
                         return _dropMaxTimeEvents(dbCtx, _maxStorageTime);
                     }).then(
                         (value:IIndexedDbItem[]) => {
                             cleanResolve(value && value.length > 0);
-                        },
-                        cleanReject);
+                        },(reason) => {
+                            cleanResolve(false);
+                        }
+                    );
                 });
 
             }
@@ -522,13 +507,6 @@ export class IndexedDbProvider implements IOfflineProvider {
                     _indexedDb.closeDb(_dbName);
                 }
             };
-
-            function _getTimeId(): string {
-                let time = _getTime();
-                // append random digits to avoid same timestamp value
-                let random = Math.random().toString().slice(3,6);
-                return time + "." + random;
-            }
 
             /**
              * Schedules the opening of the database if not already open
@@ -546,15 +524,11 @@ export class IndexedDbProvider implements IOfflineProvider {
                         let providerCtx: IProviderDbContext = {
                             iKey: _iKey,
                             id: _endpoint,
-                            storageId: _storageId,
-                            iKeyPrefix: () => _activeiKeyPrefix,
-                            evtKeyPrefix: () => _activeEventPrefix
+                            storageId: _storageId
                         };
 
                         dbCtx.ctx = providerCtx;
                         doAwait(processFunc(dbCtx), openResolve, openReject);
-                        
-                       
                     });
                 }
                 return _indexedDb.openDb<T>(
@@ -570,25 +544,18 @@ export class IndexedDbProvider implements IOfflineProvider {
                 doRetry: boolean): IPromise<IStorageTelemetryItem> {
 
                 return createAsyncPromise<IStorageTelemetryItem>((addEventResolve, addEventReject) => {
-                    function dropEvents(priority: number, droppedFunc: (droppedCount: number) => void) {
+                    function dropEvents(droppedFunc: (droppedCount: number) => void) {
                         // Try and clear space by dropping the Normal level events, note dropEvents promise never rejects
-                        _dropEventsUpToPersistence(dbCtx, priority).then(
+                        _dropEventsUpToPersistence(dbCtx, _maxCriticalCnt, _eventDropPerTime).then(
                             (droppedCount) => {
-                                // if (droppedCount > 0) {
-                                //     // We dropped some events so lets try adding the item again
-                                //     _numStoredItems -= droppedCount;
-                                // }
-
                                 droppedFunc(droppedCount);
                             }, (reason) => {
+                                // won't throw errors here, unblock following process
                                 droppedFunc(0);
                             });
                     }
 
-                    // function resolveAddEvent(value: Event|string) {
-                    //     addEventResolve(dbItem.evt);
-                    // }
-
+         
                     function _insertNewEvent() {
                         dbCtx.openStore(EventObjectStoreName, (storeCtx) => {
                             let request = storeCtx.store.put(dbItem);
@@ -616,15 +583,10 @@ export class IndexedDbProvider implements IOfflineProvider {
                                         });
                                 }
 
-                                dropEvents(eEventPersistenceValue.Normal, (droppedCount: number) => {
+                                dropEvents((droppedCount: number) => {
                                     if (droppedCount > 0) {
                                         // We dropped some events so lets try adding the item again
                                         _retryAddEvent(droppedCount);
-                                    } else if (dbItem.evt.criticalCnt >= MaxCriticalEvtsDropCnt) {
-                                        // Nothing dropped for Normal priority if the new event is a critical lets try dropping older events
-                                        dropEvents(eEventPersistenceValue.Critical, (dropCount) => {
-                                            _retryAddEvent(dropCount);
-                                        });
                                     } else {
                                         // We have already tried to remove all we can
                                         addEventReject(new Error(ErrorMessageUnableToAddEvent));         // Reject the calling promise
@@ -633,28 +595,7 @@ export class IndexedDbProvider implements IOfflineProvider {
                             };
                         });
                     }
-
-                    // Check if we need to drop any events before inserting, otherwise we might end up deleting the item we just added.
-                    if (_maxStorageItems > 0 && _numStoredItems >= _maxStorageItems) {
-                        dropEvents(eEventPersistenceValue.Normal, (droppedEvents) => {
-                            if (droppedEvents === 0) {
-                                // If this new event is a critical one then try and remove some more events
-                                if (dbItem.evt.criticalCnt >= MaxCriticalEvtsDropCnt) {
-                                    // Nothing dropped for Normal priority if the new event is a critical lets try dropping older events
-                                    dropEvents(eEventPersistenceValue.Critical, (droppedCount) => {
-                                        _insertNewEvent();
-                                    });
-                                } else {
-                                    // Unable to drop any events so don't even try to add the new one
-                                    addEventReject(new Error(ErrorMessageUnableToAddEvent));
-                                }
-                            } else {
-                                _insertNewEvent();
-                            }
-                        });
-                    } else {
-                        _insertNewEvent();
-                    }
+                    _insertNewEvent();
                 });
             }
         });
@@ -681,7 +622,15 @@ export class IndexedDbProvider implements IOfflineProvider {
     /**
      * Get all of the currently cached events from the storage mechanism
      */
-    public getAllEvents(cnt?: number): any[] | IPromise<any[]> {
+    public getNextBatch(): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Get all of the currently cached events from the storage mechanism
+     */
+    public getAllEvents(cnt?: number): IStorageTelemetryItem[] | IPromise< IStorageTelemetryItem[]> | null {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }
@@ -694,7 +643,7 @@ export class IndexedDbProvider implements IOfflineProvider {
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
      */
-    public addEvent(key: string, evt: any, itemCtx: IProcessTelemetryContext): any | IPromise<any> {
+    public addEvent(key: string, evt: any, itemCtx: IProcessTelemetryContext): IStorageTelemetryItem | IPromise<IStorageTelemetryItem> | null {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return;
     }
@@ -703,7 +652,7 @@ export class IndexedDbProvider implements IOfflineProvider {
      * Removes the value associated with the provided key
      * @param evts - The events to be removed
      */
-    public removeEvents(evts: any[]): any[] | IPromise<any[]> {
+    public removeEvents(evts: any[]): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return
     }
@@ -711,7 +660,7 @@ export class IndexedDbProvider implements IOfflineProvider {
     /**
      * Removes all entries from the storage provider, if there are any.
      */
-    public clear(disable?: boolean): any[] | IPromise<any[]> {
+    public clear(disable?: boolean): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return;
     }

@@ -59,11 +59,6 @@ export interface ILocalStorageConfiguration {
     indexedDbName?: string;
 
     /**
-     * [Optional] Identifies the maximum number of events to store in the IndexedDb store for the telemetry id.
-     * If not provided, there is no limit.
-     */
-    maxStorageItems?: number;
-    /**
      * [Optional] Identifies the maximum number of events to store in memory before sending to persistent storage.
      * If not provided, default is 5Mb/ 5000000 bytes
      */
@@ -73,11 +68,11 @@ export interface ILocalStorageConfiguration {
      * If not provided, default is false
      */
     autoClean?: boolean;
-    /**
-     * [Optional] Identifies max size for sendng payload each time.
-     * If not provided, default is 5Mb/ 5000000 bytes
-     */
-    maxSentInBytes?: number;
+    // /**
+    //  * [Optional] Identifies max size for sendng payload each time.
+    //  * If not provided, default is 5Mb/ 5000000 bytes
+    //  */
+    // maxSentInBytes?: number;
 
     inMemoMaxTime?: number;
     inStorageMaxTime?: number;
@@ -90,6 +85,8 @@ export interface ILocalStorageConfiguration {
     // if not defined, will use the value from online sender
     senderCfg?: IOfflineSenderConfig;
     maxSentBatchInterval?: number;
+    EventsToDropPerTime?: number; //default 10
+    maxCriticalEvtsDropCnt?: number; //default 2
 }
 
 export interface IOfflineSenderConfig extends ISenderConfig {
@@ -126,7 +123,7 @@ export interface IStorageTelemetryItem extends IPayloadData {
     /**
      * The storage id of the telemetry item that has been attempted to be sent.
      */
-    id?: string | number | null | undefined;
+    id?: string;
     iKey?: string;
     sync?: boolean;
     criticalCnt?: number;
@@ -187,13 +184,6 @@ export interface IOfflineProvider {
     supportsSyncRequests(): boolean;
 
     /**
-     * Get all of the currently cached events from the storage mechanism
-     * @return Either a Promise (for asynchronous process) or just the array of items
-     */
-    getAllEvents(cnt?: number): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]>;
-
-
-    /**
      * Stores the value into the storage using the specified key.
      * @param key - The key value to use for the value
      * @param evt - The actual event of the request
@@ -202,20 +192,32 @@ export interface IOfflineProvider {
      * to later plugins (vs appending items to the telemetry item)
      * @return Either the added element (for synchronous operation) or a Promise for an asynchronous processing
      */
-    addEvent(key: string, evt: IStorageTelemetryItem, itemCtx: IProcessTelemetryContext): IStorageTelemetryItem | IPromise<IStorageTelemetryItem>;
+    addEvent(key: string, evt: IStorageTelemetryItem, itemCtx: IProcessTelemetryContext): IStorageTelemetryItem | IPromise<IStorageTelemetryItem> | null;
 
+    /**
+     * Get Next batch from the storage
+     */
+     getNextBatch(): IStorageTelemetryItem[] | IPromise< IStorageTelemetryItem[]> | null;
+
+     /**
+     * Get all stored batches from the storage.
+     * @param cnt batch numbers if it is defined, it will returns given number of batches.
+     * if cnt is not defined, it will only return all availble batch
+     */
+     getAllEvents(cnt?: number): IStorageTelemetryItem[] | IPromise< IStorageTelemetryItem[]> | null;
+   
     /**
      * Removes the value associated with the provided key
      * @param evts - The events to be removed
      * @return Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
      */
-    removeEvents(evts: IStorageTelemetryItem[]): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]>;
+    removeEvents(evts: IStorageTelemetryItem[]): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null;
 
     /**
      * Removes all entries from the storage provider, if there are any.
      * @return Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
      */
-    clear(): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]>;
+    clear(): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null;
 
     /**
      * Removes all entries with stroage time longer than inStorageMaxTime from the storage provider

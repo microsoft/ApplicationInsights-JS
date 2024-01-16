@@ -1,17 +1,15 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IConfig, IEnvelope,
-    IOfflineListener, ISample, IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders,
-    SampleRate, Trace, createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage,
-    utlSetStoragePrefix
+    IOfflineListener, ISample, Metric, PageView, PageViewPerformance, RemoteDependencyData, RequestHeaders, Trace, eRequestHeaders,
+    isInternalApplicationInsightsEndpoint, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager, IPayloadData, IProcessTelemetryContext,
+    IAppInsightsCore, IConfigDefaults, IConfiguration, IDiagnosticLogger, IPayloadData, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, IUnloadHookContainer, IXHROverride, OnCompleteCallback,
-    SendPOSTFunction, SendRequestReason, TransportType, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean,
-    cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion,
-    getJSON, getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace,
-    objKeys, onConfigChange, runTargetUnload, useXDomainRequest
+    SendPOSTFunction, SendRequestReason, TransportType, _eInternalMessageId, _throwInternal, arrForEach, cfgDfBoolean, cfgDfValidate,
+    createProcessTelemetryContext, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getJSON, getNavigator, getWindow, isArray,
+    isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, objKeys, onConfigChange, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isFunction, isNumber, isTruthy, objDeepFreeze, objForEachKey, scheduleTimeout } from "@nevware21/ts-utils";
@@ -19,29 +17,13 @@ import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
 } from "./Helpers/EnvelopeCreator";
-import { Sample } from "./Helpers/Sample";
 import { ILocalStorageConfiguration, IOfflineSenderConfig } from "./Interfaces/IOfflineProvider";
 import { IBackendResponse, ISenderConfig, XDomainRequest, XDomainRequest as IXDomainRequest } from "./Interfaces/ISender";
-import { Serializer } from "./Serializer";
-
-// ***********************************************************************
-// TODO: offline sender still uses ISender Config (if not defined in offline, look for isender config)
-// TODO: retry (check online/offline status) -> depends on config, default 2
-// TODO: offline sender: save all headers (include in payloaddata)
-// [optional]: add serializer() inside "channel"
-// [clean] indexedDB, FIFO,for 400 evnts, append to head, maxretrytime
-// DO NOT have flush() NO-OP (batch sender timer)
-// _clearStorage() (need it for testing); (ASK FEEDBACK for teams)
-// TODO: isIdle // (need to be in both channel and offline) (.getPlugin(sender.id))
-// OFFline: ONLY send next one batch each time
-// JAN 2nd (early Jan), teams meeting, should let them know have offlineDetector interface ready, Secturity meetings (delay in GA, but can use it for testing)
-//TODO: testing use case: indexdb timeout after 10mins, (stress tests, indexdb randomly close)
 
 const UNDEFINED_VALUE: undefined = undefined;
 const DefaultOfflineIdentifier = "OflineChannel";
-
 const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
-const FlushCheckTimer = 0.250;          // This needs to be in seconds, so this is 250ms
+
 
 declare var XDomainRequest: {
     prototype: IXDomainRequest;
@@ -145,70 +127,52 @@ export class Sender {
      */
     public readonly _senderConfig: ISenderConfig;
 
-    /**
-     * A method which will cause data to be send to the url
-     */
-    public _sender: SenderFunction;
+    // /**
+    //  * A method which will cause data to be send to the url
+    //  */
+    // public _sender: SenderFunction;
 
-    /**
-     * A send buffer object
-     */
-    //public _buffer: ISendBuffer;
-
-    /**
-     * AppId of this component parsed from some backend response.
-     */
+    // /**
+    //  * AppId of this component parsed from some backend response.
+    //  */
     public _appId: string;
 
-    protected _sample: ISample;
+    // protected _sample: ISample;
 
     constructor() {
 
         // Don't set the defaults here, set them in the _initDefaults() as this is also called during unload
         let _consecutiveErrors: number;         // How many times in a row a retryable error condition has occurred.
         let _retryAt: number;                   // The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
-        let _lastSend: number;                  // The time of the last send operation.
+        //let _lastSend: number;                  // The time of the last send operation.
         let _paused: boolean;                   // Flag indicating that the sending should be paused
         let _timeoutHandle: ITimerHandler;      // Handle to the timer for delayed sending of batches of data.
-        let _serializer: Serializer;
+        //let _serializer: Serializer;
         let _stamp_specific_redirects: number;
         let _headers: { [name: string]: string };
         let _syncFetchPayload = 0;              // Keep track of the outstanding sync fetch payload total (as sync fetch has limits)
         let _syncUnloadSender: SendPOSTFunction;  // The identified sender to use for the synchronous unload stage
         let _offlineListener: IOfflineListener;
-        let _evtNamespace: string | string[];
         let _endpointUrl: string;
         let _orgEndpointUrl: string;
-        let _maxBatchSizeInBytes: number;
         let _beaconSupported: boolean;
         let _beaconOnUnloadSupported: boolean;
         let _beaconNormalSupported: boolean;
         let _customHeaders: Array<{header: string, value: string}>;
-        let _disableTelemetry: boolean;
         let _instrumentationKey: string;
-        let _convertUndefined: any;
         let _isRetryDisabled: boolean;
         let _maxBatchInterval: number;
-        let _sessionStorageUsed: boolean;
-        let _bufferOverrideUsed: IStorageBuffer | false;
-        let _namePrefix: string;
         let _enableSendPromise: boolean;
         let _alwaysUseCustomSend: boolean;
         let _disableXhr: boolean;
         let _fetchKeepAlive: boolean;
-        // let _xhrSend: SenderFunction;
         let _fallbackSend:  SendPOSTFunction;
-        let _disableBeaconSplit: boolean;
         let _isInitialized: boolean;
         let _diagLog: IDiagnosticLogger;
         let _core: IAppInsightsCore;
-        let _cxt: IProcessTelemetryContext;
         let _httpInterface: IXHROverride;
         let _syncHttpInterface: IXHROverride;
-        let _retryCodes: number[];
         let _onlineChannelId: string;
-        let _flushCallbackQueue: Array<() => void> = [];
-        let _flushCallbackTimer: ITimerHandler;
        
 
         dynamicProto(Sender, this, (_self, _base) => {
@@ -224,9 +188,6 @@ export class Sender {
                 if (_paused) {
                     _paused = false;
                     _retryAt = null;
-
-                    // flush if we have exceeded the max-size already
-                    //_checkMaxSize();
                     _setupTimer();
                 }
             };
@@ -234,7 +195,7 @@ export class Sender {
             _self.getOnunloadInst = (): IXHROverride => {
                 return {
                     sendPOST: _doUnloadSend
-                } as IXHROverride
+                } as IXHROverride;
             }
 
             _self.getXhrInst = (sync?: boolean): IXHROverride => {
@@ -247,6 +208,10 @@ export class Sender {
             _self.addHeader = (name: string, value: string) => {
                 _headers[name] = value;
             };
+
+            _self.getHeaders = () => {
+                return _headers;
+            };
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, cxt: IProcessTelemetryContext, diagLog: IDiagnosticLogger,  unloadHookContainer?: IUnloadHookContainer): void => {
                 
@@ -255,16 +220,9 @@ export class Sender {
                     _throwInternal(_diagLog, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender is already initialized");
                 }
                 _core = core;
-                _cxt = cxt;
-                
-                _serializer = new Serializer(core.logger);
                 _consecutiveErrors = 0;
                 _retryAt = null;
-                _lastSend = 0;
-                _self._sender = null;
                 _stamp_specific_redirects = 0;
-                _evtNamespace = mergeEvtNamespace(createUniqueNamespace("Sender"), core.evtNamespace && core.evtNamespace());
-                _offlineListener = createOfflineListener(_evtNamespace);
 
                 // This function will be re-called whenever any referenced configuration is changed
                 let hook = onConfigChange(config, (details) => {
@@ -274,8 +232,7 @@ export class Sender {
                     }
                     let ctx = createProcessTelemetryContext(null, config, core);
                     let onlineConfig = ctx.getExtCfg(BreezeChannelIdentifier, defaultAppInsightsChannelConfig);
-                    let offlineSenderCfg = (ctx.getExtCfg(DefaultOfflineIdentifier) as ILocalStorageConfiguration).senderCfg;
-                    _retryCodes = offlineSenderCfg.retryCodes;
+                    let offlineSenderCfg = (ctx.getExtCfg(DefaultOfflineIdentifier) as ILocalStorageConfiguration).senderCfg || {} as IOfflineSenderConfig;
                     _onlineChannelId = offlineSenderCfg.primaryOnlineChannelId || BreezeChannelIdentifier;
                     let senderConfig = _getSenderConfig(onlineConfig, offlineSenderCfg);
 
@@ -295,59 +252,15 @@ export class Sender {
                         });
                     }
 
-                    _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
+                    //_maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
                     _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
                     _beaconOnUnloadSupported = senderConfig.onunloadDisableBeacon === false  && isBeaconsSupported();
                     _beaconNormalSupported = senderConfig.isBeaconApiDisabled === false && isBeaconsSupported();
 
                     _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     _disableXhr = !!senderConfig.disableXhr;
+                
                     
-                    let bufferOverride = senderConfig.bufferOverride;
-                    let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer &&
-                        (!!bufferOverride || utlCanUseSessionStorage());
-                    let namePrefix = senderConfig.namePrefix;
-                 
-                    //Note: emitLineDelimitedJson and eventsLimitInMem is directly accessed via config in senderBuffer
-                    //Therefore, if canUseSessionStorage is not changed, we do not need to re initialize a new one
-                    let shouldUpdate = (canUseSessionStorage !== _sessionStorageUsed)
-                                    || (canUseSessionStorage && (_namePrefix !== namePrefix))  // prefixName is only used in session storage
-                                    || (canUseSessionStorage && (_bufferOverrideUsed !== bufferOverride));
-
-                    // if (_self._buffer) {
-                    //     // case1 (Pre and Now enableSessionStorageBuffer settings are same)
-                    //     // if namePrefix changes, transfer current buffer to new buffer
-                    //     // else no action needed
-
-                    //     //case2 (Pre and Now enableSessionStorageBuffer settings are changed)
-                    //     // transfer current buffer to new buffer
-                       
-                    //     if (shouldUpdate) {
-                    //         try {
-                                
-                    //             _self._buffer = _self._buffer.createNew(_diagLog, senderConfig, canUseSessionStorage);
-                       
-                    //         } catch (e) {
-                    //             _throwInternal(_diagLog, eLoggingSeverity.CRITICAL,
-                    //                 _eInternalMessageId.FailedAddingTelemetryToBuffer,
-                    //                 "failed to transfer telemetry to different buffer storage, telemetry will be lost: " + getExceptionName(e),
-                    //                 { exception: dumpObj(e) });
-                    //         }
-                    //     }
-                    //     _checkMaxSize();
-                    // } else {
-                    //     _self._buffer = canUseSessionStorage
-                    //         ? new SessionStorageSendBuffer(_diagLog, senderConfig) : new ArraySendBuffer(diagLog, senderConfig);
-                    // }
-
-                    _namePrefix = namePrefix;
-                    _sessionStorageUsed = canUseSessionStorage;
-                    _bufferOverrideUsed = bufferOverride;
-                    _fetchKeepAlive = !senderConfig.onunloadDisableFetch && isFetchSupported(true);
-                    _disableBeaconSplit = !!senderConfig.disableSendBeaconSplit;
-
-                    _self._sample = new Sample(senderConfig.samplingPercentage, _diagLog);
-
                     _instrumentationKey = senderConfig.instrumentationKey;
                     if(!_validateInstrumentationKey(_instrumentationKey, config)) {
                         _throwInternal(_diagLog,
@@ -376,18 +289,11 @@ export class Sender {
                     httpInterface = _getSenderInterface(theTransports, false);
                   
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
-                    // _xhrSend = (payload: string[], isAsync: boolean) => {
-                    //     return _doSend(xhrInterface, payload, isAsync);
-                    // };
                     _fallbackSend =  _xhrSender;
 
                   
     
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
-
-                    // _self._sender = (payload: string[], isAsync: boolean) => {
-                    //     return _doSend(httpInterface, payload, isAsync);
-                    // };
 
                     if (_fetchKeepAlive) {
                         // Try and use the fetch with keepalive
@@ -406,9 +312,6 @@ export class Sender {
                     syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
                    
                     if ((_alwaysUseCustomSend || senderConfig.unloadTransports || !_syncUnloadSender) && syncInterface) {
-                        // _syncUnloadSender = (payload: string[], isAsync: boolean) => {
-                        //     return _doSend(syncInterface, payload, isAsync);
-                        // };
                         _syncUnloadSender = syncInterface.sendPOST;
                     }
 
@@ -419,8 +322,7 @@ export class Sender {
                     _httpInterface = httpInterface;
                     _syncHttpInterface = syncInterface;
 
-                    _disableTelemetry = senderConfig.disableTelemetry;
-                    _convertUndefined = senderConfig.convertUndefined || UNDEFINED_VALUE;
+                    //_convertUndefined = senderConfig.convertUndefined || UNDEFINED_VALUE;
                     _isRetryDisabled = senderConfig.isRetryDisabled;
                     _maxBatchInterval = senderConfig.maxBatchInterval;
                 });
@@ -447,7 +349,7 @@ export class Sender {
         
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 //_self.onunloadFlush();
-                runTargetUnload(_offlineListener, false);
+                //runTargetUnload(_offlineListener, false);
                 _initDefaults();
             };
 
@@ -574,17 +476,6 @@ export class Sender {
                 return _doFetchSender(payload, oncomplete, false);
             }
 
-            // function _checkMaxSize(incomingPayload?: string): boolean {
-            //     let incomingSize = incomingPayload? incomingPayload.length : 0;
-            //     if ((_self._buffer.size() + incomingSize) > _maxBatchSizeInBytes) {
-            //         if (!_offlineListener || _offlineListener.isOnline()) { // only trigger send when currently online
-            //             _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
-            //         }
-
-            //         return true;
-            //     }
-            //     return false;
-            // }
 
             function _checkResponsStatus(status: number, responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any, oncomplete: OnCompleteCallback) {
                 let response: IBackendResponse = null;
@@ -786,7 +677,7 @@ export class Sender {
                 });
         
                 xhr.onreadystatechange = () => {
-                    let oriPayload = internalPayload.oriPayload;
+                    let oriPayload = internalPayload.oriPayload || [];
                     _xhrReadyStateChange(xhr, oriPayload.length, oncomplete);
                     if (xhr.readyState === 4) {
                         resolveFunc && resolveFunc(true);
@@ -975,28 +866,7 @@ export class Sender {
         
                 return null;
             }
-        
-            /**
-             * Resend payload. Adds payload back to the send buffer and setup a send timer (with exponential backoff).
-             * @param payload
-             */
-            // function _resendPayload(payload: string, linearFactor: number = 1) {
-            //     if (!payload || payload.length === 0) {
-            //         return;
-            //     }
-        
-            //     const buffer = _self._buffer;
-            //     buffer.clearSent(payload);
-            //     _consecutiveErrors++;
-        
-            //     for (const item of payload) {
-            //         buffer.enqueue(item);
-            //     }
-        
-            //     // setup timer
-            //     _setRetryTime(linearFactor);
-            //     _setupTimer();
-            // }
+
         
             /**
              * Calculates the time to wait before retrying in case of an error based on
@@ -1024,20 +894,6 @@ export class Sender {
                 _retryAt = null;
             }
         
-            /**
-             * Checks if the SDK should resend the payload after receiving this status code from the backend.
-             * @param statusCode
-             */
-            function _isRetriable(statusCode: number): boolean {
-                return statusCode === 401 // Unauthorized
-                    || statusCode === 403 // Forbidden
-                    || statusCode === 408 // Timeout
-                    || statusCode === 429 // Too many requests.
-                    || statusCode === 500 // Internal server error.
-                    || statusCode === 502 // Bad Gateway.
-                    || statusCode === 503 // Service unavailable.
-                    || statusCode === 504; // Gateway timeout.
-            }
         
             function _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
                 if (xhr) {
@@ -1059,7 +915,6 @@ export class Sender {
              */
             function _xdrSender(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
                 // It doesn't support custom headers, so no action is taken with current requestHeaders
-         
                 let internalPayload = payload as IInternalPayloadData;
                 let _window = getWindow();
                 const xdr = new XDomainRequest();
@@ -1184,45 +1039,28 @@ export class Sender {
 
         
             function _initDefaults() {
-                _self._sender = null;
-                //_self._buffer = null;
                 _self._appId = null;
-                _self._sample = null;
                 _headers = {};
                 _offlineListener = null;
                 _consecutiveErrors = 0;
                 _retryAt = null;
-                _lastSend = null;
                 _paused = false;
                 _timeoutHandle = null;
-                _serializer = null;
                 _stamp_specific_redirects = 0;
                 _syncFetchPayload = 0;
                 _syncUnloadSender = null;
-                _evtNamespace = null;
                 _endpointUrl = null;
                 _orgEndpointUrl = null;
-                _maxBatchSizeInBytes = 0;
                 _beaconSupported = false;
                 _customHeaders = null;
-                _disableTelemetry = false;
                 _instrumentationKey = null;
-                _convertUndefined = UNDEFINED_VALUE;
                 _isRetryDisabled = false;
-                _sessionStorageUsed = null;
-                _namePrefix = UNDEFINED_VALUE;
                 _disableXhr = false;
                 _fetchKeepAlive = false;
-                _disableBeaconSplit = false;
                 _isInitialized = false;
-                // _xhrSend = null;
                 _fallbackSend = null;
                 _core = null;
-                _cxt = null;
-                _retryCodes = null;
                 _onlineChannelId = null;
-                _flushCallbackQueue = null;
-                _flushCallbackTimer = null;
             }
         });
     }
@@ -1292,12 +1130,23 @@ export class Sender {
     }
 
     /**
-     * Add header to request
+     * Add request header
      * @param name - Header name.
      * @param value - Header value.
      */
-    public addHeader(name: string, value: string) {
+    public addHeader = (name: string, value: string) => {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+      
+    };
+
+    /**
+     * Get all request headers
+     * @param name - Header name.
+     * @param value - Header value.
+     */
+    public getHeaders() {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     public _doTeardown (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) {

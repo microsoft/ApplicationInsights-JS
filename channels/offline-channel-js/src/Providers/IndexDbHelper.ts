@@ -10,6 +10,7 @@ import {
     IProcessCursorState
 } from "../Interfaces/IOfflineIndexDb";
 
+//TODO: move all const to one file
 const IndexedDBNames: string[] = ["indexedDB"/*, 'mozIndexedDB', 'webkitIndexedDB', 'msIndexedDb'*/];
 const DbReadWrite = "readwrite";
 const Result = "result";
@@ -17,9 +18,9 @@ const ErrorMessageUnableToOpenDb = "DBError: Unable to open database";
 const ErrorMessageDbUpgradeRequired = "DBError: Database upgrade required";
 const ErrorMessageDbNotOpen = "Database is not open";
 const ErrorMessageDbDoesNotExist = "DBError: Database does not exist";
-const ErrorMessageFailedToOpenCursor = "DBError: Failed to Open Cursor";
 const ErrorMessageFailedToDeleteDatabase = "DBError: Failed to delete the database";
 const ErrorMessageDbNotSupported = "DBError: Feature not supported";
+const ErrorMessageFailedToOpenCursor = "DBError: Failed to Open Cursor";
 
 //window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
 //window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
@@ -95,9 +96,6 @@ function _scheduleEvent<T>(dbName: string, actionName: string, startEvent: Start
     return dbCtx.sch.queue(startEvent, actionName, evtTimeOut);
 }
 
-
-// different sotres for different sesssions
-// case: ipayload of binary data instead of string[]
 
 // TODO: move to common to be able to used by lds
 export function getDbFactory(): IDBFactory {
@@ -235,24 +233,19 @@ export class IndexedDbHelper<C> {
                             opDbCtx.add(db);
 
                             db.onabort = (evt: Event) => {
-                                //_warnLog(diagLog, dbName, "onabort -- closing the Db");
                                 _debugLog(dbName, "onabort -- closing the Db");
                                 opDbCtx.remove(db);
                             };
                             db.onerror = (evt: Event) => {
-                                //_warnLog(diagLog, dbName, "onerror -- closing the Db");
                                 _debugLog(dbName, "onerror -- closing the Db");
                                 opDbCtx.remove(db);
                             };
-                            // Need to "cast" to any as the tsc compiler is complaining
+                            
                             (db as any).onclose = (evt: Event) => {
-                                //_warnLog(diagLog, dbName, "onclose -- closing the Db");
                                 _debugLog(dbName, "onclose -- closing the Db");
                                 opDbCtx.remove(db);
                             };
                             db.onversionchange = (evt: Event) => {
-
-                                //_warnLog(diagLog, dbName, "onversionchange -- force closing the Db");
                                 _debugLog(dbName, "onversionchange -- force closing the Db");
                                 db.close();
                                 opDbCtx.remove(db);
@@ -291,12 +284,10 @@ export class IndexedDbHelper<C> {
                             // We can't open the database, possible issues are
                             // - We are attempting to open the db as a different version but it's already open
                             dbOpenRequest.onblocked = (evt: Event) => {
-                                //_warnLog(diagLog, dbName, "Db Open Blocked event [" + evtName + "] - " + (dbOpenRequest.error || ""));
                                 _debugLog(dbName, "Db Open Blocked event [" + evtName + "] - " + (dbOpenRequest.error || ""))
                                 openReject(new Error(ErrorMessageUnableToOpenDb));
                             };
                             dbOpenRequest.onerror = (evt: Event) => {
-                                //_warnLog(diagLog, dbName, "Db Open Error event [" + evtName + "] - " + (dbOpenRequest.error || ""));
                                 _debugLog( dbName,"Db Open Error event [" + evtName + "] - " + (dbOpenRequest.error || ""))
                                 openReject(new Error(ErrorMessageUnableToOpenDb));
                             };
@@ -363,7 +354,6 @@ export class IndexedDbHelper<C> {
                     let dbHdls = dbCtx.dbHdl;
                     let len = dbHdls.length;
                     if (len > 0) {
-                        //_warnLog(diagLog, dbName, "Db is open [" + len + "] force closing");
                         _debugLog(dbName, "Db is open [" + len + "] force closing");
                         for (let lp = 0; lp < len; lp++) {
                             // Just call close the db.onclose() event should take care of decrementing and removing the references
@@ -383,15 +373,12 @@ export class IndexedDbHelper<C> {
 
                                 let dbRequest = _dbFactory.deleteDatabase(dbName);
                                 dbRequest.onerror = (evt: Event) => {
-                                    //_warnLog(diagLog, dbName, "[" + evtName + "] error!!");
                                     deleteReject(new Error(ErrorMessageFailedToDeleteDatabase));
                                 };
                                 dbRequest.onblocked = (evt: Event) => {
-                                    //_warnLog(diagLog, dbName, "[" + evtName + "] blocked!!");
                                     deleteReject(new Error(ErrorMessageFailedToDeleteDatabase));
                                 };
                                 dbRequest.onupgradeneeded = (evt: Event) => {
-                                    //_warnLog(diagLog, dbName, "[" + evtName + "] upgrade needed!!");
                                     deleteReject(new Error(ErrorMessageFailedToDeleteDatabase));
                                 };
                                 dbRequest.onsuccess = (evt: Event) => {
@@ -400,7 +387,6 @@ export class IndexedDbHelper<C> {
                                 };
                                 _debugLog(dbName, "[" + evtName + "] started");
                             } catch (e) {
-                                //_warnLog(diagLog, dbName, "[" + evtName + "] threw - " + e);
                                 deleteReject(new Error(ErrorMessageFailedToDeleteDatabase + " - " + e));
                             }
                         }, 0);
@@ -441,10 +427,10 @@ export class IndexedDbHelper<C> {
                 if (tx) {
                     // The transaction was aborted and therefore the adding of the event failed
                     tx.onabort = () => {
-                        //_warnLog(diagLog, openDbCtx.dbName, "txn.onabort");
+                        // add log
                     };
                     tx.onerror = () => {
-                        //_warnLog(diagLog, openDbCtx.dbName, "txn.onerror");
+                        // add log
                     };
 
                     // Note we don't listen for the transaction onComplete event as we don't have any value
@@ -512,7 +498,7 @@ export class IndexedDbHelper<C> {
                 // non-critical failures don't cause event execution out of order)
                 if (!openDbCtx || !openDbCtx.db) {
                     // Database is not open so pass the only option is to resolve the event so it's passed onto the next on the event to the next chain
-                    //return createAsyncRejectedPromise<T[]>(new Error(ErrorMessageDbNotOpen));
+                    return createAsyncRejectedPromise<T[]>(new Error(ErrorMessageDbNotOpen));
                 }
 
                 let simpleQuery: IIndexedDbSimpleQuery = null;
@@ -537,7 +523,7 @@ export class IndexedDbHelper<C> {
                     } else {
                         cursorRequest = storeCtx.store.openCursor();
                     }
-                    //cursorRequest.onerror = _eventReject(storeCtx.db.dbName, ErrorMessageFailedToOpenCursor, openCursorReject, "openCursor");
+                    cursorRequest.onerror = _eventReject(storeCtx.db.dbName, ErrorMessageFailedToOpenCursor, openCursorReject, "openCursor");
                     cursorRequest.onsuccess = (evt: Event) => {
                         // Cursor was open/next iteration
                         let cursor: IDBCursorWithValue = evt.target[Result];

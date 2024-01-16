@@ -54,19 +54,19 @@ export interface IIndexedDbContext {
 
 }
 
-export interface IIndexedDbSchema {
-    name: string; // database name
-    ver?: number; // database scheme version
-    dbKey?: {keyPath?: any, autoIncrement?: boolean };
-    stName?: string; // database store name
-    indexes?: {indexName: string, keyPath?: any, options?: any}[]; // this is for future use to create indexes
-}
+// export interface IIndexedDbSchema {
+//     name: string; // database name
+//     ver?: number; // database scheme version
+//     dbKey?: {keyPath?: any, autoIncrement?: boolean };
+//     stName?: string; // database store name
+//     indexes?: {indexName: string, keyPath?: any, options?: any}[]; // this is for future use to create indexes
+// }
 
-export interface IOpenIndexedDbCxt extends IIndexedDbSchema {
-    db: IDBDatabase; // database
-    txn: IDBTransaction; // Open DB Transaction
-    store?: IDBObjectStore
-}
+// export interface IOpenIndexedDbCxt extends IIndexedDbSchema {
+//     db: IDBDatabase; // database
+//     txn: IDBTransaction; // Open DB Transaction
+//     store?: IDBObjectStore
+// }
 
 /**
  * Result value returned by the processFunc() delegate of the _openCursor() iterating function so that
@@ -90,12 +90,12 @@ export const enum CursorProcessResult {
 }
 
 /**
- * Internal value used by the SimpleQuery to identify the type of search being performed
- */
-const enum ValueQueryType {
-    StartsWith = 0,
-    Contains = 1
-}
+//  * Internal value used by the SimpleQuery to identify the type of search being performed
+//  */
+// const enum ValueQueryType {
+//     StartsWith = 0,
+//     Contains = 1
+// }
 
 /**
  * The open database context created by the openDb() method and passed to the processFunc() delegate to perform operations

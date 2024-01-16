@@ -6,18 +6,9 @@ import {
 import { IPromise } from "@nevware21/ts-async";
 
 // NOTE: Most interfaces here should be moved to core eventually.
-
-// Internal interfaces, should not be exported
-export interface IInternalDbSchema {
-    name: string;
-    ver: number;
-    st: string; // store name
-    key?: { keyPath: string | string[], options?: IDBIndexParameters }; //store key
-    index?: { name: string, keyPath: string | string[], options?: IDBIndexParameters}[]; // store indexes
-}
-
-
 // TODO: move interfaces to core
+//TODO: add doc
+
 export interface IOfflineDetectorCfg {
     autoStop: boolean; //default trues
     pollingInterval: number; //default 5min
@@ -33,7 +24,7 @@ export interface IOfflineDetector {
 
 export declare type createDefaultOfflineDetector = (cfg?: IOfflineDetectorCfg) => IOfflineDetector;
     
-export declare type createNoopOfflineDetectorL = (cfg?: IOfflineDetectorCfg) => IOfflineDetector;
+export declare type createNoopOfflineDetector = (cfg?: IOfflineDetectorCfg) => IOfflineDetector;
     
 
 export const enum eStorageType {
@@ -89,11 +80,11 @@ export declare type OfflineBatchCallback = (response: IOfflineBatchResponse) => 
 
 
 export interface IOfflineBatchHandler {
-    storeBatch(batch: IPayloadData, cb?: OfflineBatchStoreCallback, sync?: boolean): undefined | boolean | IPromise<IOfflineBatchStoreResponse>;
-    sendNextBatch(cb?: OfflineBatchCallback, sync?: boolean, xhrOverride?: IXHROverride, cnt?: number): undefined | boolean | IPromise<IOfflineBatchResponse>;
+    storeBatch(batch: IPayloadData, cb?: OfflineBatchStoreCallback, sync?: boolean): undefined | IOfflineBatchStoreResponse | IPromise<IOfflineBatchStoreResponse>;
+    sendNextBatch(cb?: OfflineBatchCallback, sync?: boolean, xhrOverride?: IXHROverride, cnt?: number): undefined | IOfflineBatchResponse | IPromise<IOfflineBatchResponse>;
     hasStoredBatch(callback?: (hasBatches: boolean) => void): undefined | boolean | IPromise<boolean>;
-    cleanStorage(cb?:(res: IOfflineBatchCleanResponse) => void ): undefined | boolean | IPromise<IOfflineBatchCleanResponse>;
+    cleanStorage(cb?:(res: IOfflineBatchCleanResponse) => void ): undefined | IOfflineBatchCleanResponse | IPromise<IOfflineBatchCleanResponse>;
     teardown(unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState): void
 }
 
-export declare type createOfflineBatchHandler = (storageType: eStorageType, cfg?: IOfflineBatchHandlerCfg) => IOfflineBatchHandler;
+//export declare type createOfflineBatchHandler = (storageType: eStorageType, cfg?: IOfflineBatchHandlerCfg) => IOfflineBatchHandler;

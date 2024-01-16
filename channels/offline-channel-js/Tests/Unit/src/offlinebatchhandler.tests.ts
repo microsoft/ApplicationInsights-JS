@@ -407,19 +407,19 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     result.push(res);
                 }
                 let evt = TestHelper.mockEvent(endpoint, 1, false);
-                doAwait(batchHandler.storeBatch(evt, cb) as any,(res) => {
+                doAwait(batchHandler.storeBatch(evt, cb),(res) => {
                     this.ctx.storeBatch = 1;
                     this.ctx.result = result;
                 });
 
                 let evt1 = TestHelper.mockEvent(endpoint, 2, false);
-                doAwait(batchHandler.storeBatch(evt1, cb) as any,(res) => {
+                doAwait(batchHandler.storeBatch(evt1, cb),(res) => {
                     this.ctx.storeBatch = 2;
                     this.ctx.result = result;
                 });
 
                 let evt2 = TestHelper.mockEvent(endpoint, 3, false);
-                doAwait(batchHandler.storeBatch(evt2, cb) as any,(res) => {
+                doAwait(batchHandler.storeBatch(evt2, cb),(res) => {
                     this.ctx.storeBatch = 3;
                     this.ctx.result = result;
                  
@@ -436,7 +436,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     this.ctx.cleanBatch = true;
                     this.ctx.cleanBatchRes = res;
                 }
-                doAwait(batchHandler.cleanStorage(cb2) as any,(res) => {
+                doAwait(batchHandler.cleanStorage(cb2),(res) => {
                     
                 });
 
@@ -527,13 +527,13 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let evt = TestHelper.mockEvent(endpoint, 1, false);
                 let evt1 = TestHelper.mockEvent(endpoint, 2, false);
                 let evt2 = TestHelper.mockEvent(endpoint, 3, false);
-                doAwait(batchHandler.storeBatch(evt) as any,(res) => {
+                doAwait(batchHandler.storeBatch(evt),(res) => {
                     this.ctx.storeBatch = 1;
                 });
-                doAwait(batchHandler.storeBatch(evt1) as any,(res) => {
+                doAwait(batchHandler.storeBatch(evt1),(res) => {
                     this.ctx.storeBatch = 2;
                 });
-                doAwait(batchHandler.storeBatch(evt2) as any,(res) => {
+                doAwait(batchHandler.storeBatch(evt2),(res) => {
                     this.ctx.storeBatch = 3;
                 });
                 
@@ -583,7 +583,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
                 let cb4 = (res) => {
                     this.ctx.hasBatch1Called = true;
-                    this.ctx.hasBatch1 = res;
+                    this.ctx.hasBatch1 = res && res.length >= 1;
                 }
                 doAwait(batchHandler.hasStoredBatch(cb4),(res) => {
                     

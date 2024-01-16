@@ -4,7 +4,6 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IInMemoryBatch, IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
 
-
 export class InMemoryBatch implements IInMemoryBatch {
 
 
@@ -25,6 +24,7 @@ export class InMemoryBatch implements IInMemoryBatch {
 
             
             _self.addEvent = (payload: IPostTransmissionTelemetryItem | ITelemetryItem) => {
+                //TODO: handle space free up, handle drop here
                 if (!isNullOrUndefined(evtsLimitInMem) && _self.count() >= evtsLimitInMem) {
                     // sent internal log only once
                     if (!_bufferFullMessageSent) {
@@ -50,8 +50,8 @@ export class InMemoryBatch implements IInMemoryBatch {
                 _bufferFullMessageSent = false;
             };
 
-            _self.getItems = (): IPostTransmissionTelemetryItem[] => {
-                return _buffer.slice(0)
+            _self.getItems = () => {
+                return _buffer.slice(0);
             };
 
             _self.split = (fromEvt: number, numEvts?: number) => {
@@ -69,7 +69,7 @@ export class InMemoryBatch implements IInMemoryBatch {
                 return new InMemoryBatch(logger, endpoint, theEvts, evtsLimitInMem);
             };
 
-            _self.createNew = (newEndpoint: string, evts?: IPostTransmissionTelemetryItem[], evtsLimitInMem?: number) => {
+            _self.createNew = (newEndpoint: string, evts?: IPostTransmissionTelemetryItem[] | ITelemetryItem[], evtsLimitInMem?: number) => {
                 return new InMemoryBatch(logger, newEndpoint, evts,evtsLimitInMem);
             }
 
@@ -115,7 +115,7 @@ export class InMemoryBatch implements IInMemoryBatch {
      * @param evts new events to be added
      * @param addCurEvts if it is set to true, current itemss will be transferred to the new batch
      */
-    public createNew(endpoint: string, evts?: IPostTransmissionTelemetryItem[] | ITelemetryItem, evtsLimitInMem?: number) {
+    public createNew(endpoint: string, evts?: IPostTransmissionTelemetryItem[] | ITelemetryItem[], evtsLimitInMem?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

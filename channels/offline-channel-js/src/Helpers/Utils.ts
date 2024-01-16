@@ -1,5 +1,6 @@
 
-import { objKeys } from "@nevware21/ts-utils";
+import { generateW3CId } from "@microsoft/applicationinsights-core-js";
+import { objKeys, strSubstr } from "@nevware21/ts-utils";
 
 // Endpoint schema
 // <prefix>.<suffix>
@@ -126,6 +127,14 @@ export function isMapEmpty<T>(map: { [key: string]: T }) {
     });
 
     return result;
+}
+
+export function getTimeId(): string {
+    let time = (new Date()).getTime();
+    // append random digits to avoid same timestamp value
+    const random = strSubstr(generateW3CId(), 0, 8);
+    // function to create spanid();
+    return time + "." + random;
 }
 
 

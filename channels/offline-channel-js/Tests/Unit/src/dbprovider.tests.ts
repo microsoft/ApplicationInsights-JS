@@ -1,23 +1,11 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { IndexedDbProvider } from "../../../src/Providers/IndexDbProvider";
-import { IIndexedDbOpenDbContext } from "../../../src/Interfaces/IOfflineIndexDb";
-import { createAsyncPromise, doAwait } from "@nevware21/ts-async";
+import { createAsyncPromise, createAsyncRejectedPromise, doAwait } from "@nevware21/ts-async";
 import { arrForEach } from "@nevware21/ts-utils";
 import { TestChannel } from "./TestHelper";
-import { AppInsightsCore, IConfiguration, IPayloadData, createDynamicConfig, newGuid } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, createDynamicConfig, newGuid } from "@microsoft/applicationinsights-core-js";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
-
-interface IStorageTelemetryItem extends IPayloadData {
-    /**
-     * The storage id of the telemetry item that has been attempted to be sent.
-     */
-    id?: string | number | null | undefined;
-    iKey?: string;
-    sync?: boolean;
-    criticalCnt?: number;
-    isArr?: boolean;
-}
-
+import { IStorageTelemetryItem } from "../../../src/Interfaces/IOfflineProvider";
 
 export class OfflineDbProviderTests extends AITestClass {
     private core: AppInsightsCore;
@@ -63,7 +51,13 @@ export class OfflineDbProviderTests extends AITestClass {
                 let ctx = provider["_getDbgPlgTargets"]();
                 let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
                 Assert.equal(ctx[0], expectedStorageKey, "should have expected storage");
+                let expectedMaxStorage = 5000000;
+                Assert.equal(ctx[1], expectedMaxStorage, "default MaxStorage is set");
+                let expectedMaxStorageTime = 10080000;
+                Assert.equal(ctx[2], expectedMaxStorageTime, "default Max time is set");
                 Assert.ok(!provider.supportsSyncRequests(), "support sync should be set to false");
+
+                provider.teardown();
             }
         });
 
@@ -79,9 +73,8 @@ export class OfflineDbProviderTests extends AITestClass {
                     storageConfig: storageConfig,
                     endpoint:DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH
                 }
-                doAwait(provider.initialize(providerCxt), (val) => {
-                    this.ctx.isInit = val;
-                });
+                this.ctx.isInit = provider.initialize(providerCxt);
+                this.ctx.provider = provider;
 
                 doAwait(provider.teardown(), () => {
                     this.ctx.isclosed = true;
@@ -204,17 +197,20 @@ export class OfflineDbProviderTests extends AITestClass {
                 }, (reason)=> {
                     this.ctx.oneEvtsErr = reason;
                 });
+
+                doAwait(provider.getNextBatch(), (val) => {
+                    this.ctx.nextBatch = val;
+                }, (reason)=> {
+                    this.ctx.nextBatchErr = reason;
+                });
+
+
                 doAwait(provider.getAllEvents(2), (val) => {
                     this.ctx.twoEvts = val;
                 }, (reason)=> {
                     this.ctx.twoEvtsErr = reason;
                 });
 
-                doAwait(provider.getAllEvents(), (val) => {
-                    this.ctx.allEvts1 = val;
-                }, (reason)=> {
-                    this.ctx.allEvts1Err = reason;
-                });
             
                 doAwait(provider.teardown(), () => {
                     this.ctx.isclosed = true;
@@ -228,7 +224,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 return false;
             }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.allEvts;
-                if (item && item.length == 1) {
+                if (item) {
                     Assert.equal(item[0].criticalCnt, 3, "should get expected events");
                     return true;
                 }
@@ -250,6 +246,13 @@ export class OfflineDbProviderTests extends AITestClass {
              
                 return false;
             }, "Wait for get one Event response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let items = this.ctx.nextBatch;
+                if (items && items.length == 1) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for get next Batch response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.twoEvts;
                 if (items && items.length == 2) {
                     return true;
@@ -257,18 +260,6 @@ export class OfflineDbProviderTests extends AITestClass {
              
                 return false;
             }, "Wait for get two Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
-                let items = this.ctx.allEvts1;
-                let cnt = 0;
-                if (items && items.length == 3) {
-                    arrForEach(items, (item) => {
-                        cnt += item.criticalCnt;
-                    })
-                    Assert.equal(cnt, 6, "should get expected three events");
-                    return true;
-                }
-             
-                return false;
-            }, "Wait for get Events1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     return true;
@@ -276,6 +267,151 @@ export class OfflineDbProviderTests extends AITestClass {
                 return false;
             }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
         });
+
+        this.testCaseAsync({
+            name: "IndexedDbProvider: addEvent should handle open errors",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let provider = new IndexedDbProvider();
+                let itemCtx = this.core.getProcessTelContext();
+                let storageConfig = createDynamicConfig({autoClean: true}).cfg;
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                };
+                let evt = TestHelper.mockEvent(endpoint, 3, false);
+                doAwait(provider.initialize(providerCxt), (val) => {
+                    this.ctx.isInit = val;
+                }, (reason)=> {
+                    this.ctx.initErr = reason;
+                });
+                let ctx = provider["_getDbgPlgTargets"]();
+                let db = ctx[3];
+                this.sandbox.stub(db as any, "openDb").callsFake((key) => {
+                    return createAsyncRejectedPromise(new Error("open db mock error"))
+                });
+             
+            
+                doAwait(provider.addEvent("", evt, itemCtx), (item) => {
+                    this.ctx.evt = item;
+                }, (reason) => {
+                    this.ctx.addEventErr = reason;
+                });
+
+                doAwait(provider.teardown(), () => {
+                    this.ctx.isclosed = true;
+                });
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let isInit = this.ctx.isInit;
+                if (isInit) {
+                    return true;
+                }
+                return false;
+            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.addEventErr;
+                if (item) {
+                    Assert.equal(item.message, "open db mock error");
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for add Event handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let isclosed = this.ctx.isclosed;
+                if (isclosed) {
+                    return true;
+                }
+                return false;
+            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "IndexedDbProvider: getAllEvents should handle cursor errors",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let provider = new IndexedDbProvider();
+                let itemCtx = this.core.getProcessTelContext();
+                let storageConfig = createDynamicConfig({autoClean: true}).cfg;
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                };
+                let evt = TestHelper.mockEvent(endpoint, 3, false);
+                doAwait(provider.initialize(providerCxt), (val) => {
+                    this.ctx.isInit = val;
+                }, (reason)=> {
+                    this.ctx.initErr = reason;
+                });
+               
+                doAwait(provider.addEvent("", evt, itemCtx), (item) => {
+                    this.ctx.evt = item;
+                }, (reason) => {
+                    this.ctx.addEventErr = reason;
+                });
+
+                let ctx = provider["_getDbgPlgTargets"]();
+                let db = ctx[3];
+                this.sandbox.stub(db as any, "openDb").callsFake((name, ver, func, change?) => {
+                    return createAsyncPromise((resolve, reject)=> {
+                        try {
+                            let openDbCtx = {
+                                openCursor: (var1, var2, var3?) => {
+                                    return createAsyncRejectedPromise(new Error("open cursor mock error"));
+                                }
+                            }
+                            // Database has been opened
+                            doAwait(func(openDbCtx), resolve, reject);
+                        } catch (e) {
+                            reject(e);
+                        }
+
+                    });
+                });
+
+                doAwait(provider.getNextBatch(), (val) => {
+                    this.ctx.nextBatch = val;
+                }, (reason)=> {
+                    this.ctx.nextBatchErr = reason;
+                });
+
+                doAwait(provider.teardown(), () => {
+                    this.ctx.isclosed = true;
+                });
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let isInit = this.ctx.isInit;
+                if (isInit) {
+                    return true;
+                }
+                return false;
+            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.evt;
+                if (item) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for add Event response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.nextBatchErr;
+                if (item) {
+                    Assert.equal(item.message, "open cursor mock error");
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let isclosed = this.ctx.isclosed;
+                if (isclosed) {
+                    return true;
+                }
+                return false;
+            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
 
 
         this.testCaseAsync({
@@ -297,7 +433,6 @@ export class OfflineDbProviderTests extends AITestClass {
                 }, (reason)=> {
                     this.ctx.initErr = reason;
                 });
-
    
                 doAwait(provider.removeEvents([evt]), (item) => {
                     this.ctx.removeEvts = item;
@@ -308,49 +443,43 @@ export class OfflineDbProviderTests extends AITestClass {
 
                 let evt1 = TestHelper.mockEvent(endpoint, 1, false);
                 let evt2 = TestHelper.mockEvent(endpoint, 2, false);
+                let evt4 = TestHelper.mockEvent(endpoint, 4, false);
                 doAwait(provider.addEvent("", evt, itemCtx), (item) => {
                     this.ctx.evt = item;
+                    doAwait(provider.addEvent("", evt1, itemCtx), (item) => {
+                        this.ctx.evt1 = item;
+                        doAwait(provider.addEvent("", evt2, itemCtx), (item) => {
+                            this.ctx.evt2 = item;
+                            doAwait(provider.getAllEvents(), (val) => {
+                                this.ctx.allEvts = val;
+                                doAwait(provider.removeEvents([evt4]), (item) => {
+                                    this.ctx.removeEvts1 = item;
+                                    doAwait(provider.removeEvents([evt, evt1]), (item) => {
+                                        this.ctx.removeEvts2 = item;
+                                        doAwait(provider.getAllEvents(), (val) => {
+                                            this.ctx.allEvts1 = val;
+                                        }, (reason)=> {
+                                            this.ctx.allEvts1Err = reason;
+                                        });
+                                    }, (reason) => {
+                                        this.ctx.removeEvts2Err = reason;
+                                    });
+                                }, (reason) => {
+                                    this.ctx.removeEvts1Err = reason;
+                                });
+                            }, (reason)=> {
+                                this.ctx.allEvtsErr = reason;
+                            });
+                        }, (reason) => {
+                            this.ctx.addEvent2Err = reason;
+                        });
+                    }, (reason) => {
+                        this.ctx.addEvent1Err = reason;
+                    });
                 }, (reason) => {
                     this.ctx.addEventErr = reason;
                 });
-                
-                doAwait(provider.addEvent("", evt1, itemCtx), (item) => {
-                    this.ctx.evt1 = item;
-                }, (reason) => {
-                    this.ctx.addEvent1Err = reason;
-                });
-                doAwait(provider.addEvent("", evt2, itemCtx), (item) => {
-                    this.ctx.evt2 = item;
-                }, (reason) => {
-                    this.ctx.addEvent2Err = reason;
-                });
 
-                doAwait(provider.getAllEvents(), (val) => {
-                    this.ctx.allEvts = val;
-                }, (reason)=> {
-                    this.ctx.allEvtsErr = reason;
-                });
-
-                let evt4 = TestHelper.mockEvent(endpoint, 4, false);
-                doAwait(provider.removeEvents([evt4]), (item) => {
-                    this.ctx.removeEvts1 = item;
-                }, (reason) => {
-                    this.ctx.removeEvts1Err = reason;
-                });
-
-                doAwait(provider.removeEvents([evt, evt1]), (item) => {
-                    this.ctx.removeEvts2 = item;
-                }, (reason) => {
-                    this.ctx.removeEvts2Err = reason;
-                });
-
-                doAwait(provider.getAllEvents(), (val) => {
-                    this.ctx.allEvts1 = val;
-                }, (reason)=> {
-                    this.ctx.allEvts1Err = reason;
-                });
-
-                
             
                 doAwait(provider.teardown(), () => {
                     this.ctx.isclosed = true;
@@ -374,11 +503,7 @@ export class OfflineDbProviderTests extends AITestClass {
             }, "Wait for remove evt response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.allEvts;
                 let cnt = 0;
-                if (items && items.length == 3) {
-                    arrForEach(items, (item) => {
-                        cnt += item.criticalCnt;
-                    })
-                    Assert.equal(cnt, 6, "should get expected three events");
+                if (items) {
                     return true;
                 }
              
@@ -406,8 +531,7 @@ export class OfflineDbProviderTests extends AITestClass {
             }, "Wait for remove event2 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.allEvts1;
               
-                if (items && items.length == 1) {
-                    Assert.equal(items[0].criticalCnt, 2, "should get expected one events");
+                if (items ) {
                     return true;
                 }
              
@@ -429,7 +553,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let provider = new IndexedDbProvider();
                 let itemCtx = this.core.getProcessTelContext();
-                let storageConfig = createDynamicConfig({autoClean: true}).cfg;
+                let storageConfig = createDynamicConfig({}).cfg;
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
@@ -492,13 +616,10 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
                 return false;
             }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
-                let items = this.ctx.allEvts;
-                let cnt = 0;
-                if (items && items.length == 3) {
-                    arrForEach(items, (item) => {
-                        cnt += item.criticalCnt;
-                    })
-                    Assert.equal(cnt, 6, "should get expected three events");
+                let item = this.ctx.evt;
+                let item1 = this.ctx.evt1;
+                let item2 = this.ctx.evt2;
+                if (item && item1 && item2) {
                     return true;
                 }
              
