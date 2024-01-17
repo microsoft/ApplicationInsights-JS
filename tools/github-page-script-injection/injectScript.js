@@ -34,7 +34,7 @@ scriptContent = scriptContent.replace('YOUR_CONNECTION_STRING', connectionString
 scriptContent = `<script type="text/javascript">${scriptContent}</script>`;
 
 // write this file into _include folder so that later github would reject it inside markdown files
-const includeFolderFile = path.join(__dirname, '../../_includes/snippet.html');
+const includeFolderFile = path.join(__dirname, '../../_includes/script.html');
 fs.writeFileSync(includeFolderFile, scriptContent, 'utf8');
 
 // recursively process all html files under docs folder
@@ -45,16 +45,7 @@ function injectHtml(filePath) {
   const markdownContent = fs.readFileSync(filePath, 'utf8');
 
   // Specify the injection string
-  const injectionString = `
-  <details>
-    <summary></summary>
-
-  \`\`\`html
-  {% include script.html %}
-  \`\`\`
-
-  </details>
-  `;
+  const injectionString = `{% include script.html %}`;
 
   // Append the injection string to the end of the Markdown content
   const updatedContent = `${markdownContent}\n\n${injectionString}`;
