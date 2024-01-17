@@ -146,7 +146,6 @@ function _getAllEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, curso
 }
 
 
-// if shouldDelete function is not provided, will delete all events
 function _deleteEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, eventPrefixQuery: string, shouldDelete: (value: IIndexedDbItem) => boolean): IPromise<IIndexedDbItem[]> {
     // Open the Event object store
     return dbCtx.openCursor<IIndexedDbItem>(
@@ -170,8 +169,8 @@ function _dropMaxTimeEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, 
             }
 
             let addedTime = value.id;
-           
             let minStartTime = _getTime() + 1 - maxTime + "";
+
             if (addedTime <= minStartTime) {
                 return true;
             }
