@@ -53,5 +53,11 @@
     // Snippet packages
     "snippet": [
         "./tools/applicationinsights-web-snippet"
+    ],
+    "examples": [
+        "./examples/AISKU",
+        "./examples/cfgSync",
+        "./examples/dependency",
+        "./examples/shared-worker"
     ]
 }
