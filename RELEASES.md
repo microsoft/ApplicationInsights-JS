@@ -2,6 +2,17 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.7 (Dec 14th, 2023)
+
+### Changelog
+
+This release is a hotfix for issue #2216, which is simular to the issue fixed in `3.0.6` but for the `fetch` (with the keep-alive flag).
+
+### Changelog
+
+- #2216 [release-3.0] Cherrypick (main): fix fetchkeepalive
+- #2221 [release-3.0] Cherrypick (main): Fixup the ci.yml to address internal hash changes between different node versions
+
 ## 3.0.6 (Dec 7th, 2023)
 
 This release fixes an issue with the `sendBeacon` usage during page unload, where the SDK was not correctly splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload.
