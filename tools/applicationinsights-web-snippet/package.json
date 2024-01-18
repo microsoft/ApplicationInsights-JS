@@ -49,7 +49,7 @@
         "@nevware21/grunt-eslint-ts": "^0.2.2"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^2.0.2",
+        "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-common": "3.0.7"
     }
 }
