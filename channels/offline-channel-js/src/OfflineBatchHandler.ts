@@ -24,7 +24,6 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
             let _provider: IOfflineProvider;
             let _unloadProvider: IOfflineProvider;
             let _itemCtx: IProcessTelemetryContext;
-            //let _evts: number;
             let _maxRetryCnt: number;
             let _retryCodes: number[];
 
@@ -66,7 +65,7 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                 if(!!sync) {
                     provider = _unloadProvider;
                 }
-                return createPromise((resolve, reject) => { // do not need in try catch
+                return createPromise((resolve, reject) => {
                     let evt = _getOfflineEvt(batch);
                     return doAwaitResponse(provider.addEvent(evt.id, evt, _itemCtx), (response: AwaitResponse<IStorageTelemetryItem>) => {
                         try {
@@ -79,7 +78,6 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                             cb && cb(res);
                             resolve(res);
                         } catch(e) {
-                            
                             reject(e);
                         }
                     });
@@ -103,9 +101,9 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                     return doAwaitResponse(provider.getNextBatch(), (response: AwaitResponse<IStorageTelemetryItem[]>) => {
                         try {
                             if(!response || response.rejected) {
-                                
-                                cb && cb({state: eBatchSendStatus.Failure, data: null});
-                                resolve({state: eBatchSendStatus.Failure, data: null});
+                                let res = {state: eBatchSendStatus.Failure, data: null};
+                                cb && cb(res);
+                                resolve(res);
                                 return;
                             }
                             let evts = response.value || [];

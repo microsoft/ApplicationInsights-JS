@@ -11,7 +11,7 @@ import {
     createProcessTelemetryContext, createUniqueNamespace, dateNow, eLoggingSeverity, getExceptionName, mergeEvtNamespace, onConfigChange,
     runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise } from "@nevware21/ts-async";
+import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
 import { ITimerHandler, dumpObj, isNullOrUndefined, isTruthy, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import { Sample } from "./Helpers/Sample";
 import { isGreaterThanZero } from "./Helpers/Utils";
@@ -97,6 +97,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _maxBatchInterval: number;
             let _consecutiveErrors: number;
             let _senderInst: IXHROverride;
+            let _taskScheduler: ITaskScheduler;
     
 
             _initDefaults();
@@ -116,7 +117,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineSender"), core.evtNamespace && core.evtNamespace());
                     _offlineListener = createOfflineListener(evtNamespace); // or to be passed
                     _serializer = new Serializer(_self.diagLog());
-                   
+                    _taskScheduler = createTaskScheduler(createAsyncPromise, "offline channel");
                 }
 
                 _createUrlConfig(coreConfig, core, extensions, pluginChain);
@@ -351,10 +352,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         }
                     }
                     if (payloadData) {
-                        return _urlCfg.batchHandler.storeBatch(payloadData, callback, unload) as any;
-                        // _queueStorageEvent("storeOfflineEvents", (evtName) => {
-                        //     return _urlCfg.batchHandler.storeBatch(payloadData, callback, unload) as any;
-                        // });
+                        let promise = _urlCfg.batchHandler.storeBatch(payloadData, callback, unload);
+                        _queueStorageEvent("storeBatch", promise);
                     }
 
                 } catch (e) {
@@ -384,12 +383,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                     }
                                     _sendNextBatchTimer.refresh();
                                 }
-
-                                return _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst)
-                                // _queueStorageEvent("sendNextBatch", (evtName) => {
-                                //     return _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst) as any;
-                                // });
-                               
+                                let promise = _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst);
+                                _queueStorageEvent("sendNextBatch", promise);
 
                             }
                            
@@ -408,6 +403,18 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _sendNextBatchTimer && _sendNextBatchTimer.cancel();
                 _inMemoFlushTimer = null;
                 _sendNextBatchTimer = null;
+            }
+
+            function _queueStorageEvent<T>(taskName: string, task: T | IPromise<T>) {
+                if (_taskScheduler) {
+                    console.log(taskName)
+                    _taskScheduler.queue(() => {
+                        return task;
+                    }, taskName).catch((reason) => {
+                        // Just handling any rejection to avoid an unhandled rejection event
+                    });
+                }
+                
             }
 
             function _setRetryTime(linearFactor: number = 1) {

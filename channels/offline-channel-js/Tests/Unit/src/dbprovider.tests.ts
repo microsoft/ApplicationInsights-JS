@@ -347,65 +347,7 @@ export class OfflineDbProviderTests extends AITestClass {
             }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
         });
 
-        this.testCaseAsync({
-            name: "IndexedDbProvider: addEvent should handle open errors",
-            stepDelay: 100,
-            steps: [() => {
-                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let provider = new IndexedDbProvider();
-                let itemCtx = this.core.getProcessTelContext();
-                let storageConfig = createDynamicConfig({autoClean: true}).cfg;
-                let providerCxt = {
-                    itemCtx:  itemCtx,
-                    storageConfig: storageConfig,
-                    endpoint: endpoint
-                };
-                let evt = TestHelper.mockEvent(endpoint, 3, false);
-                doAwait(provider.initialize(providerCxt), (val) => {
-                    this.ctx.isInit = val;
-                }, (reason)=> {
-                    this.ctx.initErr = reason;
-                    Assert.ok(false, "error for init");
-                });
-                let ctx = provider["_getDbgPlgTargets"]();
-                let db = ctx[3];
-                this.sandbox.stub(db as any, "openDb").callsFake((key) => {
-                    return createAsyncRejectedPromise(new Error("open db mock error"))
-                });
-             
-            
-                doAwait(provider.addEvent("", evt, itemCtx), (item) => {
-                    this.ctx.evt = item;
-                }, (reason) => {
-                    this.ctx.addEventErr = reason;
-                });
-
-                doAwait(provider.teardown(), () => {
-                    this.ctx.isclosed = true;
-                });
-
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let isInit = this.ctx.isInit;
-                if (isInit) {
-                    return true;
-                }
-                return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
-                let item = this.ctx.addEventErr;
-                if (item) {
-                    Assert.equal(item.message, "open db mock error");
-                    return true;
-                }
-             
-                return false;
-            }, "Wait for add Event handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
-                let isclosed = this.ctx.isclosed;
-                if (isclosed) {
-                    return true;
-                }
-                return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
-        });
+        
 
         this.testCaseAsync({
             name: "IndexedDbProvider: getAllEvents should handle cursor errors",
@@ -862,6 +804,278 @@ export class OfflineDbProviderTests extends AITestClass {
                 return false;
             }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
         });
+
+        this.testCaseAsync({
+            name: "IndexedDbProvider: Error handle should handle open errors",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let provider = new IndexedDbProvider();
+                let itemCtx = this.core.getProcessTelContext();
+                let storageConfig = createDynamicConfig({autoClean: true}).cfg;
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                };
+                let evt = TestHelper.mockEvent(endpoint, 3, false);
+                doAwait(provider.initialize(providerCxt), (val) => {
+                    this.ctx.isInit = val;
+                }, (reason)=> {
+                    this.ctx.initErr = reason;
+                    Assert.ok(false, "error for init");
+                });
+                let ctx = provider["_getDbgPlgTargets"]();
+                let db = ctx[3];
+                this.sandbox.stub(db as any, "openDb").callsFake((key) => {
+                    return createAsyncRejectedPromise(new Error("open db mock error"))
+                });
+             
+            
+                doAwait(provider.addEvent("", evt, itemCtx), (item) => {
+                    this.ctx.evt = item;
+                }, (reason) => {
+                    this.ctx.addEventErr = reason;
+                });
+
+                doAwait(provider.removeEvents([evt]), (item) => {
+                    this.ctx.removeEvt = item;
+                    Assert.deepEqual(item, [], "should return []");
+                }, (reason) => {
+                    this.ctx.removeEvtErr = reason;
+                    Assert.ok(false, "error for remove events");
+                });
+
+                doAwait(provider.getAllEvents(), (item) => {
+                    this.ctx.getEvts = item;
+                }, (reason) => {
+                    this.ctx.getEvtsErr = reason;
+                });
+
+                doAwait(provider.clean(), (item) => {
+                    this.ctx.cleanEvts = item;
+                    Assert.ok(!item, "should not clean");
+                }, (reason) => {
+                    this.ctx.cleanEvtsErr = reason;
+                    Assert.ok(false, "error for clean");
+                });
+
+                doAwait(provider.clear(), (item) => {
+                    this.ctx.clearEvts = item;
+                    Assert.deepEqual(item, [], "should not clear");
+                }, (reason) => {
+                    this.ctx.clearEvtsErr = reason;
+                    Assert.ok(false, "error for clean");
+                });
+
+
+                doAwait(provider.teardown(), () => {
+                    this.ctx.isclosed = true;
+                });
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let isInit = this.ctx.isInit;
+                if (isInit) {
+                    return true;
+                }
+                return false;
+            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.addEventErr;
+                if (item) {
+                    Assert.equal(item.message, "open db mock error");
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for add Event handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.removeEvt;
+                if (item) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for remove Event handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.getEvtsErr;
+                if (item) {
+                    Assert.equal(item.message, "open db mock error");
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for get all events handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.cleanEvts;
+                if (item !== null) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for get clean events handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.clearEvts;
+                if (item) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for get clear events handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let isclosed = this.ctx.isclosed;
+                if (isclosed) {
+                    return true;
+                }
+                return false;
+            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "IndexedDbProvider: Error handle should handle cursor errors",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let provider = new IndexedDbProvider();
+                let itemCtx = this.core.getProcessTelContext();
+                let storageConfig = createDynamicConfig({autoClean: true}).cfg;
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                };
+                let evt = TestHelper.mockEvent(endpoint, 3, false);
+                doAwait(provider.initialize(providerCxt), (val) => {
+                    this.ctx.isInit = val;
+                }, (reason)=> {
+                    this.ctx.initErr = reason;
+                    Assert.ok(false, "error for init");
+                });
+               
+             
+
+                let ctx = provider["_getDbgPlgTargets"]();
+                let db = ctx[3];
+                this.sandbox.stub(db as any, "openDb").callsFake((name, ver, func, change?) => {
+                    return createAsyncPromise((resolve, reject)=> {
+                        try {
+                            let openDbCtx = {
+                                openCursor: (var1, var2, var3?) => {
+                                    return createAsyncRejectedPromise(new Error("open cursor mock error"));
+                                },
+                                openStore: (var1, var2, var3) => {
+                                    return createAsyncRejectedPromise(new Error("open store mock error"));
+                                }
+                            }
+                            // Database has been opened
+                            doAwait(func(openDbCtx), resolve, reject);
+                        } catch (e) {
+                            reject(e);
+                        }
+
+                    });
+                });
+
+                doAwait(provider.addEvent("", evt, itemCtx), (item) => {
+                    Assert.ok(false, "should handle add event error");
+                }, (reason) => {
+                    this.ctx.addEvent = reason;
+                    Assert.equal(reason.message, "open store mock error", "add event message");
+                });
+
+                doAwait(provider.getNextBatch(), (val) => {
+                    Assert.ok(false, "should handle get next batch error")
+                }, (reason)=> {
+                    this.ctx.nextBatch = reason;
+                    Assert.equal(reason.message, "open cursor mock error", "get next batch message");
+                });
+
+                doAwait(provider.getAllEvents(), (val) => {
+                    Assert.ok(false, "should handle get all events error")
+                }, (reason)=> {
+                    this.ctx.allEvts = reason;
+                    Assert.equal(reason.message, "open cursor mock error", "get all events message");
+                });
+
+                doAwait(provider.removeEvents([evt]), (val) => {
+                    this.ctx.removeEvts = val;
+                    Assert.deepEqual([], val, "should handle remove events error")
+                }, (reason)=> {
+                    this.ctx.removeEvtsErr = reason;
+                    Assert.ok(false, "error for get next batch");
+                });
+
+                doAwait(provider.clear(), (val) => {
+                    this.ctx.clear = val;
+                    Assert.deepEqual([], val, "should handle clear error")
+                }, (reason)=> {
+                    this.ctx.clearErr = reason;
+                    Assert.ok(false, "error for clear");
+                });
+
+                doAwait(provider.clean(), (val) => {
+                    this.ctx.clean = val;
+                    Assert.ok(!val, "should handle clean error")
+                }, (reason)=> {
+                    this.ctx.cleanErr = reason;
+                    Assert.ok(false, "error for clean");
+                });
+
+                doAwait(provider.teardown(), () => {
+                    this.ctx.isclosed = true;
+                });
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let isInit = this.ctx.isInit;
+                if (isInit) {
+                    return true;
+                }
+                return false;
+            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.addEvent;
+                if (item) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for add Event response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.nextBatch ;
+                if (item) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for next batch response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.allEvts;
+                if (item) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for all events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.removeEvts;
+                if (item) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for remove events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.clear;
+                if (item) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for clear response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item = this.ctx.clean;
+                if (item !== null) {
+                    return true;
+                }
+             
+                return false;
+            }, "Wait for clean response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let isclosed = this.ctx.isclosed;
+                if (isclosed) {
+                    return true;
+                }
+                return false;
+            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
     }
 }
 

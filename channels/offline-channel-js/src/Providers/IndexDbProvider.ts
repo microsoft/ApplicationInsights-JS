@@ -348,8 +348,6 @@ export class IndexedDbProvider implements IOfflineProvider {
                     return [];
                 }
 
-                // Start an asynchronous set of events to access the Db, this first one will wait until all current outstanding
-                // events are completed or rejected
                 return _openDb<IStorageTelemetryItem[]>((dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>) => {
                     return createAsyncPromise<IStorageTelemetryItem[]>((allEventsResolve, allEventsReject) => {
                         _getAllEvents(dbCtx, null, cnt).then(
@@ -462,16 +460,15 @@ export class IndexedDbProvider implements IOfflineProvider {
                     _openDb<IIndexedDbItem[]>((dbCtx) => {
                         //delete all evts
                         return _deleteEvents(dbCtx, null, (value) => {
-                            return true; // TODO: add conditions
+                            return true;
                         });
                     }).then(
                         (values: IIndexedDbItem[]) => {
                             clearResolve(_getEvents(values));
                         }, (reason) => {
                             clearResolve([]);
-
                         }
-                    );
+                    )
                 });
             };
 
@@ -513,7 +510,12 @@ export class IndexedDbProvider implements IOfflineProvider {
             function _openDb<T>(processFunc: (dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>) => T | IPromise<T>): IPromise<T> {
                 function _handleDbUpgrade(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>) {
                     return createAsyncPromise<void>((createResolve, createReject) => {
-                        _createDb(dbCtx.db);
+                        try {
+                            _createDb(dbCtx.db);
+
+                        } catch(e) {
+                            createReject(e);
+                        }
                         createResolve();
                     });
                 }
@@ -556,6 +558,7 @@ export class IndexedDbProvider implements IOfflineProvider {
 
          
                     function _insertNewEvent() {
+                     
                         dbCtx.openStore(EventObjectStoreName, (storeCtx) => {
                             let request = storeCtx.store.put(dbItem);
                             request.onsuccess = (evt) => {
@@ -592,6 +595,8 @@ export class IndexedDbProvider implements IOfflineProvider {
                                     }
                                 });
                             };
+                        }).catch((e)=> {
+                            addEventReject(e);
                         });
                     }
                     _insertNewEvent();

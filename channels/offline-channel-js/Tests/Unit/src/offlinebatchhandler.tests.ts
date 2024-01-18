@@ -192,7 +192,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as ILocalStorageConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
@@ -319,7 +319,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                 let storageObject = JSON.parse(storageStr);
                 let storageEvts = storageObject.evts;
-                Assert.deepEqual(Object.keys(storageEvts).length, 3, "storgae should have three events");
+                Assert.deepEqual(Object.keys(storageEvts).length, 3, "storage should have three events");
 
                 let cb1 = (res) => {
                     this.ctx.hasBatch = res;
@@ -383,7 +383,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as ILocalStorageConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
