@@ -395,16 +395,18 @@ function updatePublishConfig(package, newVersion) {
     let details = getVersionDetails(newVersion);
     let majorVersion = package.version.split(".")[0];
 
+    if (!package.publishConfig) {
+        package.publishConfig = {};
+    }
+
     if (!details.type || details.type === "release") {
-        if (package.publishConfig && package.publishConfig.tag) {
-            // remove any previous tag
-            delete package.publishConfig.tag;
+        // Set the publishing release tag
+        if (majorVersion !== "0") {
+            package.publishConfig.tag = "release" + majorVersion;
+        } else {
+            package.publishConfig.tag = "alpha";
         }
     } else {
-        if (!package.publishConfig) {
-            package.publishConfig = {};
-        }
-
         // Set the publishing tag
         if (details.type === "nightly" || details.type === "dev" || details.type === "beta" || details.type === "alpha") {
             console.log(`   Type - [${details.type}] - ${majorVersion}`);
