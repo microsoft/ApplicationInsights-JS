@@ -19,7 +19,7 @@ import {
 } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { HttpManager } from "./HttpManager";
-import { STR_MSA_DEVICE_TICKET, STR_TRACE, STR_USER } from "./InternalConstants";
+import { STR_AUTH_PLUGIN, STR_MSA_DEVICE_TICKET, STR_TRACE, STR_USER } from "./InternalConstants";
 import { retryPolicyGetMillisToBackoffForRetry } from "./RetryPolicy";
 import { ITimeoutOverrideWrapper, createTimeoutWrapper } from "./TimeoutOverrideWrapper";
 
@@ -486,6 +486,10 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 _httpManager.addHeader(STR_MSA_DEVICE_TICKET, ticket);
             };
 
+            _self.setAuthPluginHeader = (token: string) => {
+                _httpManager.addHeader(STR_AUTH_PLUGIN, token);
+            };
+
             _self.hasEvents = _hasEvents;
 
             _self._setTransmitProfile = (profileName: string) => {
@@ -497,6 +501,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             proxyFunctions(_self, () => _httpManager, [ "addResponseHandler" ]);
+
 
             /**
              * Batch and send events currently in the queue for the given latency.
@@ -1131,6 +1136,14 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
      * @param ticket - Ticket value.
      */
     public setMsaAuthTicket(ticket: string) {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Set setAuthPluginHeader header
+     * @param token - token value.
+     */
+    public setAuthPluginHeader(token: string) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
 
