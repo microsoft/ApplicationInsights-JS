@@ -4,7 +4,7 @@ import {
     IDiagnosticLogger, IPayloadData, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IUnloadHookContainer,
     IXHROverride, isNullOrUndefined, isObject
 } from "@microsoft/applicationinsights-core-js";
-import { AwaitResponse, IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { AwaitResponse, IPromise, createAsyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
     IOfflineBatchCleanResponse, IOfflineBatchResponse, IOfflineBatchStoreResponse, OfflineBatchCallback, OfflineBatchStoreCallback,
     eBatchSendStatus, eBatchStoreStatus
@@ -15,6 +15,7 @@ import { WebStorageProvider } from "./Providers/WebStorageProvider";
 import { IOfflineBatchHandler } from "./applicationinsights-offlinechannel-js";
 
 const MaxStorageProviderConfig = 2;
+const NoProviderErrMsg = "No provider is available";
 
 export class OfflineBatchHandler implements IOfflineBatchHandler {
     constructor(logger?: IDiagnosticLogger, unloadHookContainer?: IUnloadHookContainer) {
@@ -60,12 +61,15 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
             
 
             _self.storeBatch = (batch: IPayloadData, cb?: OfflineBatchStoreCallback, sync?: boolean) => {
-                //try {
+                
                 let provider = _provider;
                 if(!!sync) {
                     provider = _unloadProvider;
                 }
-                return createPromise((resolve, reject) => {
+                return createAsyncPromise((resolve, reject) => {
+                    if (!provider) {
+                        reject(new Error(NoProviderErrMsg))
+                    }
                     let evt = _getOfflineEvt(batch);
                     return doAwaitResponse(provider.addEvent(evt.id, evt, _itemCtx), (response: AwaitResponse<IStorageTelemetryItem>) => {
                         try {
@@ -86,71 +90,81 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
             }
 
             _self.sendNextBatch = (cb?: OfflineBatchCallback, sync?: boolean, xhrOverride?: IXHROverride, cnt: number = 1) => {
-                return createPromise((resolve, reject) => {
+                return createAsyncPromise((resolve, reject) => {
                     let provider = _provider;
                     try {
-                        if ( _unloadProvider.getNextBatch()) {
-                            // always try to send ones from local storage
-                            provider = _unloadProvider;
-                        }
+                       
+                        if (_unloadProvider) {
+                            doAwaitResponse(_unloadProvider.getNextBatch(), (res) => {
+                                if (res && !res.rejected) {
+                                    let unloadEvts = res.value;
+                                    if (unloadEvts && unloadEvts.length) {
+                                        // always try to send ones from local storage
+                                        provider = _unloadProvider;
+                                    }
+    
+                                }
+                            });
 
+                        }
+                       
                     } catch(e) {
                         // eslint-disable-next-line no-empty
                     }
-                    // change name: getNextOne
+                    if (!provider) {
+                        reject(new Error(NoProviderErrMsg));
+                    }
+
                     return doAwaitResponse(provider.getNextBatch(), (response: AwaitResponse<IStorageTelemetryItem[]>) => {
                         try {
                             if(!response || response.rejected) {
-                                let res = {state: eBatchSendStatus.Failure, data: null};
-                                cb && cb(res);
-                                resolve(res);
+                                let res = {state: eBatchSendStatus.Failure, data: response.reason};
+                                storeResolve(res);
                                 return;
                             }
                             let evts = response.value || [];
+                            let result = {state: eBatchSendStatus.Complete, data: null} as IOfflineBatchResponse;
                             //_evts = evts.length;
                             if (evts.length) {
                                 // make sure doawait has resolve
                                 return doAwaitResponse(provider.removeEvents(evts), (res) => {
-                                    
-                                    if(!res.rejected && res.value) {
+                                    if(res && !res.rejected && res.value) {
                                         let deletedItems = res.value;
-                                        for (let lp = 0; lp <  deletedItems.length; lp++) {
+                                        for (let lp = 0; lp < deletedItems.length; lp++) {
                                             try {
+                                                
                                                 let evt = evts[lp];
+                                                result.data = evt; // add data
                                                 if (xhrOverride && xhrOverride.sendPOST) {
                                                     evt.attempCnt++;
                                                     let sender = xhrOverride.sendPOST; // use transports
                                                     let onCompleteCallback = (status: number, headers: {
                                                         [headerName: string]: string;
                                                     }, res?: string) => {
+                                                     
                                                         if (status == 200) { // status code (e.g: invalid key) drop payload
-                                                            // TODO: minify
-                                                            cb && cb({state: eBatchSendStatus.Complete, data: evt});
-                                                            resolve({state: eBatchSendStatus.Complete, data: evt});
+                                                            result.state = eBatchSendStatus.Complete;
                                                             
                                                         } else {
                                                             let isRetriable = _isRetriable(evt, status);
                                                             if (isRetriable) {
-                                                                // TODO: minify
-                                                                cb && cb({state: eBatchSendStatus.Retry, data: evt});
-                                                                resolve({state: eBatchSendStatus.Retry, data: evt});
-                                                                _unloadProvider.addEvent(evt.id, evt, _itemCtx);
+                                                                result.state = eBatchSendStatus.Retry;
+                                                                _unloadProvider && _unloadProvider.addEvent(evt.id, evt, _itemCtx);
 
                                                             } else {
-                                                                // TODO: minify
-                                                                cb && cb({state: eBatchSendStatus.Drop, data: evt});
-                                                                resolve({state: eBatchSendStatus.Drop, data: evt});
+                                                                result.state = eBatchSendStatus.Drop;
                                                             }
                                                         }
+                                                        storeResolve(result);
                                                         
                                                     };
-                                                    return sender(evt, onCompleteCallback, sync);
-                                                    // resolve here
-                                                    
-                                                    
+                                                    return doAwaitResponse(sender(evt, onCompleteCallback, sync) as any, (res) => {
+                                                        // do nothing, because it should be resolved in callback
+                                                    });
                                                 }
                                                 // call resolve
-                                                resolve({state: eBatchSendStatus.Drop, data: evt});
+                                                result.state = eBatchSendStatus.Drop;
+                                                storeResolve(result);
                                                 
                                             } catch (e) {
                                                 reject(e)
@@ -158,29 +172,36 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                                         }
                                         // this case should never happen because this function is called after we confirm that evt is available
                                         // add resolve here in case
-                                        resolve({state: eBatchSendStatus.Complete, data: null})
+                                        result.state = eBatchSendStatus.Complete;
+                                        storeResolve(result);
 
                                     }
                                     // if can not delete first, resolve
-                                    resolve({state: eBatchSendStatus.Failure, data: null});
+                                    result.state = eBatchSendStatus.Failure;
+                                    result.data = res.reason;
+                                    storeResolve(result)
                                 
                                 });
                             }
                             // don't have any evts returned by getNext, resolve
-                            resolve({state: eBatchSendStatus.Complete, data: null})
+                            storeResolve(result);
                             
-
                         } catch(e) {
                             reject(e);
                         }
                     });
+                    function storeResolve(result) {
+                        cb && cb(result);
+                        resolve(result);
+                    }
                 });
-
-               
             }
 
             _self.hasStoredBatch = (cb?: (hasBatches: boolean) => void) => {
-                return createPromise((resolve, reject) => {
+                return createAsyncPromise((resolve, reject) => {
+                    if (!_provider) {
+                        reject(new Error(NoProviderErrMsg))
+                    }
                     return doAwaitResponse(_provider.getNextBatch(), (response: AwaitResponse<IStorageTelemetryItem[]>) => {
                         try {
                             let evts = response.value || [];
@@ -198,9 +219,11 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
 
             _self.cleanStorage = (cb?:(res: IOfflineBatchCleanResponse) => void) => {
                 
-                   
-                return createPromise((resolve, reject) => {
+                return createAsyncPromise((resolve, reject) => {
                     // note: doawaitresponse currently returns undefined
+                    if (!_provider) {
+                        reject(new Error(NoProviderErrMsg))
+                    }
                     return doAwaitResponse(_provider.clear(), (response: AwaitResponse<IStorageTelemetryItem[]>) => {
                         try {
                             let cnt = 0;

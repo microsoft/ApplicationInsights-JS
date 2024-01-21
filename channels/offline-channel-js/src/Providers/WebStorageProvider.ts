@@ -4,7 +4,7 @@ import {
     IProcessTelemetryContext, IUnloadHookContainer, getGlobal, getJSON, isNotNullOrUndefined, objKeys, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncRejectedPromise } from "@nevware21/ts-async";
-import { getEndpointDomian, getTimeId } from "../Helpers/Utils";
+import { getEndpointDomian, getTimeFromId, getTimeId } from "../Helpers/Utils";
 import {
     ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineProvider, IStorageJSON, IStorageTelemetryItem
 } from "../Interfaces/IOfflineProvider";
@@ -114,10 +114,11 @@ function _dropMaxTimeEvents(
     let dropKeys = [];
     let droppedEvents = 0;
     let currentTime = (new Date()).getTime() + 1; // handle appended random float number
-    let minStartTime = (currentTime - maxStorageTime) + "";
+    let minStartTime = (currentTime - maxStorageTime);
     try {
         _forEachMap<IStorageTelemetryItem>(events, (evt, key) => {
-            if (key <= minStartTime) {
+            let id = getTimeFromId(key);
+            if (id <= minStartTime) {
                 dropKeys.push(key);
                 droppedEvents++;
             }

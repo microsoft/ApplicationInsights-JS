@@ -58,7 +58,7 @@ export interface IOfflineBatchHandlerCfg {
  
 export interface IOfflineBatchResponse {
      state: eBatchSendStatus,
-     data: IPayloadData
+     data?: any;
  }
  
 export interface IOfflineBatchStoreResponse {

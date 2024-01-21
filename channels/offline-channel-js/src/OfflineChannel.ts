@@ -223,7 +223,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _self.onunloadFlush();
-                runTargetUnload(_offlineListener, false);
+                _offlineListener && runTargetUnload(_offlineListener, false);
                 let handler = _urlCfg.batchHandler;
                 handler && handler.teardown();
                 _clearScheduledTimer();
@@ -232,7 +232,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_urlCfg, _inMemoBatch];
+                return [_urlCfg, _inMemoBatch, _senderInst];
             };
             
 
@@ -381,15 +381,14 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                     if (res.state !== eBatchSendStatus.Complete) {
                                         _consecutiveErrors ++;
                                     }
-                                    _sendNextBatchTimer.refresh();
+                                    _sendNextBatchTimer && _sendNextBatchTimer.refresh();
                                 }
                                 let promise = _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst);
                                 _queueStorageEvent("sendNextBatch", promise);
-
                             }
                            
                         } else {
-                            _sendNextBatchTimer = null;
+                            _sendNextBatchTimer.cancel();
                         }
                         // if offline, do nothing;
 
@@ -407,7 +406,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
             function _queueStorageEvent<T>(taskName: string, task: T | IPromise<T>) {
                 if (_taskScheduler) {
-                    console.log(taskName)
                     _taskScheduler.queue(() => {
                         return task;
                     }, taskName).catch((reason) => {

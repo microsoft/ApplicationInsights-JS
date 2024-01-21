@@ -1,16 +1,17 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IConfiguration, IPayloadData, OnCompleteCallback, createDynamicConfig, newGuid } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, IPayloadData, OnCompleteCallback, arrForEach, createDynamicConfig, newGuid } from "@microsoft/applicationinsights-core-js";
 import { TestChannel } from "./TestHelper";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
 import { ILocalStorageConfiguration, eStorageProviders } from "../../../src/Interfaces/IOfflineProvider";
 import { OfflineBatchHandler } from "../../../src/OfflineBatchHandler";
-import { doAwait } from "@nevware21/ts-async";
+import { createAsyncRejectedPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import { eBatchSendStatus, eBatchStoreStatus } from "../../../src/Interfaces/IOfflineBatch";
 
 export class OfflineBatchHandlerTests extends AITestClass {
     private core: AppInsightsCore;
     private coreConfig: IConfig & IConfiguration;
     private ctx: any;
+    private batchHandler: any;
  
     public testInitialize() {
         super.testInitialize();
@@ -68,7 +69,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true } as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime: 1 } as ILocalStorageConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
@@ -273,7 +274,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, inStorageMaxTime:1} as ILocalStorageConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
@@ -385,6 +386,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as ILocalStorageConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
+                AITestClass.orgLocalStorage.clear();
 
                 let itemCtx = this.core.getProcessTelContext();
                 let providerCxt = {
@@ -393,10 +395,11 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     endpoint: endpoint
                 }
                 let batchHandler = new OfflineBatchHandler();
+                let provider;
                 doAwait(batchHandler.initialize(providerCxt),(res) => {
                     this.ctx.isInit = true;
                     let items = batchHandler["_getDbgPlgTargets"]();
-                    let provider = items[0];
+                    provider = items[0];
                     let isInit = items[1];
                     Assert.ok(provider, "provider is initialized");
                     Assert.ok(isInit, "initialization is successful");
@@ -506,7 +509,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
-
+ 
                 let itemCtx = this.core.getProcessTelContext();
                 let providerCxt = {
                     itemCtx:  itemCtx,
@@ -566,6 +569,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let cb2 = (res) =>  {
                     res2.push(res);
                 }
+                
                 doAwait(batchHandler.sendNextBatch(cb2, false, {sendPOST: sender2}) as any,(res) => {
                     this.ctx.sendBatch2 = true;
                     this.ctx.sendBatch2Res = res2;
@@ -673,6 +677,551 @@ export class OfflineBatchHandlerTests extends AITestClass {
             }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
         });
 
+        this.testCaseAsync({
+            name: "Send Next Batch: send Next Batch with IndexedDB provider",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: false, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let  storageConfig = createDynamicConfig(storageObj).cfg;
+ 
+                let itemCtx = this.core.getProcessTelContext();
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                }
+                let batchHandler = new OfflineBatchHandler();
+                batchHandler.initialize(providerCxt);
+                this.ctx.isInit = true;
+                this.ctx.handler = batchHandler;
+                this.batchHandler = batchHandler;
+                let items = batchHandler["_getDbgPlgTargets"]();
+                let provider = items[0];
+                let isInit = items[1];
+                Assert.ok(provider, "provider is initialized");
+                Assert.ok(isInit, "initialization is successful");
+                
+
+                let evt = TestHelper.mockEvent(endpoint, 1, false);
+                let evt1 = TestHelper.mockEvent(endpoint, 2, false);
+                let evt2 = TestHelper.mockEvent(endpoint, 3, false);
+                doAwait(batchHandler.storeBatch(evt),(res) => {
+                    this.ctx.storeBatch = 1;
+                });
+                doAwait(batchHandler.storeBatch(evt1),(res) => {
+                    this.ctx.storeBatch = 2;
+                });
+                doAwait(batchHandler.storeBatch(evt2),(res) => {
+                    this.ctx.storeBatch = 3;
+                });
+                
+                let sender1Payload: any[] = []
+                let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender1Payload.push(payload);
+                    oncomplete(400, {});
+                }
+                let res1: any[] = [];
+               
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+
+              
+                doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any,(res) => {
+                    this.ctx.sendBatch1 = true;
+                    this.ctx.sendBatch1Res = res1;
+                    this.ctx.sendBatch1Pd =  sender1Payload;
+                    Assert.equal(res.value.state, eBatchSendStatus.Drop, "should have drop status");
+                    doAwaitResponse(provider.getAllEvents(), (res)=> {
+                        this.ctx.getAll = true;
+                        let val = res.value;
+                        Assert.equal(val && val.length, 2, "should have 2 events");
+                        let sentcriticalCnt = res1[0].data.criticalCnt;
+                        arrForEach(val, (item) => {
+                            Assert.ok(sentcriticalCnt !== item.criticalCnt, "should not contain deleted item");
+                        });
+                    });
+                
+                });
+           
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let storeBatch = this.ctx.storeBatch;
+                if (storeBatch && storeBatch == 3) {
+                    return true;
+                }
+                return false;
+            }, "Wait for store batch response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let sendBatch =  this.ctx.sendBatch1;
+                
+                if (sendBatch) {
+              
+                    return true;
+                }
+                return false;
+            }, "Wait for send send batch response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item =  this.ctx.getAll;
+             
+                if (item) {
+               
+                    return true;
+                }
+                return false;
+            }, "Wait for get all response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Send Next Batch: send Next Batch with IndexedDB provider test1 with retry code",
+            stepDelay: 100,
+            steps: [() => {
+                let batchHandler = this.batchHandler;
+                this.ctx.isInit = true;
+                this.ctx.handler = batchHandler;
+                let items = batchHandler["_getDbgPlgTargets"]();
+                let provider = items[0];
+                let isInit = items[1];
+                Assert.ok(provider, "provider is initialized");
+                Assert.ok(isInit, "initialization is successful");
+                
+
+                let sender1Payload: any[] = []
+                let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender1Payload.push(payload);
+                    oncomplete(500, {});
+                }
+           
+
+                let res1: any[] = [];
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+         
+                doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any,(res) => {
+                    this.ctx.sendBatch1 = true;
+                    this.ctx.sendBatch1Res = res1;
+                    this.ctx.sendBatch1Pd =  sender1Payload;
+                    Assert.equal(res.value.state, eBatchSendStatus.Retry, "should have retry status");
+                 
+                    doAwaitResponse(provider.getAllEvents(), (res)=> {
+                        this.ctx.getAll = true;
+                        let val = res.value;
+                        Assert.equal(val && val.length, 1, "should have 1 events");
+                        let sentcriticalCnt = res1[0].data.criticalCnt;
+                        arrForEach(val, (item) => {
+                            Assert.ok(sentcriticalCnt !== item.criticalCnt, "should not contain deleted item");
+                        });
+                        let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                        let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
+                        let storageObject = JSON.parse(storageStr);
+                        let storageEvts = storageObject.evts;
+                        Assert.deepEqual(Object.keys(storageEvts).length, 1, "storgae should only have one event");
+                    });
+                
+                });
+        
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let sendBatch =  this.ctx.sendBatch1;
+                
+                if (sendBatch) {
+                    return true;
+                }
+                return false;
+            }, "Wait for send batch 1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item =  this.ctx.getAll;
+                
+                if (item) {
+                    return true;
+                }
+                return false;
+            }, "Wait for get all response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Send Next Batch: send Next Batch with IndexedDB provider test1 with 200",
+            stepDelay: 100,
+            steps: [() => {
+                let batchHandler = this.batchHandler;
+                this.ctx.isInit = true;
+                this.ctx.handler = batchHandler;
+                let items = batchHandler["_getDbgPlgTargets"]();
+                let provider = items[0];
+                let isInit = items[1];
+                Assert.ok(provider, "provider is initialized");
+                Assert.ok(isInit, "initialization is successful");
+                
+
+                let sender1Payload: any[] = []
+                let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender1Payload.push(payload);
+                    oncomplete(200, {});
+                }
+           
+
+                let res1: any[] = [];
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+         
+                doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any,(res) => {
+                    this.ctx.sendBatch1 = true;
+                    this.ctx.sendBatch1Res = res1;
+                    this.ctx.sendBatch1Pd =  sender1Payload;
+                    Assert.equal(res.value.state, eBatchSendStatus.Complete, "should have complete status");
+                 
+                    doAwaitResponse(provider.getAllEvents(), (res)=> {
+                        this.ctx.getAll = true;
+                        let val = res.value;
+                        Assert.equal(val && val.length, 0, "should have 0 events");
+                        let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                        let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
+                        Assert.deepEqual(storageStr, null, "storgae should not have one event");
+                    });
+                
+                });
+        
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let sendBatch =  this.ctx.sendBatch1;
+                
+                if (sendBatch) {
+                    return true;
+                }
+                return false;
+            }, "Wait for send batch 1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item =  this.ctx.getAll;
+                
+                if (item) {
+                    return true;
+                }
+                return false;
+            }, "Wait for get all response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Send Next Batch: send Next Batch with IndexedDB provider test1 with unload events",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let  storageConfig = createDynamicConfig(storageObj).cfg;
+ 
+                let itemCtx = this.core.getProcessTelContext();
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                }
+                let unloadHandler = new OfflineBatchHandler();
+                unloadHandler.initialize(providerCxt);
+                let evt = TestHelper.mockEvent(endpoint, 1, false);
+                unloadHandler.storeBatch(evt); // add events to local storage
+                let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
+                Assert.ok(storageStr, "storgae should have one event");
+
+
+                let batchHandler = this.batchHandler;
+                this.ctx.isInit = true;
+                this.ctx.handler = batchHandler;
+                let items = batchHandler["_getDbgPlgTargets"]();
+                let provider = items[0];
+                let isInit = items[1];
+                Assert.ok(provider, "provider is initialized");
+                Assert.ok(isInit, "initialization is successful");
+
+                let sender1Payload: any[] = []
+                let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender1Payload.push(payload);
+                    oncomplete(200, {});
+                }
+           
+
+                let res1: any[] = [];
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+         
+                doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any,(res) => {
+                    this.ctx.sendBatch1 = true;
+                    this.ctx.sendBatch1Res = res1;
+                    this.ctx.sendBatch1Pd =  sender1Payload;
+                    Assert.equal(res.value.state, eBatchSendStatus.Complete, "should have complete status");
+                    Assert.equal(res.value.data.id, evt.id, "should have expected event");
+                 
+                    doAwaitResponse(provider.getAllEvents(), (res)=> {
+                        this.ctx.getAll = true;
+                        let val = res.value;
+                        Assert.equal(val && val.length, 0, "should have 0 events");
+                        let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
+                        let evts = JSON.parse(storageStr).evts;
+                        Assert.deepEqual(evts, {}, "storgae should not have one event");
+                    });
+                
+                });
+        
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let sendBatch =  this.ctx.sendBatch1;
+                
+                if (sendBatch) {
+                    return true;
+                }
+                return false;
+            }, "Wait for send batch 1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let item =  this.ctx.getAll;
+                
+                if (item) {
+                    return true;
+                }
+                return false;
+            }, "Wait for get all response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Send Next Batch: Error handle store batch",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let  storageConfig = createDynamicConfig(storageObj).cfg;
+ 
+                let itemCtx = this.core.getProcessTelContext();
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                }
+                let batchHandler = new OfflineBatchHandler();
+                batchHandler.initialize(providerCxt);
+                let items = batchHandler["_getDbgPlgTargets"]();
+                let provider = items[0];
+                let isInit = items[1];
+                Assert.ok(provider, "provider is initialized");
+                Assert.ok(isInit, "initialization is successful");
+
+                let res1: any[] = [];
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+                this.sandbox.stub((provider) as any, "addEvent").callsFake((key) => {
+                    return createAsyncRejectedPromise(new Error ("add event mock error"));
+                });
+
+                let evt = TestHelper.mockEvent(endpoint, 1, false);
+                doAwaitResponse(batchHandler.storeBatch(evt, cb1),(res) => {
+                    this.ctx.storeBatch = true;
+                    if (res.rejected) {
+                        Assert.ok(false, "error should be catched");
+                        return;
+                    }
+                    
+                    let item = res.value;
+                    Assert.equal(item?.state, eBatchStoreStatus.Failure, "should have expected state");
+                    Assert.equal(item?.item.message, "add event mock error" , "should have expected message");
+                    Assert.equal(res1.length, 1, "should call callback");
+                    Assert.equal(res1[0].state, item?.state, "should call callback with expected response");
+                    
+                });
+        
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let item =  this.ctx.storeBatch;
+                
+                if (item) {
+                    return true;
+                }
+                return false;
+            }, "Wait for store batch response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Send Next Batch: Error handle clean batch",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let  storageConfig = createDynamicConfig(storageObj).cfg;
+ 
+                let itemCtx = this.core.getProcessTelContext();
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                }
+                let batchHandler = new OfflineBatchHandler();
+                batchHandler.initialize(providerCxt);
+                let items = batchHandler["_getDbgPlgTargets"]();
+                let provider = items[0];
+                let isInit = items[1];
+                Assert.ok(provider, "provider is initialized");
+                Assert.ok(isInit, "initialization is successful");
+                
+                let res1: any[] = [];
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+                this.sandbox.stub((provider) as any, "clear").callsFake((key) => {
+                    return createAsyncRejectedPromise(new Error ("clear mock error"));
+                });
+
+                doAwaitResponse(batchHandler.cleanStorage(cb1),(res) => {
+                    this.ctx.clearBatch = true;
+
+                    if (res.rejected) {
+                        Assert.ok(false, "error should be catched");
+                        return;
+                    }
+                    
+                    let item = res.value;
+                    Assert.equal(item?.batchCnt, 0, "should have expected state");
+                    Assert.equal(res1.length, 1, "should call callback");
+                    Assert.equal(res1[0].batchCnt, item?.batchCnt, "should call callback with expected response");
+                    
+                });
+
+                batchHandler.teardown();
+        
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let item =  this.ctx.clearBatch;
+                
+                if (item) {
+                    return true;
+                }
+                return false;
+            }, "Wait for clear batch response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Send Next Batch: Error handle add batch with remove error",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let  storageConfig = createDynamicConfig(storageObj).cfg;
+ 
+                let itemCtx = this.core.getProcessTelContext();
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                }
+                let batchHandler = new OfflineBatchHandler();
+                batchHandler.initialize(providerCxt);
+                let items = batchHandler["_getDbgPlgTargets"]();
+                let provider = items[0];
+                let isInit = items[1];
+                Assert.ok(provider, "provider is initialized");
+                Assert.ok(isInit, "initialization is successful");
+
+                let evt = TestHelper.mockEvent(endpoint, 1, false);
+
+                batchHandler.storeBatch(evt);
+                this.sandbox.stub((provider) as any, "removeEvents").callsFake((key) => {
+                    return createAsyncRejectedPromise(new Error ("remove mock error"));
+                });
+                let sender1Payload: any[] = []
+                let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender1Payload.push(payload);
+                    oncomplete(200, {});
+                }
+           
+                let res1: any[] = [];
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+         
+                doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}),(res) => {
+                    this.ctx.addBatch = true;
+                    if (res.rejected) {
+                        Assert.ok(false, "error should be catched");
+                        Assert.equal(res.reason.message, "error should be catched");
+                        return;
+                    }
+                    
+                    let item = res.value;
+                    Assert.equal(item?.state, eBatchSendStatus.Failure, "should have expected state");
+                    Assert.equal(item?.data.message, "remove mock error" , "should have expected message");
+                    Assert.equal(res1.length, 1, "should call callback");
+                    Assert.equal(res1[0].state, item?.state, "should call callback with expected response");
+                });
+
+                batchHandler.teardown();
+        
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let item =  this.ctx.addBatch;
+                
+                if (item) {
+                    return true;
+                }
+                return false;
+            }, "Wait for add batch response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Send Next Batch: Error handle add batch",
+            stepDelay: 100,
+            steps: [() => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let  storageConfig = createDynamicConfig(storageObj).cfg;
+ 
+                let itemCtx = this.core.getProcessTelContext();
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                }
+                let batchHandler = new OfflineBatchHandler();
+                batchHandler.initialize(providerCxt);
+                let items = batchHandler["_getDbgPlgTargets"]();
+                let provider = items[0];
+                let isInit = items[1];
+                Assert.ok(provider, "provider is initialized");
+                Assert.ok(isInit, "initialization is successful");
+                
+                let sender1Payload: any[] = []
+                let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender1Payload.push(payload);
+                    oncomplete(200, {});
+                }
+           
+                let res1: any[] = [];
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+         
+                this.sandbox.stub((provider) as any, "getNextBatch").callsFake((key) => {
+                    return createAsyncRejectedPromise(new Error ("get mock error"));
+                });
+                doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}),(res) => {
+                    this.ctx.getBatch = true;
+                    if (res.rejected) {
+                        Assert.ok(false, "error should be catched test1");
+                        return;
+                    }
+                    let item = res.value;
+                    Assert.equal(item?.state, eBatchSendStatus.Failure, "should have expected state");
+                    Assert.equal(item?.data.message, "get mock error" , "should have expected message");
+                    Assert.equal(res1.length, 1, "should call callback again");
+                    Assert.equal(res1[0].state, item?.state, "should call callback with expected response");
+                });
+
+                batchHandler.teardown();
+        
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let item =  this.ctx.getBatch;
+                
+                if (item) {
+                    return true;
+                }
+                return false;
+            }, "Wait for get batch response" + new Date().toISOString(), 15, 1000) as any)
+        });
+
         
     }
 }
@@ -686,7 +1235,7 @@ class TestHelper {
         AITestClass.orgLocalStorage.removeItem(key);
     }
 
-    static mockEvent(endPointUrl: string, criticalCnt: number, setId = true): IPayloadData {
+    static mockEvent(endPointUrl: string, criticalCnt: number, setId = true) {
         this._idCount++;
         let payload = {
             urlString: endPointUrl,

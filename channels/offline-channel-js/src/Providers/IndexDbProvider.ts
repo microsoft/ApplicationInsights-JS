@@ -4,7 +4,7 @@ import {
     IProcessTelemetryContext, IUnloadHookContainer, eLoggingSeverity, isNotNullOrUndefined, isNumber, newGuid, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncAllPromise, createAsyncPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
-import { getEndpointDomian, getTimeId } from "../Helpers/Utils";
+import { getEndpointDomian, getTimeFromId, getTimeId } from "../Helpers/Utils";
 import {
     CursorProcessResult, IIndexedDbOpenDbContext, IIndexedDbStoreActionContext, IProcessCursorState
 } from "../Interfaces/IOfflineIndexDb";
@@ -50,7 +50,7 @@ export interface IIkeyData {
  */
 export interface IIndexedDbItem {
     key?: string;                // The actual key for the event
-    id: string | number | undefined | null;                 // The stored key of the event (This MUST be the id of the event)
+    id: string | undefined | null;                 // The stored key of the event (This MUST be the id of the event)
     evt: IStorageTelemetryItem;  // The actual store
     tm: number;                 // Identifies when this event was added to the store
     v: number;                   // Identifies the version type of this entry
@@ -168,8 +168,8 @@ function _dropMaxTimeEvents(dbCtx: IIndexedDbOpenDbContext<IProviderDbContext>, 
                 return true;
             }
 
-            let addedTime = value.id;
-            let minStartTime = _getTime() + 1 - maxTime + "";
+            let addedTime = getTimeFromId(value.id);
+            let minStartTime = _getTime() + 1 - maxTime;
 
             if (addedTime <= minStartTime) {
                 return true;

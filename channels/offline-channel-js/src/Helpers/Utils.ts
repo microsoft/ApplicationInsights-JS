@@ -1,6 +1,6 @@
 
 import { generateW3CId } from "@microsoft/applicationinsights-core-js";
-import { objKeys, strSubstr } from "@nevware21/ts-utils";
+import { isString, objKeys, strSubstr } from "@nevware21/ts-utils";
 
 // Endpoint schema
 // <prefix>.<suffix>
@@ -135,6 +135,20 @@ export function getTimeId(): string {
     const random = strSubstr(generateW3CId(), 0, 8);
     // function to create spanid();
     return time + "." + random;
+}
+
+export function getTimeFromId(id: string) {
+    try {
+        let regex = new RegExp(/\d+\./g);
+        if (id && isString(id) && regex.test(id)) {
+            let arr = id.split(".");
+            return parseInt(arr[0]);
+            
+        }
+    } catch (e) {
+        // eslint-disable-next-line no-empty
+    }
+    return 0;
 }
 
 

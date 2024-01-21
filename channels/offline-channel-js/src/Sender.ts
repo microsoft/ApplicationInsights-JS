@@ -21,7 +21,7 @@ import { ILocalStorageConfiguration, IOfflineSenderConfig } from "./Interfaces/I
 import { IBackendResponse, ISenderConfig, XDomainRequest, XDomainRequest as IXDomainRequest } from "./Interfaces/ISender";
 
 const UNDEFINED_VALUE: undefined = undefined;
-const DefaultOfflineIdentifier = "OflineChannel";
+const DefaultOfflineIdentifier = "OfflineChannel";
 const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 
 
@@ -641,6 +641,7 @@ export class Sender {
                         // }
                     }
                 }
+                return;
             }
         
             /**
@@ -811,7 +812,7 @@ export class Sender {
                                     resolveFunc && resolveFunc(false);
                                 } else {
                                     doAwaitResponse(response.text(), (resp) => {
-                                        let oriPayload = internalPayload.oriPayload;
+                                        let oriPayload = internalPayload.oriPayload || [];
                                         _checkResponsStatus(response.status, response.url, oriPayload.length, response.statusText, resp.value || "", oncomplete);
                                         resolveFunc && resolveFunc(true);
                                     });

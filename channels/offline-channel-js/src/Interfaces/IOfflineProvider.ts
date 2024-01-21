@@ -87,6 +87,7 @@ export interface ILocalStorageConfiguration {
     maxSentBatchInterval?: number;
     EventsToDropPerTime?: number; //default 10
     maxCriticalEvtsDropCnt?: number; //default 2
+    //dosampling?: boolean; //TODO
 }
 
 export interface IOfflineSenderConfig extends ISenderConfig {
