@@ -2,9 +2,6 @@ import { createConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
-const browserEntryPointName = "applicationinsights-offline-channel-js";
-const browserOutputName = "applicationinsights-offlinechannel-js";
-const entryPointName = "applicationinsights-offlinechannel-js";
 const outputName = "applicationinsights-offlinechannel-js";
 
 const banner = [
@@ -26,15 +23,15 @@ export default createConfig(banner,
         namespace: "Microsoft.ApplicationInsights",
         version: version,
         node: {
-            entryPoint: entryPointName,
+            entryPoint: outputName,
             outputName: outputName
         },
         browser: {
-            entryPoint: browserEntryPointName,
-            outputName: browserOutputName
+            entryPoint: outputName,
+            outputName: outputName
         }
     },
-    [ "applicationinsights-offlinechannel-js" ]
+    ["applicationinsights-offlinechannel-js"]
 );
 
 

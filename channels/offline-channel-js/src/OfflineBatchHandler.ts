@@ -6,13 +6,12 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { AwaitResponse, IPromise, createAsyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
-    IOfflineBatchCleanResponse, IOfflineBatchResponse, IOfflineBatchStoreResponse, OfflineBatchCallback, OfflineBatchStoreCallback,
-    eBatchSendStatus, eBatchStoreStatus
+    IOfflineBatchCleanResponse, IOfflineBatchHandler, IOfflineBatchResponse, IOfflineBatchStoreResponse, OfflineBatchCallback,
+    OfflineBatchStoreCallback, eBatchSendStatus, eBatchStoreStatus
 } from "./Interfaces/IOfflineBatch";
 import { ILocalStorageProviderContext, IOfflineProvider, IStorageTelemetryItem, eStorageProviders } from "./Interfaces/IOfflineProvider";
 import { IndexedDbProvider } from "./Providers/IndexDbProvider";
 import { WebStorageProvider } from "./Providers/WebStorageProvider";
-import { IOfflineBatchHandler } from "./applicationinsights-offlinechannel-js";
 
 const MaxStorageProviderConfig = 2;
 const NoProviderErrMsg = "No provider is available";
@@ -381,8 +380,8 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
         return null;
     }
 
-    public teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
+    public teardown (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
-    };
+    }
 }

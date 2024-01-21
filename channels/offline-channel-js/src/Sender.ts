@@ -1,14 +1,14 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IConfig, IEnvelope,
-    IOfflineListener, ISample, Metric, PageView, PageViewPerformance, RemoteDependencyData, RequestHeaders, Trace, eRequestHeaders,
+    IOfflineListener, Metric, PageView, PageViewPerformance, RemoteDependencyData, RequestHeaders, Trace, eRequestHeaders,
     isInternalApplicationInsightsEndpoint, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IConfigDefaults, IConfiguration, IDiagnosticLogger, IPayloadData, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, IUnloadHookContainer, IXHROverride, OnCompleteCallback,
     SendPOSTFunction, SendRequestReason, TransportType, _eInternalMessageId, _throwInternal, arrForEach, cfgDfBoolean, cfgDfValidate,
-    createProcessTelemetryContext, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getJSON, getNavigator, getWindow, isArray,
+    createProcessTelemetryContext, dumpObj, eLoggingSeverity, getExceptionName, getJSON, getNavigator, getWindow, isArray,
     isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, objKeys, onConfigChange, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
@@ -512,7 +512,7 @@ export class Sender {
                     // } else {
                     //     _onError(payload, errorMessage);
                     // }
-                } else if (_offlineListener && !_offlineListener.isOnline()) { // offline
+                    //} else if (_offlineListener && !_offlineListener.isOnline()) { // offline
                     // Note: Don't check for status == 0, since adblock gives this code
                     // if (!_isRetryDisabled) {
                     //     const offlineBackOffMultiplier = 10; // arbritrary number
@@ -879,13 +879,13 @@ export class Sender {
              */
             function _setupTimer() {
                 if (!_timeoutHandle && !_paused) {
-                    const retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
-                    const timerValue = Math.max(_maxBatchInterval, retryInterval);
+                    // const retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
+                    // const timerValue = Math.max(_maxBatchInterval, retryInterval);
         
                     _timeoutHandle = scheduleTimeout(() => {
                         _timeoutHandle = null;
                         _self.triggerSend(true, null, SendRequestReason.NormalSchedule);
-                    }, timerValue);
+                    }, _maxBatchInterval);
                 }
             }
 
@@ -1135,10 +1135,10 @@ export class Sender {
      * @param name - Header name.
      * @param value - Header value.
      */
-    public addHeader = (name: string, value: string) => {
+    public addHeader(name: string, value: string) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
       
-    };
+    }
 
     /**
      * Get all request headers

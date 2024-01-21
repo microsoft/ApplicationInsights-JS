@@ -95,7 +95,10 @@
             "constEnums": [
                 "eStorageType",
                 "eBatchSendStatus",
-                "eBatchStoreStatus"
+                "eBatchStoreStatus",
+                "CursorProcessResult",
+                "eEventPersistenceValue",
+                "ValueQueryType"
             ]
         }
     }

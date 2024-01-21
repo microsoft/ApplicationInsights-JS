@@ -391,7 +391,7 @@ export class WebStorageProvider implements IOfflineProvider {
                         // should not throw errors here
                         // because we don't want to block following process
                     }
-                    return false
+                    return false;
                 }
 
             }

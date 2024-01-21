@@ -492,7 +492,7 @@ export class IndexedDbProvider implements IOfflineProvider {
                     );
                 });
 
-            }
+            };
 
             /**
              * Shuts-down the telemetry plugin. This is usually called when telemetry is shut down.

@@ -1,4 +1,3 @@
-
 export { IInMemoryBatch, IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
 export  { IOfflineBatchCleanResponse, IOfflineBatchHandler, IOfflineBatchHandlerCfg, IOfflineBatchResponse,
     IOfflineBatchStoreResponse, eBatchSendStatus, eBatchStoreStatus, eStorageType,

@@ -17,7 +17,9 @@ import { Sample } from "./Helpers/Sample";
 import { isGreaterThanZero } from "./Helpers/Utils";
 import { InMemoryBatch } from "./InMemoryBatch";
 import { IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
-import { OfflineBatchCallback, OfflineBatchStoreCallback, eBatchSendStatus, eBatchStoreStatus } from "./Interfaces/IOfflineBatch";
+import {
+    IOfflineBatchHandler, OfflineBatchCallback, OfflineBatchStoreCallback, eBatchSendStatus, eBatchStoreStatus
+} from "./Interfaces/IOfflineBatch";
 import {
     ILocalStorageConfiguration, ILocalStorageProviderContext, IStorageTelemetryItem, eEventPersistenceValue, eStorageProviders
 } from "./Interfaces/IOfflineProvider";
@@ -25,7 +27,6 @@ import { OfflineBatchHandler } from "./OfflineBatchHandler";
 import { isValidPersistenceLevel } from "./Providers/IndexDbProvider";
 import { Sender } from "./Sender";
 import { Serializer } from "./Serializer";
-import { IOfflineBatchHandler } from "./applicationinsights-offlinechannel-js";
 
 const version = "#version#";
 const DefaultOfflineIdentifier = "OfflineChannel";
@@ -141,6 +142,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             _self.processTelemetry = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 try {
                     let onlineStatus = _offlineListener.isOnline(); // err handle
+                    itemCtx =  itemCtx || _self._getTelCtx(itemCtx);
+
                     if (!!onlineStatus) {
                         _self.processNext(evt, itemCtx);
                         return;
@@ -163,7 +166,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
 
                  
-                        itemCtx = _self._getTelCtx(itemCtx);
+                       
                         let item = evt as IPostTransmissionTelemetryItem;
                         item.persistence = item.persistence || eEventPersistenceValue.Normal;
                         if (_shouldCacheEvent(_urlCfg, item) && _inMemoBatch) {
@@ -219,7 +222,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             _self.getOfflineListener = () => {
                 return _offlineListener;
 
-            }
+            };
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _self.onunloadFlush();
@@ -350,7 +353,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                 _inMemoBatch.addEvent(item);
                             });
                         }
-                    }
+                    };
                     if (payloadData) {
                         let promise = _urlCfg.batchHandler.storeBatch(payloadData, callback, unload);
                         _queueStorageEvent("storeBatch", promise);

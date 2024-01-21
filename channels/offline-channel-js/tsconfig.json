@@ -12,6 +12,7 @@
         "importHelpers": true,
         "noEmitHelpers": true,
         "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
         "declaration": true,
         "declarationDir": "build/types",
         "removeComments": false,
@@ -24,3 +25,4 @@
         "node_modules/**"
     ]
 }
+  
