@@ -85,6 +85,7 @@ The current version of the snippet is version 7, the version is identified by th
     // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
     // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
     // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
+    // dle: true, // Prevent the SDK from reporting load failure log
     crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
     // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
     cfg: { // Application Insights Configuration
@@ -561,9 +562,11 @@ eg. ```var aiSdk = require("@microsoft/applicationinsights-web");```
 
 This situation can also occur when the scripts are loaded lazily, late or dynamically (__and__ RequireJs is present) as this can cause a race condition between the SDK and RequireJS, which will cause the same issue if RequireJS is loaded first.
 
+If users load Application Insights from the CDN via a script tag with require js running by other scripts, errors may occur. A typical error could be "Error: Mismatched anonymous define() module". The root reason is explained [here](https://requirejs.org/docs/errors.html#mismatch).
+
 To support this usage pattern we also produce and publish to the CDN endpoints an [iife (Immediately Invoked Function Expression)](https://www.codeproject.com/Articles/5265230/Understanding-all-JavaScript-Module-Formats-and-To#iife-module-javascript-module-pattern) module so that the SDK is always executed and initialized.
 
-To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name. (Note: Since version 7, the gbl modules is set to be default.)
+To use these modules instead of using the default script name simply add ```.gbl``` before the ```.min.js``` eg. use ```.gbl.min.js``` instead of ```.min.js``` at the end of the script name. (Note: Since version 7, the gbl modules is set as default module to solve the potential [problem](#module-formats) caused by require.js)
 
 These modules are also included in the NPM packages within the ```bundle``` folder.
 

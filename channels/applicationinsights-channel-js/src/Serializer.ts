@@ -149,11 +149,7 @@ export class Serializer {
                                 output[field] = "null";
                             } else {
                                 const num = parseFloat(value);
-                                if (isNaN(num)) {
-                                    output[field] = "NaN";
-                                } else {
-                                    output[field] = num;
-                                }
+                                output[field] = num;
                             }
                         } else {
                             output[field] = "invalid field: " + name + " is of unknown type.";

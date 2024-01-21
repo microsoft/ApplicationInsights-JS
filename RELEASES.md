@@ -2,6 +2,28 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.7 (Dec 14th, 2023)
+
+### Changelog
+
+This release is a hotfix for issue #2216, which is simular to the issue fixed in `3.0.6` but for the `fetch` (with the keep-alive flag).
+
+### Changelog
+
+- #2216 [release-3.0] Cherrypick (main): fix fetchkeepalive
+- #2221 [release-3.0] Cherrypick (main): Fixup the ci.yml to address internal hash changes between different node versions
+
+## 3.0.6 (Dec 7th, 2023)
+
+This release fixes an issue with the `sendBeacon` usage during page unload, where the SDK was not correctly splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload.
+
+### Changelog
+
+- #2195 [BUG] Beacon sender causes flood of thousands of requests on page unload
+- #2201 [BUG] applicationinsights.azure.com/v2/track making hundreds of thousands of requests when third party cookies are disabled
+- #2205 [BUG] Duplicate customEvent entries
+- #2204 [BUG] Beacon sender reports error for success when diagnostics are enabled
+
 ## 3.0.5 (Nov 1st, 2023)
 
 ### Changelog
@@ -16,21 +38,25 @@
 
 ### Changelog
 
+- #2162 [BUG] window is not defined at _getStackFromErrorObj 
+- #2163 [BUG] Using App Insights connection string leads to double slash 
+- #2164 [BUG] Fetch with empty string as first parameter does not include traceparent and does not successfully save dependency to Application Insights
+- #2165 [main] use proper URL for tracking when fetch is passed an empty string 
+- #2180  [BUG] Same timestamp on multiple pageView-events after upgrade to 3.0.3 
 - CfgSyncPlugin improvment
   - #2166 [main] correct throttle configdefault setting in aisku 
   - #2168 [Main][Task]24499167: add cfgSync plugin doc 
   - #2171 [main] test aisku config could correctly merge new config fetch from cdn 
   - #2175 [main] Update Service Notifications to not send message twice 
-
-- #2160 [Main] Include Config sync in publish group 
-- #2165 [main] use proper URL for tracking when fetch is passed an empty string 
-- #2169 [Main][Task]24499172: add throttle manager doc 
-- #2170 [Main][Task]24499174: Add service notification doc 
-- #2173 Add Issue state reporting script 
-- #2174 [main] remove double slash for endPointUrl
-- #2177 [Main]Set CfgSync version to 3.0.3 
-- #2178 [main] use helper func to get window 
-- #2183 [main] fix startTime timestamp 
+  - #2177 [Main]Set CfgSync version to 3.0.3 
+  - #2160 [Main] Include Config sync in publish group 
+- Documentation update
+  - #2169 [Main][Task]24499172: add throttle manager doc 
+  - #2170 [Main][Task]24499174: Add service notification doc 
+- Github workflow improvement 
+  - #2173 Add Issue state reporting script 
+- Sender Update
+  - #2113 [Main][Task]16238553: Provide an override option for the Sender
 
 ## 3.0.3 (Sep 20th, 2023)
 

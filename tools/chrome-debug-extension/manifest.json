@@ -2,8 +2,8 @@
     "name": "Telemetry Viewer",
     "short_name": "Telemetry Viewer",
     "description": "A browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
-    "version": "0.4.5",
-    "version_name": "0.4.5",
+    "version": "0.4.7",
+    "version_name": "0.4.7",
     "manifest_version": 2,
     "icons": {
         "16": "images/icon-16.png",

@@ -15,7 +15,7 @@ import {
     useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isNumber, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
@@ -53,6 +53,17 @@ function isOverrideFn(httpXHROverride: any) {
     return httpXHROverride && httpXHROverride.sendPOST;
 }
 
+function _prependTransports(theTransports: TransportType[], newTransports: TransportType | TransportType[]) {
+    if (newTransports) {
+        if (isNumber(newTransports)) {
+            theTransports = [newTransports as TransportType].concat(theTransports);
+        } else if (isArray(newTransports)) {
+            theTransports = newTransports.concat(theTransports);
+        }
+    }
+    return theTransports;
+}
+
 const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepFreeze({
     // Use the default value (handles empty string in the configuration)
     endpointUrl: cfgDfValidate(isTruthy, DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH),
@@ -63,6 +74,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     enableSessionStorageBuffer: cfgDfBoolean(true),
     isRetryDisabled: cfgDfBoolean(),
     isBeaconApiDisabled: cfgDfBoolean(true),
+    disableSendBeaconSplit: cfgDfBoolean(true),
     disableXhr: cfgDfBoolean(),
     onunloadDisableFetch: cfgDfBoolean(),
     onunloadDisableBeacon: cfgDfBoolean(),
@@ -74,7 +86,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     eventsLimitInMem: 10000,
     bufferOverride: false,
     httpXHROverride: { isVal: isOverrideFn, v:UNDEFINED_VALUE },
-    alwaysUseXhrOverride: cfgDfBoolean()
+    alwaysUseXhrOverride: cfgDfBoolean(),
+    transports: UNDEFINED_VALUE
 });
 
 function _chkSampling(value: number) {
@@ -159,6 +172,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _orgEndpointUrl: string;
         let _maxBatchSizeInBytes: number;
         let _beaconSupported: boolean;
+        let _beaconOnUnloadSupported: boolean;
+        let _beaconNormalSupported: boolean;
         let _customHeaders: Array<{header: string, value: string}>;
         let _disableTelemetry: boolean;
         let _instrumentationKey: string;
@@ -173,6 +188,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _disableXhr: boolean;
         let _fetchKeepAlive: boolean;
         let _xhrSend: SenderFunction;
+        let _fallbackSend: SenderFunction;
+        let _disableBeaconSplit: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -281,6 +298,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
                     _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
+                    _beaconOnUnloadSupported = senderConfig.onunloadDisableBeacon === false  && isBeaconsSupported();
+                    _beaconNormalSupported = senderConfig.isBeaconApiDisabled === false && isBeaconsSupported();
+
                     _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     _disableXhr = !!senderConfig.disableXhr;
                     
@@ -325,6 +345,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _sessionStorageUsed = canUseSessionStorage;
                     _bufferOverrideUsed = bufferOverride;
                     _fetchKeepAlive = !senderConfig.onunloadDisableFetch && isFetchSupported(true);
+                    _disableBeaconSplit = !!senderConfig.disableSendBeaconSplit;
 
                     _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
 
@@ -348,21 +369,23 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let customInterface = senderConfig.httpXHROverride;
                     let httpInterface: IXHROverride = null;
                     let syncInterface: IXHROverride = null;
-                    httpInterface = _getSenderInterface([TransportType.Xhr, TransportType.Fetch], false);
+
+                    // User requested transport(s) values > Beacon > Fetch > XHR
+                    // Beacon would be filtered out if user has set disableBeaconApi to true at _getSenderInterface
+                    let theTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
+
+                    httpInterface = _getSenderInterface(theTransports, false);
                   
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
                     _xhrSend = (payload: string[], isAsync: boolean) => {
                         return _doSend(xhrInterface, payload, isAsync);
                     };
+                    _fallbackSend = (payload: string[], isAsync: boolean) => { // for fallback send, should NOT mark payload as sent again!
+                        return _doSend(xhrInterface, payload, isAsync, false);
+                    };
     
-    
-                    if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported()) {
-                        // Config is set to always used beacon sending
-                        httpInterface = _getSenderInterface([TransportType.Beacon], false);
-                    }
-
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
-    
+
                     _self._sender = (payload: string[], isAsync: boolean) => {
                         return _doSend(httpInterface, payload, isAsync);
                     };
@@ -371,9 +394,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         // Try and use the fetch with keepalive
                         _syncUnloadSender = _fetchKeepAliveSender;
                     }
-                    syncInterface = _alwaysUseCustomSend? customInterface : (_getSenderInterface([TransportType.Beacon, TransportType.Xhr], true) || customInterface);
+                    
+                    let syncTransports: TransportType[] = _prependTransports([TransportType.Beacon, TransportType.Xhr], senderConfig.unloadTransports);
+                    if (!_fetchKeepAlive){
+                        // remove fetch from theTransports
+                        syncTransports = syncTransports.filter(transport => transport !== TransportType.Fetch);
+                    }
 
-                    if ((_alwaysUseCustomSend || !_syncUnloadSender) && syncInterface) {
+                    syncInterface = _getSenderInterface(syncTransports, true);
+                    syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
+                   
+                    if ((_alwaysUseCustomSend || senderConfig.unloadTransports || !_syncUnloadSender) && syncInterface) {
                         _syncUnloadSender = (payload: string[], isAsync: boolean) => {
                             return _doSend(syncInterface, payload, isAsync);
                         };
@@ -659,7 +690,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport)) {
                         sendPostFunc = _fetchSender;
-                    } else if (isBeaconsSupported() && transportType === TransportType.Beacon) {
+                    } else if (transportType === TransportType.Beacon && (syncSupport ? _beaconOnUnloadSupported : _beaconNormalSupported)) {
                         sendPostFunc = _beaconSender;
                     }
 
@@ -681,11 +712,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 //TODO: handle other status codes
                 if (status === 200 && payload) {
                     _self._onSuccess(payload, payload.length);
+                } else {
+                    response && _self._onError(payload, response);
                 }
-                response && _self._onError(payload, response);
             }
 
-            function _doSend(sendInterface: IXHROverride, payload: string[], isAsync: boolean): void | IPromise<boolean> {
+            function _doSend(sendInterface: IXHROverride, payload: string[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
                     return _getOnComplete(payload, status, headers, response);
                 }
@@ -695,7 +727,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (sendPostFunc && payloadData) {
                     // ***********************************************************************************************
                     // mark payload as sent at the beginning of calling each send function
-                    _self._buffer.markAsSent(payload);
+                    if (markAsSent) {
+                        _self._buffer.markAsSent(payload);
+                    }
+                   
                     return sendPostFunc(payloadData, onComplete, !isAsync);
                 }
                 return null;
@@ -835,25 +870,36 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // We are unloading so always call the sender with sync set to false
                     _syncUnloadSender(payload, false);
                 } else {
+                    
                     // Fallback to the previous beacon Sender (which causes a CORB warning on chrome now)
-                    let payloadData = _getPayload(payload)
+                    let payloadData = _getPayload(payload);
+                    _self._buffer.markAsSent(payload);
                     _beaconSender(payloadData, onComplete, !isAsync);
                 }
             }
 
             
-            function _doBeaconSend(payload: string, oncomplete?: OnCompleteCallback) {
+            function _doBeaconSend(payload: string[], oncomplete?: OnCompleteCallback) {
                 const nav = getNavigator();
                 const url = _endpointUrl;
+                const buffer = _self._buffer;
             
                 // Chrome only allows CORS-safelisted values for the sendBeacon data argument
                 // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
-                const plainTextBatch = new Blob([payload], { type: "text/plain;charset=UTF-8" });
+                const batch = buffer.batchPayloads(payload);
+            
+                // Chrome only allows CORS-safelisted values for the sendBeacon data argument
+                // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
+                const plainTextBatch = new Blob([batch], { type: "text/plain;charset=UTF-8" });
         
                 // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
                 const queued = nav.sendBeacon(url, plainTextBatch);
+
                 if (queued) {
-                    oncomplete(200, {}, payload)
+                    // Should NOT pass onComplete directly since onComplete will always be called at full batch level
+                    //buffer.markAsSent(payload);
+                    // no response from beaconSender, clear buffer
+                    _self._onSuccess(payload, payload.length);
                 }
 
                 return queued;
@@ -868,27 +914,26 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              */
             function _beaconSender(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
                 let internalPayload = payload as IInternalPayloadData;
-                let data = internalPayload  && internalPayload.data;
-                if (isString(data) && data.length > 0) {
+                let data = internalPayload  && internalPayload.oriPayload;
+                if (isArray(data) && data.length > 0) {
                     // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
                     if (!_doBeaconSend(data, oncomplete)) {
-                        // Failed to send entire payload so try and split data and try to send as much events as possible
-                        let droppedPayload: string[] = [];
-                        let oriPayload = internalPayload.oriPayload;
-                        if (oriPayload.length > 0) {
+                        if (!_disableBeaconSplit) {
+                            // Failed to send entire payload so try and split data and try to send as much events as possible
+                            let droppedPayload: string[] = [];
                             for (let lp = 0; lp < data.length; lp++) {
-                                const thePayload = payload[lp];
-                                const batch = _self._buffer.batchPayloads(thePayload);
-        
-                                if (!_doBeaconSend(batch, oncomplete)) {
+                                const thePayload = data[lp];
+                                if (!_doBeaconSend([thePayload], oncomplete)) {
                                     // Can't send anymore, so split the batch and drop the rest
                                     droppedPayload.push(thePayload);
                                 }
                             }
-                        }
-    
-                        if (droppedPayload.length > 0) {
-                            _xhrSend && _xhrSend(droppedPayload, true);
+                            if (droppedPayload.length > 0) {
+                                _fallbackSend && _fallbackSend(droppedPayload, true);
+                                _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
+                            }
+                        } else {
+                            _fallbackSend && _fallbackSend(data, true);
                             _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                         }
                     }
@@ -914,6 +959,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
                     // cause the request to fail and we no telemetry would be sent
                 }
+                
                 xhr.open("POST", endPointUrl, !sync);
                 xhr.setRequestHeader("Content-type", "application/json");
         
@@ -946,7 +992,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     });
                 }
 
-
                 xhr.send(payload.data);
 
                 return thePromise;
@@ -963,6 +1008,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         payloadSize += payload[lp].length;
                     }
                     let payloadData = _getPayload(payload);
+                    _self._buffer.markAsSent(payload);
 
                     if ((_syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {
                         _doFetchSender(payloadData, onComplete, true);
@@ -971,7 +1017,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _beaconSender(payloadData, onComplete, !isAsync);
                     } else {
                         // Payload is going to be too big so just try and send via XHR
-                        _xhrSend && _xhrSend(payload, true);
+                        _fallbackSend && _fallbackSend(payload, true);
                         _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
                     }
                 }
@@ -1330,7 +1376,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 _namePrefix = UNDEFINED_VALUE;
                 _disableXhr = false;
                 _fetchKeepAlive = false;
+                _disableBeaconSplit = false;
                 _xhrSend = null;
+                _fallbackSend = null;
 
                 objDefine(_self, "_senderConfig", {
                     g: function() {

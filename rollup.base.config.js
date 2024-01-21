@@ -19,7 +19,8 @@ function doCleanup() {
     comments: [
       'some', 
       /^.\s*@DynamicProtoStub/i,
-      /^\*\*\s*@class\s*$/
+      /^\*\*\s*@class\s*$/,
+      /[#@]__/
     ]
   })
 }
