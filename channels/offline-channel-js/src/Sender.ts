@@ -18,7 +18,7 @@ import {
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
 } from "./Helpers/EnvelopeCreator";
 import { ILocalStorageConfiguration, IOfflineSenderConfig } from "./Interfaces/IOfflineProvider";
-import { IBackendResponse, ISenderConfig, XDomainRequest, XDomainRequest as IXDomainRequest } from "./Interfaces/ISender";
+import { IBackendResponse, ISenderConfig, XDomainRequest as IXDomainRequest } from "./Interfaces/ISender";
 
 const UNDEFINED_VALUE: undefined = undefined;
 const DefaultOfflineIdentifier = "OfflineChannel";

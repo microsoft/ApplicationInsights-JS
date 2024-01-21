@@ -394,7 +394,7 @@ export class WebStorageProvider implements IOfflineProvider {
                     return false;
                 }
 
-            }
+            };
 
             /**
              * Shuts-down the telemetry plugin. This is usually called when telemetry is shut down.
