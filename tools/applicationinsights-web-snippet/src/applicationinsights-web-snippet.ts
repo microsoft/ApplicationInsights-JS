@@ -13,14 +13,12 @@ function webSnippetVersion() {
 }
 
 function getSdkLoaderScript(config: SdkLoaderConfig) {
-    let snippet: string = webSnippet;
+    let snippet: string = webSnippetCs;
     if (config && config.connectionString) {
         snippet = webSnippetCs.replace("YOUR_CONNECTION_STRING", config.connectionString);
     } else if (config && config.instrumentationKey) {
         snippet = webSnippet.replace("InstrumentationKey=INSTRUMENTATION_KEY", config.instrumentationKey);
-    } else {
-        console.log("No instrumentationKey or connectionString was provided to the init function");
-    }
+    } 
     return snippet;
 }
 
