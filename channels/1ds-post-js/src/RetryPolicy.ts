@@ -24,7 +24,6 @@ export function retryPolicyShouldRetryForStatus(httpStatusCode: number): boolean
     /* tslint:disable:triple-equals */
     // Disabling triple-equals rule to avoid httpOverrides from failing because they are returning a string value
     return !((httpStatusCode >= 300 && httpStatusCode < 500  && httpStatusCode != 429)
-        || (httpStatusCode == 204)
         || (httpStatusCode == 501)
         || (httpStatusCode == 505));
     /* tslint:enable:triple-equals */

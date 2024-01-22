@@ -2536,11 +2536,10 @@ export class HttpManagerTest extends AITestClass {
                 test: () => {
                     // according to the one collector policy
                     // status that should retry : 429, 500, 503
-                    // status that should not retry : 204, 400, 401, 403, 408, 415, 501, 505
+                    // status that should not retry : 204 (will return complete before checking retry in httpManager), 400, 401, 403, 408, 415, 501, 505
                     QUnit.assert.equal(true, retryPolicyShouldRetryForStatus(429), "status code 429 should retry");
                     QUnit.assert.equal(true, retryPolicyShouldRetryForStatus(500), "status code 500 should retry");
                     QUnit.assert.equal(true, retryPolicyShouldRetryForStatus(503), "status code 503 should retry");
-                    QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(204), "status code 204 should not retry");
                     QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(400), "status code 400 should not retry");
                     QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(401), "status code 401 should not retry");
                     QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(403), "status code 403 should not retry");
