@@ -1,3 +1,5 @@
+import { SdkLoaderConfig } from "./type";
+
 const webSnippet = "##replaceIKeySnippet##";
 const webSnippetCs = "##replaceConnStringSnippet##";
 
@@ -10,20 +12,17 @@ function webSnippetVersion() {
     return "";
 }
 
-function substituteInstrumentationKey(key: string) {
-    let userSnippet: String = webSnippet;
-    if (key && key.trim() !== "") {
-        userSnippet = webSnippet.replace("InstrumentationKey=INSTRUMENTATION_KEY", key);
+function getSdkLoaderScript(config: SdkLoaderConfig) {
+    let snippet: string = webSnippet;
+    if (config && config.connectionString) {
+        snippet = webSnippetCs.replace("YOUR_CONNECTION_STRING", config.connectionString);
+    } else if (config && config.instrumentationKey) {
+        snippet = webSnippet.replace("InstrumentationKey=INSTRUMENTATION_KEY", config.instrumentationKey);
+    } else {
+        console.log("No instrumentationKey or connectionString was provided to the init function");
     }
-    return userSnippet;
+    return snippet;
 }
 
-function substituteConnectionString(key: string) {
-    let userSnippetCs: String = webSnippetCs;
-    if (key && key.trim() !== "") {
-        userSnippetCs = webSnippetCs.replace("YOUR_CONNECTION_STRING", key);
-    }
-    return userSnippetCs;
-}
 
-export { webSnippet, webSnippetCs, webSnippetVersion, substituteInstrumentationKey, substituteConnectionString }
+export { webSnippet, webSnippetCs, webSnippetVersion, getSdkLoaderScript }

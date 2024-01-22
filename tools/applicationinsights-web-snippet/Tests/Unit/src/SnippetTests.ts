@@ -1,5 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { webSnippetVersion, webSnippet, webSnippetCs, substituteInstrumentationKey, substituteConnectionString } from "../../../dist-es5/applicationinsights-web-snippet";
+import { webSnippetVersion, webSnippet, webSnippetCs, getSdkLoaderScript } from "../../../dist-es5/applicationinsights-web-snippet";
 
 export class SnippetTests extends AITestClass {
 
@@ -44,7 +44,8 @@ export class SnippetTests extends AITestClass {
             name: "Check substituteInstrumentationKey",
             test: () => {
                 let key = "814a172a-xxxx-4950-9023-9cf13bb65696";
-                let theSnippet = substituteInstrumentationKey(key);
+                let config = {instrumentationKey: key};
+                let theSnippet = getSdkLoaderScript(config);
                 console.log(theSnippet);
                 QUnit.assert.equal(-1, theSnippet.indexOf("InstrumentationKey"), "The Snippet does not contains InstrumentationKey");
                 QUnit.assert.equal(-1, theSnippet.indexOf("YOUR_CONNECTION_STRING"), "The Snippet should not contain YOUR_CONNECTION_STRING");
@@ -56,7 +57,8 @@ export class SnippetTests extends AITestClass {
             name: "Check substituteConnectionString",
             test: () => {
                 let key = "InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/";
-                let theSnippet = substituteConnectionString(key);
+                let config = {connectionString: key};
+                let theSnippet = getSdkLoaderScript(config);
                 console.log(theSnippet);
                 QUnit.assert.notEqual(-1, theSnippet.indexOf("InstrumentationKey"), "The Snippet contains InstrumentationKey");
                 QUnit.assert.equal(-1, theSnippet.indexOf("YOUR_CONNECTION_STRING"), "The Snippet should not contain YOUR_CONNECTION_STRING");
