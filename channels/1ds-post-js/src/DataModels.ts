@@ -234,6 +234,17 @@ export interface IChannelConfiguration {
      * value to indicate that the server should return a 204 for successful requests. Defaults to true
      */
     addNoResponse?: boolean;
+
+    /**
+     * :warning: DO NOT USE THIS FLAG UNLESS YOU KNOW THAT PII DATA WILL NEVER BE INCLUDED IN THE EVENT!
+     *
+     * [Optional] Flag to indicate whether the SDK should include the common schema metadata in the payload. Defaults to true.
+     * This flag is only applicable to the POST channel and will cause the SDK to exclude the common schema metadata from the payload,
+     * while this will reduce the size of the payload, also means that the data marked as PII will not be processed as PII by the backend
+     * and will not be included in the PII data purge process.
+     * @since 4.1.0
+     */
+    excludeCsMetaData?: boolean;
 }
 
 /**
