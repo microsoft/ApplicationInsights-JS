@@ -176,8 +176,8 @@ export interface IChannelConfiguration {
 
      /**
      * [Optional] Avoid adding request headers to the outgoing request that would cause a pre-flight (OPTIONS) request to be sent for each request.
-     * This currently defaults to true but will be changed once the collector handles additional settings to allow the browser to better cache any
-     * previous OPTIONS response, at which point some of the current dynamic values sent on the query string will be moved to a header.
+     * This currently defaults to false. This is changed as the collector enables Access-Control-Max-Age to allow the browser to better cache any
+     * previous OPTIONS response. Hence, we moved some of the current dynamic values sent on the query string to a header.
      */
     avoidOptions?: boolean;
 
