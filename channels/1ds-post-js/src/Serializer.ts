@@ -38,6 +38,30 @@ const metadata = "metadata";
 const f = "f";
 const rCheckDot = /\./;
 
+/**
+ * @ignore
+ * Identifies the callback to add metadata for a property.
+ * @since 4.1.0
+ * @group Private
+ * @param pathKeys - The path keys for the property
+ * @param key - The property key
+ * @param value - The property value
+ */
+type EventMetaDataCallback = (pathKeys: string[], key: string, value: IEventProperty) => void;
+
+/**
+ * @ignore
+ * Identifies the callback to get the encoded type for a property.
+ * This is added as a future hook for the serializer to allow for custom encoding of properties.
+ * @since 4.1.0
+ * @group Private
+ * @param value - The property value
+ * @param kind - The property value kind
+ * @param type - The property type
+ * @returns The encoded type for the property
+ */
+export type SerializerGetEncodedType = (value: string | boolean | number | string[] | number[] | boolean[] | undefined, kind: number | undefined, type?: number | undefined) => number;
+
 export interface ISerializedPayload {
     /**
      * The collection of iKeys included in this payload
@@ -116,15 +140,26 @@ export interface ISerializedPayload {
 */
 export class Serializer {
 
-    constructor(perfManager?: IPerfManagerProvider, valueSanitizer?: IValueSanitizer, stringifyObjects?: boolean, enableCompoundKey?: boolean) {
+    /**
+     * Constructs a new instance of the Serializer class
+     * @param perfManager - The performance manager to use for tracking performance
+     * @param valueSanitizer - The value sanitizer to use for sanitizing field values
+     * @param stringifyObjects - Should objects be stringified before being sent
+     * @param enableCompoundKey - Should compound keys be enabled (defaults to false)
+     * @param getEncodedTypeOverride - The callback to get the encoded type for a property defaults to ({@link getCommonSchemaMetaData }(...))
+     * @param excludeCsMetaData - (!DANGER!) Should metadata be populated when encoding the event blob (defaults to false) - PII data will NOT be tagged as PII for backend processing
+     */
+    constructor(perfManager?: IPerfManagerProvider, valueSanitizer?: IValueSanitizer, stringifyObjects?: boolean, enableCompoundKey?: boolean, getEncodedTypeOverride?: SerializerGetEncodedType, excludeCsMetaData?: boolean) {
         const strData = "data";
         const strBaseData = "baseData";
         const strExt = "ext";
 
         let _checkForCompoundkey = !!enableCompoundKey;
-        let _processSubMetaData = true;
+        let _processSubKeys = true;
         let _theSanitizer: IValueSanitizer = valueSanitizer;
         let _isReservedCache = {};
+        let _excludeCsMetaData: boolean = !!excludeCsMetaData;
+        let _getEncodedType: SerializerGetEncodedType = getEncodedTypeOverride || getCommonSchemaMetaData;
 
         dynamicProto(Serializer, this, (_self) => {
 
@@ -255,6 +290,13 @@ export class Serializer {
                         // Assigning local var so usage in part b/c don't throw if there is no ext
                         let serializedExt = {};
 
+                        let _addMetadataCallback: EventMetaDataCallback;
+                        if (!_excludeCsMetaData) {
+                            _addMetadataCallback = (pathKeys: string[], key: string, value: IEventProperty) => {
+                                _addJSONPropertyMetaData(_getEncodedType, serializedExt, pathKeys, key, value);
+                            };
+                        }
+
                         // Part A
                         let eventExt = eventData[strExt];
                         if (eventExt) {
@@ -274,14 +316,10 @@ export class Serializer {
                         let serializedBaseData = serializedData[strBaseData] = {};
 
                         // Part B
-                        _processPathKeys(eventData.baseData, serializedBaseData, strBaseData, false, [strBaseData], (pathKeys, name, value) => {
-                            _addJSONPropertyMetaData(serializedExt, pathKeys, name, value);
-                        }, _processSubMetaData);
+                        _processPathKeys(eventData.baseData, serializedBaseData, strBaseData, false, [strBaseData], _addMetadataCallback, _processSubKeys);
 
                         // Part C
-                        _processPathKeys(eventData.data, serializedData, strData, false, [], (pathKeys, name, value) => {
-                            _addJSONPropertyMetaData(serializedExt, pathKeys, name, value);
-                        }, _processSubMetaData);
+                        _processPathKeys(eventData.data, serializedData, strData, false, [], _addMetadataCallback, _processSubKeys);
 
                         return JSON.stringify(serializedEvent);
                     }, () => ({ item: eventData }));
@@ -311,7 +349,7 @@ export class Serializer {
                 thePath: string,
                 checkReserved: boolean,
                 metadataPathKeys: string[],
-                metadataCallback: (pathKeys: string[], key: string, value: IEventProperty) => void,
+                metadataCallback: EventMetaDataCallback,
                 processSubKeys: boolean) {
 
                 objForEachKey(srcObj, (key, srcValue) => {
@@ -443,10 +481,21 @@ export class Serializer {
 
 /**
  * @ignore
+ * @param getEncodedType - The function to get the encoded type for the property
+ * @param json - The json object to add the metadata to
+ * @param propKeys - The property keys to add to the metadata
+ * @param name - The name of the property
+ * @param propertyValue - The property value
  */
-function _addJSONPropertyMetaData(json: { [name: string]: {} }, propKeys: string[], name: string, propertyValue: IEventProperty | null) {
+function _addJSONPropertyMetaData(
+    getEncodedType: (value: string | boolean | number | string[] | number[] | boolean[] | undefined, kind: number | undefined, type?: number | undefined) => number,
+    json: { [name: string]: {} },
+    propKeys: string[],
+    name: string,
+    propertyValue: IEventProperty | null) {
+
     if (propertyValue && json) {
-        let encodedTypeValue = getCommonSchemaMetaData(propertyValue.value, propertyValue.kind, propertyValue.propertyType);
+        let encodedTypeValue = getEncodedType(propertyValue.value, propertyValue.kind, propertyValue.propertyType);
         if (encodedTypeValue > -1) {
             // Add the root metadata
             let metaData = json[metadata];

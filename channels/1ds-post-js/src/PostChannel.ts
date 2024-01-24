@@ -84,7 +84,8 @@ const defaultPostChannelConfig: IConfigDefaults<IChannelConfiguration> = objDeep
     alwaysUseXhrOverride: false,
     maxEventRetryAttempts: { isVal: isNumber, v: MaxSendAttempts },
     maxUnloadEventRetryAttempts: { isVal: isNumber, v: MaxSyncUnloadSendAttempts},
-    addNoResponse: undefValue
+    addNoResponse: undefValue,
+    excludeCsMetaData: undefValue
 });
 
 function isOverrideFn(httpXHROverride: any) {
