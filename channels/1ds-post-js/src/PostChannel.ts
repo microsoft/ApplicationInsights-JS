@@ -487,7 +487,13 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             _self.setAuthPluginHeader = (token: string) => {
+                console.log("siyu debug purpose inside setAuthPluginHeader addHeader called");
                 _httpManager.addHeader(STR_AUTH_PLUGIN, token);
+            };
+
+            _self.removeAuthPluginHeader = () => {
+                console.log("siyu debug purpose inside setAuthPluginHeader removeAuthPluginHeader called");
+                _httpManager.removeHeader(STR_AUTH_PLUGIN);
             };
 
             _self.hasEvents = _hasEvents;
@@ -1146,6 +1152,15 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
     public setAuthPluginHeader(token: string) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
+
+    /**
+     * remove AuthPlugin Header
+     * @param token - token value.
+     */
+    public removeAuthPluginHeader(token: string) {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+    }
+
 
     /**
      * Check if there are any events waiting to be scheduled for sending.

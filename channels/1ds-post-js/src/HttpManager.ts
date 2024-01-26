@@ -669,6 +669,10 @@ export class HttpManager {
                 _headers[name] = value;
             };
 
+            _self.removeHeader = (name: string) => {
+                delete _headers[name];
+            };
+
             _self.canSendRequest = () => {
                 return _hasIdleConnection() && _clockSkewManager.allowRequestSending();
             };
@@ -1399,6 +1403,15 @@ export class HttpManager {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
 
+    /**
+         * Remove header to request
+         * @param name   - Header name.
+         * @param value  - Header value.
+         */
+    public removeHeader(name: string) {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+    }
+    
     /**
     * Add handler to be executed with request response text.
     */
