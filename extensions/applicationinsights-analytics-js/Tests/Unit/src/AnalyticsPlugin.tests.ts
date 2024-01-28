@@ -663,8 +663,10 @@ export class AnalyticsPluginTests extends AITestClass {
                 // Test
                 const dumpExMsg = throwSpy.args[0][3].exception;
                 Assert.ok(dumpExMsg.indexOf("stack: ") != -1);
-                Assert.ok(dumpExMsg.indexOf(`message: '${unexpectedError.message}'`) !== -1);
-                Assert.ok(dumpExMsg.indexOf("name: 'Error'") !== -1);
+                Assert.ok(dumpExMsg.indexOf(`message: \"${unexpectedError.message}\"`) !== -1 ||
+                    dumpExMsg.indexOf(`message: '${unexpectedError.message}'`) !== -1);
+                Assert.ok(dumpExMsg.indexOf("name: \"Error\"") !== -1 ||
+                    dumpExMsg.indexOf("name: 'Error'") !== -1);
             }
         });
 
