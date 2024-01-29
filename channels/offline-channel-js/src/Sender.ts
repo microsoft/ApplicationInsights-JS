@@ -10,7 +10,7 @@ import {
     useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, isFunction, isNumber } from "@nevware21/ts-utils";
+import { isFunction, isNumber } from "@nevware21/ts-utils";
 import { ILocalStorageConfiguration, IOfflineSenderConfig } from "./Interfaces/IOfflineProvider";
 import { IBackendResponse, XDomainRequest as IXDomainRequest } from "./Interfaces/ISender";
 
@@ -63,7 +63,6 @@ export class Sender {
         let _retryAt: number;                   // The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
         //let _lastSend: number;                  // The time of the last send operation.
         let _paused: boolean;                   // Flag indicating that the sending should be paused
-        let _timeoutHandle: ITimerHandler;      // Handle to the timer for delayed sending of batches of data.
         let _stamp_specific_redirects: number;
         let _syncFetchPayload = 0;              // Keep track of the outstanding sync fetch payload total (as sync fetch has limits)
         let _endpointUrl: string;
@@ -133,7 +132,8 @@ export class Sender {
 
                     _alwaysUseCustomSend = offlineSenderCfg.alwaysUseXhrOverride;
 
-                    //_enableSendPromise = senderConfig.enableSendPromise;
+                    // default true
+                    _enableSendPromise = !(senderConfig.enableSendPromise === false);
                     let xhrOverride = senderConfig.httpXHROverride;
 
                     let customInterface = isOverrideFn(xhrOverride)? xhrOverride : null;
@@ -531,8 +531,6 @@ export class Sender {
 
 
             function _clearScheduledTimer() {
-                _timeoutHandle && _timeoutHandle.cancel();
-                _timeoutHandle = null;
                 _retryAt = null;
             }
         
@@ -644,7 +642,6 @@ export class Sender {
                 _consecutiveErrors = 0;
                 _retryAt = null;
                 _paused = false;
-                _timeoutHandle = null;
                 _stamp_specific_redirects = 0;
                 _syncFetchPayload = 0;
                 _endpointUrl = null;

@@ -242,9 +242,9 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                     getOfflineRequestDetails: () => {
                         return  _httpManager._getOfflineRequestDetails();
                     }
-                }
+                };
 
-            }
+            };
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _releaseAllQueues(EventSendType.SendBeacon, SendRequestReason.Unload);

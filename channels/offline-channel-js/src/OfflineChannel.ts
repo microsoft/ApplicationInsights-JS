@@ -149,7 +149,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
                     if (_hasInitialized && !_paused ) {
                         let shouldProcess = true;
-                        if (_offineSupport && isFunction(_offineSupport.shouldProcess)) {
+                        if (isFunction(_offineSupport.shouldProcess)) {
                             shouldProcess = _offineSupport.shouldProcess(evt);
                         }
                         if (!shouldProcess) {
