@@ -6,13 +6,13 @@ import {
     utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager,
-    IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain,
-    ITelemetryUnloadState, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType, _eInternalMessageId,
-    _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dateNow,
-    dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON, getNavigator, getWindow, isArray, isBeaconsSupported,
-    isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend, objKeys, onConfigChange, runTargetUnload,
-    useXDomainRequest
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSerializer,
+    INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IRequestUrlDetails,
+    ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason,
+    TransportType, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
+    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON,
+    getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend,
+    objKeys, onConfigChange, runTargetUnload, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isNumber, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
@@ -26,6 +26,7 @@ import { Serializer } from "./Serializer";
 import { Sample } from "./TelemetryProcessors/Sample";
 
 const UNDEFINED_VALUE: undefined = undefined;
+const EMPTY_STR = "";
 
 const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 
@@ -427,75 +428,83 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 
                 try {
                     // if master off switch is set, don't send any data
-                    if (_disableTelemetry) {
-                        // Do not send/save data
-                        return;
-                    }
+                    // if (_disableTelemetry) {
+                    //     // Do not send/save data
+                    //     return;
+                    // }
         
-                    // validate input
-                    if (!telemetryItem) {
-                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
-                        return;
-                    }
+                    // // validate input
+                    // if (!telemetryItem) {
+                    //     _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                    //     return;
+                    // }
         
-                    // validate event
-                    if (telemetryItem.baseData && !telemetryItem.baseType) {
-                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
-                        return;
-                    }
+                    // // validate event
+                    // if (telemetryItem.baseData && !telemetryItem.baseType) {
+                    //     _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                    //     return;
+                    // }
         
-                    if (!telemetryItem.baseType) {
-                        // Default
-                        telemetryItem.baseType = "EventData";
-                    }
+                    // if (!telemetryItem.baseType) {
+                    //     // Default
+                    //     telemetryItem.baseType = "EventData";
+                    // }
         
-                    // ensure a sender was constructed
-                    if (!_self._sender) {
-                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender was not initialized");
-                        return;
-                    }
+                    // // ensure a sender was constructed
+                    // if (!_self._sender) {
+                    //     _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                    //     return;
+                    // }
                   
-                    // check if this item should be sampled in, else add sampleRate tag
-                    if (!_isSampledIn(telemetryItem)) {
-                        // Item is sampled out, do not send it
-                        _throwInternal(diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
-                            "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
+                    // // check if this item should be sampled in, else add sampleRate tag
+                    // if (!_isSampledIn(telemetryItem)) {
+                    //     // Item is sampled out, do not send it
+                    //     _throwInternal(diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
+                    //         "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
+                    //     return;
+                    // } else {
+                    //     telemetryItem[SampleRate] = _self._sample.sampleRate;
+                    // }
+                    let isValidate = _validate(telemetryItem, diagLogger);
+                    if (!isValidate) {
                         return;
-                    } else {
-                        telemetryItem[SampleRate] = _self._sample.sampleRate;
                     }
         
                     // construct an envelope that Application Insights endpoint can understand
                     // if ikey of telemetry is provided and not empty, envelope will use this iKey instead of senderConfig iKey
-                    let defaultEnvelopeIkey = telemetryItem.iKey || _instrumentationKey;
-                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, diagLogger, _convertUndefined);
+                    // let defaultEnvelopeIkey = telemetryItem.iKey || _instrumentationKey;
+                    // let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, diagLogger, _convertUndefined);
+                    // if (!aiEnvelope) {
+                    //     _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                    //     return;
+                    // }
+        
+                    // let doNotSendItem = false;
+                    // // this is for running in legacy mode, where customer may already have a custom initializer present
+                    // if (telemetryItem.tags && telemetryItem.tags[ProcessLegacy]) {
+                    //     arrForEach(telemetryItem.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
+                    //         try {
+                    //             if (callBack && callBack(aiEnvelope) === false) {
+                    //                 doNotSendItem = true;
+                    //                 _warnToConsole(diagLogger, "Telemetry processor check returns false");
+                    //             }
+                    //         } catch (e) {
+                    //             // log error but dont stop executing rest of the telemetry initializers
+                    //             // doNotSendItem = true;
+                    //             _throwInternal(diagLogger,
+                    //                 eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
+                    //                 { exception: dumpObj(e) }, true);
+                    //         }
+                    //     });
+        
+                    //     delete telemetryItem.tags[ProcessLegacy];
+                    // }
+                    // if (doNotSendItem) {
+                    //     return; // do not send, no need to execute next plugin
+                    // }
+                    let aiEnvelope = _getEnvelope(telemetryItem, diagLogger);
                     if (!aiEnvelope) {
-                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
-                        return;
-                    }
-        
-                    let doNotSendItem = false;
-                    // this is for running in legacy mode, where customer may already have a custom initializer present
-                    if (telemetryItem.tags && telemetryItem.tags[ProcessLegacy]) {
-                        arrForEach(telemetryItem.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
-                            try {
-                                if (callBack && callBack(aiEnvelope) === false) {
-                                    doNotSendItem = true;
-                                    _warnToConsole(diagLogger, "Telemetry processor check returns false");
-                                }
-                            } catch (e) {
-                                // log error but dont stop executing rest of the telemetry initializers
-                                // doNotSendItem = true;
-                                _throwInternal(diagLogger,
-                                    eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
-                                    { exception: dumpObj(e) }, true);
-                            }
-                        });
-        
-                        delete telemetryItem.tags[ProcessLegacy];
-                    }
-                    if (doNotSendItem) {
-                        return; // do not send, no need to execute next plugin
+                        return null;
                     }
         
                     // check if the incoming payload is too large, truncate if necessary
@@ -585,6 +594,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                 return result;
             };
+            
+            _self.getOfflineSupport = () => {
+                return {
+                    serialize: _serialize,
+                    batch: _batch,
+                    shouldProcess:(evt) => {
+                        return !!_validate(evt);
+                    },
+                    getOfflineRequestDetails: () => {
+                        return _getRequestDetails();
+                    }
+                } as IInternalOfflineSerializer;
+            }
         
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _self.onunloadFlush();
@@ -669,6 +691,122 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
                 }
 
+            }
+
+            function _validate(telemetryItem: ITelemetryItem, diagLogger?: IDiagnosticLogger) {
+                if (_disableTelemetry) {
+                    // Do not send/save data
+                    return;
+                }
+    
+                // validate input
+                if (!telemetryItem) {
+                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                    return;
+                }
+    
+                // validate event
+                if (telemetryItem.baseData && !telemetryItem.baseType) {
+                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                    return;
+                }
+    
+                if (!telemetryItem.baseType) {
+                    // Default
+                    telemetryItem.baseType = "EventData";
+                }
+    
+                // ensure a sender was constructed
+                if (!_self._sender) {
+                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                    return;
+                }
+              
+                // check if this item should be sampled in, else add sampleRate tag
+                if (!_isSampledIn(telemetryItem)) {
+                    // Item is sampled out, do not send it
+                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
+                        "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
+                    return;
+                } else {
+                    telemetryItem[SampleRate] = _self._sample.sampleRate;
+                }
+                return true;
+            }
+
+            function _getEnvelope(telemetryItem: ITelemetryItem, diagLogger: IDiagnosticLogger) {
+                let defaultEnvelopeIkey = telemetryItem.iKey || _instrumentationKey;
+                let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, diagLogger, _convertUndefined);
+                if (!aiEnvelope) {
+                    _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                    return;
+                }
+    
+                let doNotSendItem = false;
+                // this is for running in legacy mode, where customer may already have a custom initializer present
+                if (telemetryItem.tags && telemetryItem.tags[ProcessLegacy]) {
+                    arrForEach(telemetryItem.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
+                        try {
+                            if (callBack && callBack(aiEnvelope) === false) {
+                                doNotSendItem = true;
+                                _warnToConsole(diagLogger, "Telemetry processor check returns false");
+                            }
+                        } catch (e) {
+                            // log error but dont stop executing rest of the telemetry initializers
+                            // doNotSendItem = true;
+                            _throwInternal(diagLogger,
+                                eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
+                                { exception: dumpObj(e) }, true);
+                        }
+                    });
+    
+                    delete telemetryItem.tags[ProcessLegacy];
+                }
+                if (doNotSendItem) {
+                    return; // do not send, no need to execute next plugin
+                }
+                return aiEnvelope;
+            }
+
+            function _serialize(item: ITelemetryItem) {
+                let rlt = EMPTY_STR;
+                let diagLogger = _self.diagLog();
+                try {
+                    let valid = _validate(item, diagLogger);
+                    let envelope = null;
+                    if (valid) {
+                        envelope = _getEnvelope(item, diagLogger);
+                    }
+                    if (envelope) {
+                        rlt = _serializer.serialize(envelope);
+                    }
+
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+
+                }
+                return rlt;
+               
+            }
+
+            function _batch(arr: string[]) {
+                let rlt = EMPTY_STR;
+                if (arr && arr.length) {
+                    rlt = "[" + arr.join(",") + "]";
+                }
+                return rlt;
+            }
+
+            function _getRequestDetails() {
+                let headers = _headers;
+                if (isInternalApplicationInsightsEndpoint(_endpointUrl)) {
+                    headers[RequestHeaders[eRequestHeaders.sdkContextHeader]] = RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest];
+                }
+                return {
+                    url: _endpointUrl,
+                    hdrs: headers,
+                    useHdrs: true
+                } as IRequestUrlDetails;
             }
         
             function _isSampledIn(envelope: ITelemetryItem): boolean {
@@ -1510,6 +1648,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     public isCompletelyIdle(): boolean {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return false;
+    }
+    /**
+     * Get Offline Serializer support
+     * @returns internal Offline Serializer object
+     */
+    public getOfflineSupport(): IInternalOfflineSerializer {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
 }

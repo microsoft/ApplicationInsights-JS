@@ -1,6 +1,6 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { HttpManager } from "../../../src/HttpManager";
-import { AppInsightsCore, BaseTelemetryPlugin, EventSendType, IAppInsightsCore, IConfiguration, IExtendedConfiguration, IPlugin, IProcessTelemetryContext, ITelemetryItem, SendRequestReason, TransportType, isBeaconsSupported } from "@microsoft/1ds-core-js";
+import { AppInsightsCore, BaseTelemetryPlugin, EventSendType, IAppInsightsCore, IConfiguration, IExtendedConfiguration, IPlugin, IProcessTelemetryContext, ITelemetryItem, SendRequestReason, TransportType, isBeaconsSupported} from "@microsoft/1ds-core-js";
 import { PostChannel, IXHROverride, IPayloadData } from "../../../src/Index";
 import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from "../../../src/DataModels";
 import { EventBatch } from "../../../src/EventBatch";
@@ -192,6 +192,40 @@ export class HttpManagerTest extends AITestClass {
                 QUnit.assert.ok(fetchCalls[0].input, "fetch call should not empty");
                 QUnit.assert.equal(fetchCalls[0].init.body, "{\"name\":\"testEvent\",\"iKey\":\"o:\",\"data\":{\"baseData\":{}}}", "should get expected data");
                 QUnit.assert.equal(testBatch.events()[0].sendAttempt, 1, "attempt should be 1");
+            }
+        });
+
+        this.testCase({
+            name: "HttpManager: Offline Support",
+            useFakeTimers: true,
+            test: () => {
+                let core = this.core;
+                let postChannel = this.postManager;
+                core.config.extensionConfig = core.config.extensionConfig || {};
+                let postId = postChannel.identifier;
+      
+                core.config.endpointUrl = "testEndpoint";
+
+                let manager: HttpManager = new HttpManager(500, 2, 1, {
+                    requeue: _requeueNotification,
+                    send: _sendNotification,
+                    sent: _sentNotification,
+                    drop: _dropNotification
+                });
+                
+                manager.initialize(core.config, core, postChannel);
+                QUnit.assert.ok(manager._serializeOfflineEvt, "seralize function should exist");
+                let evt = this._createEvent();
+                evt.iKey = "testKey-123";
+                let evtStr = manager._serializeOfflineEvt(evt);
+                QUnit.assert.equal(evtStr, `{"name":"testEvent","iKey":"o:testKey","data":{"baseData":{}}}`,"Event should be serialized");
+
+                QUnit.assert.ok(manager._getOfflineRequestDetails, "request details function should exist");
+                let details = manager._getOfflineRequestDetails();
+                QUnit.assert.equal(details.url, "testEndpoint?cors=true&content-type=application/x-json-stream&w=0", "get expected Url");
+                QUnit.assert.ok(details.hdrs, "get headers Url");
+                QUnit.assert.ok(details.useHdrs, "should use headers");
+                
             }
         });
 

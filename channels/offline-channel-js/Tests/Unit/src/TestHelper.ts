@@ -1,8 +1,8 @@
-import { IConfig } from "@microsoft/applicationinsights-common";
-import { BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfiguration, IPlugin, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { BreezeChannelIdentifier, IConfig } from "@microsoft/applicationinsights-common";
+import { BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfiguration, IInternalOfflineSerializer, IPlugin, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 
 export class TestChannel extends BaseTelemetryPlugin implements IChannelControls  {
-    public identifier = 'testplugin';
+    public identifier = BreezeChannelIdentifier;
     public priority: number = 1001;
 
     lastEventAdded: ITelemetryItem;
@@ -13,26 +13,6 @@ export class TestChannel extends BaseTelemetryPlugin implements IChannelControls
     resumeCalled: boolean;
     teardownCalled: boolean;
 
-    hasEvents(expectedEvents: any[]) {
-        QUnit.assert.ok(expectedEvents.length <= this.eventsAdded.length, 'Checking that at least [' + expectedEvents.length + '] events have been processed');
-
-        let matched = 0;
-        expectedEvents.forEach((element) => {
-            let found = false;
-            for (let lp = 0; lp < this.eventsAdded.length; lp++) {
-                let evt = this.eventsAdded[lp] as any;
-                if (element.id === evt.id) {
-                    matched++;
-                    found = true;
-                    break;
-                }
-            }
-
-            QUnit.assert.ok(found, 'Looking for event ' + element.id);
-        });
-
-        QUnit.assert.equal(expectedEvents.length, matched, 'Checking all found events');
-    }
 
     initialize(config: IConfig & IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         //No-op
@@ -57,6 +37,32 @@ export class TestChannel extends BaseTelemetryPlugin implements IChannelControls
 
     flush(async = true, callback?: () => void) {
         this.flushCalled = true;
+    }
+
+    getOfflineSupport() {
+        return {
+            serialize: (evt) => {
+                return JSON.stringify(evt);
+            },
+            batch: (arr) => {
+                if (!arr || !arr.length) {
+                    return "";
+                }
+                return "[" + arr.join(",") + "]";
+            },
+            shouldProcess: (evt) => {
+                return true;
+            },
+            getOfflineRequestDetails: () => {
+                return {
+                    hdrs: {
+                        ["header1"]: "val1"
+                    }
+                };
+
+            }
+            
+        } as IInternalOfflineSerializer;
     }
 }
 

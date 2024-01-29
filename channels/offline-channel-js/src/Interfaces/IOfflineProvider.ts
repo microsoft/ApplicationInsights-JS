@@ -1,11 +1,11 @@
-import { IPayloadData, IProcessTelemetryContext } from "@microsoft/applicationinsights-core-js";
+import { EventPersistence } from "@microsoft/applicationinsights-common";
+import { IPayloadData, IProcessTelemetryContext, IXHROverride } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
-import { ISenderConfig } from "./ISender";
 
 /**
  * Identifies the Storage Providers used by the LocalStorageChannel
  */
-export enum eStorageProviders {
+export const enum eStorageProviders {
     /**
      * Identifies that the provider that uses (window||globalThis||self).localStorage
      */
@@ -34,6 +34,7 @@ export interface ILocalStorageConfiguration {
 
     /**
      * [Optional] The storage key that should be used when storing events in (window||globalThis||self).localStorage.
+     * @default AIOffline
      */
     storageKeyPrefix?: string;
 
@@ -43,7 +44,7 @@ export interface ILocalStorageConfiguration {
      * setting are defined by the EventPersistence enum, currently Normal (1) and Critical (2) with the default
      * value being Normal (1) which means all events.
      */
-    minPersistenceLevel?: number;
+    minPersistenceLevel?: number | EventPersistence;
 
     /**
      * [Optional] Identifies the StorageProviders that should be used by the system if available, the first available
@@ -68,31 +69,79 @@ export interface ILocalStorageConfiguration {
      * If not provided, default is false
      */
     autoClean?: boolean;
-    // /**
-    //  * [Optional] Identifies max size for sendng payload each time.
-    //  * If not provided, default is 5Mb/ 5000000 bytes
-    //  */
-    // maxSentInBytes?: number;
 
+    /**
+     * [Optional] Identifies max time in ms that items should be in memory
+     * @default 15000
+     */
     inMemoMaxTime?: number;
+    /**
+     * [Optional] Identifies max time in ms that items should be in persistence storage
+     * default: 10080000 (around 7days)
+     */
     inStorageMaxTime?: number;
+    /**
+     * [Optional] Identifies max retry times time for a event batch
+     * default: 2
+     */
     maxRetry?: number;
-    // TODO: figure out offline sender config
-    // if "channel" is provided, we looking for plugin(id).cfg
-    // if not, we set default to sender/post(assume it is passed in)
-    senderId?: string;
+    /**
+     * Identift online channel id
+     * default is applicationinsights-channel
+     */
+    primaryOnlineChannelId?: string;
+    /**
+     * Identify max size of per batch that saved in persistence storage
+     * default 63000
+     */
     maxBatchsize?: number;
-    // if not defined, will use the value from online sender
+    /**
+     * Identify offline sender properities
+     * if not defined, settings will be the same as online channel with primaryOnlineChannelId
+     */
     senderCfg?: IOfflineSenderConfig;
+    /**
+     * Interval time in ms that event batches should be sent under online status
+     * default 15000
+     */
     maxSentBatchInterval?: number;
+    /**
+     * Identify max event batch count when cleaning or releasing persistence storage
+     * default 10
+     */
     EventsToDropPerTime?: number; //default 10
+    /**
+     * Identify max critical events count for event batch to be able to drop
+     */
     maxCriticalEvtsDropCnt?: number; //default 2
     //dosampling?: boolean; //TODO
 }
 
-export interface IOfflineSenderConfig extends ISenderConfig {
+export interface IOfflineSenderConfig {
+    /**
+     * Identify status codes for re-sending event batches
+     */
     retryCodes?: number[];
-    primaryOnlineChannelId?: string;
+      /**
+     * [Optional] Either an array or single value identifying the requested TransportType type(s) that should be used during unload or events
+     * if not defined, same transports will be used in channel with primaryOnlineChannelId
+     */
+    transports?: number | number[];
+     /**
+     * [Optional] The HTTP override that should be used to send requests, as an IXHROverride object.
+     * By default during the unload of a page or if the event specifies that it wants to use sendBeacon() or sync fetch (with keep-alive),
+     * this override will NOT be called. You can now change this behavior by enabling the 'alwaysUseXhrOverride' configuration value.
+     * The payload data (first argument) now also includes any configured 'timeout' (defaults to undefined) and whether you should avoid
+     * creating any synchronous XHR requests 'disableXhrSync' (defaults to false/undefined)
+     */
+    httpXHROverride?: IXHROverride;
+     /**
+     * [Optional] By default during unload (or when you specify to use sendBeacon() or sync fetch (with keep-alive) for an event) the SDK
+     * ignores any provided httpXhrOverride and attempts to use sendBeacon() or fetch(with keep-alive) when they are available.
+     * When this configuration option is true any provided httpXhrOverride will always be used, so any provided httpXhrOverride will
+     * also need to "handle" the synchronous unload scenario.
+     */
+    alwaysUseXhrOverride?: boolean;
 }
 
 
@@ -105,20 +154,6 @@ export interface IStorageJSON {
     evts?: { [id: string]: IStorageTelemetryItem }; // id is the timestamp value
 }
 
-
-/**
- * The EventPersistence contains a set of values that specify the event's persistence.
- */
-export declare const enum eEventPersistenceValue {
-    /**
-     * Normal persistence.
-     */
-    Normal = 1,
-    /**
-     * Critical persistence.
-     */
-    Critical = 2
-}
 
 export interface IStorageTelemetryItem extends IPayloadData {
     /**
@@ -138,7 +173,7 @@ export interface IInternalPayloadData extends IPayloadData {
      * The storage id of the telemetry item that has been attempted to be sent.
      */
     id?: string;
-    persistence?: number | eEventPersistenceValue;
+    persistence?: number | EventPersistence;
     iKey?: string;
     attempt?: number;
     isArr?: boolean;

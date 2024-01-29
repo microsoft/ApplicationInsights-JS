@@ -23,6 +23,7 @@
                 "eStorageType",
                 "FieldType",
                 "eDistributedTracingModes",
+                "EventPersistenceValue",
                 "eOfflineValue",
                 "eRequestHeaders",
                 "DataPointType",
@@ -97,7 +98,7 @@
                 "eBatchSendStatus",
                 "eBatchStoreStatus",
                 "CursorProcessResult",
-                "eEventPersistenceValue",
+                "eStorageProviders",
                 "ValueQueryType"
             ]
         }

@@ -1,19 +1,17 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig, IEnvelope, IOfflineListener, ISample, ProcessLegacy,
-    SampleRate, createOfflineListener
+    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventPersistence, IConfig, IOfflineListener,
+    createOfflineListener
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationListener,
-    IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain,
-    ITelemetryUnloadState, IXHROverride, SendRequestReason, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dateNow, eLoggingSeverity, getExceptionName, mergeEvtNamespace, onConfigChange,
-    runTargetUnload
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSerializer,
+    INotificationListener, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
+    ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, SendRequestReason, arrForEach, createProcessTelemetryContext,
+    createUniqueNamespace, dateNow, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
-import { ITimerHandler, dumpObj, isNullOrUndefined, isTruthy, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
-import { Sample } from "./Helpers/Sample";
+import { ITimerHandler, isFunction, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import { isGreaterThanZero } from "./Helpers/Utils";
 import { InMemoryBatch } from "./InMemoryBatch";
 import { IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
@@ -21,17 +19,16 @@ import {
     IOfflineBatchHandler, OfflineBatchCallback, OfflineBatchStoreCallback, eBatchSendStatus, eBatchStoreStatus
 } from "./Interfaces/IOfflineBatch";
 import {
-    ILocalStorageConfiguration, ILocalStorageProviderContext, IStorageTelemetryItem, eEventPersistenceValue, eStorageProviders
+    ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineSenderConfig, IStorageTelemetryItem, eStorageProviders
 } from "./Interfaces/IOfflineProvider";
 import { OfflineBatchHandler } from "./OfflineBatchHandler";
 import { isValidPersistenceLevel } from "./Providers/IndexDbProvider";
 import { Sender } from "./Sender";
-import { Serializer } from "./Serializer";
 
 const version = "#version#";
 const DefaultOfflineIdentifier = "OfflineChannel";
-const emptyStr = "";
 const DefaultBatchInterval = 15000;
+const DefaultInMemoMaxTime = 15000;
 
 
 interface IUrlLocalStorageConfig {
@@ -51,29 +48,25 @@ const DefaultBatchSizeLimitBytes = 63000; // approx 64kb (the current Edge, Fire
 const defaultLocalStorageConfig: IConfigDefaults<ILocalStorageConfiguration> = objDeepFreeze({
     maxStorageSizeInBytes: { isVal: isGreaterThanZero, v: 5000000 },
     storageKey: undefValue,
-    minPersistenceLevel: { isVal: isValidPersistenceLevel, v: eEventPersistenceValue.Normal },
+    minPersistenceLevel: { isVal: isValidPersistenceLevel, v: EventPersistence.Normal },
     providers: [eStorageProviders.LocalStorage, eStorageProviders.IndexedDb],
     indexedDbName: undefValue,
     maxStorageItems: { isVal: isGreaterThanZero, v: undefValue},
-    inMemoMaxTime: 2000,
+    inMemoMaxTime: { isVal: isGreaterThanZero, v: DefaultInMemoMaxTime},
     maxRetry: 1,
     maxBatchsize:{ isVal: isGreaterThanZero, v: DefaultBatchSizeLimitBytes},
     maxSentBatchInterval: { isVal: isGreaterThanZero, v: DefaultBatchInterval},
-    senderCfg: {
-        endpointUrl:cfgDfValidate(isTruthy, DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH)
-    } as any
+    primaryOnlineChannelId: BreezeChannelIdentifier,
+    senderCfg: {} as IOfflineSenderConfig
 });
 
 
 export class OfflineChannel extends BaseTelemetryPlugin implements IChannelControls {
     public identifier = DefaultOfflineIdentifier;
-    public priority = 990; // before channel
+    public priority = 1000; // before channel (post = 1011 and sender = 1001, teechannel = 999)
     public version = version;
     public id: string;
 
-    /**
-     * Creates the LocalStorageChannel instance including populating specific implementations of the public API.
-     */
     constructor() {
         super();
         dynamicProto(OfflineChannel, this, (_self, _base) => {
@@ -86,11 +79,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _offlineListener: IOfflineListener;
             let _inMemoFlushTimer: ITimerHandler;
             let _inMemoTimerOut: number;
-            let _serializer: Serializer;
-            let _disableTelemetry: boolean;
             let _diagLogger:IDiagnosticLogger;
             let _endpoint: string;
-            let _sample: ISample;
             let _maxBatchSize: number;
             let _sendNextBatchTimer: ITimerHandler;
             let _convertUndefined: any;
@@ -99,7 +89,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _consecutiveErrors: number;
             let _senderInst: IXHROverride;
             let _taskScheduler: ITaskScheduler;
-    
+            let _offineSupport: IInternalOfflineSerializer;
 
             _initDefaults();
 
@@ -116,8 +106,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
                     _sender.initialize(coreConfig, core, ctx, _diagLogger);
                     let evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineSender"), core.evtNamespace && core.evtNamespace());
-                    _offlineListener = createOfflineListener(evtNamespace); // or to be passed
-                    _serializer = new Serializer(_self.diagLog());
+                    _offlineListener = createOfflineListener(evtNamespace); // TODO: add config to be passed
                     _taskScheduler = createTaskScheduler(createAsyncPromise, "offline channel");
                 }
 
@@ -134,6 +123,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     });
                    
                     _setSendNextTimer();
+                    
                 }
 
                
@@ -141,37 +131,37 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
             _self.processTelemetry = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 try {
-                    let onlineStatus = _offlineListener.isOnline(); // err handle
+                    let onlineStatus = _offlineListener.isOnline();
                     itemCtx =  itemCtx || _self._getTelCtx(itemCtx);
 
+                    
                     if (!!onlineStatus) {
                         _self.processNext(evt, itemCtx);
                         return;
                     }
 
 
-                    if (_disableTelemetry) {
-                        // Do not send/save data
+                    if (!_offineSupport) {
+                        // Do not send/save data when we can not get offline details
                         _self.processNext(evt, itemCtx);
                         return;
                     }
 
                     if (_hasInitialized && !_paused ) {
-                       
-                        let shouldProcess = _shouldProcess(evt);
-                        if(!shouldProcess) {
+                        let shouldProcess = true;
+                        if (_offineSupport && isFunction(_offineSupport.shouldProcess)) {
+                            shouldProcess = _offineSupport.shouldProcess(evt);
+                        }
+                        if (!shouldProcess) {
                             _self.processNext(evt, itemCtx);
                             return;
                         }
-
-
-                 
                        
                         let item = evt as IPostTransmissionTelemetryItem;
-                        item.persistence = item.persistence || eEventPersistenceValue.Normal;
+                        //TODO: add function to better get level
+                        item.persistence = item.persistence  || (item.baseData && item.baseData.persistence) || EventPersistence.Normal; // in case the level is in baseData
                         if (_shouldCacheEvent(_urlCfg, item) && _inMemoBatch) {
                             _inMemoBatch.addEvent(evt);
-                            
                         }
                         _setupInMemoTimer();
                        
@@ -184,7 +174,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 }
         
                 // hand off the telemetry item to the next plugin
-                // _self.processNext(evt, itemCtx);
+                _self.processNext(evt, itemCtx);
                 
             };
 
@@ -211,7 +201,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     while (_inMemoBatch.count() && shouldContinue) {
                         shouldContinue = _flushInMemoItems(true);
                     }
-                    // unloadprovider sending events out of order
+                    // TODO: unloadprovider might send events out of order
                 }
             };
 
@@ -245,12 +235,9 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _sender = new Sender();
                 _urlCfg = null;
                 _offlineListener = null;
-                _serializer = null;
-                _disableTelemetry = false;
                 _diagLogger = null;
                 _endpoint = null;
                 _inMemoBatch = null;
-                _sample = null;
                 _convertUndefined = undefValue;
                 _maxBatchSize = null;
                 _sendNextBatchTimer = null;
@@ -258,39 +245,12 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _retryAt = null;
                 _maxBatchInterval = null;
                 _senderInst = null;
-            }
-
-            function _shouldProcess(evt: ITelemetryItem) {
-                if (!evt ||  (evt.baseData && !evt.baseType) ) {
-                    return false;
-                }
-    
-                if (!evt.baseType) {
-                    // Default
-                    evt.baseType = "EventData";
-                }
-
-                if (!_isSampledIn(evt)) {
-                    // Item is sampled out, do not send it
-                    _throwInternal(_diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
-                        "Telemetry item was sampled out and not sent", { SampleRate: _sample.sampleRate });
-                        
-                    return false;
-                } else {
-                    evt[SampleRate] = _sample.sampleRate;
-                }
-
-                return true;
-
-            }
-
-            function _isSampledIn(envelope: ITelemetryItem): boolean {
-                return _sample.isSampledIn(envelope);
+                _offineSupport = null;
             }
 
 
             function _shouldCacheEvent(urlConfig: IUrlLocalStorageConfig, item: IPostTransmissionTelemetryItem) {
-                if (item.persistence < urlConfig.minPersistenceCacheLevel) {
+                if ((item.persistence) < urlConfig.minPersistenceCacheLevel) {
                     return false;
                 }
 
@@ -328,7 +288,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         if (size > _maxBatchSize) {
                             return;
                         }
-                        if(curEvt.persistence == eEventPersistenceValue.Critical) {
+                        if(curEvt.persistence == EventPersistence.Critical) {
                             criticalCnt ++;
                         }
                         idx = index;
@@ -347,9 +307,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let callback: OfflineBatchStoreCallback = (res) => {
                         if (res.state == eBatchStoreStatus.Failure ) {
                             arrForEach(sentItems, (item) => {
-                                // TODO: storage is full, can't add anymore
-                                // TODO: clean storage
-                                // todo: add status: full?
                                 _inMemoBatch.addEvent(item);
                             });
                         }
@@ -373,10 +330,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
                     let timerValue = Math.max(_maxBatchInterval, retryInterval);
                     _sendNextBatchTimer = scheduleTimeout(() => {
-                        // add cb to offline listender to stop/start timer
                         if (_offlineListener.isOnline()) {
                             if(!_sender.isCompletelyIdle()) {
-                                //timerValue = WaitIdleIdleInterval;
                                 _sendNextBatchTimer.refresh();
 
                             } else {
@@ -397,6 +352,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
                     },timerValue);
                     _sendNextBatchTimer.unref();
+                } else {
+                    _sendNextBatchTimer.refresh()
                 }
             }
 
@@ -462,41 +419,10 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
             function _getPayload(evt: IPostTransmissionTelemetryItem | ITelemetryItem) {
                 try {
+
                     if (evt) {
-                        let defaultEnvelopeIkey = evt.iKey || _urlCfg.iKey;
-                        let aiEnvelope = Sender.constructEnvelope(evt, defaultEnvelopeIkey, _diagLogger, _convertUndefined);
-                        if (!aiEnvelope) {
-                            _throwInternal(_diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
-                            return emptyStr;
-                        }
-            
-                        let doNotSendItem = false;
-                        // this is for running in legacy mode, where customer may already have a custom initializer present
-                        if (evt.tags && evt.tags[ProcessLegacy]) {
-                            arrForEach(evt.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
-                                try {
-                                    if (callBack && callBack(aiEnvelope) === false) {
-                                        doNotSendItem = true;
-                                        _warnToConsole(_diagLogger, "Telemetry processor check returns false");
-                                    }
-                                } catch (e) {
-                                    // log error but dont stop executing rest of the telemetry initializers
-                                    // doNotSendItem = true;
-                                    _throwInternal(_diagLogger,
-                                        eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
-                                        { exception: dumpObj(e) }, true);
-                                }
-                            });
-            
-                            delete evt.tags[ProcessLegacy];
-                        }
-                        if (doNotSendItem) {
-                            return emptyStr; // do not send, no need to execute next plugin
-                        }
-                      
-        
-                        let payload: string = _serializer.serialize(aiEnvelope);
-                        return payload;
+                        evt.iKey = evt.iKey || _urlCfg.iKey;
+                        return _offineSupport.serialize(evt, _convertUndefined);
                     }
                     
                 } catch (e) {
@@ -508,16 +434,29 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
             function _constructPayloadData(payloadArr: string[], criticalCnt?: number) {
 
-                let headers = _sender.getHeaders()
                 try {
+                    if (!_offineSupport) {
+                        return null;
+                    }
                     let cnt = criticalCnt || 0;
-                    let payload = "[" + payloadArr.join(",") + "]";
+                    let payload = _offineSupport.batch(payloadArr);
                     let payloadData: IPayloadData = {
                         urlString: _urlCfg.url,
                         data: payload,
-                        headers: headers,
+                        headers: {},
                         criticalCnt: cnt
                     } as IStorageTelemetryItem;
+                    let details = _offineSupport.getOfflineRequestDetails && _offineSupport.getOfflineRequestDetails();
+                    if (details) {
+                        let url = details.url;
+                        if (url) {
+                            payloadData.urlString = url;
+                        }
+                        let hdrs = details.hdrs;
+                        if (hdrs) {
+                            payloadData.headers = hdrs;
+                        }
+                    }
                     return payloadData;
 
                 } catch(e) {
@@ -534,8 +473,13 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
                     let ctx = createProcessTelemetryContext(null, theConfig, core);
                     storageConfig = ctx.getExtCfg<ILocalStorageConfiguration>(_self.identifier, defaultLocalStorageConfig);
-
-                    let urlConfig: IUrlLocalStorageConfig = null;
+                    let channelId = storageConfig.primaryOnlineChannelId;
+                    let plugin = _self.core.getPlugin<IChannelControls>(channelId);
+                    let channel = plugin && plugin.plugin;
+                    _offineSupport = channel && channel.getOfflineSupport();
+                    
+    
+                    let urlConfig: IUrlLocalStorageConfig = _urlCfg;
                     let curUrl = coreConfig.endpointUrl || DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
 
                     if (curUrl !== _endpoint) {
@@ -552,24 +496,16 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         urlConfig = {
                             iKey: coreConfig.instrumentationKey,
                             url: curUrl,
-                            minPersistenceCacheLevel: eEventPersistenceValue.Normal,
+                            minPersistenceCacheLevel: storageConfig.minPersistenceLevel,
                             coreRootCtx: coreRootCtx,
                             providerContext: providerContext,
                             batchHandler: handler
                         };
                         let evtsLimit = storageConfig.eventsLimitInMem;
-                        let inMemoBatch = new InMemoryBatch(_self.diagLog(),curUrl, null, evtsLimit);
-                        _inMemoBatch = inMemoBatch;
-                        
+                        _inMemoBatch = new InMemoryBatch(_self.diagLog(),curUrl, null, evtsLimit);
                         _inMemoTimerOut = storageConfig.inMemoMaxTime;
-                        let onlineConfig = ctx.getExtCfg<any>(BreezeChannelIdentifier, {});
-                        let offlineSenderCfg = storageConfig.senderCfg;
-                        let disable = offlineSenderCfg.disableTelemetry;
-                        let disableTelemetry = !isNullOrUndefined(disable)? disable : onlineConfig.disableTelemetry;
-                        _disableTelemetry = !!disableTelemetry;
-                        _convertUndefined = offlineSenderCfg.convertUndefined || onlineConfig.convertUndefined;
-                        let samplingPercentage = offlineSenderCfg.samplingPercentage || onlineConfig.samplingPercentage;
-                        _sample = new Sample(samplingPercentage, _self.diagLog());
+                        let onlineConfig = ctx.getExtCfg<any>(channelId, {});
+                        _convertUndefined = onlineConfig.convertUndefined;
                         _endpoint = curUrl;
                         _setRetryTime();
                         _maxBatchInterval = storageConfig.maxSentBatchInterval;
@@ -635,7 +571,10 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
 
-    
+    /**
+     * Get offline listener
+     * @returns offline listener
+     */
     public getOfflineListener() {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;

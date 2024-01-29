@@ -68,7 +68,7 @@ export class ChannelTests extends AITestClass {
             name: "Channel: Init from core indexed db",
             test: () => {
                 let channel = new OfflineChannel();
-                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb]} as ILocalStorageConfiguration};
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as ILocalStorageConfiguration};
                 this.core.initialize(this.coreConfig,[channel]);
               
                 let offlineListener = channel.getOfflineListener() as any;
@@ -90,9 +90,16 @@ export class ChannelTests extends AITestClass {
             test: () => {
                 let window = getGlobalInst("window");
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {inMemoMaxTime: 2000} as ILocalStorageConfiguration};
+                let sendChannel = new TestChannel();
+                this.core.initialize(this.coreConfig, [sendChannel]);
             
                 let channel = new OfflineChannel();
+               
                 channel.initialize(this.coreConfig, this.core,[]);
+                this.onDone(() => {
+                    channel.teardown();
+                });
                 let offlineListener = channel.getOfflineListener() as any;
                 offlineListener.setOnlineState(1);
                 let evt = mockTelemetryItem();
@@ -109,8 +116,9 @@ export class ChannelTests extends AITestClass {
                 inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch.count(), 0, "provider should store item");
                 let storage = AITestClass.orgLocalStorage;
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageStr = storage.getItem(storageKey) as any;
+                Assert.ok(storageStr.indexOf("header1") > -1, "should contain expeceted header");
 
                 let storageObj = JSON.parse(storageStr);
                 let evts = storageObj.evts;
@@ -180,9 +188,11 @@ export class ChannelTests extends AITestClass {
             steps: [() => {
                 let window = getGlobalInst("window");
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sendChannel = new TestChannel();
+                this.core.initialize(this.coreConfig, [sendChannel]);
 
                 let channel = new OfflineChannel();
-                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb]} as ILocalStorageConfiguration};
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as ILocalStorageConfiguration};
                 channel.initialize(this.coreConfig, this.core,[]);
                 let senderInst =  channel["_getDbgPlgTargets"]()[2];
                 let sender1 =  (payload: any, oncomplete: any, sync?: boolean) => {

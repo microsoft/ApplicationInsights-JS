@@ -9,19 +9,18 @@ import { isString, objKeys, strSubstr } from "@nevware21/ts-utils";
 
 export function getEndpointDomian(endpoint: string) {
     try {
-        let url = endpoint.replace(/[^A-Za-z0-9]\//g, "");
-        let index = url.indexOf("/");
-        return url.substring(index+1);
+        //let url = endpoint.replace(/[^A-Za-z0-9]\//g, "");
+        let url = endpoint.replace(/^https?:\/\//, "").replace(/^www\./, "");
+        url = url.replace("?", "/");
+        let arr = url.split("/");
+        if (arr && arr.length > 0) {
+            return arr[0];
+        }
+      
     } catch (e) {
         // eslint-disable-next-line no-empty
     }
     return null;
-}
-
-export function getEndpointFromDomian(domain: string) {
-    //TODO: add mapping
-    return "https://"+ domain;
-
 }
 
 export function isGreaterThanZero(value: number) {
@@ -170,8 +169,6 @@ export function getTimeFromId(id: string) {
 // 500-InternalServerError – an unexpected exception while handling the request.
 // 503-ServiceUnavailable – a machine serving this request is overloaded or shutting down. The request should be retried to a different machine. The server adds Connection: Close header to enforce TCP connection closing.
 
-// have isretriable() function!!!!
-
 
 
 // Breeze
@@ -200,4 +197,4 @@ export function getTimeFromId(id: string) {
 // 503 - Service Unavailable, retry it later. (offline)
 // 504 - Gateway timeout, retry it later.
 // All other response codes, SDK should drop the data.
-// TODO: add config, retryCodes:[];
+

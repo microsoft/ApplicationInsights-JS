@@ -1,5 +1,5 @@
+import { EventPersistence } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
-import { eEventPersistenceValue } from "./IOfflineProvider";
 
 export interface IInMemoryBatch {
     /**
@@ -34,6 +34,8 @@ export interface IInMemoryBatch {
 }
 
 export interface IPostTransmissionTelemetryItem extends ITelemetryItem {
-
-    persistence?: eEventPersistenceValue
+     /**
+     * [Optional] An EventPersistence value, that specifies the persistence for the event. The EventPersistence constant
+     */
+    persistence?: EventPersistence;
 }

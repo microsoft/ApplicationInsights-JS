@@ -53,7 +53,7 @@ export class OfflineWebProviderTests extends AITestClass {
                 Assert.ok(isInit, "init process is successful");
 
                 let ctx = provider["_getDbgPlgTargets"]();
-                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com";
                 Assert.equal(ctx[0], expectedStorageKey, "should have expected storage");
                 let expectedMaxStorage = 5000000;
                 Assert.equal(ctx[1], expectedMaxStorage, "default MaxStorage is set");
@@ -99,7 +99,7 @@ export class OfflineWebProviderTests extends AITestClass {
                 Assert.ok(isInit, "init process should return true");
 
                 let ctx = provider["_getDbgPlgTargets"]();
-                let expectedStorageKey = "testPrefix_1_dc.services.visualstudio.com/v2/track";
+                let expectedStorageKey = "testPrefix_1_dc.services.visualstudio.com";
                 Assert.equal(ctx[0], expectedStorageKey, "should have expected storage");
                 let expectedMaxStorage = 1000;
                 Assert.equal(ctx[1], expectedMaxStorage, "default MaxStorage is set");
@@ -134,7 +134,7 @@ export class OfflineWebProviderTests extends AITestClass {
             name: "Web local Storage Provider: getNextBatch with old events",
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let evt = TestHelper.mockEvent(endpoint, 3);
                 let jsonObj = TestHelper.mockStorageJSON(evt);
                 let evtStr = JSON.stringify(jsonObj);
@@ -164,7 +164,7 @@ export class OfflineWebProviderTests extends AITestClass {
             name: "Web local Storage Provider: getNextBatch should return expected number of events",
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let evt = TestHelper.mockEvent(endpoint, 3);
                 let evt1 = TestHelper.mockEvent(endpoint, 2);
                 let evt2 = TestHelper.mockEvent(endpoint, 1);
@@ -197,7 +197,7 @@ export class OfflineWebProviderTests extends AITestClass {
             name: "Web local Storage Provider: getNextBatch should handle errors",
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com";
                 
                 this.sandbox.stub((window.localStorage) as any, "getItem").callsFake((key) => {
                     throw new Error("test error");
@@ -289,7 +289,7 @@ export class OfflineWebProviderTests extends AITestClass {
                 let evts = provider.getAllEvents();
                 Assert.deepEqual(evts, [evt], "should have the expected stored event");
 
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                 let storageObj = JSON.parse(storageStr).evts;
                 Assert.deepEqual(Object.keys(storageObj).length, 1, "storgae should have expected events");
@@ -325,7 +325,7 @@ export class OfflineWebProviderTests extends AITestClass {
                 evts = provider.getAllEvents() as any[];
                 Assert.deepEqual(JSON.stringify(evts), JSON.stringify([evt, evt1]), "should have the expected stored event test1");
 
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                 let storageObj = JSON.parse(storageStr).evts;
                 Assert.deepEqual(Object.keys(storageObj).length, 2, "storgae should have expected two events");
@@ -366,7 +366,7 @@ export class OfflineWebProviderTests extends AITestClass {
                 let addedEvt3 = provider.addEvent("", evt3, itemCtx);
                 Assert.ok(addedEvt3, "evt3 should be added");
 
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                 let storageObj = JSON.parse(storageStr).evts;
                 Assert.deepEqual(Object.keys(storageObj).length, 4, "storage should have expected four events");
@@ -484,7 +484,7 @@ export class OfflineWebProviderTests extends AITestClass {
                 evts = provider.getAllEvents();
                 Assert.deepEqual(JSON.stringify(evts), JSON.stringify([]), "should have the expected remaining stored events test2");
 
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                 let storageObj = JSON.parse(storageStr);
                 Assert.deepEqual(storageObj.evts, {}, "storgae should not have any remaining events");
@@ -522,7 +522,7 @@ export class OfflineWebProviderTests extends AITestClass {
                 provider.clear();
                 evts = provider.getAllEvents();
                 Assert.deepEqual(JSON.stringify(evts), JSON.stringify([]), "should not have any remaining events");
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                 let storageObj = JSON.parse(storageStr);
                 Assert.deepEqual(storageObj.evts, {}, "storgae should not have any remaining events");
@@ -565,7 +565,7 @@ export class OfflineWebProviderTests extends AITestClass {
                 Assert.ok(isCleaned, "should clean all events");
                 evts = provider.getAllEvents();
                 Assert.deepEqual(JSON.stringify(evts), JSON.stringify([]), "should have clean all previous events");
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                 let storageObj = JSON.parse(storageStr);
                 Assert.deepEqual(storageObj.evts, {}, "storgae should not have any remaining events");
@@ -579,7 +579,7 @@ export class OfflineWebProviderTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let provider = new WebStorageProvider("localStorage");
                 let itemCtx = this.core.getProcessTelContext();
                 let storageConfig = createDynamicConfig({}).cfg;

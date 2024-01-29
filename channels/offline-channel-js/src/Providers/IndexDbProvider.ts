@@ -1,5 +1,6 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { EventPersistence } from "@microsoft/applicationinsights-common";
 import {
     IProcessTelemetryContext, IUnloadHookContainer, eLoggingSeverity, isNotNullOrUndefined, isNumber, newGuid, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
@@ -9,7 +10,7 @@ import {
     CursorProcessResult, IIndexedDbOpenDbContext, IIndexedDbStoreActionContext, IProcessCursorState
 } from "../Interfaces/IOfflineIndexDb";
 import {
-    ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineProvider, IStorageTelemetryItem, eEventPersistenceValue
+    ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineProvider, IStorageTelemetryItem
 } from "../Interfaces/IOfflineProvider";
 import { IndexedDbHelper } from "./IndexDbHelper";
 
@@ -32,8 +33,8 @@ export const EventObjectStoreName = "Evts";
 * @param {enum} value - The value that needs to be checked.
 * @return {boolean} True if the value is in EventPersistence, false otherwise.
 */
-export function isValidPersistenceLevel(value: eEventPersistenceValue | number): boolean {
-    return (isNumber(value) && value >= eLoggingSeverity.DISABLED && value <= eEventPersistenceValue.Critical);
+export function isValidPersistenceLevel(value: EventPersistence | number): boolean {
+    return (isNumber(value) && value >= eLoggingSeverity.DISABLED && value <= EventPersistence.Critical);
 }
 
 

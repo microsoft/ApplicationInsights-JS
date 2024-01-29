@@ -52,7 +52,8 @@ export {
     RemoteDependencyData,
     Trace,
     DistributedTracingModes,
-    IRequestHeaders
+    IRequestHeaders,
+    EventPersistence
 } from "@microsoft/applicationinsights-common";
 export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";
 export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";

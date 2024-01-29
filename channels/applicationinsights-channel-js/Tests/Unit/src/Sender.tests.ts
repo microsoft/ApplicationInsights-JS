@@ -797,6 +797,55 @@ export class SenderTests extends AITestClass {
             }
         });
 
+        
+        this.testCase({
+            name: "Channel Config: Offline Support",
+            test: () => {
+                this._sender.initialize(
+                    {
+                        instrumentationKey: "abc",
+                        maxBatchInterval: 123,
+                        endpointUrl: DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH,
+                        maxBatchSizeInBytes: 654,
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 456
+                            }
+                        }
+
+                    }, new AppInsightsCore(), []
+                );
+
+                let event: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                let offlineSupport = this._sender.getOfflineSupport() as any;
+                QUnit.assert.ok(offlineSupport.serialize, "serialize exist");
+                let eventStr = offlineSupport.serialize(event);
+                let expectedStr = `"iKey":"iKey","name":"Microsoft.ApplicationInsights.iKey.Event","tags":{"ai.internal.sdkVersion":"javascript:3.0.7"},"data":{"baseType":"EventData","baseData":{"ver":2,"name":"not_specified","properties":{"baseTypeSource":"some type"},"measurements":{}}}`;
+                QUnit.assert.ok(eventStr.indexOf(expectedStr) > -1, "get expected string");
+                
+                let testStr = `{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}}`;
+                QUnit.assert.ok(offlineSupport.batch, "batch should exit");
+                let batch = offlineSupport.batch([testStr, testStr]);
+                QUnit.assert.equal(batch, `[{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}},{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}}]`, "get expected batch");
+
+                QUnit.assert.ok(offlineSupport.shouldProcess, "should process should exit");
+                QUnit.assert.equal(offlineSupport.shouldProcess(event), true, "should process");
+
+                QUnit.assert.ok(offlineSupport.getOfflineRequestDetails, "getOfflineRequestDetails should exit");
+                let details = offlineSupport.getOfflineRequestDetails();
+                QUnit.assert.equal(details.url, "https://dc.services.visualstudio.com/v2/track", "get expected Url");
+                QUnit.assert.ok(details.hdrs, "should have headers");
+                QUnit.assert.equal(details.hdrs["Sdk-Context"], "appId", "get expected headers");
+                QUnit.assert.ok(details.useHdrs, "should use headers");
+            }
+        });
+
 
         this.testCase({
             name: "Channel Config: Validate empty endpointURL falls back to the default",

@@ -283,6 +283,49 @@ export class PostChannelTest extends AITestClass {
         });
 
         this.testCase({
+            name: "Post Channel: Offline Support",
+            useFakeTimers: true,
+            test: () => {
+                let config = this.config;
+                let core = this.core;
+                let postChannel = this.postChannel;
+                let postId = this.postChannel.identifier;
+                config.instrumentationKey = "ikey-123"
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    iKey: "testIkey-123"
+                };
+                core.initialize(config, [postChannel]);
+                let offlineSupport = this.postChannel.getOfflineSupport() as any;
+                QUnit.assert.ok(offlineSupport.serialize, "serialize exist");
+                let eventStr = offlineSupport.serialize(event);
+                let expectedStr = `{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}}`;
+                QUnit.assert.equal(eventStr, expectedStr, "get expected string");
+                
+                QUnit.assert.ok(offlineSupport.batch, "batch should exit");
+                let batch = offlineSupport.batch([expectedStr, expectedStr]);
+                QUnit.assert.equal(batch, expectedStr + "\n" + expectedStr, "get expected batch");
+
+                QUnit.assert.ok(offlineSupport.shouldProcess, "should process should exit");
+                QUnit.assert.equal(offlineSupport.shouldProcess(event), true, "should process");
+
+                QUnit.assert.ok(offlineSupport.getOfflineRequestDetails, "getOfflineRequestDetails should exit");
+                let details = offlineSupport.getOfflineRequestDetails();
+                QUnit.assert.equal(details.url, "https://testEndpoint?cors=true&content-type=application/x-json-stream&w=0", "get expected Url");
+                QUnit.assert.ok(details.hdrs, "get headers Url");
+                QUnit.assert.ok(details.useHdrs, "should use headers");
+
+                this.core.config.extensionConfig = this.core.config.extensionConfig || {};
+                this.core.config.extensionConfig[postId].disableTelemetry = true;
+                this.clock.tick(1);
+                offlineSupport = this.postChannel.getOfflineSupport() as any;
+                QUnit.assert.equal(offlineSupport.shouldProcess(event), false, "should not process");
+                
+            }
+        });
+
+
+        this.testCase({
             name: "Send Sync Event with Specific type override",
             test: () => {
                 let beaconCalls = [];

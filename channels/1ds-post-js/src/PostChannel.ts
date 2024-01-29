@@ -34,6 +34,7 @@ const MaxRequestRetriesBeforeBackoff = 1;
 const MaxEventsLimitInMem = 10000;
 
 const strEventsDiscarded = "eventsDiscarded";
+const EMPTY_STR = "";
 
 let undefValue = undefined;
 
@@ -230,6 +231,20 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 _self.processNext(event, itemCtx);
             };
 
+            _self.getOfflineSupport = () => {
+                return {
+                    serialize: _serialize,
+                    batch: _batch,
+                    shouldProcess: (evt) => {
+                        return !_disableTelemetry;
+                    },
+                    getOfflineRequestDetails: () => {
+                        return  _httpManager._getOfflineRequestDetails();
+                    }
+                }
+
+            }
+
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _releaseAllQueues(EventSendType.SendBeacon, SendRequestReason.Unload);
                 _isTeardownCalled = true;
@@ -258,6 +273,41 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 };
             }
 
+            function _batch(arr: string[]) {
+                let rlt = EMPTY_STR;
+                
+                if (arr && arr.length) {
+                    arrForEach(arr, (item) => {
+                        if (rlt) {
+                            rlt += "\n";
+                        }
+                        rlt += item;
+
+                    });
+                }
+                return rlt;
+
+            }
+
+            function _serialize(event: ITelemetryItem) {
+
+                let rlt = EMPTY_STR;
+                try {
+                    _cleanEvent(event);
+                    if (_overrideInstrumentationKey) {
+                        event.iKey = _overrideInstrumentationKey;
+                    }
+                    rlt = _httpManager._serializeOfflineEvt(event);
+
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+
+                }
+                return rlt;
+               
+            }
+
+
             // Moving event handlers out from the initialize closure so that any local variables can be garbage collected
             function _handleUnloadEvents(evt: any) {
                 let theEvt = evt || getWindow().event; // IE 8 does not pass the event
@@ -276,17 +326,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 _httpManager.setUnloading(_isPageUnloadTriggered);
             }
 
-            function _addEventToQueues(event: IPostTransmissionTelemetryItem, append: boolean) {
-                // If send attempt field is undefined we should set it to 0.
-                if (!event.sendAttempt) {
-                    event.sendAttempt = 0;
-                }
-                // Add default latency
-                if (!event.latency) {
-                    event.latency = EventLatencyValue.Normal;
-                }
-
-                // Remove extra AI properties if present
+            function _cleanEvent(event: ITelemetryItem | IPostTransmissionTelemetryItem) {
                 if (event.ext && event.ext[STR_TRACE]) {
                     delete (event.ext[STR_TRACE]);
                 }
@@ -304,6 +344,38 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                         event.data = optimizeObject(event.data);
                     }
                 }
+
+            }
+
+            function _addEventToQueues(event: IPostTransmissionTelemetryItem, append: boolean) {
+                // If send attempt field is undefined we should set it to 0.
+                if (!event.sendAttempt) {
+                    event.sendAttempt = 0;
+                }
+                // Add default latency
+                if (!event.latency) {
+                    event.latency = EventLatencyValue.Normal;
+                }
+                _cleanEvent(event);
+
+                // // Remove extra AI properties if present
+                // if (event.ext && event.ext[STR_TRACE]) {
+                //     delete (event.ext[STR_TRACE]);
+                // }
+                // if (event.ext && event.ext[STR_USER] && event.ext[STR_USER]["id"]) {
+                //     delete (event.ext[STR_USER]["id"]);
+                // }
+
+                // // v8 performance optimization for iterating over the keys
+                // if (_optimizeObject) {
+                //     event.ext = optimizeObject(event.ext);
+                //     if (event.baseData) {
+                //         event.baseData = optimizeObject(event.baseData);
+                //     }
+                //     if (event.data) {
+                //         event.data = optimizeObject(event.data);
+                //     }
+                // }
 
                 if (event.sync) {
                     // If the transmission is backed off then do not send synchronous events.
@@ -1185,5 +1257,14 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
      */
     public _clearBackOff() {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Get Offline Serializer support
+     * @returns internal Offline Serializer object
+     */
+    public getOfflineSupport() {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
     }
 }

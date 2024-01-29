@@ -50,7 +50,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 let isInit = provider.initialize(providerCxt);
                 Assert.ok(isInit, "init process is successful");
                 let ctx = provider["_getDbgPlgTargets"]();
-                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com";
                 Assert.equal(ctx[0], expectedStorageKey, "should have expected storage");
                 let expectedMaxStorage = 5000000;
                 Assert.equal(ctx[1], expectedMaxStorage, "default MaxStorage is set");

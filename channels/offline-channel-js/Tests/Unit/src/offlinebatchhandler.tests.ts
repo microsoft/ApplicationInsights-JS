@@ -163,7 +163,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     Assert.ok(item.id, "item id should be set");
                     Assert.equal(item.criticalCnt, 1, "expected item should be returned");
 
-                    let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                    let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                     let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                     let storageObject = JSON.parse(storageStr);
                     let storageEvts = storageObject.evts;
@@ -316,7 +316,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     this.ctx.result = result;
                  
                 });
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                 let storageObject = JSON.parse(storageStr);
                 let storageEvts = storageObject.evts;
@@ -362,7 +362,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 if (cleanBatch) {
                     let res = this.ctx.cleanBatchRes;
                     Assert.equal(res.batchCnt, 3, "should clean all three items");
-                    let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                    let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                     let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                     let storageObject = JSON.parse(storageStr);
                     let storageEvts = storageObject.evts;
@@ -810,7 +810,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                         arrForEach(val, (item) => {
                             Assert.ok(sentcriticalCnt !== item.criticalCnt, "should not contain deleted item");
                         });
-                        let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                        let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                         let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                         let storageObject = JSON.parse(storageStr);
                         let storageEvts = storageObject.evts;
@@ -873,7 +873,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                         this.ctx.getAll = true;
                         let val = res.value;
                         Assert.equal(val && val.length, 0, "should have 0 events");
-                        let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                        let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                         let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                         Assert.deepEqual(storageStr, null, "storgae should not have one event");
                     });
@@ -903,7 +903,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageKey = "AIOffline_1_dc.services.visualstudio.com/v2/track";
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
  
