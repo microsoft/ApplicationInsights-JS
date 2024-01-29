@@ -4,6 +4,7 @@ import { AppInsightsCore, BaseTelemetryPlugin, EventSendType, IAppInsightsCore, 
 import { PostChannel, IXHROverride, IPayloadData } from "../../../src/Index";
 import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from "../../../src/DataModels";
 import { EventBatch } from "../../../src/EventBatch";
+import { retryPolicyShouldRetryForStatus } from "../../../src/RetryPolicy";
 
 interface EventDetail {
     batches: EventBatch[];
@@ -2562,6 +2563,27 @@ export class HttpManagerTest extends AITestClass {
                     QUnit.assert.equal(fetchCalls.length, 2, "Make sure fetch was called");
                 }
             });
+
+            this.testCase({
+                name: "HttpManager: RetryPolicy works as expected",
+                useFakeTimers: true,
+                test: () => {
+                    // according to the one collector policy
+                    // status that should retry : 429, 500, 503
+                    // status that should not retry : 204 (will return complete before checking retry in httpManager), 400, 401, 403, 408, 415, 501, 505
+                    QUnit.assert.equal(true, retryPolicyShouldRetryForStatus(429), "status code 429 should retry");
+                    QUnit.assert.equal(true, retryPolicyShouldRetryForStatus(500), "status code 500 should retry");
+                    QUnit.assert.equal(true, retryPolicyShouldRetryForStatus(503), "status code 503 should retry");
+                    QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(400), "status code 400 should not retry");
+                    QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(401), "status code 401 should not retry");
+                    QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(403), "status code 403 should not retry");
+                    QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(408), "status code 408 should not retry");
+                    QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(415), "status code 415 should not retry");
+                    QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(501), "status code 501 should not retry");
+                    QUnit.assert.equal(false, retryPolicyShouldRetryForStatus(505), "status code 505 should not retry");
+                }
+            });
+    
         }
     }
 

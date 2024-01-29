@@ -231,5 +231,113 @@ export class SerializerTest extends AITestClass {
                 QUnit.assert.equal(metaData, JSON.stringify(expectedMetaData), 'Checking: ' + metaData);
             }
         });
+
+        this.testCase({
+            name: 'excluded metadata with event property with compoundKey support',
+            test: () => {
+                let serializer = new Serializer(undefined, undefined, undefined, true, undefined, true);
+
+                let testProperty: IEventProperty = {
+                    value: "testValue",
+                    kind: 13, //Pii_IPV4AddressLegacy
+                    propertyType: 1 //String
+                };
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    baseData: {
+                        'testProperty': testProperty
+                    },
+                    data: {
+                        'testPartC': 123,
+                        'testObject.testProperty': 456
+                    },
+                    ext: {}
+                };
+                let serializedEvent = serializer.getEventBlob(event);
+                let parsedEvent = JSON.parse(serializedEvent);
+                QUnit.assert.equal(parsedEvent.ext.metadata, undefined, 'Checking: Meta Data was not included');
+            }
+        });
+
+        this.testCase({
+            name: 'exclude metadata with event property without compoundKey support',
+            test: () => {
+                let serializer = new Serializer(undefined, undefined, undefined, false, undefined, true);
+
+                let testProperty: IEventProperty = {
+                    value: "testValue",
+                    kind: 13, //Pii_IPV4AddressLegacy
+                    propertyType: 1 //String
+                };
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    baseData: {
+                        'testProperty': testProperty
+                    },
+                    data: {
+                        'testPartC': 123,
+                        'testObject.testProperty': 456
+                    },
+                    ext: {}
+                };
+                let serializedEvent = serializer.getEventBlob(event);
+                let parsedEvent = JSON.parse(serializedEvent);
+                QUnit.assert.equal(parsedEvent.ext.metadata, undefined, 'Checking: Meta Data was not included');
+            }
+        });
+
+        this.testCase({
+            name: 'nested elements excluding metadata',
+            test: () => {
+                let serializer = new Serializer(undefined, undefined, undefined, undefined, undefined, true);
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    baseData: {
+                        "testProperty": {
+                            "testA": 123,
+                            "testB": "test"
+                        }
+                    },
+                    data: {
+                        "testProperty2": 123,
+                        "testPartCNested": {
+                            "testC": {
+                                "testD": {
+                                    "test": 456
+                                }
+                            }
+                        }
+                    },
+                    ext: {}
+                };
+
+                let serializedEvent = serializer.getEventBlob(event);
+                let parsedEvent = JSON.parse(serializedEvent);
+                QUnit.assert.equal(parsedEvent.ext.metadata, undefined, 'Checking: Meta Data was not included');
+            }
+        });
+
+        this.testCase({
+            name: 'array excluding metadata',
+            test: () => {
+                let serializer = new Serializer(undefined, undefined, undefined, undefined, undefined, true);
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    baseData: {
+                        "testProperty": {
+                            "testA": ["test1", "test2", "test3"]
+                        }
+                    },
+                    data: {
+                        "testProperty2": [1, 2, 3, 4]
+                    },
+                    ext: {}
+                };
+                let serializedEvent = serializer.getEventBlob(event);
+                let parsedEvent = JSON.parse(serializedEvent);
+                QUnit.assert.equal(parsedEvent.ext.metadata, undefined, 'Checking: Meta Data was not included');
+            }
+        });
+
     }
 }

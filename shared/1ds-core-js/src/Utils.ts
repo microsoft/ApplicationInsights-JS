@@ -161,7 +161,7 @@ export function getCommonSchemaMetaData(value: string | boolean | number | strin
 
     if (!isUndefined(value)) {
         if (kind > 0) {
-            if (kind === 32) {
+            if (kind === eValueKind.CustomerContent_GenericContent) {
                 // encode customer content. Value can only be string. bit 13-16 are for cc
                 encodedTypeValue = (1 << 13);
             } else if (kind <= 13) {

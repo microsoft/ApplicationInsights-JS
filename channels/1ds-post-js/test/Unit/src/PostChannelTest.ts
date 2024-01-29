@@ -1,5 +1,5 @@
-import { AITestClass } from "@microsoft/ai-test-framework";
-import { IExtendedConfiguration, NotificationManager, AppInsightsCore, EventLatency, ITelemetryItem, IExtendedTelemetryItem, SendRequestReason, EventSendType, isFetchSupported, objKeys, arrForEach, isBeaconsSupported } from '@microsoft/1ds-core-js';
+import { AITestClass, TestHelper } from "@microsoft/ai-test-framework";
+import { IExtendedConfiguration, AppInsightsCore, EventLatency, ITelemetryItem, IExtendedTelemetryItem, SendRequestReason, EventSendType, isFetchSupported, objKeys, arrForEach, isBeaconsSupported, EventPersistence, isNullOrUndefined } from '@microsoft/1ds-core-js';
 import { PostChannel, IXHROverride, IPayloadData } from '../../../src/Index';
 import { IPostTransmissionTelemetryItem, IChannelConfiguration } from '../../../src/DataModels';
 import { SinonSpy } from 'sinon';
@@ -169,7 +169,8 @@ export class PostChannelTest extends AITestClass {
                     alwaysUseXhrOverride: false,
                     maxEventRetryAttempts: 6,
                     maxUnloadEventRetryAttempts: 2,
-                    addNoResponse: undefValue
+                    addNoResponse: undefValue,
+                    excludeCsMetaData: undefValue
                 };
                 let actaulConfig =  postChannel["_getDbgPlgTargets"]()[1];
                 QUnit.assert.deepEqual(expectedConfig, actaulConfig, "default config should be set");
@@ -3658,6 +3659,59 @@ export class PostChannelTest extends AITestClass {
 
             }
         });
+
+        this.testCase({
+            name: "Post Channel: check excludeCsMetaData",
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                let config = this.config;
+                let core = this.core;
+                let postChannel = this.postChannel;
+                let identifier = postChannel.identifier;
+                let event1: IPostTransmissionTelemetryItem = TestHelper.mockEvent(EventPersistence.Normal);
+                let event2: IPostTransmissionTelemetryItem = TestHelper.mockEvent(EventPersistence.Normal);
+                core.initialize(config, [postChannel]);
+
+                // test timeout
+                core.track(event1);
+                this.clock.tick(10001);
+
+                let requests = this._getXhrRequests();
+                QUnit.assert.equal(requests.length, 1, "request should be sent");
+                requests[0].respond(200, {}, "response body");
+
+                QUnit.assert.equal(requests[0].method, "POST", "request method should be POST");
+
+                let evt = JSON.parse(requests[0]["requestBody"]);
+                QUnit.assert.equal(evt.name, event1.name, "request data should be set");
+                let metaData = evt.ext.metadata;
+                QUnit.assert.ok(!isNullOrUndefined(metaData));
+                QUnit.assert.equal(metaData.f.evValue2.t, 8193, "evValue should be tagged");
+                QUnit.assert.equal(metaData.f.value5.t, 6, "value5 should be tagged as number");
+                QUnit.assert.equal(metaData.f.value1.a.t, 6, "value1 should be tagged as array of numbers");
+
+                // Disable CsMetaData
+                core!.config!.extensionConfig![identifier].excludeCsMetaData = true;
+                // Let the dynamic config changes occur
+                this.clock.tick(1);
+
+                core.track(event2);
+                this.clock.tick(10001);
+
+                requests = this._getXhrRequests();
+                QUnit.assert.equal(requests.length, 2, "request should be sent");
+                requests[1].respond(200, {}, "response body");
+
+                QUnit.assert.equal(requests[1].method, "POST", "request method should be POST");
+
+                evt = JSON.parse(requests[1]["requestBody"]);
+                QUnit.assert.equal(evt.name, event2.name, "request data should be set");
+                metaData = evt.ext.metadata;
+                QUnit.assert.equal(metaData, undefined, "metadata should be undefined");
+            }
+        });
+
     }
 }
 

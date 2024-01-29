@@ -176,8 +176,8 @@ export interface IChannelConfiguration {
 
      /**
      * [Optional] Avoid adding request headers to the outgoing request that would cause a pre-flight (OPTIONS) request to be sent for each request.
-     * This currently defaults to true but will be changed once the collector handles additional settings to allow the browser to better cache any
-     * previous OPTIONS response, at which point some of the current dynamic values sent on the query string will be moved to a header.
+     * This currently defaults to false. This is changed as the collector enables Access-Control-Max-Age to allow the browser to better cache any
+     * previous OPTIONS response. Hence, we moved some of the current dynamic values sent on the query string to a header.
      */
     avoidOptions?: boolean;
 
@@ -234,6 +234,17 @@ export interface IChannelConfiguration {
      * value to indicate that the server should return a 204 for successful requests. Defaults to true
      */
     addNoResponse?: boolean;
+
+    /**
+     * :warning: DO NOT USE THIS FLAG UNLESS YOU KNOW THAT PII DATA WILL NEVER BE INCLUDED IN THE EVENT!
+     *
+     * [Optional] Flag to indicate whether the SDK should include the common schema metadata in the payload. Defaults to true.
+     * This flag is only applicable to the POST channel and will cause the SDK to exclude the common schema metadata from the payload,
+     * while this will reduce the size of the payload, also means that the data marked as PII will not be processed as PII by the backend
+     * and will not be included in the PII data purge process.
+     * @since 4.1.0
+     */
+    excludeCsMetaData?: boolean;
 }
 
 /**
