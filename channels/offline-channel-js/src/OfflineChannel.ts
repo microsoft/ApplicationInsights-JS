@@ -29,6 +29,7 @@ const version = "#version#";
 const DefaultOfflineIdentifier = "OfflineChannel";
 const DefaultBatchInterval = 15000;
 const DefaultInMemoMaxTime = 15000;
+const PostChannelIdentifier = "PostChannel";
 
 
 interface IUrlLocalStorageConfig {
@@ -53,10 +54,10 @@ const defaultLocalStorageConfig: IConfigDefaults<ILocalStorageConfiguration> = o
     indexedDbName: undefValue,
     maxStorageItems: { isVal: isGreaterThanZero, v: undefValue},
     inMemoMaxTime: { isVal: isGreaterThanZero, v: DefaultInMemoMaxTime},
-    maxRetry: 1,
+    maxRetry: {isVal: isGreaterThanZero, v: 1}, // 0 means no retry
     maxBatchsize:{ isVal: isGreaterThanZero, v: DefaultBatchSizeLimitBytes},
     maxSentBatchInterval: { isVal: isGreaterThanZero, v: DefaultBatchInterval},
-    primaryOnlineChannelId: BreezeChannelIdentifier, // todo: in array
+    primaryOnlineChannelId: [BreezeChannelIdentifier, PostChannelIdentifier],
     senderCfg: {} as IOfflineSenderConfig
 });
 
@@ -92,6 +93,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _senderInst: IXHROverride;
             let _taskScheduler: ITaskScheduler;
             let _offineSupport: IInternalOfflineSerializer;
+            let _primaryChannelId: string;
 
             _initDefaults();
 
@@ -104,15 +106,14 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     _hasInitialized = true;
 
                     _diagLogger = _self.diagLog();
-                
-                    let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
-                    _sender.initialize(coreConfig, core, ctx, _diagLogger);
                     let evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineSender"), core.evtNamespace && core.evtNamespace());
                     _offlineListener = createOfflineListener(evtNamespace); // TODO: add config to be passed
                     _taskScheduler = createTaskScheduler(createAsyncPromise, "offline channel");
                 }
 
                 _createUrlConfig(coreConfig, core, extensions, pluginChain);
+                let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
+                _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
                 if (_sender) {
                     _senderInst = _sender.getXhrInst();
                     _offlineListener.addListener((val)=> {
@@ -241,6 +242,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _maxBatchInterval = null;
                 _senderInst = null;
                 _offineSupport = null;
+                _primaryChannelId = null;
             }
 
 
@@ -468,10 +470,20 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
                     let ctx = createProcessTelemetryContext(null, theConfig, core);
                     storageConfig = ctx.getExtCfg<ILocalStorageConfiguration>(_self.identifier, defaultLocalStorageConfig);
-                    let channelId = storageConfig.primaryOnlineChannelId;
-                    let plugin = _self.core.getPlugin<IChannelControls>(channelId);
-                    let channel = plugin && plugin.plugin;
-                    _offineSupport = channel && channel.getOfflineSupport();
+                    let channelIds = storageConfig.primaryOnlineChannelId;
+                    if (channelIds && channelIds.length) {
+                        arrForEach(channelIds, (id) => {
+                            let plugin = _self.core.getPlugin<IChannelControls>(id);
+                            let channel = plugin && plugin.plugin;
+                            if (channel) {
+                                _primaryChannelId = id;
+                                _offineSupport = channel.getOfflineSupport();
+                                return;
+                            }
+                            
+                        })
+                    }
+                
                     
     
                     let urlConfig: IUrlLocalStorageConfig = _urlCfg;
@@ -499,7 +511,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         let evtsLimit = storageConfig.eventsLimitInMem;
                         _inMemoBatch = new InMemoryBatch(_self.diagLog(),curUrl, null, evtsLimit);
                         _inMemoTimerOut = storageConfig.inMemoMaxTime;
-                        let onlineConfig = ctx.getExtCfg<any>(channelId, {});
+                        let onlineConfig = ctx.getExtCfg<any>(_primaryChannelId, {}) || {};
                         _convertUndefined = onlineConfig.convertUndefined;
                         _endpoint = curUrl;
                         _setRetryTime();

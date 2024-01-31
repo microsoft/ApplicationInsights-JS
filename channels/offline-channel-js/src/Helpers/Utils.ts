@@ -24,7 +24,7 @@ export function getEndpointDomain(endpoint: string) {
 }
 
 export function isGreaterThanZero(value: number) {
-    return value > 0;
+    return value >= 0;
 }
 
 
@@ -204,4 +204,3 @@ export function getTimeFromId(id: string) {
 // 503 - Service Unavailable, retry it later. (offline)
 // 504 - Gateway timeout, retry it later.
 // All other response codes, SDK should drop the data.
-

@@ -43,6 +43,7 @@ export interface ILocalStorageConfiguration {
      * meet this persistence level will only be cached in memory in the output (Post) channel. Valid values of this
      * setting are defined by the EventPersistence enum, currently Normal (1) and Critical (2) with the default
      * value being Normal (1) which means all events.
+     * @default 1
      */
     minPersistenceLevel?: number | EventPersistence;
 
@@ -50,7 +51,7 @@ export interface ILocalStorageConfiguration {
      * [Optional] Identifies the StorageProviders that should be used by the system if available, the first available
      * provider will be used. Valid available values are defined by the StorageProviders enum. Only the first 5 entries
      * are processed, so if this value contains more than 5 elements they will be ignored.
-     * Default Order is [StorageProviders.LocalStorage, StorageProviders.IndexedDB]
+     * Default order is [StorageProviders.LocalStorage, StorageProviders.IndexedDB]
      */
     providers?: number[] | eStorageProviders[];
 
@@ -82,14 +83,14 @@ export interface ILocalStorageConfiguration {
     inStorageMaxTime?: number;
     /**
      * [Optional] Identifies max retry times time for a event batch
-     * default: 2
+     * default: 1
      */
     maxRetry?: number;
     /**
-     * Identift online channel id
-     * default is applicationinsights-channel
+     * Identify online channel ids in order, the first available one will be used
+     * default is [AppInsightsChannelPlugin, PostChannel]
      */
-    primaryOnlineChannelId?: string;
+    primaryOnlineChannelId?: string[];
     /**
      * Identify max size of per batch that saved in persistence storage
      * default 63000
@@ -112,8 +113,9 @@ export interface ILocalStorageConfiguration {
     EventsToDropPerTime?: number; //default 10
     /**
      * Identify max critical events count for event batch to be able to drop
+     * default 2
      */
-    maxCriticalEvtsDropCnt?: number; //default 2
+    maxCriticalEvtsDropCnt?: number;
     //dosampling?: boolean; //TODO
 }
 
@@ -136,10 +138,7 @@ export interface IOfflineSenderConfig {
      */
     httpXHROverride?: IXHROverride;
      /**
-     * [Optional] By default during unload (or when you specify to use sendBeacon() or sync fetch (with keep-alive) for an event) the SDK
-     * ignores any provided httpXhrOverride and attempts to use sendBeacon() or fetch(with keep-alive) when they are available.
-     * When this configuration option is true any provided httpXhrOverride will always be used, so any provided httpXhrOverride will
-     * also need to "handle" the synchronous unload scenario.
+     * When this configuration option is true any provided httpXhrOverride will always be used
      */
     alwaysUseXhrOverride?: boolean;
 }
@@ -167,18 +166,6 @@ export interface IStorageTelemetryItem extends IPayloadData {
     attempCnt?: number;
 }
 
-
-export interface IInternalPayloadData extends IPayloadData {
-    /**
-     * The storage id of the telemetry item that has been attempted to be sent.
-     */
-    id?: string;
-    persistence?: number | EventPersistence;
-    iKey?: string;
-    attempt?: number;
-    isArr?: boolean;
-    criticalCnt?: number;
-}
 
 /**
  * An internal interface which defines a common provider context that is used to pass multiple values when initializing provider instances

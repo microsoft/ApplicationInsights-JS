@@ -100,7 +100,7 @@ export class Sender {
                 return _httpInterface;
             }
         
-            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, cxt: IProcessTelemetryContext, diagLog: IDiagnosticLogger,  unloadHookContainer?: IUnloadHookContainer): void => {
+            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, cxt: IProcessTelemetryContext, diagLog: IDiagnosticLogger,  channelId?: string, unloadHookContainer?: IUnloadHookContainer): void => {
                 
                 _diagLog = diagLog || core.logger;
                 if (_isInitialized) {
@@ -120,7 +120,7 @@ export class Sender {
                     let ctx = createProcessTelemetryContext(null, config, core);
                    
                     let offlineCfg = ctx.getExtCfg(DefaultOfflineIdentifier) as ILocalStorageConfiguration;
-                    _onlineChannelId = offlineCfg.primaryOnlineChannelId || BreezeChannelIdentifier;
+                    _onlineChannelId = channelId || BreezeChannelIdentifier;
                     let senderConfig = ctx.getExtCfg(_onlineChannelId, {}) as any;
                     let offlineSenderCfg = offlineCfg.senderCfg || {} as IOfflineSenderConfig;
                   
@@ -671,7 +671,7 @@ export class Sender {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, cxt: IProcessTelemetryContext, diagLog: IDiagnosticLogger,  unloadHookContainer?: IUnloadHookContainer): void {
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, cxt: IProcessTelemetryContext, diagLog: IDiagnosticLogger,  channelId?: string, unloadHookContainer?: IUnloadHookContainer): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
