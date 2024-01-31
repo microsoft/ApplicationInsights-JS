@@ -7,10 +7,10 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     EventSendType, FullVersionString, IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IExtendedConfiguration, IPayloadData, IPerfEvent,
     IUnloadHook, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType, _eExtendedInternalMessageId,
-    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend, getLocation,
-    getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isNumber, isReactNative,
-    isString, isUndefined, isValueAssigned, isXhrSupported, objForEachKey, objKeys, onConfigChange, openXhr, strTrim, strUndefined,
-    useXDomainRequest
+    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend,
+    getCommonSchemaMetaData, getLocation, getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported, isFetchSupported,
+    isNullOrUndefined, isNumber, isReactNative, isString, isUndefined, isValueAssigned, isXhrSupported, objForEachKey, objKeys,
+    onConfigChange, openXhr, strTrim, strUndefined, useXDomainRequest
 } from "@microsoft/1ds-core-js";
 import { arrAppend } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
@@ -177,36 +177,40 @@ export class HttpManager {
      * @param requestQueue   - The queue that contains the requests to be sent.
      */
     constructor(maxEventsPerBatch: number, maxConnections: number, maxRequestRetriesBeforeBackoff: number, actions: BatchNotificationActions) {
+        // ------------------------------------------------------------------------------------------------------------------------
+        // Only set "Default" values in the _initDefaults() method, unless value are not "reset" during unloading
+        // ------------------------------------------------------------------------------------------------------------------------
         let _urlString: string;
-        let _killSwitch: KillSwitch = new KillSwitch();
-        let _paused = false;
-        let _clockSkewManager = new ClockSkewManager();
+        let _killSwitch: KillSwitch;
+        let _paused: boolean;
+        let _clockSkewManager: ClockSkewManager;
         let _useBeacons = false;
-        let _outstandingRequests = 0;           // Holds the number of outstanding async requests that have not returned a response yet
+        let _outstandingRequests: number;           // Holds the number of outstanding async requests that have not returned a response yet
         let _postManager: IPostChannel;
         let _logger: IDiagnosticLogger;
         let _sendInterfaces: { [key: number]: IInternalXhrOverride };
         let _core: IAppInsightsCore;
-        let _customHttpInterface = true;
-        let _queryStringParameters: IQueryStringParams[] = [];
-        let _headers: { [name: string]: string } = {};
-        let _batchQueue: EventBatch[] = [];
-        let _serializer: Serializer = null;
-        let _enableEventTimings = false;
+        let _customHttpInterface: boolean;
+        let _queryStringParameters: IQueryStringParams[];
+        let _headers: { [name: string]: string };
+        let _batchQueue: EventBatch[];
+        let _serializer: Serializer;
+        let _enableEventTimings: boolean;
         let _cookieMgr: ICookieMgr;
-        let _isUnloading = false;
-        let _useHeaders = false;
+        let _isUnloading: boolean;
+        let _useHeaders: boolean;
         let _xhrTimeout: number;
         let _disableXhrSync: boolean;
         let _disableFetchKeepAlive: boolean;
         let _canHaveReducedPayload: boolean;
         let _addNoResponse: boolean;
-        let _unloadHooks: IUnloadHook[]  = [];
+        let _unloadHooks: IUnloadHook[];
         let _sendHook: PayloadPreprocessorFunction | undefined;
         let _sendListener: PayloadListenerFunction | undefined;
-        let _responseHandlers: Array<(responseText: string) => void> = [];
+        let _responseHandlers: Array<(responseText: string) => void>;
         let _isInitialized: boolean;
         let _timeoutWrapper: ITimeoutOverrideWrapper;
+        let _excludeCsMetaData: boolean;
 
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
@@ -254,6 +258,7 @@ export class HttpManager {
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
+                        _excludeCsMetaData = !!channelConfig.excludeCsMetaData;
 
                         
                         if (!!core.getPlugin("LocalStorage")) {
@@ -262,7 +267,7 @@ export class HttpManager {
                         }
             
                         _useBeacons = !isReactNative(); // Only use beacons if not running in React Native
-                        _serializer = new Serializer(_core, valueSanitizer, stringifyObjects, enableCompoundKey);
+                        _serializer = new Serializer(_core, valueSanitizer, stringifyObjects, enableCompoundKey, getCommonSchemaMetaData, _excludeCsMetaData);
         
                         if (!isNullOrUndefined(channelConfig.useSendBeacon)) {
                             _useBeacons = !!channelConfig.useSendBeacon;
@@ -442,6 +447,7 @@ export class HttpManager {
                 _responseHandlers = [];
                 _isInitialized = false;
                 _timeoutWrapper = createTimeoutWrapper();
+                _excludeCsMetaData = false;
             }
     
             function _fetchSendPost(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {

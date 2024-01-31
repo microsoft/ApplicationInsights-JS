@@ -1,5 +1,11 @@
 import { IConfiguration } from "@microsoft/applicationinsights-web";
 
+// in the future, we can add more fields here
+export interface SdkLoaderConfig {
+    instrumentationKey?: string;
+    connectionString?: string;
+}
+
 export interface ISnippetConfig {
     src: string;
     name?: string;
