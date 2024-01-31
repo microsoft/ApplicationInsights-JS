@@ -488,12 +488,10 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             _self.setAuthPluginHeader = (token: string) => {
-                console.log("siyu debug purpose inside setAuthPluginHeader addHeader called");
                 _httpManager.addHeader(STR_AUTH_PLUGIN, token);
             };
 
             _self.removeAuthPluginHeader = () => {
-                console.log("siyu debug purpose inside setAuthPluginHeader removeAuthPluginHeader called");
                 _httpManager.removeHeader(STR_AUTH_PLUGIN);
             };
 
