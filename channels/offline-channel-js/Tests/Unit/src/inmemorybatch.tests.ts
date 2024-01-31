@@ -1,7 +1,8 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import {IPostTransmissionTelemetryItem} from "../../../src/Interfaces/IInMemoryBatch";
 import { InMemoryBatch } from "../../../src/InMemoryBatch";
-import { DiagnosticLogger, IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { DiagnosticLogger, IDiagnosticLogger, arrForEach } from "@microsoft/applicationinsights-core-js";
+import { base64Decode, base64Encode, getEndpointDomain } from "../../../src/Helpers/Utils";
 
 export class OfflineInMemoryBatchTests extends AITestClass {
     private _logger: IDiagnosticLogger;
@@ -75,6 +76,47 @@ export class OfflineInMemoryBatchTests extends AITestClass {
             
         });
        
+        this.testCase({
+            name: "Get domain: Add Event with expected event limit ",
+            test: () => {
+                let testUrl: string[] = [
+                    "test.com",
+                    "http://test.com",
+                    "https://test.com",
+                    "www.test.com",
+                    "https://test.com?test",
+                    "https://test.com??test",
+                    "https://test.com?test?test123"
+                ]
+                let expectedDomain =  "test.com";
+
+                arrForEach(testUrl, (url) => {
+                    let domain =  getEndpointDomain(url);
+                    Assert.equal(domain, expectedDomain, "should get expected domain");
+                });
+
+                let domain = getEndpointDomain("http://test.us.eu-east.com?warmpth&auth=true");
+                Assert.equal(domain, "test.us.eu-east.com", "should get expected domain");
+
+            }
+            
+        });
+
+        this.testCase({
+            name: "Uint8 tranform: Encode and decode Uint8 array",
+            test: () => {
+                let arr = new Uint8Array([255,255,1,236,45,18]);
+             
+                let str = base64Encode(arr);
+                Assert.equal(str, "MjU1LDI1NSwxLDIzNiw0NSwxOA==", "get expected string")
+
+                let decode = base64Decode(str);
+                Assert.deepEqual(decode, arr, "should return expected arr")
+                Assert.deepEqual(decode.toString(), arr.toString(), "get expected arr string back");
+
+            }
+            
+        });
     }
 }
 

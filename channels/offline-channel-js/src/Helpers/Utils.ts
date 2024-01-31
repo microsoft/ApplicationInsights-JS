@@ -7,11 +7,10 @@ import { isString, objKeys, strSubstr } from "@nevware21/ts-utils";
 //Prefix: Defines a service.
 //Suffix: Defines the common domain name.
 
-export function getEndpointDomian(endpoint: string) {
+export function getEndpointDomain(endpoint: string) {
     try {
-        //let url = endpoint.replace(/[^A-Za-z0-9]\//g, "");
-        let url = endpoint.replace(/^https?:\/\//, "").replace(/^www\./, "");
-        url = url.replace("?", "/");
+        let url = endpoint.replace(/^https?:\/\/|^www\./, "");
+        url = url.replace(/\?/, "/");
         let arr = url.split("/");
         if (arr && arr.length > 0) {
             return arr[0];
@@ -20,7 +19,8 @@ export function getEndpointDomian(endpoint: string) {
     } catch (e) {
         // eslint-disable-next-line no-empty
     }
-    return null;
+    // if we can't get domain, entire endpoint will be used
+    return endpoint;
 }
 
 export function isGreaterThanZero(value: number) {
@@ -41,8 +41,16 @@ const _base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+
  *
  * @return the base64-encoded output string.
  */
-export function base64Encode(input: string) {
+export function base64Encode(data: string | Uint8Array) {
     let line = "";
+    let input = "";
+
+    if (isString(data)) {
+        input = data;
+    } else {
+        input = data.toString();
+    }
+
     let output = "";
     // tslint:disable-next-line:one-variable-per-declaration
     let chr1, chr2, chr3;
@@ -79,10 +87,10 @@ export function base64Decode(input: string) {
 
     while (i < input.length) {
 
-        enc1 = this._keyStr.indexOf(input.charAt(i++));
-        enc2 = this._keyStr.indexOf(input.charAt(i++));
-        enc3 = this._keyStr.indexOf(input.charAt(i++));
-        enc4 = this._keyStr.indexOf(input.charAt(i++));
+        enc1 = _base64.indexOf(input.charAt(i++));
+        enc2 = _base64.indexOf(input.charAt(i++));
+        enc3 = _base64.indexOf(input.charAt(i++));
+        enc4 = _base64.indexOf(input.charAt(i++));
 
         chr1 = (enc1 << 2) | (enc2 >> 4);
         chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
@@ -98,8 +106,8 @@ export function base64Decode(input: string) {
         }
 
     }
-
-    return output;
+    let arr = output.split(",").map(c => Number(c));
+    return new Uint8Array(arr);
 
 }
 
@@ -149,7 +157,6 @@ export function getTimeFromId(id: string) {
     }
     return 0;
 }
-
 
 
 

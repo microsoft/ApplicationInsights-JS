@@ -627,43 +627,45 @@ export class OfflineWebProviderTests extends AITestClass {
             
         });
 
-        // this.testCase({
-        //     name: "Web local Storage Provider: Uint8 Array should be handled correctly",
-        //     test: () => {
-        //         let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-        //         let arr = new Uint8Array([21, 32]);
-        //         let evt = {
-        //             urlString: endpoint,
-        //             data: arr,
-        //             headers: {
-        //                 "header1": "header1val",
-        //                 "header2": "header2val"
-        //             },
-        //             isArr: true,
-        //             disableXhrSync: false,
-        //             disableFetchKeepAlive: false,
-        //             sendReason: 1,
-        //             iKey: "testIKey",
-        //             criticalCnt: 0
-        //         }
-        //         let provider = new WebStorageProvider("localStorage");
-        //         let itemCtx = this.core.getProcessTelContext();
-        //         let storageConfig = createDynamicConfig({}).cfg;
-        //         let providerCxt = {
-        //             itemCtx:  itemCtx,
-        //             storageConfig: storageConfig,
-        //             endpoint: endpoint
-        //         }
-        //         let isInit = provider.initialize(providerCxt);
-        //         Assert.ok(isInit, "init process is successful");
+        this.testCase({
+            name: "Web local Storage Provider: Uint8 Array should be handled correctly",
+            test: () => {
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let arr = new Uint8Array([21, 32]);
+                let evt = {
+                    urlString: endpoint,
+                    data: arr,
+                    headers: {
+                        "header1": "header1val",
+                        "header2": "header2val"
+                    },
+                    isArr: true,
+                    disableXhrSync: false,
+                    disableFetchKeepAlive: false,
+                    sendReason: 1,
+                    iKey: "testIKey",
+                    criticalCnt: 0
+                }
+                let provider = new WebStorageProvider("localStorage");
+                let itemCtx = this.core.getProcessTelContext();
+                let storageConfig = createDynamicConfig({}).cfg;
+                let providerCxt = {
+                    itemCtx:  itemCtx,
+                    storageConfig: storageConfig,
+                    endpoint: endpoint
+                }
+                let isInit = provider.initialize(providerCxt);
+                Assert.ok(isInit, "init process is successful");
 
-        //         let addedEvt = provider.addEvent("", evt, itemCtx);
-        //         Assert.ok(addedEvt, "evt should be added");
-        //         let evts = provider.getAllEvents();
-        //         Assert.deepEqual(evts, [evt], "should have the expected stored event");
-        //     }
+                let addedEvt = provider.addEvent("", evt, itemCtx);
+                Assert.ok(addedEvt, "evt should be added");
+                Assert.equal((addedEvt as IStorageTelemetryItem).data, "MjEsMzI=", "should have the expected encoded stored event");
+                let evts = provider.getAllEvents();
+                let data = evts && evts[0];
+                Assert.deepEqual(data.data, arr, "should have the expected decoded stored event array");
+            }
             
-        // });
+        });
 
 
 

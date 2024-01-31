@@ -56,14 +56,16 @@ const defaultLocalStorageConfig: IConfigDefaults<ILocalStorageConfiguration> = o
     maxRetry: 1,
     maxBatchsize:{ isVal: isGreaterThanZero, v: DefaultBatchSizeLimitBytes},
     maxSentBatchInterval: { isVal: isGreaterThanZero, v: DefaultBatchInterval},
-    primaryOnlineChannelId: BreezeChannelIdentifier,
+    primaryOnlineChannelId: BreezeChannelIdentifier, // todo: in array
     senderCfg: {} as IOfflineSenderConfig
 });
+
+//TODO: add tests for sharedAnanlytics
 
 
 export class OfflineChannel extends BaseTelemetryPlugin implements IChannelControls {
     public identifier = DefaultOfflineIdentifier;
-    public priority = 1000; // before channel (post = 1011 and sender = 1001, teechannel = 999)
+    public priority = 1000; // before channel (post = 1011 and sender = 1001, teechannel = 999, localstorage:  1009)
     public version = version;
     public id: string;
 
@@ -135,14 +137,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     itemCtx =  itemCtx || _self._getTelCtx(itemCtx);
 
                     
-                    if (!!onlineStatus) {
-                        _self.processNext(evt, itemCtx);
-                        return;
-                    }
-
-
-                    if (!_offineSupport) {
-                        // Do not send/save data when we can not get offline details
+                    if (!!onlineStatus || !_offineSupport) {
                         _self.processNext(evt, itemCtx);
                         return;
                     }

@@ -482,7 +482,7 @@ export class Sender {
                 if (status == 206 && !_isOneDs) {
                     // for breeze, 206 is partially success, currently consider success
                     // TODO: handle partial success
-                    _doOnComplete(oncomplete, 200, headers, response);
+                    _doOnComplete(oncomplete, 200, headers, response);  // TODO: doc (support partial success)-> partial success add known issue (breeze)
                 } else if (status == 204 && _isOneDs) {
                     // one collector
                     _doOnComplete(oncomplete, 200, headers, response);

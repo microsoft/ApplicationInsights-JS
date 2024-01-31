@@ -5,7 +5,7 @@ import {
     IProcessTelemetryContext, IUnloadHookContainer, eLoggingSeverity, isNotNullOrUndefined, isNumber, newGuid, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncAllPromise, createAsyncPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
-import { getEndpointDomian, getTimeFromId, getTimeId } from "../Helpers/Utils";
+import { getEndpointDomain, getTimeFromId, getTimeId } from "../Helpers/Utils";
 import {
     CursorProcessResult, IIndexedDbOpenDbContext, IIndexedDbStoreActionContext, IProcessCursorState
 } from "../Interfaces/IOfflineIndexDb";
@@ -284,7 +284,7 @@ export class IndexedDbProvider implements IOfflineProvider {
                 _storageId = _this.id || providerContext.id || newGuid();
 
                
-                _endpoint = getEndpointDomian(providerContext.endpoint);
+                _endpoint = getEndpointDomain(providerContext.endpoint);
                 _autoClean = !!storageConfig.autoClean;
                 _storageKeyPrefix = storageConfig.storageKeyPrefix || DefaultDbName;
                 _dbName = _storageKeyPrefix + "_" + DbVersion + "_" + _endpoint;

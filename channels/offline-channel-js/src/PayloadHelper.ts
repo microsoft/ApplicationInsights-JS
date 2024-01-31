@@ -20,7 +20,7 @@ export class PayloadHelper {
                 try {
                     let data = input.data;
                     if (data) {
-                        input.data = base64Decode(data as string);
+                        input.data = base64Decode(data as any);
                     }
                     return input;
                 } catch (e) {
@@ -54,7 +54,7 @@ export class PayloadHelper {
     }
 
     /**
-     * Serializes the current object to a JSON string.
+     *  Decode the JSON string back to Uint8 array.
      */
     public base64ToArr(input: IStorageTelemetryItem): IStorageTelemetryItem {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -62,7 +62,7 @@ export class PayloadHelper {
     }
 
     /**
-     * Serializes the current object to a JSON string.
+     * Code the Uint8 array object to string.
      */
     public base64ToStr(item: IStorageTelemetryItem): IStorageTelemetryItem {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
