@@ -467,7 +467,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'E2E.GenericTests: trackException with CustomError sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackException({ exception: new CustomTestError("Test Custom Error!") });
+                this._ai.trackException({ id: "testID", exception: new CustomTestError("Test Custom Error!") });
             }].concat(this.asserts(1)).concat(() => {
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 if (payloadStr.length > 0) {
@@ -485,11 +485,37 @@ export class ApplicationInsightsTests extends AITestClass {
                             Assert.ok(ex.stack.length > 0, "Has stack");
                             Assert.ok(ex.parsedStack, "Stack was parsed");
                             Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.equal(baseData.properties.id, "testID", "Make sure the error message id is present [" + baseData.properties + "]");
                         }
                     }
                 }
             })
         });
+
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: trackException will keep id from the original exception',
+            stepDelay: 1,
+            steps: [() => {
+                this._ai.trackException({id:"testId", error: new Error("test local exception"), severityLevel: 3});
+            }].concat(this.asserts(1)).concat(() => {
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            console.log(JSON.stringify(baseData.properties));
+                            Assert.equal(baseData.properties.id, "testId", "Make sure the error message id is present [" + ex.properties + "]");
+                        }
+                    }
+                }
+            })
+        });
+
 
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackException with CustomError sends to backend with custom properties',
