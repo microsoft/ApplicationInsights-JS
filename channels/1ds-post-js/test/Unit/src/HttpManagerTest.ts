@@ -215,10 +215,10 @@ export class HttpManagerTest extends AITestClass {
                 });
                 
                 manager.initialize(core.config, core, postChannel);
-                QUnit.assert.ok(manager._serializeOfflineEvt, "seralize function should exist");
+                QUnit.assert.ok(manager.serializeOfflineEvt, "seralize function should exist");
                 let evt = this._createEvent();
                 evt.iKey = "testKey-123";
-                let evtStr = manager._serializeOfflineEvt(evt);
+                let evtStr = manager.serializeOfflineEvt(evt);
                 QUnit.assert.equal(evtStr, `{"name":"testEvent","iKey":"o:testKey","data":{"baseData":{}}}`,"Event should be serialized");
 
                 QUnit.assert.ok(manager.getOfflineRequestDetails, "request details function should exist");

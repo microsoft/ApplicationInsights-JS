@@ -304,7 +304,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 let rlt = EMPTY_STR;
                 try {
                     _cleanEvent(event);
-                    rlt = _httpManager._serializeOfflineEvt(event);
+                    rlt = _httpManager.serializeOfflineEvt(event);
 
                 } catch (e) {
                     // eslint-disable-next-line no-empty

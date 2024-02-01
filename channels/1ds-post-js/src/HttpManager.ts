@@ -340,7 +340,7 @@ export class HttpManager {
                 }
             };
 
-            _self._serializeOfflineEvt = (evt) => {
+            _self.serializeOfflineEvt = (evt) => {
                 return _serializer.getEventBlob(evt);
             }
 
@@ -1505,7 +1505,7 @@ export class HttpManager {
      * Get Offline Serializer support
      * @returns internal Offline Serializer object
      */
-    public _serializeOfflineEvt(evt: ITelemetryItem | IPostTransmissionTelemetryItem): string {
+    public serializeOfflineEvt(evt: ITelemetryItem | IPostTransmissionTelemetryItem): string {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }
