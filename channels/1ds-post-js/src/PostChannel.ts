@@ -19,7 +19,7 @@ import {
 } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { HttpManager } from "./HttpManager";
-import { STR_AUTH_PLUGIN, STR_MSA_DEVICE_TICKET, STR_TRACE, STR_USER } from "./InternalConstants";
+import { STR_AUTH_WEB_TOKEN, STR_MSA_DEVICE_TICKET, STR_TRACE, STR_USER } from "./InternalConstants";
 import { retryPolicyGetMillisToBackoffForRetry } from "./RetryPolicy";
 import { ITimeoutOverrideWrapper, createTimeoutWrapper } from "./TimeoutOverrideWrapper";
 
@@ -488,11 +488,11 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             _self.setAuthPluginHeader = (token: string) => {
-                _httpManager.addHeader(STR_AUTH_PLUGIN, token);
+                _httpManager.addHeader(STR_AUTH_WEB_TOKEN, token);
             };
 
             _self.removeAuthPluginHeader = () => {
-                _httpManager.removeHeader(STR_AUTH_PLUGIN);
+                _httpManager.removeHeader(STR_AUTH_WEB_TOKEN);
             };
 
             _self.hasEvents = _hasEvents;
