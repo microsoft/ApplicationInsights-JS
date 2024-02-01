@@ -7,7 +7,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSupport,
-    INotificationListener, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
+    INotificationListener, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
     ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, SendRequestReason, arrForEach, createProcessTelemetryContext,
     createUniqueNamespace, dateNow, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";

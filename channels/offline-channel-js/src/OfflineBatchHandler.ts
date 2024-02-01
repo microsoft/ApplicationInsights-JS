@@ -197,7 +197,7 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                                             return;
                                             
                                         } catch (e) {
-                                            reject(e)
+                                            reject(e);
                                         }
                                     }
                                     // this case should never happen because this function is called after we confirm that evt is available
