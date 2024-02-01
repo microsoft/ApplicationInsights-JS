@@ -370,6 +370,9 @@ export class Exception implements IExceptionData, ISerializable {
             if (!properties) {
                 properties = { };
             }
+            if (id){
+                properties.id = id;
+            }
             
             _self.exceptions = [new _ExceptionDetails(logger, exception, properties)];
             _self.properties = dataSanitizeProperties(logger, properties);
@@ -389,6 +392,7 @@ export class Exception implements IExceptionData, ISerializable {
             }
             if (exception.id) {
                 _self.id = exception.id;
+                exception.properties.id = exception.id;
             }
             if (exception.problemGroup) {
                 _self.problemGroup = exception.problemGroup;
