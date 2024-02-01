@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHA Calculation</title>
+  <script>
+    async function calculateSHA(text) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const buffer = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function fetchData() {
+      const url = 'https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js';
+
+      try {
+        const response = await fetch(url);
+        const originalFile = await response.text();
+
+        // Calculate SHA
+        const calculatedSha = await calculateSHA(originalFile);
+
+        // Log SHA to console
+        console.log(calculatedSha);
+      } catch (error) {
+        // Handle errors
+        console.error('Error:', error.message);
+      }
+    }
+
+    // Call the fetchData function
+    fetchData();
+  </script>
+</head>
+<body>
+  <p>test test</p>
+</body>
+</html>
