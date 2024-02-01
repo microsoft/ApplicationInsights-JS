@@ -6,13 +6,13 @@ import {
     utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSerializer,
-    INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IRequestUrlDetails,
-    ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason,
-    TransportType, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON,
-    getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend,
-    objKeys, onConfigChange, runTargetUnload, useXDomainRequest
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSupport,
+    INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
+    ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType,
+    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
+    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON, getNavigator, getWindow, isArray,
+    isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend, objKeys, onConfigChange,
+    runTargetUnload, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isNumber, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
@@ -527,15 +527,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             
             _self.getOfflineSupport = () => {
                 return {
+                    getUrl: () => {
+                        return _endpointUrl;
+                    },
+                    createPayload:_createPayload,
                     serialize: _serialize,
                     batch: _batch,
                     shouldProcess:(evt) => {
                         return !!_validate(evt);
-                    },
-                    getOfflineRequestDetails: () => {
-                        return _getRequestDetails();
                     }
-                } as IInternalOfflineSerializer;
+                } as IInternalOfflineSupport;
             }
         
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
@@ -729,16 +730,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 return rlt;
             }
 
-            function _getRequestDetails() {
+            function _createPayload(data: string |Uint8Array) {
                 let headers = _headers;
                 if (isInternalApplicationInsightsEndpoint(_endpointUrl)) {
                     headers[RequestHeaders[eRequestHeaders.sdkContextHeader]] = RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest];
                 }
                 return {
-                    url: _endpointUrl,
-                    hdrs: headers,
-                    useHdrs: true
-                } as IRequestUrlDetails;
+                    urlString: _endpointUrl,
+                    data: data,
+                    headers: headers
+                } as IPayloadData;
             }
         
             function _isSampledIn(envelope: ITelemetryItem): boolean {
@@ -1585,7 +1586,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * Get Offline Serializer support
      * @returns internal Offline Serializer object
      */
-    public getOfflineSupport(): IInternalOfflineSerializer {
+    public getOfflineSupport(): IInternalOfflineSupport {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }

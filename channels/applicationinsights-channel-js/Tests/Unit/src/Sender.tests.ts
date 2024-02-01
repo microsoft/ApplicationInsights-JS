@@ -837,12 +837,12 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(offlineSupport.shouldProcess, "should process should exit");
                 QUnit.assert.equal(offlineSupport.shouldProcess(event), true, "should process");
 
-                QUnit.assert.ok(offlineSupport.getOfflineRequestDetails, "getOfflineRequestDetails should exit");
-                let details = offlineSupport.getOfflineRequestDetails();
-                QUnit.assert.equal(details.url, "https://dc.services.visualstudio.com/v2/track", "get expected Url");
-                QUnit.assert.ok(details.hdrs, "should have headers");
-                QUnit.assert.equal(details.hdrs["Sdk-Context"], "appId", "get expected headers");
-                QUnit.assert.ok(details.useHdrs, "should use headers");
+                QUnit.assert.ok(offlineSupport.createPayload, "getOffline createPayload should exit");
+                let details = offlineSupport.createPayload("test");
+                QUnit.assert.equal(details.urlString, "https://dc.services.visualstudio.com/v2/track", "get expected Url");
+                QUnit.assert.ok(details.headers, "should have headers");
+                QUnit.assert.equal(details.headers["Sdk-Context"], "appId", "get expected headers");
+                QUnit.assert.equal(details.data, "test", "should use headers");
             }
         });
 

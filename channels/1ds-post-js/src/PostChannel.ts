@@ -6,11 +6,12 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, EventLatencyValue, EventSendType, EventsDiscardedReason, IAppInsightsCore, IChannelControls, IConfigDefaults,
-    IExtendedConfiguration, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState,
-    IUnloadHook, NotificationManager, SendRequestReason, _eInternalMessageId, _throwInternal, addPageHideEventListener,
-    addPageShowEventListener, addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, doPerf,
-    eLoggingSeverity, getWindow, isChromium, isGreaterThanZero, isNumber, mergeEvtNamespace, objForEachKey, onConfigChange, optimizeObject,
-    proxyFunctions, removePageHideEventListener, removePageShowEventListener, removePageUnloadEventListener, setProcessTelemetryTimings
+    IExtendedConfiguration, IInternalOfflineSupport, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
+    ITelemetryItem, ITelemetryUnloadState, IUnloadHook, NotificationManager, SendRequestReason, _eInternalMessageId, _throwInternal,
+    addPageHideEventListener, addPageShowEventListener, addPageUnloadEventListener, arrForEach, createProcessTelemetryContext,
+    createUniqueNamespace, doPerf, eLoggingSeverity, getWindow, isChromium, isGreaterThanZero, isNumber, mergeEvtNamespace, objForEachKey,
+    onConfigChange, optimizeObject, proxyFunctions, removePageHideEventListener, removePageShowEventListener, removePageUnloadEventListener,
+    setProcessTelemetryTimings
 } from "@microsoft/1ds-core-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
 import { ITimerHandler, objDeepFreeze } from "@nevware21/ts-utils";
@@ -233,16 +234,24 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             _self.getOfflineSupport = () => {
+                let details = _httpManager.getOfflineRequestDetails();
                 return {
+                    getUrl: () => {
+                        return details.url
+                    },
                     serialize: _serialize,
                     batch: _batch,
                     shouldProcess: (evt) => {
                         return !_disableTelemetry;
                     },
-                    getOfflineRequestDetails: () => {
-                        return  _httpManager._getOfflineRequestDetails();
+                    createPayload: (evt) => {
+                        return {
+                            urlString: details.url,
+                            headers: details.hdrs,
+                            data: evt
+                        } as IPayloadData;
                     }
-                };
+                } as IInternalOfflineSupport;
 
             };
 
@@ -295,9 +304,6 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 let rlt = EMPTY_STR;
                 try {
                     _cleanEvent(event);
-                    if (_overrideInstrumentationKey) {
-                        event.iKey = _overrideInstrumentationKey;
-                    }
                     rlt = _httpManager._serializeOfflineEvt(event);
 
                 } catch (e) {
@@ -307,7 +313,6 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 return rlt;
                
             }
-
 
             // Moving event handlers out from the initialize closure so that any local variables can be garbage collected
             function _handleUnloadEvents(evt: any) {
@@ -359,24 +364,6 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 }
                 _cleanEvent(event);
 
-                // // Remove extra AI properties if present
-                // if (event.ext && event.ext[STR_TRACE]) {
-                //     delete (event.ext[STR_TRACE]);
-                // }
-                // if (event.ext && event.ext[STR_USER] && event.ext[STR_USER]["id"]) {
-                //     delete (event.ext[STR_USER]["id"]);
-                // }
-
-                // // v8 performance optimization for iterating over the keys
-                // if (_optimizeObject) {
-                //     event.ext = optimizeObject(event.ext);
-                //     if (event.baseData) {
-                //         event.baseData = optimizeObject(event.baseData);
-                //     }
-                //     if (event.data) {
-                //         event.data = optimizeObject(event.data);
-                //     }
-                // }
 
                 if (event.sync) {
                     // If the transmission is backed off then do not send synchronous events.

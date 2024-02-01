@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IDiagnosticLogger, getGlobalInst } from "@microsoft/applicationinsights-core-js";
 import {

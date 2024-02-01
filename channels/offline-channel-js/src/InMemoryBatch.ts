@@ -1,7 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import dynamicProto from "@microsoft/dynamicproto-js";
-import {
-    IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, eLoggingSeverity, isNullOrUndefined
-} from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, ITelemetryItem, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 import { IInMemoryBatch, IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
 
 export class InMemoryBatch implements IInMemoryBatch {
@@ -9,7 +10,6 @@ export class InMemoryBatch implements IInMemoryBatch {
 
     constructor(logger: IDiagnosticLogger, endpoint: string, evts?: IPostTransmissionTelemetryItem[], evtsLimitInMem?: number) {
         let _buffer: IPostTransmissionTelemetryItem[] = evts ? [].concat(evts) : [];
-        let _bufferFullMessageSent = false;
 
         dynamicProto(InMemoryBatch, this, (_self) => {
 
@@ -18,27 +18,13 @@ export class InMemoryBatch implements IInMemoryBatch {
                 return endpoint;
             }
 
-            _self["_getDbgPlgTargets"] = () => {
-                return [_bufferFullMessageSent];
-            };
-
             
             _self.addEvent = (payload: IPostTransmissionTelemetryItem | ITelemetryItem) => {
-                //TODO: handle space free up, handle drop here
                 if (!isNullOrUndefined(evtsLimitInMem) && _self.count() >= evtsLimitInMem) {
-                    // sent internal log only once
-                    if (!_bufferFullMessageSent) {
-                        _throwInternal(logger,
-                            eLoggingSeverity.WARNING,
-                            _eInternalMessageId.InMemoryStorageBufferFull,
-                            "Maximum offline in-memory buffer count reached: " + _self.count(),
-                            true);
-                        _bufferFullMessageSent = true;
-                    }
-
-                    return;
+                    return false;
                 }
                 _buffer.push(payload);
+                return true;
             };
 
             _self.count = (): number => {
@@ -47,7 +33,6 @@ export class InMemoryBatch implements IInMemoryBatch {
 
             _self.clear = () => {
                 _buffer = [];
-                _bufferFullMessageSent = false;
             };
 
             _self.getItems = () => {
@@ -78,6 +63,7 @@ export class InMemoryBatch implements IInMemoryBatch {
 
     public addEvent(payload: IPostTransmissionTelemetryItem | ITelemetryItem) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
     public endpoint() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

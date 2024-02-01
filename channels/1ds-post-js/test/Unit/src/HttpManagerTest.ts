@@ -221,8 +221,8 @@ export class HttpManagerTest extends AITestClass {
                 let evtStr = manager._serializeOfflineEvt(evt);
                 QUnit.assert.equal(evtStr, `{"name":"testEvent","iKey":"o:testKey","data":{"baseData":{}}}`,"Event should be serialized");
 
-                QUnit.assert.ok(manager._getOfflineRequestDetails, "request details function should exist");
-                let details = manager._getOfflineRequestDetails();
+                QUnit.assert.ok(manager.getOfflineRequestDetails, "request details function should exist");
+                let details = manager.getOfflineRequestDetails();
                 QUnit.assert.equal(details.url, "testEndpoint?cors=true&content-type=application/x-json-stream&w=0", "get expected Url");
                 QUnit.assert.ok(details.hdrs, "get headers Url");
                 QUnit.assert.ok(details.useHdrs, "should use headers");

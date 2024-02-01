@@ -6,10 +6,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     EventSendType, FullVersionString, IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IExtendedConfiguration, IPayloadData, IPerfEvent,
-    ITelemetryItem,
-    IUnloadHook, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType, _eExtendedInternalMessageId,
-    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend,
-    getCommonSchemaMetaData, getLocation, getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported, isFetchSupported,
+    ITelemetryItem, IUnloadHook, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType,
+    _eExtendedInternalMessageId, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity,
+    extend, getCommonSchemaMetaData, getLocation, getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported, isFetchSupported,
     isNullOrUndefined, isNumber, isReactNative, isString, isUndefined, isValueAssigned, isXhrSupported, objForEachKey, objKeys,
     onConfigChange, openXhr, strTrim, strUndefined, useXDomainRequest
 } from "@microsoft/1ds-core-js";
@@ -345,7 +344,7 @@ export class HttpManager {
                 return _serializer.getEventBlob(evt);
             }
 
-            _self._getOfflineRequestDetails = () => {
+            _self.getOfflineRequestDetails = () => {
                 let payload = _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
                 return _buildRequestDetails(payload, _useHeaders);
             }
@@ -1515,7 +1514,7 @@ export class HttpManager {
      * Get Offline request details
      * @returnsrequest details
      */
-    public _getOfflineRequestDetails(): IRequestUrlDetails {
+    public getOfflineRequestDetails(): IRequestUrlDetails {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }

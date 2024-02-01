@@ -67,7 +67,7 @@ export {
     IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn, IDynamicConfigHandler, IDynamicPropertyHandler,
     IWatchDetails, IWatcherHandler, WatcherFunction,
     createDynamicConfig, onConfigChange, getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion,
-    IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction, IInternalOfflineSerializer
+    IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction, IInternalOfflineSupport
 } from "@microsoft/applicationinsights-core-js";
 
 export {

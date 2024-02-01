@@ -918,7 +918,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let evt = TestHelper.mockEvent(endpoint, 1, false);
                 unloadHandler.storeBatch(evt); // add events to local storage
                 let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
-                Assert.ok(storageStr, "storgae should have one event");
+                Assert.ok(storageStr, "storage should have one event");
 
 
                 let batchHandler = this.batchHandler;
@@ -955,7 +955,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                         Assert.equal(val && val.length, 0, "should have 0 events");
                         let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                         let evts = JSON.parse(storageStr).evts;
-                        Assert.deepEqual(evts, {}, "storgae should not have one event");
+                        Assert.deepEqual(evts, {}, "storage should not have one event");
                     });
                 
                 });

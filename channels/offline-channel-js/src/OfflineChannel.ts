@@ -1,11 +1,12 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventPersistence, IConfig, IOfflineListener,
-    createOfflineListener
+    BreezeChannelIdentifier, EventPersistence, IConfig, IOfflineListener, createOfflineListener
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSerializer,
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSupport,
     INotificationListener, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
     ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, SendRequestReason, arrForEach, createProcessTelemetryContext,
     createUniqueNamespace, dateNow, mergeEvtNamespace, onConfigChange, runTargetUnload
@@ -33,7 +34,7 @@ const PostChannelIdentifier = "PostChannel";
 
 
 interface IUrlLocalStorageConfig {
-    iKey: string;
+    iKey?: string;
     url: string;
     coreRootCtx: IProcessTelemetryContext;
     providerContext: ILocalStorageProviderContext;
@@ -58,6 +59,7 @@ const defaultLocalStorageConfig: IConfigDefaults<ILocalStorageConfiguration> = o
     maxBatchsize:{ isVal: isGreaterThanZero, v: DefaultBatchSizeLimitBytes},
     maxSentBatchInterval: { isVal: isGreaterThanZero, v: DefaultBatchInterval},
     primaryOnlineChannelId: [BreezeChannelIdentifier, PostChannelIdentifier],
+    overrideInstrumentationKey: undefValue,
     senderCfg: {} as IOfflineSenderConfig
 });
 
@@ -92,8 +94,9 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _consecutiveErrors: number;
             let _senderInst: IXHROverride;
             let _taskScheduler: ITaskScheduler;
-            let _offineSupport: IInternalOfflineSerializer;
+            let _offineSupport: IInternalOfflineSupport;
             let _primaryChannelId: string;
+            let _overrideIkey: string;
 
             _initDefaults();
 
@@ -154,10 +157,24 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         }
                        
                         let item = evt as IPostTransmissionTelemetryItem;
+                      
                         //TODO: add function to better get level
                         item.persistence = item.persistence  || (item.baseData && item.baseData.persistence) || EventPersistence.Normal; // in case the level is in baseData
                         if (_shouldCacheEvent(_urlCfg, item) && _inMemoBatch) {
-                            _inMemoBatch.addEvent(evt);
+                            if (_overrideIkey) {
+                                item.iKey = _overrideIkey;
+                            }
+                            let added = _inMemoBatch.addEvent(evt);
+                            // inMemo is full
+                            if (!added) {
+                                _flushInMemoItems();
+                                // if event can't be added again, simply drop it
+                                // TODO: better handle clean in memo events
+                                // TODO: add logs/notification
+                                _inMemoBatch.addEvent(evt);
+                                _inMemoFlushTimer && _inMemoFlushTimer.refresh();
+                                
+                            }
                         }
                         _setupInMemoTimer();
                        
@@ -243,6 +260,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _senderInst = null;
                 _offineSupport = null;
                 _primaryChannelId = null;
+                _overrideIkey = null;
             }
 
 
@@ -418,7 +436,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 try {
 
                     if (evt) {
-                        evt.iKey = evt.iKey || _urlCfg.iKey;
                         return _offineSupport.serialize(evt, _convertUndefined);
                     }
                     
@@ -437,24 +454,16 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     }
                     let cnt = criticalCnt || 0;
                     let payload = _offineSupport.batch(payloadArr);
-                    let payloadData: IPayloadData = {
-                        urlString: _urlCfg.url,
-                        data: payload,
-                        headers: {},
-                        criticalCnt: cnt
-                    } as IStorageTelemetryItem;
-                    let details = _offineSupport.getOfflineRequestDetails && _offineSupport.getOfflineRequestDetails();
-                    if (details) {
-                        let url = details.url;
-                        if (url) {
-                            payloadData.urlString = url;
-                        }
-                        let hdrs = details.hdrs;
-                        if (hdrs) {
-                            payloadData.headers = hdrs;
-                        }
+                    // ****************************************
+                    // move this to offline support
+                    // createpayload(data:string | Uint8Array)
+                    let payloadData = _offineSupport.createPayload && _offineSupport.createPayload(payload) as IStorageTelemetryItem;
+                    if (payloadData) {
+                        payloadData.criticalCnt = cnt;
+                        return payloadData;
+
                     }
-                    return payloadData;
+                   
 
                 } catch(e) {
                     // eslint-disable-next-line no-empty
@@ -471,23 +480,27 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let ctx = createProcessTelemetryContext(null, theConfig, core);
                     storageConfig = ctx.getExtCfg<ILocalStorageConfiguration>(_self.identifier, defaultLocalStorageConfig);
                     let channelIds = storageConfig.primaryOnlineChannelId;
+                    let onlineUrl = null;
                     if (channelIds && channelIds.length) {
                         arrForEach(channelIds, (id) => {
                             let plugin = _self.core.getPlugin<IChannelControls>(id);
                             let channel = plugin && plugin.plugin;
                             if (channel) {
                                 _primaryChannelId = id;
-                                _offineSupport = channel.getOfflineSupport();
+                                if (isFunction(channel.getOfflineSupport)) {
+                                    _offineSupport = channel.getOfflineSupport();
+                                    onlineUrl = isFunction(_offineSupport.getUrl) && _offineSupport.getUrl();
+                                }
                                 return;
                             }
                             
-                        })
+                        });
                     }
+
+                    _overrideIkey = storageConfig.overrideInstrumentationKey;
                 
-                    
-    
                     let urlConfig: IUrlLocalStorageConfig = _urlCfg;
-                    let curUrl = coreConfig.endpointUrl || DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                    let curUrl = onlineUrl || coreConfig.endpointUrl;
 
                     if (curUrl !== _endpoint) {
                        

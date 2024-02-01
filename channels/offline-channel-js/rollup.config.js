@@ -6,7 +6,7 @@ const outputName = "applicationinsights-offlinechannel-js";
 
 const banner = [
     "/*!",
-    ` * Application Insights JavaScript SDK - Channel, ${version}`,
+    ` * Application Insights JavaScript SDK - Offline Channel, ${version}`,
     " * Copyright (c) Microsoft and contributors. All rights reserved.",
     " */"
 ].join("\n");

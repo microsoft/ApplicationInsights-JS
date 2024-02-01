@@ -1,9 +1,10 @@
-import { BreezeChannelIdentifier, IConfig } from "@microsoft/applicationinsights-common";
-import { BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfiguration, IInternalOfflineSerializer, IPlugin, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
+import { BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfiguration, IInternalOfflineSupport, IPayloadData, IPlugin, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 
 export class TestChannel extends BaseTelemetryPlugin implements IChannelControls  {
     public identifier = BreezeChannelIdentifier;
     public priority: number = 1001;
+    public endpoint: string = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
 
     lastEventAdded: ITelemetryItem;
     eventsAdded: ITelemetryItem[] = [];
@@ -53,16 +54,19 @@ export class TestChannel extends BaseTelemetryPlugin implements IChannelControls
             shouldProcess: (evt) => {
                 return true;
             },
-            getOfflineRequestDetails: () => {
+            getUrl: () => {
+                return this.endpoint;
+            },
+            createPayload: (evt) => {
                 return {
-                    hdrs: {
-                        ["header1"]: "val1"
-                    }
-                };
-
+                    urlString: this.endpoint,
+                    data: evt,
+                    headers: {header1: "val1"}
+                    
+                } as IPayloadData
             }
             
-        } as IInternalOfflineSerializer;
+        } as IInternalOfflineSupport;
     }
 }
 

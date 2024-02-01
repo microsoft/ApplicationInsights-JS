@@ -8,7 +8,7 @@ The Offline Channel supports the saving of events when your application is offli
 
 - A post or sender channel is required for processing online events.
 - Request header details will be stored in local/session storage or IndexedDB based on your configuration.
-- If you are using the default Breeze endpoint `https://dc.services.visualstudio.com` for Application Insights, partial success is currently considered as success and events not sent in partial success will be dropped.
+- If you are using the default endpoint `https://dc.services.visualstudio.com` for Application Insights, partial success is currently considered as success and events not sent in partial success will be dropped.
 
 ## Contributing
 

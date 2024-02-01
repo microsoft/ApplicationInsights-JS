@@ -28,8 +28,6 @@ export class OfflineInMemoryBatchTests extends AITestClass {
                 let inMemoBatch = new InMemoryBatch(this._logger, endpoint);
                 let evts = inMemoBatch.getItems();
                 Assert.deepEqual(evts, [], "should have no events");
-                let isSent = inMemoBatch["_getDbgPlgTargets"]()[0];
-                Assert.ok(!isSent, "error message should not be sent");
 
                 let mockEvt = mockPostTransmissionTelemetryItem();
                 let evtArr = [mockEvt, mockEvt, mockEvt, mockEvt, mockEvt, mockEvt];
@@ -56,19 +54,15 @@ export class OfflineInMemoryBatchTests extends AITestClass {
                 evts = inMemoBatch.getItems();
                 Assert.deepEqual(evts.length, 2, "should have 2 events");
                
-                inMemoBatch.addEvent(mockEvt);
+                let isAdded = inMemoBatch.addEvent(mockEvt);
 
-               
-                let isSent = inMemoBatch["_getDbgPlgTargets"]()[0];
-                Assert.ok(isSent, "error message should be sent");
+                Assert.ok(!isAdded, "should not added");
                 
 
                 evts = inMemoBatch.getItems();
                 Assert.deepEqual(evts.length, 2, "should have 2 events test1");
 
                 inMemoBatch.clear();
-                isSent = inMemoBatch["_getDbgPlgTargets"]()[0];
-                Assert.ok(!isSent, "error message should be reset");
                 evts = inMemoBatch.getItems();
                 Assert.deepEqual(evts.length, 0, "should clear events");
 
@@ -77,7 +71,7 @@ export class OfflineInMemoryBatchTests extends AITestClass {
         });
        
         this.testCase({
-            name: "Get domain: Add Event with expected event limit ",
+            name: "Get domain: get domain from endpoint",
             test: () => {
                 let testUrl: string[] = [
                     "test.com",

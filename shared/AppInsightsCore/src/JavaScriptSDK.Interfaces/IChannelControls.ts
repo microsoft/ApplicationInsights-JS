@@ -6,46 +6,47 @@ import { IProcessTelemetryUnloadContext } from "./IProcessTelemetryContext";
 import { ITelemetryItem } from "./ITelemetryItem";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
+import { IPayloadData } from "./IXHROverride";
 
 "use strict";
 
 /**
  * Internal Interface
- * Offline support details
  */
-export interface IRequestUrlDetails {
-    url?: string,
-    hdrs?: { [key: string]: string },
-    useHdrs?: boolean
-}
-/**
- * Internal Interface
- */
-export interface IInternalOfflineSerializer {
+export interface IInternalOfflineSupport {
+
+    /**
+     * Get current endpoint url
+     * @returns endpoint
+     */
+    getUrl: () => string;
+    /**
+     * Create payload data
+     * @param data data
+     * @returns IPayloadData
+     */
+    createPayload: (data: string | Uint8Array) => IPayloadData;
     /**
      * Serialize an item into a string
      * @param input telemetry item
      * @param convertUndefined convert undefined to a custom-defined object
      * @returns Serialized string
      */
-    serialize: (input: ITelemetryItem, convertUndefined?: any) => string;
+    serialize?: (input: ITelemetryItem, convertUndefined?: any) => string;
     /**
      * Batch an array of strings into one string
      * @param arr array of strings
      * @returns a string represent all items in the given array
      */
-    batch: (arr: string[]) => string;
+    batch?: (arr: string[]) => string;
+  
     /**
      * If the item should be processed by offline channel
      * @param evt telemetry item
      * @returns should process or not
      */
     shouldProcess?: (evt: ITelemetryItem) => boolean;
-    /**
-     * Get Offline Request Details
-     * @returns request details
-     */
-    getOfflineRequestDetails?: () => IRequestUrlDetails;
+
 }
 
 /**
@@ -91,10 +92,10 @@ export interface IChannelControls extends ITelemetryPlugin {
     flush?(async: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
 
     /**
-     * Get offline support to help serialize item
-     * @returns get internal offline Serializer object
+     * Get offline support
+     * @returns IInternalOfflineSupport
      */
-    getOfflineSupport?: () => IInternalOfflineSerializer;
+    getOfflineSupport?: () => IInternalOfflineSupport;
 
 }
 

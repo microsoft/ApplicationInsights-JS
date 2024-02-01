@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { EventPersistence } from "@microsoft/applicationinsights-common";
 import { IPayloadData, IProcessTelemetryContext, IXHROverride } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
@@ -116,6 +119,11 @@ export interface ILocalStorageConfiguration {
      * default 2
      */
     maxCriticalEvtsDropCnt?: number;
+
+    /**
+    * Override for Instrumentation key when offline channel call processTelemetry
+    */
+    overrideInstrumentationKey?: string;
     //dosampling?: boolean; //TODO
 }
 

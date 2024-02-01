@@ -1,5 +1,5 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, IConfiguration, ITelemetryItem, getGlobal, getGlobalInst } from "@microsoft/applicationinsights-core-js";
 import { TestChannel } from "./TestHelper";
 import { OfflineChannel } from "../../../src/OfflineChannel"
@@ -17,7 +17,8 @@ export class ChannelTests extends AITestClass {
         AITestClass.orgLocalStorage.clear();
         this.coreConfig = {
             instrumentationKey: "testIkey",
-            disableInstrumentationKeyValidation: true
+            disableInstrumentationKeyValidation: true,
+            endpointUrl: DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH
         };
         this.core = new AppInsightsCore();
         this.ctx = {};

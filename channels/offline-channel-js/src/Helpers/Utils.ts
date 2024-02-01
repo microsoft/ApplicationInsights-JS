@@ -1,6 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 import { generateW3CId } from "@microsoft/applicationinsights-core-js";
-import { isString, objKeys, strSubstr } from "@nevware21/ts-utils";
+import { isString, strSubstr } from "@nevware21/ts-utils";
 
 // Endpoint schema
 // <prefix>.<suffix>
@@ -111,30 +113,6 @@ export function base64Decode(input: string) {
 
 }
 
-export function forEachMap<T>(map: { [key: string]: T }, callback: (value: T, key: string) => boolean): void {
-    if (map) {
-        let keys = objKeys(map);
-        for (let lp = 0; lp < keys.length; lp++) {
-            let key = keys[lp];
-            if (!callback(map[key], key)) {
-                break;
-            }
-        }
-    }
-}
-
-export function isMapEmpty<T>(map: { [key: string]: T }) {
-    let result = true;
-    forEachMap(map, (evt, key) => {
-        if (evt) {
-            result = false;
-        }
-
-        return result;
-    });
-
-    return result;
-}
 
 export function getTimeId(): string {
     let time = (new Date()).getTime();
