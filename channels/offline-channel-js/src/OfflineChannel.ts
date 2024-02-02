@@ -7,9 +7,9 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSupport,
-    INotificationListener, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
-    ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, SendRequestReason, arrForEach, createProcessTelemetryContext,
-    createUniqueNamespace, dateNow, mergeEvtNamespace, onConfigChange, runTargetUnload
+    INotificationListener, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, IXHROverride, SendRequestReason, arrForEach, createProcessTelemetryContext, createUniqueNamespace, dateNow,
+    mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
 import { ITimerHandler, isFunction, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
@@ -141,7 +141,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     itemCtx =  itemCtx || _self._getTelCtx(itemCtx);
 
                     
-                    if (!!onlineStatus || !_offineSupport) {
+                    if (!!onlineStatus || !_offineSupport || !_endpoint) {
+                        // if we can't get url from online sender or core config, process next
                         _self.processNext(evt, itemCtx);
                         return;
                     }
@@ -454,14 +455,10 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     }
                     let cnt = criticalCnt || 0;
                     let payload = _offineSupport.batch(payloadArr);
-                    // ****************************************
-                    // move this to offline support
-                    // createpayload(data:string | Uint8Array)
                     let payloadData = _offineSupport.createPayload && _offineSupport.createPayload(payload) as IStorageTelemetryItem;
                     if (payloadData) {
                         payloadData.criticalCnt = cnt;
                         return payloadData;
-
                     }
                    
 
@@ -480,7 +477,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let ctx = createProcessTelemetryContext(null, theConfig, core);
                     storageConfig = ctx.getExtCfg<ILocalStorageConfiguration>(_self.identifier, defaultLocalStorageConfig);
                     let channelIds = storageConfig.primaryOnlineChannelId;
-                    let onlineUrl = null;
+                    let onlineUrl = _endpoint;
                     if (channelIds && channelIds.length) {
                         arrForEach(channelIds, (id) => {
                             let plugin = _self.core.getPlugin<IChannelControls>(id);

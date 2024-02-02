@@ -10,6 +10,38 @@ The Offline Channel supports the saving of events when your application is offli
 - Request header details will be stored in local/session storage or IndexedDB based on your configuration.
 - If you are using the default endpoint `https://dc.services.visualstudio.com` for Application Insights, partial success is currently considered as success and events not sent in partial success will be dropped.
 
+## Configuration
+
+`ILocalStorageConfiguration`
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| maxStorageSizeInBytes | [Optional]| 5000000 | The max size in bytes that should be used for storing events. |
+| storageKeyPrefix | [Optional] | AIOffline | The storage key prefix that should be used when storing events in persistent storage. |
+| minPersistenceLevel | [Optional] | `EventPersistence.Normal` or 1 | Identifies the minimum level that will be cached in the offline channel. Valid values of this setting are defined by the `EventPersistence` enum, currently Normal (1) and Critical (2) with the default value being Normal (1), which means all events without a persistence level set or with invalid persistence level will be marked as Normal(1) events.|
+| providers | [Optional] | [`eStorageProviders.LocalStorage, eStorageProviders.IndexedDB`]|  Identifies the StorageProviders that should be used by the system if available, the first available provider will be used. Valid available values are defined by the `eStorageProviders` enum. </br> Note: LocalStorage will be used to save unload events even if it is not in the providers list. |
+| eventsLimitInMem | [Optional] | null | Identifies the maximum number of events to store in memory before sending to persistent storage. |
+| autoClean | [Optional] | false | Identifies if events that have existed in storage longer than the maximum allowed time (configured in inStorageMaxTime) should be cleaned after connection with storage. |
+| inMemoMaxTime | [Optional] | 15000 | Identifies the maximum time in ms that items should be in memory before being saved into storage. |
+| inStorageMaxTime | [Optional] | 10080000 (around 7days) | Identifies the maximum time in ms that items should be in the configured persistent storage. |
+| maxRetry | [Optional] | 1 | Identifies the maximum retry times for an event batch. |
+| primaryOnlineChannelId | [Optional] | `[AppInsightsChannelPlugin, PostChannel]` | Identifies online channel IDs in order. The first available one will be used. |
+| maxBatchsize | [Optional] | 63000 | Identifies the maximum size per batch in bytes that is saved in persistent storage. |
+| senderCfg | [Optional] | `IOfflineSenderConfig` | Identifies offline sender properties. |
+| maxSentBatchInterval | [Optional] | 15000 | Identifies the interval time in ms that previously stored offline event batches should be sent under online status. |
+| EventsToDropPerTime | [Optional] | 10 | Identifies the maximum event batch count when cleaning or releasing space for persistent storage per time. |
+| maxCriticalEvtsDropCnt | [Optional] | 2 | Identifies the maximum critical events count for an event batch to be able to drop when releasing space for persistent storage per time. |
+| overrideInstrumentationKey | [Optional] | null | Identifies overridden for the Instrumentation key when the offline channel calls `processTelemetry`. |
+
+`IOfflineSenderConfig`
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| retryCodes | [Optional] | `[401, 403, 408, 429, 500, 502, 503, 504]` | Identifies status codes for re-sending event batches. |
+| transports | [Optional] | null | Either an array or single value identifying the requested TransportType type(s) that should be used for sending events. If not defined, the same transports will be used in the channel with the `primaryOnlineChannelI`. |
+| httpXHROverride | [Optional] | null | The HTTP override that should be used to send requests, as an `IXHROverride` object. |
+| alwaysUseXhrOverride | [Optional] | false | Identifies if provided httpXhrOverride will always be used. |
+
 ## Contributing
 
 Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.

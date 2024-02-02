@@ -14,6 +14,7 @@ import {
 } from "../Interfaces/IOfflineIndexDb";
 
 //TODO: move all const to one file
+//TODO: handle db names
 const IndexedDBNames: string[] = ["indexedDB"/*, 'mozIndexedDB', 'webkitIndexedDB', 'msIndexedDb'*/];
 const DbReadWrite = "readwrite";
 const Result = "result";

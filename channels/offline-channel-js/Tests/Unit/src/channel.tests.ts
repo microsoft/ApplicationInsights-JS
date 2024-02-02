@@ -255,6 +255,41 @@ export class ChannelTests extends AITestClass {
                 return false;
             }, "Wait for fetch response" + new Date().toISOString(), 15, 1000) as any)
         });
+
+        this.testCase({
+            name: "Channel: add event when in Memory batch is full",
+            test: () => {
+                let channel = new OfflineChannel();
+                let sendChannel = new TestChannel();
+                // make sure in memo time is long enough
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.LocalStorage], inMemoMaxTime: 200000000, eventsLimitInMem: 1} as ILocalStorageConfiguration};
+                this.core.initialize(this.coreConfig,[channel, sendChannel]);
+              
+                let offlineListener = channel.getOfflineListener() as any;
+                offlineListener.setOnlineState(2);
+                let evt1 = mockTelemetryItem();
+                let ver1 = evt1.ver;
+                let evt2 = mockTelemetryItem();
+                channel.processTelemetry(evt1);
+                let inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                Assert.equal(inMemoBatch.count(), 1, "online should process evt1");
+
+                channel.processTelemetry(evt2);
+                Assert.equal(inMemoBatch.count(), 1, "online should process evt2");
+
+                let storage = AITestClass.orgLocalStorage;
+                let storageKey = "AIOffline_1_dc.services.visualstudio.com";
+                let storageStr = storage.getItem(storageKey) as any;
+                let storageObj = JSON.parse(storageStr);
+                let evts = storageObj.evts;
+                Assert.equal(evts && Object.keys(evts).length, 1, "should have one events");
+                Assert.ok(storageStr.indexOf(ver1) > -1, "should contain only the first event")
+
+                channel.teardown();
+                
+            }
+            
+        });
     }
 }
 
@@ -266,7 +301,6 @@ function mockTelemetryItem(): ITelemetryItem {
         iKey:"testKey",
         baseData: {pro1: "prop1"},
         baseType: "testType"
-
     } as ITelemetryItem;
     return evt;
 }
