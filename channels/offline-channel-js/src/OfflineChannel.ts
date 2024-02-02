@@ -20,7 +20,7 @@ import {
     IOfflineBatchHandler, OfflineBatchCallback, OfflineBatchStoreCallback, eBatchSendStatus, eBatchStoreStatus
 } from "./Interfaces/IOfflineBatch";
 import {
-    ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineSenderConfig, IStorageTelemetryItem, eStorageProviders
+    ILocalStorageProviderContext, IOfflineChannelConfiguration, IOfflineSenderConfig, IStorageTelemetryItem, eStorageProviders
 } from "./Interfaces/IOfflineProvider";
 import { OfflineBatchHandler } from "./OfflineBatchHandler";
 import { isValidPersistenceLevel } from "./Providers/IndexDbProvider";
@@ -47,7 +47,7 @@ let undefValue = undefined;
 
 const DefaultBatchSizeLimitBytes = 63000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 
-const defaultLocalStorageConfig: IConfigDefaults<ILocalStorageConfiguration> = objDeepFreeze({
+const defaultOfflineChannelConfig: IConfigDefaults<IOfflineChannelConfiguration> = objDeepFreeze({
     maxStorageSizeInBytes: { isVal: isGreaterThanZero, v: 5000000 },
     storageKey: undefValue,
     minPersistenceLevel: { isVal: isValidPersistenceLevel, v: EventPersistence.Normal },
@@ -173,7 +173,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                 // TODO: better handle clean in memo events
                                 // TODO: add logs/notification
                                 _inMemoBatch.addEvent(evt);
-                                _inMemoFlushTimer && _inMemoFlushTimer.refresh();
                                 
                             }
                         }
@@ -278,10 +277,11 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 if (!_inMemoFlushTimer) {
                     _inMemoFlushTimer = scheduleTimeout(() => {
                         _flushInMemoItems();
-                        _inMemoFlushTimer.refresh();
-                        
                     }, _inMemoTimerOut);
                     _inMemoFlushTimer.unref();
+                } else {
+                    // Restart the timer if not already running https://nevware21.github.io/ts-utils/typedoc/interfaces/ITimerHandler.html#enabled
+                    _inMemoFlushTimer.enabled = true;
                 }
             }
 
@@ -471,11 +471,11 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             function _createUrlConfig(coreConfig: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
 
                 _self._addHook(onConfigChange(coreConfig, (details) => {
-                    let storageConfig: ILocalStorageConfiguration = null;
+                    let storageConfig: IOfflineChannelConfiguration = null;
                     let theConfig = details.cfg;
 
                     let ctx = createProcessTelemetryContext(null, theConfig, core);
-                    storageConfig = ctx.getExtCfg<ILocalStorageConfiguration>(_self.identifier, defaultLocalStorageConfig);
+                    storageConfig = ctx.getExtCfg<IOfflineChannelConfiguration>(_self.identifier, defaultOfflineChannelConfig);
                     let channelIds = storageConfig.primaryOnlineChannelId;
                     let onlineUrl = _endpoint;
                     if (channelIds && channelIds.length) {

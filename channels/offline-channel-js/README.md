@@ -1,5 +1,7 @@
 # Microsoft Application Insights JavaScript SDK - Offline Channel
 
+## [Beta]
+
 ## Description
 
 The Offline Channel supports the saving of events when your application is offline and resending those events when the application is online.
@@ -12,7 +14,7 @@ The Offline Channel supports the saving of events when your application is offli
 
 ## Configuration
 
-`ILocalStorageConfiguration`
+`IOfflineChannelConfiguration`
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|

@@ -8,7 +8,7 @@ import {
 import { IPromise, createAsyncRejectedPromise } from "@nevware21/ts-async";
 import { getEndpointDomain, getTimeFromId, getTimeId } from "../Helpers/Utils";
 import {
-    ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineProvider, IStorageJSON, IStorageTelemetryItem
+    ILocalStorageProviderContext, IOfflineChannelConfiguration, IOfflineProvider, IStorageJSON, IStorageTelemetryItem
 } from "../Interfaces/IOfflineProvider";
 import { PayloadHelper } from "../PayloadHelper";
 
@@ -178,7 +178,7 @@ export class WebStorageProvider implements IOfflineProvider {
                     return false;
                 }
                
-                let storageConfig: ILocalStorageConfiguration = providerContext.storageConfig;
+                let storageConfig: IOfflineChannelConfiguration = providerContext.storageConfig;
                 let itemCtx = providerContext.itemCtx;
                 _payloadHelper = new PayloadHelper(itemCtx.diagLog());
                 _endpoint = getEndpointDomain(endpointUrl || providerContext.endpoint);

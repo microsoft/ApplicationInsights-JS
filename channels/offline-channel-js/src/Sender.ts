@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import {
-    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, IConfig, utlSetStoragePrefix
-} from "@microsoft/applicationinsights-common";
+import { BreezeChannelIdentifier, DisabledPropertyName, IConfig, utlSetStoragePrefix } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IConfiguration, IDiagnosticLogger, IPayloadData, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
     ITelemetryUnloadState, IUnloadHookContainer, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType,
@@ -14,7 +12,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isFunction, isNumber } from "@nevware21/ts-utils";
-import { ILocalStorageConfiguration, IOfflineSenderConfig } from "./Interfaces/IOfflineProvider";
+import { IOfflineChannelConfiguration, IOfflineSenderConfig } from "./Interfaces/IOfflineProvider";
 import { IBackendResponse, XDomainRequest as IXDomainRequest } from "./Interfaces/ISender";
 
 const DefaultOfflineIdentifier = "OfflineChannel";
@@ -60,7 +58,7 @@ export class Sender {
 
     public _appId: string; //TODO: set id
 
-    constructor(endpointUrl?: string) {
+    constructor() {
 
         let _consecutiveErrors: number;         // How many times in a row a retryable error condition has occurred.
         let _retryAt: number;                   // The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
@@ -68,7 +66,6 @@ export class Sender {
         let _paused: boolean;                   // Flag indicating that the sending should be paused
         let _stamp_specific_redirects: number;
         let _syncFetchPayload = 0;              // Keep track of the outstanding sync fetch payload total (as sync fetch has limits)
-        let _endpointUrl: string;
         let _enableSendPromise: boolean;
         let _alwaysUseCustomSend: boolean;
         let _disableXhr: boolean;
@@ -122,7 +119,7 @@ export class Sender {
                     }
                     let ctx = createProcessTelemetryContext(null, config, core);
                    
-                    let offlineCfg = ctx.getExtCfg(DefaultOfflineIdentifier) as ILocalStorageConfiguration;
+                    let offlineCfg = ctx.getExtCfg(DefaultOfflineIdentifier) as IOfflineChannelConfiguration;
                     _onlineChannelId = channelId || BreezeChannelIdentifier;
                     let senderConfig = ctx.getExtCfg(_onlineChannelId, {}) as any;
                     let offlineSenderCfg = offlineCfg.senderCfg || {} as IOfflineSenderConfig;
@@ -130,8 +127,6 @@ export class Sender {
                     if (_onlineChannelId == PostChannelId) {
                         _isOneDs = true;
                     }
-                    
-                    _endpointUrl = endpointUrl || senderConfig.endpointUrl || config.endpointUrl || DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
 
                     _alwaysUseCustomSend = offlineSenderCfg.alwaysUseXhrOverride;
 
@@ -206,6 +201,10 @@ export class Sender {
                     { message });
                 _doOnComplete(onComplete, 400, {});
             }
+
+            function _onNoPayloadUrl(onComplete?: OnCompleteCallback) {
+                _onError( "No endpoint url is provided for the batch", onComplete);
+            }
         
             /**
              * partial success handler
@@ -268,7 +267,12 @@ export class Sender {
             
             function _doBeaconSend(payload: IPayloadData, oncomplete?: OnCompleteCallback) {
                 const nav = getNavigator();
-                const url = payload.urlString || _endpointUrl;
+                const url = payload.urlString;
+                if (!url) {
+                    _onNoPayloadUrl(oncomplete);
+                    // return true here, because we don't want to retry it with fallback sender
+                    return true;
+                }
                 let data = payload.data;
             
                 // Chrome only allows CORS-safelisted values for the sendBeacon data argument
@@ -319,9 +323,21 @@ export class Sender {
                 let resolveFunc: (sendComplete: boolean) => void;
                 let rejectFunc: (reason?: any) => void;
                 let headers = payload.headers || {};
+                if (!sync && _enableSendPromise) {
+                    thePromise = createPromise<boolean>((resolve, reject) => {
+                        resolveFunc = resolve;
+                        rejectFunc = reject;
+                    });
+                }
 
                 const xhr = new XMLHttpRequest();
-                const endPointUrl = payload.urlString || _endpointUrl;
+                const endPointUrl = payload.urlString;
+                if (!endPointUrl) {
+                    _onNoPayloadUrl(oncomplete);
+                    resolveFunc && resolveFunc(false);
+                    return;
+                }
+
                 try {
                     xhr[DisabledPropertyName] = true;
                 } catch(e) {
@@ -357,13 +373,6 @@ export class Sender {
                     resolveFunc && resolveFunc(false);
                 };
         
-                if (!sync && _enableSendPromise) {
-                    thePromise = createPromise<boolean>((resolve, reject) => {
-                        resolveFunc = resolve;
-                        rejectFunc = reject;
-                    });
-                }
-
                 xhr.send(payload.data);
 
                 return thePromise;
@@ -376,7 +385,7 @@ export class Sender {
              * @param sync - {boolean} - For fetch this identifies whether we are "unloading" (false) or a normal request
              */
             function _doFetchSender(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean): void | IPromise<boolean> {
-                const endPointUrl = payload.urlString || _endpointUrl;
+                const endPointUrl = payload.urlString;
                 const batch = payload.data;
                 const plainTextBatch = new Blob([batch], { type: "application/json" });
                 let thePromise: void | IPromise<boolean>;
@@ -428,6 +437,12 @@ export class Sender {
                         rejectFunc = reject;
                     });
                 }
+                if (!endPointUrl) {
+                    _onNoPayloadUrl(oncomplete);
+                    resolveFunc && resolveFunc(false);
+                    return;
+                }
+
                 try {
                     doAwaitResponse(fetch(request), (result) => {
                         if (sync) {
@@ -589,7 +604,11 @@ export class Sender {
                 // XDomainRequest requires the same protocol as the hosting page.
                 // If the protocol doesn't match, we can't send the telemetry :(.
                 const hostingProtocol = _window && _window.location && _window.location.protocol || "";
-                let endpoint = payload.urlString || _endpointUrl;
+                let endpoint = payload.urlString;
+                if (!endpoint) {
+                    _onNoPayloadUrl(oncomplete);
+                    return;
+                }
                 if (endpoint.lastIndexOf(hostingProtocol, 0) !== 0) {
                     _throwInternal(_diagLog,
                         eLoggingSeverity.WARNING,
@@ -647,7 +666,6 @@ export class Sender {
                 _paused = false;
                 _stamp_specific_redirects = 0;
                 _syncFetchPayload = 0;
-                _endpointUrl = null;
                 _disableXhr = false;
                 _isInitialized = false;
                 _fallbackSend = null;

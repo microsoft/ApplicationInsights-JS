@@ -1248,10 +1248,10 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
     }
 
     /**
-     * Get Offline Serializer support
-     * @returns internal Offline Serializer object
+     * Get Offline support
+     * @returns internal Offline support interface IInternalOfflineSupport
      */
-    public getOfflineSupport() {
+    public getOfflineSupport(): IInternalOfflineSupport {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }

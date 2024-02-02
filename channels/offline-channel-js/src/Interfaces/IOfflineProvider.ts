@@ -26,10 +26,10 @@ export const enum eStorageProviders {
 }
 
 /**
- * The ILocalStorageConfiguration interface defines the configuration options for offline channel,
+ * The IOfflineChannelConfiguration interface defines the configuration options for offline channel,
  * supports offline events storage, retrieval and re-sending.
  */
-export interface ILocalStorageConfiguration {
+export interface IOfflineChannelConfiguration {
     /**
      * [Optional] The max size in bytes that should be used for storing events(default up to 5 Mb).
      * The maximum size in bytes that should be used for storing events in storage If not specified, the system will use up to 5 MB
@@ -202,7 +202,7 @@ export interface ILocalStorageProviderContext {
     /**
      * Identifies the local storage config that should be used to initialize the provider
      */
-    storageConfig: ILocalStorageConfiguration;
+    storageConfig: IOfflineChannelConfiguration;
 
     /**
      * Identifies the unique identifier to be used for this provider instance, when not provided a new Guid will be generated for this instance.

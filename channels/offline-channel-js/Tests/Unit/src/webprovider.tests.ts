@@ -3,7 +3,7 @@ import { AppInsightsCore, IConfiguration, arrForEach, createDynamicConfig, gener
 import { WebStorageProvider } from "../../../src/Providers/WebStorageProvider";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
 import { TestChannel } from "./TestHelper";
-import { ILocalStorageConfiguration, IStorageTelemetryItem } from "../../../src/Interfaces/IOfflineProvider";
+import { IOfflineChannelConfiguration, IStorageTelemetryItem } from "../../../src/Interfaces/IOfflineProvider";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import { strSubstr } from "@nevware21/ts-utils";
 
@@ -89,7 +89,7 @@ export class OfflineWebProviderTests extends AITestClass {
                     inStorageMaxTime: 3600,
                     storageKeyPrefix: "testPrefix"
 
-                } as ILocalStorageConfiguration).cfg;
+                } as IOfflineChannelConfiguration).cfg;
                 let providerCxt = {
                     itemCtx: itemCtx,
                     storageConfig: storageConfig,

@@ -12,7 +12,7 @@ import {
     CursorProcessResult, IIndexedDbOpenDbContext, IIndexedDbStoreActionContext, IProcessCursorState
 } from "../Interfaces/IOfflineIndexDb";
 import {
-    ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineProvider, IStorageTelemetryItem
+    ILocalStorageProviderContext, IOfflineChannelConfiguration, IOfflineProvider, IStorageTelemetryItem
 } from "../Interfaces/IOfflineProvider";
 import { IndexedDbHelper } from "./IndexDbHelper";
 
@@ -282,7 +282,7 @@ export class IndexedDbProvider implements IOfflineProvider {
                 let itemCtx = providerContext.itemCtx;
                 _iKey = itemCtx.getCfg().instrumentationKey || coreConfig.instrumentationKey;
 
-                let storageConfig: ILocalStorageConfiguration = providerContext.storageConfig;
+                let storageConfig: IOfflineChannelConfiguration = providerContext.storageConfig;
                 _storageId = _this.id || providerContext.id || newGuid();
 
                

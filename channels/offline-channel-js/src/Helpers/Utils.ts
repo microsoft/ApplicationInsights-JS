@@ -9,6 +9,12 @@ import { isString, strSubstr } from "@nevware21/ts-utils";
 //Prefix: Defines a service.
 //Suffix: Defines the common domain name.
 
+/**
+ * Get domian from an endpoint url.
+ * for example, https://test.com?auth=true, will return test.com
+ * @param endpoint endpoint url
+ * @returns domain string
+ */
 export function getEndpointDomain(endpoint: string) {
     try {
         let url = endpoint.replace(/^https?:\/\/|^www\./, "");
@@ -25,6 +31,11 @@ export function getEndpointDomain(endpoint: string) {
     return endpoint;
 }
 
+/**
+ * If current value is equal or greater than zero.
+ * @param value number
+ * @returns boolean
+ */
 export function isGreaterThanZero(value: number) {
     return value >= 0;
 }
@@ -37,9 +48,7 @@ const _base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+
 /**
  * Base64-encodes a Uint8Array.
  *
- * @param input the Uint8Array to encode.
- * @param maxLine the maximum number of encoded characters per line to use,
- *          defaults to none.
+ * @param data the Uint8Array or string to encode.
  *
  * @return the base64-encoded output string.
  */
@@ -79,6 +88,11 @@ export function base64Encode(data: string | Uint8Array) {
     return output;
 }
 
+/**
+ * Base64-decodes an encoded string and transforms it back to a Uint8Array.
+ * @param input the encoded string to decode
+ * @return  Uint8Array
+ */
 export function base64Decode(input: string) {
     var output = "";
     var chr1, chr2, chr3;
@@ -113,7 +127,11 @@ export function base64Decode(input: string) {
 
 }
 
-
+/**
+ * Get number value of current time and append a random float number.
+ * For example, if current time value is 12345678, so "12345678.randomfl" will be returned
+ * @returns time id string
+ */
 export function getTimeId(): string {
     let time = (new Date()).getTime();
     // append random digits to avoid same timestamp value
@@ -122,13 +140,19 @@ export function getTimeId(): string {
     return time + "." + random;
 }
 
+/**
+ * Get time value from a time id that is generated from getTimeId() function.
+ * For example, if time id is "12345678.randomfl", 12345678 will be returned
+ * @param id time id string
+ * @returns time value number
+ */
 export function getTimeFromId(id: string) {
     try {
         let regex = new RegExp(/\d+\./g);
         if (id && isString(id) && regex.test(id)) {
             let arr = id.split(".");
             return parseInt(arr[0]);
-            
+ 
         }
     } catch (e) {
         // eslint-disable-next-line no-empty

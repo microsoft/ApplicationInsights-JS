@@ -3,7 +3,7 @@ export  { IOfflineBatchCleanResponse, IOfflineBatchHandler, IOfflineBatchHandler
     IOfflineBatchStoreResponse, eBatchSendStatus, eBatchStoreStatus, eStorageType,
     OfflineBatchSendCallback, OfflineBatchStoreCallback,OfflineBatchCallback,
     createDefaultOfflineDetector, createNoopOfflineDetector, IOfflineDetector, IOfflineDetectorCfg } from "./Interfaces/IOfflineBatch";
-export {ILocalStorageConfiguration, ILocalStorageProviderContext, IOfflineProvider, IOfflineSenderConfig, IStorageTelemetryItem,
+export {IOfflineChannelConfiguration, ILocalStorageProviderContext, IOfflineProvider, IOfflineSenderConfig, IStorageTelemetryItem,
     eStorageProviders } from "./Interfaces/IOfflineProvider";
 export { WebStorageProvider } from "./Providers/WebStorageProvider";
 export { IndexedDbProvider } from "./Providers/IndexDbProvider";

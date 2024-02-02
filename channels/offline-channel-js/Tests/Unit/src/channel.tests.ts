@@ -3,7 +3,7 @@ import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsof
 import { AppInsightsCore, IConfiguration, ITelemetryItem, getGlobal, getGlobalInst } from "@microsoft/applicationinsights-core-js";
 import { TestChannel } from "./TestHelper";
 import { OfflineChannel } from "../../../src/OfflineChannel"
-import { ILocalStorageConfiguration, eStorageProviders } from "../../../src/applicationinsights-offlinechannel-js";
+import { IOfflineChannelConfiguration, eStorageProviders } from "../../../src/applicationinsights-offlinechannel-js";
 
 export class ChannelTests extends AITestClass {
     private core: AppInsightsCore;
@@ -69,7 +69,7 @@ export class ChannelTests extends AITestClass {
             name: "Channel: Init from core indexed db",
             test: () => {
                 let channel = new OfflineChannel();
-                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as ILocalStorageConfiguration};
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as IOfflineChannelConfiguration};
                 this.core.initialize(this.coreConfig,[channel]);
               
                 let offlineListener = channel.getOfflineListener() as any;
@@ -91,7 +91,7 @@ export class ChannelTests extends AITestClass {
             test: () => {
                 let window = getGlobalInst("window");
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
-                this.coreConfig.extensionConfig = {["OfflineChannel"]: {inMemoMaxTime: 2000} as ILocalStorageConfiguration};
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {inMemoMaxTime: 2000} as IOfflineChannelConfiguration};
                 let sendChannel = new TestChannel();
                 this.core.initialize(this.coreConfig, [sendChannel]);
             
@@ -193,7 +193,7 @@ export class ChannelTests extends AITestClass {
                 this.core.initialize(this.coreConfig, [sendChannel]);
 
                 let channel = new OfflineChannel();
-                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as ILocalStorageConfiguration};
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as IOfflineChannelConfiguration};
                 channel.initialize(this.coreConfig, this.core,[]);
                 let senderInst =  channel["_getDbgPlgTargets"]()[2];
                 let sender1 =  (payload: any, oncomplete: any, sync?: boolean) => {
@@ -262,7 +262,7 @@ export class ChannelTests extends AITestClass {
                 let channel = new OfflineChannel();
                 let sendChannel = new TestChannel();
                 // make sure in memo time is long enough
-                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.LocalStorage], inMemoMaxTime: 200000000, eventsLimitInMem: 1} as ILocalStorageConfiguration};
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.LocalStorage], inMemoMaxTime: 200000000, eventsLimitInMem: 1} as IOfflineChannelConfiguration};
                 this.core.initialize(this.coreConfig,[channel, sendChannel]);
               
                 let offlineListener = channel.getOfflineListener() as any;

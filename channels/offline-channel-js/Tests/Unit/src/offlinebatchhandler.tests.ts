@@ -2,7 +2,7 @@ import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework
 import { AppInsightsCore, IConfiguration, IPayloadData, OnCompleteCallback, arrForEach, createDynamicConfig, newGuid } from "@microsoft/applicationinsights-core-js";
 import { TestChannel } from "./TestHelper";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
-import { ILocalStorageConfiguration, eStorageProviders } from "../../../src/Interfaces/IOfflineProvider";
+import { IOfflineChannelConfiguration, eStorageProviders } from "../../../src/Interfaces/IOfflineProvider";
 import { OfflineBatchHandler } from "../../../src/OfflineBatchHandler";
 import { createAsyncRejectedPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import { eBatchSendStatus, eBatchStoreStatus } from "../../../src/Interfaces/IOfflineBatch";
@@ -43,7 +43,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
         this.testCase({
             name: "Offline Batch Handler: init with web storge provider",
             test: () => {
-                let storageObj = {providers:[eStorageProviders.LocalStorage, eStorageProviders.SessionStorage], autoClean: true } as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage, eStorageProviders.SessionStorage], autoClean: true } as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
@@ -69,7 +69,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime: 1 } as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime: 1 } as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
@@ -114,7 +114,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true } as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true } as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
@@ -193,7 +193,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
@@ -274,7 +274,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, inStorageMaxTime:1} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, inStorageMaxTime:1} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
 
                 let itemCtx = this.core.getProcessTelContext();
@@ -384,7 +384,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
                 AITestClass.orgLocalStorage.clear();
 
@@ -507,7 +507,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
  
                 let itemCtx = this.core.getProcessTelContext();
@@ -682,7 +682,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: false, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: false, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
  
                 let itemCtx = this.core.getProcessTelContext();
@@ -904,7 +904,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageKey = "AIOffline_1_dc.services.visualstudio.com";
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
  
                 let itemCtx = this.core.getProcessTelContext();
@@ -983,7 +983,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
  
                 let itemCtx = this.core.getProcessTelContext();
@@ -1040,7 +1040,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
  
                 let itemCtx = this.core.getProcessTelContext();
@@ -1098,7 +1098,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
  
                 let itemCtx = this.core.getProcessTelContext();
@@ -1165,7 +1165,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
             stepDelay: 100,
             steps: [() => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
-                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as ILocalStorageConfiguration;
+                let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
                 let  storageConfig = createDynamicConfig(storageObj).cfg;
  
                 let itemCtx = this.core.getProcessTelContext();
