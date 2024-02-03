@@ -515,8 +515,11 @@ module.exports = function (grunt) {
     
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
+            "offlinechannel":       {
+                                        path: "./channels/offline-channel-js"
+                                    },
             "teechannel":           { path: "./channels/tee-channel-js" },
-            "1dsPost":              { 
+            "1dsPost":              {
                                         path: "./channels/1ds-post-js",
                                         unitTestName: "post.unittests.js"
                                     },
@@ -889,6 +892,12 @@ module.exports = function (grunt) {
         grunt.registerTask("aichannel-restore", restoreTasks("aichannel"));
         grunt.registerTask("aichanneltest", tsTestActions("aichannel"));
         grunt.registerTask("aichannel-mintest", tsTestActions("aichannel", true));
+
+        grunt.registerTask("offlinechannel", tsBuildActions("offlinechannel"));
+        grunt.registerTask("offlinechannel-min", minTasks("offlinechannel"));
+        grunt.registerTask("offlinechannel-restore", restoreTasks("offlinechannel"));
+        grunt.registerTask("offlinechanneltest", tsTestActions("offlinechannel"));
+        grunt.registerTask("offlinechannel-mintest", tsTestActions("offlinechannel", true));
 
         grunt.registerTask("teechannel", tsBuildActions("teechannel"));
         grunt.registerTask("teechannel-min", minTasks("teechannel"));
