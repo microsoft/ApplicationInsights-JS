@@ -59,7 +59,7 @@ export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 export { IUser, IUserContext } from "./Interfaces/Context/IUser";
 export { ITelemetryTrace, ITraceState } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
-export { eDistributedTracingModes, DistributedTracingModes } from "./Enums";
+export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
     isBeaconsSupported as isBeaconApiSupported,
