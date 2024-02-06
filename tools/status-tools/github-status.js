@@ -368,6 +368,9 @@ function processIssues(issues) {
         if (lastMonth < openMonth) {
             lastMonth = openMonth;
         }
+        if (openYear > lastYear) {
+            lastYear = openYear;
+        }
 
         if (closedAt) {
             let closeYear = closedAt.getFullYear();
@@ -416,6 +419,8 @@ function processIssues(issues) {
     }
 
     let filename = `issues-${_startMonth + 1}-${lastMonth + 1}`;
+
+    //console.log(`Reporting from: ${firstYear} to ${lastYear} - ${_startMonth + 1} to ${lastMonth + 1}`);
 
     logMessage(`Reporting from: ${_startMonth + 1} to ${lastMonth + 1}`);
     logHeader("Issues", firstYear, lastYear, lastMonth, openIssues);
