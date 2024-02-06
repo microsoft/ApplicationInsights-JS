@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-example-cfgsync",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Microsoft Application Insights CfgSync Plugin Example",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -55,10 +55,10 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.11",
         "@microsoft/applicationinsights-shims": "2.0.2",
-        "@microsoft/applicationinsights-core-js": "2.8.16",
-        "@microsoft/applicationinsights-common": "2.8.16",
-        "@microsoft/applicationinsights-web": "2.8.16",
-        "@microsoft/applicationinsights-cfgsync-js": "0.0.2"
+        "@microsoft/applicationinsights-core-js": "2.8.17",
+        "@microsoft/applicationinsights-common": "2.8.17",
+        "@microsoft/applicationinsights-web": "2.8.17",
+        "@microsoft/applicationinsights-cfgsync-js": "0.0.3"
     },
     "license": "MIT",
     "publishConfig": {
