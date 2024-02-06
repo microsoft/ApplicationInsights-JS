@@ -63,7 +63,7 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "2.0.2",
-        "@microsoft/dynamicproto-js": "^1.1.9",
+        "@microsoft/dynamicproto-js": "^1.1.11",
         "@microsoft/applicationinsights-web": "2.8.16",
         "@microsoft/applicationinsights-web-snippet": "1.0.1",
         "@nevware21/ts-utils": ">= 0.7 < 2.x"

@@ -66,7 +66,7 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "2.0.2",
-        "@microsoft/dynamicproto-js": "^1.1.9"
+        "@microsoft/dynamicproto-js": "^1.1.11"
     },
     "publishConfig": {
         "tag": "release2"

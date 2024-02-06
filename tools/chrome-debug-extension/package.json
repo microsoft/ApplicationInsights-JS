@@ -45,7 +45,7 @@
         "@microsoft/applicationinsights-core-js": "2.8.16",
         "@microsoft/applicationinsights-common": "2.8.16",
         "@microsoft/applicationinsights-shims": "2.0.2",
-        "@microsoft/dynamicproto-js": "^1.1.9",
+        "@microsoft/dynamicproto-js": "^1.1.11",
         "file-saver": "^2.0.0",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",

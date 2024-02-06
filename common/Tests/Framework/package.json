@@ -50,7 +50,7 @@
         "tslib": "*"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^1.1.9",
+        "@microsoft/dynamicproto-js": "^1.1.11",
         "@nevware21/ts-async": ">= 0.1.0 < 2.x"
     }
 }

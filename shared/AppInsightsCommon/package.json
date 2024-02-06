@@ -53,7 +53,7 @@
     "dependencies": {
         "@microsoft/applicationinsights-shims": "2.0.2",
         "@microsoft/applicationinsights-core-js": "2.8.16",
-        "@microsoft/dynamicproto-js": "^1.1.9"
+        "@microsoft/dynamicproto-js": "^1.1.11"
     },
     "license": "MIT",
     "publishConfig": {
