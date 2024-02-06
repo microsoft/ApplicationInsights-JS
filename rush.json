@@ -85,6 +85,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-offlinechannel-js",
+      "projectFolder": "channels/offline-channel-js",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-teechannel-js",
       "projectFolder": "channels/tee-channel-js",
       "shouldPublish": true

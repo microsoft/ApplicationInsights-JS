@@ -3,10 +3,51 @@
 import { IPromise } from "@nevware21/ts-async";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IProcessTelemetryUnloadContext } from "./IProcessTelemetryContext";
+import { ITelemetryItem } from "./ITelemetryItem";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
+import { IPayloadData } from "./IXHROverride";
 
 "use strict";
+
+/**
+ * Internal Interface
+ */
+export interface IInternalOfflineSupport {
+
+    /**
+     * Get current endpoint url
+     * @returns endpoint
+     */
+    getUrl: () => string;
+    /**
+     * Create payload data
+     * @param data data
+     * @returns IPayloadData
+     */
+    createPayload: (data: string | Uint8Array) => IPayloadData;
+    /**
+     * Serialize an item into a string
+     * @param input telemetry item
+     * @param convertUndefined convert undefined to a custom-defined object
+     * @returns Serialized string
+     */
+    serialize?: (input: ITelemetryItem, convertUndefined?: any) => string;
+    /**
+     * Batch an array of strings into one string
+     * @param arr array of strings
+     * @returns a string represent all items in the given array
+     */
+    batch?: (arr: string[]) => string;
+  
+    /**
+     * If the item should be processed by offline channel
+     * @param evt telemetry item
+     * @returns should process or not
+     */
+    shouldProcess?: (evt: ITelemetryItem) => boolean;
+
+}
 
 /**
  * Provides data transmission capabilities
@@ -49,6 +90,13 @@ export interface IChannelControls extends ITelemetryPlugin {
      * and async is true.
      */
     flush?(async: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
+
+    /**
+     * Get offline support
+     * @returns IInternalOfflineSupport
+     */
+    getOfflineSupport?: () => IInternalOfflineSupport;
+
 }
 
 export const MinChannelPriorty: number = 100;

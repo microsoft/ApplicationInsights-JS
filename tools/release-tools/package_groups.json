@@ -18,7 +18,8 @@
         "./extensions/applicationinsights-cfgsync-js",
         "./channels/tee-channel-js",
         "./shared/1ds-core-js",
-        "./channels/1ds-post-js"
+        "./channels/1ds-post-js",
+        "./channels/offline-channel-js"
     ],
     "1ds": [
         "./shared/1ds-core-js",
@@ -37,7 +38,8 @@
         "./extensions/applicationinsights-perfmarkmeasure-js",
         "./extensions/applicationinsights-debugplugin-js",
         "./extensions/applicationinsights-cfgsync-js",
-        "./channels/tee-channel-js"
+        "./channels/tee-channel-js",
+        "./channels/offline-channel-js"
     ],
     "cfgSync": [
         "./extensions/applicationinsights-cfgsync-js"

@@ -1,0 +1,13 @@
+export { IInMemoryBatch, IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
+export  { IOfflineBatchCleanResponse, IOfflineBatchHandler, IOfflineBatchHandlerCfg, IOfflineBatchResponse,
+    IOfflineBatchStoreResponse, eBatchSendStatus, eBatchStoreStatus, eStorageType,
+    OfflineBatchSendCallback, OfflineBatchStoreCallback,OfflineBatchCallback,
+    createDefaultOfflineDetector, createNoopOfflineDetector, IOfflineDetector, IOfflineDetectorCfg } from "./Interfaces/IOfflineBatch";
+export {IOfflineChannelConfiguration, ILocalStorageProviderContext, IOfflineProvider, IOfflineSenderConfig, IStorageTelemetryItem,
+    eStorageProviders } from "./Interfaces/IOfflineProvider";
+export { WebStorageProvider } from "./Providers/WebStorageProvider";
+export { IndexedDbProvider } from "./Providers/IndexDbProvider";
+export { OfflineBatchHandler } from "./OfflineBatchHandler";
+export { InMemoryBatch } from "./InMemoryBatch";
+export { Sender } from "./Sender";
+export { OfflineChannel } from "./OfflineChannel";

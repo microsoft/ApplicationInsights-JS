@@ -23,6 +23,7 @@
                 "eStorageType",
                 "FieldType",
                 "eDistributedTracingModes",
+                "EventPersistenceValue",
                 "eOfflineValue",
                 "eRequestHeaders",
                 "DataPointType",
@@ -89,6 +90,16 @@
         "@microsoft/1ds-post-js": {
             "constEnums": [
                 "EventBatchNotificationReason"
+            ]
+        },
+        "@microsoft/applicationinsights-offlinechannel-js": {
+            "constEnums": [
+                "eStorageType",
+                "eBatchSendStatus",
+                "eBatchStoreStatus",
+                "CursorProcessResult",
+                "eStorageProviders",
+                "ValueQueryType"
             ]
         }
     }
