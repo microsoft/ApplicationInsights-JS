@@ -6,9 +6,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     EventSendType, FullVersionString, IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IExtendedConfiguration, IPayloadData, IPerfEvent,
-    IUnloadHook, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType, _eExtendedInternalMessageId,
-    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend,
-    getCommonSchemaMetaData, getLocation, getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported, isFetchSupported,
+    ITelemetryItem, IUnloadHook, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType,
+    _eExtendedInternalMessageId, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity,
+    extend, getCommonSchemaMetaData, getLocation, getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported, isFetchSupported,
     isNullOrUndefined, isNumber, isReactNative, isString, isUndefined, isValueAssigned, isXhrSupported, objForEachKey, objKeys,
     onConfigChange, openXhr, strTrim, strUndefined, useXDomainRequest
 } from "@microsoft/1ds-core-js";
@@ -339,6 +339,15 @@ export class HttpManager {
                     }
                 }
             };
+
+            _self.serializeOfflineEvt = (evt) => {
+                return _serializer.getEventBlob(evt);
+            }
+
+            _self.getOfflineRequestDetails = () => {
+                let payload = _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                return _buildRequestDetails(payload, _useHeaders);
+            }
 
             // Special internal method to allow the DebugPlugin to hook embedded objects
             function _getSenderInterface(transports: TransportType[], syncSupport: boolean): IInternalXhrOverride {
@@ -1502,5 +1511,24 @@ export class HttpManager {
      */
     public sendSynchronousBatch(batch: EventBatch, sendType?: EventSendType, sendReason?: SendRequestReason) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+    }
+
+    
+    /**
+     * Get Offline Serializer support
+     * @returns internal Offline Serializer object
+     */
+    public serializeOfflineEvt(evt: ITelemetryItem | IPostTransmissionTelemetryItem): string {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Get Offline request details
+     * @returnsrequest details
+     */
+    public getOfflineRequestDetails(): IRequestUrlDetails {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
     }
 }

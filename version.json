@@ -48,6 +48,10 @@
             "package": "shared/AppInsightsCore/package.json",
             "release": "3.0.7"
         },
+        "@microsoft/applicationinsights-offlinechannel-js": {
+            "package": "channels/offline-channel-js/package.json",
+            "release": "0.0.1"
+        },
         "@microsoft/applicationinsights-chrome-debug-extension": {
             "package": "tools/chrome-debug-extension/package.json",
             "release": "0.4.7"

@@ -47,3 +47,33 @@ export const DistributedTracingModes = createEnumStyle<typeof eDistributedTracin
     W3C: eDistributedTracingModes.W3C
 });
 export type DistributedTracingModes = number | eDistributedTracingModes;
+
+/**
+ * The EventPersistence contains a set of values that specify the event's persistence.
+ */
+export const enum EventPersistenceValue {
+    /**
+     * Normal persistence.
+     */
+    Normal = 1,
+    /**
+     * Critical persistence.
+     */
+    Critical = 2
+}
+
+/**
+ * The EventPersistence contains a set of values that specify the event's persistence.
+ */
+export const EventPersistence = createEnumStyle<typeof EventPersistenceValue>({
+    /**
+     * Normal persistence.
+     */
+    Normal: EventPersistenceValue.Normal,
+
+    /**
+     * Critical persistence.
+     */
+    Critical: EventPersistenceValue.Critical
+});
+export type EventPersistence = number | EventPersistenceValue;
