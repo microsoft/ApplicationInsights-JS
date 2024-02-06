@@ -2,6 +2,14 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 2.8.17 (Feb 6th, 2024)
+
+### Changelog
+
+- #2163 [Master] [BUG] Using App Insights connection string leads to double slash
+- #2260 [Master] Bump @microsoft/dynamicProto-js to ^1.1.11 from ^1.1.9
+  - Addresses a potential prototype pollution issue
+
 ## 2.8.16 (Sep 19th, 2023)
 
 ### Changelog
