@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-core-js",
     "author": "Microsoft Application Insights Team",
-    "version": "3.0.7",
+    "version": "3.0.8",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [

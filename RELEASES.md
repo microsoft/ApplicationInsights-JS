@@ -2,6 +2,20 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.8 (Feb, 7th, 2024)
+
+This release changes the new beacon splitting code (added in 3.0.4) to be `disabled` by default. This change is to address the issue where the SDK was splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload. This change is to address the issue where the SDK was splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload.
+
+### Changelog
+
+- #2235 [BUG] - CRITICAL - Application runs out of memory
+  - #2236 [release-3.0] Cherry-Pick: [Main][Task]26396663: Set default disableBeaconSplit to true
+- #2242 [release-3.0] Update components
+  - Update @microsoft/dynamicProto-js to address possible prototype pollution issue
+- #2254 [Release3.0] Update Tests to support upcoming change in nevware21/tsutils dumpObj to better support JSON stringify and handle PURE comments
+- [Release 3.0] Update components for release #2261
+  - Update @nevware21/ts-utils version for better minification support
+
 ## 3.0.7 (Dec 14th, 2023)
 
 ### Changelog
