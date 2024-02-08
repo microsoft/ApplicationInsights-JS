@@ -29,7 +29,7 @@
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@types/sinon": "4.3.3",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
