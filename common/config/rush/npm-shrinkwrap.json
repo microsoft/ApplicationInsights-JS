@@ -8,7 +8,7 @@
       "name": "rush-common",
       "version": "0.0.0",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -326,9 +326,9 @@
       "integrity": "sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg=="
     },
     "node_modules/@microsoft/api-extractor": {
-      "version": "7.39.5",
-      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.39.5.tgz",
-      "integrity": "sha512-EvKAUU5XlWpvJwnTieQyd+EKJwMVkUwSrt1lDTJ6J9rMQ1WUlLl85U5UaifZ3meaDBek5euVmdLvuPkfahTJzA==",
+      "version": "7.40.0",
+      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.40.0.tgz",
+      "integrity": "sha512-U4yTHabfut6WuYUnSM2+FWUsNIJ+w8ZfQGqZWLjH5I/MZvCyDBFyPDIhZAnndd4Vd3pwl4eSBpeMDe8etkCxpA==",
       "dependencies": {
         "@microsoft/api-extractor-model": "7.28.8",
         "@microsoft/tsdoc": "0.14.2",
@@ -595,9 +595,9 @@
     "node_modules/@rush-temp/1ds-core-js": {
       "version": "0.0.0",
       "resolved": "file:projects/1ds-core-js.tgz",
-      "integrity": "sha512-SXava2qHggzsm7B0+cmAa6rPz8kreW3S37foAHEPtBEw0vhv/3j088tHsMYcdgpOnH5cMXdj8A0tM6duVivjrA==",
+      "integrity": "sha512-ZeSiJsAttsfeFoxG3C1E0FM1eSX9sHS+TQkngmucJdFRMVzMEqjuBXcO7omCxLFSiR0icM24Ml00MHiUMS+4rw==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-async": ">= 0.3.0 < 2.x",
         "@nevware21/ts-utils": ">= 0.10.5 < 2.x",
@@ -623,9 +623,9 @@
     "node_modules/@rush-temp/1ds-post-js": {
       "version": "0.0.0",
       "resolved": "file:projects/1ds-post-js.tgz",
-      "integrity": "sha512-0VTwvsPFd67C9SUWZKgcVTjILiXuYVGV/2Rnx3Z1hDxLx6eRYppuMAAi8la2afl+LMhNXZYcPsqcPNLDDoW+Yw==",
+      "integrity": "sha512-eRGdCLw+7Ri0wwqRdow5Qk9+8R47SMpEuy5vTGzsuXXqbNk+hjA0e7FmAhtojgZnObpKD0h1TTKhVIyxtvFOFg==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-async": ">= 0.3.0 < 2.x",
         "@nevware21/ts-utils": ">= 0.10.5 < 2.x",
@@ -671,9 +671,9 @@
     "node_modules/@rush-temp/applicationinsights-analytics-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-analytics-js.tgz",
-      "integrity": "sha512-zY2SJ4PjYJq+Oczpou5M9EtFxT8W5prjjjVBXkRbbz5NgcfgEYyC5fqcIcyWO51eRU1p4Nh/taXra5jXGaJR/Q==",
+      "integrity": "sha512-XqOUUwmmtxWA9Rw7ZEW3QhkIQ9hrPZYfsoRtuYLh/JZyRfhgMGCwf7uh75LIhXA336TUNRLeqgxE6In5dBJrHA==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -699,9 +699,9 @@
     "node_modules/@rush-temp/applicationinsights-cfgsync-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-cfgsync-js.tgz",
-      "integrity": "sha512-MnFzaKwQ4pitS3LtWIbn5jE4C4rlE4AsOPPzuyWPoTz8VR0+uPlVqZXceiRaq1h9FVK0XtGOQBayRvuGMP668g==",
+      "integrity": "sha512-XrwwzHhpr4cuAQXh7dZwnR1RE0hKBSiQ4xFRbNmy571oDSpd3nfm2kkfJikuMnlzhMYvMEY7fH2Bk9nxOBFJVg==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -728,9 +728,9 @@
     "node_modules/@rush-temp/applicationinsights-channel-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-channel-js.tgz",
-      "integrity": "sha512-6EaHyJqGX7Ci3i+kXBkvk5pbwUYE5L09ue40QvKd/XewEVibRZVLo9W6ZPseI+CZLBeopuPqpFdebudSLt2C+A==",
+      "integrity": "sha512-Qz8H96QbCPLyvvB1JrdDDkwt6AihKJH/mLGxXQ0J79UaTsDoBGd1U8jiw4VQASTtlJAdqaDmTcTdkse5EzfD+w==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -789,9 +789,9 @@
     "node_modules/@rush-temp/applicationinsights-clickanalytics-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-clickanalytics-js.tgz",
-      "integrity": "sha512-avMEQi+SZnhL1CC1CfgevzWs09GX+OuIry1Ke2YbW6TQDnNrtICWP0ovRK8xxLM3bIB+zNPz3Qda+d/iHPBOuA==",
+      "integrity": "sha512-mCxTwPWtE+mjI8qZ7r7FKRcCOtEkTZmCR5tZM6nmU+5diZs9VTr3Ul/itBlloVmw5d63z80DLHZHCEsOZgtzxA==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -814,9 +814,9 @@
     "node_modules/@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-common.tgz",
-      "integrity": "sha512-O3mw3XCKYba+LpAGN9WwLQvYVpZCA405NQwue5Lt7xpifVtm2lNRmSLXgcVD4e9U6EtD1sryneznHQS6mfuN8w==",
+      "integrity": "sha512-K8lU5ZcbOWIGBnfNsfu/+qw74aY+OGp/4aV4spe4KvXzQ6UGkkSyifV5fSWbMYtQ1YPcw1MV2IMBgGZVwog7Kw==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -840,9 +840,9 @@
     "node_modules/@rush-temp/applicationinsights-core-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-core-js.tgz",
-      "integrity": "sha512-R+0LwaG6iehvsIDm/OKf6THri8hs7dB7N3mTUDpDwlY5RFcFf5C1g129TfHGEKt043GL/ia4lviTHFxyZ4tEmg==",
+      "integrity": "sha512-6OOUEtGGsVMkwdrMbyviGzqvhx+fltBlC6eVXsBIMAQqLR0Kn8pZrSIEig2Z8DAxkv7w8/ODNDFfLIpoJrs3hA==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -869,9 +869,9 @@
     "node_modules/@rush-temp/applicationinsights-debugplugin-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-debugplugin-js.tgz",
-      "integrity": "sha512-xnUeSmXZ7JRXprZ+54l4rwAn6KP6v8ppO9CGpLQuD7eYMs3iE82fMXZi4R4clTBy5nBvzOVBx0zfYtuqO7x47A==",
+      "integrity": "sha512-5/Co9/N5bqv4Uv4/K7C52Ck86LbZ/w6b1tSTjUrG9Ubz/vcErHbgq4lm+SAgva2fquFSjpyeoO0EDtk9zy5sbQ==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -894,9 +894,9 @@
     "node_modules/@rush-temp/applicationinsights-dependencies-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-dependencies-js.tgz",
-      "integrity": "sha512-cCpCdwKQ/cVOLnnUCrQyDQfCmDbQWcL+Dnmj5Jlon18Hk6Zg+uRFh8Aqx7il4GstbksgKb8f9cwV7WaYkbqubA==",
+      "integrity": "sha512-SU8cWwvzuuQeIrm/K5aAiIqT/hfjpRHU2xESWOcyZaj9hThy5eKbm7tcMfNEbzbYm/TGebeNeO6Qfk+ymh9OLw==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -1019,9 +1019,9 @@
     "node_modules/@rush-temp/applicationinsights-perfmarkmeasure-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-perfmarkmeasure-js.tgz",
-      "integrity": "sha512-ftJSo5z5+/qbpzBY8hpFqPWRDTlvVANdJmiN7Ri8eidF9GdU6+cytVvipAi8dZgi15H0iqRTE207CaSzQDyaBw==",
+      "integrity": "sha512-eEiD8eXTgMaScA3BOXK9qWhYh1MW6crywLVEz7luPhU2rcKycfwSiQWDbPRwdXxUcJqRx5aOxCylydWqrTDXYg==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -1044,9 +1044,9 @@
     "node_modules/@rush-temp/applicationinsights-properties-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-properties-js.tgz",
-      "integrity": "sha512-UVyLbkmbPlkcPcafmBTMef4rPCCTyRzNyrA1GPwXx+pufouciwjZocne4mUzu3ZytNjRE9gZAHdfnHHRcrl2fQ==",
+      "integrity": "sha512-kvgvxqOcZ0X8ovUvQ399bB+tXvVeQyDDe2cSVIKP8hbF3GQNY2WvwP5b2DFp5eB2W6sPqGp7fR7Re6KdkMtHNg==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -1139,9 +1139,9 @@
     "node_modules/@rush-temp/applicationinsights-teechannel-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-teechannel-js.tgz",
-      "integrity": "sha512-bpdBc6YbZhBUmZYDxPvE9PzS/jelZG/DVUG88U4InWG3NcUShVE4L+NEAbb+GchlxsQmPZlCa7GS0VMopnLqWA==",
+      "integrity": "sha512-7QFmaJWTrNnYaY2QSR2OWVk02b/ItItqR5tBsDU33ruix14gFBOQcUniVmjzE9bQuGYlXcLwUT2dVnYFCp2V4A==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -1175,9 +1175,9 @@
     "node_modules/@rush-temp/applicationinsights-web": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web.tgz",
-      "integrity": "sha512-vhJkhqRlnlm6k9NkwFFKSgY8H9xMvoi+cC47e4tLiLjUbl0Friq8GtLusnZp997QsQG6ecze1G6PGDxBB5LShQ==",
+      "integrity": "sha512-KIsZYQstSgyvuvb9SYfb73wE1xoH4GA/v6UfRIY6Awg8dGjN22D/9NNtBBGcxbp04t9faoNvco4CkeGAKRmlRA==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -1207,9 +1207,9 @@
     "node_modules/@rush-temp/applicationinsights-web-basic": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web-basic.tgz",
-      "integrity": "sha512-uZqzFmrTVOUT9lb64iHpAiea0wXu7tKlx3guxN321aGY04mB7MQHgqUWJr+WVMQCgzq/hR5rbsipxMCT+Fk5cA==",
+      "integrity": "sha512-BQIR5564NIurd+4AH4911wXdFlWqEbb1RivLDtfmGKNjedgFj/0n0NrRAOiVlwYDoA9OI9HdGIipoPyWvVpaAQ==",
       "dependencies": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -2150,9 +2150,9 @@
       }
     },
     "node_modules/caniuse-lite": {
-      "version": "1.0.30001584",
-      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001584.tgz",
-      "integrity": "sha512-LOz7CCQ9M1G7OjJOF9/mzmqmj3jE/7VOmrfw6Mgs0E8cjOsbRXQJHsPBfmBOXDskXKrHLyyW3n7kpDW/4BsfpQ==",
+      "version": "1.0.30001585",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001585.tgz",
+      "integrity": "sha512-yr2BWR1yLXQ8fMpdS/4ZZXpseBgE7o4g41x3a6AJOqZuOi+iE/WdJYAuZ6Y95i4Ohd2Y+9MzIWRR+uGABH4s3Q==",
       "funding": [
         {
           "type": "opencollective",
@@ -2535,9 +2535,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.658",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.658.tgz",
-      "integrity": "sha512-LGkxndHz7OEv6ipmL95E83SOZmK96PHk6Njw0nf5UaOLbvPxxJhejlBWl4esuU6JHMiCjysLhKRQmLTd5s2ZPw=="
+      "version": "1.4.660",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.660.tgz",
+      "integrity": "sha512-1BqvQG0BBQrAA7FVL2EMrb5A1sVyXF3auwJneXjGWa1TpN+g0C4KbUsYWePz6OZ0mXZfXGy+RmQDELJWwE8v/Q=="
     },
     "node_modules/encodeurl": {
       "version": "1.0.2",
@@ -6488,9 +6488,9 @@
       "integrity": "sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg=="
     },
     "@microsoft/api-extractor": {
-      "version": "7.39.5",
-      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.39.5.tgz",
-      "integrity": "sha512-EvKAUU5XlWpvJwnTieQyd+EKJwMVkUwSrt1lDTJ6J9rMQ1WUlLl85U5UaifZ3meaDBek5euVmdLvuPkfahTJzA==",
+      "version": "7.40.0",
+      "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.40.0.tgz",
+      "integrity": "sha512-U4yTHabfut6WuYUnSM2+FWUsNIJ+w8ZfQGqZWLjH5I/MZvCyDBFyPDIhZAnndd4Vd3pwl4eSBpeMDe8etkCxpA==",
       "requires": {
         "@microsoft/api-extractor-model": "7.28.8",
         "@microsoft/tsdoc": "0.14.2",
@@ -6675,9 +6675,9 @@
     },
     "@rush-temp/1ds-core-js": {
       "version": "file:projects\\1ds-core-js.tgz",
-      "integrity": "sha512-SXava2qHggzsm7B0+cmAa6rPz8kreW3S37foAHEPtBEw0vhv/3j088tHsMYcdgpOnH5cMXdj8A0tM6duVivjrA==",
+      "integrity": "sha512-ZeSiJsAttsfeFoxG3C1E0FM1eSX9sHS+TQkngmucJdFRMVzMEqjuBXcO7omCxLFSiR0icM24Ml00MHiUMS+4rw==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-async": ">= 0.3.0 < 2.x",
         "@nevware21/ts-utils": ">= 0.10.5 < 2.x",
@@ -6702,9 +6702,9 @@
     },
     "@rush-temp/1ds-post-js": {
       "version": "file:projects\\1ds-post-js.tgz",
-      "integrity": "sha512-0VTwvsPFd67C9SUWZKgcVTjILiXuYVGV/2Rnx3Z1hDxLx6eRYppuMAAi8la2afl+LMhNXZYcPsqcPNLDDoW+Yw==",
+      "integrity": "sha512-eRGdCLw+7Ri0wwqRdow5Qk9+8R47SMpEuy5vTGzsuXXqbNk+hjA0e7FmAhtojgZnObpKD0h1TTKhVIyxtvFOFg==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-async": ">= 0.3.0 < 2.x",
         "@nevware21/ts-utils": ">= 0.10.5 < 2.x",
@@ -6748,9 +6748,9 @@
     },
     "@rush-temp/applicationinsights-analytics-js": {
       "version": "file:projects\\applicationinsights-analytics-js.tgz",
-      "integrity": "sha512-zY2SJ4PjYJq+Oczpou5M9EtFxT8W5prjjjVBXkRbbz5NgcfgEYyC5fqcIcyWO51eRU1p4Nh/taXra5jXGaJR/Q==",
+      "integrity": "sha512-XqOUUwmmtxWA9Rw7ZEW3QhkIQ9hrPZYfsoRtuYLh/JZyRfhgMGCwf7uh75LIhXA336TUNRLeqgxE6In5dBJrHA==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -6775,9 +6775,9 @@
     },
     "@rush-temp/applicationinsights-cfgsync-js": {
       "version": "file:projects\\applicationinsights-cfgsync-js.tgz",
-      "integrity": "sha512-MnFzaKwQ4pitS3LtWIbn5jE4C4rlE4AsOPPzuyWPoTz8VR0+uPlVqZXceiRaq1h9FVK0XtGOQBayRvuGMP668g==",
+      "integrity": "sha512-XrwwzHhpr4cuAQXh7dZwnR1RE0hKBSiQ4xFRbNmy571oDSpd3nfm2kkfJikuMnlzhMYvMEY7fH2Bk9nxOBFJVg==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -6803,9 +6803,9 @@
     },
     "@rush-temp/applicationinsights-channel-js": {
       "version": "file:projects\\applicationinsights-channel-js.tgz",
-      "integrity": "sha512-6EaHyJqGX7Ci3i+kXBkvk5pbwUYE5L09ue40QvKd/XewEVibRZVLo9W6ZPseI+CZLBeopuPqpFdebudSLt2C+A==",
+      "integrity": "sha512-Qz8H96QbCPLyvvB1JrdDDkwt6AihKJH/mLGxXQ0J79UaTsDoBGd1U8jiw4VQASTtlJAdqaDmTcTdkse5EzfD+w==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -6862,9 +6862,9 @@
     },
     "@rush-temp/applicationinsights-clickanalytics-js": {
       "version": "file:projects\\applicationinsights-clickanalytics-js.tgz",
-      "integrity": "sha512-avMEQi+SZnhL1CC1CfgevzWs09GX+OuIry1Ke2YbW6TQDnNrtICWP0ovRK8xxLM3bIB+zNPz3Qda+d/iHPBOuA==",
+      "integrity": "sha512-mCxTwPWtE+mjI8qZ7r7FKRcCOtEkTZmCR5tZM6nmU+5diZs9VTr3Ul/itBlloVmw5d63z80DLHZHCEsOZgtzxA==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -6886,9 +6886,9 @@
     },
     "@rush-temp/applicationinsights-common": {
       "version": "file:projects\\applicationinsights-common.tgz",
-      "integrity": "sha512-O3mw3XCKYba+LpAGN9WwLQvYVpZCA405NQwue5Lt7xpifVtm2lNRmSLXgcVD4e9U6EtD1sryneznHQS6mfuN8w==",
+      "integrity": "sha512-K8lU5ZcbOWIGBnfNsfu/+qw74aY+OGp/4aV4spe4KvXzQ6UGkkSyifV5fSWbMYtQ1YPcw1MV2IMBgGZVwog7Kw==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -6911,9 +6911,9 @@
     },
     "@rush-temp/applicationinsights-core-js": {
       "version": "file:projects\\applicationinsights-core-js.tgz",
-      "integrity": "sha512-R+0LwaG6iehvsIDm/OKf6THri8hs7dB7N3mTUDpDwlY5RFcFf5C1g129TfHGEKt043GL/ia4lviTHFxyZ4tEmg==",
+      "integrity": "sha512-6OOUEtGGsVMkwdrMbyviGzqvhx+fltBlC6eVXsBIMAQqLR0Kn8pZrSIEig2Z8DAxkv7w8/ODNDFfLIpoJrs3hA==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -6939,9 +6939,9 @@
     },
     "@rush-temp/applicationinsights-debugplugin-js": {
       "version": "file:projects\\applicationinsights-debugplugin-js.tgz",
-      "integrity": "sha512-xnUeSmXZ7JRXprZ+54l4rwAn6KP6v8ppO9CGpLQuD7eYMs3iE82fMXZi4R4clTBy5nBvzOVBx0zfYtuqO7x47A==",
+      "integrity": "sha512-5/Co9/N5bqv4Uv4/K7C52Ck86LbZ/w6b1tSTjUrG9Ubz/vcErHbgq4lm+SAgva2fquFSjpyeoO0EDtk9zy5sbQ==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -6963,9 +6963,9 @@
     },
     "@rush-temp/applicationinsights-dependencies-js": {
       "version": "file:projects\\applicationinsights-dependencies-js.tgz",
-      "integrity": "sha512-cCpCdwKQ/cVOLnnUCrQyDQfCmDbQWcL+Dnmj5Jlon18Hk6Zg+uRFh8Aqx7il4GstbksgKb8f9cwV7WaYkbqubA==",
+      "integrity": "sha512-SU8cWwvzuuQeIrm/K5aAiIqT/hfjpRHU2xESWOcyZaj9hThy5eKbm7tcMfNEbzbYm/TGebeNeO6Qfk+ymh9OLw==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -7082,9 +7082,9 @@
     },
     "@rush-temp/applicationinsights-perfmarkmeasure-js": {
       "version": "file:projects\\applicationinsights-perfmarkmeasure-js.tgz",
-      "integrity": "sha512-ftJSo5z5+/qbpzBY8hpFqPWRDTlvVANdJmiN7Ri8eidF9GdU6+cytVvipAi8dZgi15H0iqRTE207CaSzQDyaBw==",
+      "integrity": "sha512-eEiD8eXTgMaScA3BOXK9qWhYh1MW6crywLVEz7luPhU2rcKycfwSiQWDbPRwdXxUcJqRx5aOxCylydWqrTDXYg==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -7106,9 +7106,9 @@
     },
     "@rush-temp/applicationinsights-properties-js": {
       "version": "file:projects\\applicationinsights-properties-js.tgz",
-      "integrity": "sha512-UVyLbkmbPlkcPcafmBTMef4rPCCTyRzNyrA1GPwXx+pufouciwjZocne4mUzu3ZytNjRE9gZAHdfnHHRcrl2fQ==",
+      "integrity": "sha512-kvgvxqOcZ0X8ovUvQ399bB+tXvVeQyDDe2cSVIKP8hbF3GQNY2WvwP5b2DFp5eB2W6sPqGp7fR7Re6KdkMtHNg==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -7197,9 +7197,9 @@
     },
     "@rush-temp/applicationinsights-teechannel-js": {
       "version": "file:projects\\applicationinsights-teechannel-js.tgz",
-      "integrity": "sha512-bpdBc6YbZhBUmZYDxPvE9PzS/jelZG/DVUG88U4InWG3NcUShVE4L+NEAbb+GchlxsQmPZlCa7GS0VMopnLqWA==",
+      "integrity": "sha512-7QFmaJWTrNnYaY2QSR2OWVk02b/ItItqR5tBsDU33ruix14gFBOQcUniVmjzE9bQuGYlXcLwUT2dVnYFCp2V4A==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -7231,9 +7231,9 @@
     },
     "@rush-temp/applicationinsights-web": {
       "version": "file:projects\\applicationinsights-web.tgz",
-      "integrity": "sha512-vhJkhqRlnlm6k9NkwFFKSgY8H9xMvoi+cC47e4tLiLjUbl0Friq8GtLusnZp997QsQG6ecze1G6PGDxBB5LShQ==",
+      "integrity": "sha512-KIsZYQstSgyvuvb9SYfb73wE1xoH4GA/v6UfRIY6Awg8dGjN22D/9NNtBBGcxbp04t9faoNvco4CkeGAKRmlRA==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -7262,9 +7262,9 @@
     },
     "@rush-temp/applicationinsights-web-basic": {
       "version": "file:projects\\applicationinsights-web-basic.tgz",
-      "integrity": "sha512-uZqzFmrTVOUT9lb64iHpAiea0wXu7tKlx3guxN321aGY04mB7MQHgqUWJr+WVMQCgzq/hR5rbsipxMCT+Fk5cA==",
+      "integrity": "sha512-BQIR5564NIurd+4AH4911wXdFlWqEbb1RivLDtfmGKNjedgFj/0n0NrRAOiVlwYDoA9OI9HdGIipoPyWvVpaAQ==",
       "requires": {
-        "@microsoft/api-extractor": "^7.18.19",
+        "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
@@ -7970,9 +7970,9 @@
       "integrity": "sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ=="
     },
     "caniuse-lite": {
-      "version": "1.0.30001584",
-      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001584.tgz",
-      "integrity": "sha512-LOz7CCQ9M1G7OjJOF9/mzmqmj3jE/7VOmrfw6Mgs0E8cjOsbRXQJHsPBfmBOXDskXKrHLyyW3n7kpDW/4BsfpQ=="
+      "version": "1.0.30001585",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001585.tgz",
+      "integrity": "sha512-yr2BWR1yLXQ8fMpdS/4ZZXpseBgE7o4g41x3a6AJOqZuOi+iE/WdJYAuZ6Y95i4Ohd2Y+9MzIWRR+uGABH4s3Q=="
     },
     "chalk": {
       "version": "4.1.2",
@@ -8252,9 +8252,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "electron-to-chromium": {
-      "version": "1.4.658",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.658.tgz",
-      "integrity": "sha512-LGkxndHz7OEv6ipmL95E83SOZmK96PHk6Njw0nf5UaOLbvPxxJhejlBWl4esuU6JHMiCjysLhKRQmLTd5s2ZPw=="
+      "version": "1.4.660",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.660.tgz",
+      "integrity": "sha512-1BqvQG0BBQrAA7FVL2EMrb5A1sVyXF3auwJneXjGWa1TpN+g0C4KbUsYWePz6OZ0mXZfXGy+RmQDELJWwE8v/Q=="
     },
     "encodeurl": {
       "version": "1.0.2",
