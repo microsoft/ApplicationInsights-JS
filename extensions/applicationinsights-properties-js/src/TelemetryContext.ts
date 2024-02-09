@@ -9,7 +9,7 @@ import {
     IUserContext, IWeb, PageView, dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, _InternalLogMessage,
+    IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, Tags, _InternalLogMessage,
     getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
 } from "@microsoft/applicationinsights-core-js";
 import { Application } from "./Context/Application";
@@ -106,11 +106,8 @@ export class TelemetryContext implements IPropTelemetryContext {
                 if (application) {
                     // evt.ext.app
                     let tags = getSetValue(evt, strTags);
-                    if (!Array.isArray(tags)) {
-                        tags = [tags];
-                    }
-                    tags.push({[CtxTagKeys.applicationVersion]: "application.ver"});
-                    tags.push({[CtxTagKeys.applicationBuild]: "application.build"});
+                    this.setTageValue(tags, CtxTagKeys.applicationVersion, application.ver);
+                    this.setTageValue(tags, CtxTagKeys.applicationBuild, application.build);
                 }
             };
         
@@ -130,14 +127,11 @@ export class TelemetryContext implements IPropTelemetryContext {
                 let internal = _self.internal;
                 if (internal) {
                     let tags = getSetValue(evt, strTags);
-                    if (!Array.isArray(tags)) {
-                        tags = [tags];
-                    }
-                    tags.push({[CtxTagKeys.internalAgentVersion]: internal.agentVersion});
-                    tags.push({[CtxTagKeys.internalSdkVersion]: dataSanitizeString(logger, internal.sdkVersion, 64)});
+                    this.setTageValue(tags, CtxTagKeys.internalAgentVersion, internal.agentVersion);
+                    this.setTageValue(tags, CtxTagKeys.internalSdkVersion, dataSanitizeString(logger, internal.sdkVersion, 64));
                     if (evt.baseType === _InternalLogMessage.dataType || evt.baseType === PageView.dataType) {
-                        tags.push({[CtxTagKeys.internalSnippet]: internal.snippetVer});
-                        tags.push({[CtxTagKeys.internalSdkSrc]: internal.sdkSrc});
+                        this.setTageValue(tags, CtxTagKeys.internalSnippet, internal.snippetVer);
+                        this.setTageValue(tags, CtxTagKeys.internalSdkSrc, internal.sdkSrc);
                     }
                 }
             };
@@ -145,14 +139,12 @@ export class TelemetryContext implements IPropTelemetryContext {
             _self.applyLocationContext = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 let location = this.location;
                 if (location) {
-                    let tags = getSetValue(evt, strTags);
-                    if (!Array.isArray(tags)) {
-                        tags = [tags];
-                    }
-                    tags.push({[CtxTagKeys.locationIp]: location.ip});
+                    let tags = getSetValue(evt, strTags, []);
+                    this.setTageValue(tags, CtxTagKeys.locationIp, location.ip);
                 }
             };
-        
+
+         
             _self.applyOperationContext = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 let telemetryTrace = _self.telemetryTrace;
                 if (telemetryTrace) {
@@ -174,12 +166,8 @@ export class TelemetryContext implements IPropTelemetryContext {
                 let user = _self.user;
                 if (user) {
                     let tags = getSetValue(evt, strTags, []);
-                    if (!Array.isArray(tags)) {
-                        tags = [tags];
-                    }
                     // stays in tags
-                    tags.push({[CtxTagKeys.userAccountId]: user.accountId});
-            
+                    this.setTageValue(tags, CtxTagKeys.userAccountId, user.accountId);
                     // CS 4.0
                     let extUser = getSetValue(getSetValue(evt, strExt), Extensions.UserExt);
                     setValue(extUser, "id", user.id, isString);
@@ -199,6 +187,17 @@ export class TelemetryContext implements IPropTelemetryContext {
                 }
             }
         });
+    }
+
+    private setTageValue = (tags: Tags | Tags[], field: string, value: string): void => {
+        // Function body
+        if (Array.isArray(tags)) {
+            tags.forEach(tag => setValue(tag, field, value, isString)
+            );
+        } else {
+            setValue(tags, field, value, isString)
+        }
+    }
     }
 
     public applySessionContext(evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
