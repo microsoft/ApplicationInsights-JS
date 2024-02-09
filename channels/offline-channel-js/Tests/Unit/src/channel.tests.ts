@@ -1,7 +1,7 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
-import { AppInsightsCore, IConfiguration, ITelemetryItem, getGlobal, getGlobalInst } from "@microsoft/applicationinsights-core-js";
-import { TestChannel } from "./TestHelper";
+import { AppInsightsCore, IConfiguration, getGlobal, getGlobalInst } from "@microsoft/applicationinsights-core-js";
+import { TestChannel, mockTelemetryItem } from "./TestHelper";
 import { OfflineChannel } from "../../../src/OfflineChannel"
 import { IOfflineChannelConfiguration, eStorageProviders } from "../../../src/applicationinsights-offlinechannel-js";
 
@@ -123,7 +123,7 @@ export class ChannelTests extends AITestClass {
 
                 let storageObj = JSON.parse(storageStr);
                 let evts = storageObj.evts;
-                Assert.deepEqual(Object.keys(evts).length, 1, "storgae should have one event");
+                Assert.deepEqual(Object.keys(evts).length, 1, "storage should have one event");
 
                 this.clock.tick(10);
 
@@ -291,16 +291,4 @@ export class ChannelTests extends AITestClass {
             
         });
     }
-}
-
-function mockTelemetryItem(): ITelemetryItem {
-    let evt = {
-        ver: "testVer" + Math.random(),
-        name:"testName",
-        time: "testTime",
-        iKey:"testKey",
-        baseData: {pro1: "prop1"},
-        baseType: "testType"
-    } as ITelemetryItem;
-    return evt;
 }
