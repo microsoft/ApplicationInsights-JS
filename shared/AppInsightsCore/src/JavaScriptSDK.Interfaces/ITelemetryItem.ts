@@ -34,7 +34,7 @@ export interface ITelemetryItem {
     /**
      * System context property extensions that are not global (not in ctx)
      */
-    tags?: Tags & Tags[]; // Tags[] will be deprecated.
+    tags?: Tags | Tags[]; // Tags[] will be deprecated.
 
     /**
      * Custom data

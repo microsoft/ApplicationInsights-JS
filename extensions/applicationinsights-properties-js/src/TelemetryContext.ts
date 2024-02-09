@@ -106,8 +106,11 @@ export class TelemetryContext implements IPropTelemetryContext {
                 if (application) {
                     // evt.ext.app
                     let tags = getSetValue(evt, strTags);
-                    setValue(tags, CtxTagKeys.applicationVersion, application.ver, isString);
-                    setValue(tags, CtxTagKeys.applicationBuild, application.build, isString)
+                    if (!Array.isArray(tags)) {
+                        tags = [tags];
+                    }
+                    tags.push({[CtxTagKeys.applicationVersion]: "application.ver"});
+                    tags.push({[CtxTagKeys.applicationBuild]: "application.build"});
                 }
             };
         
@@ -127,13 +130,14 @@ export class TelemetryContext implements IPropTelemetryContext {
                 let internal = _self.internal;
                 if (internal) {
                     let tags = getSetValue(evt, strTags);
-
-                    setValue(tags, CtxTagKeys.internalAgentVersion, internal.agentVersion, isString); // not mapped in CS 4.0
-                    setValue(tags, CtxTagKeys.internalSdkVersion, dataSanitizeString(logger, internal.sdkVersion, 64), isString);
-            
+                    if (!Array.isArray(tags)) {
+                        tags = [tags];
+                    }
+                    tags.push({[CtxTagKeys.internalAgentVersion]: internal.agentVersion});
+                    tags.push({[CtxTagKeys.internalSdkVersion]: dataSanitizeString(logger, internal.sdkVersion, 64)});
                     if (evt.baseType === _InternalLogMessage.dataType || evt.baseType === PageView.dataType) {
-                        setValue(tags, CtxTagKeys.internalSnippet, internal.snippetVer, isString);
-                        setValue(tags, CtxTagKeys.internalSdkSrc, internal.sdkSrc, isString);
+                        tags.push({[CtxTagKeys.internalSnippet]: internal.snippetVer});
+                        tags.push({[CtxTagKeys.internalSdkSrc]: internal.sdkSrc});
                     }
                 }
             };
@@ -141,7 +145,11 @@ export class TelemetryContext implements IPropTelemetryContext {
             _self.applyLocationContext = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 let location = this.location;
                 if (location) {
-                    setValue(getSetValue(evt, strTags, []), CtxTagKeys.locationIp, location.ip, isString);
+                    let tags = getSetValue(evt, strTags);
+                    if (!Array.isArray(tags)) {
+                        tags = [tags];
+                    }
+                    tags.push({[CtxTagKeys.locationIp]: location.ip});
                 }
             };
         
@@ -166,9 +174,11 @@ export class TelemetryContext implements IPropTelemetryContext {
                 let user = _self.user;
                 if (user) {
                     let tags = getSetValue(evt, strTags, []);
-
+                    if (!Array.isArray(tags)) {
+                        tags = [tags];
+                    }
                     // stays in tags
-                    setValue(tags, CtxTagKeys.userAccountId, user.accountId, isString);
+                    tags.push({[CtxTagKeys.userAccountId]: user.accountId});
             
                     // CS 4.0
                     let extUser = getSetValue(getSetValue(evt, strExt), Extensions.UserExt);
