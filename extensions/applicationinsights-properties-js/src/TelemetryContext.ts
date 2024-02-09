@@ -35,6 +35,17 @@ function _nullResult(): string {
     return null;
 }
 
+function setTageValue(tags: Tags | Tags[], field: string, value: string): void {
+    // Function body
+    if (Array.isArray(tags)) {
+        tags.forEach(tag => setValue(tag, field, value, isString)
+        );
+    } else {
+        setValue(tags, field, value, isString)
+    }
+}
+
+
 export class TelemetryContext implements IPropTelemetryContext {
 
     public application: IApplication; // The object describing a component tracked by this object - legacy
@@ -106,8 +117,8 @@ export class TelemetryContext implements IPropTelemetryContext {
                 if (application) {
                     // evt.ext.app
                     let tags = getSetValue(evt, strTags);
-                    this.setTageValue(tags, CtxTagKeys.applicationVersion, application.ver);
-                    this.setTageValue(tags, CtxTagKeys.applicationBuild, application.build);
+                    setTageValue(tags, CtxTagKeys.applicationVersion, application.ver);
+                    setTageValue(tags, CtxTagKeys.applicationBuild, application.build);
                 }
             };
         
@@ -127,11 +138,11 @@ export class TelemetryContext implements IPropTelemetryContext {
                 let internal = _self.internal;
                 if (internal) {
                     let tags = getSetValue(evt, strTags);
-                    this.setTageValue(tags, CtxTagKeys.internalAgentVersion, internal.agentVersion);
-                    this.setTageValue(tags, CtxTagKeys.internalSdkVersion, dataSanitizeString(logger, internal.sdkVersion, 64));
+                    setTageValue(tags, CtxTagKeys.internalAgentVersion, internal.agentVersion);
+                    setTageValue(tags, CtxTagKeys.internalSdkVersion, dataSanitizeString(logger, internal.sdkVersion, 64));
                     if (evt.baseType === _InternalLogMessage.dataType || evt.baseType === PageView.dataType) {
-                        this.setTageValue(tags, CtxTagKeys.internalSnippet, internal.snippetVer);
-                        this.setTageValue(tags, CtxTagKeys.internalSdkSrc, internal.sdkSrc);
+                        setTageValue(tags, CtxTagKeys.internalSnippet, internal.snippetVer);
+                        setTageValue(tags, CtxTagKeys.internalSdkSrc, internal.sdkSrc);
                     }
                 }
             };
@@ -140,7 +151,7 @@ export class TelemetryContext implements IPropTelemetryContext {
                 let location = this.location;
                 if (location) {
                     let tags = getSetValue(evt, strTags, []);
-                    this.setTageValue(tags, CtxTagKeys.locationIp, location.ip);
+                    setTageValue(tags, CtxTagKeys.locationIp, location.ip);
                 }
             };
 
@@ -167,7 +178,7 @@ export class TelemetryContext implements IPropTelemetryContext {
                 if (user) {
                     let tags = getSetValue(evt, strTags, []);
                     // stays in tags
-                    this.setTageValue(tags, CtxTagKeys.userAccountId, user.accountId);
+                    setTageValue(tags, CtxTagKeys.userAccountId, user.accountId);
                     // CS 4.0
                     let extUser = getSetValue(getSetValue(evt, strExt), Extensions.UserExt);
                     setValue(extUser, "id", user.id, isString);
@@ -189,16 +200,6 @@ export class TelemetryContext implements IPropTelemetryContext {
         });
     }
 
-    private setTageValue = (tags: Tags | Tags[], field: string, value: string): void => {
-        // Function body
-        if (Array.isArray(tags)) {
-            tags.forEach(tag => setValue(tag, field, value, isString)
-            );
-        } else {
-            setValue(tags, field, value, isString)
-        }
-    }
-    }
 
     public applySessionContext(evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
