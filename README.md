@@ -234,6 +234,28 @@ appInsights.trackEvent({
 });
 ```
 
+```js
+appInsights.startTrackEvent("event name"); 
+appInsights.stopTrackEvent("event name", {
+  prop1: 3.14, 
+  prop2: 'string',
+  prop3: {nested:"objects are okay too"}
+  }
+)
+```
+If you wish to organize customer properties into separate sections based on properties and measurements for better visualization on the Azure Portal, consider using the following code:
+
+```js
+appInsights.startTrackEvent("event name"); 
+appInsights.stopTrackEvent("event name", {
+  stringProp1: 'string',
+  stringProp2: {nested:"objects are okay too"}
+  },
+  {numProp1: 3.15, numProp2: 90000}
+)
+```
+
+
 ### Setting Up Autocollection
 
 All autocollection is ON by default. The full version of the Application Insights Javascript SDK auto collects:
