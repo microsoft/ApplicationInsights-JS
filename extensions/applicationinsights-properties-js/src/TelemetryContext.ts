@@ -10,7 +10,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, Tags, _InternalLogMessage,
-    getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
+    arrForEach, getSetValue, hasWindow, isArray, isNullOrUndefined, isString, objKeys, setValue
 } from "@microsoft/applicationinsights-core-js";
 import { Application } from "./Context/Application";
 import { Device } from "./Context/Device";
@@ -36,10 +36,8 @@ function _nullResult(): string {
 }
 
 function setTageValue(tags: Tags | Tags[], field: string, value: string): void {
-    // Function body
-    if (Array.isArray(tags)) {
-        tags.forEach(tag => setValue(tag, field, value, isString)
-        );
+    if (isArray(tags)) {
+        arrForEach(tags, (tag) => setValue(tag, field, value, isString));
     } else {
         setValue(tags, field, value, isString)
     }
