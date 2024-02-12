@@ -8,8 +8,8 @@ import {
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSupport,
     INotificationListener, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain,
-    ITelemetryUnloadState, IXHROverride, SendRequestReason, arrForEach, createProcessTelemetryContext, createUniqueNamespace, dateNow,
-    mergeEvtNamespace, onConfigChange, runTargetUnload
+    ITelemetryUnloadState, IXHROverride, SendRequestReason, _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext,
+    createUniqueNamespace, dateNow, eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
 import { ITimerHandler, isFunction, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
@@ -97,6 +97,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _offineSupport: IInternalOfflineSupport;
             let _primaryChannelId: string;
             let _overrideIkey: string;
+            let _evtsLimitInMemo: number;
 
             _initDefaults();
 
@@ -123,11 +124,12 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         if (!val.isOnline) {
                             _sendNextBatchTimer && _sendNextBatchTimer.cancel();
                         } else {
-                            _sendNextBatchTimer && _sendNextBatchTimer.refresh()
+                            _sendNextBatchTimer && _sendNextBatchTimer.refresh();
                         }
 
                     });
                    
+                    // need it for first time to confirm if there are any events
                     _setSendNextTimer();
                     
                 }
@@ -140,7 +142,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let onlineStatus = _offlineListener.isOnline();
                     itemCtx =  itemCtx || _self._getTelCtx(itemCtx);
 
-                    
+
                     if (!!onlineStatus || !_offineSupport || !_endpoint) {
                         // if we can't get url from online sender or core config, process next
                         _self.processNext(evt, itemCtx);
@@ -156,7 +158,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             _self.processNext(evt, itemCtx);
                             return;
                         }
-                       
+
                         let item = evt as IPostTransmissionTelemetryItem;
                       
                         //TODO: add function to better get level
@@ -169,14 +171,21 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             // inMemo is full
                             if (!added) {
                                 _flushInMemoItems();
-                                // if event can't be added again, simply drop it
-                                // TODO: better handle clean in memo events
-                                // TODO: add logs/notification
-                                _inMemoBatch.addEvent(evt);
+                                let retry = _inMemoBatch.addEvent(evt);
+                                if (!retry) {
+                                    _throwInternal(_diagLogger,
+                                        eLoggingSeverity.WARNING,
+                                        _eInternalMessageId.InMemoryStorageBufferFull,
+                                        "Maximum offline in-memory buffer size reached",
+                                        true);
+                                }
                                 
                             }
+                            // start timer when the first should-cache event added
+                            _setupInMemoTimer();
+                            
                         }
-                        _setupInMemoTimer();
+                       
                        
                         return;
                     }
@@ -238,7 +247,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_urlCfg, _inMemoBatch, _senderInst];
+                return [_urlCfg, _inMemoBatch, _senderInst, _inMemoFlushTimer, _sendNextBatchTimer];
             };
             
 
@@ -261,6 +270,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _offineSupport = null;
                 _primaryChannelId = null;
                 _overrideIkey = null;
+                _evtsLimitInMemo = null;
             }
 
 
@@ -277,6 +287,11 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 if (!_inMemoFlushTimer) {
                     _inMemoFlushTimer = scheduleTimeout(() => {
                         _flushInMemoItems();
+                        if (_inMemoBatch && _inMemoBatch.count() && _inMemoFlushTimer) {
+                            _inMemoFlushTimer.refresh();
+                        }
+                        _setSendNextTimer();
+
                     }, _inMemoTimerOut);
                     _inMemoFlushTimer.unref();
                 } else {
@@ -285,8 +300,10 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 }
             }
 
+            //flush only flush max batch size event, may still have events lefts
             function _flushInMemoItems(unload?: boolean) {
                 try {
+                    // TODO: add while loop to flush everything
                     let inMemo = _inMemoBatch;
                     let evts = inMemo.getItems();
                     if (!evts || !evts.length) {
@@ -317,7 +334,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     
                     let sentItems = evts.slice(0, idx + 1);
                  
-                    _inMemoBatch = _inMemoBatch.createNew(_endpoint, inMemo.getItems().slice(idx + 1));
+                    _inMemoBatch = _inMemoBatch.createNew(_endpoint, inMemo.getItems().slice(idx + 1), _evtsLimitInMemo);
                    
                     let payloadData = _constructPayloadData(payloadArr, criticalCnt);
                     let callback: OfflineBatchStoreCallback = (res) => {
@@ -325,11 +342,16 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             arrForEach(sentItems, (item) => {
                                 _inMemoBatch.addEvent(item);
                             });
+                            _setupInMemoTimer();
                         }
                     };
                     if (payloadData) {
                         let promise = _urlCfg.batchHandler.storeBatch(payloadData, callback, unload);
                         _queueStorageEvent("storeBatch", promise);
+                    }
+
+                    if (!_inMemoBatch.count()) {
+                        _inMemoFlushTimer && _inMemoFlushTimer.cancel();
                     }
 
                 } catch (e) {
@@ -341,35 +363,51 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             }
 
             function _setSendNextTimer() {
+                let isOnline = _offlineListener && _offlineListener.isOnline();
            
                 if(!_sendNextBatchTimer) {
                     let retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
                     let timerValue = Math.max(_maxBatchInterval, retryInterval);
                     _sendNextBatchTimer = scheduleTimeout(() => {
-                        if (_offlineListener.isOnline()) {
-                            if(!_sender.isCompletelyIdle()) {
-                                _sendNextBatchTimer.refresh();
+                        if (isOnline) {
+                            // is no isCompletelyIdle function is available, assume we can send
+                            if(isFunction(_sender.isCompletelyIdle) && !_sender.isCompletelyIdle()) {
+                                _sendNextBatchTimer && _sendNextBatchTimer.refresh();
 
                             } else {
                                 let callback:  OfflineBatchCallback = (res) => {
-                                    if (res.state !== eBatchSendStatus.Complete) {
+                                    let state = res && res.state;
+                                    if (state !== eBatchSendStatus.Complete) {
                                         _consecutiveErrors ++;
                                     }
-                                    _sendNextBatchTimer && _sendNextBatchTimer.refresh();
+                                    let data = res && res.data;
+                                    if (state === eBatchSendStatus.Complete && data) {
+                                        // if status is complete and data is null, means no data
+                                        _sendNextBatchTimer && _sendNextBatchTimer.refresh();
+                                    }
+                                   
                                 }
                                 let promise = _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst);
                                 _queueStorageEvent("sendNextBatch", promise);
                             }
                            
                         } else {
-                            _sendNextBatchTimer.cancel();
+                            _sendNextBatchTimer && _sendNextBatchTimer.cancel();
                         }
                         // if offline, do nothing;
 
                     },timerValue);
+
                     _sendNextBatchTimer.unref();
+
                 } else {
-                    _sendNextBatchTimer.refresh()
+                    // only restart it when online
+                    if (isOnline) {
+                        _sendNextBatchTimer.enabled = true;
+                        _sendNextBatchTimer.refresh();
+                    }
+                    // if offline, do noting
+                    
                 }
             }
 
@@ -518,8 +556,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             providerContext: providerContext,
                             batchHandler: handler
                         };
-                        let evtsLimit = storageConfig.eventsLimitInMem;
-                        _inMemoBatch = new InMemoryBatch(_self.diagLog(),curUrl, null, evtsLimit);
+                        _evtsLimitInMemo = storageConfig.eventsLimitInMem;
+                        _inMemoBatch = new InMemoryBatch(_self.diagLog(),curUrl, null, _evtsLimitInMemo);
                         _inMemoTimerOut = storageConfig.inMemoMaxTime;
                         let onlineConfig = ctx.getExtCfg<any>(_primaryChannelId, {}) || {};
                         _convertUndefined = onlineConfig.convertUndefined;

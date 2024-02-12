@@ -5,6 +5,7 @@ export class TestChannel extends BaseTelemetryPlugin implements IChannelControls
     public identifier = BreezeChannelIdentifier;
     public priority: number = 1001;
     public endpoint: string = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+    public isIdle: boolean = true;
 
     lastEventAdded: ITelemetryItem;
     eventsAdded: ITelemetryItem[] = [];
@@ -40,6 +41,13 @@ export class TestChannel extends BaseTelemetryPlugin implements IChannelControls
         this.flushCalled = true;
     }
 
+    setIsIdle(val) {
+        this.isIdle = val;
+    }
+    isCompletelyIdle() {
+        return this.isIdle;
+    }
+
     getOfflineSupport() {
         return {
             serialize: (evt) => {
@@ -68,6 +76,18 @@ export class TestChannel extends BaseTelemetryPlugin implements IChannelControls
             
         } as IInternalOfflineSupport;
     }
+}
+
+export function mockTelemetryItem(): ITelemetryItem {
+    let evt = {
+        ver: "testVer" + Math.random(),
+        name:"testName",
+        time: "testTime",
+        iKey:"testKey",
+        baseData: {pro1: "prop1"},
+        baseType: "testType"
+    } as ITelemetryItem;
+    return evt;
 }
 
 

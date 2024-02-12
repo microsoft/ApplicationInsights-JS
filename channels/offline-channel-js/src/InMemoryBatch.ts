@@ -54,8 +54,8 @@ export class InMemoryBatch implements IInMemoryBatch {
                 return new InMemoryBatch(logger, endpoint, theEvts, evtsLimitInMem);
             };
 
-            _self.createNew = (newEndpoint: string, evts?: IPostTransmissionTelemetryItem[] | ITelemetryItem[], evtsLimitInMem?: number) => {
-                return new InMemoryBatch(logger, newEndpoint, evts,evtsLimitInMem);
+            _self.createNew = (newEndpoint: string, evts?: IPostTransmissionTelemetryItem[] | ITelemetryItem[], newEvtsLimitInMem?: number) => {
+                return new InMemoryBatch(logger, newEndpoint, evts, newEvtsLimitInMem);
             }
 
         });
