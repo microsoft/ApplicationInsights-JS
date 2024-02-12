@@ -205,7 +205,7 @@ interface ITelemetryItem {
     /**
      * Part A custom extensions
      */
-    tags?: Tags[];
+    tags?: // Tags[] is deprecated since 4.1.0
 
     /**
      * Telemetry type used for part B

@@ -2,6 +2,27 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 4.0.1 (Feb 12nd, 2024)
+
+### Potential break change
+
+This release contains a potential break change with 'tags' type [change](https://github.com/microsoft/ApplicationInsights-JS/pull/2269)
+
+#### Old
+```ts
+    tags?: Tags & Tags[]; 
+```
+#### New
+```ts
+    tags?: Tags;
+
+```
+
+### Changelog
+
+
+
+
 ## 3.0.7 (Dec 14th, 2023)
 
 ### Changelog
