@@ -132,9 +132,10 @@ export class Sender {
 
                     // default true
                     _enableSendPromise = !(senderConfig.enableSendPromise === false);
-                    let xhrOverride = senderConfig.httpXHROverride;
+                    let xhrOverride = offlineSenderCfg.httpXHROverride || senderConfig.httpXHROverride;
 
                     let customInterface = isOverrideFn(xhrOverride)? xhrOverride : null;
+
                     if (!customInterface && _isOneDs) {
                         let location = getLocation();
                         if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
@@ -154,7 +155,6 @@ export class Sender {
                     let xhrInterface = { sendPOST: _xhrSender} as IXHROverride;
                     _fallbackSend =  _xhrSender;
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
-
                     _httpInterface = httpInterface || xhrInterface;
 
                 });
