@@ -826,7 +826,7 @@ export class SenderTests extends AITestClass {
                 let offlineSupport = this._sender.getOfflineSupport() as any;
                 QUnit.assert.ok(offlineSupport.serialize, "serialize exist");
                 let eventStr = offlineSupport.serialize(event);
-                let expectedStr = `"iKey":"iKey","name":"Microsoft.ApplicationInsights.iKey.Event","tags":{"ai.internal.sdkVersion":"javascript:3.0.7"},"data":{"baseType":"EventData","baseData":{"ver":2,"name":"not_specified","properties":{"baseTypeSource":"some type"},"measurements":{}}}`;
+                let expectedStr = `"iKey":"iKey","name":"Microsoft.ApplicationInsights.iKey.Event","tags":{"ai.internal.sdkVersion":"javascript:${EnvelopeCreator.Version}"},"data":{"baseType":"EventData","baseData":{"ver":2,"name":"not_specified","properties":{"baseTypeSource":"some type"},"measurements":{}}}`;
                 QUnit.assert.ok(eventStr.indexOf(expectedStr) > -1, "get expected string");
                 
                 let testStr = `{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}}`;
