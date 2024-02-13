@@ -215,13 +215,13 @@ appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
 appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: 'some id'});
 appInsights.startTrackPage("pageName");
-appInsights.stopTrackPage("pageName", null, {customProp1: "some value"});
+appInsights.stopTrackPage("pageName", null, {customePropertiesName: "some value"}, {customerMeasurementsName: 144});
 appInsights.startTrackEvent("event");
-appInsights.stopTrackEvent("event", null, {customProp1: "some value"});
+appInsights.stopTrackEvent("event", null, {customePropertiesName: "some value"}, {customerMeasurementsName: 150});
 appInsights.flush();
 ```
 
-Custom properties can be included in your telemetry through the `properties` named argument. This can be done with *any* of the Track APIs.
+Custom properties can be included in your telemetry through the `properties` named argument. This can be done with *any* of the Track APIs except stopTrackPage and stopTrackEvent.
 
 ```js
 appInsights.trackEvent({
@@ -234,16 +234,11 @@ appInsights.trackEvent({
 });
 ```
 
-```js
-appInsights.startTrackEvent("event name"); 
-appInsights.stopTrackEvent("event name", {
-  prop1: 3.14, 
-  prop2: 'string',
-  prop3: {nested:"objects are okay too"}
-  }
-)
-```
-If you wish to organize customer properties into separate sections based on properties and measurements for better visualization on the Azure Portal, consider using the following code:
+When using stopTrackPage and stopTrackEvent, you can pass in data categorized by types:
+
+Strings: These should be included under the properties field.
+Numbers: Add these under the measurements field.
+Remember, the order of the properties and measurements should not be altered. You can achieve this using the following code structure:
 
 ```js
 appInsights.startTrackEvent("event name"); 
