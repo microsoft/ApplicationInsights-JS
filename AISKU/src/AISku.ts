@@ -651,7 +651,7 @@ export class AppInsightsSku implements IApplicationInsights {
      * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackPage(name?: string, url?: string, customProperties?: { [key: string]: any; }, measurements?: { [key: string]: number; }) {
+    public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -665,7 +665,7 @@ export class AppInsightsSku implements IApplicationInsights {
      * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackEvent(name: string, properties?: { [key: string]: string; }, measurements?: { [key: string]: number; }) {
+    public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
