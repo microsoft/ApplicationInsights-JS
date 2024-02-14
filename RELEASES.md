@@ -2,25 +2,79 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
-## 3.1.0 (Feb ??, 2024)
+## 3.1.0 (Feb 14th, 2024)
 
-### Potential break change
+### Interface changes / Breaking changes
+
+This release includes support for a new Offline Channel which has changed the `IChannelsControls` interface to include additional support for the new `offline` channel. This change is to support the new `offline` channel and is a breaking change for any custom channels that implement the `IChannelsControls` interface. If you have a custom channel that implements the `IChannelsControls` interface you will need to update your implementation to include the new `offline` channel.
+
+### Configuration default changes
+
+As this is a minor version bump we have also change some default values for the following configuration options:
+
+- `disableUserInitMessage` is now `true` by default to disable the user init message.
+
+### Potential breaking change
 
 This release contains a potential break change with 'tags' type [change](https://github.com/microsoft/ApplicationInsights-JS/pull/2269)
 
+While the interface changes are breaking changes, the changes are not expected to affect the majority of users as when the code attempted to serialize the `tags` property it would have failed due to the `Tags[]` type being used instead of the correct `Tags` type.
+
 #### Old
+
 ```ts
     tags?: Tags & Tags[]; 
 ```
+
 #### New
+
 ```ts
     tags?: Tags;
 
 ```
 
+#### New Offline Channel
+
+This release also includes the new `offline` channel which is a new channel that is designed to support offline scenarios. The `offline` channel is designed to store telemetry items in local storage and then send them when the user comes back online.
+To take full advantage of the initial version you will need to implement your own IOfflineListener to handle situations where you may have "network" connectivity but not internet access. As the `navigator.onLine` property if available will only tell you if you have network connectivity and not internet access.
+
 ### Changelog
 
-
+- #2186 [main] offlineListener preparation
+- #2241 [Main][Task]26451789: Add Offline Support
+- #2259 [Main][Task]26694421: Add Offline Support Publish Group
+- #2267 [Main][Task]26681220: Better handle timers in offline channel
+- #2028 [BUG] AI (Internal): 72 tracking
+  - Sets the default value for the `disableUserInitMessage` to `true` (was previously false since adding)
+- #2193 [main] Add extra config in sender to let users define transports type
+- #2200 [main] [doc] Highlight an issue with the default UMD module format when loading from the CDN into an environment that may have require.js
+- #2208 [Main][Task]26079397: Add disableBeaconSplit sender config and fix potential duplicated events during unload/fallback sender
+  - #2236 [Main][Task]26396663: Set default disableBeaconSplit to true
+- #2204 [BUG] Beacon sender reports error for success when diagnostics are enabled
+- #2214 [main] Merge Release-3.0 to main
+- #2221 [main] Fixup the ci.yml to address internal hash changes between different node versions
+- #2216 [Main][Task]26138416: Fix FetchKeepAliveSender send duplicated events during unload
+- #2228 [main] minor release preparation
+- #2229 [main] [doc] add requireJs problem in SdkLoadFailure.md
+- #2132 [BUG] Submitting NaN via trackEvent results in HTTP 400 Error Code
+- #2238 [Main] Merge release-3.0 to main
+- #2244 Internal Task: Update npm pack sequence
+- #2249 [main][1ds] Enhance Retry Policy Testing for Alignment with Collector Policy
+- #2245 [main] [snippet update] add functions to set configs of snippet
+- #2250 [main] [doc] minor comment update for avoidOptions
+- #2251 [Main][1DS][Post] Add support for the ext.metadata to NOT be included
+- #2253 [Main] Update Tests to support upcoming change in nevware21/tsutils dumpObj to better support JSON stringify and handle PURE comments
+- #2255 [main] #2225 pass customer exception id into telemetry
+- #2247 [main] [1ds-post] export add header func for auth-plugin to consume
+- #2209 [BUG] stopTrackEvent requires property values to be strings
+  - #2268 [main] Add example of how to use stopTrackEvent #2209
+  - #2270 [main] correct types define for stopTrackEvent and stopTrackPage for #2209
+- #2258 [BUG] ITelemetryItem uses intersection type instead of union type for tags property  
+  - #2269 [main] **[Possible Break]** Removed Tags[] from ITelemetryItem as this was breaking later versions of TypeScript by using the intersection type instead of union type for tags property
+- #2272 [release 3.0.8] Fix channel test
+- #2271 Cherry-pick from release-3.0 branch
+  - [Release-3.0] [Release] Increase version to 3.0.8 ([Release-3.0] [Release] Increase version to 3.0.8 #2264)
+  - [Release-3.0] Update namespaced types (DTS) generation to include referenced bundles
 
 
 ## 3.0.8 (Feb, 7th, 2024)

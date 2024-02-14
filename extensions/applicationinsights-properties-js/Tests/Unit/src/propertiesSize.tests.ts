@@ -5,7 +5,7 @@ export class PropertiesExtensionSizeCheck extends AITestClass {
     private readonly MAX_DEFLATE_SIZE = 18;
     private readonly rawFilePath = "../dist/es5/applicationinsights-properties-js.min.js";
     // Automatically updated by version scripts
-    private readonly currentVer = "3.0.8";
+    private readonly currentVer = "3.1.0";
     private readonly proFilePath = `../browser/es5/ai.props.${this.currentVer[0]}.min.js`;
 
     public testInitialize() {
