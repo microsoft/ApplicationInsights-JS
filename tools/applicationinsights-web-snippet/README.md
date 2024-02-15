@@ -15,25 +15,24 @@ Add the Application Insights Web Snippet to your app's dependencies and package.
 npm i @microsoft/applicationinsights-web-snippet
 ```
 
-### pass in key via function [preferred]
-Import helper function from the package.
+### Pass in Key via Function (Preferred Method)
+Import the helper function from the package to easily get the snippet
 ```
 import { getSdkLoaderScript } from "@microsoft/applicationinsights-web-snippet";
 ```
 
-Passed in your config.
+Configure the snippet with your key.
 ```
 let config = {connectionString: key}; 
 // or let config = {instrumentationKey: key};
 let theSnippet = getSdkLoaderScript(config);
 ```
 
-### pass in key manually
+### Pass in Key Manually
 Import web snippet from the package.
 ```
 import { webSnippet } from "@microsoft/applicationinsights-web-snippet";
 ```
-
 
 Replace "INSTRUMENTATION_KEY" with valid Instrumentation Key.
 ```
