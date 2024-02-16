@@ -1,6 +1,6 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "entryPoints": [ "./src/Index.ts" ],
+    "entryPoints": [ "./src/applicationinsights-offlinechannel-js.ts" ],
     "exclude": [ "**/internal/**/*.ts", "node_modules/**" ],
     "externalPattern": [
         "**/node_modules/**",
@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/webSdk/1ds-post-js",
+    "out": "../../docs/webSdk/applicationinsights-offlinechannel-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",
@@ -46,11 +46,11 @@
     },
     "sidebarLinks": {
         "Changelog": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/RELEASES.md",
-        "Readme": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/shared/1ds-post.js",
+        "Readme": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/offline-channel-js",
     },
     "navigationLinks": {
-        "GitHub": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/1ds-post.js",
-        "npm": "https://www.npmjs.com/package/@microsoft/1ds-post-js"
+        "GitHub": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/offline-channel-js",
+        "npm": "https://www.npmjs.com/package/@microsoft/applicationinsights-offlinechannel-js"
     },
     "visibilityFilters": {
         "protected": false,
