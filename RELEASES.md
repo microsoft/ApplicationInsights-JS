@@ -4,6 +4,9 @@
 
 ## 3.1.0 (Feb 14th, 2024)
 
+### Web snippet additional update to 1.1.1
+Refer to #2277 [Web-Snippet] dependency chain issues
+
 ### Interface changes / Breaking changes
 
 This release includes support for a new Offline Channel which has changed the `IChannelsControls` interface to include additional support for the new `offline` channel. This change is to support the new `offline` channel and is a breaking change for any custom channels that implement the `IChannelsControls` interface. If you have a custom channel that implements the `IChannelsControls` interface you will need to update your implementation to include the new `offline` channel.
