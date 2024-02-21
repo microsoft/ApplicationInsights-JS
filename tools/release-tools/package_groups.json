@@ -16,6 +16,25 @@
         "./extensions/applicationinsights-perfmarkmeasure-js",
         "./extensions/applicationinsights-debugplugin-js"
     ],
+    // 1ds (not in the master branch)
+    "1ds": [
+    ],
+    // aionly
+    "aionly": [
+        "./shared/AppInsightsCore",
+        "./shared/AppInsightsCommon",
+        "./AISKU",
+        "./AISKULight",
+        "./extensions/applicationinsights-analytics-js",
+        "./extensions/applicationinsights-properties-js",
+        "./channels/applicationinsights-channel-js",
+        "./extensions/applicationinsights-dependencies-js",
+        "./extensions/applicationinsights-clickanalytics-js",
+        "./extensions/applicationinsights-perfmarkmeasure-js",
+        "./extensions/applicationinsights-debugplugin-js"
+    ],
+    "cfgSync": [
+    ],
     // Rollup packages
     "rollup-es": [
         "./tools/rollup-es3"
@@ -27,5 +46,11 @@
     // Snippet packages
     "snippet": [
         "./tools/applicationinsights-web-snippet"
+    ],
+    "examples": [
+        "./examples/AISKU",
+        "./examples/cfgSync",
+        "./examples/dependency",
+        "./examples/shared-worker"
     ]
 }
