@@ -1,104 +1,104 @@
 {
     "description": "The release value identifies the base version that will be applied via the tools/release-tools/setVersion.js",
     "usage": "When creating a new release you should update this value directly or via the eg. 'npm run setVersion -- 3.2.0' or 'npm run setVersion -- -patch' or 'npm run setVersion -- -minor'",
-    "release": "3.0.7",
-    "next": "minor",
+    "release": "3.1.0",
+    "next": "patch",
     "pkgs": {
         "@microsoft/applicationinsights-web": {
             "package": "package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-web-basic": {
             "package": "AISKULight/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-channel-js": {
             "package": "channels/applicationinsights-channel-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-analytics-js": {
             "package": "extensions/applicationinsights-analytics-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-clickanalytics-js": {
             "package": "extensions/applicationinsights-clickanalytics-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-debugplugin-js": {
             "package": "extensions/applicationinsights-debugplugin-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-dependencies-js": {
             "package": "extensions/applicationinsights-dependencies-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
             "package": "extensions/applicationinsights-perfmarkmeasure-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-properties-js": {
             "package": "extensions/applicationinsights-properties-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-common": {
             "package": "shared/AppInsightsCommon/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-core-js": {
             "package": "shared/AppInsightsCore/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-offlinechannel-js": {
             "package": "channels/offline-channel-js/package.json",
-            "release": "0.0.1"
+            "release": "0.1.0"
         },
         "@microsoft/applicationinsights-chrome-debug-extension": {
             "package": "tools/chrome-debug-extension/package.json",
-            "release": "0.4.7"
+            "release": "0.5.0"
         },
         "applicationinsights-web-config": {
             "package": "tools/config/package.json",
-            "release": "0.0.11"
+            "release": "0.1.0"
         },
         "@microsoft/applicationinsights-example-aisku": {
             "package": "examples/AISKU/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-example-dependencies": {
             "package": "examples/dependency/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-example-shared-worker": {
             "package": "examples/shared-worker/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-teechannel-js": {
             "package": "channels/tee-channel-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-test-module-type-check": {
             "package": "AISKU/Tests/es6-module-type-check/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-cfgsync-js": {
             "package": "extensions/applicationinsights-cfgsync-js/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/applicationinsights-example-cfgsync": {
             "package": "examples/cfgSync/package.json",
-            "release": "3.0.7"
+            "release": "3.1.0"
         },
         "@microsoft/1ds-post-js": {
             "package": "channels/1ds-post-js/package.json",
-            "release": "4.0.5"
+            "release": "4.1.0"
         },
         "@microsoft/1ds-core-js": {
             "package": "shared/1ds-core-js/package.json",
-            "release": "4.0.5"
+            "release": "4.1.0"
         },
         "@microsoft/applicationinsights-web-snippet": {
             "package": "tools/applicationinsights-web-snippet/package.json",
-            "release": "1.1.5"
+            "release": "1.1.1"
         }
     }
 }

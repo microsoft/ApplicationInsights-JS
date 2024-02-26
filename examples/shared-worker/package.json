@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-example-shared-worker",
     "author": "Microsoft Application Insights Team",
-    "version": "3.0.7",
+    "version": "3.1.0",
     "description": "Microsoft Application Insights Shared Worker Example",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [
@@ -63,12 +63,9 @@
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@microsoft/applicationinsights-web": "3.0.7",
-        "@microsoft/applicationinsights-web-snippet": "1.1.5",
-        "@microsoft/applicationinsights-core-js": "3.0.7",
-        "@nevware21/ts-utils": ">= 0.10.4 < 2.x"
-    },
-    "publishConfig": {
-        "tag": "example"
+        "@microsoft/applicationinsights-web": "3.1.0",
+        "@microsoft/applicationinsights-web-snippet": "1.1.1",
+        "@microsoft/applicationinsights-core-js": "3.1.0",
+        "@nevware21/ts-utils": ">= 0.10.5 < 2.x"
     }
 }

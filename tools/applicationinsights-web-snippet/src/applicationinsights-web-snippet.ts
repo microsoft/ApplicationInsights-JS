@@ -18,7 +18,7 @@ function getSdkLoaderScript(config: SdkLoaderConfig) {
         snippet = webSnippetCs.replace("YOUR_CONNECTION_STRING", config.connectionString);
     } else if (config && config.instrumentationKey) {
         snippet = webSnippet.replace("InstrumentationKey=INSTRUMENTATION_KEY", config.instrumentationKey);
-    } 
+    }
     return snippet;
 }
 
