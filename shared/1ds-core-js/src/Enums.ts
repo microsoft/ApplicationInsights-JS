@@ -84,6 +84,16 @@ export const enum eValueKind {
     Pii_IPV4AddressLegacy = 13,
 
     /**
+     * Scrubs the last 4 Hextets (last 64-bits) of an IPv6 address
+     */
+    Pii_IPv6ScrubLastHextets = 14,
+
+    /**
+     * Drops the value altogether, rather than hashing
+     */
+    Pii_DropValue = 15,
+
+    /**
      * Generic content.
      */
     CustomerContent_GenericContent = 32
@@ -108,6 +118,8 @@ export const ValueKind = createEnumStyle<typeof eValueKind>({
     Pii_Uri: eValueKind.Pii_Uri,
     Pii_Fqdn: eValueKind.Pii_Fqdn,
     Pii_IPV4AddressLegacy: eValueKind.Pii_IPV4AddressLegacy,
+    Pii_IPv6ScrubLastHextets: eValueKind.Pii_IPv6ScrubLastHextets,
+    Pii_DropValue: eValueKind.Pii_DropValue,
     CustomerContent_GenericContent: eValueKind.CustomerContent_GenericContent
 });
 export type ValueKind = number | eValueKind
