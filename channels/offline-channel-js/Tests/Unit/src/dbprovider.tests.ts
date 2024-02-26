@@ -12,6 +12,7 @@ export class OfflineDbProviderTests extends AITestClass {
     private coreConfig: IConfig & IConfiguration;
     private ctx: any;
     private preEvts: IStorageTelemetryItem[] = [];
+    private batchDrop: any;
  
     public testInitialize() {
         super.testInitialize();
@@ -23,6 +24,7 @@ export class OfflineDbProviderTests extends AITestClass {
         this.core = new AppInsightsCore();
         this.core.initialize(this.coreConfig, [channel]);
         this.ctx = {};
+        this.batchDrop = [];
     }
 
     public testCleanup() {
@@ -32,6 +34,7 @@ export class OfflineDbProviderTests extends AITestClass {
         });
         this.core = null as any;
         this.coreConfig = null as any;
+        this.batchDrop = [];
     }
 
     public registerTests() {
@@ -45,15 +48,14 @@ export class OfflineDbProviderTests extends AITestClass {
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
-                    endpoint:DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH
+                    endpoint: DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH
                 }
                 let isInit = provider.initialize(providerCxt);
                 Assert.ok(isInit, "init process is successful");
                 let ctx = provider["_getDbgPlgTargets"]();
                 let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com";
                 Assert.equal(ctx[0], expectedStorageKey, "should have expected storage");
-                let expectedMaxStorage = 5000000;
-                Assert.equal(ctx[1], expectedMaxStorage, "default MaxStorage is set");
+                Assert.equal(ctx[1], "dc.services.visualstudio.com", "default endpoint is set");
                 let expectedMaxStorageTime = 10080000;
                 Assert.equal(ctx[2], expectedMaxStorageTime, "default Max time is set");
                 Assert.ok(!provider.supportsSyncRequests(), "support sync should be set to false");
@@ -440,6 +442,11 @@ export class OfflineDbProviderTests extends AITestClass {
             name: "IndexedDbProvider: removeEvents should delete expected events",
             stepDelay: 100,
             steps: [() => {
+                this.core.addNotificationListener({
+                    offlineBatchDrop: (cnt, reason)=> {
+                        this.batchDrop.push({cnt: cnt, reason: reason});
+                    }
+                });
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let provider = new IndexedDbProvider();
                 let itemCtx = this.core.getProcessTelContext();
@@ -447,7 +454,8 @@ export class OfflineDbProviderTests extends AITestClass {
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
-                    endpoint: endpoint
+                    endpoint: endpoint,
+                    notificationMgr: this.core.getNotifyMgr()
                 };
                 let evt = TestHelper.mockEvent(endpoint, 3, false);
                 doAwait(provider.initialize(providerCxt), (val) => {
@@ -575,6 +583,8 @@ export class OfflineDbProviderTests extends AITestClass {
             }, "Wait for get Events1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
+                    Assert.equal(this.batchDrop.length, 1, "notification should be called once"); // sent in clean process during initialization
+                    Assert.equal(this.batchDrop[0].reason, 3, "notification should be called with expected reason time exceeded");
                     return true;
                 }
                 return false;
@@ -688,6 +698,11 @@ export class OfflineDbProviderTests extends AITestClass {
             stepDelay: 100,
             useFakeTimers: true,
             steps: [() => {
+                this.core.addNotificationListener({
+                    offlineBatchDrop: (cnt, reason)=> {
+                        this.batchDrop.push({cnt: cnt, reason: reason});
+                    }
+                });
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let provider = new IndexedDbProvider();
                 let itemCtx = this.core.getProcessTelContext();
@@ -695,7 +710,8 @@ export class OfflineDbProviderTests extends AITestClass {
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
-                    endpoint: endpoint
+                    endpoint: endpoint,
+                    notificationMgr: this.core.getNotifyMgr()
                 };
                 
                 doAwait(provider.initialize(providerCxt), (val) => {
@@ -799,6 +815,9 @@ export class OfflineDbProviderTests extends AITestClass {
             }, "Wait for get Events1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
+                    Assert.equal(this.batchDrop.length, 1, "notification should be called once");
+                    Assert.equal(this.batchDrop[0].cnt, 2, "notification should be called with 2 count");
+                    Assert.equal(this.batchDrop[0].reason, 3, "notification should be called with expected reason clean time exceeded");
                     return true;
                 }
                 return false;

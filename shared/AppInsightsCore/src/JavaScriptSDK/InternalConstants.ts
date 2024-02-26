@@ -20,6 +20,9 @@ export const STR_EVENTS_SENT = "eventsSent";
 export const STR_EVENTS_DISCARDED = "eventsDiscarded";
 export const STR_EVENTS_SEND_REQUEST = "eventsSendRequest";
 export const STR_PERF_EVENT = "perfEvent";
+export const STR_OFFLINE_STORE = "offlineEventsStored";
+export const STR_OFFLINE_SENT = "offlineBatchSent";
+export const STR_OFFLINE_DROP = "offlineBatchDrop";
 
 export const STR_GET_PERF_MGR = "getPerfMgr";
 export const STR_DOMAIN = "domain";

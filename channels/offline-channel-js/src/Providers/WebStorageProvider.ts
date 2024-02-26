@@ -3,10 +3,11 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IProcessTelemetryContext, IUnloadHookContainer, getGlobal, getJSON, isNotNullOrUndefined, objKeys, onConfigChange
+    INotificationManager, IProcessTelemetryContext, IUnloadHookContainer, eBatchDiscardedReason, getGlobal, getJSON, isNotNullOrUndefined,
+    onConfigChange
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncRejectedPromise } from "@nevware21/ts-async";
-import { getEndpointDomain, getTimeFromId, getTimeId } from "../Helpers/Utils";
+import { batchDropNotification, forEachMap, getEndpointDomain, getTimeFromId, getTimeId } from "../Helpers/Utils";
 import {
     ILocalStorageProviderContext, IOfflineChannelConfiguration, IOfflineProvider, IStorageJSON, IStorageTelemetryItem
 } from "../Interfaces/IOfflineProvider";
@@ -66,59 +67,47 @@ function _getAvailableStorage(type: string): Storage {
     return storage;
 }
 
-function _forEachMap<T>(map: { [key: string]: T }, callback: (value: T, key: string) => boolean): void {
-    if (map) {
-        let keys = objKeys(map);
-        for (let lp = 0; lp < keys.length; lp++) {
-            let key = keys[lp];
-            if (!callback(map[key], key)) {
-                break;
-            }
-        }
-    }
-}
-
 
 // will drop batches with no critical evts first
 function _dropEventsUpToPersistence(
     maxCnt: number,
     events: { [id: string]: IStorageTelemetryItem },
-    eventsToDropAtOneTime: number): boolean {
+    eventsToDropAtOneTime: number): number {
     let dropKeys = [];
     let persistenceCnt = 0;
     let droppedEvents = 0;
     while (persistenceCnt <= maxCnt && droppedEvents < eventsToDropAtOneTime) {
-        _forEachMap<IStorageTelemetryItem>(events, (evt, key) => {
+        forEachMap<IStorageTelemetryItem>(events, (evt, key) => {
             if (evt.criticalCnt === persistenceCnt) {
                 dropKeys.push(key);
                 droppedEvents++;
             }
             return (droppedEvents < eventsToDropAtOneTime);
         });
-
         if (droppedEvents > 0) {
             for (let lp = 0; lp < dropKeys.length; lp++) {
                 delete events[dropKeys[lp]];
             }
-            return true;
+            return droppedEvents;
         }
 
         persistenceCnt++;
     }
 
-    return droppedEvents > 0;
+    return droppedEvents;
 }
 
 function _dropMaxTimeEvents(
     maxStorageTime: number,
     events: { [id: string]: IStorageTelemetryItem },
-    eventsToDropAtOneTime): boolean {
+    eventsToDropAtOneTime: number,
+    mgr?: INotificationManager): boolean {
     let dropKeys = [];
     let droppedEvents = 0;
     let currentTime = (new Date()).getTime() + 1; // handle appended random float number
     let minStartTime = (currentTime - maxStorageTime);
     try {
-        _forEachMap<IStorageTelemetryItem>(events, (evt, key) => {
+        forEachMap<IStorageTelemetryItem>(events, (evt, key) => {
             let id = getTimeFromId(key);
             if (id <= minStartTime) {
                 dropKeys.push(key);
@@ -131,6 +120,10 @@ function _dropMaxTimeEvents(
             for (let lp = 0; lp < dropKeys.length; lp++) {
                 delete events[dropKeys[lp]];
             }
+            if (mgr) {
+                batchDropNotification(mgr, droppedEvents, eBatchDiscardedReason.MaxInStorageTimeExceeded);
+            }
+           
             return true;
         }
 
@@ -164,6 +157,7 @@ export class WebStorageProvider implements IOfflineProvider {
             let _maxStorageTime: number = null;
             let _eventDropPerTime: number = null;
             let _maxCriticalCnt: number = null;
+            let _notificationManager: INotificationManager = null;
 
             _this.id = id;
 
@@ -183,6 +177,7 @@ export class WebStorageProvider implements IOfflineProvider {
                 _payloadHelper = new PayloadHelper(itemCtx.diagLog());
                 _endpoint = getEndpointDomain(endpointUrl || providerContext.endpoint);
                 let autoClean = !!storageConfig.autoClean;
+                _notificationManager = providerContext.notificationMgr;
 
                 let unloadHook = onConfigChange(storageConfig, () => {
                     _maxStorageSizeInBytes = storageConfig.maxStorageSizeInBytes || DefaultMaxStorageSizeInBytes; // value checks and defaults should be applied during core config
@@ -190,6 +185,7 @@ export class WebStorageProvider implements IOfflineProvider {
                     let dropNum = storageConfig.EventsToDropPerTime;
                     _eventDropPerTime = isNotNullOrUndefined(dropNum)? dropNum : EventsToDropAtOneTime;
                     _maxCriticalCnt = storageConfig.maxCriticalEvtsDropCnt || MaxCriticalEvtsDropCnt;
+                  
                 });
                 unloadHookContainer && unloadHookContainer.add(unloadHook);
 
@@ -246,19 +242,20 @@ export class WebStorageProvider implements IOfflineProvider {
                         // if not init, return null
                         return;
                     }
-                    return _getEvts(1);
+                    // set ordered to true, to make sure to get earliest events first
+                    return _getEvts(1, true);
                     
                 } catch (e) {
                     return createAsyncRejectedPromise(e);
                 }
             };
 
-            function _getEvts(cnt?: number) {
+            function _getEvts(cnt?: number, ordered?: boolean) {
                 let allItems: IStorageTelemetryItem[] = [];
                 let theStore = _fetchStoredDb(_storageKey).db;
                 if (theStore) {
                     let events = theStore.evts;
-                    _forEachMap(events, (evt) => {
+                    forEachMap(events, (evt) => {
                         if (evt) {
                             if (evt.isArr) {
                                 evt = _payloadHelper.base64ToArr(evt);
@@ -269,7 +266,7 @@ export class WebStorageProvider implements IOfflineProvider {
                             return false;
                         }
                         return true;
-                    });
+                    }, ordered);
                 }
                 return  allItems;
                     
@@ -291,20 +288,27 @@ export class WebStorageProvider implements IOfflineProvider {
                     if (evt && evt.isArr) {
                         evt = _payloadHelper.base64ToStr(evt);
                     }
+                    let preDroppedCnt = 0;
 
                     // eslint-disable-next-line no-constant-condition
                     while (true && evt) {
                         events[id] = evt;
                         if (_updateStoredDb(theStore)) {
                             // Database successfully updated
+                            if (preDroppedCnt && _notificationManager) {
+                                // only send notification when batches are updated successfully in storage
+                                batchDropNotification(_notificationManager, preDroppedCnt, eBatchDiscardedReason.CleanStorage);
+                            }
                             return evt;
                         }
 
                         // Could not not add events to storage assuming its full, so drop events to make space
                         // or max size exceeded
                         delete events[id];
-                        if (!_dropEventsUpToPersistence(_maxCriticalCnt, events, _eventDropPerTime)) {
-                        // Can't free any space for event
+                        let droppedCnt = _dropEventsUpToPersistence(_maxCriticalCnt, events, _eventDropPerTime);
+                        preDroppedCnt += droppedCnt;
+                        if (!droppedCnt) {
+                            // Can't free any space for event
                             return createAsyncRejectedPromise(new Error("Unable to free up event space"));
                         }
                     }
@@ -358,7 +362,7 @@ export class WebStorageProvider implements IOfflineProvider {
                     let storedDb = theStore.db;
                     if (storedDb) {
                         let events = storedDb.evts;
-                        _forEachMap(events, (evt) => {
+                        forEachMap(events, (evt) => {
                             if (evt) {
                                 delete events[evt.id]
                                 removedItems.push(evt);
@@ -383,7 +387,7 @@ export class WebStorageProvider implements IOfflineProvider {
                 if (currentDb) {
                     let events = currentDb.evts;
                     try {
-                        let isDropped = _dropMaxTimeEvents(_maxStorageTime, events, _eventDropPerTime);
+                        let isDropped = _dropMaxTimeEvents(_maxStorageTime, events, _eventDropPerTime, _notificationManager);
                         if (isDropped) {
                             return _updateStoredDb(storeDetails);
                         }
@@ -492,7 +496,7 @@ export class WebStorageProvider implements IOfflineProvider {
                 if (currentDb) {
                     let events = currentDb.evts;
                     try {
-                        _forEachMap(events, (evt) => {
+                        forEachMap(events, (evt) => {
                             if (evt) {
                                 removedItems.push(evt);
                             }

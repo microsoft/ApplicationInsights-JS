@@ -110,7 +110,6 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                     }
                     let provider = _provider;
                     try {
-                       
                         if (_unloadProvider) {
                             doAwaitResponse(_unloadProvider.getNextBatch(), (res) => {
                                 if (res && !res.rejected) {
