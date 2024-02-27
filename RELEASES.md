@@ -2,6 +2,9 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+### Web snippet additional update to 1.1.1 (Feb 16th, 2024)
+Refer to #2277 [Web-Snippet] dependency chain issues
+
 ## 3.1.0 (Feb 14th, 2024)
 
 ### Interface changes / Breaking changes

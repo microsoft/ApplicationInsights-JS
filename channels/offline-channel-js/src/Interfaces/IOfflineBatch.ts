@@ -46,8 +46,7 @@ export const enum eBatchSendStatus {
 
 export const enum eBatchStoreStatus {
     Success = 1,
-    Failure = 2,
-    Drop = 3
+    Failure = 2
  }
  
 export interface IOfflineBatchHandlerCfg {

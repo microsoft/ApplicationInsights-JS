@@ -4,10 +4,11 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { EventPersistence } from "@microsoft/applicationinsights-common";
 import {
-    IProcessTelemetryContext, IUnloadHookContainer, eLoggingSeverity, isNotNullOrUndefined, isNumber, newGuid, onConfigChange
+    INotificationManager, IProcessTelemetryContext, IUnloadHookContainer, eBatchDiscardedReason, eLoggingSeverity, isNotNullOrUndefined,
+    isNumber, newGuid, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncAllPromise, createAsyncPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
-import { getEndpointDomain, getTimeFromId, getTimeId } from "../Helpers/Utils";
+import { batchDropNotification, getEndpointDomain, getTimeFromId, getTimeId } from "../Helpers/Utils";
 import {
     CursorProcessResult, IIndexedDbOpenDbContext, IIndexedDbStoreActionContext, IProcessCursorState
 } from "../Interfaces/IOfflineIndexDb";
@@ -20,7 +21,6 @@ import { IndexedDbHelper } from "./IndexDbHelper";
 const EventsToDropAtOneTime = 10;                   // If we fail to add a new event this is the max number of events we will attempt to remove to make space
 const StoreVersion = 1;                             // The Current version for the stored items, this will be used in the future for versioning
 const OrhpanedEventThresholdInMs = 10080000;        // 7 days
-const MaxSizeLimit = 5000000;                       // 5Mb
 const UnknowniKey = "Unknown";
 const ErrorMessageUnableToAddEvent = "DBError: Unable to add event";
 const MaxCriticalEvtsDropCnt = 2;
@@ -267,7 +267,7 @@ export class IndexedDbProvider implements IOfflineProvider {
             let _maxStorageTime: number = null;
             let _eventDropPerTime: number = null;
             let _maxCriticalCnt: number = null;
-            let _maxStorageSizeInBytes: number = null;
+            let _notificationManager: INotificationManager = null;
         
             _this.id = id;
 
@@ -284,6 +284,7 @@ export class IndexedDbProvider implements IOfflineProvider {
 
                 let storageConfig: IOfflineChannelConfiguration = providerContext.storageConfig;
                 _storageId = _this.id || providerContext.id || newGuid();
+                _notificationManager = providerContext.notificationMgr;
 
                
                 _endpoint = getEndpointDomain(providerContext.endpoint);
@@ -301,7 +302,6 @@ export class IndexedDbProvider implements IOfflineProvider {
 
                 let unloadHook = onConfigChange(storageConfig, () => {
                     _maxStorageTime = storageConfig.inStorageMaxTime || OrhpanedEventThresholdInMs; // TODO: handle 0
-                    _maxStorageSizeInBytes = storageConfig.maxStorageSizeInBytes || MaxSizeLimit; // value checks and defaults should be applied during core config
                     let dropNum = storageConfig.EventsToDropPerTime;
                     _eventDropPerTime = isNotNullOrUndefined(dropNum)? dropNum : EventsToDropAtOneTime;
                     _maxCriticalCnt = storageConfig.maxCriticalEvtsDropCnt || MaxCriticalEvtsDropCnt;
@@ -333,7 +333,7 @@ export class IndexedDbProvider implements IOfflineProvider {
             };
 
             _this["_getDbgPlgTargets"] = () => {
-                return [_dbName, _maxStorageSizeInBytes, _maxStorageTime, _indexedDb];
+                return [_dbName, _endpoint, _maxStorageTime, _indexedDb];
             };
 
             /**
@@ -488,7 +488,11 @@ export class IndexedDbProvider implements IOfflineProvider {
                         return _dropMaxTimeEvents(dbCtx, _maxStorageTime);
                     }).then(
                         (value:IIndexedDbItem[]) => {
-                            cleanResolve(value && value.length > 0);
+                            let cnt = value && value.length;
+                            if (_notificationManager && cnt) {
+                                batchDropNotification(_notificationManager, cnt, eBatchDiscardedReason.MaxInStorageTimeExceeded);
+                            }
+                            cleanResolve(cnt && cnt > 0);
                         },(reason) => {
                             cleanResolve(false);
                         }
@@ -552,6 +556,9 @@ export class IndexedDbProvider implements IOfflineProvider {
                         // Try and clear space by dropping the Normal level events, note dropEvents promise never rejects
                         _dropEventsUpToPersistence(dbCtx, _maxCriticalCnt, _eventDropPerTime).then(
                             (droppedCount) => {
+                                if (_notificationManager && droppedCount) {
+                                    batchDropNotification(_notificationManager, droppedCount, eBatchDiscardedReason.CleanStorage);
+                                }
                                 droppedFunc(droppedCount);
                             }, (reason) => {
                                 // won't throw errors here, unblock following process
