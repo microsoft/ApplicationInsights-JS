@@ -383,11 +383,6 @@ export interface IConfig {
      * [Optional] Sets throttle mgr configuration by key
      */
     throttleMgrCfg?: {[key: number]: IThrottleMgrConfig};
-
-    /**
-     * [Optional] Sets the user override endpoint url where the track telemetry is going to be sent
-     */
-    userOverrideEndpointUrl?: string;
 }
 
 export class ConfigurationManager {

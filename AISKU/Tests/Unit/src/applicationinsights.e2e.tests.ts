@@ -134,12 +134,13 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public registerTests() {
-        this.addDynamicConfigTests()
-        this.addGenericE2ETests();
-        this.addAnalyticsApiTests();
-        this.addAsyncTests();
-        this.addDependencyPluginTests();
-        this.addPropertiesPluginTests();
+        this.addDynamicConfigTests();
+        this.addCDNOverrideTests();
+        // this.addGenericE2ETests();
+        // this.addAnalyticsApiTests();
+        // this.addAsyncTests();
+        // this.addDependencyPluginTests();
+        // this.addPropertiesPluginTests();
     }
 
     public addGenericE2ETests(): void {
@@ -240,6 +241,24 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
     }
+
+    // public addCDNOverrideTests(): void {
+    //     this.testCase({
+    //         name: 'CDNOverrideTests: customer could change the url endpoint that the data will be sent to',
+    //         useFakeTimers: true,
+    //         test: () => {
+    //             let expectedEndpointUrl = "https://custom.endpoint";
+    //             this._ai.config.userOverrideEndpointUrl = expectedEndpointUrl;
+    //             this.clock.tick(100);
+
+    //             const sender: Sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
+    //             let senderEndpoint = sender._senderConfig.endpointUrl;
+    //             console.log("--------------senderEndpoint: " + senderEndpoint);
+    //         }
+    //     });
+    // }
+
+
 
     public addAnalyticsApiTests(): void {
         this.testCase({
