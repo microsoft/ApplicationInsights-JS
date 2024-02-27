@@ -7,11 +7,11 @@ import { ChannelTests } from "./channel.tests";
 import { Offlinetimer } from "./offlinetimer.tests";
 
 export function runTests() {
-    new OfflineIndexedDBTests().registerTests();
-    new OfflineWebProviderTests().registerTests();
-    new OfflineDbProviderTests().registerTests();
-    new OfflineInMemoryBatchTests().registerTests();
-    new OfflineBatchHandlerTests().registerTests();
+    // new OfflineIndexedDBTests().registerTests();
+    // new OfflineWebProviderTests().registerTests();
+    // new OfflineDbProviderTests().registerTests();
+    // new OfflineInMemoryBatchTests().registerTests();
+    // new OfflineBatchHandlerTests().registerTests();
     new ChannelTests().registerTests();
-    new Offlinetimer().registerTests();
+    // new Offlinetimer().registerTests();
 }

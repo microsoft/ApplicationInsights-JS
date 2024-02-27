@@ -15,6 +15,8 @@ Placeholder for auto-generated API documentation
 
 [1DS Post Channel](./1ds-post-js/index.html)
 
+[Microsoft Application Insights JavaScript SDK Offline Channel](./applicationinsights-offlinechannel-js/index.html)
+
 [Application Insights JavaScript SDK Channel](./applicationinsights-channel-js/index.html)
 
 [Application Insights Common](./applicationinsights-common/index.html)'

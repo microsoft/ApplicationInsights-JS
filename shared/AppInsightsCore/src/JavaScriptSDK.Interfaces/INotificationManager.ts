@@ -4,6 +4,7 @@ import { IPromise } from "@nevware21/ts-async";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPerfEvent } from "./IPerfEvent";
+import { IPayloadData } from "./IXHROverride";
 
 /**
  * Class to manage sending notifications to all the listeners.
@@ -60,4 +61,26 @@ export interface INotificationManager {
      * / Promise to allow any listeners to wait for the operation to complete.
      */
     unload?(isAsync?: boolean): void | IPromise<void>;
+
+    /**
+     * [Optional] A function called when the offline events have been stored to the persistent storage
+     * @param events - items that are stored in the persistent storage
+     * @since v3.1.1
+     */
+    offlineEventsStored?(events: ITelemetryItem[]): void;
+
+    /**
+     * [Optional] A function called when the offline events have been sent from the persistent storage
+     * @param batch - payload data that is sent from the persistent storage
+     * @since v3.1.1
+     */
+    offlineBatchSent?(batch: IPayloadData): void;
+
+    /**
+     * [Optional] A function called when the offline events have been dropped from the persistent storage
+     * @param cnt - count of batches dropped
+     * @param reason - the reason why the batches is dropped
+     * @since v3.1.1
+     */
+    offlineBatchDrop?(cnt: number, reason?: number): void;
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { EventPersistence } from "@microsoft/applicationinsights-common";
-import { IPayloadData, IProcessTelemetryContext, IXHROverride } from "@microsoft/applicationinsights-core-js";
+import { INotificationManager, IPayloadData, IProcessTelemetryContext, IXHROverride } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 
 /**
@@ -31,7 +31,7 @@ export const enum eStorageProviders {
  */
 export interface IOfflineChannelConfiguration {
     /**
-     * [Optional] The max size in bytes that should be used for storing events(default up to 5 Mb).
+     * [Optional] The max size in bytes that should be used for storing events(default up to 5 Mb) in local/session storage.
      * The maximum size in bytes that should be used for storing events in storage If not specified, the system will use up to 5 MB
      * @default 5000000
      */
@@ -215,6 +215,11 @@ export interface ILocalStorageProviderContext {
      * Identifies endpoint url.
      */
     endpoint?: string;
+
+    /**
+     * Identifies Notification Manager
+     */
+    notificationMgr?: INotificationManager;
 }
 
 /*

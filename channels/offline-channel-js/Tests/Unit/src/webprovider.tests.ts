@@ -1,5 +1,5 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IConfiguration, arrForEach, createDynamicConfig, generateW3CId, isArray } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, arrForEach, createDynamicConfig, eBatchDiscardedReason, generateW3CId, isArray } from "@microsoft/applicationinsights-core-js";
 import { WebStorageProvider } from "../../../src/Providers/WebStorageProvider";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
 import { TestChannel } from "./TestHelper";
@@ -11,6 +11,7 @@ import { strSubstr } from "@nevware21/ts-utils";
 export class OfflineWebProviderTests extends AITestClass {
     private core: AppInsightsCore;
     private coreConfig: IConfig & IConfiguration;
+    private batchDrop: any;
  
     public testInitialize() {
         super.testInitialize();
@@ -22,6 +23,7 @@ export class OfflineWebProviderTests extends AITestClass {
         };
         this.core = new AppInsightsCore();
         this.core.initialize(this.coreConfig, [channel]);
+        this.batchDrop = [];
         
     }
 
@@ -33,6 +35,7 @@ export class OfflineWebProviderTests extends AITestClass {
         });
         this.core = null as any;
         this.coreConfig = null as any;
+        this.batchDrop = [];
        
     }
 
@@ -337,6 +340,11 @@ export class OfflineWebProviderTests extends AITestClass {
         this.testCase({
             name: "Web local Storage Provider: addEvent should handle errors",
             test: () => {
+                this.core.addNotificationListener({
+                    offlineBatchDrop: (cnt, reason)=> {
+                        this.batchDrop.push({cnt: cnt, reason: reason});
+                    }
+                });
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let provider = new WebStorageProvider("localStorage");
                 let itemCtx = this.core.getProcessTelContext();
@@ -344,7 +352,8 @@ export class OfflineWebProviderTests extends AITestClass {
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
-                    endpoint: endpoint
+                    endpoint: endpoint,
+                    notificationMgr: this.core.getNotifyMgr()
                 }
                 let isInit = provider.initialize(providerCxt);
                 Assert.ok(isInit, "init process is successful");
@@ -384,7 +393,7 @@ export class OfflineWebProviderTests extends AITestClass {
 
                 let evt4 = TestHelper.mockEvent(endpoint, 5, true);
                 let addedEvt4 = provider.addEvent("", evt4, itemCtx);
-                Assert.equal(evts.length, 2, "should be called two times");
+                Assert.equal(evts.length, 2, "should be called two times"); // notification should be triggered here
                 let jsonObj = JSON.parse(evts[1]);
                 Assert.deepEqual(jsonObj.evts, {[evt.id as any]: evt, [evt1.id as any]: evt1, [evt2.id as any]: evt2, [evt4.id as any]: evt4}, "should have expected events test1");
                 let evt6 = TestHelper.mockEvent(endpoint, 6, true);
@@ -392,11 +401,13 @@ export class OfflineWebProviderTests extends AITestClass {
                     if (res.rejected) {
                         Assert.ok(true, "error triggered");
                         Assert.equal(res.reason.message, "Unable to free up event space", "should have expected error");
+                        Assert.equal(this.batchDrop.length, 1, "notification should be called");
+                        Assert.equal(this.batchDrop[0].cnt, 1, "notification should be called with 1 cnt");
+                        Assert.equal(this.batchDrop[0].reason, 2, "notification should be called with expected reason");
                         return;
                     }
                     Assert.ok(false, "error is not triggered");
                 });
-
             }
             
         });
@@ -496,6 +507,11 @@ export class OfflineWebProviderTests extends AITestClass {
         this.testCase({
             name: "Web local Storage Provider: clear should clear all events in storage",
             test: () => {
+                this.core.addNotificationListener({
+                    offlineBatchDrop: (cnt, reason)=> {
+                        this.batchDrop.push({cnt: cnt, reason: reason});
+                    }
+                });
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let evt = TestHelper.mockEvent(endpoint, 3, false);
                 let evt1 = TestHelper.mockEvent(endpoint, 2, false);
@@ -507,7 +523,8 @@ export class OfflineWebProviderTests extends AITestClass {
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
-                    endpoint: endpoint
+                    endpoint: endpoint,
+                    notificationMgr: this.core.getNotifyMgr()
                 }
                 let isInit = provider.initialize(providerCxt);
                 Assert.ok(isInit, "init process is successful");
@@ -527,6 +544,8 @@ export class OfflineWebProviderTests extends AITestClass {
                 let storageObj = JSON.parse(storageStr);
                 Assert.deepEqual(storageObj.evts, {}, "storgae should not have any remaining events");
 
+                Assert.equal(this.batchDrop.length, 0, "notification should not be called");
+
             }
             
         });
@@ -535,6 +554,11 @@ export class OfflineWebProviderTests extends AITestClass {
             name: "Web local Storage Provider: Clean should drop events that exist longer than max storage time",
             useFakeTimers: true,
             test: () => {
+                this.core.addNotificationListener({
+                    offlineBatchDrop: (cnt, reason)=> {
+                        this.batchDrop.push({cnt: cnt, reason: reason});
+                    }
+                });
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let evt = TestHelper.mockEvent(endpoint, 3, false);
                 let evt1 = TestHelper.mockEvent(endpoint, 2, false);
@@ -546,7 +570,8 @@ export class OfflineWebProviderTests extends AITestClass {
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
-                    endpoint: endpoint
+                    endpoint: endpoint,
+                    notificationMgr: this.core.getNotifyMgr()
                 }
                 let isInit = provider.initialize(providerCxt);
                 Assert.ok(isInit, "init process is successful");
@@ -570,6 +595,12 @@ export class OfflineWebProviderTests extends AITestClass {
                 let storageObj = JSON.parse(storageStr);
                 Assert.deepEqual(storageObj.evts, {}, "storgae should not have any remaining events");
 
+                this.clock.tick(1);
+
+                Assert.equal(this.batchDrop.length, 1, "notification should be called");
+                Assert.equal(this.batchDrop[0].cnt, 4, "notification should not be called with 4 count");
+                Assert.equal(this.batchDrop[0].reason, eBatchDiscardedReason.MaxInStorageTimeExceeded, "notification should be called with expected reason");
+
             }
             
         });
@@ -578,6 +609,11 @@ export class OfflineWebProviderTests extends AITestClass {
             name: "Web local Storage Provider: autoClean should drop expected events when it is set to true",
             useFakeTimers: true,
             test: () => {
+                this.core.addNotificationListener({
+                    offlineBatchDrop: (cnt, reason)=> {
+                        this.batchDrop.push({cnt: cnt, reason: reason});
+                    }
+                });
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let provider = new WebStorageProvider("localStorage");
@@ -586,7 +622,8 @@ export class OfflineWebProviderTests extends AITestClass {
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
-                    endpoint: endpoint
+                    endpoint: endpoint,
+                    notificationMgr: this.core.getNotifyMgr()
                 }
                 let isInit = provider.initialize(providerCxt);
                 Assert.ok(isInit, "init process is successful");
@@ -603,7 +640,8 @@ export class OfflineWebProviderTests extends AITestClass {
                 let providerCxt1 = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig1,
-                    endpoint: endpoint
+                    endpoint: endpoint,
+                    notificationMgr: this.core.getNotifyMgr()
                 }
                 
                 
@@ -622,6 +660,12 @@ export class OfflineWebProviderTests extends AITestClass {
                 let storageObj = JSON.parse(storageStr);
                 let remainingEvts = storageObj.evts;
                 Assert.deepEqual(Object.keys(remainingEvts).length, 2, "storgae should have expected remaining events");
+
+                this.clock.tick(1)
+
+                Assert.equal(this.batchDrop.length, 1, "notification should be called");
+                Assert.equal(this.batchDrop[0].cnt, 2, "notification should not be called with 2 count");
+                Assert.equal(this.batchDrop[0].reason, eBatchDiscardedReason.MaxInStorageTimeExceeded, "notification should be called with expected reason");
 
             }
             

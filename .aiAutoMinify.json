@@ -5,6 +5,7 @@
                 "_eSetDynamicPropertyFlags",
                 "CallbackType",
                 "eEventsDiscardedReason",
+                "eBatchDiscardedReason",
                 "FeatureOptInMode",
                 "CdnFeatureMode",
                 "eLoggingSeverity",
