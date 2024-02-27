@@ -6,14 +6,17 @@ import {
     BreezeChannelIdentifier, EventPersistence, IConfig, IOfflineListener, createOfflineListener
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSupport,
-    INotificationListener, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain,
-    ITelemetryUnloadState, IXHROverride, SendRequestReason, _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext,
-    createUniqueNamespace, dateNow, eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
+    BaseTelemetryPlugin, EventsDiscardedReason, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger,
+    IInternalOfflineSupport, INotificationListener, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, SendRequestReason,
+    _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace, dateNow, eBatchDiscardedReason,
+    eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
 import { ITimerHandler, isFunction, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
-import { isGreaterThanZero } from "./Helpers/Utils";
+import {
+    EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero
+} from "./Helpers/Utils";
 import { InMemoryBatch } from "./InMemoryBatch";
 import { IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
 import {
@@ -98,6 +101,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _primaryChannelId: string;
             let _overrideIkey: string;
             let _evtsLimitInMemo: number;
+            let _notificationManager: INotificationManager | undefined;
 
             _initDefaults();
 
@@ -113,27 +117,32 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineSender"), core.evtNamespace && core.evtNamespace());
                     _offlineListener = createOfflineListener(evtNamespace); // TODO: add config to be passed
                     _taskScheduler = createTaskScheduler(createAsyncPromise, "offline channel");
+                    _notificationManager = core.getNotifyMgr();
                 }
+                try {
+                    _createUrlConfig(coreConfig, core, extensions, pluginChain);
+                    let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
+                    _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
+                    if (_sender) {
+                        _senderInst = _sender.getXhrInst();
+                        _offlineListener.addListener((val)=> {
+                            if (!val.isOnline) {
+                                _sendNextBatchTimer && _sendNextBatchTimer.cancel();
+                            } else {
+                                _setSendNextTimer();
+                            }
+    
+                        });
+                       
+                        // need it for first time to confirm if there are any events
+                        _setSendNextTimer();
+                        
+                    }
 
-                _createUrlConfig(coreConfig, core, extensions, pluginChain);
-                let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
-                _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
-                if (_sender) {
-                    _senderInst = _sender.getXhrInst();
-                    _offlineListener.addListener((val)=> {
-                        if (!val.isOnline) {
-                            _sendNextBatchTimer && _sendNextBatchTimer.cancel();
-                        } else {
-                            _sendNextBatchTimer && _sendNextBatchTimer.refresh();
-                        }
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
 
-                    });
-                   
-                    // need it for first time to confirm if there are any events
-                    _setSendNextTimer();
-                    
                 }
-
                
             };
 
@@ -173,6 +182,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                 _flushInMemoItems();
                                 let retry = _inMemoBatch.addEvent(evt);
                                 if (!retry) {
+                                    _evtDropNotification([evt], EventsDiscardedReason.QueueFull);
                                     _throwInternal(_diagLogger,
                                         eLoggingSeverity.WARNING,
                                         _eInternalMessageId.InMemoryStorageBufferFull,
@@ -184,6 +194,9 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             // start timer when the first should-cache event added
                             _setupInMemoTimer();
                             
+                        } else {
+                            // if should not cache,send event drop notification
+                            _evtDropNotification([item], EventsDiscardedReason.InvalidEvent);
                         }
                        
                        
@@ -218,17 +231,16 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             
             _self.onunloadFlush = () => {
                 if (!_paused) {
-                    //TODO: or should try send first
-                    let shouldContinue = true;
-                    while (_inMemoBatch.count() && shouldContinue) {
-                        shouldContinue = _flushInMemoItems(true);
+                    while (_inMemoBatch.count()) {
+                        _flushInMemoItems(true);
                     }
                     // TODO: unloadprovider might send events out of order
                 }
             };
 
             _self.flush = (sync: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> => {
-                // No op
+                // TODO: should we implement normal flush
+                return _self.onunloadFlush();
             };
 
             _self.getOfflineListener = () => {
@@ -338,11 +350,27 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                    
                     let payloadData = _constructPayloadData(payloadArr, criticalCnt);
                     let callback: OfflineBatchStoreCallback = (res) => {
-                        if (res.state == eBatchStoreStatus.Failure ) {
-                            arrForEach(sentItems, (item) => {
-                                _inMemoBatch.addEvent(item);
-                            });
-                            _setupInMemoTimer();
+                        if (!res || !res.state) {
+                            return null;
+                        }
+                        let state = res.state;
+
+                        if (state == eBatchStoreStatus.Failure) {
+                            if (!unload) {
+                                // for unload, just try to add each batch once
+                                arrForEach(sentItems, (item) => {
+                                    _inMemoBatch.addEvent(item);
+                                });
+                                _setupInMemoTimer();
+
+                            } else {
+                                // unload, drop events
+                                _evtDropNotification(sentItems, EventsDiscardedReason.NonRetryableStatus);
+                            }
+                          
+                        } else {
+                            // if eBatchStoreStatus is success
+                            _storeNotification(sentItems);
                         }
                     };
                     if (payloadData) {
@@ -383,7 +411,12 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                     let data = res && res.data;
                                     if (state === eBatchSendStatus.Complete && data) {
                                         // if status is complete and data is null, means no data
+                                        _sentNotification(data as IPayloadData);
                                         _sendNextBatchTimer && _sendNextBatchTimer.refresh();
+                                    }
+
+                                    if (state === eBatchSendStatus.Drop) {
+                                        batchDropNotification(_notificationManager, 1, eBatchDiscardedReason.NonRetryableStatus);
                                     }
                                    
                                 }
@@ -515,7 +548,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let ctx = createProcessTelemetryContext(null, theConfig, core);
                     storageConfig = ctx.getExtCfg<IOfflineChannelConfiguration>(_self.identifier, defaultOfflineChannelConfig);
                     let channelIds = storageConfig.primaryOnlineChannelId;
-                    let onlineUrl = _endpoint;
+                    let onlineUrl = null;
                     if (channelIds && channelIds.length) {
                         arrForEach(channelIds, (id) => {
                             let plugin = _self.core.getPlugin<IChannelControls>(id);
@@ -531,11 +564,11 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             
                         });
                     }
-
                     _overrideIkey = storageConfig.overrideInstrumentationKey;
-                
+
                     let urlConfig: IUrlLocalStorageConfig = _urlCfg;
-                    let curUrl = onlineUrl || coreConfig.endpointUrl;
+                    let curUrl = onlineUrl || coreConfig.endpointUrl || _endpoint;
+                    // NOTE: should add default endpoint value to core as well
 
                     if (curUrl !== _endpoint) {
                        
@@ -544,9 +577,20 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             itemCtx: coreRootCtx,
                             storageConfig: storageConfig,
                             id: _self.id,
-                            endpoint: curUrl
+                            endpoint: curUrl,
+                            notificationMgr: _notificationManager
                         };
+                        let oriHandler = _urlCfg && _urlCfg.batchHandler;
+
+                        try {
+                            oriHandler && oriHandler.teardown();
+                        } catch(e) {
+                            // eslint-disable-next-line no-empty
+
+                        }
+
                         let handler = new OfflineBatchHandler(_self.diagLog(), _self._unloadHooks);
+                   
                         handler.initialize(providerContext);
                         urlConfig = {
                             iKey: coreConfig.instrumentationKey,
@@ -557,7 +601,14 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             batchHandler: handler
                         };
                         _evtsLimitInMemo = storageConfig.eventsLimitInMem;
-                        _inMemoBatch = new InMemoryBatch(_self.diagLog(),curUrl, null, _evtsLimitInMemo);
+                        // transfer previous events to new buffer
+                        let evts = null;
+                        let curEvts = _inMemoBatch && _inMemoBatch.getItems();
+                        if (curEvts && curEvts.length) {
+                            evts = curEvts.slice(0);
+                            _inMemoBatch.clear();
+                        }
+                        _inMemoBatch = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
                         _inMemoTimerOut = storageConfig.inMemoMaxTime;
                         let onlineConfig = ctx.getExtCfg<any>(_primaryChannelId, {}) || {};
                         _convertUndefined = onlineConfig.convertUndefined;
@@ -567,9 +618,38 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         _maxBatchSize = storageConfig.maxBatchsize;
                     }
                     _urlCfg = urlConfig;
+                    _endpoint = curUrl;
                     
                 }));
             }
+
+            
+            function _callNotification(evtName: string, theArgs: any[]) {
+                callNotification(_notificationManager, evtName, theArgs);
+            }
+
+            function _evtDropNotification(events: ITelemetryItem[] | IPostTransmissionTelemetryItem[], reason: number | EventsDiscardedReason ) {
+                if (events && events.length) {
+                    _callNotification(EVT_DISCARD_STR, [events, reason]);
+
+                }
+                return;
+            }
+
+            function _sentNotification(batch: IPayloadData) {
+                if (batch && batch.data) {
+                    _callNotification(EVT_SENT_STR, [batch]);
+                }
+                return;
+            }
+
+            function _storeNotification(events: ITelemetryItem[] | IPostTransmissionTelemetryItem[]) {
+                if (events && events.length) {
+                    _callNotification(EVT_STORE_STR, [events]);
+                }
+                return;
+            }
+
         });
     }
 

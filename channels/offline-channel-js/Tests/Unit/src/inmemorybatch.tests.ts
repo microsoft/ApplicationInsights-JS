@@ -2,7 +2,9 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import {IPostTransmissionTelemetryItem} from "../../../src/Interfaces/IInMemoryBatch";
 import { InMemoryBatch } from "../../../src/InMemoryBatch";
 import { DiagnosticLogger, IDiagnosticLogger, arrForEach } from "@microsoft/applicationinsights-core-js";
-import { base64Decode, base64Encode, getEndpointDomain } from "../../../src/Helpers/Utils";
+import { base64Decode, base64Encode, forEachMap, getEndpointDomain, getPersistence } from "../../../src/Helpers/Utils";
+import { IStorageTelemetryItem } from "../../../src/Interfaces/IOfflineProvider";
+
 
 export class OfflineInMemoryBatchTests extends AITestClass {
     private _logger: IDiagnosticLogger;
@@ -111,6 +113,61 @@ export class OfflineInMemoryBatchTests extends AITestClass {
             }
             
         });
+
+        this.testCase({
+            name: "Get Persistent Level: Get persistent level from a telemetry item",
+            test: () => {
+                let arr1 = [
+                    null,
+                    {},
+                    {name: "test"},
+                    {name: "test", baseData: {prop1: "prop1"}, data: {prop1: "prop1"}},
+                    {name: "test", persistence: 1},
+                    {name: "test", baseData: {persistence: 1, prop1: "prop1"}},
+                    {name: "test", data: {persistence: 1, prop1: "prop1"}},
+                    {name: "test", baseData: {persistence: 1, prop1: "prop1"}, data: {persistence: 2, prop1: "prop1"}},
+                    {name: "test", persistence: 1, baseData: {persistence: 2, prop1: "prop1"}, data: {persistence: 2, prop1: "prop1"}}
+                ];
+
+                arrForEach(arr1, (item) => {
+                    let level =  getPersistence(item as any);
+                    Assert.equal(level, 1, "should get expected level");
+                });
+                
+            }
+            
+        });
+
+        this.testCase({
+            name: "Util for order map: should get events id in order",
+            test: () => {
+                let arr1 = ["1", "5.1", "2.abc", "6.jdfhhdf", "4.123","8.123"];
+                let expectedArr = ["2.abc", "4.123", "5.1", "6.jdfhhdf", "8.123", "1"];
+                let evts: {[key: string]:IStorageTelemetryItem} = {};
+                let idArr: string[] = [];
+
+                arrForEach(arr1, (id) => {
+                    let evt = mockStorageItem(id);
+                    evts[id] = evt;
+                });
+
+                forEachMap({}, (val, key) => {
+                    idArr.push(key);
+                    return true;
+                }, true);
+
+
+                forEachMap(evts, (val, key) => {
+                    idArr.push(key);
+                    return true;
+                }, true);
+
+                Assert.deepEqual(idArr, expectedArr, "should get expected ordered id array");
+                
+                
+            }
+            
+        });
     }
 }
 
@@ -125,4 +182,14 @@ function mockPostTransmissionTelemetryItem(): IPostTransmissionTelemetryItem {
 
     } as IPostTransmissionTelemetryItem;
     return evt;
+}
+
+function mockStorageItem(id: string): IStorageTelemetryItem {
+    let evt = {
+        id: id,
+        urlString: "testString",
+        data: "testData"
+    } as IStorageTelemetryItem;
+    return evt;
+
 }

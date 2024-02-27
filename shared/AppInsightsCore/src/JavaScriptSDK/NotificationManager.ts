@@ -9,8 +9,10 @@ import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotification
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IUnloadHook } from "../applicationinsights-core-js";
-import { STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT } from "./InternalConstants";
+import { IPayloadData, IUnloadHook } from "../applicationinsights-core-js";
+import {
+    STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE, STR_PERF_EVENT
+} from "./InternalConstants";
 
 const defaultValues = {
     perfEvtsSendAll: false
@@ -119,6 +121,31 @@ export class NotificationManager implements INotificationManager {
                 }
             };
 
+            _self.offlineEventsStored = (events: ITelemetryItem[]): void => {
+                if (events && events.length) {
+                    _runListeners(_listeners, STR_OFFLINE_STORE, true, (listener) => {
+                        listener.offlineEventsStored(events);
+                    });
+                }
+            }
+
+            _self.offlineBatchSent = (batch: IPayloadData): void => {
+                if (batch && batch.data) {
+                    _runListeners(_listeners, STR_OFFLINE_SENT, true, (listener) => {
+                        listener.offlineBatchSent(batch);
+                    });
+                }
+            }
+
+            _self.offlineBatchDrop = (cnt: number, reason?: number): void => {
+                if (cnt > 0) {
+                    let rn = reason || 0; // default is unknown
+                    _runListeners(_listeners, STR_OFFLINE_DROP, true, (listener) => {
+                        listener.offlineBatchDrop(cnt, rn);
+                    });
+                }
+            }
+
             _self.unload = (isAsync?: boolean) => {
 
                 const _finishUnload = () => {
@@ -214,6 +241,32 @@ export class NotificationManager implements INotificationManager {
      * / Promise to allow any listeners to wait for the operation to complete.
      */
     unload?(isAsync?: boolean): void | IPromise<void> {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * [Optional] A function called when the offline events have been stored to the persistent storage
+     * @param events - events that are stored in the persistent storage
+     */
+    offlineEventsStored?(events: ITelemetryItem[]): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * [Optional] A function called when the offline events have been sent from the persistent storage
+     * @param batch - payload data that is sent from the persistent storage
+     */
+    offlineBatchSent?(batch: IPayloadData): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * [Optional] A function called when the offline events have been dropped from the persistent storage
+     * @param cnt - count of batches dropped
+     * @param reason - the reason why the batches is dropped
+     * @since v3.1.1
+     */
+    offlineBatchDrop?(cnt: number, reason?: number): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

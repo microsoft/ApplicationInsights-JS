@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { generateW3CId } from "@microsoft/applicationinsights-core-js";
-import { isString, strSubstr } from "@nevware21/ts-utils";
+import { EventPersistence } from "@microsoft/applicationinsights-common";
+import { INotificationManager, ITelemetryItem, NotificationManager, generateW3CId } from "@microsoft/applicationinsights-core-js";
+import { isString, objKeys, strSubstr } from "@nevware21/ts-utils";
+import { isValidPersistenceLevel } from "../Providers/IndexDbProvider";
+import { IPostTransmissionTelemetryItem } from "../applicationinsights-offlinechannel-js";
 
 // Endpoint schema
 // <prefix>.<suffix>
@@ -158,6 +161,83 @@ export function getTimeFromId(id: string) {
         // eslint-disable-next-line no-empty
     }
     return 0;
+}
+
+/**
+ * Get persistence level from a telemetry item.
+ * Persistence level will be get from root, baseData or data in order.
+ * For example, if persistence level is set both in root and baseData, the root one will be returned.
+ * If no valid persistence level defined, normal level will be returned.
+ * @param item telemetry item
+ * @returns persistent level
+ */
+export function getPersistence(item: ITelemetryItem | IPostTransmissionTelemetryItem): number | EventPersistence {
+    let rlt = EventPersistence.Normal;
+    // if item is null, return normal level
+    if (!item) {
+        return rlt;
+    }
+    try {
+        let iItem = item as IPostTransmissionTelemetryItem;
+        let level = iItem.persistence || (iItem.baseData && iItem.baseData.persistence) || (iItem.data && iItem.data.persistence);
+        if (level && isValidPersistenceLevel(level)) {
+            return level;
+        }
+    } catch (e) {
+        // eslint-disable-next-line no-empty
+    }
+    return rlt;
+}
+
+export const EVT_DISCARD_STR = "eventsDiscarded";
+export const EVT_STORE_STR = "offlineEventsStored";
+export const EVT_SENT_STR = "offlineBatchSent";
+export const BATCH_DROP_STR = "offlineBatchDrop";
+
+export function forEachMap<T>(map: { [key: string]: T }, callback: (value: T, key: string) => boolean, ordered?: boolean): void {
+    if (map) {
+        let keys = objKeys(map);
+        if (!!ordered && keys) {
+            let time = (new Date()).getTime();
+            keys = keys.sort((a,b) => {
+                try {
+                    // if getTimeFromId returns 0, mean the time is not valid
+                    let aTime = getTimeFromId(a) || time;
+                    let bTime = getTimeFromId(b) || time;
+                    return aTime - bTime;
+                } catch(e) {
+                    // eslint-disable-next-line no-empty
+                }
+                return -1;
+            });
+        }
+        for (let lp = 0; lp < keys.length; lp++) {
+            let key = keys[lp];
+            if (!callback(map[key], key)) {
+                break;
+            }
+        }
+    }
+}
+
+ 
+export function callNotification(mgr: INotificationManager, evtName: string, theArgs: any[]) {
+    let manager = (mgr || ({} as NotificationManager));
+    let notifyFunc = manager[evtName];
+    if (notifyFunc) {
+        try {
+            notifyFunc.apply(manager, theArgs);
+        } catch (e) {
+            // eslint-disable-next-line no-empty
+        }
+    }
+}
+
+export function batchDropNotification(mgr: INotificationManager, cnt: number, reason?: number) {
+    if (mgr && cnt > 0) {
+        callNotification(mgr, BATCH_DROP_STR, [cnt, reason]);
+    }
+    return;
 }
 
 

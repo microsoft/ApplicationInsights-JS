@@ -78,13 +78,13 @@ export class TestChannel extends BaseTelemetryPlugin implements IChannelControls
     }
 }
 
-export function mockTelemetryItem(): ITelemetryItem {
+export function mockTelemetryItem(level?: number): ITelemetryItem {
     let evt = {
         ver: "testVer" + Math.random(),
         name:"testName",
         time: "testTime",
         iKey:"testKey",
-        baseData: {pro1: "prop1"},
+        baseData: {pro1: "prop1", persistence: level},
         baseType: "testType"
     } as ITelemetryItem;
     return evt;
