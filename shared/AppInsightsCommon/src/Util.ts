@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, IDistributedTraceContext, arrForEach, arrIndexOf, dateNow, getPerformance, isNullOrUndefined, isValidSpanId,
-    isValidTraceId
+    IDiagnosticLogger, IDistributedTraceContext, TransportType, arrForEach, arrIndexOf, dateNow, getPerformance, isNullOrUndefined,
+    isValidSpanId, isValidTraceId
 } from "@microsoft/applicationinsights-core-js";
-import { strIndexOf } from "@nevware21/ts-utils";
+import { isArray, isNumber, strIndexOf } from "@nevware21/ts-utils";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "./Constants";
 import { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
+import { IXDomainRequest } from "./Interfaces/IXDomainRequest";
 import { RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { urlParseFullHost, urlParseUrl } from "./UrlHelperFuncs";
@@ -218,4 +219,42 @@ export function createDistributedTraceContextFromTrace(telemetryTrace?: ITelemet
             trace.traceFlags = newTraceFlags
         }
     };
+}
+
+
+export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
+    try {
+        return xhr.responseText;
+    } catch (e) {
+        // Best effort, as XHR may throw while XDR wont so just ignore
+    }
+
+    return null;
+}
+
+export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
+    if (xdr) {
+        return "XDomainRequest,Response:" + getResponseText(xdr) || "";
+    }
+
+    return message;
+}
+
+export function formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
+    if (xhr) {
+        return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + getResponseText(xhr) || xhr.response || "";
+    }
+
+    return message;
+}
+
+export function prependTransports(theTransports: TransportType[], newTransports: TransportType | TransportType[]) {
+    if (newTransports) {
+        if (isNumber(newTransports)) {
+            theTransports = [newTransports as TransportType].concat(theTransports);
+        } else if (isArray(newTransports)) {
+            theTransports = newTransports.concat(theTransports);
+        }
+    }
+    return theTransports;
 }
