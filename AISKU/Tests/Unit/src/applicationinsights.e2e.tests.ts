@@ -242,21 +242,21 @@ export class ApplicationInsightsTests extends AITestClass {
         });
     }
 
-    // public addCDNOverrideTests(): void {
-    //     this.testCase({
-    //         name: 'CDNOverrideTests: customer could change the url endpoint that the data will be sent to',
-    //         useFakeTimers: true,
-    //         test: () => {
-    //             let expectedEndpointUrl = "https://custom.endpoint";
-    //             this._ai.config.userOverrideEndpointUrl = expectedEndpointUrl;
-    //             this.clock.tick(100);
+    public addCDNOverrideTests(): void {
+        this.testCase({
+            name: 'CDNOverrideTests: customer could change the url endpoint that the data will be sent to',
+            useFakeTimers: true,
+            test: () => {
+                let expectedEndpointUrl = "https://custom.endpoint";
+                this._ai.config.endpointUrl = expectedEndpointUrl;
+                this.clock.tick(100);
 
-    //             const sender: Sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
-    //             let senderEndpoint = sender._senderConfig.endpointUrl;
-    //             console.log("--------------senderEndpoint: " + senderEndpoint);
-    //         }
-    //     });
-    // }
+                const sender: Sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
+                let senderEndpoint = sender._senderConfig.endpointUrl;
+                console.log("--------------senderEndpoint: " + senderEndpoint);
+            }
+        });
+    }
 
 
 
