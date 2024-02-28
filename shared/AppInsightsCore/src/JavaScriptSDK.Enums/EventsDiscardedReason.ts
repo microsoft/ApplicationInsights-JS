@@ -69,3 +69,57 @@ export const EventsDiscardedReason = createEnumStyle<typeof eEventsDiscardedReas
 });
 
 export type EventsDiscardedReason = number | eEventsDiscardedReason;
+
+
+/**
+ * The eBatchDiscardedReason enumeration contains a set of values that specify the reason for discarding offline batches.
+ */
+export const enum eBatchDiscardedReason {
+    /**
+     * Unknown.
+     */
+     Unknown = 0,
+
+     /**
+      * Status set to non-retryable after sending
+      */
+     NonRetryableStatus = 1,
+      
+     /**
+      * Batches with lower number of critical events are dropped to free up storage space
+      */
+     CleanStorage = 2,
+
+     /**
+      * The batches in storage exceed max allowed time
+      */
+     MaxInStorageTimeExceeded = 3
+}
+
+/**
+ *  The eBatchDiscardedReason enumeration contains a set of values that specify the reason for discarding offline batches.
+ */
+export const BatchDiscardedReason = createEnumStyle<typeof eBatchDiscardedReason>({
+    /**
+     * Unknown.
+     */
+    Unknown: eBatchDiscardedReason.Unknown,
+
+    /**
+      * Status set to non-retryable after sending
+      */
+    NonRetryableStatus: eBatchDiscardedReason.NonRetryableStatus,
+      
+    /**
+     * Batches with lower number of critical events are dropped to free up storage space
+     */
+    CleanStorage: eBatchDiscardedReason.CleanStorage,
+
+    /**
+     * The batches in storage exceed max allowed time
+     */
+    MaxInStorageTimeExceeded: eBatchDiscardedReason.MaxInStorageTimeExceeded
+    
+});
+
+export type BatchDiscardedReason = number | eBatchDiscardedReason;

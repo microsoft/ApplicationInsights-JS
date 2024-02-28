@@ -18,7 +18,7 @@ The Offline Channel supports the saving of events when your application is offli
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| maxStorageSizeInBytes | [Optional]| 5000000 | The max size in bytes that should be used for storing events. |
+| maxStorageSizeInBytes | [Optional]| 5000000 | The max size in bytes that should be used for storing events in local/session storage. |
 | storageKeyPrefix | [Optional] | AIOffline | The storage key prefix that should be used when storing events in persistent storage. |
 | minPersistenceLevel | [Optional] | `EventPersistence.Normal` or 1 | Identifies the minimum level that will be cached in the offline channel. Valid values of this setting are defined by the `EventPersistence` enum, currently Normal (1) and Critical (2) with the default value being Normal (1), which means all events without a persistence level set or with invalid persistence level will be marked as Normal(1) events.|
 | providers | [Optional] | [`eStorageProviders.LocalStorage, eStorageProviders.IndexedDB`]|  Identifies the StorageProviders that should be used by the system if available, the first available provider will be used. Valid available values are defined by the `eStorageProviders` enum. </br> Note: LocalStorage will be used to save unload events even if it is not in the providers list. |

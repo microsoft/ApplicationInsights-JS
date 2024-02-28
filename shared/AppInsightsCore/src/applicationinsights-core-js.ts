@@ -14,7 +14,7 @@ export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks,
 export { IUnloadableComponent } from "./JavaScriptSDK.Interfaces/IUnloadableComponent";
 export { IPayloadData, SendPOSTFunction, IXHROverride, OnCompleteCallback } from "./JavaScriptSDK.Interfaces/IXHROverride"
 export { IUnloadHook, ILegacyUnloadHook } from "./JavaScriptSDK.Interfaces/IUnloadHook";
-export { eEventsDiscardedReason, EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
+export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { SendRequestReason, TransportType } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
