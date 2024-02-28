@@ -74,8 +74,9 @@ export class ApplicationInsights {
     
                 core.addUnloadHook(onConfigChange(cfgHandler, () => {
                     if (_config.connectionString) {
-                        const cs = parseConnectionString(_config.connectionString);
-                        _config.endpointUrl = _config.endpointUrl || (cs.ingestionendpoint + DEFAULT_BREEZE_PATH); // only add /v2/track when from connectionstring
+                        const cs = parseConnectionString(_config.connectionString, _config.userOverrideEndpointUrl);
+                        const ingest = cs.ingestionendpoint;
+                        _config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : _config.endpointUrl; // only add /v2/track when from connectionstring
                         _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                     }
                 }));

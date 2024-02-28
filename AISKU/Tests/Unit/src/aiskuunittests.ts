@@ -12,13 +12,13 @@ import { ThrottleSentMessage } from "./ThrottleSentMessage.tests";
 export function runTests() {
     new AISKUSizeCheck().registerTests();
     new ApplicationInsightsTests().registerTests();
-    // new ApplicationInsightsFetchTests().registerTests();
-    // new CdnPackagingChecks().registerTests();
-    // new SanitizerE2ETests().registerTests();
-    // new ValidateE2ETests().registerTests();
-    // new SenderE2ETests().registerTests();
-    // new SnippetInitializationTests(false).registerTests();
-    // new SnippetInitializationTests(true).registerTests();
-    // new ThrottleSentMessage().registerTests();
-    // new CdnThrottle().registerTests();
+    new ApplicationInsightsFetchTests().registerTests();
+    new CdnPackagingChecks().registerTests();
+    new SanitizerE2ETests().registerTests();
+    new ValidateE2ETests().registerTests();
+    new SenderE2ETests().registerTests();
+    new SnippetInitializationTests(false).registerTests();
+    new SnippetInitializationTests(true).registerTests();
+    new ThrottleSentMessage().registerTests();
+    new CdnThrottle().registerTests();
 }

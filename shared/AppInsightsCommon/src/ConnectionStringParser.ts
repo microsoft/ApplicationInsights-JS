@@ -8,7 +8,7 @@ import { ConnectionString, ConnectionStringKey } from "./Interfaces/ConnectionSt
 const _FIELDS_SEPARATOR = ";";
 const _FIELD_KEY_VALUE_SEPARATOR = "=";
 
-export function parseConnectionString(connectionString?: string): ConnectionString {
+export function parseConnectionString(connectionString?: string, userOverrideEndpointUrl?: string): ConnectionString {
     if (!connectionString) {
         return {};
     }
@@ -36,12 +36,11 @@ export function parseConnectionString(connectionString?: string): ConnectionStri
         }
 
         // apply user override endpoint or the default endpoints
-        result.ingestionendpoint = result.ingestionendpoint || DEFAULT_BREEZE_ENDPOINT;
+        result.ingestionendpoint = userOverrideEndpointUrl || result.ingestionendpoint || DEFAULT_BREEZE_ENDPOINT;
         
         if (strEndsWith(result.ingestionendpoint, "/")) {
             result.ingestionendpoint = result.ingestionendpoint.slice(0,-1);
         }
-        console.log("cs parser ingestionendpoint: ", result.ingestionendpoint);
     }
 
     return result;
