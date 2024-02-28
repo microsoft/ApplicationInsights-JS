@@ -385,7 +385,7 @@ export interface IConfig {
     throttleMgrCfg?: {[key: number]: IThrottleMgrConfig};
 
     /**
-     * [Optional] Specifies a custom endpoint URL where telemetry data will be sent.
+     * [Optional] Specifies a Highest Priority custom endpoint URL where telemetry data will be sent.
      * This URL takes precedence over the 'config.endpointUrl' and any endpoint in the connection string.
      */
     userOverrideEndpointUrl?: string;
