@@ -102,7 +102,7 @@ declare var cfg:ISnippetConfig;
             if (ingest && ingest.slice(-1) === "/"){
                 ingest = ingest.slice(0,-1);
             }
-            let endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
+            var endpointUrl = aiConfig.userOverrideEndpointUrl ? aiConfig.userOverrideEndpointUrl : (ingest + "/v2/track");
 
             let message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
             let evts:IEnvelope[] = [];

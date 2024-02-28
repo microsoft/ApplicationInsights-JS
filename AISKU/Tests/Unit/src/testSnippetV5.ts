@@ -89,8 +89,7 @@ export function createSnippetV5(snipConfig) {
             var conString = _parseConnectionString();
             var iKey = conString[strInstrumentationKey] || aiConfig[strInstrumentationKey] || strEmpty;
             var ingest = conString[strIngestionendpoint];
-            var endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
-
+            var endpointUrl = aiConfig.userOverrideEndpointUrl ? aiConfig.userOverrideEndpointUrl : (ingest + "/v2/track");
             var message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
             var evts = [];
             evts.push(_createException(iKey, message, targetSrc, endpointUrl));
