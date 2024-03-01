@@ -271,19 +271,21 @@ export class SenderPostManager {
         
                 xhr.onreadystatechange = () => {
                     let response = getResponseText(xhr);
-                    if (xhr.readyState !== 4) {
-                        //this should not need, add in case
-                        _doOnComplete(oncomplete, xhr.status, {}, response);
-                        resolveFunc && resolveFunc(false);
-                        return;
-                    }
                     let onReadyFunc = _onCompleteFuncs && _onCompleteFuncs.xhrOnComplete;
-                    if (onReadyFunc && isFunction(onReadyFunc)) {
+                    let onReadyFuncExist = onReadyFunc && isFunction(onReadyFunc);
+                
+                    if (onReadyFuncExist) {
                         onReadyFunc(xhr, oncomplete);
-                    } else {
-                        _doOnComplete(oncomplete, xhr.status, {}, response);
                     }
-                    resolveFunc && resolveFunc(true);
+
+                    if (xhr.readyState === 4) {
+                        if (!onReadyFuncExist) {
+                            _doOnComplete(oncomplete, xhr.status, {}, response);
+                        }
+                        resolveFunc && resolveFunc(true);
+                    }
+                    
+                    
                 }
 
                 xhr.onerror = (event: ErrorEvent|any) => {
