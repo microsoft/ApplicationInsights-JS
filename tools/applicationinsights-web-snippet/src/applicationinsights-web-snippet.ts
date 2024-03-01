@@ -13,11 +13,8 @@ function webSnippetVersion() {
     return "";
 }
 
-function getSdkLoaderScript(config: SdkLoaderConfig, futureCfg?: ISnippetConfig) {
+function getSdkLoaderScript(config: SdkLoaderConfig) {
     let snippet: string = webSnippetCs;
-    if (futureCfg) {
-        console.log(futureCfg);
-    }
     if (config && config.connectionString) {
         snippet = webSnippetCs.replace("YOUR_CONNECTION_STRING", config.connectionString);
     } else if (config && config.instrumentationKey) {
