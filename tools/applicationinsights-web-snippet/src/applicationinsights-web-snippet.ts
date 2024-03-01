@@ -1,4 +1,4 @@
-import { SdkLoaderConfig, ISnippetConfig } from "./type";
+import { SdkLoaderConfig} from "./type";
 
 
 const webSnippet = "##replaceIKeySnippet##";
