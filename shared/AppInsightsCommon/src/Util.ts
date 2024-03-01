@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, IDistributedTraceContext, TransportType, arrForEach, arrIndexOf, dateNow, getPerformance, isNullOrUndefined,
-    isValidSpanId, isValidTraceId
+    IDiagnosticLogger, IDistributedTraceContext, TransportType, _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf, dateNow,
+    eLoggingSeverity, getExceptionName, getJSON, getPerformance, isNullOrUndefined, isValidSpanId, isValidTraceId
 } from "@microsoft/applicationinsights-core-js";
 import { isArray, isNumber, strIndexOf } from "@nevware21/ts-utils";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "./Constants";
 import { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
-import { IXDomainRequest } from "./Interfaces/IXDomainRequest";
+import { IBackendResponse, IXDomainRequest } from "./Interfaces/IXDomainRequest";
 import { RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { urlParseFullHost, urlParseUrl } from "./UrlHelperFuncs";
@@ -257,4 +257,31 @@ export function prependTransports(theTransports: TransportType[], newTransports:
         }
     }
     return theTransports;
+}
+
+/**
+ * Parses the response from the backend.
+ * @param response - XMLHttpRequest or XDomainRequest response
+ */
+export function parseResponse(response: any, diagLog?: IDiagnosticLogger): IBackendResponse {
+    try {
+        if (response && response !== "") {
+            const result = getJSON().parse(response);
+
+            if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
+                result.itemsReceived - result.itemsAccepted === result.errors.length) {
+                return result;
+            }
+        }
+    } catch (e) {
+        _throwInternal(diagLog,
+            eLoggingSeverity.CRITICAL,
+            _eInternalMessageId.InvalidBackendResponse,
+            "Cannot parse the response. " + getExceptionName(e),
+            {
+                response
+            });
+    }
+
+    return null;
 }

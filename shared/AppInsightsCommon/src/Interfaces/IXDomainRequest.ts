@@ -32,8 +32,3 @@ export interface IResponseError {
     readonly message: string;
 }
 
-
-export declare var XDomainRequest: {
-    prototype: IXDomainRequest;
-    new(): IXDomainRequest;
-};

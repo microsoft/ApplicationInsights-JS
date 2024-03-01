@@ -545,15 +545,17 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     sender1Payload.push(payload);
                     oncomplete(400, {});
                 }
+                // 200 should be called first, in some case, re-try will be added back (sender2) and event2 will be returned again
+                // This is to guarantee the test gets events in order
                 let sender2Payload: any[] = []
                 let sender2 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
                     sender2Payload.push(payload);
-                    oncomplete(500, {});
+                    oncomplete(200, {});
                 }
                 let sender3Payload: any[] = []
                 let sender3 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
                     sender3Payload.push(payload);
-                    oncomplete(200, {});
+                    oncomplete(500, {});
                 }
 
                 let res1: any[] = [];
@@ -565,6 +567,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     this.ctx.sendBatch1Res = res1;
                     this.ctx.sendBatch1Pd =  sender1Payload;
                 });
+           
                 let res2: any[] = [];
                 let cb2 = (res) =>  {
                     res2.push(res);
@@ -575,6 +578,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     this.ctx.sendBatch2Res = res2;
                     this.ctx.sendBatch2Pd =  sender2Payload;
                 });
+
                 let res3: any[] = [];
                 let cb3 = (res) =>  {
                     res3.push(res);
@@ -584,6 +588,8 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     this.ctx.sendBatch3Res = res3;
                     this.ctx.sendBatch3Pd =  sender3Payload;
                 });
+
+             
 
                 let cb4 = (res) => {
                     this.ctx.hasBatch1Called = true;
@@ -631,7 +637,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 if (sendBatch) {
                     Assert.equal(res.length, 1, "response 2 should be called once");
                     let res1 = res[0];
-                    Assert.equal(res1.state, eBatchSendStatus.Retry, "response 2 state should be retry");
+                    Assert.equal(res1.state, eBatchSendStatus.Complete, "response 2 state should be retry");
                     Assert.ok(res1.data, "response 2 should have data");
                     Assert.equal(res1.data.criticalCnt, 2 ,"response 2 should have expected data");
 
@@ -650,7 +656,7 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 if (sendBatch) {
                     Assert.equal(res.length, 1, "response 3 should be called once");
                     let res1 = res[0];
-                    Assert.equal(res1.state, eBatchSendStatus.Complete, "response 3 state should be complete");
+                    Assert.equal(res1.state, eBatchSendStatus.Retry, "response 3 state should be complete");
                     Assert.ok(res1.data, "response 3 should have data");
                     Assert.equal(res1.data.criticalCnt, 3 ,"response 3 should have expected data");
 

@@ -3,7 +3,7 @@
 export {
     correlationIdSetPrefix, correlationIdGetPrefix, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext,
     correlationIdGetCorrelationContextValue, dateTimeUtilsNow, dateTimeUtilsDuration, isInternalApplicationInsightsEndpoint,
-    createDistributedTraceContextFromTrace, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports
+    createDistributedTraceContextFromTrace, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse
 } from "./Util";
 export { ThrottleMgr } from "./ThrottleMgr";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
@@ -35,7 +35,8 @@ export { eSeverityLevel, SeverityLevel } from "./Interfaces/Contracts/SeverityLe
 export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
 export { IStorageBuffer } from "./Interfaces/IStorageBuffer";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
-export {IXDomainRequest, XDomainRequest, IBackendResponse } from "./Interfaces/IXDomainRequest"
+export { IXDomainRequest, IBackendResponse } from "./Interfaces/IXDomainRequest";
+export { ISenderOnComplete, ISendPostMgrConfig } from "./Interfaces/ISenderPostManager";
 export {
     DataSanitizerValues,
     dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage,

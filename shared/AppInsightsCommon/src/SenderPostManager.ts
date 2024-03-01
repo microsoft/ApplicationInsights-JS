@@ -3,39 +3,38 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IAppInsightsCore, IConfiguration, IDiagnosticLogger, IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride,
+    IAppInsightsCore, IDiagnosticLogger, IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride,
     OnCompleteCallback, SendPOSTFunction, TransportType, _eInternalMessageId, _throwInternal, arrForEach, dumpObj, eLoggingSeverity,
     getLocation, getNavigator, getWindow, isBeaconsSupported, isFetchSupported, isFunction, isXhrSupported, objKeys, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { DisabledPropertyName } from "./Constants";
-import { IConfig } from "./Interfaces/IConfig";
-import { ISenderOnload } from "./Interfaces/ISenderPostManager";
-import { XDomainRequest } from "./Interfaces/IXDomainRequest";
+import { ISendPostMgrConfig, ISenderOnComplete } from "./Interfaces/ISenderPostManager";
+import { IXDomainRequest } from "./Interfaces/IXDomainRequest";
 import { formatErrorMessageXdr, formatErrorMessageXhr, getResponseText } from "./Util";
 
 const STR_EMPTY = "";
+declare var XDomainRequest: {
+    prototype: IXDomainRequest;
+    new(): IXDomainRequest;
+};
 
 
 export class SenderPostManager {
 
-    public _appId: string; //TODO: set id
-
     constructor() {
 
-        let _consecutiveErrors: number;         // How many times in a row a retryable error condition has occurred.
-        let _retryAt: number;                   // The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
-        //let _lastSend: number;                  // The time of the last send operation.                  // Flag indicating that the sending should be paused
-        let _stamp_specific_redirects: number;
         let _syncFetchPayload = 0;              // Keep track of the outstanding sync fetch payload total (as sync fetch has limits)
         let _enableSendPromise: boolean;
         let _isInitialized: boolean;
         let _diagLog: IDiagnosticLogger;
-        let _core: IAppInsightsCore;
         let _isOneDs: boolean;
-        let _onloadFuncs: ISenderOnload;
+        let _onCompleteFuncs: ISenderOnComplete;
         let _disableCredentials: boolean;
         let _fallbackInst: IXHROverride;
+        let _disableXhr: boolean;
+        let _disableBeacon: boolean;
+        let _disableBeaconSync: boolean;
        
 
         dynamicProto(SenderPostManager, this, (_self, _base) => {
@@ -45,36 +44,53 @@ export class SenderPostManager {
 
 
            
-            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, diagLog: IDiagnosticLogger, onloadFuncs: ISenderOnload, enableSendPromise?: boolean, isOneDs?: boolean, disableCredentials?: boolean): void => {
+            _self.initialize = (config: ISendPostMgrConfig, diagLog: IDiagnosticLogger): void => {
                 
-                _diagLog = diagLog || core.logger;
+                _diagLog = diagLog;
                 if (_isInitialized) {
                     _throwInternal(_diagLog, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender is already initialized");
                 }
-                _core = core;
-                _consecutiveErrors = 0;
-                _retryAt = null;
-                _stamp_specific_redirects = 0;
-                _onloadFuncs = onloadFuncs;
-                _disableCredentials = !!disableCredentials;
-                _isOneDs = !!isOneDs;
-                _enableSendPromise = !!enableSendPromise;
-
-                _fallbackInst = { sendPOST: _xhrSender} as IXHROverride;
-
-                if (_disableCredentials) {
-                    let location = getLocation();
-                    if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
-                        // Special case where a local html file fails with a CORS error on Chromium browsers
-                        _sendCredentials = false;
-                    }
-                }
+                _self.SetConfig(config);
+                _isInitialized = true;
 
             };
-            
 
-            _self.isCompletelyIdle = (): boolean => {
-                return _syncFetchPayload === 0;
+            _self["_getDbgPlgTargets"] = () => {
+                return [_isInitialized];
+            };
+
+            // This componet might get its config from sender, offline sender, 1ds post
+            // so set this function to mock dynamic changes
+            _self.SetConfig = (config: ISendPostMgrConfig): boolean => {
+                try {
+                    _onCompleteFuncs = config.senderOnCompleteCallBack || {};
+                    _disableCredentials = !!config.disableCredentials;
+                    _isOneDs = !!config.isOneDs;
+                    _enableSendPromise = !!config.enableSendPromise;
+                    _disableXhr = !! config.disableXhr;
+                    _disableBeacon = !!config.disableBeacon;
+                    _disableBeaconSync = !!config.disableBeaconSync;
+    
+                    _fallbackInst = { sendPOST: _xhrSender} as IXHROverride;
+    
+                    if (_disableCredentials) {
+                        let location = getLocation();
+                        if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
+                            // Special case where a local html file fails with a CORS error on Chromium browsers
+                            _sendCredentials = false;
+                        }
+                    }
+                    return true;
+
+                } catch(e) {
+                    // eslint-disable-next-line no-empty
+                }
+                return false;
+            };
+
+
+            _self.getSyncFetchPayload = (): number => {
+                return _syncFetchPayload;
             };
 
             _self.getXhrInst = (transports: TransportType[], sync?: boolean): IXHROverride => {
@@ -88,9 +104,12 @@ export class SenderPostManager {
             _self.getFallbackInst = (): IXHROverride => {
                 return _fallbackInst;
             }
-        
-        
-        
+            
+            _self.setSendOnComplete = (funcs: ISenderOnComplete) => {
+                if (funcs) {
+                    _onCompleteFuncs = funcs;
+                }
+            }
         
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _initDefaults();
@@ -126,7 +145,7 @@ export class SenderPostManager {
                 let lp = 0;
                 while (sendPostFunc == null && lp < transports.length) {
                     transportType = transports[lp];
-                    if (transportType === TransportType.Xhr) {
+                    if (!_disableXhr && transportType === TransportType.Xhr) {
                         if (useXDomainRequest()) {
                             // IE 8 and 9
                             sendPostFunc = _xdrSender;
@@ -135,7 +154,7 @@ export class SenderPostManager {
                         }
                     } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport)) {
                         sendPostFunc = _doFetchSender;
-                    } else if (transportType === TransportType.Beacon && isBeaconsSupported()) {
+                    } else if (transportType === TransportType.Beacon && isBeaconsSupported() && (syncSupport? !_disableBeaconSync : !_disableBeacon)) {
                         sendPostFunc = _beaconSender;
                     }
 
@@ -181,9 +200,9 @@ export class SenderPostManager {
                 // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
                 const queued = nav.sendBeacon(url, plainTextBatch);
 
-                if (queued) {
-                    _onSuccess(null, oncomplete);
-                }
+                // if (queued) {
+                //     _onSuccess(null, oncomplete);
+                // }
 
                 return queued;
             }
@@ -200,8 +219,17 @@ export class SenderPostManager {
                 if (data) {
                     // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
                     if (!_doBeaconSend(payload, oncomplete)) {
-                        _fallbackInst && _fallbackInst.sendPOST(payload, oncomplete,true);
-                        _throwInternal(_diagLog, eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
+                        let onRetry= _onCompleteFuncs && _onCompleteFuncs.beaconOnRetry;
+                        if (onRetry && isFunction(onRetry)) {
+                            onRetry(payload, oncomplete, _doBeaconSend);
+                        } else {
+                            _fallbackInst && _fallbackInst.sendPOST(payload, oncomplete,true);
+                            _throwInternal(_diagLog, eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
+                        }
+                        
+                    } else {
+                        // if can send
+                        _onSuccess(null, oncomplete);
                     }
                 }
                 return;
@@ -255,9 +283,9 @@ export class SenderPostManager {
                         resolveFunc && resolveFunc(false);
                         return;
                     }
-                    let onloadFunc = _onloadFuncs && _onloadFuncs.xhrOnload;
-                    if (onloadFunc && isFunction(onloadFunc)) {
-                        onloadFunc(xhr, oncomplete);
+                    let onReadyFunc = _onCompleteFuncs && _onCompleteFuncs.xhrOnComplete;
+                    if (onReadyFunc && isFunction(onReadyFunc)) {
+                        onReadyFunc(xhr, oncomplete);
                     } else {
                         _doOnComplete(oncomplete, xhr.status, {}, response);
                     }
@@ -368,19 +396,12 @@ export class SenderPostManager {
                                     resolveFunc && resolveFunc(false);
                                 } else {
                                     doAwaitResponse(response.text(), (resp) => {
-                                        let headerMap = {};
-                                        // var headers = response.headers;
-                                        // if (headers) {
-                                        //     headers["forEach"]((value: string, name: string) => {
-                                        //         headerMap[name] = value;
-                                        //     });
-                                        // }
                                         let status = response.status;
-                                        let onloadFunc = _onloadFuncs.fetchOnComplete;
-                                        if (onloadFunc && isFunction(onloadFunc)) {
-                                            onloadFunc(response, oncomplete, resp.value || STR_EMPTY);
+                                        let onCompleteFunc = _onCompleteFuncs.fetchOnComplete;
+                                        if (onCompleteFunc && isFunction(onCompleteFunc)) {
+                                            onCompleteFunc(response, oncomplete, resp.value || STR_EMPTY);
                                         } else {
-                                            _doOnComplete(oncomplete, status, headerMap, resp.value || STR_EMPTY);
+                                            _doOnComplete(oncomplete, status, {}, resp.value || STR_EMPTY);
                                         }
                                         resolveFunc && resolveFunc(true);
 
@@ -429,9 +450,9 @@ export class SenderPostManager {
 
                 xdr.onload = () => {
                     let response = getResponseText(xdr);
-                    let onloadFunc = _onloadFuncs.xdrOnload;
+                    let onloadFunc = _onCompleteFuncs && _onCompleteFuncs.xdrOnComplete;
                     if (onloadFunc && isFunction(onloadFunc)) {
-                        onloadFunc(xdr, oncomplete, response);
+                        onloadFunc(xdr, oncomplete);
                     } else {
                         _doOnComplete(oncomplete, 200, {}, response);
 
@@ -459,10 +480,11 @@ export class SenderPostManager {
                     return;
                 }
                 if (endpoint.lastIndexOf(hostingProtocol, 0) !== 0) {
+                    let msg = "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.";
                     _throwInternal(_diagLog,
                         eLoggingSeverity.WARNING,
-                        _eInternalMessageId.TransmissionFailed, ". " +
-                        "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
+                        _eInternalMessageId.TransmissionFailed, ". " + msg);
+                    _onError(msg, oncomplete);
         
                     return;
                 }
@@ -475,31 +497,43 @@ export class SenderPostManager {
             }
         
             function _initDefaults() {
-                _self._appId = null;
-                _consecutiveErrors = 0;
-                _retryAt = null;
-                _stamp_specific_redirects = 0;
                 _syncFetchPayload = 0;
                 _isInitialized = false;
-                _core = null;
-                _enableSendPromise = null;
+                _enableSendPromise = false;
+                _diagLog = null;
+                //let _core: IAppInsightsCore;
+                _isOneDs = null;
+                _onCompleteFuncs = null;
+                _disableCredentials = null;
+                _fallbackInst = null
+                _disableXhr = false;
+                _disableBeacon = false;
+                _disableBeaconSync = false;
             }
         });
     }
 
 
 
-    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, diagLog: IDiagnosticLogger, onloadFuncs: ISenderOnload, enableSendPromise?: boolean, isOneDs?: boolean, disableCredentials?: boolean): void {
+    public initialize(config: ISendPostMgrConfig, diagLog: IDiagnosticLogger): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
-     * Check if there are no active requests being sent.
-     * @returns True if idle, false otherwise.
+     * Get size of current sync fetch payload
      */
-    public isCompletelyIdle(): boolean {
+    public getSyncFetchPayload(): number {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
-        return false;
+        return null;
+    }
+
+    /**
+     * reset Config
+     * @returns True if set is successfully
+     */
+    public SetConfig(config: ISendPostMgrConfig): boolean {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     /**
@@ -510,7 +544,18 @@ export class SenderPostManager {
         return null;
     }
 
+    /**
+     * Get current fallback sender instance
+     */
     public getFallbackInst(): IXHROverride {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set send OnComplete Function
+     */
+    public setSendOnComplete(funcs: ISenderOnComplete): void {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }
