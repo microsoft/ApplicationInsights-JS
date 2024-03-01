@@ -1,4 +1,4 @@
-import { IConfiguration } from "@microsoft/applicationinsights-web";
+import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 // in the future, we can add more fields here
 export interface SdkLoaderConfig {

@@ -32,6 +32,7 @@
         "@types/qunit": "^2.19.3",
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-web": "3.1.0",
+        "@microsoft/applicationinsights-core-js": "3.1.0",
         "@microsoft/applicationinsights-common": "3.1.0",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",

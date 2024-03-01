@@ -1,6 +1,7 @@
 import { Fields, ISnippetConfig } from "./type";
 import { IEnvelope } from "@microsoft/applicationinsights-common";
-import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
+import { Snippet } from "@microsoft/applicationinsights-web";
+import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 // To ensure that SnippetConfig resides at the bottom of snippet.min.js,
 // cfg needs to be declared globally at the top without being assigned values.
