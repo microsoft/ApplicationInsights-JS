@@ -1,4 +1,5 @@
-import { SdkLoaderConfig } from "./type";
+import { SdkLoaderConfig, ISnippetConfig } from "./type";
+
 
 const webSnippet = "##replaceIKeySnippet##";
 const webSnippetCs = "##replaceConnStringSnippet##";
@@ -12,8 +13,11 @@ function webSnippetVersion() {
     return "";
 }
 
-function getSdkLoaderScript(config: SdkLoaderConfig) {
+function getSdkLoaderScript(config: SdkLoaderConfig, futureCfg?: ISnippetConfig) {
     let snippet: string = webSnippetCs;
+    if (futureCfg) {
+        console.log(futureCfg);
+    }
     if (config && config.connectionString) {
         snippet = webSnippetCs.replace("YOUR_CONNECTION_STRING", config.connectionString);
     } else if (config && config.instrumentationKey) {
