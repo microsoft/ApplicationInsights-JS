@@ -36,7 +36,7 @@ export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
 export { IStorageBuffer } from "./Interfaces/IStorageBuffer";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
 export { IXDomainRequest, IBackendResponse } from "./Interfaces/IXDomainRequest";
-export { ISenderOnComplete, ISendPostMgrConfig } from "./Interfaces/ISenderPostManager";
+export { _ISenderOnComplete, _ISendPostMgrConfig } from "./Interfaces/ISenderPostManager";
 export {
     DataSanitizerValues,
     dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage,

@@ -2,9 +2,11 @@ import { IPayloadData, OnCompleteCallback } from "@microsoft/applicationinsights
 import { IXDomainRequest } from "./IXDomainRequest";
 
 /**
+ * internal interface
  * Define functions when xhr/xdr/fetch requests are successfully returned. If they are not defined, oncomplete with be called instead
+ * @internal for internal use only
  */
-export interface ISenderOnComplete {
+export interface _ISenderOnComplete {
     /**
      * defined xdr onload function to handle response
      * @param dxr xdr request object
@@ -38,7 +40,11 @@ export interface ISenderOnComplete {
     beaconOnRetry?(data: IPayloadData, onComplete: OnCompleteCallback, canSend:(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean): void;
 }
 
-export interface ISendPostMgrConfig {
+/**
+ * Internal interface for SendPostMnager
+ * @internal for internal use only
+ */
+export interface _ISendPostMgrConfig {
     /**
      * Enable the sender interface to return a promise
      * Note: Enabling this may cause unhandled promise rejection errors to occur if you do not listen and handle any rejection response,
@@ -84,6 +90,6 @@ export interface ISendPostMgrConfig {
      * Identifies functions when xhr/xdr/fetch requests are successfully returned. If they are not defined, oncomplete with be called instead
      * @since version after 3.1.0
      */
-    senderOnCompleteCallBack?: ISenderOnComplete;
+    senderOnCompleteCallBack?: _ISenderOnComplete;
 
 }

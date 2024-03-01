@@ -1,9 +1,9 @@
-import { getGlobal, strRepeat } from "@nevware21/ts-utils";
+import { strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import {  DiagnosticLogger, IPayloadData, OnCompleteCallback, TransportType } from "@microsoft/applicationinsights-core-js";
 import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString } from "../../../src/Telemetry/Common/DataSanitizer";
 import { SenderPostManager } from "../../../src/SenderPostManager";
-import { ISendPostMgrConfig, ISenderOnComplete } from "../../../src/applicationinsights-common";
+import { _ISendPostMgrConfig, _ISenderOnComplete } from "../../../src/applicationinsights-common";
 
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -79,13 +79,16 @@ export class ApplicationInsightsTests extends AITestClass {
                         Assert.equal(onFetchCalled, 1, "onFetch is called once test1");
                     },
                     xhrOnComplete: (request: XMLHttpRequest, onComplete: OnCompleteCallback, payload?: IPayloadData) => {
-                        onXhrCalled ++;
+                        if (request.readyState === 4) {
+                            onXhrCalled ++;
+                        }
+                        
                     },
                     beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
                         onBeaconRetryCalled ++;
                     }
 
-                } as ISenderOnComplete;
+                } as _ISenderOnComplete;
 
                 let onCompleteCallback = (status: number, headers: {
                     [headerName: string]: string;
@@ -105,7 +108,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     disableBeacon: false,
                     disableBeaconSync: false,
                     senderOnCompleteCallBack: onCompleteFuncs
-                } as ISendPostMgrConfig;
+                } as _ISendPostMgrConfig;
                 let payload = {
                     urlString: "test",
                     data: "test data"
@@ -142,7 +145,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     disableBeacon: false,
                     disableBeaconSync: false,
                     senderOnCompleteCallBack: onCompleteFuncs
-                } as ISendPostMgrConfig;
+                } as _ISendPostMgrConfig;
                 SendPostMgr.SetConfig(config);
 
                 let res = {
@@ -177,7 +180,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     disableBeacon: false,
                     disableBeaconSync: false,
                     senderOnCompleteCallBack: onCompleteFuncs
-                } as ISendPostMgrConfig;
+                } as _ISendPostMgrConfig;
                 SendPostMgr.SetConfig(config);
                 this.hookSendBeacon((url, data) => {
                     return false;
@@ -197,7 +200,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     disableBeacon: true,
                     disableBeaconSync: false,
                     senderOnCompleteCallBack: onCompleteFuncs
-                } as ISendPostMgrConfig;
+                } as _ISendPostMgrConfig;
                 SendPostMgr.SetConfig(config);
                 isInit = SendPostMgr["_getDbgPlgTargets"]()[0];
                 Assert.ok(isInit, "should init test3");

@@ -9,7 +9,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { DisabledPropertyName } from "./Constants";
-import { ISendPostMgrConfig, ISenderOnComplete } from "./Interfaces/ISenderPostManager";
+import { _ISendPostMgrConfig, _ISenderOnComplete } from "./Interfaces/ISenderPostManager";
 import { IXDomainRequest } from "./Interfaces/IXDomainRequest";
 import { formatErrorMessageXdr, formatErrorMessageXhr, getResponseText } from "./Util";
 
@@ -19,7 +19,12 @@ declare var XDomainRequest: {
     new(): IXDomainRequest;
 };
 
-
+/**
+ * This Internal component
+ * Manager SendPost functions
+ * SendPostManger
+ * @internal for internal use only
+ */
 export class SenderPostManager {
 
     constructor() {
@@ -29,7 +34,7 @@ export class SenderPostManager {
         let _isInitialized: boolean;
         let _diagLog: IDiagnosticLogger;
         let _isOneDs: boolean;
-        let _onCompleteFuncs: ISenderOnComplete;
+        let _onCompleteFuncs: _ISenderOnComplete;
         let _disableCredentials: boolean;
         let _fallbackInst: IXHROverride;
         let _disableXhr: boolean;
@@ -44,7 +49,7 @@ export class SenderPostManager {
 
 
            
-            _self.initialize = (config: ISendPostMgrConfig, diagLog: IDiagnosticLogger): void => {
+            _self.initialize = (config: _ISendPostMgrConfig, diagLog: IDiagnosticLogger): void => {
                 
                 _diagLog = diagLog;
                 if (_isInitialized) {
@@ -61,7 +66,7 @@ export class SenderPostManager {
 
             // This componet might get its config from sender, offline sender, 1ds post
             // so set this function to mock dynamic changes
-            _self.SetConfig = (config: ISendPostMgrConfig): boolean => {
+            _self.SetConfig = (config: _ISendPostMgrConfig): boolean => {
                 try {
                     _onCompleteFuncs = config.senderOnCompleteCallBack || {};
                     _disableCredentials = !!config.disableCredentials;
@@ -511,7 +516,7 @@ export class SenderPostManager {
 
 
 
-    public initialize(config: ISendPostMgrConfig, diagLog: IDiagnosticLogger): void {
+    public initialize(config: _ISendPostMgrConfig, diagLog: IDiagnosticLogger): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -527,7 +532,7 @@ export class SenderPostManager {
      * reset Config
      * @returns True if set is successfully
      */
-    public SetConfig(config: ISendPostMgrConfig): boolean {
+    public SetConfig(config: _ISendPostMgrConfig): boolean {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }

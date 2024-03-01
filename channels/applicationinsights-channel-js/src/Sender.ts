@@ -1,7 +1,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Event, Exception, IConfig, IEnvelope, IOfflineListener, ISample,
-    ISendPostMgrConfig, ISenderOnComplete, IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData,
+    _ISendPostMgrConfig, _ISenderOnComplete, IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData,
     RequestHeaders, SampleRate, SenderPostManager, Trace, createOfflineListener, eRequestHeaders, formatErrorMessageXdr,
     formatErrorMessageXhr, getResponseText, isInternalApplicationInsightsEndpoint, parseResponse, prependTransports, utlCanUseSessionStorage,
     utlSetStoragePrefix
@@ -623,7 +623,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             }
 
-            function _getSendPostMgrConfig(): ISendPostMgrConfig {
+            function _getSendPostMgrConfig(): _ISendPostMgrConfig {
                 try {
                     let onCompleteFuncs = {
                         xdrOnComplete: (xdr: IXDomainRequest, oncomplete: OnCompleteCallback,payload?: IPayloadData) => {
@@ -653,7 +653,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             return _onBeaconRetry(data, onComplete, canSend);
                         }
     
-                    } as ISenderOnComplete;
+                    } as _ISenderOnComplete;
 
                     let config = {
                         enableSendPromise: _enableSendPromise,
@@ -663,7 +663,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         disableBeacon: !_beaconNormalSupported,
                         disableBeaconSync: !_beaconOnUnloadSupported,
                         senderOnCompleteCallBack: onCompleteFuncs
-                    } as ISendPostMgrConfig;
+                    } as _ISendPostMgrConfig;
                     return config;
                  
 

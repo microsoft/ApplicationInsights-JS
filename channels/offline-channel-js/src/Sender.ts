@@ -3,7 +3,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, IConfig, ISendPostMgrConfig, ISenderOnComplete, IXDomainRequest, SenderPostManager, formatErrorMessageXdr,
+    BreezeChannelIdentifier, IConfig, _ISendPostMgrConfig, _ISenderOnComplete, IXDomainRequest, SenderPostManager, formatErrorMessageXdr,
     getResponseText, parseResponse, prependTransports, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
@@ -160,13 +160,13 @@ export class Sender {
                 _doOnComplete(onComplete, 200, {}, res);
             }
 
-            function _getSendPostMgrConfig(): ISendPostMgrConfig {
+            function _getSendPostMgrConfig(): _ISendPostMgrConfig {
                 let config = {
                     enableSendPromise: _enableSendPromise,
                     isOneDs: _isOneDs,
                     disableCredentials: _disableCredentials,
                     senderOnCompleteCallBack: _getOnCompleteFuncs()
-                } as ISendPostMgrConfig;
+                } as _ISendPostMgrConfig;
 
                 return config;
             }
@@ -184,7 +184,7 @@ export class Sender {
             }
 
 
-            function _getOnCompleteFuncs(): ISenderOnComplete {
+            function _getOnCompleteFuncs(): _ISenderOnComplete {
                 let funcs = {
                     xdrOnComplete: (response: IXDomainRequest, oncomplete: OnCompleteCallback) => {
                         return _xdrOnLoad(response, oncomplete);
@@ -197,7 +197,7 @@ export class Sender {
                         let response = getResponseText(request);
                         return _handleResponse(oncomplete, request.status, {}, response);
                     }
-                } as ISenderOnComplete;
+                } as _ISenderOnComplete;
                 return funcs;
             }
 
