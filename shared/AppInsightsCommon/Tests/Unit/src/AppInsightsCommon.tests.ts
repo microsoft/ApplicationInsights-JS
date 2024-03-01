@@ -1,13 +1,17 @@
-import { strRepeat } from "@nevware21/ts-utils";
+import { getGlobal, strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import {  DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import {  DiagnosticLogger, IPayloadData, OnCompleteCallback, TransportType } from "@microsoft/applicationinsights-core-js";
 import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString } from "../../../src/Telemetry/Common/DataSanitizer";
+import { SenderPostManager } from "../../../src/SenderPostManager";
+import { ISendPostMgrConfig, ISenderOnComplete } from "../../../src/applicationinsights-common";
 
 
 export class ApplicationInsightsTests extends AITestClass {
     logger = new DiagnosticLogger();
 
+
     public testInitialize() {
+   
     }
 
     public testCleanup() {
@@ -57,6 +61,152 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(2, loggerStub.callCount);
 
                 loggerStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SendPostManager: init and change with expected config",
+            useFakeTimers: true,
+            test: () => {
+                let SendPostMgr = new SenderPostManager();
+                let onXhrCalled = 0;
+                let onFetchCalled = 0;
+                let onBeaconRetryCalled = 0;
+                let onCompleteFuncs = {
+                    fetchOnComplete: (response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) => {
+                        onFetchCalled ++;
+                        Assert.equal(onXhrCalled, 1, "onxhr is called once test1");
+                        Assert.equal(onFetchCalled, 1, "onFetch is called once test1");
+                    },
+                    xhrOnComplete: (request: XMLHttpRequest, onComplete: OnCompleteCallback, payload?: IPayloadData) => {
+                        onXhrCalled ++;
+                    },
+                    beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
+                        onBeaconRetryCalled ++;
+                    }
+
+                } as ISenderOnComplete;
+
+                let onCompleteCallback = (status: number, headers: {
+                    [headerName: string]: string;
+                }, response?: string) => {
+                    return;
+                };
+                
+                let transports = [TransportType.Xhr, TransportType.Fetch, TransportType.Beacon];
+
+
+                // use xhr
+                let config = {
+                    enableSendPromise: false,
+                    isOneDs: false,
+                    disableCredentials: false,
+                    disableXhr: false,
+                    disableBeacon: false,
+                    disableBeaconSync: false,
+                    senderOnCompleteCallBack: onCompleteFuncs
+                } as ISendPostMgrConfig;
+                let payload = {
+                    urlString: "test",
+                    data: "test data"
+                } as IPayloadData;
+
+                SendPostMgr.initialize(config, this.logger);
+                let isInit = SendPostMgr["_getDbgPlgTargets"]()[0];
+                Assert.ok(isInit, "should init");
+                let isOneDs = SendPostMgr["_getDbgPlgTargets"]()[1];
+                Assert.equal(isOneDs, false, "is not oneds");
+                let credentials = SendPostMgr["_getDbgPlgTargets"]()[2];
+                Assert.equal(credentials, false, "credentials is set ot false");
+                let promise = SendPostMgr["_getDbgPlgTargets"]()[3];
+                Assert.equal(promise, false, "promise is set ot false");
+
+                let inst = SendPostMgr.getXhrInst(transports, false);
+                Assert.ok(inst, "xhr interface should exist");
+                inst.sendPOST(payload, onCompleteCallback, false);
+           
+
+                Assert.equal(this._getXhrRequests().length, 1, "xhr is called once");
+                let request = this._getXhrRequests()[0];
+                this.sendJsonResponse(request, {}, 200);
+                Assert.equal(onXhrCalled, 1, "onxhr is called once");
+                Assert.equal(onFetchCalled, 0, "onFetch is not called");
+                Assert.equal(onBeaconRetryCalled, 0, "onBeacon is not called");
+
+                // use fetch
+                config = {
+                    enableSendPromise: false,
+                    isOneDs: false,
+                    disableCredentials: false,
+                    disableXhr: true,
+                    disableBeacon: false,
+                    disableBeaconSync: false,
+                    senderOnCompleteCallBack: onCompleteFuncs
+                } as ISendPostMgrConfig;
+                SendPostMgr.SetConfig(config);
+
+                let res = {
+                    status: 200,
+                    headers: { "Content-type": "application/json" },
+                    value: {},
+                    ok: true,
+                    text: () => {
+                        return "test";
+                    }
+                };
+            
+                this.hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve(res);
+                    }, 0);
+                });
+
+                inst = SendPostMgr.getXhrInst(transports, false);
+                Assert.ok(inst, "xhr interface should exist test1");
+                inst.sendPOST(payload, onCompleteCallback, false);
+
+                this.clock.tick(10);
+
+
+                // use beacon
+                config = {
+                    enableSendPromise: false,
+                    isOneDs: false,
+                    disableCredentials: false,
+                    disableXhr: true,
+                    disableBeacon: false,
+                    disableBeaconSync: false,
+                    senderOnCompleteCallBack: onCompleteFuncs
+                } as ISendPostMgrConfig;
+                SendPostMgr.SetConfig(config);
+                this.hookSendBeacon((url, data) => {
+                    return false;
+                });
+                transports = [TransportType.Xhr,TransportType.Beacon];
+                inst = SendPostMgr.getXhrInst(transports, false);
+                Assert.ok(inst, "xhr interface should exist test2");
+                inst.sendPOST(payload, onCompleteCallback, false);
+                Assert.equal(onBeaconRetryCalled, 1, "onBeacon is not called test2");
+
+                // change config
+                config = {
+                    enableSendPromise: true,
+                    isOneDs: true,
+                    disableCredentials: true,
+                    disableXhr: false,
+                    disableBeacon: true,
+                    disableBeaconSync: false,
+                    senderOnCompleteCallBack: onCompleteFuncs
+                } as ISendPostMgrConfig;
+                SendPostMgr.SetConfig(config);
+                isInit = SendPostMgr["_getDbgPlgTargets"]()[0];
+                Assert.ok(isInit, "should init test3");
+                isOneDs = SendPostMgr["_getDbgPlgTargets"]()[1];
+                Assert.equal(isOneDs, true, "is not oneds test3");
+                credentials = SendPostMgr["_getDbgPlgTargets"]()[2];
+                Assert.equal(credentials, true, "credentials is set ot false test3");
+                promise = SendPostMgr["_getDbgPlgTargets"]()[3];
+                Assert.equal(promise, true, "promise is set ot false test3");
             }
         });
 

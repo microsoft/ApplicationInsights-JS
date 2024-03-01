@@ -983,7 +983,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     for (let lp = 0; lp < data.length; lp++) {
                         const thePayload = data[lp];
                         let arr = [thePayload];
-                        let item = _getPayload(arr)
+                        let item = _getPayload(arr);
                         if (!canSend(item, onComplete)) {
                             // Can't send anymore, so split the batch and drop the rest
                             droppedPayload.push(thePayload);
@@ -1012,7 +1012,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         payloadSize += payload[lp].length;
                     }
 
-                    let syncFetchPayload = _sendPostMgr.getSyncFetchPayload()
+                    let syncFetchPayload = _sendPostMgr.getSyncFetchPayload();
 
                     if ((syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {
                         transport = TransportType.Fetch;

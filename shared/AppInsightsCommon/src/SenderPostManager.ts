@@ -3,9 +3,9 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IAppInsightsCore, IDiagnosticLogger, IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride,
-    OnCompleteCallback, SendPOSTFunction, TransportType, _eInternalMessageId, _throwInternal, arrForEach, dumpObj, eLoggingSeverity,
-    getLocation, getNavigator, getWindow, isBeaconsSupported, isFetchSupported, isFunction, isXhrSupported, objKeys, useXDomainRequest
+    IDiagnosticLogger, IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride, OnCompleteCallback,
+    SendPOSTFunction, TransportType, _eInternalMessageId, _throwInternal, arrForEach, dumpObj, eLoggingSeverity, getLocation, getNavigator,
+    getWindow, isBeaconsSupported, isFetchSupported, isFunction, isXhrSupported, objKeys, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { DisabledPropertyName } from "./Constants";
@@ -56,7 +56,7 @@ export class SenderPostManager {
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_isInitialized];
+                return [_isInitialized, _isOneDs, _disableCredentials, _enableSendPromise];
             };
 
             // This componet might get its config from sender, offline sender, 1ds post
@@ -505,7 +505,7 @@ export class SenderPostManager {
                 _isOneDs = null;
                 _onCompleteFuncs = null;
                 _disableCredentials = null;
-                _fallbackInst = null
+                _fallbackInst = null;
                 _disableXhr = false;
                 _disableBeacon = false;
                 _disableBeaconSync = false;
