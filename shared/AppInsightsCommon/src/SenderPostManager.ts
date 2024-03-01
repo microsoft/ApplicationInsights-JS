@@ -104,12 +104,6 @@ export class SenderPostManager {
             _self.getFallbackInst = (): IXHROverride => {
                 return _fallbackInst;
             }
-            
-            _self.setSendOnComplete = (funcs: ISenderOnComplete) => {
-                if (funcs) {
-                    _onCompleteFuncs = funcs;
-                }
-            }
         
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _initDefaults();
@@ -548,14 +542,6 @@ export class SenderPostManager {
      * Get current fallback sender instance
      */
     public getFallbackInst(): IXHROverride {
-        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
-        return null;
-    }
-
-    /**
-     * Set send OnComplete Function
-     */
-    public setSendOnComplete(funcs: ISenderOnComplete): void {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }
