@@ -1,6 +1,5 @@
 import { SdkLoaderConfig} from "./type";
 
-
 const webSnippet = "##replaceIKeySnippet##";
 const webSnippetCs = "##replaceConnStringSnippet##";
 
