@@ -12,8 +12,9 @@
     },
     "scripts": {
         "clean": "git clean -xdf",
-        "build": "npm run build:esm && npm run snippet-generate && npm run build:browser",
+        "build": "npm run build:esm && npm run snippet-generate && npm run build:browser && npm run dtsgen",
         "build:esm": "grunt websnippet ",
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Web Snippet\"",
         "snippet-generate": "npm run build:snippet && npm run replace && npm run snippetCopy",
         "snippetCopy": "grunt snippetCopy",
         "build:snippet": "rollup -c rollupSnippet.config.js --bundleConfigAsCjs",
@@ -35,6 +36,7 @@
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "@microsoft/dynamicproto-js": "^2.0.3",
+        "@microsoft/api-extractor": "^7.40.0",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
         "magic-string": "^0.25.7",
