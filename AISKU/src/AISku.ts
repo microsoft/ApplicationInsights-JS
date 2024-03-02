@@ -194,11 +194,13 @@ export class AppInsightsSku implements IApplicationInsights {
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
                 if (_config.connectionString) {
-                    const cs = parseConnectionString(_config.connectionString, _config.userOverrideEndpointUrl);
+                    const cs = parseConnectionString(_config.connectionString);
                     const ingest = cs.ingestionendpoint;
-                    _config.endpointUrl = _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : (ingest + DEFAULT_BREEZE_PATH); // only add /v2/track when from connectionstring
+                    _config.endpointUrl =  _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : ingest + DEFAULT_BREEZE_PATH; // add /v2/track 
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                 }
+                // userOverrideEndpointUrl have the highest priority
+                _config.endpointUrl = _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : _config.endpointUrl;
             }));
 
             _self.snippet = snippet;

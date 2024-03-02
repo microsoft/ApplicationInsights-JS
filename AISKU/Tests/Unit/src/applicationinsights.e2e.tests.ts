@@ -61,6 +61,7 @@ export class ApplicationInsightsTests extends AITestClass {
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             samplingPercentage: 50,
+            userOverrideEndpointUrl: undefined,
             convertUndefined: "test-value",
             disablePageUnloadEvents: [ "beforeunload" ]
         };
@@ -140,6 +141,7 @@ export class ApplicationInsightsTests extends AITestClass {
         this.addAsyncTests();
         this.addDependencyPluginTests();
         this.addPropertiesPluginTests();
+        this.addCDNOverrideTests();
     }
 
     public addGenericE2ETests(): void {
@@ -237,6 +239,22 @@ export class ApplicationInsightsTests extends AITestClass {
                 
                 // Remove the handler
                 handler.rm();
+            }
+        });
+    }
+
+    public addCDNOverrideTests(): void {
+        this.testCase({
+            name: 'CDNOverrideTests: customer could overwrite the url endpoint',
+            useFakeTimers: true,
+            test: () => {
+                let ingestionendpoint = "https://dc.services.visualstudio.com";
+                this._ai.config.connectionString = "InstrumentationKey=xxx;IngestionEndpoint=" + ingestionendpoint + ";LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/"
+                this.clock.tick(100);
+                Assert.deepEqual(this._ai.config.endpointUrl, ingestionendpoint + "/v2/track", "endpoint url is set from connection string");
+                this._ai.config.userOverrideEndpointUrl = "https://custom.endpoint";
+                this.clock.tick(100);
+                Assert.deepEqual(this._ai.config.endpointUrl, this._ai.config.userOverrideEndpointUrl, "endpoint url is override by userOverrideEndpointUrl");
             }
         });
     }
