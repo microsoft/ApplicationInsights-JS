@@ -1,9 +1,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Event, Exception, IConfig, IEnvelope, IOfflineListener, ISample,
-    _ISendPostMgrConfig, _ISenderOnComplete, IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData,
-    RequestHeaders, SampleRate, SenderPostManager, Trace, createOfflineListener, eRequestHeaders, formatErrorMessageXdr,
-    formatErrorMessageXhr, getResponseText, isInternalApplicationInsightsEndpoint, parseResponse, prependTransports, utlCanUseSessionStorage,
+    IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate,
+    SenderPostManager, Trace, _ISendPostMgrConfig, _ISenderOnComplete, createOfflineListener, eRequestHeaders, formatErrorMessageXdr,
+    formatErrorMessageXhr, isInternalApplicationInsightsEndpoint, parseResponse, prependTransports, utlCanUseSessionStorage,
     utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
@@ -847,7 +847,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if (markAsSent) {
                         _self._buffer.markAsSent(payload);
                     }
-                   
+
                     return sendPostFunc(payloadData, onComplete, !isAsync);
                 }
                 return null;

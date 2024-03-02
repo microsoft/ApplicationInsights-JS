@@ -280,7 +280,7 @@ export class SenderPostManager {
                     let onReadyFuncExist = onReadyFunc && isFunction(onReadyFunc);
                 
                     if (onReadyFuncExist) {
-                        onReadyFunc(xhr, oncomplete);
+                        onReadyFunc(xhr, oncomplete, payload);
                     }
 
                     if (xhr.readyState === 4) {
@@ -289,7 +289,6 @@ export class SenderPostManager {
                         }
                         resolveFunc && resolveFunc(true);
                     }
-                    
                     
                 }
 
