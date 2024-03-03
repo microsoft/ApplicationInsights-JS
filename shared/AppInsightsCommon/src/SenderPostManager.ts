@@ -11,7 +11,8 @@ import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { DisabledPropertyName } from "./Constants";
 import { _ISendPostMgrConfig, _ISenderOnComplete } from "./Interfaces/ISenderPostManager";
 import { IXDomainRequest } from "./Interfaces/IXDomainRequest";
-import { formatErrorMessageXdr, formatErrorMessageXhr, getResponseText } from "./Util";
+import { RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
+import { formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, isInternalApplicationInsightsEndpoint } from "./Util";
 
 const STR_EMPTY = "";
 declare var XDomainRequest: {
@@ -269,6 +270,12 @@ export class SenderPostManager {
                 
                 xhr.open("POST", endPointUrl, !sync);
                 xhr.setRequestHeader("Content-type", "application/json");
+
+                // append Sdk-Context request header only in case of breeze endpoint
+                if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
+                    xhr.setRequestHeader(RequestHeaders[eRequestHeaders.sdkContextHeader], RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest]);
+                }
+
     
                 arrForEach(objKeys(headers), (headerName) => {
                     xhr.setRequestHeader(headerName, headers[headerName]);
@@ -326,6 +333,11 @@ export class SenderPostManager {
                 let responseHandled = false;
                 let headers = payload.headers || {};
                 //TODO: handle time out for 1ds
+
+                // append Sdk-Context request header only in case of breeze endpoint
+                if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
+                    requestHeaders.append(RequestHeaders[eRequestHeaders.sdkContextHeader], RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest]);
+                }
                 
                 arrForEach(objKeys(headers), (headerName) => {
                     requestHeaders.append(headerName, headers[headerName]);

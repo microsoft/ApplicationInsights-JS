@@ -3,7 +3,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, IConfig, _ISendPostMgrConfig, _ISenderOnComplete, IXDomainRequest, SenderPostManager, formatErrorMessageXdr,
+    BreezeChannelIdentifier, IConfig, IXDomainRequest, SenderPostManager, _ISendPostMgrConfig, _ISenderOnComplete, formatErrorMessageXdr,
     getResponseText, parseResponse, prependTransports, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
