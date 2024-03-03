@@ -223,7 +223,7 @@ export class SenderPostManager {
                         if (onRetry && isFunction(onRetry)) {
                             onRetry(payload, oncomplete, _doBeaconSend);
                         } else {
-                            _fallbackInst && _fallbackInst.sendPOST(payload, oncomplete,true);
+                            _fallbackInst && _fallbackInst.sendPOST(payload, oncomplete, true);
                             _throwInternal(_diagLog, eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                         }
                         
@@ -297,12 +297,12 @@ export class SenderPostManager {
                         resolveFunc && resolveFunc(true);
                     }
                     
-                }
+                };
 
                 xhr.onerror = (event: ErrorEvent|any) => {
                     _doOnComplete(oncomplete, 400, {}, formatErrorMessageXhr(xhr));
                     rejectFunc && rejectFunc(event);
-                }
+                };
 
                 xhr.ontimeout = () => {
                     _doOnComplete(oncomplete, 500, {}, formatErrorMessageXhr(xhr));
@@ -411,7 +411,7 @@ export class SenderPostManager {
                                         let status = response.status;
                                         let onCompleteFunc = _onCompleteFuncs.fetchOnComplete;
                                         if (onCompleteFunc && isFunction(onCompleteFunc)) {
-                                            onCompleteFunc(response, oncomplete, resp.value || STR_EMPTY);
+                                            onCompleteFunc(response, oncomplete, resp.value || STR_EMPTY, payload);
                                         } else {
                                             _doOnComplete(oncomplete, status, {}, resp.value || STR_EMPTY);
                                         }
@@ -464,7 +464,7 @@ export class SenderPostManager {
                     let response = getResponseText(xdr);
                     let onloadFunc = _onCompleteFuncs && _onCompleteFuncs.xdrOnComplete;
                     if (onloadFunc && isFunction(onloadFunc)) {
-                        onloadFunc(xdr, oncomplete);
+                        onloadFunc(xdr, oncomplete, payload);
                     } else {
                         _doOnComplete(oncomplete, 200, {}, response);
 
