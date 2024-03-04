@@ -75,6 +75,7 @@ const defaultConfigValues: IConfigDefaults<IConfiguration|IConfig> = {
     connectionString: UNDEFINED_VALUE,
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
+    userOverrideEndpointUrl: UNDEFINED_VALUE,
     diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
     featureOptIn:{
         [IKEY_USAGE]: {mode: FeatureOptInMode.disable},
@@ -196,9 +197,11 @@ export class AppInsightsSku implements IApplicationInsights {
                 if (_config.connectionString) {
                     const cs = parseConnectionString(_config.connectionString);
                     const ingest = cs.ingestionendpoint;
-                    _config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : _config.endpointUrl; // only add /v2/track when from connectionstring
+                    _config.endpointUrl =  _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : ingest + DEFAULT_BREEZE_PATH; // add /v2/track 
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                 }
+                // userOverrideEndpointUrl have the highest priority
+                _config.endpointUrl = _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : _config.endpointUrl;
             }));
 
             _self.snippet = snippet;

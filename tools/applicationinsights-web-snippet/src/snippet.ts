@@ -1,5 +1,5 @@
 import { Fields, ISnippetConfig } from "./type";
-import { IEnvelope } from "@microsoft/applicationinsights-common";
+import { IConfig, IEnvelope } from "@microsoft/applicationinsights-common";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 
 // To ensure that SnippetConfig resides at the bottom of snippet.min.js,
@@ -32,7 +32,7 @@ declare var cfg:ISnippetConfig;
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
     }
-    let aiSdk = win[aiName] || (function (aiConfig: IConfiguration) {
+    let aiSdk = win[aiName] || (function (aiConfig: IConfiguration & IConfig) {
         let loadFailed = false;
         let handled = false;
         let appInsights: (Snippet & {initialize:boolean, cookie?:any, core?:any})= {
@@ -103,6 +103,7 @@ declare var cfg:ISnippetConfig;
                 ingest = ingest.slice(0,-1);
             }
             let endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
+            endpointUrl = aiConfig.userOverrideEndpointUrl ? aiConfig.userOverrideEndpointUrl : endpointUrl;
 
             let message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
             let evts:IEnvelope[] = [];

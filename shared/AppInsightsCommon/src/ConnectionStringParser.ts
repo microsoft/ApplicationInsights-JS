@@ -30,12 +30,12 @@ export function parseConnectionString(connectionString?: string): ConnectionStri
         // this is a valid connection string, so parse the results
 
         if (result.endpointsuffix) {
-            // use endpoint suffix where overrides are not provided
+            // apply the default endpoints
             const locationPrefix = result.location ? result.location + "." : "";
             result.ingestionendpoint = result.ingestionendpoint || ("https://" + locationPrefix + "dc." + result.endpointsuffix);
         }
 
-        // apply the default endpoints
+        // apply user override endpoint or the default endpoints
         result.ingestionendpoint = result.ingestionendpoint || DEFAULT_BREEZE_ENDPOINT;
         
         if (strEndsWith(result.ingestionendpoint, "/")) {
