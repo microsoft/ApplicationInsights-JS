@@ -141,7 +141,6 @@ export class Offlinetimer extends AITestClass {
                 let sendPost = (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
                     // first call, return complete, data null;
                     called ++;
-                    console.log("test")
                     oncomplete(200, {});
                     return;
 

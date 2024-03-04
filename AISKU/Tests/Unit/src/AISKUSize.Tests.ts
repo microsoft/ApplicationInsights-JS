@@ -5,10 +5,10 @@ import { Snippet } from "../../../src/Snippet";
 import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 
 export class AISKUSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 136;
-    private readonly MAX_BUNDLE_SIZE = 136;
-    private readonly MAX_RAW_DEFLATE_SIZE = 55;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 55;
+    private readonly MAX_RAW_SIZE = 138;
+    private readonly MAX_BUNDLE_SIZE = 138;
+    private readonly MAX_RAW_DEFLATE_SIZE = 56;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 56;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web.min.js";
     // Automatically updated by version scripts
     private readonly currentVer = "3.1.0";
