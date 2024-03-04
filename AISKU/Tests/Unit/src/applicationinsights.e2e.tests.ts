@@ -61,7 +61,6 @@ export class ApplicationInsightsTests extends AITestClass {
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             samplingPercentage: 50,
-            userOverrideEndpointUrl: undefined,
             convertUndefined: "test-value",
             disablePageUnloadEvents: [ "beforeunload" ]
         };

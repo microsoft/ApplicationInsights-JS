@@ -75,6 +75,7 @@ const defaultConfigValues: IConfigDefaults<IConfiguration|IConfig> = {
     connectionString: UNDEFINED_VALUE,
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
+    userOverrideEndpointUrl: UNDEFINED_VALUE,
     diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
     featureOptIn:{
         [IKEY_USAGE]: {mode: FeatureOptInMode.disable},
