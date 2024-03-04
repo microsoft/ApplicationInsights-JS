@@ -784,13 +784,8 @@ module.exports = function (grunt) {
                         { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js` },
                         { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js.map` },
                         { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js` },
-                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js.map` },
-                        { 
-                            expand: true,
-                            cwd: "./tools/applicationinsights-web-snippet/build/types/",
-                            src: ["**/*"],
-                            dest: "./tools/applicationinsights-web-snippet/types/"
-                          }              ]
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js.map` }
+                       ]
                 },
 
                 "web-snippet": {
