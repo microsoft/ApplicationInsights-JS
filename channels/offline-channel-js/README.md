@@ -52,7 +52,7 @@ The Offline Channel supports the saving of events when your application is offli
 import { OfflineChannel, eStorageProviders } from "@microsoft/applicationinsights-offlinechannel-js";
 
 let offlineChannel = new OfflineChannel();
-let config = {
+let coreConfig = {
     connectionString: "YOUR_CONNECTION_STRING",
     extensionConfig: {
         [offlineChannel.identifier]: {
