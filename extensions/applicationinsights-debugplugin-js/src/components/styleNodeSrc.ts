@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 // @skip-file-minify
 
-import { getIEVersion } from "@microsoft/applicationinsights-core-js";
-
 const BG_INFO = "#F0F6FF",
     BG_ERROR = "#FEF0F1",
     ICON_ERROR = "#E00B1C",
@@ -14,8 +12,6 @@ const BG_INFO = "#F0F6FF",
     TEXT_MATCHED = "yellow",
     BORDER_GREY_160 = "1px solid #605E5C",
     BORDER_GREY_60 = "1px solid #B3B0AD";
-
-console.log(getIEVersion());
 
 export const tempStyle = (prefix: string) => `
   .${prefix}-dbg-lgr-dashboard {
