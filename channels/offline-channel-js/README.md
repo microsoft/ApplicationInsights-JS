@@ -73,13 +73,13 @@ var offlineListener = offlineChannel.getOfflineListener();
 // set application status to online 
 offlineListener.setOnlineState(1);
 // offline channel will not process events when the status is online
-analytics.track({ name:"onlineEvent" }); // post channel will send this event
+appInsights.track({ name:"onlineEvent" }); // sender channel will send this event
 
 // set application status to offline
 offlineListener.setOnlineState(2);
 // offline channel will process and save this event to the configured persistent storage
 // the event will be sent when the application status is online again
-analytics.track({ name:"offlineEvent" });
+appInsights.track({ name:"offlineEvent" });
 
 ```
 
