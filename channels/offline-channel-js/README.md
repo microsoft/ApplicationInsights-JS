@@ -67,7 +67,7 @@ appInsights.loadAppInsights();
 appInsights.addPlugin(offlineChannel);
 
 // get offlineListener to set online/offline status
-var offlineListener = offlineChannel.getOfflineListener();
+let offlineListener = offlineChannel.getOfflineListener();
 
 
 // set application status to online 
