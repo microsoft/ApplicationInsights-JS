@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 // @skip-file-minify
 
+import { getIEVersion } from "@microsoft/applicationinsights-core-js";
+
 const BG_INFO = "#F0F6FF",
     BG_ERROR = "#FEF0F1",
     ICON_ERROR = "#E00B1C",
