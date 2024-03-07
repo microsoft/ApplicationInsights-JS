@@ -24,6 +24,10 @@
             "package": "extensions/applicationinsights-clickanalytics-js/package.json",
             "release": "3.1.0"
         },
+        "@microsoft/applicationinsights-osplugin-js": {
+            "package": "extensions/applicationinsights-osplugin-js/package.json",
+            "release": "3.1.0"
+        },
         "@microsoft/applicationinsights-debugplugin-js": {
             "package": "extensions/applicationinsights-debugplugin-js/package.json",
             "release": "3.1.0"
