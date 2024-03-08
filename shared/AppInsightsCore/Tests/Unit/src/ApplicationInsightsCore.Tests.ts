@@ -151,7 +151,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let promise = SendPostMgr["_getDbgPlgTargets"]()[3];
                 Assert.equal(promise, false, "promise is set ot false");
 
-                let inst = SendPostMgr.getXhrInst(transports, false);
+                let inst = SendPostMgr.getSenderInst(transports, false);
                 Assert.ok(inst, "xhr interface should exist");
                 inst.sendPOST(payload, onCompleteCallback, false);
            
@@ -191,7 +191,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     }, 0);
                 });
 
-                inst = SendPostMgr.getXhrInst(transports, false);
+                inst = SendPostMgr.getSenderInst(transports, false);
                 Assert.ok(inst, "xhr interface should exist test1");
                 inst.sendPOST(payload, onCompleteCallback, false);
 
@@ -213,7 +213,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     return false;
                 });
                 transports = [TransportType.Xhr,TransportType.Beacon];
-                inst = SendPostMgr.getXhrInst(transports, false);
+                inst = SendPostMgr.getSenderInst(transports, false);
                 Assert.ok(inst, "xhr interface should exist test2");
                 inst.sendPOST(payload, onCompleteCallback, false);
                 Assert.equal(onBeaconRetryCalled, 1, "onBeacon is not called test2");

@@ -117,7 +117,7 @@ export class SenderPostManager {
                 return _syncFetchPayload;
             };
 
-            _self.getXhrInst = (transports: TransportType[], sync?: boolean): IXHROverride => {
+            _self.getSenderInst = (transports: TransportType[], sync?: boolean): IXHROverride => {
                 if (transports && transports.length) {
                     return _getSenderInterface(transports, sync);
 
@@ -481,7 +481,6 @@ export class SenderPostManager {
                                         _handleError(dumpObj(e));
                                     }
                                 }
-
                                 
                             } else {
                                 _handleError(result.reason && result.reason.message);
@@ -643,7 +642,7 @@ export class SenderPostManager {
     /**
      * Get current xhr instance
      */
-    public getXhrInst(transports: TransportType[], sync?: boolean): IXHROverride {
+    public getSenderInst(transports: TransportType[], sync?: boolean): IXHROverride {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }

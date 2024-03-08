@@ -369,7 +369,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // Beacon would be filtered out if user has set disableBeaconApi to true at _getSenderInterface
                     let theTransports: TransportType[] = prependTransports([TransportType.Beacon, TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
 
-                    httpInterface = _sendPostMgr && _sendPostMgr.getXhrInst(theTransports, false);
+                    httpInterface = _sendPostMgr && _sendPostMgr.getSenderInst(theTransports, false);
                   
                     let xhrInterface = _sendPostMgr && _sendPostMgr.getFallbackInst();
                     _xhrSend = (payload: string[], isAsync: boolean) => {
@@ -396,7 +396,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         syncTransports = syncTransports.filter(transport => transport !== TransportType.Fetch);
                     }
 
-                    syncInterface = _sendPostMgr && _sendPostMgr.getXhrInst(syncTransports, true);
+                    syncInterface = _sendPostMgr && _sendPostMgr.getSenderInst(syncTransports, true);
                     syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
                    
                     if ((_alwaysUseCustomSend || senderConfig.unloadTransports || !_syncUnloadSender) && syncInterface) {
@@ -980,7 +980,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 } else {
                     
                     // Fallback to the previous beacon Sender (which causes a CORB warning on chrome now)
-                    let beaconInst = _sendPostMgr && _sendPostMgr.getXhrInst([TransportType.Beacon], true);
+                    let beaconInst = _sendPostMgr && _sendPostMgr.getSenderInst([TransportType.Beacon], true);
                     return _doSend(beaconInst, payload, isAsync);
                 }
             }
@@ -1036,7 +1036,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         transport = TransportType.Xhr;
                         _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
                     }
-                    let inst = _sendPostMgr && _sendPostMgr.getXhrInst([transport], true);
+                    let inst = _sendPostMgr && _sendPostMgr.getSenderInst([transport], true);
                     return _doSend(inst, payload, isAsync);
                 }
                 return null;

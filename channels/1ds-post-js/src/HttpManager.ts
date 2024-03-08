@@ -345,7 +345,7 @@ export class HttpManager {
             // Special internal method to allow the DebugPlugin to hook embedded objects
             function _getSenderInterface(transports: TransportType[], syncSupport: boolean): _IInternalXhrOverride {
                 try {
-                    return _sendPostMgr && _sendPostMgr.getXhrInst(transports, syncSupport);
+                    return _sendPostMgr && _sendPostMgr.getSenderInst(transports, syncSupport);
                 } catch (e) {
                     // eslint-disable-next-line no-empty
 
@@ -1147,31 +1147,6 @@ export class HttpManager {
                 }
             }
 
-            // /**
-            // * Converts the XHR getAllResponseHeaders to a map containing the header key and value.
-            // */
-            // // tslint:disable-next-line: align
-            // function _convertAllHeadersToMap(headersString: string): { [headerName: string]: string } {
-            //     let headers = {};
-            //     if (isString(headersString)) {
-            //         let headersArray = strTrim(headersString).split(/[\r\n]+/);
-            //         arrForEach(headersArray, (headerEntry) => {
-            //             if (headerEntry) {
-            //                 let idx = headerEntry.indexOf(": ");
-            //                 if (idx !== -1) {
-            //                     // The new spec has the headers returning all as lowercase -- but not all browsers do this yet
-            //                     let header = strTrim(headerEntry.substring(0, idx)).toLowerCase();
-            //                     let value = strTrim(headerEntry.substring(idx + 1));
-            //                     headers[header] = value;
-            //                 } else {
-            //                     headers[strTrim(headerEntry)] = 1;
-            //                 }
-            //             }
-            //         });
-            //     }
-
-            //     return headers;
-            // }
 
             function _getMsfpc(thePayload: ISerializedPayload): string {
                 for (let lp = 0; lp < thePayload.batches.length; lp++) {

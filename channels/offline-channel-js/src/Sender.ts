@@ -113,7 +113,7 @@ export class Sender {
                     let customTransPorts = offlineSenderCfg.transports || senderConfig.transports || [];
                     
                     let theTransports: TransportType[] = prependTransports([TransportType.Xhr, TransportType.Fetch, TransportType.Beacon], customTransPorts);
-                    httpInterface = _sendPostMgr.getXhrInst(theTransports, false);
+                    httpInterface = _sendPostMgr.getSenderInst(theTransports, false);
                     let xhrInterface = _sendPostMgr.getFallbackInst();
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
                     _httpInterface = httpInterface || xhrInterface;
