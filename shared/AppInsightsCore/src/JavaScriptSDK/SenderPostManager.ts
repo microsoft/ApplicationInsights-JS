@@ -477,9 +477,8 @@ export class SenderPostManager {
                                     }
 
                                 } catch (e) {
-                                    if (_isOneDs) {
-                                        _handleError(dumpObj(e));
-                                    }
+                                    _handleError(dumpObj(e));
+                                    rejectFunc && rejectFunc(e);
                                 }
                                 
                             } else {

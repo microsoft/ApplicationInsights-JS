@@ -4,8 +4,8 @@ import * as pako from "pako";
 export class AppInsightsCoreSizeCheck extends AITestClass {
     private readonly MAX_RAW_SIZE = 63;
     private readonly MAX_BUNDLE_SIZE = 63;
-    private readonly MAX_RAW_DEFLATE_SIZE = 26;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 26;
+    private readonly MAX_RAW_DEFLATE_SIZE = 27;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 27;
     private readonly rawFilePath = "../dist/es5/applicationinsights-core-js.min.js";
     private readonly prodFilePath = "../browser/es5/applicationinsights-core-js.min.js";
 
