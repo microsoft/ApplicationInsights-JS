@@ -234,25 +234,34 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             _self.getOfflineSupport = () => {
-                let details = _httpManager.getOfflineRequestDetails();
-                return {
-                    getUrl: () => {
-                        return details.url
-                    },
-                    serialize: _serialize,
-                    batch: _batch,
-                    shouldProcess: (evt) => {
-                        return !_disableTelemetry;
-                    },
-                    createPayload: (evt) => {
+                try {
+                    let details = _httpManager && _httpManager.getOfflineRequestDetails();
+                    if (details) {
                         return {
-                            urlString: details.url,
-                            headers: details.hdrs,
-                            data: evt
-                        } as IPayloadData;
-                    }
-                } as IInternalOfflineSupport;
+                            getUrl: () => {
+                                return details.url
+                            },
+                            serialize: _serialize,
+                            batch: _batch,
+                            shouldProcess: (evt) => {
+                                return !_disableTelemetry;
+                            },
+                            createPayload: (evt) => {
+                                return {
+                                    urlString: details.url,
+                                    headers: details.hdrs,
+                                    data: evt
+                                } as IPayloadData;
+                            }
+                        } as IInternalOfflineSupport;
 
+                    }
+                    
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+                }
+                return null;
+               
             };
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {

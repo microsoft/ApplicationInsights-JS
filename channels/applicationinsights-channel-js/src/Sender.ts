@@ -1,18 +1,17 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Event, Exception, IConfig, IEnvelope, IOfflineListener, ISample,
-    IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate,
-    SenderPostManager, Trace, _ISendPostMgrConfig, _ISenderOnComplete, createOfflineListener, eRequestHeaders, formatErrorMessageXdr,
-    formatErrorMessageXhr, isInternalApplicationInsightsEndpoint, parseResponse, prependTransports, utlCanUseSessionStorage,
-    utlSetStoragePrefix
+    IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace,
+    createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSupport,
-    INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
-    ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType,
-    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
-    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFetchSupported,
-    isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, runTargetUnload
+    BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger,
+    IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
+    ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction,
+    SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal,
+    _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj,
+    eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported,
+    isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import { ITimerHandler, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
@@ -20,7 +19,7 @@ import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
 } from "./EnvelopeCreator";
-import { IBackendResponse, ISenderConfig, XDomainRequest as IXDomainRequest } from "./Interfaces";
+import { ISenderConfig } from "./Interfaces";
 import { ArraySendBuffer, ISendBuffer, SessionStorageSendBuffer } from "./SendBuffer";
 import { Serializer } from "./Serializer";
 import { Sample } from "./TelemetryProcessors/Sample";
@@ -809,10 +808,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             }
 
             function _createPayload(data: string |Uint8Array) {
-                let headers = _headers;
-                if (isInternalApplicationInsightsEndpoint(_endpointUrl)) {
-                    headers[RequestHeaders[eRequestHeaders.sdkContextHeader]] = RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest];
-                }
+                let headers = _getHeaders();
                 return {
                     urlString: _endpointUrl,
                     data: data,
@@ -856,10 +852,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _getPayload(payload: string[]): IInternalPayloadData {
                 if (isArray(payload) && payload.length > 0) {
                     let batch = _self._buffer.batchPayloads(payload);
+                    let headers = _getHeaders();
                     let payloadData: IInternalPayloadData = {
                         data: batch,
                         urlString: _endpointUrl,
-                        headers: _headers,
+                        headers: headers,
                         disableXhrSync: _disableXhr,
                         disableFetchKeepAlive: !_fetchKeepAlive,
                         oriPayload: payload
@@ -867,6 +864,21 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     return payloadData;
                 }
                 
+                return null;
+            }
+
+            function _getHeaders() {
+                try {
+                    let headers = _headers || {};
+                    if (isInternalApplicationInsightsEndpoint(_endpointUrl)) {
+                        headers[RequestHeaders[eRequestHeaders.sdkContextHeader]] = RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest];
+                    }
+                    return headers;
+
+                } catch(e) {
+                    // eslint-disable-next-line no-empty
+
+                }
                 return null;
             }
 

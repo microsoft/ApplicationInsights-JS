@@ -557,7 +557,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                 _primaryChannelId = id;
                                 if (isFunction(channel.getOfflineSupport)) {
                                     _offineSupport = channel.getOfflineSupport();
-                                    onlineUrl = isFunction(_offineSupport.getUrl) && _offineSupport.getUrl();
+                                    onlineUrl = isFunction(_offineSupport && _offineSupport.getUrl) && _offineSupport.getUrl();
                                 }
                                 return;
                             }

@@ -27,8 +27,12 @@ export { runTargetUnload, doUnloadAll } from "./JavaScriptSDK/AsyncUtils";
 export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
-    isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled
+    isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse,
+    openXhr, _appendHeader, _getAllResponseHeaders, convertAllHeadersToMap
 } from "./JavaScriptSDK/HelperFuncs";
+export { IXDomainRequest, IBackendResponse } from "./JavaScriptSDK.Interfaces/IXDomainRequest";
+export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./JavaScriptSDK.Interfaces/ISenderPostManager";
+export { SenderPostManager } from "./JavaScriptSDK/SenderPostManager";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
     strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,

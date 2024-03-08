@@ -6,11 +6,11 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     EventSendType, FullVersionString, IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IExtendedConfiguration, IPayloadData, IPerfEvent,
-    ITelemetryItem, IUnloadHook, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType,
-    _eExtendedInternalMessageId, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity,
-    extend, getCommonSchemaMetaData, getLocation, getNavigator, getTime, hasOwnProperty, isArray, isBeaconsSupported, isFetchSupported,
-    isNullOrUndefined, isNumber, isReactNative, isString, isUndefined, isValueAssigned, isXhrSupported, objForEachKey, objKeys,
-    onConfigChange, openXhr, strTrim, strUndefined, useXDomainRequest
+    ITelemetryItem, IUnloadHook, IXDomainRequest, IXHROverride, OnCompleteCallback, SendRequestReason, SenderPostManager, TransportType,
+    _IInternalXhrOverride, _ISendPostMgrConfig, _ISenderOnComplete, _eExtendedInternalMessageId, _eInternalMessageId, _getAllResponseHeaders,
+    _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend, getCommonSchemaMetaData, getNavigator,
+    getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
+    isValueAssigned, objForEachKey, objKeys, onConfigChange, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
 import { arrAppend } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
@@ -22,26 +22,19 @@ import {
 import { EventBatch } from "./EventBatch";
 import {
     DEFAULT_CACHE_CONTROL, DEFAULT_CONTENT_TYPE, STR_API_KEY, STR_AUTH_XTOKEN, STR_CACHE_CONTROL, STR_CLIENT_ID, STR_CLIENT_VERSION,
-    STR_CONTENT_TYPE_HEADER, STR_DISABLED_PROPERTY_NAME, STR_DROPPED, STR_EMPTY, STR_KILL_DURATION_HEADER, STR_KILL_DURATION_SECONDS_HEADER,
-    STR_KILL_TOKENS_HEADER, STR_MSA_DEVICE_TICKET, STR_MSFPC, STR_NO_RESPONSE_BODY, STR_OTHER, STR_POST_METHOD, STR_REQUEUE,
-    STR_RESPONSE_FAIL, STR_SENDING, STR_TIME_DELTA_HEADER, STR_TIME_DELTA_TO_APPLY, STR_UPLOAD_TIME
+    STR_CONTENT_TYPE_HEADER, STR_DROPPED, STR_EMPTY, STR_KILL_DURATION_HEADER, STR_KILL_TOKENS_HEADER, STR_MSA_DEVICE_TICKET, STR_MSFPC,
+    STR_NO_RESPONSE_BODY, STR_OTHER, STR_REQUEUE, STR_RESPONSE_FAIL, STR_SENDING, STR_TIME_DELTA_HEADER, STR_TIME_DELTA_TO_APPLY,
+    STR_UPLOAD_TIME
 } from "./InternalConstants";
 import { KillSwitch } from "./KillSwitch";
 import { retryPolicyGetMillisToBackoffForRetry, retryPolicyShouldRetryForStatus } from "./RetryPolicy";
 import { ISerializedPayload, Serializer } from "./Serializer";
 import { ITimeoutOverrideWrapper, createTimeoutWrapper } from "./TimeoutOverrideWrapper";
-import { XDomainRequest as IXDomainRequest } from "./typings/XDomainRequest";
 
 const strSendAttempt = "sendAttempt";
 
 const _noResponseQs =  "&" + STR_NO_RESPONSE_BODY + "=true";
 const UrlQueryString = "?cors=true&" + STR_CONTENT_TYPE_HEADER.toLowerCase() + "=" + DEFAULT_CONTENT_TYPE;
-
-// TypeScript removed this interface so we need to declare the global so we can check for it's existence.
-declare var XDomainRequest: {
-    prototype: IXDomainRequest;
-    new(): IXDomainRequest;
-};
 
 interface IRequestUrlDetails {
     url: string,
@@ -78,22 +71,6 @@ _addCollectorHeaderQsMapping(STR_TIME_DELTA_TO_APPLY, STR_TIME_DELTA_TO_APPLY);
 _addCollectorHeaderQsMapping(STR_UPLOAD_TIME, STR_UPLOAD_TIME);
 _addCollectorHeaderQsMapping(STR_AUTH_XTOKEN, STR_AUTH_XTOKEN);
 
-
-function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
-    try {
-        return xhr.responseText;
-    } catch (e) {
-        // Best effort, as XHR may throw while XDR wont so just ignore
-    }
-
-    return STR_EMPTY;
-}
-
-interface IInternalXhrOverride extends IXHROverride {
-    _transport?: TransportType;
-    _isSync?: boolean;
-}
-
 interface IInternalPayloadData extends IPayloadData {
     _thePayload: ISerializedPayload;
     _sendReason: SendRequestReason;
@@ -128,18 +105,6 @@ function _addRequestDetails(details: IRequestUrlDetails, name: string, value: st
             details.url += "&" + name + "=" + value;
         }
     }
-}
-
-function _prependTransports(theTransports: TransportType[], newTransports: TransportType | TransportType[]) {
-    if (newTransports) {
-        if (isNumber(newTransports)) {
-            theTransports = [newTransports as TransportType].concat(theTransports);
-        } else if (isArray(newTransports)) {
-            theTransports = newTransports.concat(theTransports);
-        }
-    }
-
-    return theTransports;
 }
 
 interface IQueryStringParams {
@@ -188,7 +153,7 @@ export class HttpManager {
         let _outstandingRequests: number;           // Holds the number of outstanding async requests that have not returned a response yet
         let _postManager: IPostChannel;
         let _logger: IDiagnosticLogger;
-        let _sendInterfaces: { [key: number]: IInternalXhrOverride };
+        let _sendInterfaces: { [key: number]: _IInternalXhrOverride };
         let _core: IAppInsightsCore;
         let _customHttpInterface: boolean;
         let _queryStringParameters: IQueryStringParams[];
@@ -211,6 +176,7 @@ export class HttpManager {
         let _isInitialized: boolean;
         let _timeoutWrapper: ITimeoutOverrideWrapper;
         let _excludeCsMetaData: boolean;
+        let _sendPostMgr: SenderPostManager;
 
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
@@ -272,6 +238,15 @@ export class HttpManager {
                         if (!isNullOrUndefined(channelConfig.useSendBeacon)) {
                             _useBeacons = !!channelConfig.useSendBeacon;
                         }
+
+                        let sendPostConfig = _getSendPostMgrConfig();
+                        // only init it once
+                        if (!_sendPostMgr) {
+                            _sendPostMgr = new SenderPostManager();
+                            _sendPostMgr.initialize(sendPostConfig, _logger);
+                        } else {
+                            _sendPostMgr.SetConfig(sendPostConfig);
+                        }
     
                         let syncHttpInterface = httpInterface;
                         let beaconHttpInterface: IXHROverride = channelConfig.alwaysUseXhrOverride ? httpInterface : null;
@@ -281,11 +256,12 @@ export class HttpManager {
                         if (!httpInterface) {
                             _customHttpInterface = false;
         
-                            let location = getLocation();
-                            if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
-                                // Special case where a local html file fails with a CORS error on Chromium browsers
-                                _sendCredentials = false;
-                            }
+                            // this is handled in SendPostManager now
+                            // let location = getLocation();
+                            // if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
+                            //     // Special case where a local html file fails with a CORS error on Chromium browsers
+                            //     _sendCredentials = false;
+                            // }
         
                             let theTransports: TransportType[] = [];
                             if (isReactNative()) {
@@ -298,7 +274,7 @@ export class HttpManager {
                             }
         
                             // Prefix any user requested transport(s) values
-                            theTransports = _prependTransports(theTransports, channelConfig.transports);
+                            theTransports = prependTransports(theTransports, channelConfig.transports);
         
                             httpInterface = _getSenderInterface(theTransports, false);
                             if (!httpInterface) {
@@ -310,7 +286,7 @@ export class HttpManager {
     
                         if (!beaconHttpInterface) {
                             // Allow overriding the usage of sendBeacon
-                            beaconUnloadTransports = _prependTransports(beaconUnloadTransports, channelConfig.unloadTransports);
+                            beaconUnloadTransports = prependTransports(beaconUnloadTransports, channelConfig.unloadTransports);
                             beaconHttpInterface = _getSenderInterface(beaconUnloadTransports, true);
                         }
     
@@ -341,44 +317,39 @@ export class HttpManager {
             };
 
             _self.serializeOfflineEvt = (evt) => {
-                return _serializer.getEventBlob(evt);
+                try {
+                    if (_serializer) {
+                        return _serializer.getEventBlob(evt);
+                    }
+                      
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+
+                }
+                return STR_EMPTY;
+                
             }
 
             _self.getOfflineRequestDetails = () => {
-                let payload = _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
-                return _buildRequestDetails(payload, _useHeaders);
+                try {
+                    let payload = _serializer && _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                    return _buildRequestDetails(payload, _useHeaders);
+
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+
+                }
+                return null;
             }
 
             // Special internal method to allow the DebugPlugin to hook embedded objects
-            function _getSenderInterface(transports: TransportType[], syncSupport: boolean): IInternalXhrOverride {
-                let transportType: TransportType = TransportType.NotSet;
-                let sendPostFunc: SendPOSTFunction = null;
-                let lp = 0;
-                while (sendPostFunc == null && lp < transports.length) {
-                    transportType = transports[lp];
-                    if (transportType === TransportType.Xhr) {
-                        if (useXDomainRequest()) {
-                            sendPostFunc = _xdrSendPost;
-                        } else if (isXhrSupported()) {
-                            sendPostFunc = _xhrSendPost;
-                        }
-                    } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport) && (!syncSupport || (syncSupport && !_disableFetchKeepAlive))) {
-                        sendPostFunc = _fetchSendPost;
-                    } else if (_useBeacons && transportType === TransportType.Beacon && isBeaconsSupported()) {
-                        sendPostFunc = _beaconSendPost;
-                    }
+            function _getSenderInterface(transports: TransportType[], syncSupport: boolean): _IInternalXhrOverride {
+                try {
+                    return _sendPostMgr && _sendPostMgr.getXhrInst(transports, syncSupport);
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
 
-                    lp++;
                 }
-
-                if (sendPostFunc) {
-                    return {
-                        _transport: transportType,
-                        _isSync: syncSupport,
-                        sendPOST: sendPostFunc
-                    };
-                }
-
                 return null;
             }
 
@@ -386,42 +357,39 @@ export class HttpManager {
                 return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces];
             };
 
-            function _xdrSendPost(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
-                // It doesn't support custom headers, so no action is taken with current requestHeaders
-                let xdr = new XDomainRequest();
-                xdr.open(STR_POST_METHOD, payload.urlString);
-                if (payload.timeout) {
-                    xdr.timeout = payload.timeout;
+            function _getSendPostMgrConfig(): _ISendPostMgrConfig {
+                try {
+                    let onCompleteFuncs = {
+                        xdrOnComplete: _xdrOncomplete,
+                        fetchOnComplete: _fetchOnComplete,
+                        xhrOnComplete: _xhrOnComplete,
+                        beaconOnRetry: _onBeaconRetry
+                    } as _ISenderOnComplete;
+                    let config = {
+                        enableSendPromise: false,
+                        isOneDs: true,
+                        disableCredentials: !_sendCredentials,
+                        disableXhr: false,
+                        disableBeacon: !_useBeacons,
+                        disableBeaconSync: !_useBeacons,
+                        disableFetchKeepAlive: _disableFetchKeepAlive,
+                        timeWrapper: _timeoutWrapper,
+                        addNoResponse: _addNoResponse,
+                        senderOnCompleteCallBack: onCompleteFuncs
+                    } as _ISendPostMgrConfig;
+                    return config;
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
                 }
+                return null;
+            }
 
-                // can't get the status code in xdr.
-                xdr.onload = () => {
-                    // we will assume onload means the request succeeded.
-                    let response = _getResponseText(xdr);
-                    _doOnComplete(oncomplete, 200, {}, response);
-                    _handleCollectorResponse(response);
-                };
 
-                // we will assume onerror means we need to drop the events.
-                xdr.onerror = () => {
-                    _doOnComplete(oncomplete, 400, {});
-                };
-                // we will assume ontimeout means we need to retry the events.
-                xdr.ontimeout = () => {
-                    _doOnComplete(oncomplete, 500, {});
-                };
-
-                // https://cypressnorth.com/web-programming-and-development/internet-explorer-aborting-ajax-requests-fixed/
-                // tslint:disable-next-line:no-empty
-                xdr.onprogress = () => { };
-
-                if (sync) {
-                    xdr.send(payload.data);
-                } else {
-                    _timeoutWrapper.set(() => {
-                        xdr.send(payload.data);
-                    }, 0);
-                }
+            function _xdrOncomplete(xdr: IXDomainRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) {
+                let response = getResponseText(xdr);
+                _doOnComplete(oncomplete, 200, {}, response);
+                _handleCollectorResponse(response);
+               
             }
 
             function _initDefaults() {
@@ -457,150 +425,29 @@ export class HttpManager {
                 _isInitialized = false;
                 _timeoutWrapper = createTimeoutWrapper();
                 _excludeCsMetaData = false;
+                _sendPostMgr = null;
             }
-    
-            function _fetchSendPost(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
-                let theUrl = payload.urlString;
-                let ignoreResponse = false;
-                let responseHandled = false;
-                let requestInit: RequestInit = {
-                    body: payload.data,
-                    method: STR_POST_METHOD,
-                    [STR_DISABLED_PROPERTY_NAME]: true
-                };
 
-                if (sync) {
-                    requestInit.keepalive = true;
-                    if ((payload as IInternalPayloadData)._sendReason === SendRequestReason.Unload) {
-                        // As a sync request (during unload), it is unlikely that we will get a chance to process the response so
-                        // just like beacon send assume that the events have been accepted and processed
-                        ignoreResponse = true;
-                        if (_addNoResponse) {
-                            theUrl += _noResponseQs;
-                        }
-                    }
-                }
-
-                if (_sendCredentials) {
-                    // Don't send credentials when URL is file://
-                    requestInit.credentials = "include";
-                }
-
-                // Only add headers if there are headers to add, due to issue with some polyfills
-                if (payload.headers && objKeys(payload.headers).length > 0) {
-                    requestInit.headers = payload.headers;
-                }
-
+            function _fetchOnComplete(response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) {
                 const handleResponse = (status: number, headerMap: { [x: string]: string; }, responseText: string) => {
-                    if (!responseHandled) {
-                        responseHandled = true;
-                        _doOnComplete(oncomplete, status, headerMap, responseText);
-                        _handleCollectorResponse(responseText);
-                    }
+                    _doOnComplete(onComplete, status, headerMap, responseText);
+                    _handleCollectorResponse(responseText);
                 };
-            
-                const handleError = () => {
-                    // In case there is an error in the request. Set the status to 0
-                    // so that the events can be retried later.
-                    if (!responseHandled) {
-                        responseHandled = true;
-                        _doOnComplete(oncomplete, 0, {});
-                    }
-                };
-
-                fetch(theUrl, requestInit).then((response) => {
-                    let headerMap = {};
-                    let responseText = STR_EMPTY;
-                    var headers = response.headers;
-                    if (headers) {
-                        headers["forEach"]((value: string, name: string) => {
-                            headerMap[name] = value;
-                        });
-                    }
-                    if (response.body) {
-                        response.text().then(function(text) {
-                            responseText = text;
-                            handleResponse(response.status, headerMap, responseText);
-                        }, handleError);
-                    } else {
-                        handleResponse(response.status, headerMap, "");
-                    }
-                }).catch(handleError);
-
-                if (ignoreResponse && !responseHandled) {
-                    // Assume success during unload processing
-                    responseHandled = true;
-                    _doOnComplete(oncomplete, 200, {});
+                let headerMap = {};
+                var headers = response.headers;
+                if (headers) {
+                    headers["forEach"]((value: string, name: string) => {
+                        headerMap[name] = value;
+                    });
                 }
-
-                if (!responseHandled && payload.timeout > 0) {
-                    // Simulate timeout
-                    _timeoutWrapper.set(() => {
-                        if (!responseHandled) {
-                            // Assume a 500 response (which will cause a retry)
-                            responseHandled = true;
-                            _doOnComplete(oncomplete, 500, {});
-                        }
-                    }, payload.timeout);
-                }
+                handleResponse(response.status, headerMap, resValue || STR_EMPTY);
             }
+            
 
-            function _xhrSendPost(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
-                let theUrl = payload.urlString;
-
-                function _appendHeader(theHeaders, xhr, name) {
-                    if (!theHeaders[name] && xhr && xhr.getResponseHeader) {
-                        let value = xhr.getResponseHeader(name);
-                        if (value) {
-                            theHeaders[name] = strTrim(value);
-                        }
-                    }
-
-                    return theHeaders;
-                }
-
-                function _getAllResponseHeaders(xhr) {
-                    let theHeaders = {};
-
-                    if (!xhr.getAllResponseHeaders) {
-                        // Firefox 2-63 doesn't have getAllResponseHeaders function but it does have getResponseHeader
-                        // Only call these if getAllResponseHeaders doesn't exist, otherwise we can get invalid response errors
-                        // as collector is not currently returning the correct header to allow JS to access these headers
-                        theHeaders = _appendHeader(theHeaders, xhr, STR_TIME_DELTA_HEADER);
-                        theHeaders = _appendHeader(theHeaders, xhr, STR_KILL_DURATION_HEADER);
-                        theHeaders = _appendHeader(theHeaders, xhr, STR_KILL_DURATION_SECONDS_HEADER);
-                    } else {
-                        theHeaders = _convertAllHeadersToMap(xhr.getAllResponseHeaders());
-                    }
-
-                    return theHeaders;
-                }
-
-                function xhrComplete(xhr, responseTxt?) {
-                    _doOnComplete(oncomplete, xhr.status, _getAllResponseHeaders(xhr), responseTxt);
-                }
-                if (sync && payload.disableXhrSync) {
-                    sync = false;
-                }
-
-                let xhrRequest = openXhr(STR_POST_METHOD, theUrl, _sendCredentials, true, sync, payload.timeout);
-
-                // Set custom headers (e.g. gzip) here (after open())
-                objForEachKey(payload.headers, (name, value) => {
-                    xhrRequest.setRequestHeader(name, value);
-                });
-                xhrRequest.onload = () => {
-                    let response = _getResponseText(xhrRequest);
-                    xhrComplete(xhrRequest, response);
-                    _handleCollectorResponse(response);
-                };
-                xhrRequest.onerror = () => {
-                    xhrComplete(xhrRequest);
-                };
-                xhrRequest.ontimeout = () => {
-                    xhrComplete(xhrRequest);
-                };
-                xhrRequest.send(payload.data);
+            function _xhrOnComplete (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) {
+                let response = getResponseText(request);
+                _doOnComplete(oncomplete, request.status, _getAllResponseHeaders(request, true), response);
+                _handleCollectorResponse(response);
             }
 
             function _doOnComplete(oncomplete: OnCompleteCallback, status: number, headers: { [headerName: string]: string }, response?: string) {
@@ -613,7 +460,7 @@ export class HttpManager {
                 }
             }
 
-            function _beaconSendPost(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
+            function _onBeaconRetry(payload: IPayloadData, onComplete: OnCompleteCallback, canSend:(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) {
                 // Custom headers not supported in sendBeacon payload.headers would be ignored
                 let internalPayloadData = payload as IInternalPayloadData;
                 let status = 200;
@@ -622,50 +469,52 @@ export class HttpManager {
 
                 try {
                     let nav = getNavigator();
-                    if (!nav.sendBeacon(theUrl, payload.data)) {
-                        if (thePayload) {
-                            let persistStorage = !!_core.getPlugin("LocalStorage");
-                            // Failed to send entire payload so try and split data and try to send as much events as possible
-                            let droppedBatches: EventBatch[] = [];
-                            let sentBatches: EventBatch[] = [];
-                            arrForEach(thePayload.batches, (theBatch) => {
-                                if (droppedBatches && theBatch && theBatch.count() > 0) {
-                                    let theEvents = theBatch.events();
-                                    for (let lp = 0; lp < theEvents.length; lp++) {
-                                        if (!nav.sendBeacon(theUrl, _serializer.getEventBlob(theEvents[lp]))) {
-                                            // Can't send anymore, so split the batch and drop the rest
-                                            droppedBatches.push(theBatch.split(lp));
-                                            break;
-                                        } else {
-                                            sentBatches.push(theBatch[lp]);
-                                        }
+                 
+                    if (thePayload) {
+                        let persistStorage = !!_core.getPlugin("LocalStorage");
+                        // Failed to send entire payload so try and split data and try to send as much events as possible
+                        let droppedBatches: EventBatch[] = [];
+                        let sentBatches: EventBatch[] = [];
+                        arrForEach(thePayload.batches, (theBatch) => {
+                            if (droppedBatches && theBatch && theBatch.count() > 0) {
+                                let theEvents = theBatch.events();
+                                for (let lp = 0; lp < theEvents.length; lp++) {
+                                    if (!nav.sendBeacon(theUrl, _serializer.getEventBlob(theEvents[lp]))) {
+                                        // Can't send anymore, so split the batch and drop the rest
+                                        droppedBatches.push(theBatch.split(lp));
+                                        break;
+                                    } else {
+                                        sentBatches.push(theBatch[lp]);
                                     }
-                                } else {
-                                    // Remove all of the events from the existing batch in the payload as the copy includes the original
-                                    droppedBatches.push(theBatch.split(0));
                                 }
-                            });
+                            } else {
+                                // Remove all of the events from the existing batch in the payload as the copy includes the original
+                                droppedBatches.push(theBatch.split(0));
+                            }
+                        });
 
-                            if (sentBatches.length > 0) {
-                                // Update the payload with the sent batches
-                                thePayload.sentEvts = sentBatches;
-                            }
-                            
-                            if (!persistStorage) {
-                                _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
-                            }
-                        } else {
-                            status = 0;
+                        if (sentBatches.length > 0) {
+                            // Update the payload with the sent batches
+                            thePayload.sentEvts = sentBatches;
                         }
+                        
+                        if (!persistStorage) {
+                            _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                        }
+                    } else {
+                        status = 0;
                     }
+                  
 
                 } catch (ex) {
                     _warnToConsole(_logger, "Failed to send telemetry using sendBeacon API. Ex:" + dumpObj(ex));
                     status = 0;
                 } finally {
-                    _doOnComplete(oncomplete, status, {}, STR_EMPTY);
+                    _doOnComplete(onComplete, status, {}, STR_EMPTY);
                 }
+
             }
+
 
             function _isBeaconPayload(sendType: EventSendType) {
                 // Sync Fetch has the same payload limitation as sendBeacon -- 64kb limit, so treat both as a beacon send
@@ -1298,31 +1147,31 @@ export class HttpManager {
                 }
             }
 
-            /**
-            * Converts the XHR getAllResponseHeaders to a map containing the header key and value.
-            */
-            // tslint:disable-next-line: align
-            function _convertAllHeadersToMap(headersString: string): { [headerName: string]: string } {
-                let headers = {};
-                if (isString(headersString)) {
-                    let headersArray = strTrim(headersString).split(/[\r\n]+/);
-                    arrForEach(headersArray, (headerEntry) => {
-                        if (headerEntry) {
-                            let idx = headerEntry.indexOf(": ");
-                            if (idx !== -1) {
-                                // The new spec has the headers returning all as lowercase -- but not all browsers do this yet
-                                let header = strTrim(headerEntry.substring(0, idx)).toLowerCase();
-                                let value = strTrim(headerEntry.substring(idx + 1));
-                                headers[header] = value;
-                            } else {
-                                headers[strTrim(headerEntry)] = 1;
-                            }
-                        }
-                    });
-                }
+            // /**
+            // * Converts the XHR getAllResponseHeaders to a map containing the header key and value.
+            // */
+            // // tslint:disable-next-line: align
+            // function _convertAllHeadersToMap(headersString: string): { [headerName: string]: string } {
+            //     let headers = {};
+            //     if (isString(headersString)) {
+            //         let headersArray = strTrim(headersString).split(/[\r\n]+/);
+            //         arrForEach(headersArray, (headerEntry) => {
+            //             if (headerEntry) {
+            //                 let idx = headerEntry.indexOf(": ");
+            //                 if (idx !== -1) {
+            //                     // The new spec has the headers returning all as lowercase -- but not all browsers do this yet
+            //                     let header = strTrim(headerEntry.substring(0, idx)).toLowerCase();
+            //                     let value = strTrim(headerEntry.substring(idx + 1));
+            //                     headers[header] = value;
+            //                 } else {
+            //                     headers[strTrim(headerEntry)] = 1;
+            //                 }
+            //             }
+            //         });
+            //     }
 
-                return headers;
-            }
+            //     return headers;
+            // }
 
             function _getMsfpc(thePayload: ISerializedPayload): string {
                 for (let lp = 0; lp < thePayload.batches.length; lp++) {
