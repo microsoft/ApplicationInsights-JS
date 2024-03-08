@@ -170,7 +170,7 @@ export class SenderPostManager {
                         } else if (isXhrSupported()) {
                             sendPostFunc = _xhrSender;
                         }
-                    } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport) && (!syncSupport || (syncSupport && !_disableFetchKeepAlive))) {
+                    } else if (transportType === TransportType.Fetch && isFetchSupported(syncSupport) && (!syncSupport || !_disableFetchKeepAlive)) {
                         sendPostFunc = _doFetchSender;
                     } else if (transportType === TransportType.Beacon && isBeaconsSupported() && (syncSupport? !_disableBeaconSync : !_disableBeacon)) {
                         sendPostFunc = _beaconSender;
@@ -461,7 +461,7 @@ export class SenderPostManager {
                                      */
                                     if (!_isOneDs && !response.ok) {
                                         // this is for appInsights only
-                                        _handleError(response.statusText)
+                                        _handleError(response.statusText);
                                         resolveFunc && resolveFunc(false);
                                     } else {
                                         if (_isOneDs && !response.body) {
@@ -492,7 +492,6 @@ export class SenderPostManager {
                 } catch (e) {
                     if (!responseHandled) {
                         _handleError(dumpObj(e));
-                        //_doOnComplete(oncomplete, 400, {},  dumpObj(e));
                         rejectFunc && rejectFunc(e);
                     }
                 }
