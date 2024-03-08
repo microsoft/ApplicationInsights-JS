@@ -44,6 +44,45 @@ The Offline Channel supports the saving of events when your application is offli
 | httpXHROverride | [Optional] | null | The HTTP override that should be used to send requests, as an `IXHROverride` object. |
 | alwaysUseXhrOverride | [Optional] | false | Identifies if provided httpXhrOverride will always be used. |
 
+## Basic Usage
+
+### NPM Setup
+
+```js
+import { OfflineChannel, eStorageProviders } from "@microsoft/applicationinsights-offlinechannel-js";
+
+let offlineChannel = new OfflineChannel();
+let coreConfig = {
+    connectionString: "YOUR_CONNECTION_STRING",
+    extensionConfig: {
+        [offlineChannel.identifier]: {
+            providers: [eStorageProviders.LocalStorage, eStorageProviders.IndexedDb],
+            minPersistenceLevel:  2, // only events with PersistenceLevel >=2 will be saved/sent
+        } // Add config for offline support channel
+    }
+};
+let appInsights = new ApplicationInsights({config: coreConfig});
+appInsights.loadAppInsights();
+// this is to make sure offline channel is initialized after sender channel
+appInsights.addPlugin(offlineChannel);
+
+// get offlineListener to set online/offline status
+let offlineListener = offlineChannel.getOfflineListener();
+
+
+// set application status to online 
+offlineListener.setOnlineState(1);
+// offline channel will not process events when the status is online
+appInsights.track({ name:"onlineEvent" }); // sender channel will send this event
+
+// set application status to offline
+offlineListener.setOnlineState(2);
+// offline channel will process and save this event to the configured persistent storage
+// the event will be sent when the application status is online again
+appInsights.track({ name:"offlineEvent" });
+
+```
+
 ## Contributing
 
 Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
@@ -52,11 +91,11 @@ Read our [contributing guide](./CONTRIBUTING.md) to learn about our development 
 
 As this SDK is designed to enable applications to perform data collection which is sent to the Microsoft collection endpoints the following is required to identify our privacy statement.
 
-The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft�s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft's privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 
 ## Trademarks
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft�s Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party�s policies.
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
 
 ## License
 
