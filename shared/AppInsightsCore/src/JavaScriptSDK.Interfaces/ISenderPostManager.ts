@@ -1,5 +1,7 @@
-import { IPayloadData, OnCompleteCallback } from "@microsoft/applicationinsights-core-js";
+import { ITimerHandler } from "@nevware21/ts-utils";
+import { TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IXDomainRequest } from "./IXDomainRequest";
+import { IPayloadData, IXHROverride, OnCompleteCallback } from "./IXHROverride";
 
 /**
  * internal interface
@@ -73,7 +75,7 @@ export interface _ISendPostMgrConfig {
     disableXhr?: boolean;
     
     /**
-     * Is beacon disabled during asunc sending
+     * Is beacon disabled during async sending
      * Default: false
      * @since version after 3.1.0
      */
@@ -87,9 +89,55 @@ export interface _ISendPostMgrConfig {
     disableBeaconSync?: boolean;
 
     /**
+     * Is FetchKeepAlive disabled during sync sending
+     * Default: false
+     * @since version after 3.1.0
+     */
+    disableFetchKeepAlive?: boolean
+
+    /**
      * Identifies functions when xhr/xdr/fetch requests are successfully returned. If they are not defined, oncomplete with be called instead
      * @since version after 3.1.0
      */
     senderOnCompleteCallBack?: _ISenderOnComplete;
 
+    /**
+     * time wrapper to handle payload timeout
+     * this is for 1ds post channel only
+     * Default: null
+     * @since version after 3.1.0
+     */
+    timeWrapper?: _ITimeoutOverrideWrapper;
+    
+    /**
+     * [Optional] flag to indicate whether the sendBeacon and fetch (with keep-alive flag) should add the "NoResponseBody" query string
+     * value to indicate that the server should return a 204 for successful requests. Defaults to true
+     * this is for 1ds post channel only
+     * Default: true
+     * @since version after 3.1.0
+     */
+    addNoResponse?: boolean;
+
+}
+
+/**
+* Internal interface
+* Simple internal timeout wrapper
+* @internal
+* @since version after 3.1.0
+*/
+export interface _ITimeoutOverrideWrapper {
+    set: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => ITimerHandler;
+}
+
+
+/**
+* Internal interface
+* internal sendpost interface
+* @internal
+* @since version after 3.1.0
+*/
+export interface _IInternalXhrOverride extends IXHROverride {
+    _transport?: TransportType;
+    _isSync?: boolean;
 }

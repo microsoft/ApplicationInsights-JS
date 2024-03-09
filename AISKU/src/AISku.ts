@@ -197,7 +197,7 @@ export class AppInsightsSku implements IApplicationInsights {
                 if (_config.connectionString) {
                     const cs = parseConnectionString(_config.connectionString);
                     const ingest = cs.ingestionendpoint;
-                    _config.endpointUrl =  _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : ingest + DEFAULT_BREEZE_PATH; // add /v2/track 
+                    _config.endpointUrl =  _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : ingest + DEFAULT_BREEZE_PATH; // add /v2/track
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                 }
                 // userOverrideEndpointUrl have the highest priority

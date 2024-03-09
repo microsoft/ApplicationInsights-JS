@@ -3,7 +3,7 @@
 export {
     correlationIdSetPrefix, correlationIdGetPrefix, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext,
     correlationIdGetCorrelationContextValue, dateTimeUtilsNow, dateTimeUtilsDuration, isInternalApplicationInsightsEndpoint,
-    createDistributedTraceContextFromTrace, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse
+    createDistributedTraceContextFromTrace
 } from "./Util";
 export { ThrottleMgr } from "./ThrottleMgr";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
@@ -35,8 +35,6 @@ export { eSeverityLevel, SeverityLevel } from "./Interfaces/Contracts/SeverityLe
 export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
 export { IStorageBuffer } from "./Interfaces/IStorageBuffer";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
-export { IXDomainRequest, IBackendResponse } from "./Interfaces/IXDomainRequest";
-export { _ISenderOnComplete, _ISendPostMgrConfig } from "./Interfaces/ISenderPostManager";
 export {
     DataSanitizerValues,
     dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage,
@@ -67,7 +65,6 @@ export {
     isBeaconsSupported as isBeaconApiSupported,
     ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
 } from "@microsoft/applicationinsights-core-js";
-export { SenderPostManager } from "./SenderPostManager";
 export { createDomEvent } from "./DomHelperFuncs";
 export {
     utlDisableStorage, utlEnableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage,

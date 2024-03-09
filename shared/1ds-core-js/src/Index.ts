@@ -11,14 +11,13 @@ import {
 } from "./DataModels";
 import {
     EventLatency, EventLatencyValue, EventPersistence, EventPersistenceValue, EventPropertyType, EventSendType, FieldValueSanitizerType,
-    GuidStyle, TraceLevel, TransportType, ValueKind, _ExtendedInternalMessageId, _eExtendedInternalMessageId, eEventPropertyType,
-    eTraceLevel, eValueKind
+    GuidStyle, TraceLevel, ValueKind, _ExtendedInternalMessageId, _eExtendedInternalMessageId, eEventPropertyType, eTraceLevel, eValueKind
 } from "./Enums";
 import { ValueSanitizer } from "./ValueSanitizer";
 
 export {
     ValueKind, eValueKind, IExtendedConfiguration, IPropertyStorageOverride,
-    EventLatency, EventPersistence, TraceLevel, eTraceLevel, IEventProperty, IExtendedTelemetryItem, TransportType,
+    EventLatency, EventPersistence, TraceLevel, eTraceLevel, IEventProperty, IExtendedTelemetryItem,
     AppInsightsCore, _ExtendedInternalMessageId, _eExtendedInternalMessageId, EventPropertyType, eEventPropertyType,
     IEventTiming, GuidStyle,
     FieldValueSanitizerFunc, FieldValueSanitizerType, FieldValueSanitizerTypes, IFieldSanitizerDetails,
@@ -67,7 +66,10 @@ export {
     IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn, IDynamicConfigHandler, IDynamicPropertyHandler,
     IWatchDetails, IWatcherHandler, WatcherFunction,
     createDynamicConfig, onConfigChange, getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion,
-    IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction, IInternalOfflineSupport
+    IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction, IInternalOfflineSupport, _ISendPostMgrConfig, IBackendResponse, _ISenderOnComplete, SenderPostManager,
+    getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse, convertAllHeadersToMap, _getAllResponseHeaders, _appendHeader, _IInternalXhrOverride,
+    _ITimeoutOverrideWrapper, IXDomainRequest,
+    TransportType
 } from "@microsoft/applicationinsights-core-js";
 
 export {

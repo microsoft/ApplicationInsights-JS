@@ -24,7 +24,13 @@ export interface IXDomainRequest extends XMLHttpRequestEventTarget {
     readonly responseText: string;
     send(payload: string): void;
     open(method: string, url: string): void;
+    timeout: number;
+    contentType: string;
+    addEventListener(type: "error", listener: (ev: ErrorEvent) => any, useCapture?: boolean): void;
+    addEventListener(type: "load" | "timeout", listener: (ev: Event) => any, useCapture?: boolean): void;
+    addEventListener(type: "progress", listener: (ev: ProgressEvent) => any, useCapture?: boolean): void;
 }
+
 
 export interface IResponseError {
     readonly index: number;

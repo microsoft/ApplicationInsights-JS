@@ -2,8 +2,8 @@ import { AITestClass } from "@microsoft/ai-test-framework";
 import * as pako from 'pako';
 
 export class FileSizeCheckTest extends AITestClass {
-    private readonly MAX_BUNDLE_SIZE = 60;
-    private readonly MAX_DEFLATE_SIZE = 26;
+    private readonly MAX_BUNDLE_SIZE = 65;
+    private readonly MAX_DEFLATE_SIZE = 28;
     private readonly bundleFilePath = "../bundle/es5/ms.core.min.js";
 
     public testInitialize() {
