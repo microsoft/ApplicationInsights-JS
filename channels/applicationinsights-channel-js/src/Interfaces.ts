@@ -85,6 +85,11 @@ export interface ISenderConfig {
      * (Optional) The number of events that can be kept in memory before the SDK starts to drop events. By default, this is 10,000.
      */
     eventsLimitInMem: () => number;
+
+    /**
+     * (Optional) The specific error codes that will cause a retry of sending data to the backend.
+     */
+    retryCodes: () => number[];
 }
 
 export interface IBackendResponse {
