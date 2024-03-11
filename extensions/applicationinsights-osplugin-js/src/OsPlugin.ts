@@ -5,22 +5,23 @@
 */
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IExtendedConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eExtendedInternalMessageId, _throwInternal,
+    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
     addPageHideEventListener, addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eLoggingSeverity,
-    mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setProcessTelemetryTimings
-} from "@microsoft/1ds-core-js";
+    getSetValue, mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setValue
+} from "@microsoft/applicationinsights-core-js";
+import { Extensions, IConfig } from "@microsoft/applicationinsights-common";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import { objDeepFreeze, objDefineAccessors } from "@nevware21/ts-utils";
 import { IOSPluginConfiguration } from "./DataModels";
 
 const defaultgetOSTimeoutMs = 5000;
+const strExt = "ext";
 interface platformVersionInterface {
     brands?: { brand: string, version: string }[],
     mobile?: boolean,
     platform?: string,
     platformVersion?: string
-
 }
 interface UserAgentHighEntropyData {
     platformVersion: platformVersionInterface
@@ -31,7 +32,8 @@ interface ModernNavigator {
     };
   }
 const defaultOSConfig: IConfigDefaults<IOSPluginConfiguration> = objDeepFreeze({
-    getOSTimeoutMs: defaultgetOSTimeoutMs
+    getOSTimeoutMs: defaultgetOSTimeoutMs,
+    endpointIsBreeze: true
 });
 
 interface IDelayedEvent {
@@ -52,8 +54,9 @@ export class OsPlugin extends BaseTelemetryPlugin {
         let _getOSTimeout: any;
         let _getOSTimeoutMs: number;
 
-        let _platformVersion: platformVersionInterface;
+        let _platformVersionResponse: platformVersionInterface;
         let _retrieveFullVersion: boolean;
+        let _endpointIsBreeze: boolean;
 
         let _eventQueue: IDelayedEvent[];
         let _evtNamespace: string | string[];
@@ -66,18 +69,24 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
             _initDefaults();
 
-            _self.initialize = (coreConfig: IExtendedConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => {
+            _self.initialize = (coreConfig: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) => {
                 let _self = this;
                 _core = core;
                 super.initialize(coreConfig, core, extensions);
                 let identifier = _self.identifier;
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace(identifier), core.evtNamespace && core.evtNamespace());
 
+                _os = sessionStorage.getItem("ai_os");
+                _osVer = parseInt(sessionStorage.getItem("ai_osVer"));
+                if(_os && _osVer){
+                    _retrieveFullVersion = true;
+                }
                 _self._addHook(onConfigChange(coreConfig, (details)=> {
                     let coreConfig = details.cfg;
                     let ctx = createProcessTelemetryContext(null, coreConfig, core);
                     _ocConfig = ctx.getExtCfg<IOSPluginConfiguration>(identifier, defaultOSConfig);
                     _getOSTimeoutMs = _ocConfig.getOSTimeoutMs;
+                    _endpointIsBreeze = _ocConfig.endpointIsBreeze;
                   
                     let excludePageUnloadEvents = coreConfig.disablePageUnloadEvents || [];
 
@@ -101,12 +110,11 @@ export class OsPlugin extends BaseTelemetryPlugin {
         
             _self.processTelemetry = (event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
-                setProcessTelemetryTimings(event, _self.identifier);
-                // has not yet get the OS version
+
                 if (!_retrieveFullVersion) {
-                    // Start Requesting OS version
+                    // Start Requesting OS version process
                     _getOSInProgress = true;
-                    // Timeout handshake if it takes more than 5 seconds
+                    // Timeout request if it takes more than 5 seconds (by default)
                     _getOSTimeout = setTimeout(() => {
                         _completeOsRetrieve();
                     }, _getOSTimeoutMs);
@@ -119,8 +127,14 @@ export class OsPlugin extends BaseTelemetryPlugin {
                         item: event
                     });
                 } else {
-                    event.ext.os = _os;
-                    event.ext.osVer = _osVer;
+                    if (_retrieveFullVersion){
+                        if (_endpointIsBreeze){
+                            setValue(getSetValue(event, strExt), Extensions.OSExt, _os + _osVer);
+                        } else {
+                            setValue(getSetValue(event, strExt), Extensions.OSExt, _os);
+                            setValue(getSetValue(event, strExt), "osVer", _osVer);
+                        }
+                    }
                     _self.processNext(event, itemCtx);
                 }
             };
@@ -135,36 +149,36 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
         
             /**
-             * Attaches to message, to receive responses from Collector.
+             * Wait for the response from the browser for the OS version and store info in the session storage
              */
             function startRetrieveOsVersion() {
-                console.log("startRetrieveOsVersion");
-                if (navigator.userAgent && navigator.userAgent.indexOf("Windows") > 0) {
+                if (navigator.userAgent) {
                     const getHighEntropyValues = (navigator as ModernNavigator).userAgentData?.getHighEntropyValues;
                     if (getHighEntropyValues) {
                         doAwaitResponse(getHighEntropyValues(["platformVersion"]), (response:any) => {
-                            console.log("response", JSON.stringify(response));
                             if (!response.rejected) {
-                                let result = response.value;
+                                _platformVersionResponse = response.value;
                                 _retrieveFullVersion = true;
-                                console.log("getplatformVersion", JSON.stringify(result.platformVersion));
-                                _platformVersion = result.platformVersion;
-                                if (_platformVersion.platformVersion && _platformVersion.platform) {
-                                    _os = _platformVersion.platform;
-                                    _osVer = parseInt(_platformVersion.platformVersion);
-                                    if (_os == "Windows"){
-                                        if (_osVer >= 13){
-                                            _osVer = 11;
-                                        } else {
+                                if (_platformVersionResponse.platformVersion && _platformVersionResponse.platform) {
+                                    _os = _platformVersionResponse.platform;
+                                    _osVer = parseInt(_platformVersionResponse.platformVersion);
+                                    if (_os === "Windows"){
+                                        if (_osVer == 0){
+                                            _osVer = 8;
+                                        } else if (_osVer < 13){
                                             _osVer = 10;
+                                        } else{
+                                            _osVer = 11;
                                         }
                                     }
+                                    sessionStorage.setItem("ai_os", _os);
+                                    sessionStorage.setItem("ai_osVer", _osVer.toString());
                                 }
                             } else {
-                                _throwInternal(_self.diagLog(),
+                                _throwInternal(_core.logger,
                                     eLoggingSeverity.CRITICAL,
-                                    _eExtendedInternalMessageId.AuthHandShakeError, "Error with os detection process: " + response.reason
-                                );
+                                    _eInternalMessageId.PluginException,
+                                    "Could not retrieve operating system: " + response.reason);
                             }
                             _completeOsRetrieve();
                         });
@@ -173,7 +187,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
             }
         
             /**
-            * Complete auth handhshake, cleanup and release the event queue
+            * Complete retrieving operating system info process, cleanup and release the event queue
             */
             function _completeOsRetrieve() {
                 if (_getOSTimeout) {
@@ -188,11 +202,15 @@ export class OsPlugin extends BaseTelemetryPlugin {
             */
             function _releaseEventQueue() {
                 arrForEach(_eventQueue, (evt) => {
-                    if (evt.item){
-                        evt.item.ext.os = _os;
-                        evt.item.ext.osVer = _osVer;
-                        evt.ctx.processNext(evt.item);
+                    if (_retrieveFullVersion){
+                        if (_endpointIsBreeze){
+                            setValue(getSetValue(evt.item, strExt), Extensions.OSExt, _os + _osVer);
+                        } else {
+                            setValue(getSetValue(evt.item, strExt), Extensions.OSExt, _os);
+                            setValue(getSetValue(evt.item, strExt), "osVer", _osVer);
+                        }
                     }
+                    evt.ctx.processNext(evt.item);
                 });
                 _eventQueue = [];
             }
@@ -208,15 +226,14 @@ export class OsPlugin extends BaseTelemetryPlugin {
             }
 
             // For backward compatibility
-            objDefineAccessors(_self, "_platformVersion", () => _platformVersion);
+            objDefineAccessors(_self, "_platformVersionResponse", () => _platformVersionResponse);
             objDefineAccessors(_self, "_eventQueue", () => _eventQueue);
             objDefineAccessors(_self, "_getOSInProgress", () => _getOSInProgress);
             objDefineAccessors(_self, "_evtNamespace", () => "." + _evtNamespace);
         });
     }
-
-    public initialize(coreConfig: IExtendedConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
@@ -229,6 +246,4 @@ export class OsPlugin extends BaseTelemetryPlugin {
     public processTelemetry(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
-
-
 }

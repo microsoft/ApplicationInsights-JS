@@ -4,11 +4,9 @@
 
 import { Assert, AITestClass } from '@microsoft/ai-test-framework';
 import { IOSPluginConfiguration, OsPlugin } from '../../../src/applicationinsights-osplugin-js';
-import { 
-    IExtendedConfiguration, AppInsightsCore, IChannelControls, ITelemetryItem, __getRegisteredEvents, 
-    _IRegisteredEvents, blockDynamicConversion
-} from '@microsoft/1ds-core-js';
 import { createAsyncPromise, ResolvePromiseHandler, RejectPromiseHandler } from "@nevware21/ts-async";
+import {getWindow, AppInsightsCore, IChannelControls, ITelemetryPlugin,
+    IConfiguration, ITelemetryItem} from "@microsoft/applicationinsights-core-js";
 
 const defaultgetOSTimeoutMs = 5000;
 const _platformVersion =  {"brands":[{"brand":"Chromium","version":"122"}, 
@@ -22,20 +20,24 @@ interface CustomNavigator extends Navigator {
 
 export class OsPluginTest extends AITestClass {
 
-    private _config: IExtendedConfiguration;
+    private _config;
     private _plugin: OsPlugin;
     private _core: AppInsightsCore;
     private _channelExtension: IChannelControls;
     private _osConfig: IOSPluginConfiguration = {
-        getOSTimeoutMs: 6000 // set a big number to avoid timeout for test
+        getOSTimeoutMs: 6000, // set a big number to avoid timeout for test
+        endpointIsBreeze: false
     };
+    private _testChannelPlugin: TestChannelPlugin;
 
     private _resolvedGetHighEntrophyPromise: ResolvePromiseHandler<any> | undefined;
     private _rejectedGetHighEntrophyPromise: RejectPromiseHandler | undefined;
+    private _channelSpy: any;
 
     public testInitialize() {
         this._core = new AppInsightsCore();
         this._plugin = new OsPlugin();
+        this._testChannelPlugin = new TestChannelPlugin();
         this._config = {
             instrumentationKey: 'testIkey',
             endpointUrl: 'testEndpoint',
@@ -45,29 +47,26 @@ export class OsPluginTest extends AITestClass {
         let navigator = {
             userAgentData: {
                 getHighEntropyValues: (args) => {
-                    return createAsyncPromise((resolve, reject) => {
-                        this._resolvedGetHighEntrophyPromise = resolve;
-                        this._rejectedGetHighEntrophyPromise = reject;
-                    });
+                    if (args[0] === "platformVersion") {
+                        return createAsyncPromise((resolve, reject) => {
+                            this._resolvedGetHighEntrophyPromise = resolve;
+                            this._rejectedGetHighEntrophyPromise = reject;
+                        });
+                    }
                 }
             }
         } as CustomNavigator;
 
         this.setNavigator(navigator, true);
-        this._channelExtension = blockDynamicConversion({
-            pause: () => { },
-            resume: () => { },
-            teardown: () => { },
-            flush: (async: any, callBack: any) => { },
-            processTelemetry: (env: any) => { },
-            setNextPlugin: (next: any) => { },
-            initialize: (config: any, core: any, extensions: any) => { },
-            identifier: "testChannel",
-            priority: 1003
-        });
+
+        this._channelSpy = this.sandbox.spy(this._testChannelPlugin, 'processTelemetry');
+
     }
 
     public testFinishedCleanup(): void {
+        let window = getWindow();
+        let sessionStorage = window.sessionStorage;
+        sessionStorage.clear();
         if (this._core && this._core.isInitialized()) {
             this._core.unload(false);
         }
@@ -82,7 +81,7 @@ export class OsPluginTest extends AITestClass {
                 let plugin = this._plugin;
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = this._osConfig;
-                this._core.initialize(config, [plugin, this._channelExtension]);
+                this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 this.clock.tick(100);
                 Assert.deepEqual(this._osConfig.getOSTimeoutMs, this._core.config.extensionConfig[this._plugin.identifier].getOSTimeoutMs, "getOSTimeoutMs should be changed");
             }
@@ -95,21 +94,20 @@ export class OsPluginTest extends AITestClass {
                 let config = this._config;
                 let plugin = this._plugin;
                 config.extensionConfig = this._config.extensionConfig || {};
-                this._core.initialize(config, [plugin, this._channelExtension]);
-                let channelSpy = this.sandbox.spy(this._channelExtension, 'processTelemetry');
+                this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 let event = {
                     name: 'testEvent',
                     baseType: 'testBaseType',
                     baseData: {}
                 };
                 this._core.track(event);
-                Assert.equal(channelSpy.called, false);
+                Assert.equal(this._channelSpy.called, false);
                 Assert.equal(this._plugin['_getOSInProgress'], true);
                 Assert.equal(this._plugin['_eventQueue'].length, 1);
                 Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
                 this.clock.tick(defaultgetOSTimeoutMs);
                 Assert.equal(this._plugin['_eventQueue'].length, 0);
-                Assert.equal(channelSpy.called, true);
+                Assert.equal(this._channelSpy.called, true);
             }
         });
 
@@ -121,25 +119,23 @@ export class OsPluginTest extends AITestClass {
                 let plugin = this._plugin;
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = this._osConfig;
-                this._core.initialize(config, [plugin, this._channelExtension]);
-                let channelSpy = this.sandbox.spy(this._channelExtension, 'processTelemetry');
+                this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 let event = {
                     name: 'testEvent',
                     baseType: 'testBaseType',
                     baseData: {}
                 };
                 this._core.track(event);
-                Assert.equal(channelSpy.called, false);
+                Assert.equal(this._channelSpy.called, false);
                 Assert.equal(this._plugin['_getOSInProgress'], true);
                 Assert.equal(this._plugin['_eventQueue'].length, 1);
                 Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
-                this._resolvedGetHighEntrophyPromise({ platformVersion: _platformVersion });
+                this._resolvedGetHighEntrophyPromise(_platformVersion);
                 this.clock.tick(1);
                 Assert.equal(this._plugin['_eventQueue'].length, 0);
                 Assert.equal(this._plugin['_getOSInProgress'], false);
-                Assert.equal(channelSpy.called, true);
-                let telemetry = channelSpy.getCall(0).args[0];
-                console.log("telemetry: ", JSON.stringify(telemetry));
+                Assert.equal(this._channelSpy.called, true);
+                let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
                 Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
                 Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
@@ -154,15 +150,14 @@ export class OsPluginTest extends AITestClass {
                 let plugin = this._plugin;
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = this._osConfig;
-                this._core.initialize(config, [plugin, this._channelExtension]);
-                let channelSpy = this.sandbox.spy(this._channelExtension, 'processTelemetry');
+                this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 let event = {
                     name: 'testEvent',
                     baseType: 'testBaseType',
                     baseData: {}
                 };
                 this._core.track(event);
-                Assert.equal(channelSpy.called, false);
+                Assert.equal(this._channelSpy.called, false);
                 Assert.equal(this._plugin['_getOSInProgress'], true);
                 Assert.equal(this._plugin['_eventQueue'].length, 1);
                 Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
@@ -182,15 +177,14 @@ export class OsPluginTest extends AITestClass {
                 config.extensionConfig[this._plugin.identifier] = {
                     getOSTimeoutMs: 1000
                 };;
-                this._core.initialize(config, [plugin, this._channelExtension]);
-                let channelSpy = this.sandbox.spy(this._channelExtension, 'processTelemetry');
+                this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 let event = {
                     name: 'testEvent',
                     baseType: 'testBaseType',
                     baseData: {}
                 };
                 this._core.track(event);
-                Assert.equal(channelSpy.called, false);
+                Assert.equal(this._channelSpy.called, false);
                 Assert.equal(this._plugin['_getOSInProgress'], true);
                 Assert.equal(this._plugin['_eventQueue'].length, 1);
                 Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
@@ -200,9 +194,8 @@ export class OsPluginTest extends AITestClass {
                 this.clock.tick(500);
                 Assert.equal(this._plugin['_eventQueue'].length, 0);
                 Assert.equal(this._plugin['_getOSInProgress'], false);
-                Assert.equal(channelSpy.called, true);
-                let telemetry = channelSpy.getCall(0).args[0];
-                console.log("telemetry: ", JSON.stringify(telemetry));
+                Assert.equal(this._channelSpy.called, true);
+                let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), false, "timeout would not get os version");
             }
         });
@@ -215,43 +208,138 @@ export class OsPluginTest extends AITestClass {
                 let plugin = this._plugin;
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = {
-                    getOSTimeoutMs: 1000
+                    getOSTimeoutMs: 1000,
+                    endpointIsBreeze: false
                 };;
-                this._core.initialize(config, [plugin, this._channelExtension]);
-                let channelSpy = this.sandbox.spy(this._channelExtension, 'processTelemetry');
+                this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 let event = {
                     name: 'testEvent',
                     baseType: 'testBaseType',
                     baseData: {}
                 };
                 this._core.track(event);
-                Assert.equal(channelSpy.called, false);
+                Assert.equal(this._channelSpy.called, false);
                 Assert.equal(this._plugin['_getOSInProgress'], true);
                 Assert.equal(this._plugin['_eventQueue'].length, 1);
                 Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
                 this.clock.tick(1200);
                 Assert.equal(this._plugin['_eventQueue'].length, 0);
                 Assert.equal(this._plugin['_getOSInProgress'], false);
-                Assert.equal(channelSpy.called, true);
-                let telemetry = channelSpy.getCall(0).args[0];
-                console.log("telemetry: ", JSON.stringify(telemetry));
+                Assert.equal(this._channelSpy.called, true);
+                let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), false, "timeout would not get os version");
 
                 // send another event
                 this._core.track(event);
                 Assert.equal(this._plugin['_getOSInProgress'], true);
                 Assert.equal(this._plugin['_eventQueue'].length, 1);
-                this._resolvedGetHighEntrophyPromise({ platformVersion: _platformVersion });
+                this._resolvedGetHighEntrophyPromise(_platformVersion);
                 this.clock.tick(1);
                 Assert.equal(this._plugin['_eventQueue'].length, 0);
                 Assert.equal(this._plugin['_getOSInProgress'], false);
-                Assert.equal(channelSpy.called, true);
-                telemetry = channelSpy.getCall(0).args[0];
-                console.log("telemetry: ", JSON.stringify(telemetry));
+                Assert.equal(this._channelSpy.called, true);
+                telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
                 Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
                 Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
             }
         });
+
+        this.testCase({
+            name: "OsPlugin: If first telemetryget the OS version, the following telemetry do not need to try again",
+            useFakeTimers: true,
+            test: () => {
+                let window = getWindow();
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+                let config = this._config;
+                let plugin = this._plugin;
+                config.extensionConfig = this._config.extensionConfig || {};
+                config.extensionConfig[this._plugin.identifier] = {
+                    getOSTimeoutMs: 1000,
+                    endpointIsBreeze: false
+                };
+                this._core.initialize(config, [plugin, this._testChannelPlugin]);
+                let event = {
+                    name: 'testEvent',
+                    baseType: 'testBaseType',
+                    baseData: {}
+                };
+                this._core.track(event);
+                Assert.equal(this._channelSpy.called, false);
+                Assert.equal(this._plugin['_getOSInProgress'], true);
+                Assert.equal(this._plugin['_eventQueue'].length, 1);
+                Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
+                this._resolvedGetHighEntrophyPromise(_platformVersion);
+                this.clock.tick(1);
+                Assert.equal(this._plugin['_eventQueue'].length, 0);
+                Assert.equal(this._plugin['_getOSInProgress'], false);
+                Assert.equal(this._channelSpy.called, true);
+                let telemetry = this._channelSpy.getCall(0).args[0];
+                Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
+                Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
+                let storedOs = sessionStorage.getItem("ai_os");
+                QUnit.assert.equal(storedOs, _platformVersion.platform, "os is stored in session storage");
+                let storedOsver = sessionStorage.getItem("ai_osVer");
+                QUnit.assert.equal(storedOsver, 11, "os ver is stored in session storage");
+                // send another event
+                this._core.track(event);
+                Assert.equal(this._plugin['_getOSInProgress'], false);
+                Assert.equal(this._plugin['_eventQueue'].length, 0);
+                Assert.equal(this._channelSpy.called, true);
+                telemetry = this._channelSpy.getCall(0).args[0];
+                Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
+                Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
+                Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
+            }
+        });
+    }
+}
+
+class TestChannelPlugin implements IChannelControls {
+
+    public isFlushInvoked = false;
+    public isUnloadInvoked = false;
+    public isTearDownInvoked = false;
+    public isResumeInvoked = false;
+    public isPauseInvoked = false;
+
+    constructor() {
+        this.processTelemetry = this._processTelemetry.bind(this);
+    }
+    public pause(): void {
+        this.isPauseInvoked = true;
+    }
+
+    public resume(): void {
+        this.isResumeInvoked = true;
+    }
+
+    public teardown(): void {
+        this.isTearDownInvoked = true;
+    }
+
+    flush(async?: boolean, callBack?: () => void): void {
+        this.isFlushInvoked = true;
+        if (callBack) {
+            callBack();
+        }
+    }
+
+    public processTelemetry;
+
+    public identifier = "Sender";
+
+    setNextPlugin(next: ITelemetryPlugin) {
+        // no next setup
+    }
+
+    public priority: number = 1001;
+
+    public initialize = (config: IConfiguration) => {
+    }
+
+    private _processTelemetry(env: ITelemetryItem) {
     }
 }
