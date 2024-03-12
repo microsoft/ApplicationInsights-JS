@@ -62,3 +62,7 @@ export {
     AjaxPlugin as DependenciesPlugin, IDependenciesPlugin,
     DependencyListenerFunction, DependencyInitializerFunction, IDependencyInitializerHandler, IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
+
+export { CfgSyncPlugin, ICfgSyncPlugin, ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
+} from "@microsoft/applicationinsights-cfgsync-js";
+
