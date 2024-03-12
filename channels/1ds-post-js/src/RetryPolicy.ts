@@ -11,9 +11,9 @@ const MaxBackoff = 600000;
 /**
  * Determine if the request should be retried for the given status code.
  * The below expression reads that we should only retry for:
- *      - HttpStatusCodes that are smaller than 300.
- *      - HttpStatusCodes greater or equal to 500 (except for 501-NotImplement
- *        and 505-HttpVersionNotSupport).
+ *      - HttpStatusCodes that are smaller than 300. (include 206-PartialSuccess)
+ *      - HttpStatusCodes greater or equal to 500 (except for 500-InternalServerError,
+ *        501-NotImplement and 505-HttpVersionNotSupport).
  *      - HttpStatusCode 408-RequestTimeout.
  *      - HttpStatusCode 429.
  * This is based on Microsoft.WindowsAzure.Storage.RetryPolicies.ExponentialRetry class
@@ -23,8 +23,9 @@ const MaxBackoff = 600000;
 export function retryPolicyShouldRetryForStatus(httpStatusCode: number): boolean {
     /* tslint:disable:triple-equals */
     // Disabling triple-equals rule to avoid httpOverrides from failing because they are returning a string value
-    return !((httpStatusCode >= 300 && httpStatusCode < 500  && httpStatusCode != 429)
+    return !((httpStatusCode >= 300 && httpStatusCode < 500  && httpStatusCode != 429 && httpStatusCode != 408)
         || (httpStatusCode == 501)
+        || (httpStatusCode == 500)
         || (httpStatusCode == 505));
     /* tslint:enable:triple-equals */
 }
