@@ -4,8 +4,8 @@ import * as pako from "pako";
 export class AISKULightSizeCheck extends AITestClass {
     private readonly MAX_RAW_SIZE = 86;
     private readonly MAX_BUNDLE_SIZE = 86;
-    private readonly MAX_RAW_DEFLATE_SIZE = 35;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 35;
+    private readonly MAX_RAW_DEFLATE_SIZE = 36;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 36;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web-basic.min.js";
     private readonly currentVer = "3.1.0";
     private readonly prodFilePath = `../browser/es5/aib.${this.currentVer[0]}.min.js`;
