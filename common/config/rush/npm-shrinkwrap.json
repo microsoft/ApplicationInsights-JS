@@ -785,13 +785,12 @@
     "node_modules/@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-common.tgz",
-      "integrity": "sha512-QeBec/uELZOsMbdaUT87bBpCMKoqCZqoV3FUI1pQwFCuZ/WZ49MbTeT+FD+npFHQLZGa9H75F9Tk0K9EyNGV0g==",
+      "integrity": "sha512-yItT8dwcOLM+x2mDMBKYEJ+WH4Ljz/74oojUFNY2ye4zr7kunyXPMBzqODmR2czKrXiqCFrA6xFkl1auQuUNQg==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
-        "@nevware21/ts-async": ">= 0.3.0 < 2.x",
         "@nevware21/ts-utils": ">= 0.10.5 < 2.x",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
@@ -1482,9 +1481,9 @@
       }
     },
     "node_modules/@types/lodash": {
-      "version": "4.14.202",
-      "resolved": "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.202.tgz",
-      "integrity": "sha512-OvlIYQK9tNneDlS0VN54LLd5uiPCBOp7gS5Z0f1mjoJYBrtStzgmJBxONW3U6OZqdtNzZPmn9BS/7WI7BFFcFQ=="
+      "version": "4.17.0",
+      "resolved": "https://registry.npmjs.org/@types/lodash/-/lodash-4.17.0.tgz",
+      "integrity": "sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA=="
     },
     "node_modules/@types/minimatch": {
       "version": "5.1.2",
@@ -6865,13 +6864,12 @@
     },
     "@rush-temp/applicationinsights-common": {
       "version": "file:projects\\applicationinsights-common.tgz",
-      "integrity": "sha512-QeBec/uELZOsMbdaUT87bBpCMKoqCZqoV3FUI1pQwFCuZ/WZ49MbTeT+FD+npFHQLZGa9H75F9Tk0K9EyNGV0g==",
+      "integrity": "sha512-yItT8dwcOLM+x2mDMBKYEJ+WH4Ljz/74oojUFNY2ye4zr7kunyXPMBzqODmR2czKrXiqCFrA6xFkl1auQuUNQg==",
       "requires": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
-        "@nevware21/ts-async": ">= 0.3.0 < 2.x",
         "@nevware21/ts-utils": ">= 0.10.5 < 2.x",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
@@ -7516,9 +7514,9 @@
       }
     },
     "@types/lodash": {
-      "version": "4.14.202",
-      "resolved": "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.202.tgz",
-      "integrity": "sha512-OvlIYQK9tNneDlS0VN54LLd5uiPCBOp7gS5Z0f1mjoJYBrtStzgmJBxONW3U6OZqdtNzZPmn9BS/7WI7BFFcFQ=="
+      "version": "4.17.0",
+      "resolved": "https://registry.npmjs.org/@types/lodash/-/lodash-4.17.0.tgz",
+      "integrity": "sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA=="
     },
     "@types/minimatch": {
       "version": "5.1.2",
