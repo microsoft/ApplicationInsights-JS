@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-example-dependencies",
     "author": "Microsoft Application Insights Team",
-    "version": "2.8.17",
+    "version": "2.8.18",
     "description": "Microsoft Application Insights Dependencies Example",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [
@@ -51,9 +51,9 @@
     "dependencies": {
         "@microsoft/applicationinsights-shims": "2.0.2",
         "@microsoft/dynamicproto-js": "^1.1.11",
-        "@microsoft/applicationinsights-web": "2.8.17",
-        "@microsoft/applicationinsights-dependencies-js": "2.8.17",
-        "@microsoft/applicationinsights-core-js": "2.8.17"
+        "@microsoft/applicationinsights-web": "2.8.18",
+        "@microsoft/applicationinsights-dependencies-js": "2.8.18",
+        "@microsoft/applicationinsights-core-js": "2.8.18"
     },
     "publishConfig": {
         "tag": "release2"
