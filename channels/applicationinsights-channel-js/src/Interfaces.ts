@@ -122,6 +122,12 @@ export interface ISenderConfig {
      * @since 3.0.6
      */
     disableSendBeaconSplit?: boolean;
+
+    /**
+     * (Optional) The specific error codes that will cause a retry of sending data to the backend.
+     * @since 3.1.1
+     */
+    retryCodes?: number[];
 }
 
 export interface IBackendResponse {
