@@ -4,13 +4,13 @@
 * @copyright Microsoft 2024
 */
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { Extensions, IConfig } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
-    addPageHideEventListener, addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eLoggingSeverity,
-    getSetValue, mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setValue
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eInternalMessageId, _throwInternal, addPageHideEventListener,
+    addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eLoggingSeverity, getSetValue,
+    mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setValue
 } from "@microsoft/applicationinsights-core-js";
-import { Extensions, IConfig } from "@microsoft/applicationinsights-common";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import { objDeepFreeze, objDefineAccessors } from "@nevware21/ts-utils";
 import { IOSPluginConfiguration } from "./DataModels";
