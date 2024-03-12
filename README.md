@@ -368,6 +368,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | disableIkeyDeprecationMessage | boolean | true | [Optional]  Disable instrumentation Key deprecation error message. If true, error message will NOT be sent. **Note: instrumentation key support will end soon**, see aka.ms/IkeyMigrate for more details.
 | bufferOverride <br/><sub>since 2.8.12</sub> | IStorageBuffer | undefined | [Optional] Identifies a simple interface to allow you to override the storage mechanism used for tracking unsent and unacknowledged events, when not provided defaults to using SessionStorage interface. You MUST supply both the `getItem` and `setItem` functions when defined.
 | storagePrefix (since v2.8.15)| string[] | undefined | [Optional] An optional value that will be added as name prefix for storage name.  ([design for system to correctly identifies these telemetry events as "necessary"](https://github.com/microsoft/ApplicationInsights-JS/issues/2094).) |
+| retryCodes | number[] | undefined | Identifies the status codes that will cause event batches to be resent, when `null` or `undefined` the SDK will use it's defaults `[401, 408, 429, 500, 502, 503, 504]`. `403` was removed in version 2.8.18. |
 
 ### ICookieMgrConfig
 
