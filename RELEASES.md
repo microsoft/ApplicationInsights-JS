@@ -2,6 +2,13 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.0.9 (Mar 12th, 2024)
+
+### Changelog
+
+- #2265 [Release-3.0] Update namespaced types (DTS) generation to include referenced bundles
+- #2296 [Release-3.0][BUG] remove 403 as a “retriable” error code
+
 ## 3.0.8 (Feb, 7th, 2024)
 
 This release changes the new beacon splitting code (added in 3.0.4) to be `disabled` by default. This change is to address the issue where the SDK was splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload. This change is to address the issue where the SDK was splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload.
