@@ -72,7 +72,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     bufferOverride: false,
     httpXHROverride: { isVal: isOverrideFn, v:UNDEFINED_VALUE },
     alwaysUseXhrOverride: cfgDfBoolean(),
-    transports: UNDEFINED_VALUE
+    transports: UNDEFINED_VALUE,
+    retryCodes: UNDEFINED_VALUE
 });
 
 function _chkSampling(value: number) {
@@ -176,6 +177,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _fallbackSend: SenderFunction;
         let _disableBeaconSplit: boolean;
         let _sendPostMgr: SenderPostManager;
+        let _retryCodes: number[];
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -289,6 +291,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     _disableXhr = !!senderConfig.disableXhr;
+                    _retryCodes = senderConfig.retryCodes;
                     
                     let bufferOverride = senderConfig.bufferOverride;
                     let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer &&
@@ -1116,8 +1119,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * @param statusCode
              */
             function _isRetriable(statusCode: number): boolean {
+                // retryCodes = [] means should not retry
+                if (!isNullOrUndefined(_retryCodes)) {
+                    return _retryCodes.length && _retryCodes.indexOf(statusCode) > -1;
+                }
+
                 return statusCode === 401 // Unauthorized
-                    || statusCode === 403 // Forbidden
+                    // Removing as private links can return a 403 which causes excessive retries and session storage usage
+                    // || statusCode === 403 // Forbidden
                     || statusCode === 408 // Timeout
                     || statusCode === 429 // Too many requests.
                     || statusCode === 500 // Internal server error.
