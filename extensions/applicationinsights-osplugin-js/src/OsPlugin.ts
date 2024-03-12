@@ -17,6 +17,7 @@ import { IOSPluginConfiguration } from "./DataModels";
 
 const defaultgetOSTimeoutMs = 5000;
 const strExt = "ext";
+const maxRetry = 3;
 interface platformVersionInterface {
     brands?: { brand: string, version: string }[],
     mobile?: boolean,
@@ -64,6 +65,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
         let _os: string;
         let _osVer: number;
+        let _retryTime: number;
     
         dynamicProto(OsPlugin, this, (_self, _base) => {
 
@@ -111,7 +113,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
             _self.processTelemetry = (event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
 
-                if (!_retrieveFullVersion) {
+                if (!_retrieveFullVersion && !_getOSInProgress && _retryTime < maxRetry) {
                     // Start Requesting OS version process
                     _getOSInProgress = true;
                     // Timeout request if it takes more than 5 seconds (by default)
@@ -119,6 +121,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                         _completeOsRetrieve();
                     }, _getOSTimeoutMs);
                     startRetrieveOsVersion();
+                    _retryTime++;
                 }
         
                 if (_getOSInProgress) {
@@ -223,6 +226,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 _getOSTimeoutMs = null;
                 _retrieveFullVersion = false;
                 _eventQueue = [];
+                _retryTime = 0;
             }
 
             // For backward compatibility
