@@ -8,10 +8,10 @@ import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager,
     IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain,
     ITelemetryUnloadState, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType, _eInternalMessageId,
-    _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dateNow,
-    dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON, getNavigator, getWindow, isArray, isBeaconsSupported,
-    isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend, objKeys, onConfigChange, runTargetUnload,
-    useXDomainRequest
+    _throwInternal, _warnToConsole, arrForEach, arrIndexOf, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
+    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON, getNavigator, getWindow, isArray,
+    isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend, objKeys, onConfigChange,
+    runTargetUnload, useXDomainRequest
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
@@ -75,7 +75,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     eventsLimitInMem: 10000,
     bufferOverride: false,
     httpXHROverride: { isVal: isOverrideFn, v:UNDEFINED_VALUE },
-    alwaysUseXhrOverride: cfgDfBoolean()
+    alwaysUseXhrOverride: cfgDfBoolean(),
+    retryCodes: UNDEFINED_VALUE
 });
 
 function _chkSampling(value: number) {
@@ -176,6 +177,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _xhrSend: SenderFunction;
         let _fallbackSend: SenderFunction;
         let _disableBeaconSplit: boolean;
+        let _retryCodes: number[];
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -286,6 +288,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
                     _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     _disableXhr = !!senderConfig.disableXhr;
+                    _retryCodes = senderConfig.retryCodes;
                     
                     let bufferOverride = senderConfig.bufferOverride;
                     let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer &&
@@ -1066,7 +1069,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 let response = result.value;
 
                                 /**
-                                 * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500.
+                                 * The Promise returned from fetch() won't reject on HTTP error status even if the response is an HTTP 404 or 500.
                                  * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure
                                  * or if anything prevented the request from completing.
                                  */
@@ -1205,8 +1208,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * @param statusCode
              */
             function _isRetriable(statusCode: number): boolean {
+                // retryCodes = [] means should not retry
+                if (!isNullOrUndefined(_retryCodes)) {
+                    return _retryCodes.length && arrIndexOf(_retryCodes, statusCode) > -1;
+                }
+
                 return statusCode === 401 // Unauthorized
-                    || statusCode === 403 // Forbidden
+                    // Removing as private links can return a 403 which causes excessive retries and session storage usage
+                    // || statusCode === 403 // Forbidden
                     || statusCode === 408 // Timeout
                     || statusCode === 429 // Too many requests.
                     || statusCode === 500 // Internal server error.
