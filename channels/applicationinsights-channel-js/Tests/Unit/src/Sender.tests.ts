@@ -1912,6 +1912,7 @@ export class SenderTests extends AITestClass {
                 let fetchstub = this.sandbox.stub((window as any), "fetch");
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
                 let sessionStorage = window.sessionStorage;
+                let sessionSpy = this.sandbox.spy(sessionStorage,"setItem");
                 QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
                 sessionStorage.clear();
 
@@ -1974,8 +1975,23 @@ export class SenderTests extends AITestClass {
                 let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
                 let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
-                QUnit.assert.equal(1, sentItems.length, "sent buffer should have one payload");
+                QUnit.assert.equal(0, sentItems.length, "sent buffer should have one payload test1");
 
+                let setItemCalled = 0;
+                let args = sessionSpy.args;
+                let itemCount = 0;
+                args.forEach((arg) => {
+                    if (arg && arg[0] === "AI_sentBuffer") {
+                        let data = JSON.parse(arg[1]);
+                        let cnt = data.length;
+                        if(data && cnt) {
+                            setItemCalled ++;
+                            itemCount += cnt;
+                        }
+                    }
+                });
+                QUnit.assert.equal(1, setItemCalled, "sent buffer session should have be called once");
+                QUnit.assert.equal(1, itemCount, "sent buffer session should have be called once with one item");
 
                 (window as any).XMLHttpRequest = fakeXMLHttpRequest;
                 sessionStorage.clear();
@@ -2074,6 +2090,7 @@ export class SenderTests extends AITestClass {
                 let fetchstub = this.sandbox.stub((window as any), "fetch");
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
                 let sessionStorage = window.sessionStorage;
+                let sessionSpy = this.sandbox.spy(sessionStorage,"setItem");
                 QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
                 sessionStorage.clear();
 
@@ -2151,7 +2168,23 @@ export class SenderTests extends AITestClass {
                 let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
                 let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
-                QUnit.assert.equal(2, sentItems.length, "sent buffer should have two payload");
+                QUnit.assert.equal(0, sentItems.length, "sent buffer should have no payload left");
+
+                let setItemCalled = 0;
+                let itemCount = 0;
+                let args = sessionSpy.args;
+                args.forEach((arg) => {
+                    if (arg && arg[0] === "AI_sentBuffer") {
+                        let data = JSON.parse(arg[1]);
+                        let cnt = data.length;
+                        if(data && cnt) {
+                            setItemCalled ++;
+                            itemCount += cnt;
+                        }
+                    }
+                });
+                QUnit.assert.equal(1, setItemCalled, "sent buffer session should have be called once");
+                QUnit.assert.equal(2, itemCount, "sent buffer session should have be called once with two item");
 
                 (window as any).XMLHttpRequest = fakeXMLHttpRequest;
                 sessionStorage.clear();
