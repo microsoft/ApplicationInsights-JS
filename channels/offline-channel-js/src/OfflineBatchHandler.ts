@@ -29,7 +29,6 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
             let _maxRetryCnt: number;
             let _retryCodes: number[];
 
-
             _initDefaults();
 
             _self.initialize = (providerContext: ILocalStorageProviderContext) => {
@@ -350,8 +349,8 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                 // retryCodes = [] means should not retry
                 if (!isNullOrUndefined(_retryCodes)) {
                     return _retryCodes.length && _retryCodes.indexOf(statusCode) > -1;
-
                 }
+
                 return statusCode === 401 // Unauthorized
                     || statusCode === 403 // Forbidden
                     || statusCode === 408 // Timeout
