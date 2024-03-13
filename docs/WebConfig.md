@@ -1,4 +1,4 @@
-# Microsoft Application Insights JavaScript SDK - CfgSync Config Details
+# Microsoft Application Insights JavaScript SDK - Web Config for CfgSync Plugin
 
 Define ThrottleMgrCfg Configurations and feature opt-in status details.
 
@@ -8,6 +8,8 @@ Define ThrottleMgrCfg Configurations and feature opt-in status details.
 
 1.0.0 (March, 2024)
 
+CDN details
+
 | Name    | Description | Details
 |---------|------|----------------
 | enabled | General on/off | `true` (on)
@@ -16,7 +18,32 @@ Define ThrottleMgrCfg Configurations and feature opt-in status details.
 | featureOptIn.iKeyUsage.onCfg | override values of the following cdn `config` when feature-iKeyUsage is enabled |  <sub>DefaultThrottleMsgKey</sub></br>throttleMgrCfg.109.enabled: `false`</br> <sub>InstrumentationKeyDeprecation</sub></br> throttleMgrCfg.106.enabled: `true`
 | featureOptIn.iKeyUsage.offCfg | override values of the following cdn `config` when feature-iKeyUsage is disabled | <sub>DefaultThrottleMsgKey</sub></br>throttleMgrCfg.109.enabled: `false`</br> <sub>InstrumentationKeyDeprecation</sub></br> throttleMgrCfg.106.enabled: `false`
 | config | override values for user's core config | throttleMgrCfg
-| config.throttleMgrCfg | override values for user's throttleMgrCfg under core config | <sub>InstrumentationKeyDeprecation</sub></br> throttleMgrCfg.106:</br>{  `"enabled": true`, *// will send ikey InstrumentationKey Deprecation message*</br>`"limit": { "samplingRate": 1, "maxSendNumber": 1}`, *// sampling rate: 0.0001%, and will send max one message per time* </br>`"interval": {"monthInterval": 6,"daysOfMonth": [1]}`} *// message will be sent on the first day every 6 month*,</br><sub>DefaultThrottleMsgKey</sub></br>throttleMgrCfg.109:</br>{  `"enabled": false`, *// will not send default ikey message*</br> ... *// all other settings are same with the InstrumentationKeyDeprecation settings*}</br>
+| config.throttleMgrCfg | override values for user's throttleMgrCfg under core config | <sub>InstrumentationKeyDeprecation</sub></br> throttleMgrCfg.106:</br>{  `"enabled": true`, *// will send ikey InstrumentationKey Deprecation message*</br>`"limit": { "samplingRate": 1, "maxSendNumber": 1}`, *// sampling rate: 0.0001%, and will send max one message per time* </br>`"interval": {"monthInterval": 2,"daysOfMonth": [1]}`} *// message will be sent on the first day every 2 months*,</br><sub>DefaultThrottleMsgKey</sub></br>throttleMgrCfg.109:</br>{  `"enabled": false`, *// will not send default ikey message*</br> ... *// all other settings are same with the InstrumentationKeyDeprecation settings*}</br>
+
+#### Note
+
+This change will begin InstrumentationKeyDeprecation message throttling. If InstrumentationKey is used instead of ConnectionString for appInsights SDK initialization, logs with InstrumentationKeyDeprecation(106) message id will be sent.
+
+## Basic Usage
+
+### Change Feature Opt-in Status
+
+Under your config, define opt-in details in `featureOptIn`
+
+```js
+
+//to define iKeyUsage opt-in details
+{
+    connectionString: "YOUR_CONNECTION_STRING",
+    ...
+    featureOptIn: {["iKeyUsage"]: {
+        mode: FeatureOptInMode.disable, // set feature-iKeyUsage opt-in status to disable
+        blockCdnCfg: false, //define if should block any changes from web config cdn
+        } as IFeatureOptInDetails
+    }
+}
+
+```
 
 ## Contributing
 
