@@ -26,7 +26,7 @@
         },
         "@microsoft/applicationinsights-osplugin-js": {
             "package": "extensions/applicationinsights-osplugin-js/package.json",
-            "release": "3.1.0"
+            "release": "3.1.1"
         },
         "@microsoft/applicationinsights-debugplugin-js": {
             "package": "extensions/applicationinsights-debugplugin-js/package.json",
