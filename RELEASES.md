@@ -2,6 +2,20 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.1.1 (Mar 12th, 2024)
+
+### Changelog
+
+- #2296 [BUG] remove 403 as a “retriable” error code
+- #2276 Update api-docs (typedoc) with the current 3.1.0 release details
+- #2281 [Main][Task]26681188: Handle endpoint url change for offline channel and add notification mgr
+- #2282 Addng two new PII Kind values for IPv6 scrubbing and dropping data.
+- #2285 [Main][Task]25693679: Extract common sendPost implementation for online and offline sender
+- #2197 [main] [BUG] using EndPointUrl (and IngestionEndpoint) results in Telemetry sent to incorrect urls
+- #2288 [Main][Task]27064950: Add doc on adding offline support channel
+- #2295 [Main][Task]27064983: Update post channel to use sender post common interfaces from core
+- #2290 chore: remove extraneous console log from debug plugin
+
 ### Web snippet additional update to 1.1.2 (March 1st, 2024)
 Refer to #2284 [Web-Snippet] [BUG] @microsoft/applicationinsights-web-snippet version 1.1.1 type problem 
 
