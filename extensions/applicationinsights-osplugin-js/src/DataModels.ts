@@ -7,5 +7,5 @@
 
 export interface IOSPluginConfiguration {
     getOSTimeoutMs?: number;
-    endpointIsBreeze?: boolean;
+    mergeOsNameVersion?: boolean;
 }

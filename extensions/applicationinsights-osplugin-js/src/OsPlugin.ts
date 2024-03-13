@@ -12,12 +12,11 @@ import {
     mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setValue
 } from "@microsoft/applicationinsights-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
-import { objDeepFreeze, objDefineAccessors } from "@nevware21/ts-utils";
+import { objDeepFreeze } from "@nevware21/ts-utils";
 import { IOSPluginConfiguration } from "./DataModels";
 
 const defaultgetOSTimeoutMs = 5000;
 const strExt = "ext";
-const maxRetry = 3;
 interface platformVersionInterface {
     brands?: { brand: string, version: string }[],
     mobile?: boolean,
@@ -34,7 +33,7 @@ interface ModernNavigator {
   }
 const defaultOSConfig: IConfigDefaults<IOSPluginConfiguration> = objDeepFreeze({
     getOSTimeoutMs: defaultgetOSTimeoutMs,
-    endpointIsBreeze: true
+    mergeOsNameVersion: undefined
 });
 
 interface IDelayedEvent {
@@ -57,7 +56,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
         let _platformVersionResponse: platformVersionInterface;
         let _retrieveFullVersion: boolean;
-        let _endpointIsBreeze: boolean;
+        let _mergeOsNameVersion: boolean;
 
         let _eventQueue: IDelayedEvent[];
         let _evtNamespace: string | string[];
@@ -65,7 +64,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
         let _os: string;
         let _osVer: number;
-        let _retryTime: number;
+        let _firstAttempt: boolean;
     
         dynamicProto(OsPlugin, this, (_self, _base) => {
 
@@ -88,7 +87,14 @@ export class OsPlugin extends BaseTelemetryPlugin {
                     let ctx = createProcessTelemetryContext(null, coreConfig, core);
                     _ocConfig = ctx.getExtCfg<IOSPluginConfiguration>(identifier, defaultOSConfig);
                     _getOSTimeoutMs = _ocConfig.getOSTimeoutMs;
-                    _endpointIsBreeze = _ocConfig.endpointIsBreeze;
+                    if (_ocConfig.mergeOsNameVersion !== undefined){
+                        _mergeOsNameVersion = _ocConfig.mergeOsNameVersion;
+                    } else if (core.getPlugin("Sender").plugin){
+                        _mergeOsNameVersion = true;
+                    } else {
+                        _mergeOsNameVersion = false;
+                    }
+                    _mergeOsNameVersion = _ocConfig.mergeOsNameVersion;
                   
                     let excludePageUnloadEvents = coreConfig.disablePageUnloadEvents || [];
 
@@ -113,15 +119,11 @@ export class OsPlugin extends BaseTelemetryPlugin {
             _self.processTelemetry = (event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
 
-                if (!_retrieveFullVersion && !_getOSInProgress && _retryTime < maxRetry) {
+                if (!_retrieveFullVersion && !_getOSInProgress && _firstAttempt) {
                     // Start Requesting OS version process
                     _getOSInProgress = true;
-                    // Timeout request if it takes more than 5 seconds (by default)
-                    _getOSTimeout = setTimeout(() => {
-                        _completeOsRetrieve();
-                    }, _getOSTimeoutMs);
                     startRetrieveOsVersion();
-                    _retryTime++;
+                    _firstAttempt = false;
                 }
         
                 if (_getOSInProgress) {
@@ -130,14 +132,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                         item: event
                     });
                 } else {
-                    if (_retrieveFullVersion){
-                        if (_endpointIsBreeze){
-                            setValue(getSetValue(event, strExt), Extensions.OSExt, _os + _osVer);
-                        } else {
-                            setValue(getSetValue(event, strExt), Extensions.OSExt, _os);
-                            setValue(getSetValue(event, strExt), "osVer", _osVer);
-                        }
-                    }
+                    updateTeleItemWithOs(event);
                     _self.processNext(event, itemCtx);
                 }
             };
@@ -155,6 +150,11 @@ export class OsPlugin extends BaseTelemetryPlugin {
              * Wait for the response from the browser for the OS version and store info in the session storage
              */
             function startRetrieveOsVersion() {
+                // Timeout request if it takes more than 5 seconds (by default)
+                _getOSTimeout = setTimeout(() => {
+                    _completeOsRetrieve();
+                }, _getOSTimeoutMs);
+
                 if (navigator.userAgent) {
                     const getHighEntropyValues = (navigator as ModernNavigator).userAgentData?.getHighEntropyValues;
                     if (getHighEntropyValues) {
@@ -188,6 +188,17 @@ export class OsPlugin extends BaseTelemetryPlugin {
                     }
                 }
             }
+
+            function updateTeleItemWithOs(event: ITelemetryItem) {
+                if (_retrieveFullVersion){
+                    if (_mergeOsNameVersion){
+                        setValue(getSetValue(event, strExt), Extensions.OSExt, _os + _osVer);
+                    } else {
+                        setValue(getSetValue(event, strExt), Extensions.OSExt, _os);
+                        setValue(getSetValue(event, strExt), "osVer", _osVer);
+                    }
+                }
+            }
         
             /**
             * Complete retrieving operating system info process, cleanup and release the event queue
@@ -205,14 +216,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
             */
             function _releaseEventQueue() {
                 arrForEach(_eventQueue, (evt) => {
-                    if (_retrieveFullVersion){
-                        if (_endpointIsBreeze){
-                            setValue(getSetValue(evt.item, strExt), Extensions.OSExt, _os + _osVer);
-                        } else {
-                            setValue(getSetValue(evt.item, strExt), Extensions.OSExt, _os);
-                            setValue(getSetValue(evt.item, strExt), "osVer", _osVer);
-                        }
-                    }
+                    updateTeleItemWithOs(evt.item);
                     evt.ctx.processNext(evt.item);
                 });
                 _eventQueue = [];
@@ -226,14 +230,13 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 _getOSTimeoutMs = null;
                 _retrieveFullVersion = false;
                 _eventQueue = [];
-                _retryTime = 0;
+                _firstAttempt = true;
             }
-
-            // For backward compatibility
-            objDefineAccessors(_self, "_platformVersionResponse", () => _platformVersionResponse);
-            objDefineAccessors(_self, "_eventQueue", () => _eventQueue);
-            objDefineAccessors(_self, "_getOSInProgress", () => _getOSInProgress);
-            objDefineAccessors(_self, "_evtNamespace", () => "." + _evtNamespace);
+            
+            // Special internal method to allow the DebugPlugin to hook embedded objects
+            _self["_getDbgPlgTargets"] = () => {
+                return [_platformVersionResponse, _eventQueue, _getOSInProgress];
+            };
         });
     }
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {

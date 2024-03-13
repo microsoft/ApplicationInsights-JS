@@ -102,11 +102,11 @@ export class OsPluginTest extends AITestClass {
                 };
                 this._core.track(event);
                 Assert.equal(this._channelSpy.called, false);
-                Assert.equal(this._plugin['_getOSInProgress'], true);
-                Assert.equal(this._plugin['_eventQueue'].length, 1);
-                Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1][0].item.name, event.name);
                 this.clock.tick(defaultgetOSTimeoutMs);
-                Assert.equal(this._plugin['_eventQueue'].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
                 Assert.equal(this._channelSpy.called, true);
             }
         });
@@ -127,13 +127,13 @@ export class OsPluginTest extends AITestClass {
                 };
                 this._core.track(event);
                 Assert.equal(this._channelSpy.called, false);
-                Assert.equal(this._plugin['_getOSInProgress'], true);
-                Assert.equal(this._plugin['_eventQueue'].length, 1);
-                Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1][0].item.name, event.name);
                 this._resolvedGetHighEntrophyPromise(_platformVersion);
                 this.clock.tick(1);
-                Assert.equal(this._plugin['_eventQueue'].length, 0);
-                Assert.equal(this._plugin['_getOSInProgress'], false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
                 Assert.equal(this._channelSpy.called, true);
                 let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
@@ -158,12 +158,12 @@ export class OsPluginTest extends AITestClass {
                 };
                 this._core.track(event);
                 Assert.equal(this._channelSpy.called, false);
-                Assert.equal(this._plugin['_getOSInProgress'], true);
-                Assert.equal(this._plugin['_eventQueue'].length, 1);
-                Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1][0].item.name, event.name);
                 this._rejectedGetHighEntrophyPromise(new Error("error"));
                 this.clock.tick(1);
-                Assert.equal(this._plugin['_eventQueue'].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
             }
         });
 
@@ -185,15 +185,15 @@ export class OsPluginTest extends AITestClass {
                 };
                 this._core.track(event);
                 Assert.equal(this._channelSpy.called, false);
-                Assert.equal(this._plugin['_getOSInProgress'], true);
-                Assert.equal(this._plugin['_eventQueue'].length, 1);
-                Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1][0].item.name, event.name);
                 this.clock.tick(500);
-                Assert.equal(this._plugin['_eventQueue'].length, 1);
-                Assert.equal(this._plugin['_getOSInProgress'], true);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
                 this.clock.tick(500);
-                Assert.equal(this._plugin['_eventQueue'].length, 0);
-                Assert.equal(this._plugin['_getOSInProgress'], false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
                 Assert.equal(this._channelSpy.called, true);
                 let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), false, "timeout would not get os version");
@@ -201,7 +201,7 @@ export class OsPluginTest extends AITestClass {
         });
 
         this.testCase({
-            name: "OsPlugin: If first telemetry didn't get the OS version, the following telemetry will try again",
+            name: "OsPlugin: If first telemetry didn't get the OS version, the following telemetry will not try again",
             useFakeTimers: true,
             test: () => {
                 let config = this._config;
@@ -219,29 +219,27 @@ export class OsPluginTest extends AITestClass {
                 };
                 this._core.track(event);
                 Assert.equal(this._channelSpy.called, false);
-                Assert.equal(this._plugin['_getOSInProgress'], true);
-                Assert.equal(this._plugin['_eventQueue'].length, 1);
-                Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1][0].item.name, event.name);
                 this.clock.tick(1200);
-                Assert.equal(this._plugin['_eventQueue'].length, 0);
-                Assert.equal(this._plugin['_getOSInProgress'], false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
                 Assert.equal(this._channelSpy.called, true);
                 let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), false, "timeout would not get os version");
 
                 // send another event
                 this._core.track(event);
-                Assert.equal(this._plugin['_getOSInProgress'], true);
-                Assert.equal(this._plugin['_eventQueue'].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
                 this._resolvedGetHighEntrophyPromise(_platformVersion);
                 this.clock.tick(1);
-                Assert.equal(this._plugin['_eventQueue'].length, 0);
-                Assert.equal(this._plugin['_getOSInProgress'], false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
                 Assert.equal(this._channelSpy.called, true);
                 telemetry = this._channelSpy.getCall(0).args[0];
-                Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
-                Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
-                Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
+                Assert.equal(JSON.stringify(telemetry).includes("osVer"), false, "second event should not attempt to get os version");
             }
         });
 
@@ -268,13 +266,13 @@ export class OsPluginTest extends AITestClass {
                 };
                 this._core.track(event);
                 Assert.equal(this._channelSpy.called, false);
-                Assert.equal(this._plugin['_getOSInProgress'], true);
-                Assert.equal(this._plugin['_eventQueue'].length, 1);
-                Assert.equal(this._plugin['_eventQueue'][0].item.name, event.name);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1][0].item.name, event.name);
                 this._resolvedGetHighEntrophyPromise(_platformVersion);
                 this.clock.tick(1);
-                Assert.equal(this._plugin['_eventQueue'].length, 0);
-                Assert.equal(this._plugin['_getOSInProgress'], false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
                 Assert.equal(this._channelSpy.called, true);
                 let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
@@ -285,8 +283,8 @@ export class OsPluginTest extends AITestClass {
                 QUnit.assert.equal(storedOsver, 11, "os ver is stored in session storage");
                 // send another event
                 this._core.track(event);
-                Assert.equal(this._plugin['_getOSInProgress'], false);
-                Assert.equal(this._plugin['_eventQueue'].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
                 Assert.equal(this._channelSpy.called, true);
                 telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
