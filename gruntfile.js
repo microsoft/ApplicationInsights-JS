@@ -799,8 +799,8 @@ module.exports = function (grunt) {
                 },
                 config: {
                     files: [
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configVer}.cfg.json` },
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configMajorVer}.cfg.json` }
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configVer}.cfg.json` },
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configMajorVer}.cfg.json` }
                     ]
                 }
             }

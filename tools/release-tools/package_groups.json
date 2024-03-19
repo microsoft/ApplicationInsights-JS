@@ -46,6 +46,10 @@
     "cfgSync": [
         "./extensions/applicationinsights-cfgsync-js"
     ],
+    // Config for throttleMgr and feature Opt-in
+    "webConfig": [
+        "./tools/config"
+    ],
     // Rollup packages
     "rollup-es": [
         "./tools/rollup-es5"
