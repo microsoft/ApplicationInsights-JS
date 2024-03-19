@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager, OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig } from "../../../src/applicationinsights-core-js"
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager, OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, dumpObj } from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
 import { _eInternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
@@ -19,7 +19,6 @@ export class ApplicationInsightsCoreTests extends AITestClass {
     }
 
     public registerTests() {
-
         this.testCase({
             name: "ApplicationInsightsCore: Initialization validates input",
             test: () => {
@@ -998,6 +997,30 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(totalVariance > 0 && totalVariance <= testDist, totalVariance + ': Check the average distribution perfect distribution is (1/bucketCount) = ' + perfectDist);
             }
         });
+
+        // this.testCase({
+        //     name: 'Test Excessive unload hook detection',
+        //     test: () => {
+        //         const appInsightsCore = new AppInsightsCore();
+        //         const channelPlugin1 = new ChannelPlugin();
+        //         channelPlugin1.priority = 1001;
+
+        //         const theConfig = {
+        //             channels: [[channelPlugin1]],
+        //             endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+        //             instrumentationKey: "",
+        //             extensionConfig: {}
+        //         };
+
+        //         appInsightsCore.initialize(theConfig, []);
+        //         Assert.equal(true, appInsightsCore.isInitialized(), "Core is initialized");
+
+        //         // Send lots of notifications
+        //         for (let lp = 0; lp < 100; lp++) {
+        //             Assert.equal(null, appInsightsCore.getPerfMgr());
+        //         }
+        //     }
+        // });
 
         function _createBuckets(num: number) {
             // Using helper function as TypeScript 2.5.3 is complaining about new Array<number>(100).fill(0);
