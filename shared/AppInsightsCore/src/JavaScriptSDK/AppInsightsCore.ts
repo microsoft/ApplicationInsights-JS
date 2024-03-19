@@ -181,7 +181,7 @@ function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<
     let theListener = _findWatcher(listeners, newWatcher).l;
 
     if (!theListener) {
-        theListener ={
+        theListener = {
             w: newWatcher,
             rm: () => {
                 let fnd = _findWatcher(listeners, newWatcher);
@@ -205,6 +205,36 @@ function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: ()
             unloadHdl.rm();
         };
     });
+}
+
+// Moved this outside of the closure to reduce the retained memory footprint
+function _initDebugListener(configHandler: IDynamicConfigHandler<IConfiguration>, unloadContainer: IUnloadHookContainer, notificationManager: INotificationManager, debugListener: INotificationListener) {
+    // Will get recalled if any referenced config values are changed
+    unloadContainer.add(configHandler.watch((details) => {
+        let disableDbgExt = details.cfg.disableDbgExt;
+
+        if (disableDbgExt === true && debugListener) {
+            // Remove any previously loaded debug listener
+            notificationManager.removeNotificationListener(debugListener);
+            debugListener = null;
+        }
+
+        if (notificationManager && !debugListener && disableDbgExt !== true) {
+            debugListener = getDebugListener(details.cfg);
+            notificationManager.addNotificationListener(debugListener);
+        }
+    }));
+
+    return debugListener
+}
+
+// Moved this outside of the closure to reduce the retained memory footprint
+function _createUnloadHook(unloadHook: IUnloadHook): IUnloadHook {
+    return objDefine<IUnloadHook | any>({
+        rm: () => {
+            unloadHook.rm();
+        }
+    }, "toJSON", { v: () => "aicore::onCfgChange<" + JSON.stringify(unloadHook) + ">" });
 }
 
 /**
@@ -317,7 +347,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 _notificationManager = notificationManager;
 
-                _initDebugListener();
+                // Initialize the debug listener outside of the closure to reduce the retained memory footprint
+                _debugListener = _initDebugListener(_configHandler, _hookContainer, _notificationManager && _self.getNotifyMgr(), _debugListener);
                 _initPerfManager();
 
                 _self.logger = logger;
@@ -444,17 +475,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             };
 
             _self.getPerfMgr = (): IPerfManager => {
-                if (!_perfManager && !_cfgPerfManager) {
-                    _addUnloadHook(_configHandler.watch((details) => {
-                        if (details.cfg.enablePerfMgr) {
-                            let createPerfMgr = details.cfg.createPerfMgr;
-                            if (isFunction(createPerfMgr)) {
-                                _cfgPerfManager = createPerfMgr(_self, _self.getNotifyMgr());
-                            }
-                        }
-                    }));
-                }
-
                 return _perfManager || _cfgPerfManager || getGblPerfMgr();
             };
 
@@ -726,11 +746,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     unloadHook = onConfigChange(_configHandler.cfg, handler, _self.logger);
                 }
 
-                return {
-                    rm: () => {
-                        unloadHook.rm();
-                    }
-                }
+                return _createUnloadHook(unloadHook);
             };
 
             _self.getWParam = () => {
@@ -854,6 +870,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _pluginVersionString = null;
                 _pluginVersionStringArr = null;
                 _forceStopInternalLogPoller = false;
+                _internalLogPoller = null;
+                _internalLogPollerListening = false;
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
@@ -1106,40 +1124,39 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 return true;
             }
 
-            function _initDebugListener() {
-                // Lazily ensure that the notification manager is created
-                !_notificationManager && _self.getNotifyMgr();
-
-                // Will get recalled if any referenced config values are changed
-                _addUnloadHook(_configHandler.watch((details) => {
-                    let disableDbgExt = details.cfg.disableDbgExt;
-
-                    if (disableDbgExt === true && _debugListener) {
-                        // Remove any previously loaded debug listener
-                        _notificationManager.removeNotificationListener(_debugListener);
-                        _debugListener = null;
-                    }
-    
-                    if (_notificationManager && !_debugListener && disableDbgExt !== true) {
-                        _debugListener = getDebugListener(details.cfg);
-                        _notificationManager.addNotificationListener(_debugListener);
-                    }
-                }));
-            }
-
             function _initPerfManager() {
+                // Save the previous config based performance manager creator to avoid creating new perf manager instances if unchanged
+                let prevCfgPerfMgr: (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager;
+
                 // Will get recalled if any referenced config values are changed
                 _addUnloadHook(_configHandler.watch((details) => {
                     let enablePerfMgr = details.cfg.enablePerfMgr;
+                    if (enablePerfMgr) {
+                        let createPerfMgr = details.cfg.createPerfMgr;
+                        if (prevCfgPerfMgr !== createPerfMgr) {
+                            if (!createPerfMgr) {
+                                createPerfMgr = _createPerfManager;
+                            }
 
-                    if (!enablePerfMgr && _cfgPerfManager) {
+                            // Set the performance manager creation function if not defined
+                            getSetValue(details.cfg, STR_CREATE_PERF_MGR, createPerfMgr);
+                            prevCfgPerfMgr = createPerfMgr;
+
+                            // Remove any existing config based performance manager
+                            _cfgPerfManager = null;
+                        }
+
+                        // Only create the performance manager if it's not already created or manually set
+                        if (!_perfManager && !_cfgPerfManager && isFunction(createPerfMgr)) {
+                            // Create a new config based performance manager
+                            _cfgPerfManager = createPerfMgr(_self, _self.getNotifyMgr());
+                        }
+                    } else {
                         // Remove any existing config based performance manager
                         _cfgPerfManager = null;
-                    }
-    
-                    if (enablePerfMgr) {
-                        // Set the performance manager creation function if not defined
-                        getSetValue(details.cfg, STR_CREATE_PERF_MGR, _createPerfManager);
+
+                        // Clear the previous cached value so it can be GC'd
+                        prevCfgPerfMgr = null;
                     }
                 }));
             }
