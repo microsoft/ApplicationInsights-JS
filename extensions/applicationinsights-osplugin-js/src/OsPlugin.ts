@@ -94,7 +94,6 @@ export class OsPlugin extends BaseTelemetryPlugin {
                     } else {
                         _mergeOsNameVersion = false;
                     }
-                    _mergeOsNameVersion = _ocConfig.mergeOsNameVersion;
                   
                     let excludePageUnloadEvents = coreConfig.disablePageUnloadEvents || [];
 
