@@ -1,49 +1,43 @@
 {
-    "name":"Application Insights Config",
-    "description":" Application Insights JavaScript SDK - Web Config",
-    "copyright": "(c) Microsoft and contributors. All rights reserved.",
-    "author": "Microsoft Application Insights Team",
-    "throttleConfig": {
-        "default": {
-            "msgKey": 0,
-            "limit": {
-                "sendPercentage": 0,
-                "maxSendNumber": 0
+    "version": "1.0.0",
+    "enabled": true,
+    "featureOptIn": {
+        "iKeyUsage": {
+            "mode": 3,
+            "onCfg": { 
+                "throttleMgrCfg.109.enabled": false,
+                "throttleMgrCfg.106.enabled": true
             },
-            "interval": {
-                "monthInterval": 100,
-                "dayInterval": 100,
-                "maxTimesPerMonth": 0
+            "offCfg": { 
+                "throttleMgrCfg.109.enabled": false,
+                "throttleMgrCfg.106.enabled": false
             }
-        },
-        "config": {
-            "ikeyDeprecation": {
-                "msgKey": 1,
-                "limit": {
-                    "sendPercentage": 1,
-                    "maxSendNumber": 10
+        }
+    },
+    "config": {
+        "throttleMgrCfg": {
+            "109": { 
+                "enabled": false,
+                "limit": { 
+                    "samplingRate": 1,
+                    "maxSendNumber": 1
                 },
                 "interval": {
-                    "monthInterval": 3,
-                    "dayInterval": 28,
-                    "maxTimesPerMonth": 1
+                    "monthInterval": 2,
+                    "daysOfMonth": [1]
                 }
-             },
-            "cdnDeprecation": {
-                "ikeyDeprecation": {
-                    "msgKey": 2,
-                    "limit": {
-                        "sendPercentage": 1,
-                        "maxSendNumber": 10
-                    },
-                    "interval": {
-                        "monthInterval": 3,
-                        "dayInterval": 28,
-                        "maxTimesPerMonth": 1
-                    }
+            },
+            "106": { 
+                "enabled": true,
+                "limit": { 
+                    "samplingRate": 1,
+                    "maxSendNumber": 1
+                },
+                "interval": {
+                    "monthInterval": 2,
+                    "daysOfMonth": [1]
                 }
             }
         }
     }
 }
-   
