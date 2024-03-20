@@ -81,7 +81,7 @@ export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils
 export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./JavaScriptSDK.Interfaces/ITelemetryInitializers";
 export { createUniqueNamespace } from "./JavaScriptSDK/DataCacheHelper";
 export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./JavaScriptSDK/UnloadHandlerContainer";
-export { IUnloadHookContainer, createUnloadHookContainer } from "./JavaScriptSDK/UnloadHookContainer";
+export { IUnloadHookContainer, createUnloadHookContainer, _testHookMaxUnloadHooksCb } from "./JavaScriptSDK/UnloadHookContainer";
 export { ITelemetryUpdateState } from "./JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 export { IDistributedTraceContext } from "./JavaScriptSDK.Interfaces/IDistributedTraceContext";

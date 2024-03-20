@@ -19,7 +19,6 @@ export class ApplicationInsightsCoreTests extends AITestClass {
     }
 
     public registerTests() {
-
         this.testCase({
             name: "ApplicationInsightsCore: Initialization validates input",
             test: () => {
@@ -846,6 +845,30 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(min > 0 && min <= testDist, min + ': Make sure that we have a good minimum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
                 Assert.ok(max > 0 && max <= testDist, max + ': Make sure that we have a good maximum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
                 Assert.ok(totalVariance > 0 && totalVariance <= testDist, totalVariance + ': Check the average distribution perfect distribution is (1/bucketCount) = ' + perfectDist);
+            }
+        });
+
+        this.testCase({
+            name: 'Test Excessive unload hook detection - make sure calling getPerfMgr() does not cause excessive unload hook detection',
+            test: () => {
+                const appInsightsCore = new AppInsightsCore();
+                const channelPlugin1 = new ChannelPlugin();
+                channelPlugin1.priority = 1001;
+
+                const theConfig = {
+                    channels: [[channelPlugin1]],
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey: "",
+                    extensionConfig: {}
+                };
+
+                appInsightsCore.initialize(theConfig, []);
+                Assert.equal(true, appInsightsCore.isInitialized(), "Core is initialized");
+
+                // Send lots of notifications
+                for (let lp = 0; lp < 100; lp++) {
+                    Assert.equal(null, appInsightsCore.getPerfMgr());
+                }
             }
         });
 
