@@ -26,7 +26,7 @@ export class OsPluginTest extends AITestClass {
     private _channelExtension: IChannelControls;
     private _osConfig: IOSPluginConfiguration = {
         getOSTimeoutMs: 6000, // set a big number to avoid timeout for test
-        endpointIsBreeze: false
+        mergeOsNameVersion: false
     };
     private _testChannelPlugin: TestChannelPlugin;
 
@@ -209,7 +209,7 @@ export class OsPluginTest extends AITestClass {
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = {
                     getOSTimeoutMs: 1000,
-                    endpointIsBreeze: false
+                    mergeOsNameVersion: false
                 };;
                 this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 let event = {
@@ -256,7 +256,7 @@ export class OsPluginTest extends AITestClass {
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = {
                     getOSTimeoutMs: 1000,
-                    endpointIsBreeze: false
+                    mergeOsNameVersion: false
                 };
                 this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 let event = {
