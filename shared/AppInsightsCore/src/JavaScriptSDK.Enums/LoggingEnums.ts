@@ -84,6 +84,7 @@ export const enum _eInternalMessageId {
     InvalidDurationValue = 45,
     TelemetryEnvelopeInvalid = 46,
     CreateEnvelopeError = 47,
+    MaxUnloadHookExceeded = 48,
 
     // User actionable
     CannotSerializeObject = 48,

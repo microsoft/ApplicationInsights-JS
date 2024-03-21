@@ -5,10 +5,12 @@ import { DynamicProtoTests } from './DynamicProtoTests';
 import { UtilsTest } from './UtilsTest';
 import { ValueSanitizerTests } from './ValueSanitizerTests';
 import {FileSizeCheckTest} from './FileSizeCheckTest'
+import { GlobalTestHooks } from './GlobalTestHooks.Test';
 
 
 
 export function registerTests() {
+    new GlobalTestHooks().registerTests();
     new CoreTest('CoreTest').registerTests();
     new ESPromiseTests('ESPromiseTests').registerTests();
     new ESPromiseSchedulerTests('ESPromiseSchedulerTests').registerTests();

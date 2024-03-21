@@ -2,6 +2,7 @@ import { AISKUSizeCheck } from "./AISKUSize.Tests";
 import { ApplicationInsightsTests } from './applicationinsights.e2e.tests';
 import { ApplicationInsightsFetchTests } from './applicationinsights.e2e.fetch.tests';
 import { CdnPackagingChecks } from './CdnPackaging.tests';
+import { GlobalTestHooks } from './GlobalTestHooks.Test';
 import { SanitizerE2ETests } from './sanitizer.e2e.tests';
 import { ValidateE2ETests } from './validate.e2e.tests';
 import { SenderE2ETests } from './sender.e2e.tests';
@@ -10,6 +11,7 @@ import { CdnThrottle} from "./CdnThrottle.tests";
 import { ThrottleSentMessage } from "./ThrottleSentMessage.tests";
 
 export function runTests() {
+    new GlobalTestHooks().registerTests();
     new AISKUSizeCheck().registerTests();
     new ApplicationInsightsTests().registerTests();
     new ApplicationInsightsFetchTests().registerTests();
