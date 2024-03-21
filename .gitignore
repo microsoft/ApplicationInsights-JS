@@ -180,6 +180,7 @@ browser/
 types/
 dist/
 dest/
+drop/
 
 # Don't commit the sub resource integrity generated files
 **/*.integrity.json
