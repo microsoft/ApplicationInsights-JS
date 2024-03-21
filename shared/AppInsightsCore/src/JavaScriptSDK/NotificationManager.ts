@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise, createAllPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { arrForEach, arrIndexOf, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, arrForEach, arrIndexOf, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../Config/DynamicConfig";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
@@ -16,17 +16,37 @@ const defaultValues = {
     perfEvtsSendAll: false
 };
 
-function _runListeners(listeners: INotificationListener[], name: string, isAsync: boolean, callback: (listener: INotificationListener) => void) {
+interface IAsyncNotifications {
+    h: ITimerHandler;
+    cb: Array<{ fn: (listener: INotificationListener) => void, arg: INotificationListener }>
+}
+
+function _runScheduledListeners(asyncNotifications: IAsyncNotifications) {
+    asyncNotifications.h = null;
+    let callbacks = asyncNotifications.cb;
+    asyncNotifications.cb = [];
+    arrForEach(callbacks, (cb) => {
+        // Run the listener in a try-catch to ensure that a single listener failing doesn't prevent the others from running
+        safe(cb.fn, [cb.arg]);
+    });
+}
+
+// This function is used to combine the logic of running the listeners and handling the async notifications so that they don't
+// create multiple timers if there are multiple async listeners.
+function _runListeners(listeners: INotificationListener[], name: string, asyncNotifications: IAsyncNotifications | null, callback: (listener: INotificationListener) => void) {
     arrForEach(listeners, (listener) => {
         if (listener && listener[name]) {
-            if (isAsync) {
-                scheduleTimeout(() => callback(listener), 0);
+            if (asyncNotifications) {
+                // Schedule the callback to be called after the current call stack has cleared.
+                asyncNotifications.cb.push({
+                    fn: callback,
+                    arg: listener
+                });
+
+                asyncNotifications.h = asyncNotifications.h || scheduleTimeout(_runScheduledListeners, 0, asyncNotifications);
             } else {
-                try {
-                    callback(listener);
-                } catch (e) {
-                    // Catch errors to ensure we don't block sending the requests
-                }
+                // Run the listener in a try-catch to ensure that a single listener failing doesn't prevent the others from running
+                safe(callback, [listener]);
             }
         }
     });
@@ -42,7 +62,11 @@ export class NotificationManager implements INotificationManager {
         let perfEvtsSendAll: boolean;
         let unloadHandler: IUnloadHook;
         let _listeners: INotificationListener[] = [];
-        
+        let _asyncNotifications: IAsyncNotifications = {
+            h: null,
+            cb: []
+        };
+
         let cfgHandler = createDynamicConfig(config, defaultValues);
 
         unloadHandler = cfgHandler.watch((details) => {
@@ -75,7 +99,7 @@ export class NotificationManager implements INotificationManager {
              * @param events - The array of events that have been sent.
              */
             _self.eventsSent = (events: ITelemetryItem[]): void => {
-                _runListeners(_listeners, STR_EVENTS_SENT, true, (listener) => {
+                _runListeners(_listeners, STR_EVENTS_SENT, _asyncNotifications, (listener) => {
                     listener.eventsSent(events);
                 });
             };
@@ -87,7 +111,7 @@ export class NotificationManager implements INotificationManager {
              * constant should be used to check the different values.
              */
             _self.eventsDiscarded = (events: ITelemetryItem[], reason: number): void => {
-                _runListeners(_listeners, STR_EVENTS_DISCARDED, true, (listener) => {
+                _runListeners(_listeners, STR_EVENTS_DISCARDED, _asyncNotifications, (listener) => {
                     listener.eventsDiscarded(events, reason);
                 });
             };
@@ -98,7 +122,7 @@ export class NotificationManager implements INotificationManager {
              * @param isAsync - A flag which identifies whether the requests are being sent in an async or sync manner.
              */
             _self.eventsSendRequest = (sendReason: number, isAsync: boolean): void => {
-                _runListeners(_listeners, STR_EVENTS_SEND_REQUEST, isAsync, (listener) => {
+                _runListeners(_listeners, STR_EVENTS_SEND_REQUEST, isAsync ? _asyncNotifications : null, (listener) => {
                     listener.eventsSendRequest(sendReason, isAsync);
                 });
             };
@@ -108,7 +132,7 @@ export class NotificationManager implements INotificationManager {
 
                     // Send all events or only parent events
                     if (perfEvtsSendAll || !perfEvent.isChildEvt()) {
-                        _runListeners(_listeners, STR_PERF_EVENT, false, (listener) => {
+                        _runListeners(_listeners, STR_PERF_EVENT, null, (listener) => {
                             if (perfEvent.isAsync) {
                                 scheduleTimeout(() => listener.perfEvent(perfEvent), 0);
                             } else {
@@ -125,10 +149,15 @@ export class NotificationManager implements INotificationManager {
                     unloadHandler && unloadHandler.rm();
                     unloadHandler = null;
                     _listeners = [];
+                    
+                    // Clear any async listener
+                    _asyncNotifications.h && _asyncNotifications.h.cancel();
+                    _asyncNotifications.h = null;
+                    _asyncNotifications.cb = [];
                 };
 
                 let waiting: IPromise<void>[];
-                _runListeners(_listeners, "unload", false, (listener) => {
+                _runListeners(_listeners, "unload", null, (listener) => {
                     let asyncUnload = listener.unload(isAsync);
                     if (asyncUnload) {
                         if (!waiting) {

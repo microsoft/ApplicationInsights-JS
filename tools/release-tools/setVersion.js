@@ -391,29 +391,41 @@ function shouldProcess(name) {
     return false;
 }
 
+function setPublishTag(package, publishTag) {
+    if (publishTag !== (package.publishConfig || {}).tag) {
+        if (!package.publishConfig) {
+            package.publishConfig = {};
+        }
+
+        package.publishConfig.tag = publishTag;
+
+        return true;
+    }
+
+    return false;
+}
+
 function updatePublishConfig(package, newVersion) {
     let details = getVersionDetails(newVersion);
     let majorVersion = package.version.split(".")[0];
-
-    if (!package.publishConfig) {
-        package.publishConfig = {};
-    }
+    let minorVersion = package.version.split(".")[1];
+    let changed = false;
 
     if (!details.type || details.type === "release") {
         // Set the publishing release tag
         if (majorVersion !== "0") {
-            package.publishConfig.tag = "release" + majorVersion;
-        } else {
-            package.publishConfig.tag = "alpha";
+            changed |= setPublishTag(package, "release" + majorVersion);
+        //} else {
+        //    changed |= setPublishTag(package, "alpha");
         }
     } else {
         // Set the publishing tag
         if (details.type === "nightly" || details.type === "dev" || details.type === "beta" || details.type === "alpha") {
             console.log(`   Type - [${details.type}] - ${majorVersion}`);
-            package.publishConfig.tag = details.type + (majorVersion !== "0" ? majorVersion : "");
+            changed |= setPublishTag(package, details.type + (majorVersion !== "0" ? majorVersion : ""));
         } else {
             console.log(`   Type - [${details.type}]`);
-            package.publishConfig.tag = details.type;
+            changed |= setPublishTag(package, details.type);
         }
 
         console.log(` Tag - [${package.publishConfig.tag}]`);
@@ -422,7 +434,10 @@ function updatePublishConfig(package, newVersion) {
     if (package.publishConfig && Object.keys(package.publishConfig).length === 0) {
         // Nothing left so remove it
         delete package.publishConfig;
+        changed = true;
     }
+
+    return changed;
 }
 
 function updateDependencies(target, orgVersion, newVersion) {
@@ -518,6 +533,16 @@ const setPackageJsonRelease = () => {
                             }
                         }
                     });
+                }
+            } else if (updatePublishConfig(package, newVersion)) {
+                console.log("   Name - " + package.name + " Publish tag set: " + (package.publishConfig || {}).tag || "<empty>");
+                changed = true;
+
+                if (!testOnly) {
+                    // Rewrite the file
+                    const newContent = JSON.stringify(package, null, 4) + "\n";
+                    fs.writeFileSync(theFilename, newContent);
+                    changed = true;
                 }
             } else {
                 console.log("   Name - " + package.name + " Version: " + currentVersion + " => Skipped");

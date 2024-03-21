@@ -67,7 +67,10 @@ export {
     IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn, IDynamicConfigHandler, IDynamicPropertyHandler,
     IWatchDetails, IWatcherHandler, WatcherFunction,
     createDynamicConfig, onConfigChange, getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion,
-    IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction
+    IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction,
+
+    // Test Hooks
+    _testHookMaxUnloadHooksCb
 } from "@microsoft/applicationinsights-core-js";
 
 export {
