@@ -2,6 +2,21 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.1.2 (Mar 21st, 2024)
+
+!! Critical Bug fix for Memoery Leak !!
+[#2311](https://github.com/microsoft/ApplicationInsights-JS/issues/2311)
+
+It also contains a packaging fix for webpack [#2307](https://github.com/microsoft/ApplicationInsights-JS/issues/2307) (caused by [#2306]](https://github.com/microsoft/ApplicationInsights-JS/issues/2306) ) and 
+
+### Changelog
+
+- #2307 ApplicationInsights-JS latest version 3.1.1 giving TypeError: Cannot read properties of undefined (reading 'getCrypto')
+- #2306 [BUG] Circular dependencies
+- #2311 [BUG] Excessive memory usage for SPA where unload hooks keep accumulating
+- #2299 [Main][Task]27156360: Add json config cdn details to tool folder
+- #2308 [Main][Task]27221819: Remove node 14 (from ci.yml)
+
 ## 3.1.1 (Mar 12th, 2024)
 
 ### Changelog
