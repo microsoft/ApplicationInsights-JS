@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-osplugin-js",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "description": "Microsoft Application Insights OS Plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
