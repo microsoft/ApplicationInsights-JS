@@ -75,7 +75,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 let identifier = _self.identifier;
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace(identifier), core.evtNamespace && core.evtNamespace());
 
-                _platformVersionResponse = JSON.parse(sessionStorage.getItem("ai_os"));
+                _platformVersionResponse = JSON.parse(sessionStorage.getItem("ai_osplugin"));
                 if(_platformVersionResponse){
                     _retrieveFullVersion = true;
                     _osVer = parseInt(_platformVersionResponse.platformVersion);
@@ -172,7 +172,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                                             _osVer = 11;
                                         }
                                     }
-                                    sessionStorage.setItem("ai_os", JSON.stringify({platform: _os, platformVersion: _osVer}));
+                                    sessionStorage.setItem("ai_osplugin", JSON.stringify({platform: _os, platformVersion: _osVer}));
                                 }
                             } else {
                                 _throwInternal(_core.logger,

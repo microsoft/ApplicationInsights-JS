@@ -277,7 +277,7 @@ export class OsPluginTest extends AITestClass {
                 let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
                 Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
-                let storedOs = JSON.parse(sessionStorage.getItem("ai_os"));
+                let storedOs = JSON.parse(sessionStorage.getItem("ai_osplugin"));
                 QUnit.assert.equal(storedOs.platform, _platformVersion.platform, "os is stored in session storage");
                 QUnit.assert.equal(storedOs.platformVersion, 11, "os ver is stored in session storage");
                 // send another event
