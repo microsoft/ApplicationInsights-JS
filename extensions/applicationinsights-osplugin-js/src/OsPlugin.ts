@@ -11,15 +11,13 @@ import {
     addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eLoggingSeverity, getSetValue,
     mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setValue
 } from "@microsoft/applicationinsights-core-js";
-import { doAwaitResponse } from "@nevware21/ts-async";
-import { objDeepFreeze } from "@nevware21/ts-utils";
+import { IPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { isString, objDeepFreeze } from "@nevware21/ts-utils";
 import { IOSPluginConfiguration } from "./DataModels";
 
-const defaultgetOSTimeoutMs = 5000;
+const defaultMaxTimeout = 200;
 const strExt = "ext";
 interface platformVersionInterface {
-    brands?: { brand: string, version: string }[],
-    mobile?: boolean,
     platform?: string,
     platformVersion?: string
 }
@@ -28,11 +26,11 @@ interface UserAgentHighEntropyData {
 }
 interface ModernNavigator {
     userAgentData?: {
-      getHighEntropyValues?: (fields: ["platformVersion"]) => Promise<UserAgentHighEntropyData>;
+      getHighEntropyValues?: (fields: ["platformVersion"]) => IPromise<UserAgentHighEntropyData>;
     };
   }
 const defaultOSConfig: IConfigDefaults<IOSPluginConfiguration> = objDeepFreeze({
-    getOSTimeoutMs: defaultgetOSTimeoutMs,
+    maxTimeout: defaultMaxTimeout,
     mergeOsNameVersion: undefined
 });
 
@@ -52,7 +50,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
         let _ocConfig: IOSPluginConfiguration;
         let _getOSInProgress: boolean;
         let _getOSTimeout: any;
-        let _getOSTimeoutMs: number;
+        let _maxTimeout: number;
 
         let _platformVersionResponse: platformVersionInterface;
         let _retrieveFullVersion: boolean;
@@ -77,16 +75,17 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 let identifier = _self.identifier;
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace(identifier), core.evtNamespace && core.evtNamespace());
 
-                _os = sessionStorage.getItem("ai_os");
-                _osVer = parseInt(sessionStorage.getItem("ai_osVer"));
-                if(_os && _osVer){
+                _platformVersionResponse = JSON.parse(sessionStorage.getItem("ai_os"));
+                if(_platformVersionResponse){
                     _retrieveFullVersion = true;
+                    _osVer = parseInt(_platformVersionResponse.platformVersion);
+                    _os = _platformVersionResponse.platform;
                 }
                 _self._addHook(onConfigChange(coreConfig, (details)=> {
                     let coreConfig = details.cfg;
                     let ctx = createProcessTelemetryContext(null, coreConfig, core);
                     _ocConfig = ctx.getExtCfg<IOSPluginConfiguration>(identifier, defaultOSConfig);
-                    _getOSTimeoutMs = _ocConfig.getOSTimeoutMs;
+                    _maxTimeout = _ocConfig.maxTimeout;
                     if (_ocConfig.mergeOsNameVersion !== undefined){
                         _mergeOsNameVersion = _ocConfig.mergeOsNameVersion;
                     } else if (core.getPlugin("Sender").plugin){
@@ -152,7 +151,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 // Timeout request if it takes more than 5 seconds (by default)
                 _getOSTimeout = setTimeout(() => {
                     _completeOsRetrieve();
-                }, _getOSTimeoutMs);
+                }, _maxTimeout);
 
                 if (navigator.userAgent) {
                     const getHighEntropyValues = (navigator as ModernNavigator).userAgentData?.getHighEntropyValues;
@@ -173,8 +172,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                                             _osVer = 11;
                                         }
                                     }
-                                    sessionStorage.setItem("ai_os", _os);
-                                    sessionStorage.setItem("ai_osVer", _osVer.toString());
+                                    sessionStorage.setItem("ai_os", JSON.stringify({platform: _os, platformVersion: _osVer}));
                                 }
                             } else {
                                 _throwInternal(_core.logger,
@@ -190,11 +188,12 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
             function updateTeleItemWithOs(event: ITelemetryItem) {
                 if (_retrieveFullVersion){
+                    let extOS = getSetValue(getSetValue(event, strExt), Extensions.OSExt);
                     if (_mergeOsNameVersion){
-                        setValue(getSetValue(event, strExt), Extensions.OSExt, _os + _osVer);
+                        setValue(extOS, "osVer", _os + _osVer, isString);
                     } else {
-                        setValue(getSetValue(event, strExt), Extensions.OSExt, _os);
-                        setValue(getSetValue(event, strExt), "osVer", _osVer);
+                        setValue(extOS, "os", _os, isString);
+                        setValue(extOS, "osVer", _osVer, isString);
                     }
                 }
             }
@@ -226,7 +225,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 _ocConfig = null;
                 _getOSInProgress = false;
                 _getOSTimeout = null;
-                _getOSTimeoutMs = null;
+                _maxTimeout = null;
                 _retrieveFullVersion = false;
                 _eventQueue = [];
                 _firstAttempt = true;

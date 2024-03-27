@@ -6,6 +6,6 @@
 */
 
 export interface IOSPluginConfiguration {
-    getOSTimeoutMs?: number;
+    maxTimeout?: number;
     mergeOsNameVersion?: boolean;
 }

@@ -8,7 +8,7 @@ import { createAsyncPromise, ResolvePromiseHandler, RejectPromiseHandler } from 
 import {getWindow, AppInsightsCore, IChannelControls, ITelemetryPlugin,
     IConfiguration, ITelemetryItem} from "@microsoft/applicationinsights-core-js";
 
-const defaultgetOSTimeoutMs = 5000;
+const defaultmaxTimeout = 5000;
 const _platformVersion =  {"brands":[{"brand":"Chromium","version":"122"}, 
 {"brand":"Microsoft Edge","version":"122"}],"mobile":false,"platform":"Windows",
 "platformVersion":"15.0.0"}
@@ -25,7 +25,7 @@ export class OsPluginTest extends AITestClass {
     private _core: AppInsightsCore;
     private _channelExtension: IChannelControls;
     private _osConfig: IOSPluginConfiguration = {
-        getOSTimeoutMs: 6000, // set a big number to avoid timeout for test
+        maxTimeout: 6000, // set a big number to avoid timeout for test
         mergeOsNameVersion: false
     };
     private _testChannelPlugin: TestChannelPlugin;
@@ -83,7 +83,7 @@ export class OsPluginTest extends AITestClass {
                 config.extensionConfig[this._plugin.identifier] = this._osConfig;
                 this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 this.clock.tick(100);
-                Assert.deepEqual(this._osConfig.getOSTimeoutMs, this._core.config.extensionConfig[this._plugin.identifier].getOSTimeoutMs, "getOSTimeoutMs should be changed");
+                Assert.deepEqual(this._osConfig.maxTimeout, this._core.config.extensionConfig[this._plugin.identifier].maxTimeout, "maxTimeout should be changed");
             }
         });
 
@@ -105,7 +105,7 @@ export class OsPluginTest extends AITestClass {
                 Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
                 Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
                 Assert.equal(this._plugin["_getDbgPlgTargets"]()[1][0].item.name, event.name);
-                this.clock.tick(defaultgetOSTimeoutMs);
+                this.clock.tick(defaultmaxTimeout);
                 Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
                 Assert.equal(this._channelSpy.called, true);
             }
@@ -175,7 +175,7 @@ export class OsPluginTest extends AITestClass {
                 let plugin = this._plugin;
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = {
-                    getOSTimeoutMs: 1000
+                    maxTimeout: 1000
                 };;
                 this._core.initialize(config, [plugin, this._testChannelPlugin]);
                 let event = {
@@ -208,7 +208,7 @@ export class OsPluginTest extends AITestClass {
                 let plugin = this._plugin;
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = {
-                    getOSTimeoutMs: 1000,
+                    maxTimeout: 1000,
                     mergeOsNameVersion: false
                 };;
                 this._core.initialize(config, [plugin, this._testChannelPlugin]);
@@ -255,7 +255,7 @@ export class OsPluginTest extends AITestClass {
                 let plugin = this._plugin;
                 config.extensionConfig = this._config.extensionConfig || {};
                 config.extensionConfig[this._plugin.identifier] = {
-                    getOSTimeoutMs: 1000,
+                    maxTimeout: 1000,
                     mergeOsNameVersion: false
                 };
                 this._core.initialize(config, [plugin, this._testChannelPlugin]);
@@ -277,10 +277,9 @@ export class OsPluginTest extends AITestClass {
                 let telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
                 Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
-                let storedOs = sessionStorage.getItem("ai_os");
-                QUnit.assert.equal(storedOs, _platformVersion.platform, "os is stored in session storage");
-                let storedOsver = sessionStorage.getItem("ai_osVer");
-                QUnit.assert.equal(storedOsver, 11, "os ver is stored in session storage");
+                let storedOs = JSON.parse(sessionStorage.getItem("ai_os"));
+                QUnit.assert.equal(storedOs.platform, _platformVersion.platform, "os is stored in session storage");
+                QUnit.assert.equal(storedOs.platformVersion, 11, "os ver is stored in session storage");
                 // send another event
                 this._core.track(event);
                 Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
@@ -289,7 +288,7 @@ export class OsPluginTest extends AITestClass {
                 telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
                 Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
-                Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
+                Assert.deepEqual(telemetry.ext.osVer, 11, "Windows 11 is detected");
             }
         });
     }
