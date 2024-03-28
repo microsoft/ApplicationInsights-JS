@@ -2533,8 +2533,10 @@ export class SenderTests extends AITestClass {
                         device: {
                             deviceClass: "Browser",
                             localId: "browser"
+                        },
+                        os: {
+                            osVer: "Windows11"
                         }
-
                     },
                     tags: [{"ai.internal.sdkVersion": "javascript:2.5.1"}],
                     data: {
@@ -2580,6 +2582,9 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(appInsightsEnvelope.tags);
                 QUnit.assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
                 QUnit.assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
+                QUnit.assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
+                QUnit.assert.equal("Windows11", appInsightsEnvelope.tags["ai.device.osVersion"]);
+
                 QUnit.assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
                 QUnit.assert.equal("javascript:2.5.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 

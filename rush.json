@@ -80,6 +80,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-osplugin-js",
+      "projectFolder": "extensions/applicationinsights-osplugin-js",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-channel-js",
       "projectFolder": "channels/applicationinsights-channel-js",
       "shouldPublish": true

@@ -546,6 +546,10 @@ module.exports = function (grunt) {
                                         path: "./extensions/applicationinsights-properties-js",
                                         unitTestName: "prop.tests.js"
                                     },
+            "osplugin":             { 
+                                        path: "./extensions/applicationinsights-osplugin-js",
+                                        unitTestName: "applicationinsights-osplugin.tests.js"
+                                    },
             "cfgsync":               { 
                                         path: "./extensions/applicationinsights-cfgsync-js",
                                         unitTestName: "cfgsync.tests.js"
@@ -923,6 +927,12 @@ module.exports = function (grunt) {
         grunt.registerTask("clickanalytics-restore", restoreTasks("clickanalytics"));
         grunt.registerTask("clickanalyticstests", tsTestActions("clickanalytics"));
         grunt.registerTask("clickanalytics-mintests", tsTestActions("clickanalytics", true));
+
+        grunt.registerTask("osplugin", tsBuildActions("osplugin"));
+        grunt.registerTask("osplugin-min", minTasks("osplugin"));
+        grunt.registerTask("osplugin-restore", restoreTasks("osplugin"));
+        grunt.registerTask("osplugintests", tsTestActions("osplugin"));
+        grunt.registerTask("osplugin-mintests", tsTestActions("osplugin", true));
 
         grunt.registerTask("1dsCoreBuild", tsBuildActions("1dsCore"));
         grunt.registerTask("1dsCoreTest", tsTestActions("1dsCore"));

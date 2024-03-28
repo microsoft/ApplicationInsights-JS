@@ -102,6 +102,9 @@
                 "eStorageProviders",
                 "ValueQueryType"
             ]
+        },
+        "@microsoft/applicationinsights-osplugin-js": {
+            "constEnums": []
         }
     }
 }

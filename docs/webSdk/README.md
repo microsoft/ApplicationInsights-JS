@@ -33,6 +33,8 @@ Placeholder for auto-generated API documentation
 
 [Click Analytics extension](./applicationinsights-clickanalytics-js/index.html)
 
+[OS Plugin extension](./applicationinsights-osplugin-js/index.html)
+
 [Debug Plugin extension](./applicationinsights-debugplugin-js/index.html)
 
 [XHR dependencies plugin](./applicationinsights-dependencies-js/index.html)
