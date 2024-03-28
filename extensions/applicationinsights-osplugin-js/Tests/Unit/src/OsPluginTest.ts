@@ -136,9 +136,10 @@ export class OsPluginTest extends AITestClass {
                 Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
                 Assert.equal(this._channelSpy.called, true);
                 let telemetry = this._channelSpy.getCall(0).args[0];
+                console.log("telemetry", JSON.stringify(telemetry));
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
-                Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
-                Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
+                Assert.deepEqual(telemetry.ext.os.os, _platformVersion.platform, "OS should be changed");
+                Assert.deepEqual(telemetry.ext.os.osVer, 11, "windows 11 is detected");
             }
         });
 
@@ -275,8 +276,8 @@ export class OsPluginTest extends AITestClass {
                 Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
                 Assert.equal(this._channelSpy.called, true);
                 let telemetry = this._channelSpy.getCall(0).args[0];
-                Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
-                Assert.deepEqual(telemetry.ext.osVer, 11, "windows 11 is detected");
+                Assert.deepEqual(telemetry.ext.os.os, _platformVersion.platform, "OS should be changed");
+                Assert.deepEqual(telemetry.ext.os.osVer, 11, "windows 11 is detected");
                 let storedOs = JSON.parse(sessionStorage.getItem("ai_osplugin"));
                 QUnit.assert.equal(storedOs.platform, _platformVersion.platform, "os is stored in session storage");
                 QUnit.assert.equal(storedOs.platformVersion, 11, "os ver is stored in session storage");
@@ -287,8 +288,8 @@ export class OsPluginTest extends AITestClass {
                 Assert.equal(this._channelSpy.called, true);
                 telemetry = this._channelSpy.getCall(0).args[0];
                 Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
-                Assert.deepEqual(telemetry.ext.os, _platformVersion.platform, "OS should be changed");
-                Assert.deepEqual(telemetry.ext.osVer, 11, "Windows 11 is detected");
+                Assert.deepEqual(telemetry.ext.os.os, _platformVersion.platform, "OS should be changed");
+                Assert.deepEqual(telemetry.ext.os.osVer, 11, "Windows 11 is detected");
             }
         });
     }

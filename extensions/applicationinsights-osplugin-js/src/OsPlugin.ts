@@ -4,7 +4,9 @@
 * @copyright Microsoft 2024
 */
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { Extensions, IConfig } from "@microsoft/applicationinsights-common";
+import {
+    Extensions, IConfig, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage
+} from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eInternalMessageId, _throwInternal, addPageHideEventListener,
@@ -74,8 +76,9 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 super.initialize(coreConfig, core, extensions);
                 let identifier = _self.identifier;
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace(identifier), core.evtNamespace && core.evtNamespace());
-
-                _platformVersionResponse = JSON.parse(sessionStorage.getItem("ai_osplugin"));
+                if (utlCanUseSessionStorage){
+                    _platformVersionResponse = JSON.parse(utlGetSessionStorage(core.logger, "ai_osplugin"));
+                }
                 if(_platformVersionResponse){
                     _retrieveFullVersion = true;
                     _osVer = parseInt(_platformVersionResponse.platformVersion);
@@ -172,7 +175,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                                             _osVer = 11;
                                         }
                                     }
-                                    sessionStorage.setItem("ai_osplugin", JSON.stringify({platform: _os, platformVersion: _osVer}));
+                                    utlSetSessionStorage(_core.logger, "ai_osplugin", JSON.stringify({platform: _os, platformVersion: _osVer}))
                                 }
                             } else {
                                 _throwInternal(_core.logger,
@@ -191,9 +194,10 @@ export class OsPlugin extends BaseTelemetryPlugin {
                     let extOS = getSetValue(getSetValue(event, strExt), Extensions.OSExt);
                     if (_mergeOsNameVersion){
                         setValue(extOS, "osVer", _os + _osVer, isString);
+                        setValue(extOS, "name", _os + _osVer, isString);
                     } else {
+                        setValue(extOS, "osVer", _osVer);
                         setValue(extOS, "os", _os, isString);
-                        setValue(extOS, "osVer", _osVer, isString);
                     }
                 }
             }
