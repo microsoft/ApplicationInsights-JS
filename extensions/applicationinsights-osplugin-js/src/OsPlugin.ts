@@ -175,7 +175,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                                             _osVer = 11;
                                         }
                                     }
-                                    utlSetSessionStorage(_core.logger, "ai_osplugin", JSON.stringify({platform: _os, platformVersion: _osVer}))
+                                    utlSetSessionStorage(_core.logger, "ai_osplugin", JSON.stringify({platform: _os, platformVersion: _osVer}));
                                 }
                             } else {
                                 _throwInternal(_core.logger,
