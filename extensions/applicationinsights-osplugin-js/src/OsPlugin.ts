@@ -159,7 +159,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 if (navigator.userAgent) {
                     const getHighEntropyValues = (navigator as ModernNavigator).userAgentData?.getHighEntropyValues;
                     if (getHighEntropyValues) {
-                        doAwaitResponse(getHighEntropyValues(["platformVersion"]), (response:any) => {
+                        doAwaitResponse((navigator as ModernNavigator).userAgentData.getHighEntropyValues(["platformVersion"]), (response:any) => {
                             if (!response.rejected) {
                                 _platformVersionResponse = response.value;
                                 _retrieveFullVersion = true;
@@ -194,7 +194,6 @@ export class OsPlugin extends BaseTelemetryPlugin {
                     let extOS = getSetValue(getSetValue(event, strExt), Extensions.OSExt);
                     if (_mergeOsNameVersion){
                         setValue(extOS, "osVer", _os + _osVer, isString);
-                        setValue(extOS, "name", _os + _osVer, isString);
                     } else {
                         setValue(extOS, "osVer", _osVer);
                         setValue(extOS, "os", _os, isString);
