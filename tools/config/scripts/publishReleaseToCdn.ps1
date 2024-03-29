@@ -81,6 +81,7 @@ if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
 
 $cacheControl1Year = "public, max-age=31536000, immutable, no-transform";
 $contentType = "text/javascript; charset=utf-8";
+$cacheControl30Min = "public, max-age=1800, immutable, no-transform";
 
 Write-LogParams
 
@@ -110,9 +111,9 @@ Write-Log "---------------------------------------------------------------------
 # Publish the full versioned files to all release folders
 if ($version.type -eq "release") {
     # Normal publishing deployment
-    PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
-    PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
-    PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "beta" $cacheControl30Min $contentType $overwrite
+    PublishFiles $releaseFiles "next" $cacheControl30Min $contentType $overwrite
+    PublishFiles $releaseFiles "scripts/b" $cacheControl30Min $contentType $overwrite
 }
 elseif ($version.type -eq "rc") {
     PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
