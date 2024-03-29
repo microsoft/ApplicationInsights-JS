@@ -6,7 +6,7 @@ param (
     [string] $resourceGroup = $null,                    # Identifies the target Azure Subscription Resource Group (if not encoded in the cdnStorePath)
     [string] $sasToken = $null,                         # The SAS Token to use rather than using or attempting to login
     [string] $logPath = $null,                          # The location where logs should be written
-    [switch] $overwrite = $true,                       # Overwrite any existing files   
+    [switch] $overwrite = $false,                       # Overwrite any existing files   
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
     [switch] $cdn = $false                              # (No longer used -- kept for now for backward compatibility)
 )
@@ -111,9 +111,9 @@ Write-Log "---------------------------------------------------------------------
 # Publish the full versioned files to all release folders
 if ($version.type -eq "release") {
     # Normal publishing deployment
-    PublishFiles $releaseFiles "beta" $cacheControl30Min $contentType $overwrite
-    PublishFiles $releaseFiles "next" $cacheControl30Min $contentType $overwrite
-    PublishFiles $releaseFiles "scripts/b" $cacheControl30Min $contentType $overwrite
+    PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
+    PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite
 }
 elseif ($version.type -eq "rc") {
     PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
