@@ -31,3 +31,4 @@ export const STR_TRACK_EXCEPTION = _TRACK + "Exception" as "trackException";
 export const STR_TRACK_DEPENDENCY_DATA = _TRACK + "DependencyData" as "trackDependencyData";
 export const STR_SET_AUTHENTICATED_USER_CONTEXT = "set" + _AUTHENTICATED_USER_CONTEXT as "setAuthenticatedUserContext";
 export const STR_CLEAR_AUTHENTICATED_USER_CONTEXT = "clear" + _AUTHENTICATED_USER_CONTEXT as "clearAuthenticatedUserContext";
+export const CONFIG_ENDPOINT_URL = "https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json";
