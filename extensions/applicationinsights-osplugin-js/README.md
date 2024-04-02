@@ -7,17 +7,44 @@
 Microsoft Application Insights OS Plugin
 
 ## Description
-1DS OS Plugin provides
-## Basic Usage
+1DS OS Plugin provides the functionality to retrieve customers system version, such as "Windows 11".
+
+## NPM Setup (ignore if using Snippet Setup)
+
+Install npm package:
+
+```bash
+npm install --save @microsoft/applicationinsights-osplugin-js @microsoft/applicationinsights-web
+```
+
+```js
+
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import {OsPlugin} from '@microsoft/applicationinsights-osplugin-js';
+
+const osPlugin = new OsPlugin();
+const appInsights = new ApplicationInsights({
+  config: {
+    connectionString: "YOUR_CONNECTION_STRING",
+    extensionConfig:{
+      [osPlugin.identifier]: {
+        maxTimeout: 10000,
+        mergeOsNameVersion: true
+      }},
+    extensions: [osPlugin]
+  }
+});
+appInsights.loadAppInsights();
+appInsights.trackEvent({name: "testEvent", properties: {testProperty: "testValue"}});
+
+```
 ## Configuration
 
-### Setup 
-## Build:
-```
-npm install -g grunt-cli
-npm install
-npm run build --silent
-```
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| maxTimeout | number[Optional]| 200 | Maximum time to wait for the OS plugin to return the OS information |
+| mergeOsNameVersion | boolean[Optional] | false | Whether to merge the OS name and version into one field change details. |
+
 
 ## Run unit tests:
 ```

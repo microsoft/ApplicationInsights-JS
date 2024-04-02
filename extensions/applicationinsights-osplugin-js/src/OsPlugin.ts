@@ -14,7 +14,7 @@ import {
     mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setValue
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { isString, objDeepFreeze } from "@nevware21/ts-utils";
+import { ITimerHandler, isString, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import { IOSPluginConfiguration } from "./DataModels";
 
 const defaultMaxTimeout = 200;
@@ -51,7 +51,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
         let _core: IAppInsightsCore;
         let _ocConfig: IOSPluginConfiguration;
         let _getOSInProgress: boolean;
-        let _getOSTimeout: any;
+        let _getOSTimeout: ITimerHandler;
         let _maxTimeout: number;
 
         let _platformVersionResponse: platformVersionInterface;
@@ -76,8 +76,12 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 super.initialize(coreConfig, core, extensions);
                 let identifier = _self.identifier;
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace(identifier), core.evtNamespace && core.evtNamespace());
-                if (utlCanUseSessionStorage){
-                    _platformVersionResponse = JSON.parse(utlGetSessionStorage(core.logger, "ai_osplugin"));
+                if (utlCanUseSessionStorage) {
+                    try {
+                        _platformVersionResponse = JSON.parse(utlGetSessionStorage(core.logger, "ai_osplugin"));
+                    } catch (error) {
+                        // do nothing
+                    }
                 }
                 if(_platformVersionResponse){
                     _retrieveFullVersion = true;
@@ -152,7 +156,8 @@ export class OsPlugin extends BaseTelemetryPlugin {
              */
             function startRetrieveOsVersion() {
                 // Timeout request if it takes more than 5 seconds (by default)
-                _getOSTimeout = setTimeout(() => {
+                 
+                _getOSTimeout = scheduleTimeout(() => {
                     _completeOsRetrieve();
                 }, _maxTimeout);
 
@@ -206,7 +211,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
             */
             function _completeOsRetrieve() {
                 if (_getOSTimeout) {
-                    clearTimeout(_getOSTimeout);
+                    _getOSTimeout.cancel();
                 }
                 _getOSInProgress = false;
                 _releaseEventQueue();
@@ -218,7 +223,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
             function _releaseEventQueue() {
                 arrForEach(_eventQueue, (evt) => {
                     updateTeleItemWithOs(evt.item);
-                    evt.ctx.processNext(evt.item);
+                    _self.processNext(evt.item, evt.ctx);
                 });
                 _eventQueue = [];
             }
