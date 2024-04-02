@@ -394,6 +394,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | storagePrefix | string[] | undefined | [Optional] An optional value that will be added as name prefix for storage name. |
 | featureOptIn <br/><sub>since 3.0.3</sub> | IFeatureOptIn | undefined | [Optional]  Set Feature opt in details. |
 | throttleMgrCfg <br/><sub>since 3.0.3</sub> | `{[key: number]: IThrottleMgrConfig}` | undefined | [Optional]  Set throttle mgr configuration by key. |
+| retryCodes | number[] | undefined | Identifies the status codes that will cause event batches to be resent, when `null` or `undefined` the SDK will use it's defaults `[401, 408, 429, 500, 502, 503, 504]`. `403` was removed in version 3.1.1. |
 
 ### ICookieMgrConfig
 
@@ -456,7 +457,11 @@ As part of changes being introduced in version 2.6.0 we are deprecating and remo
 
 ## Service Notification
 
-As part of changes being introduced in version 3.0.3, we are intergrating [cfgSync plugin](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-cfgsync-js) and [throttle manager](./docs/ThrottleMgr.md) to AISKU. By default, these components will be disabled during the current initial release, but they will be enabled by default in future releases once extensive production level testing is completed.
+As part of changes being introduced in version 3.0.3, we are intergrating [cfgSync plugin](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-cfgsync-js) and [throttle manager](./docs/ThrottleMgr.md) to AISKU.
+For versions before 3.1.2, these components are disabled by default.
+
+For versions after 3.1.2, these components are **turned on by default**.
+See [feature opt-in status](./docs/WebConfig.md) for more details.
 
 ## Single Page Applications
 

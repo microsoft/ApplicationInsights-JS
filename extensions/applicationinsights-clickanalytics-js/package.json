@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-clickanalytics-js",
-    "version": "3.1.0",
+    "version": "3.1.2",
     "description": "Microsoft Application Insights Click Analytics extension",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -51,10 +51,10 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-core-js": "3.1.0",
-        "@microsoft/applicationinsights-common": "3.1.0",
-        "@microsoft/applicationinsights-properties-js": "3.1.0",
-        "@nevware21/ts-utils": ">= 0.10.5 < 2.x"
+        "@microsoft/applicationinsights-core-js": "3.1.2",
+        "@microsoft/applicationinsights-common": "3.1.2",
+        "@microsoft/applicationinsights-properties-js": "3.1.2",
+        "@nevware21/ts-utils": ">= 0.11.0 < 2.x"
     },
     "repository": {
         "type": "git",
