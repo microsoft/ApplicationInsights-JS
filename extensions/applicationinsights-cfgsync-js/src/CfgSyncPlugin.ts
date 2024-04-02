@@ -23,12 +23,13 @@ const EVENT_NAME = "ai_cfgsync";
 const STR_GET_METHOD = "GET";
 const FETCH_TIMEOUT = 1800000; // 30 minutes
 const udfVal: undefined = undefined;
+const CONFIG_ENDPOINT_URL = "https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json";
 let defaultNonOverrideCfg: NonOverrideCfg  = {instrumentationKey: true, connectionString: true, endpointUrl: true }
 const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     syncMode: ICfgSyncMode.Broadcast,
     blkCdnCfg: udfVal,
     customEvtName: udfVal,
-    cfgUrl: udfVal, //TODO: REPLACE TO DEFAULT URL
+    cfgUrl: CONFIG_ENDPOINT_URL,
     overrideSyncFn: udfVal,
     overrideFetchFn: udfVal,
     onCfgChangeReceive: udfVal,
