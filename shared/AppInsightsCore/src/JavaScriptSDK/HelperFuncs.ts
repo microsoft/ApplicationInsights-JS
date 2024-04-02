@@ -8,11 +8,7 @@ import {
 import { FeatureOptInMode } from "../JavaScriptSDK.Enums/FeatureOptInEnums";
 import { TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IBackendResponse, IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
-import { _eInternalMessageId, eLoggingSeverity } from "../applicationinsights-core-js";
-import { _throwInternal } from "./DiagnosticLogger";
-import { getJSON } from "./EnvUtils";
+import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
 import { STR_EMPTY } from "./InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
@@ -402,33 +398,6 @@ export function prependTransports(theTransports: TransportType[], newTransports:
         }
     }
     return theTransports;
-}
-
-/**
- * Parses the response from the backend.
- * @param response - XMLHttpRequest or XDomainRequest response
- */
-export function parseResponse(response: any, diagLog?: IDiagnosticLogger): IBackendResponse {
-    try {
-        if (response && response !== "") {
-            const result = getJSON().parse(response);
-
-            if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
-                result.itemsReceived - result.itemsAccepted === result.errors.length) {
-                return result;
-            }
-        }
-    } catch (e) {
-        _throwInternal(diagLog,
-            eLoggingSeverity.CRITICAL,
-            _eInternalMessageId.InvalidBackendResponse,
-            "Cannot parse the response. " + getExceptionName(e),
-            {
-                response
-            });
-    }
-
-    return null;
 }
 
 const strDisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
