@@ -66,6 +66,7 @@ function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem
 
     let extOs = itmExt.os;
     if (extOs) {
+        _setValueIf(envTags, CtxTagKeys.deviceOS, extOs.name);
         _setValueIf(envTags, CtxTagKeys.deviceOSVersion, extOs.osVer);
     }
 

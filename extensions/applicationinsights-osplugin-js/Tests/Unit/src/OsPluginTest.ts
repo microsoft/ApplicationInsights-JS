@@ -292,6 +292,53 @@ export class OsPluginTest extends AITestClass {
                 Assert.deepEqual(telemetry.ext.os.osVer, 11, "Windows 11 is detected");
             }
         });
+
+        this.testCase({
+            name: "OsPlugin: test merged version",
+            useFakeTimers: true,
+            test: () => {
+                let window = getWindow();
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+                let config = this._config;
+                let plugin = this._plugin;
+                config.extensionConfig = this._config.extensionConfig || {};
+                config.extensionConfig[this._plugin.identifier] = {
+                    maxTimeout: 1000,
+                    mergeOsNameVersion: true
+                };
+                this._core.initialize(config, [plugin, this._testChannelPlugin]);
+                let event = {
+                    name: 'testEvent',
+                    baseType: 'testBaseType',
+                    baseData: {}
+                };
+                this._core.track(event);
+                Assert.equal(this._channelSpy.called, false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], true);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1][0].item.name, event.name);
+                this._resolvedGetHighEntrophyPromise(_platformVersion);
+                this.clock.tick(1);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
+                Assert.equal(this._channelSpy.called, true);
+                let telemetry = this._channelSpy.getCall(0).args[0];
+                Assert.deepEqual(telemetry.ext.os.osVer, "windows11", "windows 11 is detected");
+                let storedOs = JSON.parse(sessionStorage.getItem("ai_osplugin"));
+                QUnit.assert.equal(storedOs.platform, _platformVersion.platform, "os is stored in session storage");
+                QUnit.assert.equal(storedOs.platformVersion, 11, "os ver is stored in session storage");
+                // send another event
+                this._core.track(event);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[2], false);
+                Assert.equal(this._plugin["_getDbgPlgTargets"]()[1].length, 0);
+                Assert.equal(this._channelSpy.called, true);
+                telemetry = this._channelSpy.getCall(0).args[0];
+                Assert.equal(JSON.stringify(telemetry).includes("osVer"), true, "before timeout, get os version");
+                Assert.deepEqual(telemetry.ext.os.osVer, "Windows11", "windows 11 is detected");
+            }
+        });
     }
 }
 
