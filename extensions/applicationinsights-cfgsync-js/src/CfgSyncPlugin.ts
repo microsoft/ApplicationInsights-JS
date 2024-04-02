@@ -28,7 +28,7 @@ const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     syncMode: ICfgSyncMode.Broadcast,
     blkCdnCfg: udfVal,
     customEvtName: udfVal,
-    cfgUrl: udfVal, // as long as it is set to NOT NUll, we will NOT use config from core
+    cfgUrl: udfVal,
     overrideSyncFn: udfVal,
     overrideFetchFn: udfVal,
     onCfgChangeReceive: udfVal,
