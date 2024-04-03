@@ -44,7 +44,7 @@ interface IDelayedEvent {
 export class OsPlugin extends BaseTelemetryPlugin {
     public identifier = "OsPlugin";
     public priority = 195;
-    public version = '3.1.2';
+    public version = "#version#";
 
     constructor() {
         super();
