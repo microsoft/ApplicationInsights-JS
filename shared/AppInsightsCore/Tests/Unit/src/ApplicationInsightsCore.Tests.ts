@@ -101,7 +101,6 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let onCompleteFuncs = {
                     fetchOnComplete: (response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) => {
                         onFetchCalled ++;
-                        Assert.equal(onXhrCalled, 1, "onxhr is called once test1");
                         Assert.equal(onFetchCalled, 1, "onFetch is called once test1");
                     },
                     xhrOnComplete: (request: XMLHttpRequest, onComplete: OnCompleteCallback, payload?: IPayloadData) => {
@@ -125,7 +124,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let transports = [TransportType.Xhr, TransportType.Fetch, TransportType.Beacon];
 
 
-                // use xhr
+                // use xhr, appInsights
                 let config = {
                     enableSendPromise: false,
                     isOneDs: false,
@@ -157,12 +156,14 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 Assert.equal(this._getXhrRequests().length, 1, "xhr is called once");
                 let request = this._getXhrRequests()[0];
+                let reqHeaders = request.requestHeaders["Content-type"];
+                Assert.equal(reqHeaders, "application/json;charset=utf-8");
                 this.sendJsonResponse(request, {}, 200);
                 Assert.equal(onXhrCalled, 1, "onxhr is called once");
                 Assert.equal(onFetchCalled, 0, "onFetch is not called");
                 Assert.equal(onBeaconRetryCalled, 0, "onBeacon is not called");
 
-                // use fetch
+                // use fetch, appInsghts
                 config = {
                     enableSendPromise: false,
                     isOneDs: false,
@@ -217,7 +218,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 inst.sendPOST(payload, onCompleteCallback, false);
                 Assert.equal(onBeaconRetryCalled, 1, "onBeacon is not called test2");
 
-                // change config
+                // change config, xhr
                 config = {
                     enableSendPromise: true,
                     isOneDs: true,
@@ -236,6 +237,16 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.equal(credentials, true, "credentials is set ot false test3");
                 promise = SendPostMgr["_getDbgPlgTargets"]()[3];
                 Assert.equal(promise, true, "promise is set ot false test3");
+
+                inst = SendPostMgr.getSenderInst(transports, false);
+                inst.sendPOST(payload, onCompleteCallback, false);
+
+                Assert.equal(this._getXhrRequests().length, 2, "xhr is called once again for 1ds");
+                request = this._getXhrRequests()[1];
+                reqHeaders = request.requestHeaders["Content-type"];
+                Assert.ok(!reqHeaders, "1ds post xhr request headers should be set by query parameters");
+                this.sendJsonResponse(request, {}, 200);
+                Assert.equal(onXhrCalled, 2, "onxhr is called twice");
             }
         });
 
