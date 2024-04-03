@@ -67,6 +67,7 @@ function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem
     let extOs = itmExt.os;
     if (extOs) {
         _setValueIf(envTags, CtxTagKeys.deviceOS, extOs.name);
+        _setValueIf(envTags, CtxTagKeys.deviceOSVersion, extOs.osVer);
     }
 
     // No support for mapping Trace.traceState to 2.0 as it is currently empty

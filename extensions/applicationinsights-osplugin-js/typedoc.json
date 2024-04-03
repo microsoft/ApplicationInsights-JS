@@ -1,6 +1,6 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "entryPoints": [ "./src/applicationinsights-channel-js.ts" ],
+    "entryPoints": [ "./src/applicationinsights-osplugin-js.ts" ],
     "exclude": [ "**/internal/**/*.ts", "node_modules/**" ],
     "externalPattern": [
         "**/node_modules/**",
@@ -37,7 +37,7 @@
         "*"
     ],
     "tsconfig": "./tsconfig.json",
-    "out": "../../docs/webSdk/applicationinsights-channel-js",
+    "out": "../../docs/webSdk/applicationinsights-osplugin-js",
     "readme": "none",
     "githubPages": true,
     "gitRevision": "main",
@@ -47,11 +47,11 @@
     "sidebarLinks": {
         "Changelog": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/RELEASES.md",
         "Examples": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/examples/README.md",
-        "Readme": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/channels/applicationinsights-channel-js"
+        "Readme": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-osplugin-js"
     },
     "navigationLinks": {
         "GitHub": "https://github.com/Microsoft/ApplicationInsights-JS",
-        "npm": "https://www.npmjs.com/package/@microsoft/applicationinsights-channel-js"
+        "npm": "https://www.npmjs.com/package/@microsoft/applicationinsights-osplugin-js"
     },
     "visibilityFilters": {
         "protected": false,

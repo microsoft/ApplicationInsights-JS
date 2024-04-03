@@ -46,7 +46,7 @@
     },
     "sidebarLinks": {
         "Changelog": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/RELEASES.md",
-        "Readme": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/offline-channel-js",
+        "Readme": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/channels/offline-channel-js",
     },
     "navigationLinks": {
         "GitHub": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/offline-channel-js",

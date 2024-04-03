@@ -47,7 +47,7 @@
     "sidebarLinks": {
         "Changelog": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/RELEASES.md",
         "Examples": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/examples/README.md",
-        "Readme": "https://github.com/Microsoft/ApplicationInsights-JS"
+        "Readme": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/tools/applicationinsights-web-snippet"
     },
     "navigationLinks": {
         "GitHub": "https://github.com/Microsoft/ApplicationInsights-JS",
