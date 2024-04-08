@@ -1,6 +1,22 @@
 import { IStorageBuffer } from "@microsoft/applicationinsights-common";
 import { IXHROverride } from "@microsoft/applicationinsights-core-js";
 
+/**
+ * Internal interface for sendBuffer, do not export it
+ * @internal
+ * @since 3.1.3
+ */
+export interface IInternalStorageItem {
+    /**
+     * serialized telemetry to be stored.
+     */
+    item: string;
+    /**
+     * total retry count
+     */
+    cnt?: number;
+}
+
 export interface ISenderConfig {
     /**
      * The url to which payloads will be sent
@@ -141,6 +157,14 @@ export interface ISenderConfig {
      * @since 3.1.1
      */
     retryCodes?: number[];
+
+    /**
+     * (Optional) The specific max retry count for each telemetry item.
+     * Default: undefined (no limit for retry times)
+     * if it is set to 0, means no retry allowed
+     * @since 3.1.3
+     */
+    maxRetryCnt?: number;
 }
 
 export interface IBackendResponse {

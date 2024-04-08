@@ -5,24 +5,24 @@ import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData, isFetchSupported, TransportType, getWindow, getGlobal} from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
-import { ISenderConfig } from "../../../src/Interfaces";
+import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
 
 
 
-const BUFFER_KEY = "AI_buffer";
-const SENT_BUFFER_KEY = "AI_sentBuffer";
+const BUFFER_KEY = "AI_buffer_1";
+const SENT_BUFFER_KEY = "AI_sentBuffer_1";
 export class SenderTests extends AITestClass {
     private _sender: Sender;
     private _instrumentationKey = 'iKey';
     private _offline: IOfflineListener;
 
-    protected _getBuffer(key: string, logger: DiagnosticLogger, namePrefix?: string): string[] {
+    protected _getBuffer(key: string, logger: DiagnosticLogger, namePrefix?: string): IInternalStorageItem[] {
         let prefixedKey = key;
         try {
             prefixedKey = namePrefix ? namePrefix + "_" + prefixedKey : prefixedKey;
             const bufferJson = utlGetSessionStorage(logger, prefixedKey);
             if (bufferJson) {
-                let buffer: string[] = JSON.parse(bufferJson);
+                let buffer: IInternalStorageItem[] = JSON.parse(bufferJson);
                 if (isString(buffer)) {
                     buffer = JSON.parse(buffer as any);
                 }
@@ -182,7 +182,7 @@ export class SenderTests extends AITestClass {
                         }
                     }
                 }
-                let testBatch: string[] = ["test", "test1"];
+                let testBatch: IInternalStorageItem[] = [{item: "test", cnt: 0}, {item: "test1", cnt: 0}];
                 const telemetryItem: ITelemetryItem = {
                     name: "fake item",
                     iKey: "test",
@@ -229,10 +229,76 @@ export class SenderTests extends AITestClass {
                 this._sender.onunloadFlush();
                 QUnit.assert.deepEqual(2, sentPayloadData.length, "httpXHROverride should be called");
                 let data = sentPayloadData[1].payload.oriPayload;
-                payload = JSON.parse(data[0]);
+                payload = JSON.parse(data[0].item);
                 QUnit.assert.deepEqual("test", payload.iKey, "httpXHROverride should send expected payload test1");
                 sync = sentPayloadData[1].sync;
                 QUnit.assert.equal(true, sync, "Channel httpXHROverride sync is called with true during send test2 (sender interface should be opposite with the sender)");
+                
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config MaxRetry Count: payload exceeds max retry count should not be sent again",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            //httpXHROverride: xhrOverride,
+                            //alwaysUseXhrOverride: true,
+                            maxRetryCnt: 1
+                        }
+                    }
+                }
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "test",
+                    baseType: "some type",
+                    baseData: {}
+                };
+                core.initialize(coreConfig, [this._sender]);
+              
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                    QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger).length, 1, "session storage buffer should have 1 item");
+                    QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty test1");
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+                
+                // inital send, cnt = 0
+                this._sender.flush(false);
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger).length, 1, "session storage sent buffer should have one event");
+
+                let requests = this._getXhrRequests();
+                QUnit.assert.deepEqual(requests.length, 1, "should have only 1 requests");
+                let request = requests[0];
+                this.sendJsonResponse(request, {}, 500);
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger).length, 1, "session storage buffer should have one item test2");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer should not have one event test2");
+                
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger)[0].cnt, 1, "session storage buffer should have item with retry cnt 1");
+                
+                // retry 1, cnt = 1
+                this._sender.flush(false);
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty test4");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger).length, 1, "session storage sent buffer should have one event test4");
+                
+                requests = this._getXhrRequests();
+                QUnit.assert.deepEqual(requests.length, 2, "should have only 1 requests");
+                request = requests[1];
+                this.sendJsonResponse(request, {}, 500);
+                // items should not be added back
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer should not have one item test5");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer should not have one event test5");
                 
             }
         });
@@ -334,7 +400,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
                 let payload  = this._getBuffer(BUFFER_KEY, logger);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage");
                 let sentPayload  = this._getBuffer(SENT_BUFFER_KEY, logger);
                 QUnit.assert.deepEqual([], sentPayload, "sent payload is empty");
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "buffer length shoule be one");
@@ -346,7 +412,7 @@ export class SenderTests extends AITestClass {
                 this.clock.tick(1);
                 QUnit.assert.equal(false, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is disabled");
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "session storage buffer is transferred");
-                QUnit.assert.ok(this._sender._buffer.getItems()[0].indexOf("some type") > 1, "in memory storage buffer is set");
+                QUnit.assert.ok(this._sender._buffer.getItems()[0].item.indexOf("some type") > 1, "in memory storage buffer is set");
                 
                 this.clock.tick(15000);
                 QUnit.assert.equal(true, loggerSpy.calledOnce, "The send has been triggered");
@@ -432,7 +498,7 @@ export class SenderTests extends AITestClass {
 
                 let payload  = this._getBuffer(BUFFER_KEY, logger);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage");
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "buffer length shoule be one");
                 let sentPayload  = this._getBuffer(SENT_BUFFER_KEY, logger);
                 QUnit.assert.deepEqual([], sentPayload, "sent payload is empty");
@@ -481,7 +547,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "session storage buffer is set");
                 let payload  = this._getBuffer(BUFFER_KEY, logger);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger, prefixName), [], "session storage buffer with prefix is empty");
 
 
@@ -495,7 +561,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
                 payload  = this._getBuffer(BUFFER_KEY, logger, prefixName);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage with prefix");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage with prefix");
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "new session storage buffer is set");
                
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
@@ -544,7 +610,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
                 let payload  = this._getBuffer(BUFFER_KEY, logger);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage");
 
                 // change endpointUrl
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -555,7 +621,7 @@ export class SenderTests extends AITestClass {
                 payload  = this._sender._buffer.getItems();
                 QUnit.assert.deepEqual(payload.length, 1, "buffer is not changed");
                 payload  = this._getBuffer(BUFFER_KEY, logger);
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is not changed");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is not changed");
 
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
             }
@@ -589,17 +655,58 @@ export class SenderTests extends AITestClass {
                 let arrBufferCopy= arrBuffer.createNew(logger, config, false); // set to false to make sure it is array buffer
                 QUnit.assert.deepEqual(arrBufferCopy.getItems(), [], "payload should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                //let payload = [{"payload1"}, "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
                 arrForEach(payload, (val) =>{
                     arrBuffer.enqueue(val);
                 });
                 arrBufferCopy = arrBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(payload, arrBufferCopy.getItems(), "payload should be same");
-                arrBuffer.enqueue("payload");
+                arrBuffer.enqueue({item:"payload", cnt: 0});
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 7, "arrBuffer length");
                 QUnit.assert.deepEqual(arrBufferCopy.getItems().length, 6, "copy is deep copy");
             }
         });
+
+        this.testCase({
+            name: "ArraySendBuffer Max Count: item exceeds max cnt should not be added again",
+            test: () => {
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled:true,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    maxRetryCnt: 1
+                } as ISenderConfig;
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+
+                let arrBuffer = new ArraySendBuffer(logger, config);
+                QUnit.assert.deepEqual(arrBuffer.getItems(), [], "payload should be empty");
+                let payload1 = {item: "payload1", cnt: 1};
+                arrBuffer.enqueue(payload1);
+                QUnit.assert.deepEqual(arrBuffer.getItems().length, 1, "buffer should have one item");
+
+                let payload2 = {item: "payload2", cnt: 2};
+                arrBuffer.enqueue(payload2);
+                QUnit.assert.deepEqual(arrBuffer.getItems().length, 1, "payload exceeds max cnt should not be added again");
+
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]))
+            }
+        });
+
 
         this.testCase({
             name: "ArraySendBuffer createNew: function createNew() can return expected sessionStorage buffer",
@@ -629,14 +736,15 @@ export class SenderTests extends AITestClass {
                 let sessionBuffer =  arrBuffer.createNew(logger, config, true); // set to false to make sure it is session storage buffer
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "payload should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                //let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
                 arrForEach(payload, (val) =>{
                     arrBuffer.enqueue(val);
                 });
                 sessionBuffer = arrBuffer.createNew(logger, config, true);
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), payload, "payload should be same");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
-                arrBuffer.enqueue("payload");
+                arrBuffer.enqueue({item: "payload", cnt: 0});
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 7, "arrBuffer length");
                 QUnit.assert.deepEqual(sessionBuffer.getItems().length, 6, "copy is deep copy");
 
@@ -672,17 +780,57 @@ export class SenderTests extends AITestClass {
                 let arrBuffer = sessionBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(arrBuffer.getItems(), [], "payload should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                //let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
                 arrForEach(payload, (val) =>{
                     sessionBuffer.enqueue(val);
                 });
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
                 arrBuffer = sessionBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(arrBuffer.getItems(), payload, "payload should be same");
-                sessionBuffer.enqueue("payload");
+                sessionBuffer.enqueue({item: "payload", cnt: 0});
                 QUnit.assert.deepEqual(sessionBuffer.getItems().length, 1, "sessionBuffer length");
-                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), ["payload"], "session storage buffer is set");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [{item: "payload", cnt: 0}], "session storage buffer is set");
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 6, "copy is deep copy");
+
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer Max Count: payload exceeds max retry cnt should not be added again",
+            test: () => {
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled:true,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    maxRetryCnt: 1
+                } as ISenderConfig;
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                
+                let sessionBuffer = new SessionStorageSendBuffer(logger, config);
+                QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "payload should be empty");
+                let payload1 = {item: "payload1", cnt: 1};
+                sessionBuffer.enqueue(payload1);
+                QUnit.assert.deepEqual(sessionBuffer.getItems().length, 1, "should have only one payload");
+
+                let payload2 = {item: "payload2", cnt: 2};
+                sessionBuffer.enqueue(payload2);
+                QUnit.assert.deepEqual(sessionBuffer.getItems().length, 1, "should have only one payload");
 
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
             }
@@ -717,8 +865,10 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual(sessionBufferCopy.getItems(), [], "payload should be empty");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
-                let sentPayload = ["sent1", "sent2","sent3","sent4"];
+                //let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
+                let sentPayload = [{item: "sent1", cnt: 0}, {item: "sent2", cnt: 0}, {item: "sent3", cnt: 0}, {item: "sent4", cnt: 0} ];
+                //let sentPayload = ["sent1", "sent2","sent3","sent4"];
                 arrForEach(payload, (val) =>{
                     sessionBuffer.enqueue(val);
                 });
@@ -772,8 +922,10 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer should be empty");
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger, prefix), [], "session storage sent buffer with prefix should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
-                let sentPayload = ["sent1", "sent2","sent3","sent4"];
+                // let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                // let sentPayload = ["sent1", "sent2","sent3","sent4"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
+                let sentPayload = [{item: "sent1", cnt: 0}, {item: "sent2", cnt: 0}, {item: "sent3", cnt: 0}, {item: "sent4", cnt: 0} ];
                 arrForEach(payload, (val) =>{
                     sessionBuffer.enqueue(val);
                 });
@@ -1004,7 +1156,7 @@ export class SenderTests extends AITestClass {
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
                     let buffer = this._sender._buffer.getItems();
-                    let payload = JSON.parse(buffer[buffer.length-1]);
+                    let payload = JSON.parse(buffer[buffer.length-1].item);
                     var actualIkey = payload.iKey;
                 } catch(e) {
                     QUnit.assert.ok(false, "Exception - " + e);
@@ -1692,9 +1844,9 @@ export class SenderTests extends AITestClass {
                 try {
                     sender.processTelemetry(telemetryItem, null);
                     QUnit.assert.equal(1, buffer.getItems().length, "sender buffer should have one payload");
-                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                     QUnit.assert.equal(bufferItems.length, 1, "sender buffer should have one payload");
-                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                     QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
                     sender.onunloadFlush();
                 } catch(e) {
@@ -1709,15 +1861,15 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, fetchstub.called, "fetch sender is not called");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
                 QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
-                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
-                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(1, sentItems.length, "sent buffer should have only one payload");
 
                 this.sendJsonResponse(xhrRequest, {}, 200);
-                bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
-                sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(0, sentItems.length, "sent buffer should have no payload");
 
                 (window as any).XMLHttpRequest = fakeXMLHttpRequest;
@@ -1779,9 +1931,9 @@ export class SenderTests extends AITestClass {
                 try {
                     sender.processTelemetry(telemetryItem, null);
                     QUnit.assert.equal(1, buffer.getItems().length, "sender buffer should have one payload");
-                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                     QUnit.assert.equal(bufferItems.length, 1, "sender buffer should have one payload");
-                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                     QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
                     sender.onunloadFlush();
                 } catch(e) {
@@ -1793,9 +1945,9 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, fetchstub.called, "fetch sender is not called");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
                 QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
-                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
-                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(0, sentItems.length, "sent buffer should not have one payload");
 
                 (window as any).XMLHttpRequest = fakeXMLHttpRequest;
@@ -1870,9 +2022,9 @@ export class SenderTests extends AITestClass {
                     sender.processTelemetry(telemetryItem, null);
                     sender.processTelemetry(telemetryItem1, null);
                     QUnit.assert.equal(2, buffer.getItems().length, "sender buffer should have one payload");
-                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                     QUnit.assert.equal(bufferItems.length, 2, "sender buffer should have one payload");
-                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                     QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
                     sender.onunloadFlush();
                 } catch(e) {
@@ -1886,16 +2038,16 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, fetchstub.called, "fetch sender is not called");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
                 QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
-                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
-                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(1, sentItems.length, "sent buffer should have one payload");
-                QUnit.assert.ok(sentItems[0].indexOf("iKey1") >= 0, "sent buffer should have ikey1 payload");
+                QUnit.assert.ok(sentItems[0].item.indexOf("iKey1") >= 0, "sent buffer should have ikey1 payload");
 
                 this.sendJsonResponse(xhrRequest, {}, 200);
-                bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should have no payload test1");
-                sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload test1");
 
                 (window as any).XMLHttpRequest = fakeXMLHttpRequest;
@@ -1957,9 +2109,9 @@ export class SenderTests extends AITestClass {
                 try {
                     sender.processTelemetry(telemetryItem, null);
                     QUnit.assert.equal(1, buffer.getItems().length, "sender buffer should have one payload");
-                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                     QUnit.assert.equal(bufferItems.length, 1, "sender buffer should have one payload");
-                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                     QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
                     sender.onunloadFlush();
                 } catch(e) {
@@ -1972,16 +2124,16 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(true, fetchstub.calledOnce, "fetch sender is called once");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
                 QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
-                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
-                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(0, sentItems.length, "sent buffer should have one payload test1");
 
                 let setItemCalled = 0;
                 let args = sessionSpy.args;
                 let itemCount = 0;
                 args.forEach((arg) => {
-                    if (arg && arg[0] === "AI_sentBuffer") {
+                    if (arg && arg[0] === SENT_BUFFER_KEY) {
                         let data = JSON.parse(arg[1]);
                         let cnt = data.length;
                         if(data && cnt) {
@@ -2056,9 +2208,9 @@ export class SenderTests extends AITestClass {
                 try {
                     sender.processTelemetry(telemetryItem, null);
                     QUnit.assert.equal(1, buffer.getItems().length, "sender buffer should have one payload");
-                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                     QUnit.assert.equal(bufferItems.length, 1, "sender buffer should have one payload");
-                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                     QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
                     sender.onunloadFlush();
                 } catch(e) {
@@ -2071,9 +2223,9 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender should not be called");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
                 QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
-                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
-                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(0, sentItems.length, "sent buffer should not have one payload");
 
 
@@ -2151,9 +2303,9 @@ export class SenderTests extends AITestClass {
                     sender.processTelemetry(telemetryItem, null);
                     sender.processTelemetry(telemetryItem1, null);
                     QUnit.assert.equal(2, buffer.getItems().length, "sender buffer should have two payload");
-                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                     QUnit.assert.equal(bufferItems.length, 2, "sender buffer should have two payload");
-                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                     QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
                     sender.onunloadFlush();
                 } catch(e) {
@@ -2165,16 +2317,16 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(true, fetchstub.called, "fetch sender is called");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
                 QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
-                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
-                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(0, sentItems.length, "sent buffer should have no payload left");
 
                 let setItemCalled = 0;
                 let itemCount = 0;
                 let args = sessionSpy.args;
                 args.forEach((arg) => {
-                    if (arg && arg[0] === "AI_sentBuffer") {
+                    if (arg && arg[0] === SENT_BUFFER_KEY) {
                         let data = JSON.parse(arg[1]);
                         let cnt = data.length;
                         if(data && cnt) {
@@ -2257,9 +2409,9 @@ export class SenderTests extends AITestClass {
                     sender.processTelemetry(telemetryItem, null);
                     sender.processTelemetry(telemetryItem1, null);
                     QUnit.assert.equal(2, buffer.getItems().length, "sender buffer should have two payload");
-                    let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                     QUnit.assert.equal(bufferItems.length, 2, "sender buffer should have two payload");
-                    let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                     QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
                     sender.onunloadFlush();
                 } catch(e) {
@@ -2271,9 +2423,9 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, fetchstub.called, "fetch sender is called");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
                 QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
-                let bufferItems = JSON.parse(sessionStorage.getItem("AI_buffer") as any);
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
                 QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
-                let sentItems = JSON.parse(sessionStorage.getItem("AI_sentBuffer") as any);
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
                 QUnit.assert.equal(2, sentItems.length, "sent buffer should not have two payload");
 
                 (window as any).XMLHttpRequest = fakeXMLHttpRequest;

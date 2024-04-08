@@ -2,15 +2,20 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
 import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf, dumpObj, eLoggingSeverity, getExceptionName, getJSON,
-    isArray, isFunction, isString
+    isArray, isFunction, isNullOrUndefined, isString
 } from "@microsoft/applicationinsights-core-js";
-import { ISenderConfig } from "./Interfaces";
+import { IInternalStorageItem, ISenderConfig } from "./Interfaces";
 
+/**
+ * Before 3.1.3, payload only allow string
+ * After 3.1.3,  IInternalStorageItem is accepted
+ */
 export interface ISendBuffer {
+
     /**
      * Enqueue the payload
      */
-    enqueue: (payload: string) => void;
+    enqueue: (payload: IInternalStorageItem) => void;
 
     /**
      * Returns the number of elements in the buffer
@@ -30,23 +35,23 @@ export interface ISendBuffer {
     /**
      * Returns items stored in the buffer
      */
-    getItems: () => string[];
+    getItems: () => IInternalStorageItem[];
 
     /**
      * Build a batch of all elements in the payload array
      */
-    batchPayloads: (payload: string[]) => string;
+    batchPayloads: (payload: IInternalStorageItem[]) => string;
 
     /**
      * Moves items to the SENT_BUFFER.
      * The buffer holds items which were sent, but we haven't received any response from the backend yet.
      */
-    markAsSent: (payload: string[]) => void;
+    markAsSent: (payload: IInternalStorageItem[]) => void;
 
     /**
      * Removes items from the SENT_BUFFER. Should be called on successful response from the backend.
      */
-    clearSent: (payload: string[]) => void;
+    clearSent: (payload: IInternalStorageItem[]) => void;
 
      /**
      * Copy current buffer items to a new buffer.
@@ -59,25 +64,26 @@ export interface ISendBuffer {
 
 abstract class BaseSendBuffer {
 
-    protected _get: () => string[];
-    protected _set: (buffer: string[]) => string[];
+    protected _get: () => IInternalStorageItem[];
+    protected _set: (buffer: IInternalStorageItem[]) => IInternalStorageItem[];
 
     constructor(logger: IDiagnosticLogger, config: ISenderConfig) {
-        let _buffer: string[] = [];
+        let _buffer: IInternalStorageItem[] = [];
         let _bufferFullMessageSent = false;
+        let _maxRetryCnt = config.maxRetryCnt;
 
         this._get = () => {
             return _buffer;
         };
 
-        this._set = (buffer: string[]) => {
+        this._set = (buffer: IInternalStorageItem[]) => {
             _buffer = buffer;
             return _buffer;
         };
 
         dynamicProto(BaseSendBuffer, this, (_self) => {
 
-            _self.enqueue = (payload: string) => {
+            _self.enqueue = (payload: IInternalStorageItem) => {
                 if (_self.count() >= config.eventsLimitInMem) {
                     // sent internal log only once per page view
                     if (!_bufferFullMessageSent) {
@@ -91,8 +97,20 @@ abstract class BaseSendBuffer {
 
                     return;
                 }
-
+         
+                payload.cnt = payload.cnt || 0;
+                // max retry is defined, and max retry is reached, do not add the payload to buffer
+                if (!isNullOrUndefined(_maxRetryCnt)) {
+                    if (payload.cnt > _maxRetryCnt) {
+                        // TODO: add log here on dropping payloads
+                        return;
+                    }
+                }
                 _buffer.push(payload);
+
+                return;
+
+                
             };
 
             _self.count = (): number => {
@@ -102,7 +120,7 @@ abstract class BaseSendBuffer {
             _self.size = (): number => {
                 let size = _buffer.length;
                 for (let lp = 0; lp < _buffer.length; lp++) {
-                    size += _buffer[lp].length;
+                    size += (_buffer[lp].item).length;
                 }
 
                 if (!config.emitLineDelimitedJson) {
@@ -117,15 +135,19 @@ abstract class BaseSendBuffer {
                 _bufferFullMessageSent = false;
             };
 
-            _self.getItems = (): string[] => {
+            _self.getItems = (): IInternalStorageItem[] => {
                 return _buffer.slice(0)
             };
 
-            _self.batchPayloads = (payload: string[]): string => {
-                if (payload && payload.length > 0) {
+            _self.batchPayloads = (payloads: IInternalStorageItem[]): string => {
+                if (payloads && payloads.length > 0) {
+                    let payloadStr: string[] = [];
+                    arrForEach(payloads, (payload) => {
+                        payloadStr.push(payload.item);
+                    })
                     const batch = config.emitLineDelimitedJson ?
-                        payload.join("\n") :
-                        "[" + payload.join(",") + "]";
+                        payloadStr.join("\n") :
+                        "[" + payloadStr.join(",") + "]";
         
                     return batch;
                 }
@@ -146,7 +168,7 @@ abstract class BaseSendBuffer {
         });
     }
 
-    public enqueue(payload: string) {
+    public enqueue(payload: IInternalStorageItem) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -164,12 +186,12 @@ abstract class BaseSendBuffer {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public getItems(): string[] {
+    public getItems(): IInternalStorageItem[] {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 
-    public batchPayloads(payload: string[]): string {
+    public batchPayloads(payload: IInternalStorageItem[]): string {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
@@ -190,21 +212,21 @@ export class ArraySendBuffer extends BaseSendBuffer implements ISendBuffer {
 
         dynamicProto(ArraySendBuffer, this, (_self, _base) => {
         
-            _self.markAsSent = (payload: string[]) => {
+            _self.markAsSent = (payload: IInternalStorageItem[]) => {
                 _base.clear();
             };
         
-            _self.clearSent = (payload: string[]) => {
+            _self.clearSent = (payload: IInternalStorageItem[]) => {
                 // not supported
             };
         });
     }
 
-    public markAsSent(payload: string[]) {
+    public markAsSent(payload: IInternalStorageItem[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public clearSent(payload: string[]) {
+    public clearSent(payload: IInternalStorageItem[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
@@ -213,8 +235,9 @@ export class ArraySendBuffer extends BaseSendBuffer implements ISendBuffer {
  * Session storage buffer holds a copy of all unsent items in the browser session storage.
  */
 export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuffer {
-    static BUFFER_KEY = "AI_buffer";
-    static SENT_BUFFER_KEY = "AI_sentBuffer";
+    static VERSION = "_1";
+    static BUFFER_KEY = "AI_buffer"+ this.VERSION;
+    static SENT_BUFFER_KEY = "AI_sentBuffer" + this.VERSION;
 
     // Maximum number of payloads stored in the buffer. If the buffer is full, new elements will be dropped.
     static MAX_BUFFER_SIZE = 2000;
@@ -225,6 +248,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
         //Note: should not use config.namePrefix directly, because it will always refers to the latest namePrefix
         let _namePrefix = config?.namePrefix;
         const { getItem, setItem } = config.bufferOverride || { getItem: utlGetSessionStorage, setItem: utlSetSessionStorage };
+        let _maxRetryCnt = config.maxRetryCnt;
 
         dynamicProto(SessionStorageSendBuffer, this, (_self, _base) => {
             const bufferItems = _getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
@@ -239,7 +263,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
             _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
             _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, buffer);
     
-            _self.enqueue = (payload: string) => {
+            _self.enqueue = (payload: IInternalStorageItem) => {
                 if (_self.count() >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                     // sent internal log only once per page view
                     if (!_bufferFullMessageSent) {
@@ -252,6 +276,14 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                     }
 
                     return;
+                }
+                payload.cnt = payload.cnt || 0;
+                // max retry is defined, and max retry is reached, do not add the payload to buffer
+                if (!isNullOrUndefined(_maxRetryCnt)) {
+                    if (payload.cnt > _maxRetryCnt) {
+                        // TODO: add log here on dropping payloads
+                        return;
+                    }
                 }
         
                 _base.enqueue(payload);
@@ -266,7 +298,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 _bufferFullMessageSent = false;
             };
         
-            _self.markAsSent = (payload: string[]) => {
+            _self.markAsSent = (payload: IInternalStorageItem[]) => {
                 _setBuffer(SessionStorageSendBuffer.BUFFER_KEY,
                     _self._set(_removePayloadsFromBuffer(payload, _self._get())));
         
@@ -290,7 +322,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 }
             };
         
-            _self.clearSent = (payload: string[]) => {
+            _self.clearSent = (payload: IInternalStorageItem[]) => {
                 let sentElements = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
                 sentElements = _removePayloadsFromBuffer(payload, sentElements);
         
@@ -317,10 +349,14 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 return newBuffer;
             }
         
-            function _removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
-                const remaining: string[] = [];
+            function _removePayloadsFromBuffer(payloads: IInternalStorageItem[], buffer: IInternalStorageItem[]): IInternalStorageItem[] {
+                const remaining: IInternalStorageItem[] = [];
+                let payloadStr: string[] = [];
+                arrForEach(payloads, (payload) => {
+                    payloadStr.push(payload.item);
+                });
                 arrForEach(buffer, (value) => {
-                    if (!isFunction(value) && arrIndexOf(payloads, value) === -1) {
+                    if (!isFunction(value) && arrIndexOf(payloadStr, value.item) === -1) {
                         remaining.push(value);
                     }
                 });
@@ -328,13 +364,13 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 return remaining;
             }
         
-            function _getBuffer(key: string): string[] {
+            function _getBuffer(key: string): IInternalStorageItem[] {
                 let prefixedKey = key;
                 try {
                     prefixedKey = _namePrefix ? _namePrefix + "_" + prefixedKey : prefixedKey;
                     const bufferJson = getItem(logger, prefixedKey);
                     if (bufferJson) {
-                        let buffer: string[] = getJSON().parse(bufferJson);
+                        let buffer: IInternalStorageItem[] = getJSON().parse(bufferJson);
                         if (isString(buffer)) {
                             // When using some version prototype.js the stringify / parse cycle does not decode array's correctly
                             buffer = getJSON().parse(buffer as any);
@@ -354,7 +390,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 return [];
             }
         
-            function _setBuffer(key: string, buffer: string[]) {
+            function _setBuffer(key: string, buffer: IInternalStorageItem[]) {
                 let prefixedKey = key;
                 try {
                     prefixedKey = _namePrefix ? _namePrefix + "_" + prefixedKey : prefixedKey;
@@ -374,7 +410,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
         });
     }
 
-    public enqueue(payload: string) {
+    public enqueue(payload: IInternalStorageItem) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -382,11 +418,11 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public markAsSent(payload: string[]) {
+    public markAsSent(payload: IInternalStorageItem[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public clearSent(payload: string[]) {
+    public clearSent(payload: IInternalStorageItem[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
