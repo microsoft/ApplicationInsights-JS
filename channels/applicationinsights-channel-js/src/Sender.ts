@@ -472,9 +472,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * xhr state changes
              */
-            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) => {
+            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) => {
                 // since version 3.1.3, this function is no-op
-                return;
+                if (_isStringArr(payload)) {
+                    return;
+                }
+                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[],countOfItemsInPayload);
+
             }
         
             /**
@@ -550,67 +554,82 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * error handler
              */
-            _self._onError = (payload: IInternalStorageItem[], message: string, event?: ErrorEvent) => {
-                _throwInternal(_self.diagLog(),
-                    eLoggingSeverity.WARNING,
-                    _eInternalMessageId.OnError,
-                    "Failed to send telemetry.",
-                    { message });
-        
-                _self._buffer && _self._buffer.clearSent(payload);
+            _self._onError = (payload: IInternalStorageItem[] | string[], message: string, event?: ErrorEvent) => {
+                // since version 3.1.3, string[] is no-op
+                if (_isStringArr(payload)) {
+                    return;
+                }
+                return _onError(payload as IInternalStorageItem[], message, event);
             };
         
             /**
              * partial success handler
              */
-            _self._onPartialSuccess = (payload: IInternalStorageItem[], results: IBackendResponse) => {
-                const failed: IInternalStorageItem[] = [];
-                const retry: IInternalStorageItem[] = [];
-        
-                // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
-                const errors = results.errors.reverse();
-                for (const error of errors) {
-                    const extracted = payload.splice(error.index, 1)[0];
-                    if (_isRetriable(error.statusCode)) {
-                        retry.push(extracted);
-                    } else {
-                        // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
-                        failed.push(extracted);
-                    }
+            _self._onPartialSuccess = (payload: IInternalStorageItem[] | string[], results: IBackendResponse) => {
+                // since version 3.1.3, string[] is no-op
+                if (_isStringArr(payload)) {
+                    return;
                 }
+                return _onPartialSuccess(payload as IInternalStorageItem[], results);
+                
+                
+                // const failed: IInternalStorageItem[] = [];
+                // const retry: IInternalStorageItem[] = [];
         
-                if (payload.length > 0) {
-                    _self._onSuccess(payload, results.itemsAccepted);
-                }
+                // // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
+                // const errors = results.errors.reverse();
+                // for (const error of errors) {
+                //     const extracted = payload.splice(error.index, 1)[0];
+                //     if (_isRetriable(error.statusCode)) {
+                //         retry.push(extracted);
+                //     } else {
+                //         // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
+                //         failed.push(extracted);
+                //     }
+                // }
         
-                if (failed.length > 0) {
-                    _self._onError(failed, formatErrorMessageXhr(null, ["partial success", results.itemsAccepted, "of", results.itemsReceived].join(" ")));
-                }
+                // if (payload.length > 0) {
+                //     _self._onSuccess(payload, results.itemsAccepted);
+                // }
         
-                if (retry.length > 0) {
-                    _resendPayload(retry);
+                // if (failed.length > 0) {
+                //     _self._onError(failed, formatErrorMessageXhr(null, ["partial success", results.itemsAccepted, "of", results.itemsReceived].join(" ")));
+                // }
         
-                    _throwInternal(_self.diagLog(),
-                        eLoggingSeverity.WARNING,
-                        _eInternalMessageId.TransmissionFailed, "Partial success. " +
-                        "Delivered: " + payload.length + ", Failed: " + failed.length +
-                        ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
-                }
+                // if (retry.length > 0) {
+                //     _resendPayload(retry);
+        
+                //     _throwInternal(_self.diagLog(),
+                //         eLoggingSeverity.WARNING,
+                //         _eInternalMessageId.TransmissionFailed, "Partial success. " +
+                //         "Delivered: " + payload.length + ", Failed: " + failed.length +
+                //         ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
+                // }
             };
         
             /**
              * success handler
              */
-            _self._onSuccess = (payload: IInternalStorageItem[], countOfItemsInPayload: number) => {
-                _self._buffer && _self._buffer.clearSent(payload);
+            _self._onSuccess = (payload: IInternalStorageItem[] | string[], countOfItemsInPayload: number) => {
+                // since version 3.1.3, string[] is no-op
+                if (_isStringArr(payload)) {
+                    return;
+                }
+                return _onSuccess(payload as IInternalStorageItem[], countOfItemsInPayload);
+                
+                //_self._buffer && _self._buffer.clearSent(payload);
             };
 
         
             /**
              * xdr state changes
              */
-            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: IInternalStorageItem[]) => {
-                return _xdrOnLoad(xdr, payload);
+            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: IInternalStorageItem[] | string[]) => {
+                // since version 3.1.3, string[] is no-op
+                if (_isStringArr(payload)) {
+                    return;
+                }
+                return _xdrOnLoad(xdr, payload as IInternalStorageItem[]);
 
             }
 
@@ -618,15 +637,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 const responseText = _getResponseText(xdr);
                 if (xdr && (responseText + "" === "200" || responseText === "")) {
                     _consecutiveErrors = 0;
-                    _onSuccess(payload, 0);
+                    _self._onSuccess(payload, 0);
                 } else {
                     const results = parseResponse(responseText);
         
                     if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
                         && !_isRetryDisabled) {
-                        _onPartialSuccess(payload, results);
+                        _self._onPartialSuccess(payload, results);
                     } else {
-                        _onError(payload, formatErrorMessageXdr(xdr));
+                        _self._onError(payload, formatErrorMessageXdr(xdr));
                     }
                 }
 
@@ -725,11 +744,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
         
                 if (payload.length > 0) {
-                    _onSuccess(payload, results.itemsAccepted);
+                    _self._onSuccess(payload, results.itemsAccepted);
                 }
         
                 if (failed.length > 0) {
-                    _onError(failed, formatErrorMessageXhr(null, ["partial success", results.itemsAccepted, "of", results.itemsReceived].join(" ")));
+                    _self._onError(failed, formatErrorMessageXhr(null, ["partial success", results.itemsAccepted, "of", results.itemsReceived].join(" ")));
                 }
         
                 if (retry.length > 0) {
@@ -894,9 +913,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 // ***********************************************************************************************
                 //TODO: handle other status codes
                 if (status === 200 && payload) {
-                    _onSuccess(payload, payload.length);
+                    _self._onSuccess(payload, payload.length);
                 } else {
-                    response && _onError(payload, response);
+                    response && _self._onError(payload, response);
                 }
             }
 
@@ -989,7 +1008,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             _eInternalMessageId.TransmissionFailed, ". " +
                             "Response code " + status + ". Will retry to send " + payload.length + " items.");
                     } else {
-                        _onError(payload, errorMessage);
+                        _self._onError(payload, errorMessage);
                     }
                 } else if (_offlineListener && !_offlineListener.isOnline()) { // offline
                     // Note: Don't check for status == 0, since adblock gives this code
@@ -1013,13 +1032,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
     
                         if (response && !_isRetryDisabled) {
-                            _onPartialSuccess(payload, response);
+                            _self._onPartialSuccess(payload, response);
                         } else {
-                            _onError(payload, errorMessage);
+                            _self._onError(payload, errorMessage);
                         }
                     } else {
                         _consecutiveErrors = 0;
-                        _onSuccess(payload, countOfItemsInPayload);
+                        _self._onSuccess(payload, countOfItemsInPayload);
                     }
                 }
             }
@@ -1069,7 +1088,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             // Can't send anymore, so split the batch and drop the rest
                             droppedPayload.push(thePayload);
                         } else {
-                            _onSuccess(arr, arr.length);
+                            _self._onSuccess(arr, arr.length);
                         }
                     }
                     if (droppedPayload.length > 0) {
@@ -1081,6 +1100,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                 }
 
+            }
+
+            function _isStringArr(arr: string[] | IInternalStorageItem[]) {
+                try {
+                    if (arr && arr.length){
+                        return (typeof arr[0] === "string");
+                    }
+
+                } catch(e) {
+                    //TODO: log, sender use IInternalStorageItem instead of string since 3.1.3
+                }
+                return null;
+                
             }
 
 
@@ -1357,9 +1389,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     /**
      * xhr state changes
      * @deprecated
-     * since version 3.1.3, this function is no-op
+     * since version 3.1.3, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
+    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         // TODO: no-op
         // add note to users, this will be removed
@@ -1382,8 +1414,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
     /**
      * error handler
-     * @deprecated
-     * since version 3.1.3, this function is no-op
+     * @Internal
+     * since version 3.1.3,if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onError(payload: string[] | IInternalStorageItem[], message: string, event?: ErrorEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1391,8 +1423,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
     /**
      * partial success handler
-     * @deprecated
-     * since version 3.1.3, this function is no-op
+     * @Internal
+     * since version 3.1.3, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onPartialSuccess(payload: string[] | IInternalStorageItem[], results: IBackendResponse) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1400,8 +1432,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
     /**
      * success handler
-     * @deprecated
-     * since version 3.1.3, this function is no-op
+     * @Internal
+     * since version 3.1.3, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onSuccess(payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1410,7 +1442,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     /**
      * xdr state changes
      * @deprecated
-     * since version 3.1.3, this function is no-op
+     * since version 3.1.3, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _xdrOnLoad(xdr: IXDomainRequest, payload: string[] | IInternalStorageItem[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
