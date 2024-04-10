@@ -463,6 +463,8 @@ For versions before 3.1.2, these components are disabled by default.
 For versions after 3.1.2, these components are **turned on by default**.
 See [feature opt-in status](./docs/WebConfig.md) for more details.
 
+For users behind a firewall, see [how to disable fetching from default CfgSync CDN](./docs/WebConfig.md#basic-usage).
+
 ## Single Page Applications
 
 By default, this SDK will **not** handle state based route changing that occurs in single page applications. To enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to your setup configuration.

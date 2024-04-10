@@ -78,7 +78,7 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
     userOverrideEndpointUrl: UNDEFINED_VALUE,
     diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
     featureOptIn:{
-        [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //since 3.1.3
+        [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //for versions after 3.1.2 (>= 3.2.0)
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable}
     },
