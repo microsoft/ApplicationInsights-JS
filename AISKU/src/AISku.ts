@@ -4,7 +4,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { CfgSyncPlugin } from "@microsoft/applicationinsights-cfgsync-js";
+import { CfgSyncPlugin, ICfgSyncConfig } from "@microsoft/applicationinsights-cfgsync-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
@@ -30,8 +30,8 @@ import { IPromise, createPromise } from "@nevware21/ts-async";
 import { arrForEach, arrIndexOf, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
-    STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
-    STR_POLL_INTERNAL_LOGS, STR_SET_AUTHENTICATED_USER_CONTEXT, STR_SNIPPET, STR_START_TRACK_EVENT, STR_START_TRACK_PAGE,
+    CONFIG_ENDPOINT_URL, STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR,
+    STR_GET_PLUGIN, STR_POLL_INTERNAL_LOGS, STR_SET_AUTHENTICATED_USER_CONTEXT, STR_SNIPPET, STR_START_TRACK_EVENT, STR_START_TRACK_PAGE,
     STR_STOP_TRACK_EVENT, STR_STOP_TRACK_PAGE, STR_TRACK_DEPENDENCY_DATA, STR_TRACK_EVENT, STR_TRACK_EXCEPTION, STR_TRACK_METRIC,
     STR_TRACK_PAGE_VIEW, STR_TRACK_TRACE
 } from "./InternalConstants";
@@ -71,14 +71,14 @@ const default_throttle_config = {
 
 // We need to include all properties that we only reference that we want to be dynamically updatable here
 // So they are converted even when not specified in the passed configuration
-const defaultConfigValues: IConfigDefaults<IConfiguration|IConfig> = {
+const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
     connectionString: UNDEFINED_VALUE,
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
     userOverrideEndpointUrl: UNDEFINED_VALUE,
     diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
     featureOptIn:{
-        [IKEY_USAGE]: {mode: FeatureOptInMode.disable},
+        [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //since 3.1.3
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable}
     },
@@ -89,7 +89,12 @@ const defaultConfigValues: IConfigDefaults<IConfiguration|IConfig> = {
             [_eInternalMessageId.SdkLdrUpdate]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
             [_eInternalMessageId.CdnDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config)
         }
-    )
+    ),
+    extensionConfig: cfgDfMerge<{[key: string]: any}>({
+        ["AppInsightsCfgSyncPlugin"]: cfgDfMerge<ICfgSyncConfig>({
+            cfgUrl: CONFIG_ENDPOINT_URL
+        })
+    })
 };
 
 function _chkDiagLevel(value: number) {

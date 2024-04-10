@@ -33,7 +33,7 @@ export class ThrottleSentMessage extends AITestClass {
     }
 
     public _getTestConfig() {
-        let config: IConfiguration | IConfig = {
+        let config: IConfiguration & IConfig = {
             instrumentationKey: TestInstrumentationKey,
             disableAjaxTracking: false,
             disableFetchTracking: false,
@@ -44,7 +44,12 @@ export class ThrottleSentMessage extends AITestClass {
             enableCorsCorrelation: true,
             samplingPercentage: 50,
             convertUndefined: "test-value",
-            disablePageUnloadEvents: [ "beforeunload" ]
+            disablePageUnloadEvents: [ "beforeunload" ],
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         };
         return config;
     }
@@ -186,14 +191,19 @@ export class ThrottleSentMessage extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 let loggingSpy = this.sandbox.stub(this._logger, 'throwInternal');
-
-                Assert.equal(true, this._ai.appInsights.core.isInitialized(),
-                    'Core is initialized');
-                let config = this.getAi.config;
+                let config = this._getTestConfig();
                 config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                 config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.disable}}
+                let init = new ApplicationInsights({
+                    config: config
+                });
+              
+                let ai = init.loadAppInsights();
+                Assert.equal(true, ai.appInsights.core.isInitialized(),'Core is initialized');
                 this.clock.tick(12); // wait enough time for negative test
                 Assert.equal(loggingSpy.callCount, 0);
+
+                ai.unload(false);
             }
         });
     }

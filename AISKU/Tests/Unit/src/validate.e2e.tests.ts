@@ -30,7 +30,11 @@ export class ValidateE2ETests extends AITestClass {
                     extensionConfig: {
                         'AppInsightsChannelPlugin': {
                             maxBatchInterval: 500
+                        },
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            cfgUrl: ""
                         }
+                        
                     }
                 },
                 queue: [],
