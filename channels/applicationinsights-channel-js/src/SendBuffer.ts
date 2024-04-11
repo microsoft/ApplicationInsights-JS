@@ -372,30 +372,10 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
         
             function _getBuffer(key: string): IInternalStorageItem[] {
                 let prefixedKey = key;
-                try {
-                    prefixedKey = _namePrefix ? _namePrefix + "_" + prefixedKey : prefixedKey;
-                    return _getBufferBase<IInternalStorageItem>(prefixedKey);
-                    // const bufferJson = getItem(logger, prefixedKey);
-                    // if (bufferJson) {
-                    //     let buffer: IInternalStorageItem[] = getJSON().parse(bufferJson);
-                    //     if (isString(buffer)) {
-                    //         // When using some version prototype.js the stringify / parse cycle does not decode array's correctly
-                    //         buffer = getJSON().parse(buffer as any);
-                    //     }
-        
-                    //     if (buffer && isArray(buffer)) {
-                    //         return buffer;
-                    //     }
-                    // }
-                } catch (e) {
-                    _throwInternal(logger, eLoggingSeverity.CRITICAL,
-                        _eInternalMessageId.FailedToRestoreStorageBuffer,
-                        " storage key: " + prefixedKey + ", " + getExceptionName(e),
-                        { exception: dumpObj(e) });
-                }
-        
-                return [];
+                prefixedKey = _namePrefix ? _namePrefix + "_" + prefixedKey : prefixedKey;
+                return _getBufferBase<IInternalStorageItem>(prefixedKey);
             }
+            
             function _getBufferBase<T>(key: string): T[] {
                 try {
                     const bufferJson = getItem(logger, key);
@@ -466,6 +446,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 return [];
             }
 
+            // transform string[] to IInternalStorageItem[]
             function _getItemsFromPreviousKey(key: string) {
                 try {
                     let items = _getBufferBase<string>(key);
@@ -483,7 +464,6 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
 
                 } catch (e) {
                     // eslint-disable-next-line no-empty
-
                 }
                 return [];
             }
