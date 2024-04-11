@@ -7,8 +7,8 @@ import {
 import { IInternalStorageItem, ISenderConfig } from "./Interfaces";
 
 /**
- * Before 3.1.3, payload only allow string
- * After 3.1.3,  IInternalStorageItem is accepted
+ * Before 3.1.2, payload only allow string
+ * After 3.2.0,  IInternalStorageItem is accepted
  */
 export interface ISendBuffer {
 
