@@ -160,9 +160,10 @@ export interface ISenderConfig {
 
     /**
      * (Optional) The specific max retry count for each telemetry item.
-     * Default: undefined (no limit for retry times)
+     * Default: 10
      * if it is set to 0, means no retry allowed
-     * @since 3.1.3
+     * if it is set to undefined, means no limit for retry times
+     * @since 3.2.0
      */
     maxRetryCnt?: number;
 }

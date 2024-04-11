@@ -1,9 +1,9 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
-import { IOfflineListener, createOfflineListener } from "@microsoft/applicationinsights-common";
+import { IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData, isFetchSupported, TransportType, getWindow, getGlobal} from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow } from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
 
@@ -122,6 +122,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(undefined, defaultSenderConfig.httpXHROverride, "Channel default httpXHROverride config is set");
                 QUnit.assert.equal(false, defaultSenderConfig.alwaysUseXhrOverride, "Channel default alwaysUseXhrOverride config is set");
                 QUnit.assert.equal(true, defaultSenderConfig.disableSendBeaconSplit, "Channel default disableSendBeaconSplit config is set");
+                QUnit.assert.equal(10, defaultSenderConfig.maxRetryCnt, "Channel default maxRetryCnt config is set");
 
                 //check dynamic config
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -355,6 +356,91 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(2, sentPayloadData.length, "httpXHROverride is called once sync test4");
                 
                 
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: sessionStorage can get items from previous buffers",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            namePrefix: "test"
+                        }
+                    }
+                }
+
+                let item1: ITelemetryItem = {
+                    name: "fake item1",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let item2: ITelemetryItem = {
+                    name: "fake item2",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let item3: ITelemetryItem = {
+                    name: "fake item3",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let item4: ITelemetryItem = {
+                    name: "fake item4",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let item5: ITelemetryItem = {
+                    name: "fake item5",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let items = [item1, item2];
+                let sentItems = [item3];
+                let prefixItems = [item4, item5];
+                //mock previous items stored in previous buffer key
+                sessionStorage.setItem("AI_buffer",JSON.stringify(items));
+                sessionStorage.setItem("AI_sentBuffer",JSON.stringify(sentItems));
+                sessionStorage.setItem("test_AI_buffer",JSON.stringify(prefixItems));
+
+                let keys = utlGetSessionStorageKeys();
+                QUnit.assert.deepEqual(keys.length, 3, "session buffer should contain only three keys");
+
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+
+                core.initialize(coreConfig, [this._sender]);
+                QUnit.assert.equal(true, this._sender._senderConfig.enableSessionStorageBuffer, "Channel default enableSessionStorageBuffer config is set");
+                QUnit.assert.equal(true, utlCanUseSessionStorage(), "SessionStorage should be able to use");
+                QUnit.assert.deepEqual(this._getBuffer("test_" + BUFFER_KEY, logger).length, 5, "session storage buffer should contain all previous events");
+                QUnit.assert.deepEqual(this._getBuffer("test_" + SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+                
+                let previousItems = this._sender._buffer.getItems();
+                
+                QUnit.assert.deepEqual(previousItems.length, 5, "buffer should contain 5 previous items");
+                
+                keys = utlGetSessionStorageKeys();
+                QUnit.assert.deepEqual(keys.length, 2, "session buffer should contain only two keys");
+                QUnit.assert.ok(keys.indexOf("test_" + BUFFER_KEY) > -1, "session buffer key contain buffer key");
+                QUnit.assert.ok(keys.indexOf("test_" +  SENT_BUFFER_KEY) > -1, "session buffer key contain sent buffer key");
+
+                utlRemoveSessionStorage(logger, "test_" + BUFFER_KEY);
+                utlRemoveSessionStorage(logger, "test_" + SENT_BUFFER_KEY);
+                
+
             }
         });
 

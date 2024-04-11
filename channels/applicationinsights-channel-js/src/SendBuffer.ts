@@ -1,5 +1,5 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
+import { utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
 import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf, dumpObj, eLoggingSeverity, getExceptionName, getJSON,
     isArray, isFunction, isNullOrUndefined, isString
@@ -231,6 +231,8 @@ export class ArraySendBuffer extends BaseSendBuffer implements ISendBuffer {
     }
 }
 
+const PREVIOUS_KEYS: string[] = ["AI_buffer", "AI_sentBuffer"];
+
 /*
  * Session storage buffer holds a copy of all unsent items in the browser session storage.
  */
@@ -247,21 +249,25 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
         let _bufferFullMessageSent = false;
         //Note: should not use config.namePrefix directly, because it will always refers to the latest namePrefix
         let _namePrefix = config?.namePrefix;
+        // TODO: add remove buffer override as well
         const { getItem, setItem } = config.bufferOverride || { getItem: utlGetSessionStorage, setItem: utlSetSessionStorage };
         let _maxRetryCnt = config.maxRetryCnt;
 
         dynamicProto(SessionStorageSendBuffer, this, (_self, _base) => {
             const bufferItems = _getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
-            const notDeliveredItems = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+            const itemsInSentBuffer = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+            let previousItems = _getPreviousEvents();
+            const notDeliveredItems = itemsInSentBuffer.concat(previousItems);
     
             let buffer = _self._set(bufferItems.concat(notDeliveredItems));
-    
+            
             // If the buffer has too many items, drop items from the end.
             if (buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                 buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
             }
             _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
             _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, buffer);
+
     
             _self.enqueue = (payload: IInternalStorageItem) => {
                 if (_self.count() >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
@@ -368,9 +374,33 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 let prefixedKey = key;
                 try {
                     prefixedKey = _namePrefix ? _namePrefix + "_" + prefixedKey : prefixedKey;
-                    const bufferJson = getItem(logger, prefixedKey);
+                    return _getBufferBase<IInternalStorageItem>(prefixedKey);
+                    // const bufferJson = getItem(logger, prefixedKey);
+                    // if (bufferJson) {
+                    //     let buffer: IInternalStorageItem[] = getJSON().parse(bufferJson);
+                    //     if (isString(buffer)) {
+                    //         // When using some version prototype.js the stringify / parse cycle does not decode array's correctly
+                    //         buffer = getJSON().parse(buffer as any);
+                    //     }
+        
+                    //     if (buffer && isArray(buffer)) {
+                    //         return buffer;
+                    //     }
+                    // }
+                } catch (e) {
+                    _throwInternal(logger, eLoggingSeverity.CRITICAL,
+                        _eInternalMessageId.FailedToRestoreStorageBuffer,
+                        " storage key: " + prefixedKey + ", " + getExceptionName(e),
+                        { exception: dumpObj(e) });
+                }
+        
+                return [];
+            }
+            function _getBufferBase<T>(key: string): T[] {
+                try {
+                    const bufferJson = getItem(logger, key);
                     if (bufferJson) {
-                        let buffer: IInternalStorageItem[] = getJSON().parse(bufferJson);
+                        let buffer: T[] = getJSON().parse(bufferJson);
                         if (isString(buffer)) {
                             // When using some version prototype.js the stringify / parse cycle does not decode array's correctly
                             buffer = getJSON().parse(buffer as any);
@@ -383,7 +413,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                 } catch (e) {
                     _throwInternal(logger, eLoggingSeverity.CRITICAL,
                         _eInternalMessageId.FailedToRestoreStorageBuffer,
-                        " storage key: " + prefixedKey + ", " + getExceptionName(e),
+                        " storage key: " + key + ", " + getExceptionName(e),
                         { exception: dumpObj(e) });
                 }
         
@@ -407,6 +437,57 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                         { exception: dumpObj(e) });
                 }
             }
+
+            // this removes buffer with prefix+key
+            function _getPreviousEvents() {
+                let items: IInternalStorageItem[] = [];
+                try {
+                    arrForEach(PREVIOUS_KEYS, (key) => {
+                        let events = _getItemsFromPreviousKey(key);
+                        items = items.concat(events);
+                        
+                        // to make sure that we also transfer items from old prefixed + key buffer
+                        if (_namePrefix) {
+                            let prefixedKey = _namePrefix + "_" + key;
+                            let prefixEvents = _getItemsFromPreviousKey(prefixedKey);
+                            items = items.concat( prefixEvents);
+                        }
+                    });
+                    return items;
+                    
+
+                } catch(e) {
+                    _throwInternal(logger, eLoggingSeverity.WARNING,
+                        _eInternalMessageId.FailedToSetStorageBuffer,
+                        "Transfer events from previous buffers: " + getExceptionName(e) + ". previous Buffer items can not be removed",
+                        { exception: dumpObj(e) });
+
+                }
+                return [];
+            }
+
+            function _getItemsFromPreviousKey(key: string) {
+                try {
+                    let items = _getBufferBase<string>(key);
+                    let transFormedItems: IInternalStorageItem[] = [];
+                    arrForEach(items, (item) => {
+                        let internalItem = {
+                            item: item,
+                            cnt: 0 // previous events will be default to 0 count
+                        } as IInternalStorageItem;
+                        transFormedItems.push(internalItem);
+                    });
+                    // remove the session storage if we can add events back
+                    utlRemoveSessionStorage(logger, key);
+                    return transFormedItems;
+
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+
+                }
+                return [];
+            }
+
         });
     }
 

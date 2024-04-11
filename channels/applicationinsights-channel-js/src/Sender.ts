@@ -14,7 +14,7 @@ import {
     isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
-import { ITimerHandler, isNumber, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isNumber, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
@@ -75,7 +75,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     alwaysUseXhrOverride: cfgDfBoolean(),
     transports: UNDEFINED_VALUE,
     retryCodes: UNDEFINED_VALUE,
-    maxRetryCnt: {isVal: isNumber, v:UNDEFINED_VALUE}
+    maxRetryCnt: {isVal: isNumber, v:10}
 });
 
 function _chkSampling(value: number) {
@@ -1105,7 +1105,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _isStringArr(arr: string[] | IInternalStorageItem[]) {
                 try {
                     if (arr && arr.length){
-                        return (typeof arr[0] === "string");
+                        return (isString(arr[0]));
                     }
 
                 } catch(e) {
@@ -1260,17 +1260,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
             }
 
-            function _getStrPayload(payloads: IInternalStorageItem[]) {
-                let strArr: string[] = []
-                if (payloads && payloads.length) {
-                    arrForEach(payloads, (payload) => {
-                        strArr.push(payload.item);
-                    });
-
-                }
-                return strArr;
-            }
-
             
 
             /**
@@ -1389,7 +1378,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     /**
      * xhr state changes
      * @deprecated
-     * since version 3.1.3, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1415,7 +1404,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     /**
      * error handler
      * @Internal
-     * since version 3.1.3,if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
+     * since version 3.2.0,if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onError(payload: string[] | IInternalStorageItem[], message: string, event?: ErrorEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1424,7 +1413,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     /**
      * partial success handler
      * @Internal
-     * since version 3.1.3, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onPartialSuccess(payload: string[] | IInternalStorageItem[], results: IBackendResponse) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1433,7 +1422,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     /**
      * success handler
      * @Internal
-     * since version 3.1.3, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onSuccess(payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1442,7 +1431,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     /**
      * xdr state changes
      * @deprecated
-     * since version 3.1.3, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _xdrOnLoad(xdr: IXDomainRequest, payload: string[] | IInternalStorageItem[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
