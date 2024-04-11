@@ -36,7 +36,11 @@ export class SenderE2ETests extends AITestClass {
                         'AppInsightsChannelPlugin': {
                             maxBatchInterval: 2000,
                             maxBatchSizeInBytes: 10*1024*1024 // 10 MB
+                        },
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            cfgUrl: ""
                         }
+                        
                     }
                 },
                 queue: [],

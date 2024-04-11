@@ -66,7 +66,12 @@ function getSnippetConfig(sessionPrefix: string, addSampling: boolean = false) {
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-            samplingPercentage: addSampling ? 50 : undefined
+            samplingPercentage: addSampling ? 50 : undefined,
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         } as IConfig
     };
 };
@@ -84,7 +89,12 @@ function getSnippetConfigConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         } as IConfig
     };
 };
@@ -102,7 +112,12 @@ function getSnippetConfigWrongConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         } as IConfig
     };
 };
@@ -120,7 +135,12 @@ function getSnippetConfigNotSetConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         } as IConfig
     };
 };
