@@ -1,6 +1,7 @@
 import '@microsoft/applicationinsights-shims';
 import { ApplicationInsightsCoreTests } from "./ApplicationInsightsCore.Tests";
 import { CookieManagerTests } from "./CookieManager.Tests";
+import { GlobalTestHooks } from "./GlobalTestHooks.Test";
 import { HelperFuncTests } from './HelperFunc.Tests';
 import { AppInsightsCoreSizeCheck } from "./AppInsightsCoreSize.Tests";
 import { EventHelperTests } from "./EventHelper.Tests";
@@ -12,6 +13,7 @@ import { W3cTraceParentTests } from "./W3cTraceParentTests";
 import { DynamicConfigTests } from "./DynamicConfig.Tests";
 
 export function runTests() {
+    new GlobalTestHooks().registerTests();
     new DynamicTests().registerTests();
     new DynamicConfigTests().registerTests();
     new ApplicationInsightsCoreTests().registerTests();

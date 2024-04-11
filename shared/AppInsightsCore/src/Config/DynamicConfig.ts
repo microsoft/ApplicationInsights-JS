@@ -36,6 +36,8 @@ function _createAndUseHandler<T>(state: _IDynamicConfigHandlerState<T>, configHa
         }
     };
 
+    objDefine<any>(handler, "toJSON", { v: () => "WatcherHandler" + (handler.fn ? "" : "[X]") });
+
     state.use(handler, configHandler);
 
     return handler;

@@ -290,7 +290,10 @@ export class SenderPostManager {
                 }
 
                 let xhr = openXhr(STR_POST_METHOD, endPointUrl, _sendCredentials, true, sync, payload.timeout);
-                xhr.setRequestHeader("Content-type", "application/json");
+                if (!_isOneDs) {
+                    // application/json should NOT add to 1ds post by default
+                    xhr.setRequestHeader("Content-type", "application/json");
+                }
 
     
                 arrForEach(objKeys(headers), (headerName) => {

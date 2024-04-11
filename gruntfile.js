@@ -239,7 +239,7 @@ module.exports = function (grunt) {
     // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
     // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
     // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions=["3.1.0"];
+    const perfTestVersions=["3.1.2"];
 
     function buildConfig(modules) {
         var buildCmds = {
@@ -546,6 +546,10 @@ module.exports = function (grunt) {
                                         path: "./extensions/applicationinsights-properties-js",
                                         unitTestName: "prop.tests.js"
                                     },
+            "osplugin":             { 
+                                        path: "./extensions/applicationinsights-osplugin-js",
+                                        unitTestName: "applicationinsights-osplugin.tests.js"
+                                    },
             "cfgsync":               { 
                                         path: "./extensions/applicationinsights-cfgsync-js",
                                         unitTestName: "cfgsync.tests.js"
@@ -795,8 +799,8 @@ module.exports = function (grunt) {
                 },
                 config: {
                     files: [
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configVer}.cfg.json` },
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configMajorVer}.cfg.json` }
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configVer}.cfg.json` },
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configMajorVer}.cfg.json` }
                     ]
                 }
             }
@@ -923,6 +927,12 @@ module.exports = function (grunt) {
         grunt.registerTask("clickanalytics-restore", restoreTasks("clickanalytics"));
         grunt.registerTask("clickanalyticstests", tsTestActions("clickanalytics"));
         grunt.registerTask("clickanalytics-mintests", tsTestActions("clickanalytics", true));
+
+        grunt.registerTask("osplugin", tsBuildActions("osplugin"));
+        grunt.registerTask("osplugin-min", minTasks("osplugin"));
+        grunt.registerTask("osplugin-restore", restoreTasks("osplugin"));
+        grunt.registerTask("osplugintests", tsTestActions("osplugin"));
+        grunt.registerTask("osplugin-mintests", tsTestActions("osplugin", true));
 
         grunt.registerTask("1dsCoreBuild", tsBuildActions("1dsCore"));
         grunt.registerTask("1dsCoreTest", tsTestActions("1dsCore"));

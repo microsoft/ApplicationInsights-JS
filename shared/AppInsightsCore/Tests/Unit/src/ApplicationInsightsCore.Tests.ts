@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager, OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig } from "../../../src/applicationinsights-core-js"
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager, OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, dumpObj } from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
 import { _eInternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
@@ -19,7 +19,6 @@ export class ApplicationInsightsCoreTests extends AITestClass {
     }
 
     public registerTests() {
-
         this.testCase({
             name: "ApplicationInsightsCore: Initialization validates input",
             test: () => {
@@ -102,7 +101,6 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let onCompleteFuncs = {
                     fetchOnComplete: (response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) => {
                         onFetchCalled ++;
-                        Assert.equal(onXhrCalled, 1, "onxhr is called once test1");
                         Assert.equal(onFetchCalled, 1, "onFetch is called once test1");
                     },
                     xhrOnComplete: (request: XMLHttpRequest, onComplete: OnCompleteCallback, payload?: IPayloadData) => {
@@ -126,7 +124,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let transports = [TransportType.Xhr, TransportType.Fetch, TransportType.Beacon];
 
 
-                // use xhr
+                // use xhr, appInsights
                 let config = {
                     enableSendPromise: false,
                     isOneDs: false,
@@ -158,12 +156,14 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 Assert.equal(this._getXhrRequests().length, 1, "xhr is called once");
                 let request = this._getXhrRequests()[0];
+                let reqHeaders = request.requestHeaders["Content-type"];
+                Assert.equal(reqHeaders, "application/json;charset=utf-8");
                 this.sendJsonResponse(request, {}, 200);
                 Assert.equal(onXhrCalled, 1, "onxhr is called once");
                 Assert.equal(onFetchCalled, 0, "onFetch is not called");
                 Assert.equal(onBeaconRetryCalled, 0, "onBeacon is not called");
 
-                // use fetch
+                // use fetch, appInsghts
                 config = {
                     enableSendPromise: false,
                     isOneDs: false,
@@ -218,7 +218,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 inst.sendPOST(payload, onCompleteCallback, false);
                 Assert.equal(onBeaconRetryCalled, 1, "onBeacon is not called test2");
 
-                // change config
+                // change config, xhr
                 config = {
                     enableSendPromise: true,
                     isOneDs: true,
@@ -237,6 +237,16 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.equal(credentials, true, "credentials is set ot false test3");
                 promise = SendPostMgr["_getDbgPlgTargets"]()[3];
                 Assert.equal(promise, true, "promise is set ot false test3");
+
+                inst = SendPostMgr.getSenderInst(transports, false);
+                inst.sendPOST(payload, onCompleteCallback, false);
+
+                Assert.equal(this._getXhrRequests().length, 2, "xhr is called once again for 1ds");
+                request = this._getXhrRequests()[1];
+                reqHeaders = request.requestHeaders["Content-type"];
+                Assert.ok(!reqHeaders, "1ds post xhr request headers should be set by query parameters");
+                this.sendJsonResponse(request, {}, 200);
+                Assert.equal(onXhrCalled, 2, "onxhr is called twice");
             }
         });
 
@@ -996,6 +1006,30 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(min > 0 && min <= testDist, min + ': Make sure that we have a good minimum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
                 Assert.ok(max > 0 && max <= testDist, max + ': Make sure that we have a good maximum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
                 Assert.ok(totalVariance > 0 && totalVariance <= testDist, totalVariance + ': Check the average distribution perfect distribution is (1/bucketCount) = ' + perfectDist);
+            }
+        });
+
+        this.testCase({
+            name: 'Test Excessive unload hook detection - make sure calling getPerfMgr() does not cause excessive unload hook detection',
+            test: () => {
+                const appInsightsCore = new AppInsightsCore();
+                const channelPlugin1 = new ChannelPlugin();
+                channelPlugin1.priority = 1001;
+
+                const theConfig = {
+                    channels: [[channelPlugin1]],
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey: "",
+                    extensionConfig: {}
+                };
+
+                appInsightsCore.initialize(theConfig, []);
+                Assert.equal(true, appInsightsCore.isInitialized(), "Core is initialized");
+
+                // Send lots of notifications
+                for (let lp = 0; lp < 100; lp++) {
+                    Assert.equal(null, appInsightsCore.getPerfMgr());
+                }
             }
         });
 

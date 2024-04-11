@@ -69,7 +69,10 @@ export {
     IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction, IInternalOfflineSupport, _ISendPostMgrConfig, IBackendResponse, _ISenderOnComplete, SenderPostManager,
     getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse, convertAllHeadersToMap, _getAllResponseHeaders, _appendHeader, _IInternalXhrOverride,
     _ITimeoutOverrideWrapper, IXDomainRequest,
-    TransportType
+    TransportType,
+
+    // Test Hooks
+    _testHookMaxUnloadHooksCb
 } from "@microsoft/applicationinsights-core-js";
 
 export {

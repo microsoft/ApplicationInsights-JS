@@ -81,6 +81,7 @@ if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
 
 $cacheControl1Year = "public, max-age=31536000, immutable, no-transform";
 $contentType = "text/javascript; charset=utf-8";
+$cacheControl30Min = "public, max-age=1800, immutable, no-transform";
 
 Write-LogParams
 

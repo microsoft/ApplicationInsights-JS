@@ -10,6 +10,7 @@
         "./AISKULight",
         "./extensions/applicationinsights-analytics-js",
         "./extensions/applicationinsights-properties-js",
+        "./extensions/applicationinsights-osplugin-js",
         "./channels/applicationinsights-channel-js",
         "./extensions/applicationinsights-dependencies-js",
         "./extensions/applicationinsights-clickanalytics-js",
@@ -32,6 +33,7 @@
         "./AISKULight",
         "./extensions/applicationinsights-analytics-js",
         "./extensions/applicationinsights-properties-js",
+        "./extensions/applicationinsights-osplugin-js",
         "./channels/applicationinsights-channel-js",
         "./extensions/applicationinsights-dependencies-js",
         "./extensions/applicationinsights-clickanalytics-js",
@@ -43,6 +45,10 @@
     ],
     "cfgSync": [
         "./extensions/applicationinsights-cfgsync-js"
+    ],
+    // Config for throttleMgr and feature Opt-in
+    "webConfig": [
+        "./tools/config"
     ],
     // Rollup packages
     "rollup-es": [

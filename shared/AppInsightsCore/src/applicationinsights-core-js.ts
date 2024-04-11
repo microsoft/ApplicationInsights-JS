@@ -27,9 +27,10 @@ export { runTargetUnload, doUnloadAll } from "./JavaScriptSDK/AsyncUtils";
 export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
-    isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse,
+    isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports,
     openXhr, _appendHeader, _getAllResponseHeaders, convertAllHeadersToMap
 } from "./JavaScriptSDK/HelperFuncs";
+export { parseResponse } from "./JavaScriptSDK/ResponseHelpers";
 export { IXDomainRequest, IBackendResponse } from "./JavaScriptSDK.Interfaces/IXDomainRequest";
 export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./JavaScriptSDK.Interfaces/ISenderPostManager";
 export { SenderPostManager } from "./JavaScriptSDK/SenderPostManager";
@@ -85,7 +86,7 @@ export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils
 export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./JavaScriptSDK.Interfaces/ITelemetryInitializers";
 export { createUniqueNamespace } from "./JavaScriptSDK/DataCacheHelper";
 export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./JavaScriptSDK/UnloadHandlerContainer";
-export { IUnloadHookContainer, createUnloadHookContainer } from "./JavaScriptSDK/UnloadHookContainer";
+export { IUnloadHookContainer, createUnloadHookContainer,  _testHookMaxUnloadHooksCb } from "./JavaScriptSDK/UnloadHookContainer";
 export { ITelemetryUpdateState } from "./JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 export { IDistributedTraceContext } from "./JavaScriptSDK.Interfaces/IDistributedTraceContext";
