@@ -826,7 +826,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:string[], isAsync:boolean) => {
+                sender._sender = (payload:any[], isAsync:boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -842,10 +842,10 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
             }].concat(this.waitForException(1))
             .concat(() => {
-
                 let isLocal = window.location.protocol === "file:";
                 let exp = this.trackSpy.args[0];
                 const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+            
                 if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
@@ -909,7 +909,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:string[], isAsync:boolean) => {
+                sender._sender = (payload:any[], isAsync:boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -924,7 +924,6 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
             }].concat(this.waitForException(1))
             .concat(() => {
-
                 let exp = this.trackSpy.args[0];
                 const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
                 if (payloadStr.length > 0) {
@@ -983,7 +982,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:string[], isAsync:boolean) => {
+                sender._sender = (payload:any[], isAsync:boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -1065,7 +1064,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:string[], isAsync:boolean) => {
+                sender._sender = (payload:any[], isAsync:boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -1914,10 +1913,13 @@ export class AnalyticsPluginTests extends AITestClass {
             }
     
             Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking spy " + new Date().toISOString());
-
             try {
                 if (argCount >= expectedCount) {
-                    const payload = JSON.parse(this.trackSpy.args[0][0]);
+                    let payloads: any = []
+                    this.trackSpy.args[0][0].forEach(item => {
+                        payloads.push(item.item)
+                    });
+                    const payload = JSON.parse(payloads);
                     const baseType = payload.data.baseType;
                     // call the appropriate Validate depending on the baseType
                     switch (baseType) {
