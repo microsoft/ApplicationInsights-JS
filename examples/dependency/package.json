@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-example-dependencies",
     "author": "Microsoft Application Insights Team",
-    "version": "3.1.2",
+    "version": "3.2.0",
     "description": "Microsoft Application Insights Dependencies Example",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [
@@ -51,9 +51,9 @@
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@microsoft/applicationinsights-web": "3.1.2",
-        "@microsoft/applicationinsights-dependencies-js": "3.1.2",
-        "@microsoft/applicationinsights-core-js": "3.1.2",
+        "@microsoft/applicationinsights-web": "3.2.0",
+        "@microsoft/applicationinsights-dependencies-js": "3.2.0",
+        "@microsoft/applicationinsights-core-js": "3.2.0",
         "@nevware21/ts-utils": ">= 0.11.0 < 2.x"
     }
 }

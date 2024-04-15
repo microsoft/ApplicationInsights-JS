@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/1ds-post-js",
-    "version": "4.1.2",
+    "version": "4.2.0",
     "description": "Microsoft Application Insights JavaScript SDK - 1ds-post-channel-js",
     "author": "Microsoft Application Insights Team",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
@@ -27,7 +27,7 @@
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@microsoft/1ds-core-js": "4.1.2",
+        "@microsoft/1ds-core-js": "4.2.0",
         "@nevware21/ts-utils": ">= 0.11.0 < 2.x",
         "@nevware21/ts-async": ">= 0.3.0 < 2.x"
     },
