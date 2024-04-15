@@ -62,7 +62,7 @@
         },
         "applicationinsights-web-config": {
             "package": "tools/config/package.json",
-            "release": "3.2.0"
+            "release": "1.0.0"
         },
         "@microsoft/applicationinsights-example-aisku": {
             "package": "examples/AISKU/package.json",
