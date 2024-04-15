@@ -956,7 +956,7 @@
     "node_modules/@rush-temp/applicationinsights-example-shared-worker": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-example-shared-worker.tgz",
-      "integrity": "sha512-OR0TWePgADh/1JTCb42V1Y/sU4viZ4p9qT8IGnmWwygmSxOMx36cO3DdW43bf+bXDxrWnAXGF5smYtLt7TL1Yw==",
+      "integrity": "sha512-vtbmgr2C5Qyb+epbBxB/Liz1UcSyrKbbRSRlDQtMjVfBrYmNy9L9UK6pI13G5866/ecN8AQViJ+VaX8fcNafMw==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -7077,7 +7077,7 @@
     },
     "@rush-temp/applicationinsights-example-shared-worker": {
       "version": "file:projects\\applicationinsights-example-shared-worker.tgz",
-      "integrity": "sha512-OR0TWePgADh/1JTCb42V1Y/sU4viZ4p9qT8IGnmWwygmSxOMx36cO3DdW43bf+bXDxrWnAXGF5smYtLt7TL1Yw==",
+      "integrity": "sha512-vtbmgr2C5Qyb+epbBxB/Liz1UcSyrKbbRSRlDQtMjVfBrYmNy9L9UK6pI13G5866/ecN8AQViJ+VaX8fcNafMw==",
       "requires": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
