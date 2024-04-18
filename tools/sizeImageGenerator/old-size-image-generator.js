@@ -1,4 +1,6 @@
-const fs = require('fs').promises;
+const fsPromise = require('fs').promises;
+const fs = require('fs');
+const { create } = require('domain');
 const zlib = require('zlib');
 
 async function generateSizeBadge(path, fileSize) {
@@ -12,7 +14,7 @@ async function generateSizeBadge(path, fileSize) {
         }
 
         const buffer = await res.arrayBuffer();
-        await fs.writeFile(`img/ai.${path}.svg`, Buffer.from(buffer));
+        await fsPromise.writeFile(`img/ai.${path}.svg`, Buffer.from(buffer));
         console.log('File saved successfully');
     } catch (err) {
         throw new Error(`Failed to generate size badge: ${err.message}`);
@@ -28,15 +30,23 @@ async function downloadFile(version) {
         }
 
         const buffer = await res.arrayBuffer();
-        await fs.writeFile(`./cdnFile/ai.${version}.js`, Buffer.from(buffer));
+        await fsPromise.writeFile(`./cdnFile/ai.${version}.js`, Buffer.from(buffer));
         console.log('File saved successfully');
     } catch (err) {
         throw new Error(`Failed to generate size badge: ${err.message}`);
     }
 }
 
-async function main() {
+function createDirectory(dirName) {
+    const dir = `./${dirName}`;
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+    }
+}
 
+async function main() {
+        createDirectory("cdnFile");
+        createDirectory("img");
         const versions = ["3.1.2", "3.1.1", "3.1.0", "3.0.9", "3.0.8", "3.0.7", 
         "3.0.6", "3.0.5", "3.0.4", "3.0.3", "3.0.2", "3.0.1", "3.0.0", "2.8.18", 
         "2.8.17", "2.8.16", "2.8.15", "2.8.14", "2.8.13", "2.8.12", "2.8.11", 
@@ -55,12 +65,12 @@ async function main() {
             const minFileName = `./cdnFile/ai.${version}.min.js`;
             console.log(`File to check: ${filename}`);
             try {
-                const fileSize = Math.ceil((await fs.stat(filename)).size / 1024);
-                const minFileSize = Math.ceil((await fs.stat(minFileName)).size / 1024);
+                const fileSize = Math.ceil((await fsPromise.stat(filename)).size / 1024);
+                const minFileSize = Math.ceil((await fsPromise.stat(minFileName)).size / 1024);
                 console.log(`File size: ${fileSize}kb`);
                 console.log(`Minified file size: ${minFileSize}kb`);
 
-                const fileContent = await fs.readFile(filename);
+                const fileContent = await fsPromise.readFile(filename);
                 const gzippedContent = zlib.gzipSync(fileContent);
                 const gzippedSize = Math.ceil(gzippedContent.length / 1024);
                 console.log(`Gzipped file size: ${gzippedSize}kb`);

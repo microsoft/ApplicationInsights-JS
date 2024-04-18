@@ -1,8 +1,9 @@
-const fs = require('fs').promises;
+const fsPromise = require('fs').promises;
+const fs = require('fs');
 const zlib = require('zlib');
 async function getVersionFromPackageJson(packageJsonPath) {
     try {
-        const data = await fs.readFile(packageJsonPath, 'utf8');
+        const data = await fsPromise.readFile(packageJsonPath, 'utf8');
         const packageJson = JSON.parse(data);
         if (packageJson && packageJson.version) {
             return packageJson.version;
@@ -25,14 +26,20 @@ async function generateSizeBadge(path, fileSize) {
         }
 
         const buffer = await res.arrayBuffer();
-        await fs.writeFile(`img/ai.${path}.svg`, Buffer.from(buffer));
+        await fsPromise.writeFile(`img/ai.${path}.svg`, Buffer.from(buffer));
         console.log('File saved successfully');
     } catch (err) {
         throw new Error(`Failed to generate size badge: ${err.message}`);
     }
 }
-
+function createDirectory(dirName) {
+    const dir = `./${dirName}`;
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+    }
+}
 async function main() {
+    createDirectory("img");
     const packageJsonPath = '../../AISKU/package.json';
     try {
         const version = await getVersionFromPackageJson(packageJsonPath);
@@ -41,14 +48,14 @@ async function main() {
         const minFileName = `../../AISKU/browser/es5/ai.${version}.min.js`;
         console.log(`File to check: ${filename}`);
 
-        const fileSize = Math.ceil((await fs.stat(filename)).size / 1024);
-        const minFileSize = Math.ceil((await fs.stat(minFileName)).size / 1024);
+        const fileSize = Math.ceil((await fsPromise.stat(filename)).size / 1024);
+        const minFileSize = Math.ceil((await fsPromise.stat(minFileName)).size / 1024);
 
 
         console.log(`File size: ${fileSize}kb`);
         console.log(`Minified file size: ${minFileSize}kb`);
 
-        const fileContent = await fs.readFile(filename);
+        const fileContent = await fsPromise.readFile(filename);
         const gzippedContent = zlib.gzipSync(fileContent);
         const gzippedSize = Math.ceil(gzippedContent.length / 1024);
         console.log(`Gzipped file size: ${gzippedSize}kb`);
