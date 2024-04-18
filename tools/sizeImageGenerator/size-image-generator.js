@@ -25,7 +25,7 @@ async function generateSizeBadge(path, fileSize) {
         }
 
         const buffer = await res.arrayBuffer();
-        await fs.writeFile(`ai.${path}.svg`, Buffer.from(buffer));
+        await fs.writeFile(`img/ai.${path}.svg`, Buffer.from(buffer));
         console.log('File saved successfully');
     } catch (err) {
         throw new Error(`Failed to generate size badge: ${err.message}`);
