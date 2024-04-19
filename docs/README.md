@@ -18,8 +18,8 @@
 [![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
-[![minified size size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js.svg?label=minified%20size)](https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js)
-[![gzip size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js.svg?compression=gzip&softmax=50000&max=55000)](https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js)
+[![minified size size](https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js.svg)](https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js)
+[![gzip size](https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js.gzip.svg)](https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js)
 
 ## Before Getting Started
 
