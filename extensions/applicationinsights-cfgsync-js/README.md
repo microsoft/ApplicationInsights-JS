@@ -19,7 +19,7 @@ Refer to [our GitHub page](https://github.com/microsoft/ApplicationInsights-JS) 
 | onCfgChangeReceive | function<br>[Optional] | null | Overrides callback function to handle event details when changes are received via event listener. |
 | overrideSyncFn | function<br>[Optional] | null | Overrides sync() function to broadcast changes. |
 | overrideFetchFn | function<br>[Optional] | null | Overrides fetch function to get config from cfgUrl when cfgUrl is defined. |
-| nonOverrideConfigs | NonOverrideCfg<br>[Optional] | {instrumentationKey: true, connectionString: true, endpointUrl: true } | When current instance is set with syncMode: `Receive`, config fields under nonOverrideConfigs will NOT be changed by any confif details sent out from other instances. |
+| nonOverrideConfigs | NonOverrideCfg<br>[Optional] | {instrumentationKey: true, connectionString: true, endpointUrl: true } | When current instance is set with syncMode: `Receive`, config fields under nonOverrideConfigs will NOT be changed by any confif details sent out from other instances. NOTE: this config will be ONLY applied during initialization, so it won't be changed dynamically. |
 | scheduleFetchTimeout | number<br>[Optional] | 30 mins | Identifies the time interval (in milliseconds) for fetching config details from cfgUrl when cfgUrl is defined. If set to 0, the fetch operation will only be called once during initialization. |
 
 

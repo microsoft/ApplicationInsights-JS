@@ -98,12 +98,14 @@ export class CfgSyncPluginTests extends AITestClass {
                 this.core.config.extensionConfig[this.identifier].syncMode = ICfgSyncMode.Receive;
                 this.core.config.extensionConfig[this.identifier].receiveChanges = true;
                 this.core.config.extensionConfig[this.identifier].blkCdnCfg = true;
+                this.core.config.extensionConfig[this.identifier].nonOverrideConfigs = {};
               
                 this.clock.tick(1);
                 targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], true, "auto sync should not be changed to false dynamically");
                 Assert.equal(targets[1], false, "receive changes should not be changed dynamically");
                 Assert.equal(targets[3], true, "blkCdnCfg changes should be changed dynamically");
+                Assert.equal(targets[4], defaultNonOverrideCfg, "nonOverrideCfg changes should not be changed dynamically");
                 Assert.equal(patchEvnSpy.callCount, 3, "event dispatch should be called again");
                 curMainCfg = this.mainInst.getCfg();
                 Assert.deepEqual(curMainCfg, this.core.config, "main config should be set test2");
