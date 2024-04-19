@@ -66,6 +66,6 @@
         "@microsoft/applicationinsights-web": "3.1.2",
         "@microsoft/applicationinsights-web-snippet": "1.1.4",
         "@microsoft/applicationinsights-core-js": "3.1.2",
-        "@nevware21/ts-utils": ">= 0.11.0 < 2.x"
+        "@nevware21/ts-utils": ">= 0.11.1 < 2.x"
     }
 }
