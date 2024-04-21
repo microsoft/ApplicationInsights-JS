@@ -316,7 +316,9 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         if (JSON) {
                             let cdnCfg = JSON.parse(response); //comments are not allowed
                             let cfg = applyCdnfeatureCfg(cdnCfg, _self.core);
-                            cfg && _setCfg(cfg, isAutoSync);
+                            let newCfg = cfg && isPlainObject(cfg) && _replaceTartgetByKeys(cfg);
+                            newCfg && _setCfg(newCfg, isAutoSync);
+                            //cfg && _setCfg(cfg, isAutoSync);
                         }
                     } else {
                         _retryCnt ++;
