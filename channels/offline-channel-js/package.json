@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-offlinechannel-js",
-    "version": "3.2.0",
+    "version": "0.2.0",
     "description": "Microsoft Application Insights JavaScript SDK Offline Channel",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",

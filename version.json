@@ -54,7 +54,7 @@
         },
         "@microsoft/applicationinsights-offlinechannel-js": {
             "package": "channels/offline-channel-js/package.json",
-            "release": "3.2.0"
+            "release": "0.2.0"
         },
         "@microsoft/applicationinsights-chrome-debug-extension": {
             "package": "tools/chrome-debug-extension/package.json",
