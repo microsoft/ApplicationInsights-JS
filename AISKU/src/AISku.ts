@@ -4,7 +4,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { CfgSyncPlugin, ICfgSyncConfig } from "@microsoft/applicationinsights-cfgsync-js";
+import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
@@ -92,7 +92,8 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
     ),
     extensionConfig: cfgDfMerge<{[key: string]: any}>({
         ["AppInsightsCfgSyncPlugin"]: cfgDfMerge<ICfgSyncConfig>({
-            cfgUrl: CONFIG_ENDPOINT_URL
+            cfgUrl: CONFIG_ENDPOINT_URL,
+            syncMode: ICfgSyncMode.Receive
         })
     })
 };

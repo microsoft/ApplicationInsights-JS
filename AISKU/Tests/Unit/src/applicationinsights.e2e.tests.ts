@@ -271,6 +271,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 ai.config.extensionConfig = ai.config.extensionConfig || {};
                 let extConfig = ai.config.extensionConfig["AppInsightsCfgSyncPlugin"];
                 Assert.equal(extConfig.cfgUrl, CONFIG_ENDPOINT_URL, "default cdn endpoint should be set");
+                Assert.equal(extConfig.syncMode, 2, "default mode should be set to receive");
 
                 let featureOptIn = config.featureOptIn || {};
                 Assert.equal(featureOptIn["iKeyUsage"].mode, FeatureOptInMode.enable, "ikey message should be turned on");
