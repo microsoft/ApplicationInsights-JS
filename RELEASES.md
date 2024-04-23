@@ -2,6 +2,25 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.2.0 (Apr 23rd, 2024)
+
+!! CfgSync plugin is turned on. Throttling Ikey depreciation message is enabled with sampling rate 0.0001%
+[##2317](https://github.com/microsoft/ApplicationInsights-JS/pull/2317)
+
+!! Sender has breaking changes. The key used for session storage is changed and items stored in the storage now contain retry counts.
+[##2324](https://github.com/microsoft/ApplicationInsights-JS/pull/2324)
+
+### Changelog
+
+- #2371 [Main][Task]27365739 Turn on Ikey depreciation message with sampling rate 0.0001%
+- #2319 [Main] Fix config release script overwrite flag and cache time
+- #2321 [Main] Default request headers content-type for 1ds should be x-json-stream only ing
+- #2324 [Main][Task]27079894 Add a max retry count for Sender
+- #2325 [Main][Task]25716927: Change default CfgSync values to turn on the ikey deprecation message
+- #2331 [Main] Resetting the DataCacheHelper version number back to current version (from 3.0.5)
+- #2332 [Main][Task]27742145: Change nonOverrideCfgs to be added only during initialization
+- #2333 [Main][Task]27749889: Change AISKU Sync Mode to Receive
+
 ## 3.1.2 (Mar 21st, 2024)
 
 !! Critical Bug fix for Memoery Leak !!
