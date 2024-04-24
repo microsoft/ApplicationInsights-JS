@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-debugplugin-js",
-    "version": "3.1.2",
+    "version": "3.2.0",
     "description": "Microsoft Application Insights JavaScript SDK - Debug Plugin extension",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -52,8 +52,8 @@
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@microsoft/applicationinsights-common": "3.1.2",
-        "@microsoft/applicationinsights-core-js": "3.1.2",
+        "@microsoft/applicationinsights-common": "3.2.0",
+        "@microsoft/applicationinsights-core-js": "3.2.0",
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@nevware21/ts-utils": ">= 0.11.1 < 2.x"
     },
