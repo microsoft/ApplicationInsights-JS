@@ -109,7 +109,7 @@ Function CheckLogin(
             foreach ($eacherror in $global:Error) {
                 Write-LogWarning "Not Logged in..."
                 $loggedIn = $false
-                if ($eacherror.Exception.ToString() -like "* Login-AzureRmAccount*") {
+                if ($eacherror.Exception.ToString() -like "* Connect-AzAccount*") {
                     Write-Log "Logging in... Atempt #$attempt"
                     $global:Error.Clear()
                     Login-AzAccount -ErrorAction SilentlyContinue 
