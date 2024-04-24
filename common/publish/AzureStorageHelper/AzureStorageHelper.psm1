@@ -28,7 +28,7 @@ Function InstallRequiredModules (
         Write-LogWarning "--------------------------------------"
         Write-Log ""
         Write-Log "Please install / run the following from an administrator powershell window"
-        Write-Log "Install-Module AzureRM"
+        Write-Log "Install-Module Az.Accounts"
         Write-Log "Install-Module Az.Storage"
         Write-Log ""
         Write-Log "Additional Notes for Internal Application Insights Team"
@@ -38,28 +38,28 @@ Function InstallRequiredModules (
     }
 
     $commandsExist = $true
-    $c = Get-Command Login-AzureRMAccount -errorAction SilentlyContinue
+    $c = Get-Command Login-AzureAccount -errorAction SilentlyContinue
     if ($null -eq $c) {
         $commandsExist = $false
     } else {
-        Write-Log "Importing Module $($c.Source) for Login-AzureRMAccount"
+        Write-Log "Importing Module $($c.Source) for Connect-AzAccount"
         Import-Module $c.Source
-        $c = Get-Command Get-AzureRmStorageAccount -errorAction SilentlyContinue
+        $c = Get-Command Get-AzStorageAccount -errorAction SilentlyContinue
         if ($null -eq $c) {
             $commandsExist = $false
         } else {
-            Write-Log "Importing Module $($c.Source) for Get-AzureRmStorageAccount"
+            Write-Log "Importing Module $($c.Source) for Get-AzStorageAccount"
             Import-Module $c.Source
         }
     }
 
     if ($commandsExist -eq $false) {
-        # You will need to at least have the AzureRM module installed
-        $m = Get-Module -ListAvailable -Name "AzureRM"
+        # You will need to at least have the Az.Storage module installed
+        $m = Get-Module -ListAvailable -Name "Az.Storage"
         if ($null -eq $m) {
-            Write-Log "The AzureRM module is not currently installed -- it needs to be"
-            Write-Log "Attempting to Install AzureRM Module"
-
+            Write-Log "The Az.Storage module is not currently installed -- it needs to be"
+            Write-Log "Attempting to Install Az.Storage Module"
+ 
             InstallRequiredModules $($retry-1)
         }
     }

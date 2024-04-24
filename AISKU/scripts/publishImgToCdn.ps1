@@ -86,7 +86,7 @@ if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
 }
 
 $cacheControl1Year = "public, max-age=31536000, immutable, no-transform";
-$contentType = "text/javascript; charset=utf-8";
+$contentType = "image/svg";
 
 Write-LogParams
 
@@ -112,16 +112,7 @@ Write-Log "Release Files : $($releaseFiles.Count)"
 
 Write-Log "----------------------------------------------------------------------"
 
-# Publish the full versioned files to all release folders
-if ($version.type -eq "svg") {
-    # Normal publishing deployment
-    PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite
-}
-else {
-    # Upload to the test container rather than the supplied one
-    $global:connectDetails.testOnly = $true
-    $global:connectDetails.storeContainer = "tst"
-    PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
-}
+# Publish the img to the folder that is same to the script folder.
+PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite
 
 Write-Log "======================================================================"
