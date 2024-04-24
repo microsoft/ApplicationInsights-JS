@@ -93,14 +93,14 @@ Function CheckLogin(
             if ([string]::IsNullOrWhiteSpace($($connectDetails.resourceGroup)) -ne $true) {
                 if ([string]::IsNullOrWhiteSpace($connectDetails.storeName) -ne $true) {
                     Write-Log "Attempting to get default storage account for $($connectDetails.resourceGroup) account $($connectDetails.storeName)"
-                    Get-AzureRmStorageAccount -ResourceGroupName $connectDetails.resourceGroup -AccountName $connectDetails.storeName -ErrorAction SilentlyContinue | Out-Null
+                    Get-AzStorageAccount -ResourceGroupName $connectDetails.resourceGroup -Name $connectDetails.storeName -ErrorAction SilentlyContinue | Out-Null
                 } else {
                     Write-Log "Attempting to get default storage account for $($connectDetails.resourceGroup)"
-                    Get-AzureRmStorageAccount -ResourceGroupName $connectDetails.resourceGroup -ErrorAction SilentlyContinue | Out-Null
+                    Get-AzStorageAccount -ResourceGroupName $connectDetails.resourceGroup -ErrorAction SilentlyContinue | Out-Null
                 }
             } else {
                 Write-Log "Attempting to get default storage account"
-                Get-AzureRmStorageAccount -ErrorAction SilentlyContinue | Out-Null
+                Get-AzStorageAccount -ErrorAction SilentlyContinue | Out-Null
             }
     
             Write-LogErrors $false
@@ -112,16 +112,16 @@ Function CheckLogin(
                 if ($eacherror.Exception.ToString() -like "* Login-AzureRmAccount*") {
                     Write-Log "Logging in... Atempt #$attempt"
                     $global:Error.Clear()
-                    Login-AzureRMAccount -ErrorAction SilentlyContinue 
+                    Login-AzAccount -ErrorAction SilentlyContinue 
                     Write-LogErrors $false
                     break
                 } elseif ($eacherror.Exception.ToString() -like "* Connect-AzureRmAccount*") {
                     Write-Log "Connecting... Atempt #$attempt"
                     $global:Error.Clear()
                     if ([string]::IsNullOrWhiteSpace($connectDetails.subscriptionId) -ne $true -and (IsGuid($connectDetails.subscriptionId) -eq $true)) {
-                        Connect-AzureRmAccount -ErrorAction SilentlyContinue -Subscription $connectDetails.subscriptionId | Out-Null
+                        Connect-AzAccount -ErrorAction SilentlyContinue -Subscription $connectDetails.subscriptionId | Out-Null
                     } else {
-                        Connect-AzureRmAccount -ErrorAction SilentlyContinue | Out-Null
+                        Connect-AzAccount -ErrorAction SilentlyContinue | Out-Null
                     }
     
                     Write-LogErrors $false
@@ -202,10 +202,10 @@ Function ValidateAccess (
     $store = $null
     $subs = $null
     if ([string]::IsNullOrWhiteSpace($connectDetails.subscriptionId) -ne $true -and (IsGuid($connectDetails.subscriptionId) -eq $true)) {
-        Select-AzureRmSubscription -SubscriptionId $connectDetails.subscriptionId | Out-Null
+        Select-AzSubscription -Subscription $connectDetails.subscriptionId | Out-Null
         if ([string]::IsNullOrWhiteSpace($connectDetails.resourceGroup) -ne $true -and [string]::IsNullOrWhiteSpace($connectDetails.storeName) -ne $true) {
             Write-Log "  Getting Storage Account"
-            $accounts = Get-AzureRmStorageAccount -ResourceGroupName $connectDetails.resourceGroup -AccountName $connectDetails.storeName
+            $accounts = Get-AzStorageAccount -ResourceGroupName $connectDetails.resourceGroup -Name $connectDetails.storeName
             if ($null -ne $accounts -and $accounts.Length -eq 1) {
                 $store = $accounts[0]
             }
@@ -213,11 +213,11 @@ Function ValidateAccess (
         
         if ($null -eq $store) {
             Write-Log "  Selecting Subscription"
-            $subs = Get-AzureRmSubscription -SubscriptionId $connectDetails.subscriptionId | Where-Object State -eq "Enabled"
+            $subs = Get-AzSubscription -SubscriptionId $connectDetails.subscriptionId | Where-Object State -eq "Enabled"
         }
     } else {
         Write-Log "  Finding Subscriptions"
-        $subs = Get-AzureRmSubscription | Where-Object State -eq "Enabled"
+        $subs = Get-AzSubscription | Where-Object State -eq "Enabled"
     }
 
     if ($null -eq $store -and $null -ne $subs) {
@@ -235,16 +235,16 @@ Function ValidateAccess (
         $accounts = $null
         foreach ($id in $subs) {
             Write-Log "    Checking Subscription $($id.Id)"
-            Select-AzureRmSubscription -SubscriptionId $id.Id | Out-Null
+            Select-AzSubscription -Subscription $id.Id | Out-Null
             $accounts = $null
             if ([string]::IsNullOrWhiteSpace($connectDetails.resourceGroup) -ne $true) {
                 if ([string]::IsNullOrWhiteSpace($connectDetails.storeName) -eq $true) {
-                    $accounts = Get-AzureRmStorageAccount -ResourceGroupName $connectDetails.resourceGroup -AccountName $connectDetails.storeName
+                    $accounts = Get-AzStorageAccount -ResourceGroupName $connectDetails.resourceGroup -Name $connectDetails.storeName
                 } else {
-                    $accounts = Get-AzureRmStorageAccount -ResourceGroupName $connectDetails.resourceGroup
+                    $accounts = Get-AzStorageAccount -ResourceGroupName $connectDetails.resourceGroup
                 }
             } else {
-                $accounts = Get-AzureRmStorageAccount
+                $accounts = Get-AzStorageAccount
             }
     
             if ($null -ne $accounts -and $accounts.Length -ge 1) {
@@ -344,10 +344,10 @@ Function GetContainerContext(
     $azureContext = $connectDetails.storageContext
     if ([string]::IsNullOrWhiteSpace($connectDetails.sasToken) -ne $true) {
         # Use the Sas token
-        $azureContext = New-AzureStorageContext -StorageAccountName $connectDetails.storeName -Sastoken $connectDetails.sasToken -ErrorAction SilentlyContinue
+        $azureContext = New-AzStorageContext -StorageAccountName $connectDetails.storeName -Sastoken $connectDetails.sasToken -ErrorAction SilentlyContinue
     }
 
-    $azContainer = Get-AzureStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
+    $azContainer = Get-AzStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
     if ($null -eq $azContainer) {
         Write-Log "Container [$storageContainer] does not exist"
         return
@@ -440,7 +440,7 @@ Function Get-VersionFiles(
         $filePrefix = $filePrefix.Substring(0, $filePrefix.Length - 1)
     }
 
-    $blobs = Get-AzureStorageBlob -Container $context.storageContainer -Context $context.azureContext -Prefix "$($context.blobPrefix)$filePrefix" -ErrorAction SilentlyContinue
+    $blobs = Get-AzStorageBlob -Container $context.storageContainer -Context $context.azureContext -Prefix "$($context.blobPrefix)$filePrefix" -ErrorAction SilentlyContinue
     foreach ($blob in $blobs) {
         $version = Get-FileVersion $blob.Name
         if ($null -ne $version -and [string]::IsNullOrWhiteSpace($version.ver) -ne $true -and
@@ -536,7 +536,7 @@ Function CopyBlob(
 
     $srcCloudBlob = $blob.ICloudBlob.FetchAttributes()
 
-    $blobResult = Start-AzureStorageBlobCopy -Context $blobContext -CloudBlob $blob.ICloudBlob -DestContext $destContext.azureContext -DestContainer "$($destContext.storageContainer)" -DestBlob $destName -Force
+    $blobResult = Start-AzStorageBlobCopy -Context $blobContext -CloudBlob $blob.ICloudBlob -DestContext $destContext.azureContext -DestContainer "$($destContext.storageContainer)" -DestBlob $destName -Force
     Write-LogErrors
 
     # Don't try and publish anything if any errors have been logged
@@ -544,9 +544,9 @@ Function CopyBlob(
         exit 2
     }
     
-    $status = $blobResult | Get-AzureStorageBlobCopyState
+    $status = $blobResult | Get-AzStorageBlobCopyState
     while ($status.Status -eq "Pending") {
-        $status = $blobResult | Get-AzureStorageBlobCopyState
+        $status = $blobResult | Get-AzStorageBlobCopyState
         Write-Log $status
         Start-Sleep 10
     }
@@ -559,7 +559,7 @@ Function CopyBlob(
     # Make sure the metadata and properties are set correctly
     # - When destination did not exist then the properties and metadata are set correctly
     # - But when overwriting an existing blob the properties and metadata are not updated
-    $newBlob = Get-AzureStorageBlob -Context $destContext.azureContext -Container "$($destContext.storageContainer)" -Blob $destName
+    $newBlob = Get-AzStorageBlob -Context $destContext.azureContext -Container "$($destContext.storageContainer)" -Blob $destName
     $cloudBlob = $newBlob.ICloudBlob
     $cloudBlob.FetchAttributes()
     $cloudBlob.Properties.CacheControl = $blob.ICloudBlob.Properties.CacheControl
@@ -648,13 +648,13 @@ Function PublishFiles(
     $azureContext = $global:connectDetails.storageContext
     if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -ne $true) {
         # Use the Sas token
-        $azureContext = New-AzureStorageContext -StorageAccountName $global:connectDetails.storeName -Sastoken $global:connectDetails.sasToken
+        $azureContext = New-AzStorageContext -StorageAccountName $global:connectDetails.storeName -Sastoken $global:connectDetails.sasToken
     }
     
-    $container = Get-AzureStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
+    $container = Get-AzStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
     if ($null -eq $container) {
         $Error.Clear()
-        New-AzureStorageContainer -Name $storageContainer -Context $azureContext -Permission Blob -ErrorAction SilentlyContinue | Out-Null
+        New-AzStorageContainer -Name $storageContainer -Context $azureContext -Permission Blob -ErrorAction SilentlyContinue | Out-Null
         Write-LogErrors
     }
 
@@ -678,11 +678,11 @@ Function PublishFiles(
         }
 
         $newBlob = $null
-        $blob = Get-AzureStorageBlob -Container $storageContainer -Blob ($blobPrefix + $name) -Context $azureContext -ErrorAction SilentlyContinue
+        $blob = Get-AzStorageBlob -Container $storageContainer -Blob ($blobPrefix + $name) -Context $azureContext -ErrorAction SilentlyContinue
         if ($null -ne $blob -and $blob.Count -ne 0) {
             if ($overwrite -eq $true) {
                 Write-Log "    Overwriting $($blobPrefix + $name)"
-                $newBlob = Set-AzureStorageBlobContent -Force -Container $storageContainer -File $path -Blob ($blobPrefix + $name) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = $contentType} -Metadata $metadata
+                $newBlob = Set-AzStorageBlobContent -Force -Container $storageContainer -File $path -Blob ($blobPrefix + $name) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = $contentType} -Metadata $metadata
                 if ($null -eq $newBlob) {
                     Write-LogFailure "    Failed to overwrite/upload $($blobPrefix + $name)"
                 }
@@ -691,7 +691,7 @@ Function PublishFiles(
             }
         } else {
             Write-Log "    Uploading $($blobPrefix + $name)"
-            $newBlob = Set-AzureStorageBlobContent -Container $storageContainer -File $path -Blob ($blobPrefix + $name) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = $contentType} -Metadata $metadata
+            $newBlob = Set-AzStorageBlobContent -Container $storageContainer -File $path -Blob ($blobPrefix + $name) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = $contentType} -Metadata $metadata
             if ($null -eq $newBlob) {
                 Write-LogFailure "    Failed to upload $($blobPrefix + $name)"
             }
@@ -882,7 +882,7 @@ Function SetActiveVersion(
             $stageName = "$($version.path)$($version.prefix)$($verParts[0]).$($verParts[1])$($preRel)$($version.ext).stage"
             CopyBlob $blobContext $blob $destContext $stageName
 
-            $stagedBlob = Get-AzureStorageBlob -Context $destContext.azureContext -Container $destContext.storageContainer -Blob $stageName
+            $stagedBlob = Get-AzStorageBlob -Context $destContext.azureContext -Container $destContext.storageContainer -Blob $stageName
             SetProperties $stagedBlob "[$($destContext.storageContainer)]/$($blob.Name)" $version.ver $cacheControl30Min
 
             $minorName = "$($version.path)$($version.prefix)$($verParts[0]).$($verParts[1])$($preRel)$($version.ext)"
@@ -899,7 +899,7 @@ Function SetActiveVersion(
             }
 
             # Remove the staged files
-            $stagedBlob | Remove-AzureStorageBlob -Force
+            $stagedBlob | Remove-AzStorageBlob -Force
         }
     }
 }
