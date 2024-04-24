@@ -50,7 +50,6 @@ Function GetReleaseFiles
 
     # check if the img dir exists
     $parentDir = Split-Path -Path $jsSdkDir -Parent
-    $parentDir = Split-Path -Path $parentDir -Parent
     $imgSrcDir = Join-Path -Path $parentDir -ChildPath "tools\sizeImageGenerator\img"
 
     Write-Log "Image Folder   : $imgSrcDir"
