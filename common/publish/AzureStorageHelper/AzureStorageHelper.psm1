@@ -38,7 +38,7 @@ Function InstallRequiredModules (
     }
 
     $commandsExist = $true
-    $c = Get-Command Login-AzureAccount -errorAction SilentlyContinue
+    $c = Get-Command Connect-AzAccount -errorAction SilentlyContinue
     if ($null -eq $c) {
         $commandsExist = $false
     } else {
