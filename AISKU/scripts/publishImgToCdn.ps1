@@ -86,7 +86,7 @@ if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
 }
 
 $cacheControl1Year = "public, max-age=31536000, immutable, no-transform";
-$contentType = "image/svg";
+$contentType = "image/svg+xml;";
 
 Write-LogParams
 
@@ -112,7 +112,9 @@ Write-Log "Release Files : $($releaseFiles.Count)"
 
 Write-Log "----------------------------------------------------------------------"
 
+$contentDisposition = "inline"
+
 # Publish the img to the folder that is same to the script folder.
-PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite
+PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite $contentDisposition
 
 Write-Log "======================================================================"

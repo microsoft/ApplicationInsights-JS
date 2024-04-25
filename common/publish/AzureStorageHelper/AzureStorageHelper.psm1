@@ -534,9 +534,14 @@ Function CopyBlob(
 
     Write-Log "       - $($blob.Name) ==> $destName"
 
+    Write-Log "Source Blob: $sourceBlobPath"
+    Write-Log "Destination Blob: $destinationBlobPath"
+    Write-Log "Storage Context: $($storageContext.StorageAccountName)"
+
     $srcCloudBlob = $blob.ICloudBlob.FetchAttributes()
 
-    $blobResult = Start-AzStorageBlobCopy -Context $blobContext -CloudBlob $blob.ICloudBlob -DestContext $destContext.azureContext -DestContainer "$($destContext.storageContainer)" -DestBlob $destName -Force
+    # $blobResult = Start-AzStorageBlobCopy -Context $blobContext -CloudBlob $blob.ICloudBlob -DestContext $destContext.azureContext -DestContainer "$($destContext.storageContainer)" -DestBlob $destName -Force
+    $blobResult = Start-AzStorageBlobCopy -Context $blobContext -SrcContainer $blob.ICloudBlob.Container.Name -SrcBlob $blob.ICloudBlob.Name -DestContext $destContext.azureContext -DestContainer "$($destContext.storageContainer)" -DestBlob $destName -Force
     Write-LogErrors
 
     # Don't try and publish anything if any errors have been logged
@@ -605,7 +610,8 @@ Function PublishFiles(
     [string] $storagePath,
     [string] $cacheControlValue,
     [string] $defaultContentType,
-    [bool] $overwrite
+    [bool] $overwrite,
+    [string] $contentDisposition = $null
 ) {
 
     # Don't try and publish anything if any errors have been logged
@@ -682,7 +688,7 @@ Function PublishFiles(
         if ($null -ne $blob -and $blob.Count -ne 0) {
             if ($overwrite -eq $true) {
                 Write-Log "    Overwriting $($blobPrefix + $name)"
-                $newBlob = Set-AzStorageBlobContent -Force -Container $storageContainer -File $path -Blob ($blobPrefix + $name) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = $contentType} -Metadata $metadata
+                $newBlob = Set-AzStorageBlobContent -Force -Container $storageContainer -File $path -Blob ($blobPrefix + $name) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = $contentType; ContentDisposition = $contentDisposition} -Metadata $metadata
                 if ($null -eq $newBlob) {
                     Write-LogFailure "    Failed to overwrite/upload $($blobPrefix + $name)"
                 }
