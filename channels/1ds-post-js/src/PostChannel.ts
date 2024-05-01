@@ -247,9 +247,11 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                                 return !_disableTelemetry;
                             },
                             createPayload: (evt) => {
+                                // should get new url headers based on payload directly
+                                let curDetails = _httpManager && _httpManager.getOfflineRequestDetails();
                                 return {
-                                    urlString: details.url,
-                                    headers: details.hdrs,
+                                    urlString: curDetails.url,
+                                    headers: curDetails.hdrs,
                                     data: evt
                                 } as IPayloadData;
                             }
