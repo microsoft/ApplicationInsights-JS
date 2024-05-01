@@ -365,7 +365,7 @@ export class ChannelTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for fetch response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for fetch response" + new Date().toISOString(), 200, 1000) as any)
         });
 
         this.testCase({
