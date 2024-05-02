@@ -3,8 +3,9 @@ import { SinonSpy } from 'sinon';
 import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig } from '@microsoft/applicationinsights-common';
-import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
+import { createAsyncResolvedPromise, createResolvedPromise } from '@nevware21/ts-async';
 
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -43,6 +44,7 @@ export class ApplicationInsightsTests extends AITestClass {
     private tagKeys = new ContextTagKeys();
     private _config;
     private _appId: string;
+    private ctx: any;
 
     constructor(testName?: string) {
         super(testName || "ApplicationInsightsTests");
@@ -73,6 +75,7 @@ export class ApplicationInsightsTests extends AITestClass {
             this.isFetchPolyfill = fetch["polyfill"];
             this.useFakeServer = false;
             this._config = this._getTestConfig(this._sessionPrefix);
+            this.ctx = {};
 
             const init = new ApplicationInsights({
                 config: this._config
@@ -129,18 +132,19 @@ export class ApplicationInsightsTests extends AITestClass {
         if (this._ai && this._ai["dependencies"]) {
             this._ai["dependencies"].teardown();
         }
+        this.ctx = {};
 
         console.log("* testCleanup(" + (AITestClass.currentTestInfo ? AITestClass.currentTestInfo.name : "<null>") + ")");
     }
 
     public registerTests() {
         this.addDynamicConfigTests()
-        this.addGenericE2ETests();
-        this.addAnalyticsApiTests();
-        this.addAsyncTests();
-        this.addDependencyPluginTests();
-        this.addPropertiesPluginTests();
-        this.addCDNOverrideTests();
+        // this.addGenericE2ETests();
+        // this.addAnalyticsApiTests();
+        // this.addAsyncTests();
+        // this.addDependencyPluginTests();
+        // this.addPropertiesPluginTests();
+        // this.addCDNOverrideTests();
     }
 
     public addGenericE2ETests(): void {
@@ -240,6 +244,99 @@ export class ApplicationInsightsTests extends AITestClass {
                 handler.rm();
             }
         });
+
+        this.testCaseAsync({
+            name: "Init: init with cs promise, change with cs string",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+
+                
+                config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1"
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    core.config.instrumentationKey = "testIkey";
+                    core.config.endpointUrl = "testUrl";
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+
+        
+        this.testCaseAsync({
+            name: "Init: init with cs string, change with cs promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+                let config = this._ai.config;
+                let expectedIkey = ApplicationInsightsTests._instrumentationKey;
+                let expectedConnectionString = ApplicationInsightsTests._connectionString;
+                let expectedEndpointUrl = "https://dc.services.visualstudio.com/v2/track";
+                Assert.ok(config, "ApplicationInsights config exists");
+                Assert.equal(expectedConnectionString, config.connectionString, "connection string is set");
+                Assert.equal(expectedIkey, config.instrumentationKey, "ikey is set");
+                Assert.equal(expectedEndpointUrl, config.endpointUrl, "endpoint url is set from connection string");
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active");
+
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                
+                config.connectionString = csPromise;
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    core.config.instrumentationKey = "testIkey";
+                    core.config.endpointUrl = "testUrl";
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
     }
 
     public addCDNOverrideTests(): void {

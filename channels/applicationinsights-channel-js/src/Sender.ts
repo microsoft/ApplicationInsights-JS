@@ -5,16 +5,17 @@ import {
     createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger,
-    IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
-    ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction,
-    SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal,
-    _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj,
-    eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported,
-    isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
+    ActiveStatus, BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration,
+    IDiagnosticLogger, IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride,
+    OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete,
+    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
+    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion,
+    isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
+    prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
-import { ITimerHandler, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
@@ -240,7 +241,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (_self.isInitialized()) {
                     _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender is already initialized");
                 }
-                
+
+             
                 _base.initialize(config, core, extensions, pluginChain);
                 let identifier = _self.identifier;
                 _serializer = new Serializer(core.logger);
@@ -267,6 +269,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             return senderConfig;
                         }
                     });
+
+                    if (core.activeStatus() === ActiveStatus.PENDING) {
+                        // waiting for core promises to be resolved
+                        return;
+                    }
+                    
 
                     // Only update the endpoint if the original config !== the current config
                     // This is so any redirect endpointUrl is not overwritten
@@ -346,7 +354,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
 
                     _customHeaders = senderConfig.customHeaders;
-                    if (!isInternalApplicationInsightsEndpoint(_endpointUrl) && _customHeaders && _customHeaders.length > 0) {
+                    if (isString(_endpointUrl) && !isInternalApplicationInsightsEndpoint(_endpointUrl) && _customHeaders && _customHeaders.length > 0) {
                         arrForEach(_customHeaders, customHeader => {
                             this.addHeader(customHeader.header, customHeader.value);
                         });

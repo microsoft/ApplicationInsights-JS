@@ -8,6 +8,7 @@
                 "eBatchDiscardedReason",
                 "FeatureOptInMode",
                 "CdnFeatureMode",
+                "eActiveStatus",
                 "eLoggingSeverity",
                 "_eInternalMessageId",
                 "SendRequestReason",

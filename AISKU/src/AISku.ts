@@ -26,8 +26,8 @@ import {
     IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { IPromise, createPromise } from "@nevware21/ts-async";
-import { arrForEach, arrIndexOf, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
+import { IPromise, createAsyncPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { arrForEach, arrIndexOf, isPromiseLike, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
     STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR, STR_GET_PLUGIN,
@@ -194,8 +194,47 @@ export class AppInsightsSku implements IApplicationInsights {
 
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
-                if (_config.connectionString) {
-                    const cs = parseConnectionString(_config.connectionString);
+                let configCs =  _config.connectionString;
+                
+                if (isPromiseLike(configCs)) {
+                    let ikeyPromise = createAsyncPromise<string>((resolve, reject) => {
+                        doAwaitResponse(configCs, (res) => {
+                            let curCs = res.value;
+                            let ikey = _config.instrumentationKey;
+                            if (!res.rejected && curCs) {
+                                // replace cs with resolved values in case of circular promises
+                                _config.connectionString = curCs;
+                                let resolvedCs = parseConnectionString(curCs);
+                                ikey = resolvedCs.instrumentationkey || ikey;
+                            }
+                            resolve(ikey);
+                        });
+
+                    });
+
+                    let urlPromise = createAsyncPromise<string>((resolve, reject) => {
+                        doAwaitResponse(configCs, (res) => {
+                            let curCs = res.value;
+                            let url = _config.endpointUrl;
+                            if (!res.rejected && curCs) {
+                                let resolvedCs = parseConnectionString(curCs);
+                                let ingest = resolvedCs.ingestionendpoint;
+                                url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
+                            }
+                            resolve(url);
+                        });
+
+                    });
+
+                    _config.instrumentationKey = ikeyPromise;
+                    _config.endpointUrl = _config.userOverrideEndpointUrl || urlPromise;
+                    
+                }
+                if (isString(configCs)) {
+                    // confirm if promiselike function present
+                    // handle cs promise here
+                    // add cases to oneNote
+                    const cs = parseConnectionString(configCs);
                     const ingest = cs.ingestionendpoint;
                     _config.endpointUrl =  _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : ingest + DEFAULT_BREEZE_PATH; // add /v2/track
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
