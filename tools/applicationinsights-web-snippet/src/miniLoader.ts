@@ -202,7 +202,7 @@ declare var cfg:ISnippetConfig;
             "js2.cdn.applicationinsights.io",
             "js2.cdn.monitor.azure.com",
             "az416426.vo.msecnd.net" // this domain is supported but not recommended
-        ]
+        ];
 
         fetch("https://js.monitor.azure.com/beta/ai.3.integrity.json")
             .then(response => response.json())
