@@ -102,19 +102,19 @@ module.exports = function (grunt) {
         };
     }
 
-    function expandJS() {
+    function expandJS(srcFile) {
         var srcPath = "./tools/applicationinsights-web-snippet/build/output";
         return {
             files: [{
                 expand: true,
                 cwd: srcPath,
                 dest: "./tools/applicationinsights-web-snippet/build/output",
-                src: "snippet.js"
+                src: srcFile+".js"
             }],
             options: {
                 replacements: function() {
                
-                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.js");
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/" + srcFile + ".js");
                     var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
                     while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
                         snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
@@ -777,7 +777,8 @@ module.exports = function (grunt) {
                 }
             },
             'string-replace': {
-                'generate-expanded-JS': expandJS(),
+                'generate-expanded-JS': expandJS("snippet"),
+                'generate-expanded-MiniJS': expandJS("miniLoader"),
                 'generate-expanded-min': expandMin(),
                 'generate-snippet-ikey': generateNewSnippet(false),
                 'generate-snippet-connString': generateNewSnippet(true)
@@ -917,7 +918,7 @@ module.exports = function (grunt) {
 
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
         grunt.registerTask("snippetCopy", ["copy:snippet"]);
-        grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
+        grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "string-replace:generate-expanded-MiniJS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
 
         grunt.registerTask("snippet-restore", restoreTasks("applicationinsights-web-snippet"));
         grunt.registerTask("websnippettests", tsTestActions("applicationinsights-web-snippet"));

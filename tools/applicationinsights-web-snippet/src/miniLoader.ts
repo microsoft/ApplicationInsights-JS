@@ -205,97 +205,98 @@ declare var cfg:ISnippetConfig;
         ]
 
         fetch("https://js.monitor.azure.com/beta/ai.3.integrity.json")
-                .then(response => response.json())
-                .then(json => {
-                    let currentVersion = json.version;
-                    // Assigning these to local variables allows them to be minified to save space:
-                    let targetSrc : string = (aiConfig as any)["url"] || cfg.src
-                    if (targetSrc) {
-                        if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
-                            // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
-                            targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {
-                                return g1 + "ai.2" + g2;
-                            });
-                            // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
-                        }
-                        if (currentVersion.startsWith("3")) {
-                            targetSrc = targetSrc.replace(/\/ai\.\d+\./, "/ai." + currentVersion + ".");
-                        }
+            .then(response => response.json())
+            .then(json => {
+                let currentVersion = json.version;
+                // Assigning these to local variables allows them to be minified to save space:
+                let targetSrc : string = (aiConfig as any)["url"] || cfg.src
+                if (targetSrc) {
+                    if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
+                        // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
+                        targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {
+                            return g1 + "ai.2" + g2;
+                        });
+                        // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
+                    }
+                    if (currentVersion) {
+                        targetSrc = targetSrc.replace(/\/ai\.\d+\./, "/ai." + currentVersion + ".");
+                    }
 
-                        if (cfg.cr !== false){
-                            for (var i = 0; i < domains.length; i++){
-                                if (targetSrc.indexOf(domains[i]) > 0){
-                                    domainRetryIndex = i;
-                                    break;
-                                }
+                    if (cfg.cr !== false){
+                        for (var i = 0; i < domains.length; i++){
+                            if (targetSrc.indexOf(domains[i]) > 0){
+                                domainRetryIndex = i;
+                                break;
                             }
                         }
+                    }
 
-                        const _handleError = (evt?: any) => {
-                            appInsights.queue = []; // Clear the queue
-                            if (!handled) {
-                                // start retry
-                                if (domainRetryIndex >= 0 && domainRetryCount + 1 < domains.length){ // domainRetryIndex will be negative when client using own domain (the supported domain list is defined above)
-                                    let nextIdx = (domainRetryIndex + domainRetryCount + 1) % domains.length;
-                                    _createScript(targetSrc.replace(/^(.*\/\/)([\w\.]*)(\/.*)$/, function (_all, http, domain, qs) {
-                                        return http + domains[nextIdx] + qs;
-                                    }));
-                                    domainRetryCount += 1;
-                                } else {
-                                    handled = true;
-                                    loadFailed = true;
-                                    _reportFailure(targetSrc);
-                                }
-                            }
-                        }
-
-                        const _handleLoad = (evt?: any, isAbort?:any) => {
-                            if (!handled) {
-                                // IE10, Opera calls loaded before the script is processed.
-                                // so delaying to give the script a chance to be processed
-                                setTimeout(function() {
-                                    if (isAbort || !appInsights.core) {
-                                        _handleError();
-                                    }
-                                }, 500);
-                            }
-                            loadFailed = false;
-                        }
-
-                        const _createScript = (src: string) => {
-                            let scriptElement : HTMLElement = doc.createElement(scriptText);
-                            (scriptElement as any)["src"] = src;
-                            // Allocate Cross origin only if defined and available
-                            let crossOrigin = cfg[strCrossOrigin];
-                            if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
-                                scriptElement[strCrossOrigin] = crossOrigin;
-                            }
-                            scriptElement.onload = _handleLoad;
-                            scriptElement.onerror = _handleError;
-                            // Some browsers support onload while others onreadystatechange and others both
-                            (scriptElement as any)["onreadystatechange"] = function (evt?:any, isAbort?:any) {
-                                if ((scriptElement as any)["readyState"] === "loaded" || (scriptElement as any)["readyState"]  === "complete") {
-                                    _handleLoad(evt, isAbort);
-                                }
-                            };
-
-                            if (cfg.ld && cfg.ld < 0) {
-                                // if user wants to append tag to document head, blocking page load
-                                let headNode = doc.getElementsByTagName("head")[0];
-                                headNode.appendChild(scriptElement);
+                    const _handleError = (evt?: any) => {
+                        appInsights.queue = []; // Clear the queue
+                        if (!handled) {
+                            // start retry
+                            if (domainRetryIndex >= 0 && domainRetryCount + 1 < domains.length){ // domainRetryIndex will be negative when client using own domain (the supported domain list is defined above)
+                                let nextIdx = (domainRetryIndex + domainRetryCount + 1) % domains.length;
+                                _createScript(targetSrc.replace(/^(.*\/\/)([\w\.]*)(\/.*)$/, function (_all, http, domain, qs) {
+                                    return http + domains[nextIdx] + qs;
+                                }));
+                                domainRetryCount += 1;
                             } else {
-                                setTimeout(function () {
-                                    // Attempts to place the script tag in the same location as the first script on the page
-                                    doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
-                                }, cfg.ld || 0);
+                                handled = true;
+                                loadFailed = true;
+                                _reportFailure(targetSrc);
                             }
-
-
-                            return scriptElement;
                         }
-                        _createScript(targetSrc);
-                    }})
-                .catch(error => console.error('Error loading JSON:', error));
+                    }
+
+                    const _handleLoad = (evt?: any, isAbort?:any) => {
+                        if (!handled) {
+                            // IE10, Opera calls loaded before the script is processed.
+                            // so delaying to give the script a chance to be processed
+                            setTimeout(function() {
+                                if (isAbort || !appInsights.core) {
+                                    _handleError();
+                                }
+                            }, 500);
+                        }
+                        loadFailed = false;
+                    }
+
+                    const _createScript = (src: string) => {
+                        let scriptElement : HTMLElement = doc.createElement(scriptText);
+                        (scriptElement as any)["src"] = src;
+                        // Allocate Cross origin only if defined and available
+                        let crossOrigin = cfg[strCrossOrigin];
+                        if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
+                            scriptElement[strCrossOrigin] = crossOrigin;
+                        }
+                        scriptElement.onload = _handleLoad;
+                        scriptElement.onerror = _handleError;
+                        // Some browsers support onload while others onreadystatechange and others both
+                        (scriptElement as any)["onreadystatechange"] = function (evt?:any, isAbort?:any) {
+                            if ((scriptElement as any)["readyState"] === "loaded" || (scriptElement as any)["readyState"]  === "complete") {
+                                _handleLoad(evt, isAbort);
+                            }
+                        };
+
+                        if (cfg.ld && cfg.ld < 0) {
+                            // if user wants to append tag to document head, blocking page load
+                            let headNode = doc.getElementsByTagName("head")[0];
+                            headNode.appendChild(scriptElement);
+                        } else {
+                            setTimeout(function () {
+                                // Attempts to place the script tag in the same location as the first script on the page
+                                doc.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
+                            }, cfg.ld || 0);
+                        }
+
+
+                        return scriptElement;
+                    }
+                    _createScript(targetSrc);
+                }
+            })
+            .catch(error => console.error("Error loading JSON:", error));
     
         // capture initial cookie
         try {
