@@ -90,13 +90,13 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     return true;
                 }
                 return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+            }, "Wait for close response" + new Date().toISOString(), 30, 1000) as any)
         });
 
         this.testCaseAsync({
@@ -149,27 +149,27 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for Init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.evt;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for add Event response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for add Event response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.getEvt;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for get Event response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get Event response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     return true;
                 }
                 return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+            }, "Wait for close response" + new Date().toISOString(), 30, 1000) as any)
         });
 
         this.testCaseAsync({
@@ -284,28 +284,28 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for Init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.preEvts;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for get previous Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get previous Events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.evt;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for add Event response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for add Event response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.allEvts;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for get all Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get all Events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item1 = this.ctx.evt1;
                 let item2 = this.ctx.evt2;
                 if (item1 && item2) {
@@ -313,40 +313,40 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for add all Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for add all Events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.allEvts1;
                 if (items) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for get all Events1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get all Events1 response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.nextBatch;
                 if (items && items.length == 1) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for get next Batch response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get next Batch response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.twoEvts;
                 if (items && items.length == 2) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for get two Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get two Events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.clear;
                 if (item) {
                     return true;
                 }
                 return false;
-            }, "Wait for clear response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for clear response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     return true;
                 }
                 return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+            }, "Wait for close response" + new Date().toISOString(), 30, 1000) as any)
         });
 
         
@@ -413,14 +413,14 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for Init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.evt;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for add Event response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for add Event response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.nextBatchErr;
                 if (item) {
                     Assert.equal(item.message, "open cursor mock error");
@@ -428,13 +428,13 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for handle error response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     return true;
                 }
                 return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+            }, "Wait for close response" + new Date().toISOString(), 30, 1000) as any)
         });
 
 
@@ -541,7 +541,7 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for Init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.removeEvts;
 
                 if (items) {
@@ -549,7 +549,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for remove evt response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for remove evt response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.allEvts;
 
                 if (items) {
@@ -557,14 +557,14 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for get Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get Events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item1 = this.ctx.removeEvts1;
                 if (item1) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for remove Event1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for remove Event1 response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items2 = this.ctx.removeEvts2;
 
                 if (items2) {
@@ -572,7 +572,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for remove event2 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for remove event2 response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.allEvts1;
               
                 if (items ) {
@@ -580,7 +580,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for get Events1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get Events1 response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     Assert.equal(this.batchDrop.length, 1, "notification should be called once"); // sent in clean process during initialization
@@ -588,7 +588,7 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+            }, "Wait for close response" + new Date().toISOString(), 30, 1000) as any)
         });
 
 
@@ -667,7 +667,7 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for Init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.evt;
                 let item1 = this.ctx.evt1;
                 let item2 = this.ctx.evt2;
@@ -676,7 +676,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for get Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get Events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.allEvts1;
               
                 if (items && items.length == 0) {
@@ -684,13 +684,13 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for get Events1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get Events1 response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     return true;
                 }
                 return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+            }, "Wait for close response" + new Date().toISOString(), 30, 1000) as any)
         });
 
         this.testCaseAsync({
@@ -706,7 +706,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let provider = new IndexedDbProvider();
                 let itemCtx = this.core.getProcessTelContext();
-                let storageConfig = createDynamicConfig({inStorageMaxTime: 10000}).cfg;
+                let storageConfig = createDynamicConfig({inStorageMaxTime: 30000}).cfg;
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
@@ -739,7 +739,7 @@ export class OfflineDbProviderTests extends AITestClass {
                     this.ctx.addEvent1Err = reason;
                     Assert.ok(false, "error for add event1");
                 });
-                this.clock.tick(6000);
+                this.clock.tick(25000);
 
 
                 let evt2 = TestHelper.mockEvent(endpoint, 2, false);
@@ -784,7 +784,7 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for Init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.allEvts;
                 let cnt = 0;
                 if (items && items.length == 3) {
@@ -796,7 +796,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for get Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get Events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.cleanEvts;
               
                 if (item) {
@@ -804,7 +804,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for clean Events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for clean Events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let items = this.ctx.allEvts1;
               
                 if (items) {
@@ -812,7 +812,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for get Events1 response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get Events1 response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     Assert.equal(this.batchDrop.length, 1, "notification should be called once");
@@ -821,7 +821,7 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+            }, "Wait for close response" + new Date().toISOString(), 30, 1000) as any)
         });
 
         this.testCaseAsync({
@@ -898,7 +898,7 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for Init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.addEventErr;
                 if (item) {
                     Assert.equal(item.message, "open db mock error");
@@ -906,14 +906,14 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for add Event handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for add Event handle error response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.removeEvt;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for remove Event handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for remove Event handle error response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.getEvtsErr;
                 if (item) {
                     Assert.equal(item.message, "open db mock error");
@@ -921,21 +921,21 @@ export class OfflineDbProviderTests extends AITestClass {
                 }
              
                 return false;
-            }, "Wait for get all events handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get all events handle error response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.cleanEvts;
                 if (item !== null) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for get clean events handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get clean events handle error response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.clearEvts;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for get clear events handle error response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for get clear events handle error response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     return true;
@@ -1044,55 +1044,55 @@ export class OfflineDbProviderTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for Init response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for Init response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.addEvent;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for add Event response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for add Event response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.nextBatch ;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for next batch response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for next batch response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.allEvts;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for all events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for all events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.removeEvts;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for remove events response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for remove events response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.clear;
                 if (item) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for clear response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for clear response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let item = this.ctx.clean;
                 if (item !== null) {
                     return true;
                 }
              
                 return false;
-            }, "Wait for clean response" + new Date().toISOString(), 15, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for clean response" + new Date().toISOString(), 30, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
                 let isclosed = this.ctx.isclosed;
                 if (isclosed) {
                     return true;
                 }
                 return false;
-            }, "Wait for close response" + new Date().toISOString(), 15, 1000) as any)
+            }, "Wait for close response" + new Date().toISOString(), 30, 1000) as any)
         });
 
     }

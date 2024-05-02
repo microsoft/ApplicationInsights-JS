@@ -106,7 +106,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_broadcastChanges, _receiveChanges, _evtName, _blkCdnCfg];
+                return [_broadcastChanges, _receiveChanges, _evtName, _blkCdnCfg, _nonOverrideConfigs];
             };
     
             function _initDefaults() {
@@ -179,7 +179,8 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _overrideSyncFn = _extensionConfig.overrideSyncFn;
                 _overrideFetchFn = _extensionConfig.overrideFetchFn;
                 _onCfgChangeReceive = _extensionConfig.onCfgChangeReceive;
-                _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs;
+                _nonOverrideConfigs = _extensionConfig.nonOverrideConfigs; // override values should not be changed
+               
                 _fetchTimeout = _extensionConfig.scheduleFetchTimeout;
                 _fetchFn = _getFetchFnInterface();
                 _retryCnt = 0;
@@ -316,7 +317,9 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         if (JSON) {
                             let cdnCfg = JSON.parse(response); //comments are not allowed
                             let cfg = applyCdnfeatureCfg(cdnCfg, _self.core);
-                            cfg && _setCfg(cfg, isAutoSync);
+                            let newCfg = cfg && isPlainObject(cfg) && _replaceTartgetByKeys(cfg);
+                            newCfg && _setCfg(newCfg, isAutoSync);
+                            //cfg && _setCfg(cfg, isAutoSync);
                         }
                     } else {
                         _retryCnt ++;

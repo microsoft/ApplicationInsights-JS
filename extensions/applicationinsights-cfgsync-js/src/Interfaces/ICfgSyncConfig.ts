@@ -38,7 +38,8 @@ export interface ICfgSyncConfig {
      */
     overrideFetchFn?: SendGetFunction;
     /**
-     * When current instance is set with syncMode: `Receive`, config fields under nonOverrideConfigs will NOT be changed by any confif details sent out from other instances.
+     * When current instance is set with syncMode: `Receive`, config fields under nonOverrideConfigs will NOT be changed by any config details sent out from other instances.
+     * NOTE: this config will be ONLY applied during initialization, so it won't be changed dynamically
      * @default {instrumentationKey:true,connectionString:true,endpointUrl:true}
      */
     nonOverrideConfigs?: NonOverrideCfg;

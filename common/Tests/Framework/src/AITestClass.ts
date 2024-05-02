@@ -611,7 +611,11 @@ export class AITestClass {
         let resultPayload: any[] = [];
         if (spy.called && spy.args && spy.args.length > 0) {
             spy.args.forEach(call => {
-                call[0].forEach((message: string) => {
+                call[0].forEach((item: any) => {
+                    let message = item;
+                    if (typeof item !== "string") {
+                        message = item.item;
+                    }
                     if (message) {
                         // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                         if (includeInit || message.indexOf("AI (Internal): 72 ") === -1) {

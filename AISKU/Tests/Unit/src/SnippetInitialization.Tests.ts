@@ -313,7 +313,11 @@ export class SnippetInitializationTests extends AITestClass {
                         if(this.successSpy.called) {
                             let currentCount: number = 0;
                             this.successSpy.args.forEach(call => {
-                                call[0].forEach(message => {
+                                call[0].forEach(item => {
+                                    let message = item;
+                                    if (typeof item !== "string") {
+                                        message = item.item;
+                                    }
                                     // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                                     if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
                                         currentCount ++;
@@ -1086,7 +1090,11 @@ export class SnippetInitializationTests extends AITestClass {
         if(this.successSpy.called) {
             let currentCount: number = 0;
             this.successSpy.args.forEach(call => {
-                call[0].forEach(message => {
+                call[0].forEach(item => {
+                    let message = item.item;
+                    if (typeof item === "string") {
+                        message = item;
+                    }
                     // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                     if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
                         currentCount ++;
