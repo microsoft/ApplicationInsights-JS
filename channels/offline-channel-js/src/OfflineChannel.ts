@@ -347,8 +347,16 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let sentItems = evts.slice(0, idx + 1);
                  
                     _inMemoBatch = _inMemoBatch.createNew(_endpoint, inMemo.getItems().slice(idx + 1), _evtsLimitInMemo);
+
+                    let payloadData: IStorageTelemetryItem = null;
+                    if (_offineSupport && _offineSupport.createOneDSPayload) {
+                        payloadData = _offineSupport.createOneDSPayload(sentItems);
+                        payloadData.criticalCnt = criticalCnt
+                    } else {
+                        payloadData = _constructPayloadData(payloadArr, criticalCnt);
+                    }
                    
-                    let payloadData = _constructPayloadData(payloadArr, criticalCnt);
+               
                     let callback: OfflineBatchStoreCallback = (res) => {
                         if (!res || !res.state) {
                             return null;

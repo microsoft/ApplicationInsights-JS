@@ -236,7 +236,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             _self.getOfflineSupport = () => {
                 try {
                     let details = _httpManager && _httpManager.getOfflineRequestDetails();
-                    if (details) {
+                    if (_httpManager) {
                         return {
                             getUrl: () => {
                                 return details.url
@@ -246,14 +246,21 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                             shouldProcess: (evt) => {
                                 return !_disableTelemetry;
                             },
-                            createPayload: (evt) => {
+                            createPayload: (evt, ikeys?: string[]) => {
+                                return null;
                                 // should get new url headers based on payload directly
-                                let curDetails = _httpManager && _httpManager.getOfflineRequestDetails();
-                                return {
-                                    urlString: curDetails.url,
-                                    headers: curDetails.hdrs,
-                                    data: evt
-                                } as IPayloadData;
+                                // let curDetails = _httpManager && _httpManager.getOfflineRequestDetails();
+                                // return {
+                                //     urlString: curDetails.url,
+                                //     headers: curDetails.hdrs,
+                                //     data: evt
+                                // } as IPayloadData;
+                            },
+                            createOneDSPayload: (evts: ITelemetryItem[]) => {
+                                if (_httpManager.createOneDSPayload) {
+                                    return _httpManager.createOneDSPayload(evts, _optimizeObject);
+                                }
+                                
                             }
                         } as IInternalOfflineSupport;
 
