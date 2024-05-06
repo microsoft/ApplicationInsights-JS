@@ -351,7 +351,10 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     let payloadData: IStorageTelemetryItem = null;
                     if (_offineSupport && _offineSupport.createOneDSPayload) {
                         payloadData = _offineSupport.createOneDSPayload(sentItems);
-                        payloadData.criticalCnt = criticalCnt;
+                        if (payloadData) {
+                            payloadData.criticalCnt = criticalCnt;
+                        }
+                        
                     } else {
                         payloadData = _constructPayloadData(payloadArr, criticalCnt);
                     }
