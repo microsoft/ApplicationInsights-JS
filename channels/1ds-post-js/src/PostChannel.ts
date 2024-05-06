@@ -246,15 +246,8 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                             shouldProcess: (evt) => {
                                 return !_disableTelemetry;
                             },
-                            createPayload: (evt, ikeys?: string[]) => {
+                            createPayload: (evt) => {
                                 return null;
-                                // should get new url headers based on payload directly
-                                // let curDetails = _httpManager && _httpManager.getOfflineRequestDetails();
-                                // return {
-                                //     urlString: curDetails.url,
-                                //     headers: curDetails.hdrs,
-                                //     data: evt
-                                // } as IPayloadData;
                             },
                             createOneDSPayload: (evts: ITelemetryItem[]) => {
                                 if (_httpManager.createOneDSPayload) {

@@ -349,7 +349,7 @@ export class HttpManager {
           
                     let thePayload: ISerializedPayload = null;
 
-                    while (theBatches && theBatches.length && _serializer) {
+                    while (theBatches && theBatches.length > 0 && _serializer) {
                         let theBatch = theBatches.shift();
                         if (theBatch && theBatch.count() > 0) {
                             thePayload = thePayload || _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
