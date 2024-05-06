@@ -10,7 +10,7 @@ import {
     _IInternalXhrOverride, _ISendPostMgrConfig, _ISenderOnComplete, _eExtendedInternalMessageId, _eInternalMessageId, _getAllResponseHeaders,
     _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend, getCommonSchemaMetaData, getNavigator,
     getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
-    isValueAssigned, objForEachKey, objKeys, onConfigChange, prependTransports, strUndefined
+    isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
 import { arrAppend } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
@@ -331,9 +331,55 @@ export class HttpManager {
             }
 
             _self.getOfflineRequestDetails = () => {
+                return null;
+            }
+
+            _self.createOneDSPayload = (evts: ITelemetryItem[], optimize?: boolean) => {
                 try {
-                    let payload = _serializer && _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
-                    return _buildRequestDetails(payload, _useHeaders);
+                    // TODO: optimize
+                    let theBatches: EventBatch[] = [];
+                    // create a eventBatch for each event
+                    arrForEach(evts, (evt) => {
+                        if (optimize) {
+                            evt = optimizeObject(evt)
+                        }
+                        let batch = EventBatch.create(evt.iKey, [evt]);
+                        theBatches.push(batch);
+                    })
+          
+                    let thePayload: ISerializedPayload = null;
+
+                    while (theBatches.length > 0 && _serializer) {
+                        let theBatch = theBatches.shift();
+                        if (theBatch && theBatch.count() > 0) {
+                            thePayload = thePayload || _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                            _serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)
+                        }
+                    }
+
+                    let requestDetails = _buildRequestDetails(thePayload, _useHeaders);
+
+                    let payloadData: IPayloadData = {
+                        data: thePayload.payloadBlob,
+                        urlString: requestDetails.url,
+                        headers: requestDetails.hdrs,
+                        timeout: _xhrTimeout,
+                        disableXhrSync: _disableXhrSync,
+                        disableFetchKeepAlive: _disableFetchKeepAlive
+                    };
+
+                    // Only automatically add the following headers if already sending headers and we are not attempting to avoid an options call
+                    if (_useHeaders) {
+                        if (!_hasHeader(payloadData.headers, STR_CACHE_CONTROL)) {
+                            payloadData.headers[STR_CACHE_CONTROL] = DEFAULT_CACHE_CONTROL;
+                        }
+
+                        if (!_hasHeader(payloadData.headers, STR_CONTENT_TYPE_HEADER)) {
+                            payloadData.headers[STR_CONTENT_TYPE_HEADER] = DEFAULT_CONTENT_TYPE;
+                        }
+                    }
+
+                    return payloadData;
 
                 } catch (e) {
                     // eslint-disable-next-line no-empty
@@ -341,6 +387,8 @@ export class HttpManager {
                 }
                 return null;
             }
+
+            
 
             // Special internal method to allow the DebugPlugin to hook embedded objects
             function _getSenderInterface(transports: TransportType[], syncSupport: boolean): _IInternalXhrOverride {
@@ -1352,6 +1400,16 @@ export class HttpManager {
      * @returnsrequest details
      */
     public getOfflineRequestDetails(): IRequestUrlDetails {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Create payload data
+     * @param evts telemetry events
+     * @returns payload
+     */
+    public createOneDSPayload(evts?: ITelemetryItem[], optimize?: boolean): IPayloadData {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }

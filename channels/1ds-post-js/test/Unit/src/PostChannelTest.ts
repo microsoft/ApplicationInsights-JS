@@ -311,10 +311,11 @@ export class PostChannelTest extends AITestClass {
                 QUnit.assert.equal(offlineSupport.shouldProcess(event), true, "should process");
 
                 QUnit.assert.ok(offlineSupport.createPayload, "createPayload should exit");
-                let details = offlineSupport.createPayload("test");
+                QUnit.assert.equal(offlineSupport.createPayload("test"), null, "createPayload should return null now");
+                let details = offlineSupport.createOneDSPayload([event]);
                 QUnit.assert.equal(details.urlString, "https://testEndpoint?cors=true&content-type=application/x-json-stream&w=0", "get expected Url");
                 QUnit.assert.ok(details.headers, "get headers Url");
-                QUnit.assert.equal(details.data, "test", "get expected data");
+                QUnit.assert.equal(details.data, expectedStr, "get expected data");
 
                 this.core.config.extensionConfig = this.core.config.extensionConfig || {};
                 this.core.config.extensionConfig[postId].disableTelemetry = true;

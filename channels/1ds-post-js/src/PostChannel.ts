@@ -236,7 +236,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             _self.getOfflineSupport = () => {
                 try {
                     let details = _httpManager && _httpManager.getOfflineRequestDetails();
-                    if (details) {
+                    if (_httpManager) {
                         return {
                             getUrl: () => {
                                 return details.url
@@ -247,11 +247,13 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                                 return !_disableTelemetry;
                             },
                             createPayload: (evt) => {
-                                return {
-                                    urlString: details.url,
-                                    headers: details.hdrs,
-                                    data: evt
-                                } as IPayloadData;
+                                return null;
+                            },
+                            createOneDSPayload: (evts: ITelemetryItem[]) => {
+                                if (_httpManager.createOneDSPayload) {
+                                    return _httpManager.createOneDSPayload(evts, _optimizeObject);
+                                }
+                                
                             }
                         } as IInternalOfflineSupport;
 
