@@ -331,6 +331,15 @@ export class HttpManager {
             }
 
             _self.getOfflineRequestDetails = () => {
+                try {
+                    // get current url without paramter
+                    let payload = _serializer && _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                    return _buildRequestDetails(payload, _useHeaders);
+
+                } catch(e) {
+                    // eslint-disable-next-line no-empty
+                }
+               
                 return null;
             }
 

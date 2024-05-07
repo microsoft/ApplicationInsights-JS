@@ -302,6 +302,9 @@ export class PostChannelTest extends AITestClass {
                 let eventStr = offlineSupport.serialize(event);
                 let expectedStr = `{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}}`;
                 QUnit.assert.equal(eventStr, expectedStr, "get expected string");
+
+                let url = offlineSupport.getUrl();
+                QUnit.assert.equal(url, "https://testEndpoint?cors=true&content-type=application/x-json-stream&w=0", "get expected url string");
                 
                 QUnit.assert.ok(offlineSupport.batch, "batch should exit");
                 let batch = offlineSupport.batch([expectedStr, expectedStr]);

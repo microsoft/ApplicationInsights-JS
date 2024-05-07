@@ -222,7 +222,8 @@ export class HttpManagerTest extends AITestClass {
                 QUnit.assert.equal(evtStr, `{"name":"testEvent","iKey":"o:testKey","data":{"baseData":{}}}`,"Event should be serialized");
 
                 QUnit.assert.ok(manager.getOfflineRequestDetails, "request details function should exist");
-                QUnit.assert.equal(manager.getOfflineRequestDetails(), null, "request details function should return null for 1ds");
+                QUnit.assert.ok(manager.getOfflineRequestDetails(), "request details should set");
+                QUnit.assert.equal(manager.getOfflineRequestDetails().url, "testEndpoint?cors=true&content-type=application/x-json-stream&w=0", "details url should be set");
                 let details = manager.createOneDSPayload([evt]);
                 let headers = details.headers || {};
                 let apiKey = headers["apikey"];
