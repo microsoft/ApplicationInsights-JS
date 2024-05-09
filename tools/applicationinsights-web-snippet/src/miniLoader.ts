@@ -221,7 +221,7 @@ declare var cfg:ISnippetConfig;
                         file = json.ext[targetType].file;
                         integrity = json.ext[targetType].integrity;
                         targetSrc = targetSrc.replace(/ai\.\d+\..+\.js/, file);
-                        setScript(targetSrc);
+                        setScript(targetSrc, integrity);
                     })
                     .catch(error => console.error("Error loading JSON:", error));
             } else if (XMLHttpRequest) {
@@ -234,7 +234,7 @@ declare var cfg:ISnippetConfig;
                             file = json.ext[targetType].file;
                             integrity = json.ext[targetType].integrity;
                             targetSrc = targetSrc.replace(/ai\.\d+\..+\.js/, file);
-                            setScript(targetSrc);
+                            setScript(targetSrc, integrity);
                         } else {
                             console.error("Error loading JSON:", xhr.statusText);
                         }
@@ -242,11 +242,11 @@ declare var cfg:ISnippetConfig;
                 };
                 xhr.send();
             } else {
-                setScript(targetSrc); // Fallback to original behavior
+                setScript(targetSrc, integrity); // Fallback to original behavior
             }
         }
         
-        function setScript(targetSrc: string) {
+        function setScript(targetSrc: string, integrity: string | null) {
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
                 // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
                 targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {
@@ -298,6 +298,9 @@ declare var cfg:ISnippetConfig;
             const _createScript = (src: string) => {
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
                 (scriptElement as any)["src"] = src;
+                if (integrity){
+                    (scriptElement as any).integrity = integrity;
+                }
                 // Allocate Cross origin only if defined and available
                 let crossOrigin = cfg[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
