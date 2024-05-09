@@ -337,6 +337,59 @@ export class ApplicationInsightsTests extends AITestClass {
             }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
         });
 
+        this.testCaseAsync({
+            name: "Init: init with cs null, ikey promise, endpoint promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let ikeyPromise = createAsyncResolvedPromise("testIkey");
+                let endpointPromise = createAsyncResolvedPromise("testUrl");
+                //let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                //this._config.connectionString = csPromise;
+                this._config.connectionString = null;
+                this._config.instrumentationKey = ikeyPromise;
+                this._config.endpointUrl = endpointPromise;
+
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                Assert.equal(config.connectionString,null, "connection string shoule be null");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    core.config.instrumentationKey = "testIkey";
+                    core.config.endpointUrl = "testUrl";
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
     }
 
     public addCDNOverrideTests(): void {

@@ -384,7 +384,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     if (promises.length) {
                         _activeStatus = eActiveStatus.PENDING;
                         let allPromises = createAllSettledPromise<string>(promises);
-                        // ask a question to osvaldo, cs promise timeout? what happened?
                         doAwaitResponse(allPromises, (response) => {
                             try {
                                 _instrumentationKey = null; // set current local ikey variable
@@ -410,6 +409,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                                 if (isNullOrUndefined(_instrumentationKey)) {
                                     _activeStatus = ActiveStatus.INACTIVE;
+                                    _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, "ikey can't be resolved from promises");
                                 } else {
                                     _activeStatus = ActiveStatus.ACTIVE;
                                     _self.releaseQueue();
