@@ -30,7 +30,11 @@ export class ValidateE2ETests extends AITestClass {
                     extensionConfig: {
                         'AppInsightsChannelPlugin': {
                             maxBatchInterval: 500
+                        },
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            cfgUrl: ""
                         }
+                        
                     }
                 },
                 queue: [],
@@ -134,7 +138,11 @@ export class ValidateE2ETests extends AITestClass {
                 .concat(() => {
                     let acceptedItems = 0;
                     this.successSpy.args.forEach(call => {
-                        call[0].forEach(message => {
+                        call[0].forEach(item => {
+                            let message = item;
+                            if (typeof item !== "string") {
+                                message = item.item;
+                            }
                             // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                             if (message.indexOf("AI (Internal): 72 ") == -1) {
                                 acceptedItems ++;

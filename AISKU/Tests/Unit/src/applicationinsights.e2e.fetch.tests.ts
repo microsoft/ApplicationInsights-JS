@@ -26,7 +26,12 @@ export class ApplicationInsightsFetchTests extends ApplicationInsightsTests {
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             samplingPercentage: 50,
             convertUndefined: "test-value",
-            disablePageUnloadEvents: [ "beforeunload" ]
+            disablePageUnloadEvents: [ "beforeunload" ],
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         };
 
         return config;

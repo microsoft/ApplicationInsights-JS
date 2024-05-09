@@ -1,5 +1,5 @@
 import { Assert, AITestClass, IFetchArgs, PollingAssert } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IAppInsightsCore, IPlugin, ITelemetryItem, getGlobal, getGlobalInst } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IPlugin, ITelemetryItem, getGlobal, getGlobalInst } from "@microsoft/applicationinsights-core-js";
 import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { CfgSyncPlugin } from "../../../../applicationinsights-cfgsync-js/src/applicationinsights-cfgsync-js";
 import { ICfgSyncConfig, ICfgSyncMode, NonOverrideCfg } from "../../../src/Interfaces/ICfgSyncConfig";
@@ -10,7 +10,7 @@ import { createSyncPromise } from "@nevware21/ts-async";
 
 export class CfgSyncPluginTests extends AITestClass {
     private core: AppInsightsCore;
-    private _config: IConfiguration;
+    private _config: IConfiguration & IConfig;
     private mainInst: CfgSyncPlugin;
     private identifier: string;
     private _channel: ChannelPlugin;
@@ -98,12 +98,14 @@ export class CfgSyncPluginTests extends AITestClass {
                 this.core.config.extensionConfig[this.identifier].syncMode = ICfgSyncMode.Receive;
                 this.core.config.extensionConfig[this.identifier].receiveChanges = true;
                 this.core.config.extensionConfig[this.identifier].blkCdnCfg = true;
+                this.core.config.extensionConfig[this.identifier].nonOverrideConfigs = {};
               
                 this.clock.tick(1);
                 targets = this.mainInst["_getDbgPlgTargets"]();
                 Assert.equal(targets[0], true, "auto sync should not be changed to false dynamically");
                 Assert.equal(targets[1], false, "receive changes should not be changed dynamically");
                 Assert.equal(targets[3], true, "blkCdnCfg changes should be changed dynamically");
+                Assert.deepEqual(targets[4], defaultNonOverrideCfg, "nonOverrideCfg changes should not be changed dynamically");
                 Assert.equal(patchEvnSpy.callCount, 3, "event dispatch should be called again");
                 curMainCfg = this.mainInst.getCfg();
                 Assert.deepEqual(curMainCfg, this.core.config, "main config should be set test2");
@@ -269,7 +271,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let fetchStub = this._context["fetchStub"];
                 let patchEvnSpy = this._context["patchEvnSpy"];
                 let config = {
-                    instrumentationKey:"testIkey",
+                    //instrumentationKey:"testIkey", // should not be override
                     enableAjaxPerfTracking: true
                 } as IConfiguration & IConfig;
                 if (fetchStub.called && patchEvnSpy.called) {
@@ -328,7 +330,7 @@ export class CfgSyncPluginTests extends AITestClass {
                 let fetchStub = this._context["fetchStub"];
                 let patchEvnSpy = this._context["patchEvnSpy"];
                 let config = {
-                    instrumentationKey:"testIkey",
+                    //instrumentationKey:"testIkey", // should not be override
                     enableAjaxPerfTracking: true
                 } as IConfiguration & IConfig;
                 if (fetchStub.called && patchEvnSpy.called) {
@@ -520,6 +522,124 @@ export class CfgSyncPluginTests extends AITestClass {
                 }
                 return true;
             }, "response received", 60, 100) as any)
+        });
+
+        this.testCaseAsync({
+            name: "CfgSyncPlugin: Test with current cfgSync CDN v1",
+            stepDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            steps: [ () => {
+              
+                let doc = getGlobal();
+                this.onDone(() => {
+                    this.core.unload(false);
+                });
+                let fetchStub = this.sandbox.spy((doc as any), "fetch");
+    
+                this._config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.enable}, ["CdnUsage"]:{mode: FeatureOptInMode.disable}}
+                this._config.throttleMgrCfg = {
+                    ["109"]: {disabled: true},
+                    ["106"]: {disabled: true},
+                    ["110"]: {disabled: true}
+                }
+                this._config.extensionConfig  = { [this.identifier]: {
+                    syncMode: ICfgSyncMode.Receive,
+                    cfgUrl: "https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json",
+                    scheduleFetchTimeout: 10000
+                }};
+                this._context["fetchStub"] = fetchStub;
+                this.core.initialize(this._config, [this._channel]);
+               
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                Assert.equal(fetchStub.callCount, 1, "fetch is should called once");
+                if (fetchStub.called) {
+                    return true;
+                }
+                return false;
+            }, "wait for fetch response", 60, 100) as any).concat(PollingAssert.createPollingAssert(() => {
+                let coreConfig = this.core.config as IConfig & IConfiguration;
+                let featureOptIn = coreConfig.featureOptIn || {};
+                let throttleMgrConfig = coreConfig.throttleMgrCfg || {};
+                let ikeyOptIn = featureOptIn["iKeyUsage"];
+                let defaultIkey = throttleMgrConfig["109"];
+                let defaultEnabled = !defaultIkey.disabled;
+                let onConfig = ikeyOptIn.onCfg;
+                let offConfig = ikeyOptIn.onCfg;
+                if (onConfig && offConfig && defaultEnabled) {
+                    let ikeyMsg = throttleMgrConfig["106"];
+                    Assert.equal(ikeyMsg.disabled, false, "ikey msg should be enabled");
+                    let otherMsg = throttleMgrConfig["110"];
+                    Assert.equal(otherMsg.disabled, true, "other msg should be disabled");
+                    let cdnOptIn = featureOptIn["CdnUsage"];
+                    Assert.equal(cdnOptIn.mode, 2, "cdn feature optin should be disabled");
+                    Assert.equal(ikeyOptIn.mode, 3, "ikey feature optin should be enabled");
+                    return true;
+                }
+                return false;
+            }, "wait for core config update", 60, 100) as any)
+        });
+
+        this.testCaseAsync({
+            name: "CfgSyncPlugin: NonOverride values should not be changed Test with current cfgSync CDN v1",
+            stepDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            steps: [ () => {
+              
+                let doc = getGlobal();
+                this.onDone(() => {
+                    this.core.unload(false);
+                });
+                let fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this._config.throttleMgrCfg = {};
+                this._config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.enable}, ["CdnUsage"]:{mode: FeatureOptInMode.disable}}
+                this._config.throttleMgrCfg = {
+                    ["109"]: {disabled: true},
+                    ["106"]: {disabled: true},
+                    ["110"]: {disabled: true}
+                }
+
+                this._config.extensionConfig  = { [this.identifier]: {
+                    syncMode: ICfgSyncMode.Receive,
+                    cfgUrl: "https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json",
+                    scheduleFetchTimeout: 10000,
+                    nonOverrideConfigs: {throttleMgrCfg: true}
+                
+                } as ICfgSyncConfig};
+                this._context["fetchStub"] = fetchStub;
+                this.core.initialize(this._config, [this._channel]);
+               
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                Assert.equal(fetchStub.callCount, 1, "fetch is should called once");
+                if (fetchStub.called) {
+                    return true;
+                }
+                return false;
+            }, "wait for fetch response", 60, 100) as any).concat(PollingAssert.createPollingAssert(() => {
+                let coreConfig = this.core.config as IConfig & IConfiguration;
+                let featureOptIn = coreConfig.featureOptIn || {};
+                let throttleMgrConfig = coreConfig.throttleMgrCfg || {};
+                let ikeyOptIn = featureOptIn["iKeyUsage"];
+            
+                let onConfig = ikeyOptIn.onCfg;
+                let offConfig = ikeyOptIn.onCfg;
+                if (onConfig && offConfig) {
+                    let defaultIkey = throttleMgrConfig["109"];
+                    Assert.equal(defaultIkey.disabled, true, "ikey msg should be disbaled");
+                    let ikeyMsg = throttleMgrConfig["106"];
+                    Assert.equal(ikeyMsg.disabled, true, "ikey msg should be disabled");
+                    let otherMsg = throttleMgrConfig["110"];
+                    Assert.equal(otherMsg.disabled, true, "other msg should be disabled");
+                    let cdnOptIn = featureOptIn["CdnUsage"];
+                    Assert.equal(cdnOptIn.mode, 2, "cdn feature optin should be disabled");
+                    Assert.equal(ikeyOptIn.mode, 3, "ikey feature optin should be enabled");
+                    return true;
+                }
+                return false;
+            }, "wait for core config update", 60, 100) as any)
         });
 
     }

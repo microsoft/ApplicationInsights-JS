@@ -10,6 +10,7 @@ import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from '@microsoft/applicat
 import { createSyncPromise } from '@nevware21/ts-async';
 import { ICfgSyncCdnConfig } from '@microsoft/applicationinsights-cfgsync-js/src/Interfaces/ICfgSyncCdnConfig';
 
+
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
 const default_throttle_config = {
@@ -181,6 +182,7 @@ export class CdnThrottle extends AITestClass {
                 this.init = new ApplicationInsights({
                     config:   {
                         instrumentationKey: TestInstrumentationKey,
+                        featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.disable}},
                         extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
                             syncMode: ICfgSyncMode.Receive,
                             cfgUrl: "testurl"
@@ -190,7 +192,6 @@ export class CdnThrottle extends AITestClass {
                 this.init.loadAppInsights();
                 this._ai = this.init;
             }].concat(PollingAssert.createPollingAssert(() => {
-   
                 if (this.fetchStub.called){
                     let core = this._ai['core'];
                     let _logger = core.logger;

@@ -45,6 +45,24 @@ Under your config, define opt-in details in `featureOptIn`
 
 ```
 
+### Disable Fetching From CDN
+
+For users behind a firewall, if fetching config CDN needs to be disabled, the following changes can be applied to your root configurations.
+
+```js
+{
+    connectionString: "YOUR_CONNECTION_STRING",
+    ...
+    extensionConfig: {
+            ["AppInsightsCfgSyncPlugin"]: {
+                cfgUrl: "" // this will block fetching from default cdn
+            }
+    }
+}
+
+```
+
+
 ## Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to

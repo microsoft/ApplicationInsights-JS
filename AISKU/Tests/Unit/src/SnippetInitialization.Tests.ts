@@ -66,7 +66,12 @@ function getSnippetConfig(sessionPrefix: string, addSampling: boolean = false) {
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-            samplingPercentage: addSampling ? 50 : undefined
+            samplingPercentage: addSampling ? 50 : undefined,
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         } as IConfig
     };
 };
@@ -84,7 +89,12 @@ function getSnippetConfigConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         } as IConfig
     };
 };
@@ -102,7 +112,12 @@ function getSnippetConfigWrongConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         } as IConfig
     };
 };
@@ -120,7 +135,12 @@ function getSnippetConfigNotSetConnectionString(sessionPrefix: string) {
             disableExceptionTracking: false,
             namePrefix: `sessionPrefix`,
             enableCorsCorrelation: true,
-            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         } as IConfig
     };
 };
@@ -293,7 +313,11 @@ export class SnippetInitializationTests extends AITestClass {
                         if(this.successSpy.called) {
                             let currentCount: number = 0;
                             this.successSpy.args.forEach(call => {
-                                call[0].forEach(message => {
+                                call[0].forEach(item => {
+                                    let message = item;
+                                    if (typeof item !== "string") {
+                                        message = item.item;
+                                    }
                                     // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                                     if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
                                         currentCount ++;
@@ -1066,7 +1090,11 @@ export class SnippetInitializationTests extends AITestClass {
         if(this.successSpy.called) {
             let currentCount: number = 0;
             this.successSpy.args.forEach(call => {
-                call[0].forEach(message => {
+                call[0].forEach(item => {
+                    let message = item.item;
+                    if (typeof item === "string") {
+                        message = item;
+                    }
                     // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                     if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
                         currentCount ++;

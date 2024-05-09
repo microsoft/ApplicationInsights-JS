@@ -7,8 +7,8 @@ import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
 
 export class SenderE2ETests extends AITestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
-    private readonly _bufferName = 'AI_buffer';
-    private readonly _sentBufferName = 'AI_sentBuffer';
+    private readonly _bufferName = 'AI_buffer_1';
+    private readonly _sentBufferName = 'AI_sentBuffer_1';
 
     private _ai: IApplicationInsights;
     private _sender: Sender;
@@ -36,7 +36,11 @@ export class SenderE2ETests extends AITestClass {
                         'AppInsightsChannelPlugin': {
                             maxBatchInterval: 2000,
                             maxBatchSizeInBytes: 10*1024*1024 // 10 MB
+                        },
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            cfgUrl: ""
                         }
+                        
                     }
                 },
                 queue: [],

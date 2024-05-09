@@ -6,6 +6,7 @@ import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, 
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise, createResolvedPromise } from '@nevware21/ts-async';
+import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
 
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -64,7 +65,12 @@ export class ApplicationInsightsTests extends AITestClass {
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             samplingPercentage: 50,
             convertUndefined: "test-value",
-            disablePageUnloadEvents: [ "beforeunload" ]
+            disablePageUnloadEvents: [ "beforeunload" ],
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    cfgUrl: ""
+                }
+            }
         };
 
         return config;
@@ -390,6 +396,47 @@ export class ApplicationInsightsTests extends AITestClass {
             }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
         });
 
+
+        this.testCase({
+            name: "CfgSync DynamicConfigTests: Prod CDN is Fetched and feature is turned on/off as expected",
+            useFakeTimers: true,
+            test: () => {
+                let fetchcalled = 0;
+                let overrideFetchFn = (url: string, oncomplete: any, isAutoSync?: boolean) => {
+                    fetchcalled ++;
+                    Assert.equal(url, CONFIG_ENDPOINT_URL, "fetch should be called with prod cdn");
+                };
+                let config = {
+                    instrumentationKey: "testIKey",
+                    extensionConfig:{
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            overrideFetchFn: overrideFetchFn
+                        }
+
+                    }
+                } as IConfiguration & IConfig;
+                let ai = new ApplicationInsights({config: config});
+                ai.loadAppInsights();
+          
+                ai.config.extensionConfig = ai.config.extensionConfig || {};
+                let extConfig = ai.config.extensionConfig["AppInsightsCfgSyncPlugin"];
+                Assert.equal(extConfig.cfgUrl, CONFIG_ENDPOINT_URL, "default cdn endpoint should be set");
+                Assert.equal(extConfig.syncMode, 2, "default mode should be set to receive");
+
+                let featureOptIn = config.featureOptIn || {};
+                Assert.equal(featureOptIn["iKeyUsage"].mode, FeatureOptInMode.enable, "ikey message should be turned on");
+               
+                Assert.equal(fetchcalled, 1, "fetch should be called once");
+                config.extensionConfig = config.extensionConfig || {};
+                let expectedTimeout = 2000000000;
+                config.extensionConfig["AppInsightsCfgSyncPlugin"].scheduleFetchTimeout = expectedTimeout;
+                this.clock.tick(1);
+
+                extConfig = ai.config.extensionConfig["AppInsightsCfgSyncPlugin"];
+                Assert.equal(extConfig.scheduleFetchTimeout, expectedTimeout, "timeout should be changes dynamically");
+                ai.unload(false);
+            }
+        });
     }
 
     public addCDNOverrideTests(): void {
