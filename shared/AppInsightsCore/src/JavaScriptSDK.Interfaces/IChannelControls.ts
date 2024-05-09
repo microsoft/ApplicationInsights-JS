@@ -47,6 +47,13 @@ export interface IInternalOfflineSupport {
      */
     shouldProcess?: (evt: ITelemetryItem) => boolean;
 
+    /**
+     * Create 1ds payload data
+     * @param evts ITelemetryItems
+     * @returns IPayloadData
+     */
+      createOneDSPayload?: (evts: ITelemetryItem[]) => IPayloadData;
+
 }
 
 /**

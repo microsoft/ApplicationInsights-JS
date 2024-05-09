@@ -6,8 +6,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, EventLatencyValue, EventSendType, EventsDiscardedReason, IAppInsightsCore, IChannelControls, IConfigDefaults,
-    IExtendedConfiguration, IInternalOfflineSupport, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
-    ITelemetryItem, ITelemetryUnloadState, IUnloadHook, NotificationManager, SendRequestReason, _eInternalMessageId, _throwInternal,
+    IExtendedConfiguration, IInternalOfflineSupport, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem,
+    ITelemetryUnloadState, IUnloadHook, NotificationManager, SendRequestReason, _eInternalMessageId, _throwInternal,
     addPageHideEventListener, addPageShowEventListener, addPageUnloadEventListener, arrForEach, createProcessTelemetryContext,
     createUniqueNamespace, doPerf, eLoggingSeverity, getWindow, isChromium, isGreaterThanZero, isNumber, mergeEvtNamespace, objForEachKey,
     onConfigChange, optimizeObject, proxyFunctions, removePageHideEventListener, removePageShowEventListener, removePageUnloadEventListener,
@@ -236,10 +236,14 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             _self.getOfflineSupport = () => {
                 try {
                     let details = _httpManager && _httpManager.getOfflineRequestDetails();
-                    if (details) {
+                    if (_httpManager) {
                         return {
                             getUrl: () => {
-                                return details.url
+                                if (details) {
+                                    return details.url
+
+                                }
+                                return null;
                             },
                             serialize: _serialize,
                             batch: _batch,
@@ -247,11 +251,13 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                                 return !_disableTelemetry;
                             },
                             createPayload: (evt) => {
-                                return {
-                                    urlString: details.url,
-                                    headers: details.hdrs,
-                                    data: evt
-                                } as IPayloadData;
+                                return null;
+                            },
+                            createOneDSPayload: (evts: ITelemetryItem[]) => {
+                                if (_httpManager.createOneDSPayload) {
+                                    return _httpManager.createOneDSPayload(evts, _optimizeObject);
+                                }
+                                
                             }
                         } as IInternalOfflineSupport;
 

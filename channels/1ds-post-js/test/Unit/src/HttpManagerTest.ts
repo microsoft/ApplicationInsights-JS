@@ -222,10 +222,31 @@ export class HttpManagerTest extends AITestClass {
                 QUnit.assert.equal(evtStr, `{"name":"testEvent","iKey":"o:testKey","data":{"baseData":{}}}`,"Event should be serialized");
 
                 QUnit.assert.ok(manager.getOfflineRequestDetails, "request details function should exist");
-                let details = manager.getOfflineRequestDetails();
-                QUnit.assert.equal(details.url, "testEndpoint?cors=true&content-type=application/x-json-stream&w=0", "get expected Url");
-                QUnit.assert.ok(details.hdrs, "get headers Url");
-                QUnit.assert.ok(details.useHdrs, "should use headers");
+                QUnit.assert.ok(manager.getOfflineRequestDetails(), "request details should set");
+                QUnit.assert.equal(manager.getOfflineRequestDetails().url, "testEndpoint?cors=true&content-type=application/x-json-stream&w=0", "details url should be set");
+                let details = manager.createOneDSPayload([evt]);
+                let headers = details.headers || {};
+                let apiKey = headers["apikey"];
+                QUnit.assert.equal(apiKey, "testKey-123", "should get expected api key");
+                QUnit.assert.equal(details.data, `{"name":"testEvent","iKey":"o:testKey","data":{"baseData":{}}}`, "should return expected data");
+
+                let evt1 = this._createEvent();
+                evt1.iKey = "testKey-12345";
+                evt1.name = "testEvent1";
+                details = manager.createOneDSPayload([evt, evt1]);
+                headers = details.headers || {};
+                apiKey = headers["apikey"];
+                QUnit.assert.equal(apiKey, "testKey-123,testKey-12345", "should get expected api keys test1");
+                QUnit.assert.equal(details.data, `{"name":"testEvent","iKey":"o:testKey","data":{"baseData":{}}}\n{"name":"testEvent1","iKey":"o:testKey","data":{"baseData":{}}}`, "should return expected data test1");
+
+                let evt2 = this._createEvent();
+                evt2.iKey = "testKey-123";
+                evt2.name = "testEvent2";
+                details = manager.createOneDSPayload([evt, evt2]);
+                headers = details.headers || {};
+                apiKey = headers["apikey"];
+                QUnit.assert.equal(apiKey, "testKey-123", "should get expected api keys test2");
+                QUnit.assert.equal(details.data, `{"name":"testEvent","iKey":"o:testKey","data":{"baseData":{}}}\n{"name":"testEvent2","iKey":"o:testKey","data":{"baseData":{}}}`, "should return expected data test2");
                 
             }
         });
