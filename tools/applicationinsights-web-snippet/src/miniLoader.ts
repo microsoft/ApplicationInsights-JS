@@ -207,17 +207,23 @@ declare var cfg:ISnippetConfig;
         var sender = window.fetch;
         var endpointUrl = "https://js.monitor.azure.com/beta/ai.3.integrity.json";
         var strPostMethod = "GET"; // Assuming this is a GET request based on the example
+        
         let targetSrc = (aiConfig as any)["url"] || cfg.src;
+        let targetType = "@" + (cfg.type || "gbl.min.js");
+        let file = "ai.3.gbl.min.js"; // Default to 3 if we can't get the version
+        var integrity = null;
 
         if (targetSrc) {
             if (sender && !cfg.useXhr) {
                 sender(endpointUrl, { method: strPostMethod, mode: "cors" })
-                .then(response => response.json())
-                .then(json => {
-                    let currentVersion = json.version;
-                        setScript(currentVersion, targetSrc);
-                })
-                .catch(error => console.error("Error loading JSON:", error));
+                    .then(response => response.json())
+                    .then(json => {
+                        file = json.ext[targetType].file;
+                        integrity = json.ext[targetType].integrity;
+                        targetSrc = targetSrc.replace(/ai\.\d+\..+\.js/, file);
+                        setScript(targetSrc);
+                    })
+                    .catch(error => console.error("Error loading JSON:", error));
             } else if (XMLHttpRequest) {
                 var xhr = new XMLHttpRequest();
                 xhr.open(strPostMethod, endpointUrl);
@@ -225,8 +231,10 @@ declare var cfg:ISnippetConfig;
                     if (xhr.readyState === XMLHttpRequest.DONE) {
                         if (xhr.status === 200) {
                             var json = JSON.parse(xhr.responseText);
-                            var currentVersion = json.version;
-                            setScript(currentVersion, targetSrc);
+                            file = json.ext[targetType].file;
+                            integrity = json.ext[targetType].integrity;
+                            targetSrc = targetSrc.replace(/ai\.\d+\..+\.js/, file);
+                            setScript(targetSrc);
                         } else {
                             console.error("Error loading JSON:", xhr.statusText);
                         }
@@ -234,21 +242,17 @@ declare var cfg:ISnippetConfig;
                 };
                 xhr.send();
             } else {
-                setScript("3", targetSrc);
+                setScript(targetSrc); // Fallback to original behavior
             }
         }
         
-        
-        function setScript(currentVersion: string, targetSrc: string) {  
+        function setScript(targetSrc: string) {
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
                 // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
                 targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {
                     return g1 + "ai.2" + g2;
                 });
                 // let message = "Load Version 2 SDK instead to support IE"; // where to report this error?
-            }
-            if (currentVersion) {
-                targetSrc = targetSrc.replace(/\/ai\.\d+\./, "/ai." + currentVersion + ".");
             }
 
             if (cfg.cr !== false){
@@ -323,7 +327,7 @@ declare var cfg:ISnippetConfig;
                 return scriptElement;
             }
             _createScript(targetSrc);
-        }  
+        }
         // capture initial cookie
         try {
             appInsights.cookie = doc.cookie;
