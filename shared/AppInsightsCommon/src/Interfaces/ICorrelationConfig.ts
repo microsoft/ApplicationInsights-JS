@@ -44,7 +44,9 @@ export interface ICorrelationConfig {
     correlationHeaderDomains?: string[];
 
     /**
-     * Response and request headers to be excluded from ajax tracking data.
+     * [Optional] Response and request headers to be excluded from AJAX & Fetch tracking data.
+     * To override or discard the default, add an array with all headers to be excluded or 
+     * an empty array to the configuration. For example: ["Authorization", "X-API-Key", "WWW-Authenticate"]
      */
     ignoreHeaders?: string[];
 
