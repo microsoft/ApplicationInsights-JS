@@ -5,7 +5,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { EventPersistence } from "@microsoft/applicationinsights-common";
 import {
     INotificationManager, IProcessTelemetryContext, IUnloadHookContainer, eBatchDiscardedReason, eLoggingSeverity, isNotNullOrUndefined,
-    isNumber, newGuid, onConfigChange
+    isNumber, isString, newGuid, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncAllPromise, createAsyncPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import { batchDropNotification, getEndpointDomain, getTimeFromId, getTimeId } from "../Helpers/Utils";
@@ -280,7 +280,12 @@ export class IndexedDbProvider implements IOfflineProvider {
                 }
                 let coreConfig = providerContext.itemCtx.getCfg();
                 let itemCtx = providerContext.itemCtx;
-                _iKey = itemCtx.getCfg().instrumentationKey || coreConfig.instrumentationKey;
+                let ikey = itemCtx.getCfg().instrumentationKey || coreConfig.instrumentationKey;
+                if (!isString(ikey)) {
+                    //_iKey = ikey
+                    return;
+                }
+                _iKey = ikey;
 
                 let storageConfig: IOfflineChannelConfiguration = providerContext.storageConfig;
                 _storageId = _this.id || providerContext.id || newGuid();

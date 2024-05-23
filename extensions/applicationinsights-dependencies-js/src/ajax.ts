@@ -598,11 +598,14 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                     if (_enableAjaxPerfTracking) {
                         let iKey = config.instrumentationKey || "unkwn";
-                        if (iKey.length > 5) {
-                            _markPrefix = AJAX_MONITOR_PREFIX + strSubstring(iKey, iKey.length - 5) + ".";
-                        } else {
-                            _markPrefix = AJAX_MONITOR_PREFIX + iKey + ".";
+                        if (isString(iKey)) {
+                            if (iKey.length > 5) {
+                                _markPrefix = AJAX_MONITOR_PREFIX + strSubstring(iKey, iKey.length - 5) + ".";
+                            } else {
+                                _markPrefix = AJAX_MONITOR_PREFIX + iKey + ".";
+                            }
                         }
+                       
                     }
 
                     _disableAjaxTracking = !!_extensionConfig.disableAjaxTracking;

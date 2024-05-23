@@ -361,8 +361,14 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     if (isNullOrUndefined(ikey)) {
                         _activeStatus = ActiveStatus.INACTIVE;
                         if (!_isInitialized) {
+                            // only throw error during initial initialization
                             _throwIKeyErrMsg();
+                        } else {
+                            _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, "ikey can't be null");
                         }
+                        
+                        // if ikey is null, should we release queue?
+                        _eventQueue = [];
                         return;
                       
                     }

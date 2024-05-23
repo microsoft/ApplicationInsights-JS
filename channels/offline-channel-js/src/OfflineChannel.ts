@@ -13,7 +13,7 @@ import {
     eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
-import { ITimerHandler, isFunction, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isFunction, isString, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero
 } from "./Helpers/Utils";
@@ -553,6 +553,10 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             function _createUrlConfig(coreConfig: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
 
                 _self._addHook(onConfigChange(coreConfig, (details) => {
+                    if (!isString(coreConfig.instrumentationKey)) {
+                        // if ikey is promise, delay initialization
+                        return;
+                    }
                     let storageConfig: IOfflineChannelConfiguration = null;
                     let theConfig = details.cfg;
 

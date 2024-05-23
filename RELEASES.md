@@ -2,6 +2,16 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.2.1 (May 9th, 2024)
+
+### Changelog
+
+- #2333 [Main][Task]27749889: Change AISKU Sync Mode to Receive
+- #2335 [Main][Task]27681441: Fix async tests for MsAzure Migration
+- #2338 [Main][Task]27923018: Post Channel getOfflineSupport should set correct headers and url based on payload data
+- #2342 [Main][Task]27923018: 1ds post getOffline support url fix
+
+
 ## 3.2.0 (Apr 23rd, 2024)
 
 !! CfgSync plugin is turned on. Throttling Ikey depreciation message is enabled with sampling rate 0.0001%

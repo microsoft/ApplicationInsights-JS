@@ -54,7 +54,7 @@ declare var cfg:ISnippetConfig;
         function _parseConnectionString() {
             let fields:Fields = {};
             let connectionString = aiConfig.connectionString;
-            if (connectionString) {
+            if (typeof connectionString === "string" && connectionString) {
                 let kvPairs = connectionString.split(";");
                 for (let lp = 0; lp < kvPairs.length; lp++) {
                     let kvParts = kvPairs[lp].split("=");
