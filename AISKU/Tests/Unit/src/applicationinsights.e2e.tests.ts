@@ -145,12 +145,12 @@ export class ApplicationInsightsTests extends AITestClass {
 
     public registerTests() {
         this.addDynamicConfigTests()
-        // this.addGenericE2ETests();
-        // this.addAnalyticsApiTests();
-        // this.addAsyncTests();
-        // this.addDependencyPluginTests();
-        // this.addPropertiesPluginTests();
-        // this.addCDNOverrideTests();
+        this.addGenericE2ETests();
+        this.addAnalyticsApiTests();
+        this.addAsyncTests();
+        this.addDependencyPluginTests();
+        this.addPropertiesPluginTests();
+        this.addCDNOverrideTests();
     }
 
     public addGenericE2ETests(): void {
