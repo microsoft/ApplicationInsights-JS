@@ -3,9 +3,9 @@ import { SinonSpy } from 'sinon';
 import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig } from '@microsoft/applicationinsights-common';
-import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
-import { createAsyncResolvedPromise, createResolvedPromise } from '@nevware21/ts-async';
+import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
 
 
