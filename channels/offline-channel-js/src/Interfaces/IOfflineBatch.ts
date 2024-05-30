@@ -3,7 +3,8 @@
 
 import { IOfflineListener } from "@microsoft/applicationinsights-common";
 import {
-    IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride
+    IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride,
+    createEnumStyle
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 
@@ -35,19 +36,39 @@ export const enum eStorageType {
     SessionStorage = 2,
     IndexDb = 3
 }
+
+export const StorageType = createEnumStyle<typeof eStorageType>({
+    Unknown: eStorageType.Unknown,
+    LocalStorage: eStorageType.LocalStorage,
+    SessionStorage: eStorageType.SessionStorage,
+    IndexDb: eStorageType.IndexDb
+});
+export type StorageType = number | eStorageType;
  
 export const enum eBatchSendStatus {
     Complete = 1,
     Retry = 2,
     Drop = 3,
     Failure = 4
- }
+}
+export const BatchSendStatus = createEnumStyle<typeof eBatchSendStatus>({
+    Complete: eBatchSendStatus.Complete,
+    Retry: eBatchSendStatus.Retry,
+    Drop: eBatchSendStatus.Drop,
+    Failure: eBatchSendStatus.Failure
+});
+export type BatchSendStatus = number | eBatchSendStatus;
  
 
 export const enum eBatchStoreStatus {
     Success = 1,
     Failure = 2
- }
+}
+export const BatchStoreStatus = createEnumStyle<typeof eBatchStoreStatus>({
+    Success: eBatchStoreStatus.Success,
+    Failure: eBatchStoreStatus.Failure
+});
+export type BatchStoreStatus = number | eBatchStoreStatus;
  
 export interface IOfflineBatchHandlerCfg {
     batchMaxSize?: number; // default 10000
