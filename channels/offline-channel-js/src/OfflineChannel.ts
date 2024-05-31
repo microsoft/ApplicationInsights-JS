@@ -231,7 +231,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             
             _self.onunloadFlush = () => {
                 if (!_paused) {
-                    while (_inMemoBatch.count()) {
+                    while (_inMemoBatch && _inMemoBatch.count()) {
                         _flushInMemoItems(true);
                     }
                     // TODO: unloadprovider might send events out of order
@@ -322,7 +322,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 try {
                     // TODO: add while loop to flush everything
                     let inMemo = _inMemoBatch;
-                    let evts = inMemo.getItems();
+                    let evts = inMemo && inMemo.getItems();
                     if (!evts || !evts.length) {
                         return;
                     }

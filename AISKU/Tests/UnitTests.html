@@ -24,6 +24,7 @@
         modules.add("qunit");
         modules.add("sinon");
         modules.add("pako","./node_modules/pako/dist/pako");
+        modules.add("@microsoft/applicationinsights-offlinechannel-js");        // Load offline plugin
 
         loadFetchModule(modules, "whatwg-fetch");
         loadCommonModules(modules, function () {

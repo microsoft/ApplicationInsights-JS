@@ -59,6 +59,7 @@ const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";
 const strSdkNotInitialized = "SDK is not initialized";
+const DefaultOfflineIdentifier = "OfflineChannel";
 // const strPluginUnloadFailed = "Failed to unload plugin";
 
 /**
@@ -885,6 +886,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             function _initPluginChain(updateState: ITelemetryUpdateState | null) {
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
+                let delayInit: IPlugin[] = [];
+                let offflineChannelPlugin = _getPlugin(DefaultOfflineIdentifier);
+                if (offflineChannelPlugin) {
+                    delayInit.push(offflineChannelPlugin.plugin);
+                }
             
                 _pluginChain = null;
                 _pluginVersionString = null;
@@ -913,7 +919,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 
                 // Initializing the channels first
                 if (_channels && _channels.length > 0) {
-                    initializePlugins(rootCtx.createNew(_channels), allExtensions);
+                    initializePlugins(rootCtx.createNew(_channels), allExtensions, delayInit);
                 }
 
                 // Now initialize the normal extensions (explicitly not including the _channels as this can cause duplicate initialization)
