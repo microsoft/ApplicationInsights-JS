@@ -1273,7 +1273,6 @@ class TestOfflineChannelPlugin implements IChannelControls {
     }
 
     public initialize = (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: any) => {
-        this._isInit = !this._isInit;
         let plugin = core.getPlugin<IChannelControls>("Sender");
         let channel = plugin && plugin.plugin;
         if (channel && channel.isInitialized()) {
