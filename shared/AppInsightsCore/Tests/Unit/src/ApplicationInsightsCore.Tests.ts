@@ -343,7 +343,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             test: () => {
                 let offlineChannelPlugin = new TestOfflineChannelPlugin();
 
-                let channelPlugin = new ChannelPlugin();
+                let channelPlugin = new TestChannelPlugin();
               
 
                 const appInsightsCore = new AppInsightsCore();
@@ -363,7 +363,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             test: () => {
                 let offlineChannelPlugin = new TestOfflineChannelPlugin();
 
-                let channelPlugin = new ChannelPlugin();
+                let channelPlugin = new TestChannelPlugin();
               
 
                 const appInsightsCore = new AppInsightsCore();
@@ -1272,10 +1272,88 @@ class TestOfflineChannelPlugin implements IChannelControls {
         this._nextPlugin = next;
     }
 
-    public initialize = (config: IConfiguration) => {
+    public initialize = (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: any) => {
         this._isInit = !this._isInit;
+        let plugin = core.getPlugin<IChannelControls>("Sender");
+        let channel = plugin && plugin.plugin;
+        if (channel && channel.isInitialized()) {
+            this._isInit = true;
+
+        }
         
     }
+
+    public isInitialized = () => {
+        return this._isInit;
+        
+    }
+
+    public _processTelemetry(env: ITelemetryItem) {
+        this.events.push(env);
+
+        // Just calling processTelemetry as this is the original design of the Plugins (as opposed to the newer processNext())
+        this._nextPlugin?.processTelemetry(env);
+    }
+
+}
+
+class TestChannelPlugin implements IChannelControls {
+    public _nextPlugin: ITelemetryPlugin;
+    public isFlushInvoked = false;
+    public isUnloadInvoked = false;
+    public isTearDownInvoked = false;
+    public isResumeInvoked = false;
+    public isPauseInvoked = false;
+    public version: string = "1.0.33-Beta";
+
+    public processTelemetry;
+
+    public identifier = "Sender";
+
+    public priority: number = 1001;
+    public events: ITelemetryItem[] = [];
+    public _isInitialized: boolean = false;
+
+    constructor() {
+        this.processTelemetry = this._processTelemetry.bind(this);
+    }
+    public pause(): void {
+        this.isPauseInvoked = true;
+    }
+
+    public resume(): void {
+        this.isResumeInvoked = true;
+    }
+
+    public teardown(): void {
+        this.isTearDownInvoked = true;
+    }
+
+    flush(async?: boolean, callBack?: () => void): void {
+        this.isFlushInvoked = true;
+        if (callBack) {
+            callBack();
+        }
+    }
+
+    onunloadFlush(async?: boolean) {
+        this.isUnloadInvoked = true;
+    }
+
+    setNextPlugin(next: ITelemetryPlugin) {
+        this._nextPlugin = next;
+    }
+
+    public initialize = (config: IConfiguration) => {
+        this._isInitialized = true
+    }
+
+    
+    public isInitialized = () => {
+        return  this._isInitialized
+        
+    }
+
 
     public _processTelemetry(env: ITelemetryItem) {
         this.events.push(env);

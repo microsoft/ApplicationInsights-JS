@@ -886,10 +886,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             function _initPluginChain(updateState: ITelemetryUpdateState | null) {
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
-                let delayInit: IPlugin[] = [];
+                let offlineChannelFound: boolean = false;
                 let offflineChannelPlugin = _getPlugin(DefaultOfflineIdentifier);
                 if (offflineChannelPlugin) {
-                    delayInit.push(offflineChannelPlugin.plugin);
+                    offlineChannelFound = true;
                 }
             
                 _pluginChain = null;
@@ -919,7 +919,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 
                 // Initializing the channels first
                 if (_channels && _channels.length > 0) {
-                    initializePlugins(rootCtx.createNew(_channels), allExtensions, delayInit);
+                    let ctx = rootCtx.createNew(_channels);
+                    initializePlugins(ctx, allExtensions); // first time, offline will do lazy init
+                    if (offlineChannelFound) {
+                        initializePlugins(ctx, allExtensions); // re-init again to initialize offline support
+                    }
                 }
 
                 // Now initialize the normal extensions (explicitly not including the _channels as this can cause duplicate initialization)

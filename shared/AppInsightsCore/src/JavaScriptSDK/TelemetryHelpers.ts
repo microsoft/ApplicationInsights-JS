@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { arrForEach, arrIndexOf, isFunction } from "@nevware21/ts-utils";
+import { arrForEach, isFunction } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
@@ -35,7 +35,7 @@ export function _getPluginState(plugin: IPlugin): IPluginState {
  * @param core - THe current core instance
  * @param extensions - The extensions
  */
-export function initializePlugins(processContext: IProcessTelemetryContext, extensions: IPlugin[], excludedFromInit?: IPlugin[]) {
+export function initializePlugins(processContext: IProcessTelemetryContext, extensions: IPlugin[]) {
 
     // Set the next plugin and identified the uninitialized plugins
     let initPlugins: ITelemetryPlugin[] = [];
@@ -45,9 +45,6 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
 
     while (proxy) {
         let thePlugin = proxy.getPlugin();
-        if (excludedFromInit && excludedFromInit.length && arrIndexOf(excludedFromInit, thePlugin) !== -1) {
-            return;
-        }
         if (thePlugin) {
             if (lastPlugin && lastPlugin.setNextPlugin && thePlugin.processTelemetry) {
                 // Set this plugin as the next for the previous one

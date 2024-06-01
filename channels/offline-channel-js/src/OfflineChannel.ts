@@ -102,16 +102,20 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _overrideIkey: string;
             let _evtsLimitInMemo: number;
             let _notificationManager: INotificationManager | undefined;
+            let _isLazyInit: boolean;
+            let _dependencyPlugin: IChannelControls;
+
 
             _initDefaults();
 
             _self.initialize = (coreConfig: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) => {
              
-                if (!_hasInitialized) {
+                if (!_hasInitialized && !_isLazyInit) {
 
                     _base.initialize(coreConfig, core, extensions);
 
-                    _hasInitialized = true;
+                    //_hasInitialized = true;
+                    _isLazyInit = true; // to be able to re-initialized
 
                     _diagLogger = _self.diagLog();
                     let evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineSender"), core.evtNamespace && core.evtNamespace());
@@ -120,23 +124,28 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     _notificationManager = core.getNotifyMgr();
                 }
                 try {
-                    _createUrlConfig(coreConfig, core, extensions, pluginChain);
-                    let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
-                    _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
-                    if (_sender) {
-                        _senderInst = _sender.getXhrInst();
-                        _offlineListener.addListener((val)=> {
-                            if (!val.isOnline) {
-                                _sendNextBatchTimer && _sendNextBatchTimer.cancel();
-                            } else {
-                                _setSendNextTimer();
-                            }
-    
-                        });
+                    let _dependencyPlugin = _getDependencyPlugin(coreConfig, core);
+                    if (!_hasInitialized && _dependencyPlugin && !!_dependencyPlugin.isInitialized()) {
+                        _hasInitialized = true;
+                        _createUrlConfig(coreConfig, core, extensions, pluginChain);
+                        let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
+                        _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
+                        if (_sender) {
+                            _senderInst = _sender.getXhrInst();
+                            _offlineListener.addListener((val)=> {
+                                if (!val.isOnline) {
+                                    _sendNextBatchTimer && _sendNextBatchTimer.cancel();
+                                } else {
+                                    _setSendNextTimer();
+                                }
+        
+                            });
                        
-                        // need it for first time to confirm if there are any events
-                        _setSendNextTimer();
-                        
+                            // need it for first time to confirm if there are any events
+                            _setSendNextTimer();
+
+                        }
+
                     }
 
                 } catch (e) {
@@ -288,6 +297,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _primaryChannelId = null;
                 _overrideIkey = null;
                 _evtsLimitInMemo = null;
+                _isLazyInit = false;
+                _dependencyPlugin = null;
             }
 
 
@@ -524,7 +535,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 try {
 
                     if (evt) {
-                        return _offineSupport.serialize(evt, _convertUndefined);
+                        return _offineSupport && _offineSupport.serialize(evt, _convertUndefined);
                     }
                     
                 } catch (e) {
@@ -563,23 +574,31 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
                     let ctx = createProcessTelemetryContext(null, theConfig, core);
                     storageConfig = ctx.getExtCfg<IOfflineChannelConfiguration>(_self.identifier, defaultOfflineChannelConfig);
-                    let channelIds = storageConfig.primaryOnlineChannelId;
+                    // let channelIds = storageConfig.primaryOnlineChannelId;
                     let onlineUrl = null;
-                    if (channelIds && channelIds.length) {
-                        arrForEach(channelIds, (id) => {
-                            let plugin = _self.core.getPlugin<IChannelControls>(id);
-                            let channel = plugin && plugin.plugin;
-                            if (channel) {
-                                _primaryChannelId = id;
-                                if (isFunction(channel.getOfflineSupport)) {
-                                    _offineSupport = channel.getOfflineSupport();
-                                    onlineUrl = isFunction(_offineSupport && _offineSupport.getUrl) && _offineSupport.getUrl();
-                                }
-                                return;
-                            }
-                            
-                        });
+                    let channel = _getDependencyPlugin(coreConfig, core);
+                    if (!!channel.isInitialized() && isFunction(channel.getOfflineSupport)) {
+                        _offineSupport = channel.getOfflineSupport();
+                        onlineUrl = isFunction(_offineSupport && _offineSupport.getUrl) && _offineSupport.getUrl();
+                    } else {
+                        return;
                     }
+                    
+                    // if (channelIds && channelIds.length) {
+                    //     arrForEach(channelIds, (id) => {
+                    //         let plugin = core.getPlugin<IChannelControls>(id);
+                    //         let channel = plugin && plugin.plugin;
+                    //         if (channel && !!channel.isInitialized()) {
+                    //             _primaryChannelId = id;
+                    //             if (!!channel.isInitialized() && isFunction(channel.getOfflineSupport)) {
+                    //                 _offineSupport = channel.getOfflineSupport();
+                    //                 onlineUrl = isFunction(_offineSupport && _offineSupport.getUrl) && _offineSupport.getUrl();
+                    //             }
+                    //             return;
+                    //         }
+                            
+                    //     });
+                    // }
                     _overrideIkey = storageConfig.overrideInstrumentationKey;
 
                     let urlConfig: IUrlLocalStorageConfig = _urlCfg;
@@ -637,6 +656,28 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     _endpoint = curUrl;
                     
                 }));
+            }
+
+            function _getDependencyPlugin(coreConfig: IConfiguration & IConfig, core: IAppInsightsCore) {
+                if (!_dependencyPlugin) {
+                    let ctx = createProcessTelemetryContext(null, coreConfig, core);
+                    let storageConfig = ctx.getExtCfg<IOfflineChannelConfiguration>(_self.identifier, defaultOfflineChannelConfig);
+                    let channelIds = storageConfig.primaryOnlineChannelId;
+                    if (channelIds && channelIds.length) {
+                        arrForEach(channelIds, (id) => {
+                            let plugin = core.getPlugin<IChannelControls>(id);
+                            let channel = plugin && plugin.plugin;
+                            if (channel) {
+                                _dependencyPlugin = channel;
+                                return;
+                            }
+                                
+                            
+                        });
+                    }
+                }
+               
+                return _dependencyPlugin;
             }
 
             
@@ -752,4 +793,5 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
     public sendNextBatch() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
 }

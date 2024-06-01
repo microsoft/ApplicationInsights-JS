@@ -62,7 +62,8 @@ export class ChannelTests extends AITestClass {
             name: "Channel: Init from core",
             test: () => {
                 let channel = new OfflineChannel();
-                this.core.initialize(this.coreConfig,[channel]);
+                let onlineChannel = new TestChannel();
+                this.core.initialize(this.coreConfig,[channel, onlineChannel]);
                 this.core.addNotificationListener({
                     eventsDiscarded: (evts, reason) => {
                         this.evtDiscard += 1;
@@ -101,8 +102,9 @@ export class ChannelTests extends AITestClass {
             name: "Channel: Init from core indexed db",
             test: () => {
                 let channel = new OfflineChannel();
+                let onlineChannel = new TestChannel();
                 this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as IOfflineChannelConfiguration};
-                this.core.initialize(this.coreConfig,[channel]);
+                this.core.initialize(this.coreConfig,[channel, onlineChannel]);
                 this.core.addNotificationListener({
                     eventsDiscarded: (evts, reason) => {
                         this.evtDiscard += 1;
