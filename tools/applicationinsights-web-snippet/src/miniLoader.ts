@@ -206,7 +206,7 @@ declare var cfg:ISnippetConfig;
         ];
 
         var sender = window.fetch;
-        var endpointUrl = "https://js.monitor.azure.com/beta/ai.3.integrity.json";
+        var integrityUrl = "https://js.monitor.azure.com/beta/ai.3.integrity.json";
         
         let targetSrc = (aiConfig as any)["url"] || cfg.src;
         let targetType = "@" + (cfg.type || "gbl.min.js");
@@ -215,7 +215,7 @@ declare var cfg:ISnippetConfig;
 
         if (targetSrc) {
             if (sender && !cfg.useXhr) {
-                sender(endpointUrl, { method: strGetMethod, mode: "cors" })
+                sender(integrityUrl, { method: strGetMethod, mode: "cors" })
                     .then(response => response.json())
                     .then(json => {
                         file = json.ext[targetType].file;
@@ -226,7 +226,7 @@ declare var cfg:ISnippetConfig;
                     .catch(error => console.error("Error loading JSON:", error));
             } else if (XMLHttpRequest) {
                 var xhr = new XMLHttpRequest();
-                xhr.open(strGetMethod, endpointUrl);
+                xhr.open(strGetMethod, integrityUrl);
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === XMLHttpRequest.DONE) {
                         if (xhr.status === 200) {
