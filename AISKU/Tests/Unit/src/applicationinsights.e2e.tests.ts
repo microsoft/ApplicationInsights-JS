@@ -286,12 +286,47 @@ export class ApplicationInsightsTests extends AITestClass {
                 extConfig = ai.config.extensionConfig["AppInsightsCfgSyncPlugin"];
                 Assert.equal(extConfig.scheduleFetchTimeout, expectedTimeout, "timeout should be changes dynamically");
                 ai.unload(false);
+                if (ai && ai["dependencies"]) {
+                    ai["dependencies"].teardown();
+                }
             }
         });
 
         this.testCase({
             name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized with endpoint url",
-            useFakeTimers: true,
+            test: () => {
+                // if fake timer is turned on, session data will return 0 and will throw sesson not renew error
+                let offlineChannel = new OfflineChannel();
+                let config = {
+                    instrumentationKey: "testIKey",
+                    endpointUrl: "testUrl",
+                    extensionConfig:{
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            cfgUrl: ""
+                        }
+
+                    },
+                    extensions:[offlineChannel]
+                } as IConfiguration & IConfig;
+                let ai = new ApplicationInsights({config: config});
+                ai.loadAppInsights();
+
+                let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
+                let offlineChannelPlugin = ai.getPlugin("OfflineChannel");
+                Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                Assert.equal(offlineChannelPlugin.plugin.isInitialized(), true, "offline channel is initialized");
+
+                ai.unload(false);
+                if (ai && ai["dependencies"]) {
+                    ai["dependencies"].teardown();
+                }
+                offlineChannel.teardown();
+                
+            }
+        });
+
+        this.testCase({
+            name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized with channels",
             test: () => {
                 let offlineChannel = new OfflineChannel();
                 let config = {
@@ -309,17 +344,21 @@ export class ApplicationInsightsTests extends AITestClass {
                 ai.loadAppInsights();
 
                 let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
-                let offflineChannelPlugin = ai.getPlugin("OfflineChannel");
+                let offlineChannelPlugin = ai.getPlugin("OfflineChannel");
                 Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                Assert.equal(offflineChannelPlugin.plugin.isInitialized(), true, "offline channel is initialized");
+                Assert.equal(offlineChannelPlugin.plugin.isInitialized(), true, "offline channel is initialized");
 
                 ai.unload(false);
+                if (ai && ai["dependencies"]) {
+                    ai["dependencies"].teardown();
+                }
+                offlineChannel.teardown();
+                
             }
         });
 
         this.testCase({
             name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized without endpoint url",
-            useFakeTimers: true,
             test: () => {
                 let offlineChannel = new OfflineChannel();
                 let config = {
@@ -341,6 +380,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(offflineChannelPlugin.plugin.isInitialized(), true, "offline channel is initialized");
 
                 ai.unload(false);
+                if (ai && ai["dependencies"]) {
+                    ai["dependencies"].teardown();
+                }
+                offlineChannel.teardown();
             }
         });
     }

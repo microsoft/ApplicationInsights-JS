@@ -887,10 +887,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
                 let offlineChannelFound: boolean = false;
-                let offflineChannelPlugin = _getPlugin(DefaultOfflineIdentifier);
-                if (offflineChannelPlugin) {
-                    offlineChannelFound = true;
-                }
+               
             
                 _pluginChain = null;
                 _pluginVersionString = null;
@@ -916,6 +913,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 arrAppend(cfgExtensions, _extensions);
 
                 let rootCtx = _createTelCtx();
+
+                let offflineChannelPlugin = _getPlugin(DefaultOfflineIdentifier);
+                if (offflineChannelPlugin) {
+                    offlineChannelFound = true;
+                }
                 
                 // Initializing the channels first
                 if (_channels && _channels.length > 0) {

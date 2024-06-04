@@ -265,7 +265,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _self.onunloadFlush();
                 _offlineListener && runTargetUnload(_offlineListener, false);
-                let handler = _urlCfg.batchHandler;
+                let handler = _urlCfg && _urlCfg.batchHandler;
                 handler && handler.teardown();
                 _clearScheduledTimer();
                 _initDefaults();
