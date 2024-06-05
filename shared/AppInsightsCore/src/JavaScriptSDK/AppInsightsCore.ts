@@ -885,7 +885,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             function _initPluginChain(updateState: ITelemetryUpdateState | null) {
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
-               
             
                 _pluginChain = null;
                 _pluginVersionString = null;
@@ -912,10 +911,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 let rootCtx = _createTelCtx();
 
-                
                 // Initializing the channels first
                 if (_channels && _channels.length > 0) {
-                    initializePlugins(rootCtx.createNew(_channels), allExtensions); // first time, offline will do lazy init
+                    initializePlugins(rootCtx.createNew(_channels), allExtensions);
                 }
 
                 // Now initialize the normal extensions (explicitly not including the _channels as this can cause duplicate initialization)
