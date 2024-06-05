@@ -13,7 +13,7 @@ export function runTests() {
     new OfflineWebProviderTests().registerTests();
     new OfflineDbProviderTests().registerTests();
     new OfflineInMemoryBatchTests().registerTests();
-    new OfflineBatchHandlerTests().registerTests();
     new ChannelTests().registerTests();
+    new OfflineBatchHandlerTests().registerTests();
     new Offlinetimer().registerTests();
 }
