@@ -340,6 +340,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
         this.testCase({
             name: "Initialization: channels adds and initialize with offline channel with channel config",
+            useFakeTimers: true,
             test: () => {
                 let offlineChannelPlugin = new TestOfflineChannelPlugin();
 
@@ -350,6 +351,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 appInsightsCore.initialize(
                     { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[offlineChannelPlugin, channelPlugin]] },
                     []);
+                this.clock.tick(1);
 
                 const channelQueues = appInsightsCore.getChannels();
                 Assert.equal(2, channelQueues.length, "Total number of channel queues");
@@ -360,6 +362,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         
         this.testCase({
             name: "Initialization: channels adds and initialize with offline channel with extension config",
+            useFakeTimers: true,
             test: () => {
                 let offlineChannelPlugin = new TestOfflineChannelPlugin();
 
@@ -372,6 +375,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     [offlineChannelPlugin]);
 
                 const channelQueues = appInsightsCore.getChannels();
+                this.clock.tick(1);
                 Assert.equal(2, channelQueues.length, "Total number of channel queues");
                 Assert.equal(offlineChannelPlugin._isInit, true, "offline channel is initialized");
             }
@@ -1273,12 +1277,12 @@ class TestOfflineChannelPlugin implements IChannelControls {
     }
 
     public initialize = (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: any) => {
-        let plugin = core.getPlugin<IChannelControls>("Sender");
-        let channel = plugin && plugin.plugin;
-        if (channel && channel.isInitialized()) {
-            this._isInit = true;
-
-        }
+     
+        setTimeout(() => {
+            let plugin = core.getPlugin<IChannelControls>("Sender");
+            let channel = plugin && plugin.plugin;
+            this._isInit = channel && channel.isInitialized();
+        }, 0);
         
     }
 

@@ -115,7 +115,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     _base.initialize(coreConfig, core, extensions);
 
                     //_hasInitialized = true;
-                    _isLazyInit = true; // to be able to re-initialized
+                    _isLazyInit = true;
 
                     _diagLogger = _self.diagLog();
                     let evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineSender"), core.evtNamespace && core.evtNamespace());
@@ -124,29 +124,35 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     _notificationManager = core.getNotifyMgr();
                 }
                 try {
-                    let _dependencyPlugin = _getDependencyPlugin(coreConfig, core);
-                    if (!_hasInitialized && _dependencyPlugin && !!_dependencyPlugin.isInitialized()) {
-                        _hasInitialized = true;
-                        _createUrlConfig(coreConfig, core, extensions, pluginChain);
-                        let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
-                        _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
-                        if (_sender) {
-                            _senderInst = _sender.getXhrInst();
-                            _offlineListener.addListener((val)=> {
-                                if (!val.isOnline) {
-                                    _sendNextBatchTimer && _sendNextBatchTimer.cancel();
-                                } else {
-                                    _setSendNextTimer();
-                                }
-        
-                            });
-                       
-                            // need it for first time to confirm if there are any events
-                            _setSendNextTimer();
-
+                    setTimeout(() => {
+                      
+                        let _dependencyPlugin = _getDependencyPlugin(coreConfig, core);
+                        // make sure that online sender is initialized
+                        if (!_hasInitialized && _dependencyPlugin && _dependencyPlugin.isInitialized()) {
+                            _hasInitialized = true;
+                            _createUrlConfig(coreConfig, core, extensions, pluginChain);
+                            let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
+                            _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
+                            if (_sender) {
+                                _senderInst = _sender.getXhrInst();
+                                _offlineListener.addListener((val)=> {
+                                    if (!val.isOnline) {
+                                        _sendNextBatchTimer && _sendNextBatchTimer.cancel();
+                                    } else {
+                                        _setSendNextTimer();
+                                    }
+            
+                                });
+                           
+                                // need it for first time to confirm if there are any events
+                                _setSendNextTimer();
+    
+                            }
+    
                         }
-
-                    }
+                        
+                    }, 0);
+                    
 
                 } catch (e) {
                     // eslint-disable-next-line no-empty
