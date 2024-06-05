@@ -59,7 +59,6 @@ const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";
 const strSdkNotInitialized = "SDK is not initialized";
-const DefaultOfflineIdentifier = "OfflineChannel";
 // const strPluginUnloadFailed = "Failed to unload plugin";
 
 /**
@@ -913,10 +912,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 let rootCtx = _createTelCtx();
 
+                
                 // Initializing the channels first
                 if (_channels && _channels.length > 0) {
-                    let ctx = rootCtx.createNew(_channels);
-                    initializePlugins(ctx, allExtensions); // first time, offline will do lazy init
+                    initializePlugins(rootCtx.createNew(_channels), allExtensions); // first time, offline will do lazy init
                 }
 
                 // Now initialize the normal extensions (explicitly not including the _channels as this can cause duplicate initialization)
