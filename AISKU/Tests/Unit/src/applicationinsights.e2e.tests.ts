@@ -294,7 +294,9 @@ export class ApplicationInsightsTests extends AITestClass {
 
         this.testCase({
             name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized with endpoint url",
+            useFakeTimers: true,
             test: () => {
+                this.clock.tick(1);
                 // if fake timer is turned on, session data will return 0 and will throw sesson not renew error
                 let offlineChannel = new OfflineChannel();
                 let config = {
@@ -310,11 +312,14 @@ export class ApplicationInsightsTests extends AITestClass {
                 } as IConfiguration & IConfig;
                 let ai = new ApplicationInsights({config: config});
                 ai.loadAppInsights();
+                this.clock.tick(1);
 
                 let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
-                let offlineChannelPlugin = ai.getPlugin("OfflineChannel");
+                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
                 Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                Assert.equal(offlineChannelPlugin.plugin.isInitialized(), true, "offline channel is initialized");
+                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                Assert.ok(urlConfig, "offline url config is initialized");
 
                 ai.unload(false);
                 if (ai && ai["dependencies"]) {
@@ -327,7 +332,9 @@ export class ApplicationInsightsTests extends AITestClass {
 
         this.testCase({
             name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized with channels",
+            useFakeTimers: true,
             test: () => {
+                this.clock.tick(1);
                 let offlineChannel = new OfflineChannel();
                 let config = {
                     instrumentationKey: "testIKey",
@@ -342,11 +349,15 @@ export class ApplicationInsightsTests extends AITestClass {
                 } as IConfiguration & IConfig;
                 let ai = new ApplicationInsights({config: config});
                 ai.loadAppInsights();
+                this.clock.tick(1);
 
                 let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
-                let offlineChannelPlugin = ai.getPlugin("OfflineChannel");
+                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
                 Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                Assert.equal(offlineChannelPlugin.plugin.isInitialized(), true, "offline channel is initialized");
+                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                Assert.ok(urlConfig, "offline url config is initialized");
+             
 
                 ai.unload(false);
                 if (ai && ai["dependencies"]) {
@@ -359,7 +370,9 @@ export class ApplicationInsightsTests extends AITestClass {
 
         this.testCase({
             name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized without endpoint url",
+            useFakeTimers: true,
             test: () => {
+                this.clock.tick(1);
                 let offlineChannel = new OfflineChannel();
                 let config = {
                     instrumentationKey: "testIKey",
@@ -373,11 +386,14 @@ export class ApplicationInsightsTests extends AITestClass {
                 } as IConfiguration & IConfig;
                 let ai = new ApplicationInsights({config: config});
                 ai.loadAppInsights();
+                this.clock.tick(1);
 
                 let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
-                let offflineChannelPlugin = ai.getPlugin("OfflineChannel");
+                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
                 Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                Assert.equal(offflineChannelPlugin.plugin.isInitialized(), true, "offline channel is initialized");
+                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                Assert.ok(urlConfig, "offline url config is initialized");
 
                 ai.unload(false);
                 if (ai && ai["dependencies"]) {
