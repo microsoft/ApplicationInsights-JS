@@ -6,6 +6,7 @@ import {
     BreezeChannelIdentifier, EventPersistence, IConfig, IOfflineListener, createOfflineListener
 } from "@microsoft/applicationinsights-common";
 import {
+    ActiveStatus,
     BaseTelemetryPlugin, EventsDiscardedReason, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger,
     IInternalOfflineSupport, INotificationListener, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, SendRequestReason,
@@ -553,9 +554,13 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             function _createUrlConfig(coreConfig: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
 
                 _self._addHook(onConfigChange(coreConfig, (details) => {
-                    if (!isString(coreConfig.instrumentationKey)) {
+                    if (!isString(coreConfig.instrumentationKey) || (core.activeStatus && core.activeStatus() === ActiveStatus.PENDING )) {
                         // if ikey is promise, delay initialization
+                        _self.pause();
                         return;
+                    }
+                    if (_paused) {
+                        _self.resume();
                     }
                     let storageConfig: IOfflineChannelConfiguration = null;
                     let theConfig = details.cfg;

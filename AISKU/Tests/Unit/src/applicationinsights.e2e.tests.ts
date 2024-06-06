@@ -295,8 +295,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 let activeStatus = core.activeStatus && core.activeStatus();
             
                 if (activeStatus === ActiveStatus.ACTIVE) {
-                    core.config.instrumentationKey = "testIkey";
-                    core.config.endpointUrl = "testUrl";
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
                     return true;
                 }
                 return false;
@@ -335,8 +335,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 let activeStatus = core.activeStatus && core.activeStatus();
             
                 if (activeStatus === ActiveStatus.ACTIVE) {
-                    core.config.instrumentationKey = "testIkey";
-                    core.config.endpointUrl = "testUrl";
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
                     return true;
                 }
                 return false;
@@ -388,8 +388,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 let activeStatus = core.activeStatus && core.activeStatus();
             
                 if (activeStatus === ActiveStatus.ACTIVE) {
-                    core.config.instrumentationKey = "testIkey";
-                    core.config.endpointUrl = "testUrl";
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
                     return true;
                 }
                 return false;
