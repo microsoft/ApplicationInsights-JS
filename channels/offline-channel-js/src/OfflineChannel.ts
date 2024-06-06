@@ -249,6 +249,11 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
             };
 
+            _self.sendNextBatch = () => {
+                // TODO: add callback function
+                return _setSendNextTimer();
+            };
+
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _self.onunloadFlush();
                 _offlineListener && runTargetUnload(_offlineListener, false);
@@ -747,6 +752,13 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
      * Will not flush if the Send has been paused.
      */
     public onunloadFlush() {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Flush the next stored event batch
+     */
+    public sendNextBatch() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
