@@ -110,12 +110,12 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
             _self.initialize = (coreConfig: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) => {
              
-                if (!_hasInitialized && !_isLazyInit) {
+                if (!_hasInitialized) {
 
                     _base.initialize(coreConfig, core, extensions);
 
-                    //_hasInitialized = true;
-                    _isLazyInit = true;
+                    // keep setting hasInitialized status here to avoid re-initialize
+                    _hasInitialized = true;
 
                     _diagLogger = _self.diagLog();
                     let evtNamespace = mergeEvtNamespace(createUniqueNamespace("OfflineSender"), core.evtNamespace && core.evtNamespace());
@@ -123,13 +123,13 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     _taskScheduler = createTaskScheduler(createAsyncPromise, "offline channel");
                     _notificationManager = core.getNotifyMgr();
                 }
-                try {
-                    setTimeout(() => {
-                      
+                // TODO: add refresh inside timer until dependency plugin is initialized
+                scheduleTimeout(() => {
+                    try {
                         let _dependencyPlugin = _getDependencyPlugin(coreConfig, core);
                         // make sure that online sender is initialized
-                        if (!_hasInitialized && _dependencyPlugin && _dependencyPlugin.isInitialized()) {
-                            _hasInitialized = true;
+                        if (!_isLazyInit  && _dependencyPlugin && _dependencyPlugin.isInitialized()) {
+                            _isLazyInit = true;
                             _createUrlConfig(coreConfig, core, extensions, pluginChain);
                             let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
                             _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
@@ -143,22 +143,20 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                     }
             
                                 });
-                           
+                            
                                 // need it for first time to confirm if there are any events
                                 _setSendNextTimer();
     
                             }
     
                         }
+                    }  catch (e) {
+                        // eslint-disable-next-line no-empty
+
+                    }
                         
-                    }, 0);
-                    
+                }, 0);
 
-                } catch (e) {
-                    // eslint-disable-next-line no-empty
-
-                }
-               
             };
 
             _self.processTelemetry = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
@@ -590,21 +588,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         return;
                     }
                     
-                    // if (channelIds && channelIds.length) {
-                    //     arrForEach(channelIds, (id) => {
-                    //         let plugin = core.getPlugin<IChannelControls>(id);
-                    //         let channel = plugin && plugin.plugin;
-                    //         if (channel && !!channel.isInitialized()) {
-                    //             _primaryChannelId = id;
-                    //             if (!!channel.isInitialized() && isFunction(channel.getOfflineSupport)) {
-                    //                 _offineSupport = channel.getOfflineSupport();
-                    //                 onlineUrl = isFunction(_offineSupport && _offineSupport.getUrl) && _offineSupport.getUrl();
-                    //             }
-                    //             return;
-                    //         }
-                            
-                    //     });
-                    // }
                     _overrideIkey = storageConfig.overrideInstrumentationKey;
 
                     let urlConfig: IUrlLocalStorageConfig = _urlCfg;
