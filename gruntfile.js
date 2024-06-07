@@ -778,7 +778,7 @@ module.exports = function (grunt) {
             },
             'string-replace': {
                 'generate-expanded-JS': expandJS("snippet"),
-                'generate-expanded-MiniJS': expandJS("miniLoader"),
+                'generate-expanded-MiniJS': expandJS("integrityLoader"),
                 'generate-expanded-min': expandMin(),
                 'generate-snippet-ikey': generateNewSnippet(false),
                 'generate-snippet-connString': generateNewSnippet(true)

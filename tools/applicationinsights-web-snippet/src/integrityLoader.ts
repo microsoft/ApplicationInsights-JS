@@ -208,13 +208,14 @@ declare var cfg:ISnippetConfig;
         var sender = window.fetch;
         var integrityUrl = "https://js.monitor.azure.com/beta/ai.3.integrity.json";
         
-        let targetSrc = (aiConfig as any)["url"] || cfg.src;
+        let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
         let targetType = "@" + (cfg.type || "gbl.min.js");
         let file = "ai.3.gbl.min.js"; // Default to 3 if we can't get the version
         var integrity = null;
 
         if (targetSrc) {
-            if (sender && !cfg.useXhr) {
+            if (sender && !cfg.useXhr) { 
+                // retrieve integrity file using fetch
                 sender(integrityUrl, { method: strGetMethod, mode: "cors" })
                     .then(response => response.json())
                     .then(json => {
@@ -299,6 +300,7 @@ declare var cfg:ISnippetConfig;
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
                 (scriptElement as any)["src"] = src;
                 if (integrity){
+                    // Set the integrity attribute to the script tag if integrity is provided
                     (scriptElement as any).integrity = integrity;
                 }
                 // Allocate Cross origin only if defined and available
@@ -331,6 +333,7 @@ declare var cfg:ISnippetConfig;
             }
             _createScript(targetSrc);
         }
+    
         // capture initial cookie
         try {
             appInsights.cookie = doc.cookie;

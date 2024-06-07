@@ -202,10 +202,10 @@ declare var cfg:ISnippetConfig;
             "js2.cdn.applicationinsights.io",
             "js2.cdn.monitor.azure.com",
             "az416426.vo.msecnd.net" // this domain is supported but not recommended
-        ]
+        ];
     
         // Assigning these to local variables allows them to be minified to save space:
-        let targetSrc : string = (aiConfig as any)["url"] || cfg.src
+        let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
         if (targetSrc) {
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
                 // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
