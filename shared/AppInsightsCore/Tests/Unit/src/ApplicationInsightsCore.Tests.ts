@@ -349,7 +349,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[offlineChannelPlugin, channelPlugin]] },
+                    { instrumentationKey: "testIkey", channels: [[offlineChannelPlugin, channelPlugin]] },
                     []);
                 this.clock.tick(1);
 
@@ -371,7 +371,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin]] },
+                    { instrumentationKey: "testIkey", channels: [[channelPlugin]] },
                     [offlineChannelPlugin]);
 
                 const channelQueues = appInsightsCore.getChannels();

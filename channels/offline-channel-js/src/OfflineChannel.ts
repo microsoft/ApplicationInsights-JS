@@ -133,21 +133,18 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             _createUrlConfig(coreConfig, core, extensions, pluginChain);
                             let ctx = _getCoreItemCtx(coreConfig, core, extensions, pluginChain);
                             _sender.initialize(coreConfig, core, ctx, _diagLogger, _primaryChannelId, _self._unloadHooks);
-                            if (_sender) {
-                                _senderInst = _sender.getXhrInst();
-                                _offlineListener.addListener((val)=> {
-                                    if (!val.isOnline) {
-                                        _sendNextBatchTimer && _sendNextBatchTimer.cancel();
-                                    } else {
-                                        _setSendNextTimer();
-                                    }
-            
-                                });
-                            
-                                // need it for first time to confirm if there are any events
-                                _setSendNextTimer();
-    
-                            }
+                            _senderInst = _sender.getXhrInst();
+                            _offlineListener.addListener((val)=> {
+                                if (!val.isOnline) {
+                                    _sendNextBatchTimer && _sendNextBatchTimer.cancel();
+                                } else {
+                                    _setSendNextTimer();
+                                }
+        
+                            });
+                        
+                            // need it for first time to confirm if there are any events
+                            _setSendNextTimer();
     
                         }
                     }  catch (e) {
@@ -263,7 +260,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
             _self.sendNextBatch = () => {
                 // TODO: add callback function
-                return _setSendNextTimer();
+                return _offineSupport && _setSendNextTimer();
             };
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
