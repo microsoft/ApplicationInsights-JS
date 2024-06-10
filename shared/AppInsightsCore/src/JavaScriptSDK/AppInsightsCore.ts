@@ -910,7 +910,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 arrAppend(cfgExtensions, _extensions);
 
                 let rootCtx = _createTelCtx();
-                
+
                 // Initializing the channels first
                 if (_channels && _channels.length > 0) {
                     initializePlugins(rootCtx.createNew(_channels), allExtensions);
