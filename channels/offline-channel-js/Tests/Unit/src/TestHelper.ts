@@ -6,6 +6,9 @@ export class TestChannel extends BaseTelemetryPlugin implements IChannelControls
     public priority: number = 1001;
     public endpoint: string = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
     public isIdle: boolean = true;
+    public isInitialized = () => {
+        return true;
+    }
 
     lastEventAdded: ITelemetryItem;
     eventsAdded: ITelemetryItem[] = [];
