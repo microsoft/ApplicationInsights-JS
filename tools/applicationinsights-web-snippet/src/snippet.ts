@@ -26,6 +26,7 @@ declare var cfg:ISnippetConfig;
     let strCrossOrigin = "crossOrigin";
 
     let strPostMethod = "POST";
+    let strGetMethod = "GET";
     let sdkInstanceName = "appInsightsSDK";         // required for Initialization to find the current instance
     let aiName = cfg.name || "appInsights";  // provide non default instance name through snipConfig name value
     if (cfg.name || win[sdkInstanceName]) {
@@ -203,10 +204,57 @@ declare var cfg:ISnippetConfig;
             "js2.cdn.monitor.azure.com",
             "az416426.vo.msecnd.net" // this domain is supported but not recommended
         ];
-    
-        // Assigning these to local variables allows them to be minified to save space:
+
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
-        if (targetSrc) {
+        var integrityUrl = targetSrc.replace(/\/scripts\/b\/ai\.(\d+\.\d+(\.\d+)?)\.\w+\.js$/, '/beta/ai.$1.integrity.json');
+        var filename = (targetSrc.match(/ai.*?js/) || [])[0]; // if filename not found, the original targetSrc will be used
+        var targetType = "@" + (targetSrc.match(/\/ai\.3\.(.+)/) || [])[0];
+
+        var sender = window.fetch;
+        var integrity: string = null;
+        var currentVersion = "3";
+
+        if (filename) {
+            if (sender && !cfg.useXhr) { 
+                // retrieve integrity file using fetch
+                sender(integrityUrl, { method: strGetMethod, mode: "cors" })
+                    .then(response => response.json())
+                    .then(json => {
+                        currentVersion = json.version;
+                        integrity = json.ext[targetType].integrity;
+                        targetSrc = targetSrc.replace(/(?<=\/ai\.)\d+(\.\d+){0,2}/, currentVersion);
+                        setScript(targetSrc, integrity);
+                    })
+                    .catch(error => {
+                        console.error("Error loading JSON:", error);
+                        setScript(targetSrc, integrity); // Fallback to original behavior
+                    });
+            } else if (XMLHttpRequest) {
+                var xhr = new XMLHttpRequest();
+                xhr.open(strGetMethod, integrityUrl);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        if (xhr.status === 200) {
+                            var json = JSON.parse(xhr.responseText);
+                            currentVersion = json.version;
+                            integrity = json.ext[targetType].integrity;
+                            targetSrc = targetSrc.replace(/(?<=\/ai\.)\d+(\.\d+){0,2}/, currentVersion);
+                            setScript(targetSrc, integrity);
+                        } else {
+                            console.error("Error loading JSON:", xhr.statusText);
+                            setScript(targetSrc, integrity); // Fallback to original behavior
+                        }
+                    }
+                };
+                xhr.send();
+            }
+        } else if (targetSrc){
+            setScript(targetSrc, integrity); // Fallback to original behavior
+        }
+
+      
+        
+        function setScript(targetSrc: string, integrity: string | null) {
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
                 // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
                 targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {
@@ -258,6 +306,10 @@ declare var cfg:ISnippetConfig;
             const _createScript = (src: string) => {
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
                 (scriptElement as any)["src"] = src;
+                if (integrity){
+                    // Set the integrity attribute to the script tag if integrity is provided
+                    (scriptElement as any).integrity = integrity;
+                }
                 // Allocate Cross origin only if defined and available
                 let crossOrigin = cfg[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {
