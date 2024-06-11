@@ -1,11 +1,12 @@
-import { AITestClass } from "@microsoft/ai-test-framework";
+import { AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
 import { IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus } from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
+import { createAsyncResolvedPromise } from "@nevware21/ts-async";
 
 
 
@@ -161,6 +162,39 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal("https://dc.services.visualstudio.com/v2/track", this._sender._senderConfig.endpointUrl, "Channel default endpointUrl config is set");
                 QUnit.assert.equal(false,  this._sender._senderConfig.emitLineDelimitedJson, "Channel default emitLineDelimitedJson config is set");
             }
+        });
+
+        this.testCaseAsync({
+            name: "Channel Init: init with promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                let core = new AppInsightsCore();
+                let ikeyPromise = createAsyncResolvedPromise("testIkey");
+                let urlPromise = createAsyncResolvedPromise("testUrl");
+                let coreConfig = {
+                    instrumentationKey: ikeyPromise,
+                    endpointUrl: urlPromise,
+                    extensionConfig: {}
+                }
+                core.initialize(coreConfig, [this._sender]);
+        
+                let status = core.activeStatus && core.activeStatus();
+                QUnit.assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._sender.core;
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    QUnit.assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    QUnit.assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
         });
 
         this.testCase({

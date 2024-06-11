@@ -277,14 +277,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         // waiting for core promises to be resolved
                         // NOTE: if active status is set to pending, stop sending, clear timer here
                         _self.pause();
-                        return;
+                    } else if (core.activeStatus() === ActiveStatus.ACTIVE) {
+                        // core status changed from pending to other status
+                        _self.resume();
+
                     }
 
-                    // core status changed from pending to other status
-                    if (_paused) {
-                        _self.resume();
-                    }
-                   
                     
 
                     // Only update the endpoint if the original config !== the current config
