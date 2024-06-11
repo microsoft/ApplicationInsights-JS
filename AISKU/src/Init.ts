@@ -68,6 +68,9 @@ try {
     if (typeof window !== strUndefined) {
         var _window = window;
         aiName = _window["appInsightsSDK"] || "appInsights";
+        if (document.currentScript) {
+            aiName = document.currentScript.getAttribute("data-ai-name") || aiName;
+        }
         if (typeof JSON !== strUndefined) {
             // get snippet or initialize to an empty object
 
