@@ -7,7 +7,7 @@ export class AISKULightSizeCheck extends AITestClass {
     private readonly MAX_RAW_DEFLATE_SIZE = 37;
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 37;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web-basic.min.js";
-    private readonly currentVer = "3.2.1";
+    private readonly currentVer = "3.2.2";
     private readonly prodFilePath = `../browser/es5/aib.${this.currentVer[0]}.min.js`;
 
     public testInitialize() {

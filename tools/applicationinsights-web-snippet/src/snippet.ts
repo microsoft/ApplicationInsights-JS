@@ -258,6 +258,7 @@ declare var cfg:ISnippetConfig;
             const _createScript = (src: string) => {
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
                 (scriptElement as any)["src"] = src;
+                (scriptElement as any).setAttribute("data-ai-name", aiName);
                 // Allocate Cross origin only if defined and available
                 let crossOrigin = cfg[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {

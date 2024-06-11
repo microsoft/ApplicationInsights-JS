@@ -345,6 +345,49 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Initialization: channels adds and initialize with offline channel with channel config",
+            useFakeTimers: true,
+            test: () => {
+                let offlineChannelPlugin = new TestOfflineChannelPlugin();
+
+                let channelPlugin = new TestChannelPlugin();
+              
+
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize(
+                    { instrumentationKey: "testIkey", channels: [[offlineChannelPlugin, channelPlugin]] },
+                    []);
+                this.clock.tick(1);
+
+                const channelQueues = appInsightsCore.getChannels();
+                Assert.equal(2, channelQueues.length, "Total number of channel queues");
+                Assert.equal(offlineChannelPlugin._isInit, true, "offline channel is initialized");
+            }
+        });
+
+        
+        this.testCase({
+            name: "Initialization: channels adds and initialize with offline channel with extension config",
+            useFakeTimers: true,
+            test: () => {
+                let offlineChannelPlugin = new TestOfflineChannelPlugin();
+
+                let channelPlugin = new TestChannelPlugin();
+              
+
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize(
+                    { instrumentationKey: "testIkey", channels: [[channelPlugin]] },
+                    [offlineChannelPlugin]);
+
+                const channelQueues = appInsightsCore.getChannels();
+                this.clock.tick(1);
+                Assert.equal(2, channelQueues.length, "Total number of channel queues");
+                Assert.equal(offlineChannelPlugin._isInit, true, "offline channel is initialized");
+            }
+        });
+
+        this.testCase({
             name: 'ApplicationInsightsCore: track adds required default fields if missing',
             useFakeTimers: true,
             test: () => {
@@ -1898,3 +1941,143 @@ class TrackPlugin implements IPlugin {
         this._nextPlugin?.processTelemetry(evt);
     }
 }
+
+class TestOfflineChannelPlugin implements IChannelControls {
+    public _nextPlugin: ITelemetryPlugin;
+    public isFlushInvoked = false;
+    public isUnloadInvoked = false;
+    public isTearDownInvoked = false;
+    public isResumeInvoked = false;
+    public isPauseInvoked = false;
+    public version: string = "1.0.33-Beta";
+
+    public processTelemetry;
+
+    public identifier = "OfflineChannel";
+
+    public priority: number = 1000;
+    public events: ITelemetryItem[] = [];
+
+    public _isInit: boolean = false;
+  
+
+    constructor() {
+        this.processTelemetry = this._processTelemetry.bind(this);
+    }
+    public pause(): void {
+        this.isPauseInvoked = true;
+    }
+
+    public resume(): void {
+        this.isResumeInvoked = true;
+    }
+
+    public teardown(): void {
+        this.isTearDownInvoked = true;
+    }
+
+    flush(async?: boolean, callBack?: () => void): void {
+        this.isFlushInvoked = true;
+        if (callBack) {
+            callBack();
+        }
+    }
+
+    onunloadFlush(async?: boolean) {
+        this.isUnloadInvoked = true;
+    }
+
+    setNextPlugin(next: ITelemetryPlugin) {
+        this._nextPlugin = next;
+    }
+
+    public initialize = (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: any) => {
+     
+        setTimeout(() => {
+            let plugin = core.getPlugin<IChannelControls>("Sender");
+            let channel = plugin && plugin.plugin;
+            this._isInit = channel && channel.isInitialized();
+        }, 0);
+        
+    }
+
+    public isInitialized = () => {
+        return this._isInit;
+        
+    }
+
+    public _processTelemetry(env: ITelemetryItem) {
+        this.events.push(env);
+
+        // Just calling processTelemetry as this is the original design of the Plugins (as opposed to the newer processNext())
+        this._nextPlugin?.processTelemetry(env);
+    }
+
+}
+
+class TestChannelPlugin implements IChannelControls {
+    public _nextPlugin: ITelemetryPlugin;
+    public isFlushInvoked = false;
+    public isUnloadInvoked = false;
+    public isTearDownInvoked = false;
+    public isResumeInvoked = false;
+    public isPauseInvoked = false;
+    public version: string = "1.0.33-Beta";
+
+    public processTelemetry;
+
+    public identifier = "Sender";
+
+    public priority: number = 1001;
+    public events: ITelemetryItem[] = [];
+    public _isInitialized: boolean = false;
+
+    constructor() {
+        this.processTelemetry = this._processTelemetry.bind(this);
+    }
+    public pause(): void {
+        this.isPauseInvoked = true;
+    }
+
+    public resume(): void {
+        this.isResumeInvoked = true;
+    }
+
+    public teardown(): void {
+        this.isTearDownInvoked = true;
+    }
+
+    flush(async?: boolean, callBack?: () => void): void {
+        this.isFlushInvoked = true;
+        if (callBack) {
+            callBack();
+        }
+    }
+
+    onunloadFlush(async?: boolean) {
+        this.isUnloadInvoked = true;
+    }
+
+    setNextPlugin(next: ITelemetryPlugin) {
+        this._nextPlugin = next;
+    }
+
+    public initialize = (config: IConfiguration) => {
+        this._isInitialized = true
+    }
+
+    
+    public isInitialized = () => {
+        return  this._isInitialized
+        
+    }
+
+
+    public _processTelemetry(env: ITelemetryItem) {
+        this.events.push(env);
+
+        // Just calling processTelemetry as this is the original design of the Plugins (as opposed to the newer processNext())
+        this._nextPlugin?.processTelemetry(env);
+    }
+}
+
