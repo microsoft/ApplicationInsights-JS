@@ -6,8 +6,7 @@ async function getVersionFromPackageJson(packageJsonPath) {
         const data = await fsPromise.readFile(packageJsonPath, 'utf8');
         const packageJson = JSON.parse(data);
         if (packageJson && packageJson.version) {
-            // return packageJson.version;
-            return "3.2.1"
+            return packageJson.version;
         } else {
             throw new Error('No version found in package.json');
         }
