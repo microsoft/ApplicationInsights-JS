@@ -10,6 +10,7 @@
 - #2357 [Main][Task]28050373: Expose Offline Support SendNextBatch function
 - #2358 [Main][Task]27080650: Initialization Should Handle Offline Support Dependency
 - #2362 [Main]Publishing: Add support for Az Modules instead of AzureRM Modules
+- #2360 set script attribut to avoid race condition when multiple sdks are inited
 
 ## 3.2.1 (May 9th, 2024)
 
