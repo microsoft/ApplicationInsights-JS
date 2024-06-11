@@ -46,7 +46,34 @@ export interface ICorrelationConfig {
     /**
      * [Optional] Response and request headers to be excluded from AJAX & Fetch tracking data.
      * To override or discard the default, add an array with all headers to be excluded or 
-     * an empty array to the configuration. For example: ["Authorization", "X-API-Key", "WWW-Authenticate"]
+     * an empty array to the configuration. 
+     * 
+     * For example: `["Authorization", "X-API-Key", "WWW-Authenticate"]`
+     * 
+     * @example
+     * ```js
+     * import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+     * import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
+     * 
+     * const dependencyPlugin = new AjaxPlugin();
+     * const appInsights = new ApplicationInsights({
+     *     config: {
+     *         connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+     *         extensions: [dependencyPlugin],
+     *         extensionConfig: {
+     *             [dependencyPlugin.identifier]: {
+     *                 ignoreHeaders: [
+     *                     "Authorization",
+     *                     "X-API-Key",
+     *                     "WWW-Authenticate"
+     *                 ]
+     *             }
+     *         }
+     *     }
+     * });
+     * appInsights.loadAppInsights();
+     * appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+     * ```
      */
     ignoreHeaders?: string[];
 

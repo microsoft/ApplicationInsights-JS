@@ -34,7 +34,7 @@ const appInsights = new ApplicationInsights({
         connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
         extensions: [dependencyPlugin],
         extensionConfig: {
-            [DebugPlugin.identifier]: {
+            [dependencyPlugin.identifier]: {
                 ignoreHeaders:[
                     "Authorization",
                     "X-API-Key",
