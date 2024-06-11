@@ -39,6 +39,7 @@ function createDirectory(dirName) {
 
 async function main() {
     createDirectory("cdnFile");
+    console.log("created cdnFile directory")
     createDirectory("img");
     const versions = ["3.1.2", "3.1.1", "3.1.0", "3.0.9", "3.0.8", "3.0.7", 
     "3.0.6", "3.0.5", "3.0.4", "3.0.3", "3.0.2", "3.0.1", "3.0.0", "2.8.18", 
@@ -59,7 +60,7 @@ async function main() {
         try {
             const fileSize = Math.ceil((await fsPromise.stat(filename)).size / 1024);
             const minFileSize = Math.ceil((await fsPromise.stat(minFileName)).size / 1024);
-            const fileContent = await fsPromise.readFile(filename);
+            const fileContent = await fsPromise.readFile(minFileName);
             const gzippedContent = zlib.gzipSync(fileContent);
             const gzippedSize = Math.ceil(gzippedContent.length / 1024);    
             await generateSizeBadge(version + ".js", fileSize);

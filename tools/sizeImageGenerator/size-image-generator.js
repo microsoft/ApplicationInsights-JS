@@ -6,7 +6,8 @@ async function getVersionFromPackageJson(packageJsonPath) {
         const data = await fsPromise.readFile(packageJsonPath, 'utf8');
         const packageJson = JSON.parse(data);
         if (packageJson && packageJson.version) {
-            return packageJson.version;
+            // return packageJson.version;
+            return "3.2.1"
         } else {
             throw new Error('No version found in package.json');
         }
@@ -45,7 +46,7 @@ async function main() {
         const fileSize = Math.ceil((await fsPromise.stat(filename)).size / 1024);
         const minFileSize = Math.ceil((await fsPromise.stat(minFileName)).size / 1024);
 
-        const fileContent = await fsPromise.readFile(filename);
+        const fileContent = await fsPromise.readFile(minFileName);
         const gzippedContent = zlib.gzipSync(fileContent);
         const gzippedSize = Math.ceil(gzippedContent.length / 1024);
 
