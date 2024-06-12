@@ -206,23 +206,34 @@ declare var cfg:ISnippetConfig;
         ];
 
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
-        var integrityUrl = targetSrc.replace(/\/scripts\/b\/ai\.(\d+\.\d+(\.\d+)?)\.\w+\.js$/, '/beta/ai.$1.integrity.json');
-        var filename = (targetSrc.match(/ai.*?js/) || [])[0]; // if filename not found, the original targetSrc will be used
-        var targetType = "@" + (targetSrc.match(/\/ai\.3\.(.+)/) || [])[0];
+        console.log("targetSrc " + targetSrc);
 
+        var match = targetSrc.match(/^(https?:\/\/[^/]+)\/.*?\/ai\.(\d+(\.\d+){0,2})\.(.*?)$/);
+        console.log("match " + match);
+        var integrityUrl = match[1] + "/beta/ai." + match[2] + ".integrity.json";
+        console.log("integrityUrl " + integrityUrl);
+
+        // var filename = (targetSrc.match(/ai.*?js/) || [])[0]; // if filename not found, the original targetSrc will be used
+        // console.log("filename " + filename);
+        // var targetType = "@" + filename.replace(/^ai\.\d+(\.\d+)?(\.\d+)?\./, "");
+        var targetType = "@" + match[4];
+        console.log("targetType " + targetType);
+        
         var sender = window.fetch;
         var integrity: string = null;
         var currentVersion = "3";
-
-        if (filename) {
-            if (sender && !cfg.useXhr) { 
+        if (targetType) {
+            if (sender && !cfg.useXhr) {
                 // retrieve integrity file using fetch
                 sender(integrityUrl, { method: strGetMethod, mode: "cors" })
                     .then(response => response.json())
                     .then(json => {
                         currentVersion = json.version;
+                        console.log("currentVersion " + currentVersion);
                         integrity = json.ext[targetType].integrity;
+                        console.log("integrity " + integrity);
                         targetSrc = targetSrc.replace(/(?<=\/ai\.)\d+(\.\d+){0,2}/, currentVersion);
+                        console.log("new targetSrc " + targetSrc);
                         setScript(targetSrc, integrity);
                     })
                     .catch(error => {
@@ -255,6 +266,7 @@ declare var cfg:ISnippetConfig;
       
         
         function setScript(targetSrc: string, integrity: string | null) {
+            console.log("Loading " + targetSrc + " with integrity " + integrity);
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
                 // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
                 targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {

@@ -102,19 +102,19 @@ module.exports = function (grunt) {
         };
     }
 
-    function expandJS(srcFile) {
+    function expandJS() {
         var srcPath = "./tools/applicationinsights-web-snippet/build/output";
         return {
             files: [{
                 expand: true,
                 cwd: srcPath,
                 dest: "./tools/applicationinsights-web-snippet/build/output",
-                src: srcFile+".js"
+                src: "snippet.js"
             }],
             options: {
                 replacements: function() {
                
-                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/" + srcFile + ".js");
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.js");
                     var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
                     while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
                         snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
@@ -239,7 +239,7 @@ module.exports = function (grunt) {
     // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
     // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
     // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions=["3.2.1"];
+    const perfTestVersions=["3.2.2"];
 
     function buildConfig(modules) {
         var buildCmds = {
@@ -777,8 +777,7 @@ module.exports = function (grunt) {
                 }
             },
             'string-replace': {
-                'generate-expanded-JS': expandJS("snippet"),
-                'generate-expanded-MiniJS': expandJS("integrityLoader"),
+                'generate-expanded-JS': expandJS(),
                 'generate-expanded-min': expandMin(),
                 'generate-snippet-ikey': generateNewSnippet(false),
                 'generate-snippet-connString': generateNewSnippet(true)
@@ -918,7 +917,7 @@ module.exports = function (grunt) {
 
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
         grunt.registerTask("snippetCopy", ["copy:snippet"]);
-        grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "string-replace:generate-expanded-MiniJS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
+        grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString"]);
 
         grunt.registerTask("snippet-restore", restoreTasks("applicationinsights-web-snippet"));
         grunt.registerTask("websnippettests", tsTestActions("applicationinsights-web-snippet"));
