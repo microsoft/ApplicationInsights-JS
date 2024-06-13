@@ -6,7 +6,7 @@
     // dle: true, // Prevent the SDK from reporting load failure log
     crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
     // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
-    // integrity: false, // Custom optional value to specify whether add the integrity attribute to the script tag
+    // sri: false, // Custom optional value to specify whether fetching the snippet from integrity file and do integrity check 
     cfg: { // Application Insights Configuration
         connectionString: "YOUR_CONNECTION_STRING"
     }

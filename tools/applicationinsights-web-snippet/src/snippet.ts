@@ -155,7 +155,7 @@ declare var cfg:ISnippetConfig;
                         ver: 2
                     }
                 },
-                ver: 4.0,
+                ver: undefined,
                 seq: "1",
                 aiDataContract: undefined
             };
@@ -207,7 +207,7 @@ declare var cfg:ISnippetConfig;
 
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
         var match = targetSrc.match(/^(https?:\/\/[^/]+)\/.*?\/ai\.(\d+(\.\d+){0,2})\.(.*?)$/);
-        if (match.length === 5) {
+        if (match.length === 5 && cfg.sri) {
             var integrityUrl = match[1] + "/beta/ai." + match[2] + ".integrity.json";
             var targetType = "@" + match[4];
             var sender = window.fetch;

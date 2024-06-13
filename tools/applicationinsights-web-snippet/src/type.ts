@@ -16,7 +16,7 @@ export interface ISnippetConfig {
     cfg: IConfiguration;
     cr?: boolean; // cdn retry would be proceed if ture
     dle?: boolean; // Custom optional value to disable sdk load error to be sent
-    integrity?: boolean; // Custom optional value to specify whether add the integrity attribute to the script tag
+    sri?: boolean; // Custom optional value to specify whether fetching the snippet from integrity file and do integrity check
 }
 
 export interface Fields {
