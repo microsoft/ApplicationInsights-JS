@@ -2,6 +2,16 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.2.2 (June 11th, 2024)
+
+### Changelog
+
+- #2356 [Main][Task]27488189: Modify offline support enums for isolated mode
+- #2357 [Main][Task]28050373: Expose Offline Support SendNextBatch function
+- #2358 [Main][Task]27080650: Initialization Should Handle Offline Support Dependency
+- #2362 [Main]Publishing: Add support for Az Modules instead of AzureRM Modules
+- #2360 set script attribut to avoid race condition when multiple sdks are inited
+
 ## 3.2.1 (May 9th, 2024)
 
 ### Changelog
