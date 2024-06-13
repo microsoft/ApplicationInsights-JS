@@ -43,6 +43,8 @@ export class Offlinetimer extends AITestClass {
                 let channel = new OfflineChannel();
                 let onlineChannel = new TestChannel();
                 this.core.initialize(this.coreConfig,[channel, onlineChannel]);
+
+                this.clock.tick(1);
                 let offlineListener = channel.getOfflineListener() as any;
 
                 // online, processTelemetry is not called
@@ -153,6 +155,7 @@ export class Offlinetimer extends AITestClass {
                 let channel = new OfflineChannel();
                 let onlineChannel = new TestChannel();
                 this.core.initialize(this.coreConfig,[channel, onlineChannel]);
+                this.clock.tick(1);
                 let offlineListener = channel.getOfflineListener() as any;
 
                 // online, processTelemetry is not called

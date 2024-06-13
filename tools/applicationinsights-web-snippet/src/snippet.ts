@@ -306,6 +306,7 @@ declare var cfg:ISnippetConfig;
                     // Set the integrity attribute to the script tag if integrity is provided
                     (scriptElement as any).integrity = integrity;
                 }
+                (scriptElement as any).setAttribute("data-ai-name", aiName);
                 // Allocate Cross origin only if defined and available
                 let crossOrigin = cfg[strCrossOrigin];
                 if ((crossOrigin || crossOrigin === "") && scriptElement[strCrossOrigin] != strUndefined) {

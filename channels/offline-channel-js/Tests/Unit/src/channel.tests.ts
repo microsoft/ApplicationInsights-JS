@@ -60,9 +60,11 @@ export class ChannelTests extends AITestClass {
 
         this.testCase({
             name: "Channel: Init from core",
+            useFakeTimers: true,
             test: () => {
                 let channel = new OfflineChannel();
-                this.core.initialize(this.coreConfig,[channel]);
+                let onlineChannel = new TestChannel();
+                this.core.initialize(this.coreConfig,[channel, onlineChannel]);
                 this.core.addNotificationListener({
                     eventsDiscarded: (evts, reason) => {
                         this.evtDiscard += 1;
@@ -78,6 +80,8 @@ export class ChannelTests extends AITestClass {
                         this.batchDrop += 1;
                     }
                 });
+
+                this.clock.tick(1);
 
                 let offlineListener = channel.getOfflineListener() as any;
                 offlineListener.setOnlineState(1);
@@ -99,10 +103,12 @@ export class ChannelTests extends AITestClass {
         
         this.testCase({
             name: "Channel: Init from core indexed db",
+            useFakeTimers: true,
             test: () => {
                 let channel = new OfflineChannel();
+                let onlineChannel = new TestChannel();
                 this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as IOfflineChannelConfiguration};
-                this.core.initialize(this.coreConfig,[channel]);
+                this.core.initialize(this.coreConfig,[channel, onlineChannel]);
                 this.core.addNotificationListener({
                     eventsDiscarded: (evts, reason) => {
                         this.evtDiscard += 1;
@@ -118,7 +124,7 @@ export class ChannelTests extends AITestClass {
                         this.batchDrop += 1;
                     }
                 });
-              
+                this.clock.tick(1);
                 let offlineListener = channel.getOfflineListener() as any;
                 offlineListener.setOnlineState(1);
                 let evt = mockTelemetryItem();
@@ -171,6 +177,8 @@ export class ChannelTests extends AITestClass {
                 this.onDone(() => {
                     channel.teardown();
                 });
+
+                this.clock.tick(1);
                 let offlineListener = channel.getOfflineListener() as any;
                 offlineListener.setOnlineState(1);
                 let evt = mockTelemetryItem();
@@ -295,6 +303,8 @@ export class ChannelTests extends AITestClass {
                 let channel = new OfflineChannel();
                 this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.IndexedDb], inMemoMaxTime: 2000} as IOfflineChannelConfiguration};
                 channel.initialize(this.coreConfig, this.core,[]);
+
+                this.clock.tick(1);
                 let senderInst =  channel["_getDbgPlgTargets"]()[2];
                 let sender1 =  (payload: any, oncomplete: any, sync?: boolean) => {
                     oncomplete(200, {});
@@ -392,6 +402,8 @@ export class ChannelTests extends AITestClass {
                     }
                 });
 
+                this.clock.tick(1);
+
                 Assert.equal(this.evtDiscard, 0, "discard listener notification should not be called");
                 Assert.equal(this.evtStore, 0, "store listener notification should not be called");
                 Assert.equal(this.evtSent, 0, "sent listener notification should not be called");
@@ -460,6 +472,8 @@ export class ChannelTests extends AITestClass {
                         this.batchDrop += 1;
                     }
                 });
+
+                this.clock.tick(1);
                 let inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 this.sandbox.stub((inMemoBatch) as any, "addEvent").callsFake((evt) => {
                     return false;
@@ -517,6 +531,7 @@ export class ChannelTests extends AITestClass {
                         this.batchDrop += 1;
                     }
                 });
+                this.clock.tick(1);
 
                 let senderInst =  channel["_getDbgPlgTargets"]()[2];
                 let sender1 =  (payload: any, oncomplete: any, sync?: boolean) => {
@@ -581,6 +596,8 @@ export class ChannelTests extends AITestClass {
                 // make sure in memo time is long enough
                 this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.LocalStorage], inMemoMaxTime: 200000} as IOfflineChannelConfiguration};
                 this.core.initialize(this.coreConfig,[channel, sendChannel]);
+
+                this.clock.tick(1);
                 
                 let offlineListener = channel.getOfflineListener() as any;
                 offlineListener.setOnlineState(2);
