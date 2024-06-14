@@ -206,21 +206,20 @@ declare var cfg:ISnippetConfig;
         ];
 
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
-        var match = targetSrc.match(/^(https?:\/\/[^/]+)\/.*?\/ai\.(\d+(\.\d+){0,2})\.(.*?)$/);
-        if (match.length === 5 && cfg.sri) {
-            var integrityUrl = match[1] + "/beta/ai." + match[2] + ".integrity.json";
+        var match = targetSrc.match(/^(http[s]?:\/\/.*\/ai\.)(\d+(\.\d+){0,2})\.(([\w]+\.){0,2}js)$/);
+        console.log("mathc", match);
+        if (match.length === 6 && cfg.sri) {
+            var integrityUrl = match[1] + match[2] + ".integrity.json";
             var targetType = "@" + match[4];
             var sender = window.fetch;
             var integrity: string = null;
-            var currentVersion: string = "3";
             if (sender && !cfg.useXhr) {
                 // retrieve integrity file using fetch
                 sender(integrityUrl, { method: strGetMethod, mode: "cors" })
                     .then(response => response.json())
                     .then(json => {
-                        currentVersion = json.version;
                         integrity = json.ext[targetType].integrity;
-                        targetSrc = targetSrc.replace(/(?<=\/ai\.)\d+(\.\d+){0,2}/, currentVersion);
+                        targetSrc = match[1] + json.ext[targetType].file.substring(3);
                         setScript(targetSrc, integrity);
                     })
                     .catch(error => {
@@ -234,9 +233,8 @@ declare var cfg:ISnippetConfig;
                     if (xhr.readyState === XMLHttpRequest.DONE) {
                         if (xhr.status === 200) {
                             var json = JSON.parse(xhr.responseText);
-                            currentVersion = json.version;
                             integrity = json.ext[targetType].integrity;
-                            targetSrc = targetSrc.replace(/(?<=\/ai\.)\d+(\.\d+){0,2}/, currentVersion);
+                            targetSrc = match[1] + json.ext[targetType].file.substring(3);
                             setScript(targetSrc, integrity);
                         } else {
                             console.error("Error loading JSON:", xhr.statusText);
@@ -247,7 +245,7 @@ declare var cfg:ISnippetConfig;
                 xhr.send();
             }
         } else if (targetSrc){
-            setScript(targetSrc, integrity); // Fallback to original behavior
+            setScript(targetSrc, null); // Fallback to original behavior
         }
 
         function setScript(targetSrc: string, integrity: string | null) {
