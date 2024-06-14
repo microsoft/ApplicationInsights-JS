@@ -206,11 +206,10 @@ declare var cfg:ISnippetConfig;
         ];
 
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
-        var match = targetSrc.match(/^(http[s]?:\/\/.*\/ai\.)(\d+(\.\d+){0,2})\.(([\w]+\.){0,2}js)$/);
-        console.log("mathc", match);
-        if (match.length === 6 && cfg.sri) {
-            var integrityUrl = match[1] + match[2] + ".integrity.json";
-            var targetType = "@" + match[4];
+        var match = targetSrc.match(/^(http[s]?:\/\/.*\/)([\w]+\.)?(\d+(\.\d+){0,2})\.(([\w]+\.){0,2}js)$/);
+        if (match.length === 7 && cfg.sri) {
+            var integrityUrl = match[1] + "ai." + match[3] + ".integrity.json";
+            var targetType = "@" + match[5];
             var sender = window.fetch;
             var integrity: string = null;
             if (sender && !cfg.useXhr) {
@@ -219,7 +218,7 @@ declare var cfg:ISnippetConfig;
                     .then(response => response.json())
                     .then(json => {
                         integrity = json.ext[targetType].integrity;
-                        targetSrc = match[1] + json.ext[targetType].file.substring(3);
+                        targetSrc = match[1] + json.ext[targetType].file;
                         setScript(targetSrc, integrity);
                     })
                     .catch(error => {
@@ -234,7 +233,7 @@ declare var cfg:ISnippetConfig;
                         if (xhr.status === 200) {
                             var json = JSON.parse(xhr.responseText);
                             integrity = json.ext[targetType].integrity;
-                            targetSrc = match[1] + json.ext[targetType].file.substring(3);
+                            targetSrc = match[1] + json.ext[targetType].file;
                             setScript(targetSrc, integrity);
                         } else {
                             console.error("Error loading JSON:", xhr.statusText);
