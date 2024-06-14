@@ -207,55 +207,54 @@ declare var cfg:ISnippetConfig;
         ];
 
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
-        var match = targetSrc.match(/^(http[s]?:\/\/.*\/)([\w]+\.)?(\d+(\.\d+){0,2})\.(([\w]+\.){0,2}js)$/);
-        if (match.length === 7 && cfg.sri) {
-            var integrityUrl = match[1] + "ai." + match[3] + ".integrity.json";
-            var targetType = "@" + match[5];
-            var sender = window.fetch;
-            var integrity: string = null;
-            if (sender && !cfg.useXhr) {
-                // retrieve integrity file using fetch
-                sender(integrityUrl, { method: strGetMethod, mode: "cors" })
-                    .then(response => response.json().catch(() => ({}))) // return an empty object, will be catched by the next if statement
-                    .then(json => {
-                        if (!json.ext || !json.ext[targetType]) {
-                            throw new Error(strJsonResponseError);
-                        }
-                        integrity = json.ext[targetType].integrity;
-                        targetSrc = match[1] + json.ext[targetType].file;
-                        setScript(targetSrc, integrity);
-                    })
-                    .catch(error => {
-                        console.error(strJsonResponseError, error);
-                        setScript(targetSrc, null); // Fallback to original behavior
-                    });
-            } else if (XMLHttpRequest) {
-                var xhr = new XMLHttpRequest();
-                xhr.open(strGetMethod, integrityUrl);
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                        try {
-                            var json = JSON.parse(xhr.responseText);
-                            if (!json.ext || !json.ext[targetType]) {
-                                throw new Error(strJsonResponseError);
-                            }
-                            integrity = json.ext[targetType].integrity;
-                            targetSrc = match[1] + json.ext[targetType].file;
-                            setScript(targetSrc, integrity);
-                        } catch (error) {
-                            console.error(strJsonResponseError, error.message);
-                            setScript(targetSrc, null);
-                        }
-                    } else {
-                        console.error(strJsonResponseError, xhr.statusText);
-                        setScript(targetSrc, null);
+        const fallback = () => setScript(targetSrc, null);
+        if (cfg.sri) {
+            const match = targetSrc.match(/^((http[s]?:\/\/.*\/)([\w]+\.))?(\d+(\.\d+){0,2})\.(([\w]+\.){0,2}js)$/);
+            
+            if (match && match.length === 8) {
+                const integrityUrl = `${match[1]}${match[4]}.integrity.json`;
+                const targetType = `@${match[6]}`;
+                const sender = window.fetch;
+                const handleResponse = (json:any) => {
+                    if (!json.ext || !json.ext[targetType] || !json.ext[targetType].file) {
+                        throw new Error(strJsonResponseError);
                     }
+                    const integrity = json.ext[targetType].integrity || null;
+                    targetSrc = match[2] + json.ext[targetType].file;
+                    setScript(targetSrc, integrity);
                 };
-                xhr.send();
-            } 
-        } else if (targetSrc){
-            setScript(targetSrc, null); // Fallback to original behavior
+        
+                if (sender && !cfg.useXhr) {
+                    sender(integrityUrl, { method: strGetMethod, mode: "cors" })
+                        .then(response => response.json().catch(() => ({})))
+                        .then(handleResponse)
+                        .catch(fallback);
+                } else if (XMLHttpRequest) {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open(strGetMethod, integrityUrl);
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState === XMLHttpRequest.DONE) {
+                            if (xhr.status === 200) {
+                                try {
+                                    handleResponse(JSON.parse(xhr.responseText));
+                                } catch {
+                                    fallback();
+                                }
+                            } else {
+                                fallback();
+                            }
+                        }
+                    };
+                    xhr.send();
+                }
+            } else if (targetSrc) {
+                fallback(); // Fallback to original behavior
+            }
+        } else if (targetSrc) {
+            fallback(); // Fallback to original behavior
         }
+        
+        
 
         function setScript(targetSrc: string, integrity: string | null) {
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
