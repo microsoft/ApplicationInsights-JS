@@ -24,6 +24,7 @@ declare var cfg:ISnippetConfig;
     let strEmpty = "";
     let strUndefined = "undefined";
     let strCrossOrigin = "crossOrigin";
+    let strJsonResponseError = "Error Loading JSON response";
 
     let strPostMethod = "POST";
     let strGetMethod = "GET";
@@ -215,34 +216,43 @@ declare var cfg:ISnippetConfig;
             if (sender && !cfg.useXhr) {
                 // retrieve integrity file using fetch
                 sender(integrityUrl, { method: strGetMethod, mode: "cors" })
-                    .then(response => response.json())
+                    .then(response => response.json().catch(() => ({}))) // return an empty object, will be catched by the next if statement
                     .then(json => {
+                        if (!json.ext || !json.ext[targetType]) {
+                            throw new Error(strJsonResponseError);
+                        }
                         integrity = json.ext[targetType].integrity;
                         targetSrc = match[1] + json.ext[targetType].file;
                         setScript(targetSrc, integrity);
                     })
                     .catch(error => {
-                        console.error("Error loading JSON:", error);
-                        setScript(targetSrc, integrity); // Fallback to original behavior
+                        console.error(strJsonResponseError, error);
+                        setScript(targetSrc, null); // Fallback to original behavior
                     });
             } else if (XMLHttpRequest) {
                 var xhr = new XMLHttpRequest();
                 xhr.open(strGetMethod, integrityUrl);
                 xhr.onreadystatechange = function () {
-                    if (xhr.readyState === XMLHttpRequest.DONE) {
-                        if (xhr.status === 200) {
+                    if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                        try {
                             var json = JSON.parse(xhr.responseText);
+                            if (!json.ext || !json.ext[targetType]) {
+                                throw new Error(strJsonResponseError);
+                            }
                             integrity = json.ext[targetType].integrity;
                             targetSrc = match[1] + json.ext[targetType].file;
                             setScript(targetSrc, integrity);
-                        } else {
-                            console.error("Error loading JSON:", xhr.statusText);
-                            setScript(targetSrc, integrity); // Fallback to original behavior
+                        } catch (error) {
+                            console.error(strJsonResponseError, error.message);
+                            setScript(targetSrc, null);
                         }
+                    } else {
+                        console.error(strJsonResponseError, xhr.statusText);
+                        setScript(targetSrc, null);
                     }
                 };
                 xhr.send();
-            }
+            } 
         } else if (targetSrc){
             setScript(targetSrc, null); // Fallback to original behavior
         }
