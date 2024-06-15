@@ -209,11 +209,10 @@ declare var cfg:ISnippetConfig;
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
         const fallback = () => setScript(targetSrc, null);
         if (cfg.sri) {
-            const match = targetSrc.match(/^((http[s]?:\/\/.*\/)([\w]+\.))?(\d+(\.\d+){0,2})\.(([\w]+\.){0,2}js)$/);
-            
-            if (match && match.length === 8) {
-                const integrityUrl = `${match[1]}${match[4]}.integrity.json`;
-                const targetType = `@${match[6]}`;
+            const match = targetSrc.match(/^((http[s]?:\/\/.*\/)\w+(\.\d+){1,5})\.(([\w]+\.){0,2}js)$/);
+            if (match && match.length === 6) {
+                const integrityUrl = `${match[1]}.integrity.json`;
+                const targetType = `@${match[4]}`;
                 const sender = window.fetch;
                 const handleResponse = (json:any) => {
                     if (!json.ext || !json.ext[targetType] || !json.ext[targetType].file) {
