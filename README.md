@@ -401,7 +401,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 
 `extensionConfig` should be initialized under the specific extension rather than being defined in the root configuration. This allows for more granular configuration tailored to each extension's needs.
 
-For instance, to configure the debug plugin, you would initialize it as follows:
+For instance, to configure the dependencies plugin, you would initialize it as follows:
 
 ```js
 const appInsights = new ApplicationInsights({
