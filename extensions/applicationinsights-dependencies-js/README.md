@@ -20,6 +20,34 @@ npm run build --silent
 npm run test
 ```
 
+## Basic Usage
+
+### NPM Setup (ignore if using Snippet Setup)
+
+```js
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
+
+const dependencyPlugin = new AjaxPlugin();
+const appInsights = new ApplicationInsights({
+    config: {
+        connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+        extensions: [dependencyPlugin],
+        extensionConfig: {
+            [dependencyPlugin.identifier]: {
+                ignoreHeaders:[
+                    "Authorization",
+                    "X-API-Key",
+                    "WWW-Authenticate"
+                ]
+            }
+        }
+    }
+});
+appInsights.loadAppInsights();
+appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+```
+
 ## Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to
