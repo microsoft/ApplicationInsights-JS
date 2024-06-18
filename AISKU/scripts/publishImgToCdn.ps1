@@ -85,7 +85,12 @@ if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
     $jsSdkDir = Split-Path (Split-Path $MyInvocation.MyCommand.Path) -Parent
 }
 
-$cacheControl1Year = "public, max-age=31536000, immutable, no-transform";
+$cacheControl = "public, max-age=31536000, immutable, no-transform";
+if ($testOnly){
+    $cacheControl = "public, max-age=86400, immutable, no-transform";
+}
+
+
 $contentType = "image/svg+xml;";
 
 Write-LogParams
@@ -115,6 +120,6 @@ Write-Log "---------------------------------------------------------------------
 $contentDisposition = "inline"
 
 # Publish the img to the folder that is same to the script folder.
-PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite $contentDisposition
+PublishFiles $releaseFiles "scripts/b" $cacheControl $contentType $overwrite $contentDisposition
 
 Write-Log "======================================================================"
