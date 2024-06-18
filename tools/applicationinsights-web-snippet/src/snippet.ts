@@ -24,8 +24,10 @@ declare var cfg:ISnippetConfig;
     let strEmpty = "";
     let strUndefined = "undefined";
     let strCrossOrigin = "crossOrigin";
+    let strJsonResponseError = "Error Loading JSON response";
 
     let strPostMethod = "POST";
+    let strGetMethod = "GET";
     let sdkInstanceName = "appInsightsSDK";         // required for Initialization to find the current instance
     let aiName = cfg.name || "appInsights";  // provide non default instance name through snipConfig name value
     if (cfg.name || win[sdkInstanceName]) {
@@ -38,7 +40,7 @@ declare var cfg:ISnippetConfig;
         let appInsights: (Snippet & {initialize:boolean, cookie?:any, core?:any})= {
             initialize: true,   // initialize sdk on download
             queue: [],
-            sv: "7",            // Track the actual snippet version for reporting.
+            sv: "8",            // Track the actual snippet version for reporting.
             version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
             config: aiConfig
         };
@@ -154,7 +156,7 @@ declare var cfg:ISnippetConfig;
                         ver: 2
                     }
                 },
-                ver: 4.0,
+                ver: undefined,
                 seq: "1",
                 aiDataContract: undefined
             };
@@ -202,11 +204,58 @@ declare var cfg:ISnippetConfig;
             "js2.cdn.applicationinsights.io",
             "js2.cdn.monitor.azure.com",
             "az416426.vo.msecnd.net" // this domain is supported but not recommended
-        ]
-    
-        // Assigning these to local variables allows them to be minified to save space:
-        let targetSrc : string = (aiConfig as any)["url"] || cfg.src
-        if (targetSrc) {
+        ];
+
+        let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
+        const fallback = () => setScript(targetSrc, null);
+        if (cfg.sri) {
+            const match = targetSrc.match(/^((http[s]?:\/\/.*\/)\w+(\.\d+){1,5})\.(([\w]+\.){0,2}js)$/);
+            if (match && match.length === 6) {
+                const integrityUrl = `${match[1]}.integrity.json`;
+                const targetType = `@${match[4]}`;
+                const sender = window.fetch;
+                const handleResponse = (json:any) => {
+                    if (!json.ext || !json.ext[targetType] || !json.ext[targetType].file) {
+                        throw new Error(strJsonResponseError);
+                    }
+                    const integrity = json.ext[targetType].integrity || null;
+                    targetSrc = match[2] + json.ext[targetType].file;
+                    setScript(targetSrc, integrity);
+                };
+        
+                if (sender && !cfg.useXhr) {
+                    sender(integrityUrl, { method: strGetMethod, mode: "cors" })
+                        .then(response => response.json().catch(() => ({})))
+                        .then(handleResponse)
+                        .catch(fallback);
+                } else if (XMLHttpRequest) {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open(strGetMethod, integrityUrl);
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState === XMLHttpRequest.DONE) {
+                            if (xhr.status === 200) {
+                                try {
+                                    handleResponse(JSON.parse(xhr.responseText));
+                                } catch {
+                                    fallback();
+                                }
+                            } else {
+                                fallback();
+                            }
+                        }
+                    };
+                    xhr.send();
+                }
+            } else if (targetSrc) {
+                fallback(); // Fallback to original behavior
+            }
+        } else if (targetSrc) {
+            fallback(); // Fallback to original behavior
+        }
+        
+        
+
+        function setScript(targetSrc: string, integrity: string | null) {
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
                 // This regex matches any URL which contains "\ai.3." but not any full versions like "\ai.3.1" etc
                 targetSrc = targetSrc.replace(/(\/)(ai\.3\.)([^\d]*)$/, function(_all, g1, g2) {
@@ -258,6 +307,10 @@ declare var cfg:ISnippetConfig;
             const _createScript = (src: string) => {
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
                 (scriptElement as any)["src"] = src;
+                if (integrity){
+                    // Set the integrity attribute to the script tag if integrity is provided
+                    (scriptElement as any).integrity = integrity;
+                }
                 (scriptElement as any).setAttribute("data-ai-name", aiName);
                 // Allocate Cross origin only if defined and available
                 let crossOrigin = cfg[strCrossOrigin];
