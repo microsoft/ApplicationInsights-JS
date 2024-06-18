@@ -33,7 +33,8 @@
         "npm-publish": "node ./tools/release-tools/npm_publish.js",
         "npm-set-latest": "node ./tools/release-tools/npm_set_latest.js",
         "gh-status": "node ./tools/status-tools/github-status.js",
-        "api-docs": "rush api-docs"
+        "api-docs": "rush api-docs",
+        "imgsizegen": "node ./tools/sizeImageGenerator/size-image-generator.js"
     },
     "repository": {
         "type": "git",
@@ -69,6 +70,7 @@
         "puppeteer": "19.2.0",
         "typedoc": "^0.23.22",
         "typescript": "^4.9.3",
-        "whatwg-fetch": "^3.6.2"
+        "whatwg-fetch": "^3.6.2",
+        "request": "^2.88.2"
     }
 }

@@ -8,7 +8,8 @@ param (
     [string] $logPath = $null,                          # The location where logs should be written
     [switch] $overwrite = $false,                       # Overwrite any existing files   
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
-    [switch] $cdn = $false                              # (No longer used -- kept for now for backward compatibility)
+    [switch] $cdn = $false,                             # (No longer used -- kept for now for backward compatibility)
+    [switch] $cacheTest = $false                        # Uploads the images with a shorter cache time
 )
 
 Import-Module -Force -Name "../../common/publish/Logging"
@@ -50,7 +51,7 @@ Function GetReleaseFiles
 
     # check if the img dir exists
     $parentDir = Split-Path -Path $jsSdkDir -Parent
-    $imgSrcDir = Join-Path -Path $parentDir -ChildPath "tools\sizeImageGenerator\img"
+    $imgSrcDir = Join-Path -Path $parentDir -ChildPath "./AISKU/.cdn/img"
 
     Write-Log "Image Folder   : $imgSrcDir"
 
@@ -86,7 +87,7 @@ if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
 }
 
 $cacheControl = "public, max-age=31536000, immutable, no-transform";
-if ($testOnly){
+if ($cacheTest -eq $true) {
     $cacheControl = "public, max-age=86400, immutable, no-transform";
 }
 $contentType = "image/svg+xml;";

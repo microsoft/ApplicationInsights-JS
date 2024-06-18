@@ -4,15 +4,26 @@ const http = require('http');
 const request = require('request');
 const zlib = require('zlib');
 
-async function generateSizeBadge(path, fileSize) {
+async function generateSizeBadge(path, fileSize, isGzip = false, maxSize = 65, minSize = 30) {
     try {
-        const sizeBadge = `https://img.shields.io/badge/size-${fileSize}kb-blue`;
+        let sizeBadge = `https://img.shields.io/badge/size-${fileSize}kb`;
+        if (isGzip) {
+            if (fileSize > maxSize) {
+                sizeBadge += "-red";
+            } else if (fileSize > minSize) {
+                sizeBadge += "-yellow";
+            } else {
+                sizeBadge += "-brightgreen";
+            }
+        } else {
+            sizeBadge += "-blue";
+        }
         const res = await fetch(encodeURI(sizeBadge));
         if (!res.ok) {
             throw new Error(`Failed to fetch ${sizeBadge}: ${res.status} ${res.statusText}`);
         }
         const buffer = await res.arrayBuffer();
-        await fsPromise.writeFile(`img/ai.${path}.svg`, Buffer.from(buffer));
+        await fsPromise.writeFile(`./AISKU/.cdn/img/ai.${path}.svg`, Buffer.from(buffer));
     } catch (err) {
         throw new Error(`Failed to generate size badge: ${err.message}`);
     }
@@ -26,7 +37,7 @@ async function downloadFile(version) {
             throw new Error(`Failed to fetch ${url}: ${res.status} ${res.statusText}`);
         }
         const buffer = await res.arrayBuffer();
-        await fsPromise.writeFile(`./cdnFile/ai.${version}.js`, Buffer.from(buffer));
+        await fsPromise.writeFile(`./AISKU/.cdn/file/ai.${version}.js`, Buffer.from(buffer));
     } catch (err) {
         throw new Error(`Failed to generate size badge: ${err.message}`);
     }
@@ -35,7 +46,7 @@ async function downloadFile(version) {
 function createDirectory(dirName) {
     const dir = `./${dirName}`;
     if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir);
+        fs.mkdirSync(dir, { recursive: true });
     }
 }
 
@@ -55,9 +66,9 @@ async function getVersionFromPackageJson(packageJsonPath) {
 }
 
 async function main() {
-    createDirectory("cdnFile");
-    createDirectory("img");
-    const packageJsonPath = '../../AISKU/package.json';
+    createDirectory("./AISKU/.cdn/file");
+    createDirectory("./AISKU/.cdn/img");
+    const packageJsonPath = './AISKU/package.json';
     const version = await getVersionFromPackageJson(packageJsonPath);
 
     let versions = [];
@@ -72,8 +83,8 @@ async function main() {
         let version = versions[i];
         await downloadFile(version);
         await downloadFile(version + ".min");
-        const filename = `./cdnFile/ai.${version}.js`;
-        const minFileName = `./cdnFile/ai.${version}.min.js`;
+        const filename = `./AISKU/.cdn/file/ai.${version}.js`;
+        const minFileName = `./AISKU/.cdn/file/ai.${version}.min.js`;
         try {
             const fileSize = ((await fsPromise.stat(filename)).size / 1024).toFixed(1);
             const minFileSize = ((await fsPromise.stat(minFileName)).size / 1024).toFixed(1);
@@ -99,7 +110,7 @@ async function main() {
                     })
                     res.on('end', async function() {
                         let gzipsize = Buffer.byteLength(rawHeaders, 'utf8') + bodySize;
-                        await generateSizeBadge(version + ".gzip.min.js", (gzipsize / 1024).toFixed(1));
+                        await generateSizeBadge(version + ".gzip.min.js", (bodySize / 1024).toFixed(1), true);
                     });
                 } else {
                     console.error("Content is not gzip encoded");
