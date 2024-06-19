@@ -181,6 +181,7 @@ types/
 dist/
 dest/
 drop/
+.cdn/
 
 # Don't commit the sub resource integrity generated files
 **/*.integrity.json
