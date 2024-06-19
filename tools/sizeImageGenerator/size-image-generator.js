@@ -96,9 +96,8 @@ async function main() {
                 url: url,
                 headers: {'Accept-Encoding': 'gzip'}
             };
-            const req = request(opts).on('response', function(res) {
+            request(opts).on('response', function(res) {
                 if (res.headers['content-encoding'] === 'gzip') {
-                    const gzip = zlib.createGunzip();
                     let bodySize = 0;  // bytes size over the wire
                     res.on('data', function(data) {
                         bodySize += data.length;
