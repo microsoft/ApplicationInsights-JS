@@ -4,7 +4,7 @@ const http = require('http');
 const request = require('request');
 const zlib = require('zlib');
 
-async function generateSizeBadge(path, fileSize, isGzip = false, maxSize = 65, minSize = 30) {
+async function generateSizeBadge(path, fileSize, isGzip = false, maxSize = 35, minSize = 30) {
     try {
         let sizeBadge = `https://img.shields.io/badge/size-${fileSize}kb`;
         if (isGzip) {
@@ -57,11 +57,11 @@ async function getVersionFromPackageJson(packageJsonPath) {
         if (packageJson && packageJson.version) {
             return packageJson.version;
         } else {
-            return [];
+            return null;
         }
     } catch (err) {
         console.error(`Failed to read package.json: ${err.message}`);
-        return [];
+        return null;
     }
 }
 
@@ -97,11 +97,6 @@ async function main() {
                 headers: {'Accept-Encoding': 'gzip'}
             };
             const req = request(opts).on('response', function(res) {
-                let rawHeaders = 'HTTP/' + res.httpVersion + ' ' + res.statusCode + ' ' + http.STATUS_CODES[res.statusCode] + '\r\n';
-                Object.keys(res.headers).forEach(function(headerKey) {
-                    rawHeaders += headerKey + ': ' + res.headers[headerKey] + '\r\n';
-                });
-                rawHeaders += '\r\n';
                 if (res.headers['content-encoding'] === 'gzip') {
                     const gzip = zlib.createGunzip();
                     let bodySize = 0;  // bytes size over the wire
@@ -109,7 +104,6 @@ async function main() {
                         bodySize += data.length;
                     })
                     res.on('end', async function() {
-                        let gzipsize = Buffer.byteLength(rawHeaders, 'utf8') + bodySize;
                         await generateSizeBadge(version + ".gzip.min.js", (bodySize / 1024).toFixed(1), true);
                     });
                 } else {
