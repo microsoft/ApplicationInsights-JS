@@ -76,7 +76,7 @@ appInsights.trackPageView(); // Manually call trackPageView to establish the cur
 
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 
-The current version of the snippet is version 7, the version is identified by the "sv:" in the script.
+The current version of the snippet is version 8, the version is identified by the "sv:" in the script.
 
 ```html
 <script type="text/javascript">

@@ -21,14 +21,27 @@ Import the helper function from the package to easily get the snippet
 import { getSdkLoaderScript } from "@microsoft/applicationinsights-web-snippet";
 ```
 
-Configure the snippet with your connectionString.
+Configure the snippet with your connectionString or other customerized field:
 ```
-let config = {connectionString: "InstrumentationKey=xxx"}; 
-// or let config = {instrumentationKey: key};
+let config = {connectionString: "InstrumentationKey=xxx", name: "myAppInsights"}; 
+// or let config = {instrumentationKey: key, sri: true};
 let theSnippet = getSdkLoaderScript(config);
 ```
 
+### Multiple Snippet Run Simutinously (available since v1.2.0)
+Configure two snippets with different name.
+```
+let firstConfig = {connectionString: "InstrumentationKey=xxx", name: "firstAppInsights"}; 
+let firstSnippet = getSdkLoaderScript(firstConfig);
+let secondConfig = {connectionString: "InstrumentationKey=xxx", name: "secondAppInsights"}; 
+let secondSnippet = getSdkLoaderScript(secondConfig);
+```
 
+### Snippet Run With Integrity Check and Minified Loading Time (available since v1.2.0)
+Configure the snippet with sri enabled.
+```
+let config = {connectionString: "InstrumentationKey=xxx", sri: true};
+```
 
 More details on web snippet, see [Web Snippet](https://github.com/microsoft/ApplicationInsights-JS#snippet-setup-ignore-if-using-npm-setup).
 

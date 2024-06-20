@@ -1,5 +1,6 @@
-import { SdkLoaderConfig } from "./type";
+import { ISnippetConfig, SdkLoaderConfig } from "./type";
 
+const originSnippet = "##replaceOriginSnippet##";
 const webSnippet = "##replaceIKeySnippet##";
 const webSnippetCs = "##replaceConnStringSnippet##";
 
@@ -13,13 +14,28 @@ function webSnippetVersion() {
 }
 
 function getSdkLoaderScript(config: SdkLoaderConfig) {
-    let snippet: string = webSnippetCs;
-    if (config && config.connectionString) {
-        snippet = webSnippetCs.replace("YOUR_CONNECTION_STRING", config.connectionString);
-    } else if (config && config.instrumentationKey) {
-        snippet = webSnippet.replace("InstrumentationKey=INSTRUMENTATION_KEY", config.instrumentationKey);
+    let snippetConfig: ISnippetConfig = {
+        src: config.src? config.src : "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
+        crossOrigin: config.crossOrigin ? config.crossOrigin : "anonymous",
+        cfg: {},
+        name: config.name ? config.name : "appInsights",
+        ld: config.ld,
+        useXhr: config.useXhr,
+        onInit: config.onInit,
+        cr: config.cr,
+        dle: config.dle,
+        sri: config.sri
+    };
+
+    if (config.instrumentationKey) {
+        snippetConfig.cfg.instrumentationKey = config.instrumentationKey;
+    } else if (config.connectionString) {
+        snippetConfig.cfg.connectionString = config.connectionString;
     }
-    return snippet;
+
+    let configString = JSON.stringify(snippetConfig);
+    let userSnippet = `!(function (cfg){${originSnippet}})(\n${configString}\n);`;
+    return userSnippet;
 }
 
 
