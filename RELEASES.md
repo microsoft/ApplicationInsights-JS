@@ -2,6 +2,21 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+### Web snippet additional update to 1.2.0 (June 21st, 2024)
+
+This release includes support for multiple snippet loading. Snippets with different names (passed in by the user via configuration; check [##2355](https://github.com/microsoft/ApplicationInsights-JS/issues/2355) and README for more details) can now run simultaneously.
+
+
+Additionally, users can pass in a customized configuration with getSdkLoaderScript to get a ready-to-use snippet.
+
+Users can also enable Integrity Check and minimize snippet loading time by setting sri to true.
+
+
+### Changelog
+- #2365 [main][snippet] prepare new snippet release, add support for more config 
+- #2360 [main] set script attribut to avoid race condition when multiple sdks are inited #2355 
+- #2339 [main] create snippet mini loader 
+
 ## 3.2.2 (June 11th, 2024)
 
 ### Changelog
