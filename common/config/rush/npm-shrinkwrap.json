@@ -956,7 +956,7 @@
     "node_modules/@rush-temp/applicationinsights-example-shared-worker": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-example-shared-worker.tgz",
-      "integrity": "sha512-VrrfozxI9X33aXC6yGCBJH/LAGDpd4n+PB/9cq9n/6P2tpWbnSmwpVXXPBxF02wNqnyEoxuw8W4O3dYZDqnT8Q==",
+      "integrity": "sha512-kX/MZZl8KKjBC7GLGTRVs2nniAR5uX/IT/C/gIoxo09C9NsURdZU1gpxBzPVuv1nwLkhqTK4LYTEcCcKcUrgHg==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -2641,9 +2641,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.4.806",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.806.tgz",
-      "integrity": "sha512-nkoEX2QIB8kwCOtvtgwhXWy2IHVcOLQZu9Qo36uaGB835mdX/h8uLRlosL6QIhLVUnAiicXRW00PwaPZC74Nrg=="
+      "version": "1.4.808",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.808.tgz",
+      "integrity": "sha512-0ItWyhPYnww2VOuCGF4s1LTfbrdAV2ajy/TN+ZTuhR23AHI6rWHCrBXJ/uxoXOvRRqw8qjYVrG81HFI7x/2wdQ=="
     },
     "node_modules/encodeurl": {
       "version": "1.0.2",
@@ -3958,11 +3958,14 @@
       }
     },
     "node_modules/is-core-module": {
-      "version": "2.13.1",
-      "resolved": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.13.1.tgz",
-      "integrity": "sha512-hHrIjvZsftOsvKSn2TRYl63zvxsgE0K+0mYMoH6gD4omR5IWB2KynivBQczo3+wF1cCkjzvptnI9Q0sPU66ilw==",
+      "version": "2.14.0",
+      "resolved": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.14.0.tgz",
+      "integrity": "sha512-a5dFJih5ZLYlRtDc0dZWP7RiKr6xIKzmn/oAYCDvdLThadVgyJwlaoQPmRtMSpz+rk0OGAgIu+TcM9HUF0fk1A==",
       "dependencies": {
-        "hasown": "^2.0.0"
+        "hasown": "^2.0.2"
+      },
+      "engines": {
+        "node": ">= 0.4"
       },
       "funding": {
         "url": "https://github.com/sponsors/ljharb"
@@ -7102,7 +7105,7 @@
     },
     "@rush-temp/applicationinsights-example-shared-worker": {
       "version": "file:projects\\applicationinsights-example-shared-worker.tgz",
-      "integrity": "sha512-VrrfozxI9X33aXC6yGCBJH/LAGDpd4n+PB/9cq9n/6P2tpWbnSmwpVXXPBxF02wNqnyEoxuw8W4O3dYZDqnT8Q==",
+      "integrity": "sha512-kX/MZZl8KKjBC7GLGTRVs2nniAR5uX/IT/C/gIoxo09C9NsURdZU1gpxBzPVuv1nwLkhqTK4LYTEcCcKcUrgHg==",
       "requires": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
@@ -8400,9 +8403,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "electron-to-chromium": {
-      "version": "1.4.806",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.806.tgz",
-      "integrity": "sha512-nkoEX2QIB8kwCOtvtgwhXWy2IHVcOLQZu9Qo36uaGB835mdX/h8uLRlosL6QIhLVUnAiicXRW00PwaPZC74Nrg=="
+      "version": "1.4.808",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.808.tgz",
+      "integrity": "sha512-0ItWyhPYnww2VOuCGF4s1LTfbrdAV2ajy/TN+ZTuhR23AHI6rWHCrBXJ/uxoXOvRRqw8qjYVrG81HFI7x/2wdQ=="
     },
     "encodeurl": {
       "version": "1.0.2",
@@ -9383,11 +9386,11 @@
       }
     },
     "is-core-module": {
-      "version": "2.13.1",
-      "resolved": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.13.1.tgz",
-      "integrity": "sha512-hHrIjvZsftOsvKSn2TRYl63zvxsgE0K+0mYMoH6gD4omR5IWB2KynivBQczo3+wF1cCkjzvptnI9Q0sPU66ilw==",
+      "version": "2.14.0",
+      "resolved": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.14.0.tgz",
+      "integrity": "sha512-a5dFJih5ZLYlRtDc0dZWP7RiKr6xIKzmn/oAYCDvdLThadVgyJwlaoQPmRtMSpz+rk0OGAgIu+TcM9HUF0fk1A==",
       "requires": {
-        "hasown": "^2.0.0"
+        "hasown": "^2.0.2"
       }
     },
     "is-extglob": {

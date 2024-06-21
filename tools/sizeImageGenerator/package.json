@@ -28,6 +28,7 @@
     },
     "dependencies": {
         "node-fetch": "^3.3.2",
+        "request": "^2.88.2",
         "zlib": "^1.0.5"
     }
 }
