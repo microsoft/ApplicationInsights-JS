@@ -21,7 +21,6 @@ function getSdkLoaderScript(config: SdkLoaderConfig) {
         name: config.name ? config.name : "appInsights",
         ld: config.ld,
         useXhr: config.useXhr,
-        onInit: config.onInit,
         cr: config.cr,
         dle: config.dle,
         sri: config.sri
