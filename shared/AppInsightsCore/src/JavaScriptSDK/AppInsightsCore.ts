@@ -60,7 +60,8 @@ const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";
 const strSdkNotInitialized = "SDK is not initialized";
-const maxQueueSize = 500;
+const maxInitQueueSize = 100;
+const maxInitTimeout = 50000;
 // const strPluginUnloadFailed = "Failed to unload plugin";
 
 /**
@@ -296,6 +297,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _pluginVersionString: string;
         let _activeStatus: eActiveStatus; // to indicate if ikey or endpoint url promised is resolved or not
         let _endpoint: string;
+        let _initInMemoMaxSize: number; // max event count limit during wait for init promises to be resolved
+        let _isStatusSet: boolean; // track if active status is set in case of init timeout and init promises setting the status twice
+        let _initTimer: ITimerHandler;
     
         /**
          * Internal log poller
@@ -316,13 +320,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             _self.isInitialized = () => _isInitialized;
 
-            // version 3.3.0
+            // since version 3.3.0
             _self.activeStatus = () => _activeStatus;
 
-            // version 3.3.0
+            // since version 3.3.0
             // internal
             _self._setPendingStatus = () => {
-                _activeStatus = eActiveStatus.PENDING;  // allow set pending under NONE?
+                _activeStatus = eActiveStatus.PENDING;
             };
 
             // Creating the self.initialize = ()
@@ -343,32 +347,33 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 // This will be "re-run" if the referenced config properties are changed
                 _addUnloadHook(_configHandler.watch((details) => {
-                
-
+                    let rootCfg = details.cfg;
                   
-
-                    // app Insights core only handle ikey and endpointurl
-                
-                    let ikey = details.cfg.instrumentationKey;
-                    let endpointUrl = details.cfg.endpointUrl; // do not need to validate endpoint url
                     let isPending = _activeStatus === eActiveStatus.PENDING;
                     
                     if (isPending){
-                        // mean waiting for previous promises to be resolved, won't apply new changes
+                        // means waiting for previous promises to be resolved, won't apply new changes
                         return;
                     }
 
+                    _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
+                    // app Insights core only handle ikey and endpointurl, aisku will handle cs
+                    let ikey = rootCfg.instrumentationKey;
+                    let endpointUrl = rootCfg.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
+
                     if (isNullOrUndefined(ikey)) {
+                        _instrumentationKey = null;
+                        // if new ikey is null, set status to be inactive, all new events will be saved in memory or dropped
                         _activeStatus = ActiveStatus.INACTIVE;
+                        let msg = "Please provide instrumentation key";
+
                         if (!_isInitialized) {
-                            // only throw error during initial initialization
-                            _throwIKeyErrMsg();
+                            // only throw error during initialization
+                            throwError(msg);
                         } else {
-                            _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, "ikey can't be null");
+                            _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, msg);
+                            _releaseQueues();
                         }
-                        
-                        // if ikey is null, should we release queue?
-                        _eventQueue = [];
                         return;
                       
                     }
@@ -376,64 +381,84 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     let promises: IPromise<string>[] = [];
                     if (isPromiseLike(ikey)) {
                         promises.push(ikey);
+                        _instrumentationKey = null; // reset current local ikey variable (otherwise it will always be the previous ikeys if timeout is called before promise cb)
                     } else {
+                        // string
                         _instrumentationKey = ikey;
                     }
 
                     if (isPromiseLike(endpointUrl)) {
                         promises.push(endpointUrl);
+                        _endpoint = null; // reset current local endpoint variable (otherwise it will always be the previous urls if timeout is called before promise cb)
                     } else {
+                        // string or null
                         _endpoint = endpointUrl;
                     }
 
-                    // have at least one promise
+                    // at least have one promise
                     if (promises.length) {
+                        // reset to false for new dynamic changes
+                        _isStatusSet = false;
                         _activeStatus = eActiveStatus.PENDING;
+                        let initTimeout = isNullOrUndefined(rootCfg.initTimeOut)?  rootCfg.initTimeOut : maxInitTimeout; // rootCfg.initTimeOut could be 0
                         let allPromises = createAllSettledPromise<string>(promises);
+                        _initTimer = scheduleTimeout(() => {
+                            // set _isStatusSet to true
+                            // set active status
+                            // release queues
+                            _initTimer = null;
+                            if (!_isStatusSet) {
+                                _setStatus();
+                            }
+                           
+                        }, initTimeout);
+                   
                         doAwaitResponse(allPromises, (response) => {
                             try {
-                                _instrumentationKey = null; // set current local ikey variable
+                                if (_isStatusSet) {
+                                    // promises take too long to resolve, ignore them
+                                    // active status should be set by timeout already
+                                    return;
+                                }
+
                                 if (!response.rejected) {
                                     let values = response.value;
                                     if (values && values.length) {
+                                        // ikey
                                         let ikeyRes = values[0];
-                                        let ikeyVal = ikeyRes.value;
-                                        if (ikeyVal) {
-                                            _instrumentationKey = ikeyVal;
-                                            config.instrumentationKey = _instrumentationKey; // should not be set to null
-                                        }
-                                        
+                                        _instrumentationKey = ikeyRes && ikeyRes.value;
+
+                                        // endpoint
                                         if (values.length > 1) {
                                             let endpointRes = values[1];
-                                            _endpoint = endpointRes.value;
-                                            config.endpointUrl = _endpoint;
+                                            _endpoint = endpointRes &&  endpointRes.value;
+                                            
                                         }
 
+                                    }
+                                    if (_instrumentationKey) {
+                                        // if ikey is null, no need to trigger extra dynamic changes for extensions
+                                        config.instrumentationKey = _instrumentationKey; // set config.instrumentationKey for extensions to consume
+                                        config.endpointUrl = _endpoint; // set config.endpointUrl for extensions to consume
                                     }
 
                                 }
 
-                                if (isNullOrUndefined(_instrumentationKey)) {
-                                    _activeStatus = ActiveStatus.INACTIVE;
-                                    _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, "ikey can't be resolved from promises");
-                                } else {
-                                    _activeStatus = ActiveStatus.ACTIVE;
-                                    _self.releaseQueue();
-                                    _self.pollInternalLogs();
-                                }
+                                // set _isStatusSet to true
+                                // set active status
+                                // release queues
+                                _setStatus();
 
                             } catch (e) {
-                                // eslint-disable-next-line
-                                _activeStatus = ActiveStatus.INACTIVE;
+                                if (!_isStatusSet){
+                                    _setStatus();
+                                }
                             }
 
                         });
                     } else {
                         // means no promises
-                        _activeStatus = ActiveStatus.ACTIVE;
-                        _self.releaseQueue();
-                        _self.pollInternalLogs();
-                        
+                        _setStatus();
                        
                     }
 
@@ -482,8 +507,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 _isInitialized = true;
                 if (_activeStatus === ActiveStatus.ACTIVE) {
-                    _self.releaseQueue();
-                    _self.pollInternalLogs();
+                    _releaseQueues();
                 }
                 
             };
@@ -527,8 +551,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         _createTelCtx().processNext(telemetryItem);
                     } else if (_activeStatus !== ActiveStatus.INACTIVE){
                         // Queue events until all extensions are initialized
-                        if (_eventQueue.length <= maxQueueSize) {
-                            // set limit, 500, if full, stop adding new events
+                        if (_eventQueue.length <= _initInMemoMaxSize) {
+                            // set limit, if full, stop adding new events
                             _eventQueue.push(telemetryItem);
                         }
                      
@@ -600,11 +624,18 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_isInitialized && _eventQueue.length > 0) {
                     let eventQueue = _eventQueue;
                     _eventQueue = [];
+                    if (_activeStatus === eActiveStatus.ACTIVE) {
+                        arrForEach(eventQueue, (event: ITelemetryItem) => {
+                            event.iKey = event.iKey || _instrumentationKey;
+                            _createTelCtx().processNext(event);
+                        });
 
-                    arrForEach(eventQueue, (event: ITelemetryItem) => {
-                        event.iKey = event.iKey || _instrumentationKey;
-                        _createTelCtx().processNext(event);
-                    });
+                    } else {
+                        // new one for msg ikey
+                        _throwInternal(_logger, eLoggingSeverity.WARNING, _eInternalMessageId.FailedToSendQueuedTelemetry, "core init status is not active");
+                    }
+
+               
                 }
             };
 
@@ -616,8 +647,23 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 return _startLogPoller(true);
             };
 
-            function _throwIKeyErrMsg() {
-                throwError("Please provide instrumentation key");
+            function _setStatus() {
+                _isStatusSet = true;
+                if (isNullOrUndefined(_instrumentationKey)) {
+                    _activeStatus = ActiveStatus.INACTIVE;
+                    _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InitPromiseException, "ikey can't be resolved from promises");
+                } else {
+                    _activeStatus = ActiveStatus.ACTIVE;
+                }
+                _releaseQueues();
+
+            }
+
+            function _releaseQueues() {
+                if (_isInitialized) {
+                    _self.releaseQueue();
+                    _self.pollInternalLogs();
+                }
             }
 
             function _startLogPoller(alwaysStart?: boolean): ITimerHandler {
@@ -989,6 +1035,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _internalLogPollerListening = false;
                 _activeStatus = eActiveStatus.NONE; // default is None
                 _endpoint = null;
+                _initInMemoMaxSize = null;
+                _isStatusSet = false;
+                _initTimer = null;
             }
 
             function _createTelCtx(): IProcessTelemetryContext {

@@ -272,6 +272,63 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._config = this._getTestConfig(this._sessionPrefix);
                 let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
                 this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+
+                
+                config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                // promise is not resolved, no new changes applied
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Init: init with cs promise and offline channel",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                let offlineChannel = new OfflineChannel();
+                this._config.channels = [[offlineChannel]];
+                this._config.initTimeOut= 80000;
 
 
                 let init = new ApplicationInsights({
@@ -298,6 +355,12 @@ export class ApplicationInsightsTests extends AITestClass {
                 if (activeStatus === ActiveStatus.ACTIVE) {
                     Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
                     Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
+                    let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
+                    Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                    Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                    let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                    Assert.ok(urlConfig, "offline url config is initialized");
                     return true;
                 }
                 return false;
@@ -326,6 +389,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
                 
                 config.connectionString = csPromise;
+                config.initTimeOut = 80000;
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
@@ -369,6 +433,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._config.connectionString = null;
                 this._config.instrumentationKey = ikeyPromise;
                 this._config.endpointUrl = endpointPromise;
+                this._config.initTimeOut= 80000;
 
 
 

@@ -195,14 +195,16 @@ export interface IConfiguration {
     /**
      * If your connection string, instrumentation key and endpoint url are promises,
      * this config is to manually set timeout for those promises.
-     * Default: undefined, initialization process will wait all promises to be finished.
+     * Default: 50000ms
+     * @since 3.3.0
      */
     initTimeOut?: number;
 
     /**
      * If your connection string, instrumentation key and endpoint url are promises,
-     * this config is to manually set in memory proxy track calls size limit before promises finished.
-     * Default: undefined
+     * this config is to manually set in memory proxy track calls count limit before promises finished.
+     * Default: 100
+     * @since 3.3.0
      */
     initInMemoMaxSize?: number;
 

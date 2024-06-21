@@ -6,7 +6,6 @@ import {
     BreezeChannelIdentifier, EventPersistence, IConfig, IOfflineListener, createOfflineListener
 } from "@microsoft/applicationinsights-common";
 import {
-    ActiveStatus,
     BaseTelemetryPlugin, EventsDiscardedReason, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger,
     IInternalOfflineSupport, INotificationListener, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, SendRequestReason,
@@ -402,12 +401,12 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             _storeNotification(sentItems);
                         }
                     };
-                    if (payloadData) {
+                    if (payloadData && _urlCfg && _urlCfg.batchHandler) {
                         let promise = _urlCfg.batchHandler.storeBatch(payloadData, callback, unload);
                         _queueStorageEvent("storeBatch", promise);
                     }
 
-                    if (!_inMemoBatch.count()) {
+                    if (_inMemoBatch && !_inMemoBatch.count()) {
                         _inMemoFlushTimer && _inMemoFlushTimer.cancel();
                     }
 
@@ -571,8 +570,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             function _createUrlConfig(coreConfig: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
 
                 _self._addHook(onConfigChange(coreConfig, (details) => {
-                    if (!isString(coreConfig.instrumentationKey) || (core.activeStatus && core.activeStatus() === ActiveStatus.PENDING )) {
-                        // if ikey is promise, delay initialization
+                    if (!isString(coreConfig.instrumentationKey) || !isString(coreConfig.endpointUrl)) {
+                        // if ikey or endpointUrl is promise, delay initialization
                         _self.pause();
                         return;
                     }
@@ -623,7 +622,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                    
                         handler.initialize(providerContext);
                         urlConfig = {
-                            iKey: coreConfig.instrumentationKey,
+                            iKey: coreConfig.instrumentationKey as string,
                             url: curUrl,
                             minPersistenceCacheLevel: storageConfig.minPersistenceLevel,
                             coreRootCtx: coreRootCtx,
