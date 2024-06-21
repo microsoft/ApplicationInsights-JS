@@ -218,7 +218,8 @@ export class AjaxTests extends AITestClass {
                 let csPromise = createAsyncResolvedPromise("testIkey");
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: csPromise
+                    instrumentationKey: csPromise,
+                    initTimeOut: 80000
                     
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
@@ -255,7 +256,6 @@ export class AjaxTests extends AITestClass {
                     let data = trackStub.args[0][0].baseData;
                     Assert.equal(data.type, "Ajax", "request type should be ajax");
                     Assert.ok(data.properties, "properties should be added");
-                    console.log(JSON.stringify(data))
                     return true;
                 }
                 return false;
