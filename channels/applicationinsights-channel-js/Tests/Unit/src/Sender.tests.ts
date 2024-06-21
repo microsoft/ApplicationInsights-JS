@@ -176,6 +176,7 @@ export class SenderTests extends AITestClass {
                 let coreConfig = {
                     instrumentationKey: ikeyPromise,
                     endpointUrl: urlPromise,
+                    initTimeOut: 80000,
                     extensionConfig: {}
                 }
                 core.initialize(coreConfig, [this._sender]);
