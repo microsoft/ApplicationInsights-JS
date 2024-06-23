@@ -448,8 +448,11 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                     }
                                    
                                 }
-                                let promise = _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst);
-                                _queueStorageEvent("sendNextBatch", promise);
+                                if (_urlCfg && _urlCfg.batchHandler) {
+                                    let promise = _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst);
+                                    _queueStorageEvent("sendNextBatch", promise);
+                                }
+                               
                             }
                            
                         } else {
