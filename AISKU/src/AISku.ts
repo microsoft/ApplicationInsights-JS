@@ -232,23 +232,26 @@ export class AppInsightsSku implements IApplicationInsights {
                         });
 
                     });
-
-                    let urlPromise = createAsyncPromise<string>((resolve, reject) => {
-                        _parseCs().then((cs) => {
-                            let url = _config.endpointUrl;
-                            let ingest = cs && cs.ingestionendpoint;
-                            url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
-                            resolve(url);
-                        }).catch((e) => {
-                            // parseCs will always resolve(unless timeout)
-                            // return null in case any error happens
-                            resolve(null);
+                    
+                    let url: IPromise<string> | string = _config.userOverrideEndpointUrl;
+                    if (isNullOrUndefined(url)) {
+                        url = createAsyncPromise<string>((resolve, reject) => {
+                            _parseCs().then((cs) => {
+                                let url = _config.endpointUrl;
+                                let ingest = cs && cs.ingestionendpoint;
+                                url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
+                                resolve(url);
+                            }).catch((e) => {
+                                // parseCs will always resolve(unless timeout)
+                                // return null in case any error happens
+                                resolve(null);
+                            });
+    
                         });
-
-                    });
+                    }
 
                     _config.instrumentationKey = ikeyPromise;
-                    _config.endpointUrl = _config.userOverrideEndpointUrl || urlPromise;
+                    _config.endpointUrl = url;
                     
                 }
                 if (isString(configCs)) {
