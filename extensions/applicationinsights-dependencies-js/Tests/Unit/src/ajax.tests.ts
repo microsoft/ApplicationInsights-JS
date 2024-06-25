@@ -210,7 +210,7 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCaseAsync({
-            name: "Dependencies Configuration: init with cs promise ikey promise",
+            name: "Dependencies Configuration: init with cs promise ikey promise and default enableAjaxPerfTracking",
             stepDelay: 100,
             useFakeTimers: true,
             steps: [() => {
