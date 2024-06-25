@@ -7,8 +7,8 @@ import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsi
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
-    AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
-    IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
+    AnalyticsPluginIdentifier, ConnectionString, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
+    IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
     ITelemetryContext as Common_ITelemetryContext, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceTelemetry,
     PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
 } from "@microsoft/applicationinsights-common";
@@ -201,33 +201,48 @@ export class AppInsightsSku implements IApplicationInsights {
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
                 let configCs =  _config.connectionString;
-                
-                if (isPromiseLike(configCs)) {
-                    let ikeyPromise = createAsyncPromise<string>((resolve, reject) => {
+
+                function _parseCs() {
+                    return createAsyncPromise<ConnectionString>((resolve, reject) => {
                         doAwaitResponse(configCs, (res) => {
-                            let curCs = res.value;
-                            let ikey = _config.instrumentationKey;
+                            let curCs = res && res.value;
+                            let parsedCs = null;
                             if (!res.rejected && curCs) {
                                 // replace cs with resolved values in case of circular promises
                                 _config.connectionString = curCs;
-                                let resolvedCs = parseConnectionString(curCs);
-                                ikey = resolvedCs.instrumentationkey || ikey;
+                                parsedCs = parseConnectionString(curCs);
                             }
+                            // if can't resolve cs promise, null will be returned
+                            resolve(parsedCs);
+                        });
+                    });
+
+                }
+                
+                if (isPromiseLike(configCs)) {
+                    let ikeyPromise = createAsyncPromise<string>((resolve, reject) => {
+                        _parseCs().then((cs) => {
+                            let ikey = _config.instrumentationKey;
+                            ikey = cs && cs.instrumentationkey || ikey;
                             resolve(ikey);
+                        }).catch((e) => {
+                            // parseCs will always resolve(unless timeout)
+                            // return null in case any error happens
+                            resolve(null);
                         });
 
                     });
 
                     let urlPromise = createAsyncPromise<string>((resolve, reject) => {
-                        doAwaitResponse(configCs, (res) => {
-                            let curCs = res.value;
+                        _parseCs().then((cs) => {
                             let url = _config.endpointUrl;
-                            if (!res.rejected && curCs) {
-                                let resolvedCs = parseConnectionString(curCs);
-                                let ingest = resolvedCs.ingestionendpoint;
-                                url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
-                            }
+                            let ingest = cs && cs.ingestionendpoint;
+                            url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
                             resolve(url);
+                        }).catch((e) => {
+                            // parseCs will always resolve(unless timeout)
+                            // return null in case any error happens
+                            resolve(null);
                         });
 
                     });

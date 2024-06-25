@@ -599,6 +599,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     if (_enableAjaxPerfTracking) {
                         let iKey = config.instrumentationKey || "unkwn";
                         // only change the ikey if it is string
+                        // TODO: handle ikey promise
                         if (isString(iKey)) {
                             if (iKey.length > 5) {
                                 _markPrefix = AJAX_MONITOR_PREFIX + strSubstring(iKey, iKey.length - 5) + ".";

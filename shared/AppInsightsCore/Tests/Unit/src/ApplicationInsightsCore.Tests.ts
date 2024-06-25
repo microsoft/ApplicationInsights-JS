@@ -1571,92 +1571,94 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
         });
 
-        // this.testCaseAsync({
-        //     name: "ApplicationInsightsCore Init: init with ikey and endpoint timeout promises",
-        //     stepDelay: 100,
-        //     useFakeTimers: true,
-        //     steps: [() => {
-        //         let trackPlugin = new TrackPlugin();
-        //         let channelPlugin = new ChannelPlugin();
-        //         channelPlugin.priority = 1001;
-        //         let core = new AppInsightsCore();
-        //         let channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
-        //         this.ctx.core = core;
-        //         this.ctx.channelSpy = channelSpy;
+        this.testCaseAsync({
+            name: "ApplicationInsightsCore Init: init with ikey and endpoint timeout promises",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+                let trackPlugin = new TrackPlugin();
+                let channelPlugin = new ChannelPlugin();
+                channelPlugin.priority = 1001;
+                let core = new AppInsightsCore();
+                let channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
+                this.ctx.core = core;
+                this.ctx.channelSpy = channelSpy;
 
-        //         let ikeyPromise = createTimeoutPromise(60, true,"testIkey");
-        //         let urlPromise = createTimeoutPromise(60, true, "testUrl");
+                let ikeyPromise = createTimeoutPromise(60, true,"testIkey");
+                let urlPromise = createTimeoutPromise(60, true, "testUrl");
 
-        //         let config = {
-        //             instrumentationKey: ikeyPromise,
-        //             endpointUrl: urlPromise,
-        //             initTimeOut: 1
-        //         } as IConfiguration;
-        //         core.initialize(
-        //             config,
-        //             [trackPlugin, channelPlugin]);
+                let config = {
+                    instrumentationKey: ikeyPromise,
+                    endpointUrl: urlPromise,
+                    initTimeOut: 1
+                } as IConfiguration;
+                core.initialize(
+                    config,
+                    [trackPlugin, channelPlugin]);
           
 
-        //         Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
-        //         Assert.ok(core.eventCnt() == 1, "Event should be queued");
-        //         let activeStatus = core.activeStatus();
-        //         Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
+                Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
+                Assert.ok(core.eventCnt() == 1, "Event should be queued");
+                let activeStatus = core.activeStatus();
+                Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
 
-        //     }].concat(PollingAssert.createPollingAssert(() => {
-        //         let core = this.ctx.core;
-        //         let activeStatus = core.activeStatus();
-        //         let channelSpy = this.ctx.channelSpy;
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this.ctx.core;
+                let activeStatus = core.activeStatus();
+                let channelSpy = this.ctx.channelSpy;
             
-        //         if (activeStatus === ActiveStatus.INACTIVE) {
-        //             Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
-        //             Assert.ok(core.eventCnt() == 0, "Event should be released");
-        //             return true;
-        //         }
-        //         return false;
-        //     }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-        // });
+                if (activeStatus === ActiveStatus.INACTIVE) {
+                    Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
+                    Assert.ok(core.eventCnt() == 0, "Event should be released");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
 
-        // this.testCaseAsync({
-        //     name: "ApplicationInsightsCore Init: init with ikey promises and endpoint timeout promises",
-        //     stepDelay: 100,
-        //     useFakeTimers: true,
-        //     steps: [() => {
-        //         let channelPlugin = new ChannelPlugin();
-        //         channelPlugin.priority = 1001;
-        //         let core = new AppInsightsCore();
-        //         let channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
+        this.testCaseAsync({
+            name: "ApplicationInsightsCore Init: init with ikey timeout promises and endpoint promises",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+                let channelPlugin = new ChannelPlugin();
+                channelPlugin.priority = 1001;
+                let core = new AppInsightsCore();
+                let channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
 
-        //         let ikeyPromise = createAsyncResolvedPromise("testIkey1");
-        //         let urlPromise = createTimeoutPromise(20, false, "testUrl1");
+                let ikeyPromise = createTimeoutPromise(20, true, "testIkey1");
+                let urlPromise = createTimeoutPromise(1, true, "testUrl1");
 
-        //         let config = {
-        //             instrumentationKey: ikeyPromise,
-        //             endpointUrl: urlPromise,
-        //             initTimeOut: 2
-        //         } as IConfiguration;
-        //         core.initialize(
-        //             config,
-        //             [channelPlugin]);
-        //         this.ctx.core = core;
-        //         this.ctx.channelSpy = channelSpy;
+                let config = {
+                    instrumentationKey: ikeyPromise,
+                    endpointUrl: urlPromise,
+                    initTimeOut: 6
+                } as IConfiguration;
+                core.initialize(
+                    config,
+                    [channelPlugin]);
+                this.ctx.core = core;
+                this.ctx.channelSpy = channelSpy;
 
-        //         this.clock.tick(1);
-        //         let activeStatus = core.activeStatus();
-        //         Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
+                let activeStatus = core.activeStatus();
+                Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
+                Assert.ok(!channelSpy.calledOnce, "channel should not be called");
+                core.track({name: "testEvent"});
 
-        //     }].concat(PollingAssert.createPollingAssert(() => {
-        //         let core = this.ctx.core;
-        //         let activeStatus = core.activeStatus();
-        //         let channelSpy = this.ctx.channelSpy
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this.ctx.core;
+                let activeStatus = core.activeStatus();
+                let channelSpy = this.ctx.channelSpy
             
-        //         if (activeStatus === ActiveStatus.INACTIVE) {
-        //             //Assert.equal(activeStatus, ActiveStatus.INACTIVE,"should be set to inactive status");
-        //             //Assert.equal(!channelSpy.called, "channel should not be called");
-        //             return true;
-        //         }
-        //         return false;
-        //     }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-        // });
+                if (activeStatus === ActiveStatus.INACTIVE) {
+                    Assert.ok(core.eventCnt() == 0, "Event should be released");
+                    Assert.ok(!channelSpy.called, "channel should not be called");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
 
 
 

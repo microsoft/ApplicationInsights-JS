@@ -42,7 +42,7 @@ import { createCookieMgr } from "./CookieMgr";
 import { createUniqueNamespace } from "./DataCacheHelper";
 import { getDebugListener } from "./DbgExtensionUtils";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import { getSetValue, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
+import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
 import {
     STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
 } from "./InternalConstants";
@@ -400,7 +400,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         // reset to false for new dynamic changes
                         _isStatusSet = false;
                         _activeStatus = eActiveStatus.PENDING;
-                        let initTimeout = isNullOrUndefined(rootCfg.initTimeOut)?  rootCfg.initTimeOut : maxInitTimeout; // rootCfg.initTimeOut could be 0
+                        let initTimeout = isNotNullOrUndefined(rootCfg.initTimeOut)?  rootCfg.initTimeOut : maxInitTimeout; // rootCfg.initTimeOut could be 0
                         let allPromises = createAllSettledPromise<string>(promises);
                         _initTimer = scheduleTimeout(() => {
                             // set _isStatusSet to true
