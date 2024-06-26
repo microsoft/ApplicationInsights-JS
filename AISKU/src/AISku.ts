@@ -7,8 +7,8 @@ import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsi
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
-    AnalyticsPluginIdentifier, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry,
-    IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
+    AnalyticsPluginIdentifier, ConnectionString, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
+    IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
     ITelemetryContext as Common_ITelemetryContext, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceTelemetry,
     PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
 } from "@microsoft/applicationinsights-common";
@@ -26,8 +26,8 @@ import {
     IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { IPromise, createPromise } from "@nevware21/ts-async";
-import { arrForEach, arrIndexOf, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
+import { IPromise, createAsyncPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { arrForEach, arrIndexOf, isPromiseLike, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
     CONFIG_ENDPOINT_URL, STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR,
@@ -200,8 +200,65 @@ export class AppInsightsSku implements IApplicationInsights {
 
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
-                if (_config.connectionString) {
-                    const cs = parseConnectionString(_config.connectionString);
+                let configCs =  _config.connectionString;
+
+                function _parseCs() {
+                    return createAsyncPromise<ConnectionString>((resolve, reject) => {
+                        doAwaitResponse(configCs, (res) => {
+                            let curCs = res && res.value;
+                            let parsedCs = null;
+                            if (!res.rejected && curCs) {
+                                // replace cs with resolved values in case of circular promises
+                                _config.connectionString = curCs;
+                                parsedCs = parseConnectionString(curCs);
+                            }
+                            // if can't resolve cs promise, null will be returned
+                            resolve(parsedCs);
+                        });
+                    });
+
+                }
+                
+                if (isPromiseLike(configCs)) {
+                    let ikeyPromise = createAsyncPromise<string>((resolve, reject) => {
+                        _parseCs().then((cs) => {
+                            let ikey = _config.instrumentationKey;
+                            ikey = cs && cs.instrumentationkey || ikey;
+                            resolve(ikey);
+                        }).catch((e) => {
+                            // parseCs will always resolve(unless timeout)
+                            // return null in case any error happens
+                            resolve(null);
+                        });
+
+                    });
+                    
+                    let url: IPromise<string> | string = _config.userOverrideEndpointUrl;
+                    if (isNullOrUndefined(url)) {
+                        url = createAsyncPromise<string>((resolve, reject) => {
+                            _parseCs().then((cs) => {
+                                let url = _config.endpointUrl;
+                                let ingest = cs && cs.ingestionendpoint;
+                                url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
+                                resolve(url);
+                            }).catch((e) => {
+                                // parseCs will always resolve(unless timeout)
+                                // return null in case any error happens
+                                resolve(null);
+                            });
+    
+                        });
+                    }
+
+                    _config.instrumentationKey = ikeyPromise;
+                    _config.endpointUrl = url;
+                    
+                }
+                if (isString(configCs)) {
+                    // confirm if promiselike function present
+                    // handle cs promise here
+                    // add cases to oneNote
+                    const cs = parseConnectionString(configCs);
                     const ingest = cs.ingestionendpoint;
                     _config.endpointUrl =  _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : ingest + DEFAULT_BREEZE_PATH; // add /v2/track
                     _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;

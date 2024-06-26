@@ -8,8 +8,8 @@ import {
     AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
     ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise } from "@nevware21/ts-async";
-import { isNullOrUndefined, objDefine, throwError } from "@nevware21/ts-utils";
+import { IPromise, createAsyncPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
 
 const defaultConfigValues: IConfigDefaults<IConfiguration> = {
     diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000)
@@ -73,8 +73,45 @@ export class ApplicationInsights {
                 _config = cfgHandler.cfg;
     
                 core.addUnloadHook(onConfigChange(cfgHandler, () => {
-                    if (_config.connectionString) {
-                        const cs = parseConnectionString(_config.connectionString);
+                    let configCs =  _config.connectionString;
+                
+                    if (isPromiseLike(configCs)) {
+                        let ikeyPromise = createAsyncPromise<string>((resolve, reject) => {
+                            doAwaitResponse(configCs, (res) => {
+                                let curCs = res.value;
+                                let ikey = _config.instrumentationKey;
+                                if (!res.rejected && curCs) {
+                                    // replace cs with resolved values in case of circular promises
+                                    _config.connectionString = curCs;
+                                    let resolvedCs = parseConnectionString(curCs);
+                                    ikey = resolvedCs.instrumentationkey || ikey;
+                                }
+                                resolve(ikey);
+                            });
+
+                        });
+
+                        let urlPromise = createAsyncPromise<string>((resolve, reject) => {
+                            doAwaitResponse(configCs, (res) => {
+                                let curCs = res.value;
+                                let url = _config.endpointUrl;
+                                if (!res.rejected && curCs) {
+                                    let resolvedCs = parseConnectionString(curCs);
+                                    let ingest = resolvedCs.ingestionendpoint;
+                                    url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
+                                }
+                                resolve(url);
+                            });
+
+                        });
+
+                        _config.instrumentationKey = ikeyPromise;
+                        _config.endpointUrl = _config.userOverrideEndpointUrl || urlPromise;
+                    
+                    }
+                    
+                    if (isString(configCs)) {
+                        const cs = parseConnectionString(configCs);
                         const ingest = cs.ingestionendpoint;
                         _config.endpointUrl = _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : (ingest + DEFAULT_BREEZE_PATH); // only add /v2/track when from connectionstring
                         _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;

@@ -7,6 +7,7 @@ export {
 } from "./Util";
 export { ThrottleMgr } from "./ThrottleMgr";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
+export { ConnectionString } from "./Interfaces/ConnectionString";
 export { FieldType } from "./Enums";
 export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
 export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified } from "./Constants";

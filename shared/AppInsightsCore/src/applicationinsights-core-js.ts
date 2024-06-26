@@ -18,6 +18,7 @@ export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, B
 export { SendRequestReason, TransportType } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
+export { eActiveStatus, ActiveStatus } from "./JavaScriptSDK.Enums/InitActiveStatusEnum"
 export { throwAggregationError } from "./JavaScriptSDK/AggregationError";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";

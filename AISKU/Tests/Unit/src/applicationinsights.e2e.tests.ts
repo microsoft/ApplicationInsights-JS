@@ -3,8 +3,9 @@ import { SinonSpy } from 'sinon';
 import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig } from '@microsoft/applicationinsights-common';
-import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
+import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
 import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
 
@@ -46,6 +47,7 @@ export class ApplicationInsightsTests extends AITestClass {
     private _config;
     private _appId: string;
     private _ctx: any;
+
 
     constructor(testName?: string) {
         super(testName || "ApplicationInsightsTests");
@@ -250,6 +252,217 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
+        this.testCaseAsync({
+            name: "Init: init with cs promise, change with cs string",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+
+                
+                config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                // promise is not resolved, no new changes applied
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Init: init with cs promise and offline channel",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                let offlineChannel = new OfflineChannel();
+                this._config.channels = [[offlineChannel]];
+                this._config.initTimeOut= 80000;
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+
+                
+                config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1"
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
+                    let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
+                    Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                    Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                    let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                    Assert.ok(urlConfig, "offline url config is initialized");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+
+        
+        this.testCaseAsync({
+            name: "Init: init with cs string, change with cs promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+                let config = this._ai.config;
+                let expectedIkey = ApplicationInsightsTests._instrumentationKey;
+                let expectedConnectionString = ApplicationInsightsTests._connectionString;
+                let expectedEndpointUrl = "https://dc.services.visualstudio.com/v2/track";
+                Assert.ok(config, "ApplicationInsights config exists");
+                Assert.equal(expectedConnectionString, config.connectionString, "connection string is set");
+                Assert.equal(expectedIkey, config.instrumentationKey, "ikey is set");
+                Assert.equal(expectedEndpointUrl, config.endpointUrl, "endpoint url is set from connection string");
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active");
+
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                
+                config.connectionString = csPromise;
+                config.initTimeOut = 80000;
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Init: init with cs null, ikey promise, endpoint promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let ikeyPromise = createAsyncResolvedPromise("testIkey");
+                let endpointPromise = createAsyncResolvedPromise("testUrl");
+                //let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                //this._config.connectionString = csPromise;
+                this._config.connectionString = null;
+                this._config.instrumentationKey = ikeyPromise;
+                this._config.endpointUrl = endpointPromise;
+                this._config.initTimeOut= 80000;
+
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                Assert.equal(config.connectionString,null, "connection string shoule be null");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+
         this.testCase({
             name: "CfgSync DynamicConfigTests: Prod CDN is Fetched and feature is turned on/off as expected",
             useFakeTimers: true,
@@ -295,7 +508,7 @@ export class ApplicationInsightsTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized with endpoint url",
+            name: "Init Promise: Offline Support can be added and initialized with endpoint url",
             useFakeTimers: true,
             test: () => {
                 this.clock.tick(1);
@@ -327,13 +540,13 @@ export class ApplicationInsightsTests extends AITestClass {
                 if (ai && ai["dependencies"]) {
                     ai["dependencies"].teardown();
                 }
-                offlineChannel.teardown();
+                //offlineChannel.teardown();
                 
             }
         });
 
         this.testCase({
-            name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized with channels",
+            name: "Init Promise: Offline Support can be added and initialized with channels",
             useFakeTimers: true,
             test: () => {
                 this.clock.tick(1);
@@ -365,7 +578,6 @@ export class ApplicationInsightsTests extends AITestClass {
                 if (ai && ai["dependencies"]) {
                     ai["dependencies"].teardown();
                 }
-                offlineChannel.teardown();
                 
             }
         });
@@ -377,7 +589,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 this.clock.tick(1);
                 let offlineChannel = new OfflineChannel();
                 let config = {
-                    instrumentationKey: "testIKey",
+                    connectionString: "InstrumentationKey=testIKey",
                     extensionConfig:{
                         ["AppInsightsCfgSyncPlugin"]: {
                             cfgUrl: ""
@@ -395,13 +607,14 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
                 Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
                 let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+
+                this.clock.tick(1);
                 Assert.ok(urlConfig, "offline url config is initialized");
 
                 ai.unload(false);
                 if (ai && ai["dependencies"]) {
                     ai["dependencies"].teardown();
                 }
-                offlineChannel.teardown();
             }
         });
         

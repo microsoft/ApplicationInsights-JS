@@ -13,7 +13,7 @@ import {
     eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
-import { ITimerHandler, isFunction, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isFunction, isString, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero
 } from "./Helpers/Utils";
@@ -401,12 +401,12 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             _storeNotification(sentItems);
                         }
                     };
-                    if (payloadData) {
+                    if (payloadData && _urlCfg && _urlCfg.batchHandler) {
                         let promise = _urlCfg.batchHandler.storeBatch(payloadData, callback, unload);
                         _queueStorageEvent("storeBatch", promise);
                     }
 
-                    if (!_inMemoBatch.count()) {
+                    if (_inMemoBatch && !_inMemoBatch.count()) {
                         _inMemoFlushTimer && _inMemoFlushTimer.cancel();
                     }
 
@@ -448,8 +448,11 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                     }
                                    
                                 }
-                                let promise = _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst);
-                                _queueStorageEvent("sendNextBatch", promise);
+                                if (_urlCfg && _urlCfg.batchHandler) {
+                                    let promise = _urlCfg.batchHandler.sendNextBatch(callback, false, _senderInst);
+                                    _queueStorageEvent("sendNextBatch", promise);
+                                }
+                               
                             }
                            
                         } else {
@@ -570,6 +573,14 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             function _createUrlConfig(coreConfig: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
 
                 _self._addHook(onConfigChange(coreConfig, (details) => {
+                    if (!isString(coreConfig.instrumentationKey) || !isString(coreConfig.endpointUrl)) {
+                        // if ikey or endpointUrl is promise, delay initialization
+                        _self.pause();
+                        return;
+                    }
+                    if (_paused) {
+                        _self.resume();
+                    }
                     let storageConfig: IOfflineChannelConfiguration = null;
                     let theConfig = details.cfg;
 
@@ -614,7 +625,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                    
                         handler.initialize(providerContext);
                         urlConfig = {
-                            iKey: coreConfig.instrumentationKey,
+                            iKey: coreConfig.instrumentationKey as string,
                             url: curUrl,
                             minPersistenceCacheLevel: storageConfig.minPersistenceLevel,
                             coreRootCtx: coreRootCtx,

@@ -4,6 +4,7 @@
 import { IPromise } from "@nevware21/ts-async";
 import { ITimerHandler } from "@nevware21/ts-utils";
 import { WatcherFunction } from "../Config/IDynamicWatcher";
+import { eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
 import { IChannelControls } from "./IChannelControls";
@@ -225,4 +226,22 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * Function used to identify the get w parameter used to identify status bit to some channels
      */
     getWParam: () => number;
+
+    /**
+     * Watches and tracks status of initialization process
+     * @returns ActiveStatus
+     * @since 3.3.0
+     * If returned status is active, it means initialization process is completed.
+     * If returned status is pending, it means the initialization process is waiting for promieses to be resolved.
+     * If returned status is inactive, it means ikey is invalid or can 't get ikey or enpoint url from promsises.
+     */
+    activeStatus?: () => eActiveStatus | number;
+
+     /**
+     * Set Active Status to pending, which will block the incoming changes until internal promises are resolved
+     * @internal Internal use
+     * @since 3.3.0
+     */
+    _setPendingStatus?: () => void;
+
 }

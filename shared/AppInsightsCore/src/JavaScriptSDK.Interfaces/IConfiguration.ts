@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IPromise } from "@nevware21/ts-async";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
@@ -17,12 +18,12 @@ export interface IConfiguration {
     /**
      * Instrumentation key of resource. Either this or connectionString must be specified.
      */
-    instrumentationKey?: string;
+    instrumentationKey?: string| IPromise<string>;
 
     /**
      * Connection string of resource. Either this or instrumentationKey must be specified.
      */
-    connectionString?: string;
+    connectionString?: string | IPromise<string> ;
 
     /**
      * Set the timer interval (in ms) for internal logging queue, this is the
@@ -72,7 +73,7 @@ export interface IConfiguration {
     /**
      * Endpoint where telemetry data is sent
      */
-    endpointUrl?: string;
+    endpointUrl?: string | IPromise<string>;
 
     /**
      * Extension configs loaded in SDK
@@ -190,4 +191,21 @@ export interface IConfiguration {
      * @defaultValue undefined
      */
     featureOptIn?: IFeatureOptIn;
+
+    /**
+     * If your connection string, instrumentation key and endpoint url are promises,
+     * this config is to manually set timeout for those promises.
+     * Default: 50000ms
+     * @since 3.3.0
+     */
+    initTimeOut?: number;
+
+    /**
+     * If your connection string, instrumentation key and endpoint url are promises,
+     * this config is to manually set in memory proxy track calls count limit before promises finished.
+     * Default: 100
+     * @since 3.3.0
+     */
+    initInMemoMaxSize?: number;
+
 }
