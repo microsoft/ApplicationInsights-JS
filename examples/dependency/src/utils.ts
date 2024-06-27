@@ -12,6 +12,7 @@ export const stopDependencyEventButtonId = "stop-dependency-events";
 export const changeConfigButtonId = "change-config";
 export const fetchCallId = "create-fetch-request";
 export const fetchXhrId = "create-xhr-request";
+export const ajaxCallId = "create-ajaxPerf-request";
 export const untrackFetchRequestId = "create-untrack-fetch-request";
 export const removeAllHandlersId = "remove-all-handlers";
 export const buttonSectionId = "button-section";

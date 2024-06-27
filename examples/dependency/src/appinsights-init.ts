@@ -95,7 +95,13 @@ export function changeConfig() {
     return false;
 }
 
-
+export function enableAjaxPerfTrackingConfig() {
+    if (_appInsights && _appInsights.config.extensionConfig) {
+        _appInsights.config.extensionConfig["AjaxDependencyPlugin"].enableAjaxPerfTracking = true;
+        return true;
+    }
+    return false;
+}
 
 // // ******************************************************************************************************************************
 // // Snippet Initialization
