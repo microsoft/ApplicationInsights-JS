@@ -3379,6 +3379,52 @@ export class AjaxPerfTrackTests extends AITestClass {
         });
 
         this.testCaseAsync({
+            name: "AjaxPerf: check perf mark prefix is correctly set for multiple xhr requests",
+            stepDelay: 10,
+            steps: [ (testContext) => {
+                let performance = getPerformance();
+                let markSpy = this.sandbox.spy(performance, "mark");
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            enableAjaxPerfTracking: true
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+                // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
+                this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
+                // Act
+                var xhr = new XMLHttpRequest();
+
+                // trigger the request that should cause a track event once the xhr request is complete
+                xhr.open("GET", "https://httpbin.org/status/200");
+                xhr.send();
+
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open("GET", "https://httpbin.org/anything");
+                xhr2.send();
+
+                Assert.equal(true, markSpy.called, "The code should have called been mark()");
+                let spyDetails = markSpy.args;
+                let prefix1 = spyDetails[0][0];
+                let prefix2 = spyDetails[1][0];
+                Assert.equal(prefix1.indexOf("ajaxData"), 0, "Prefix1 should start with 'ajaxData'");
+                Assert.equal(prefix2.indexOf("ajaxData"), 0, "Prefix2 should start with 'ajaxData'");
+
+                let ajaxCountOne = parseInt(prefix1.substring(prefix1.indexOf('#') + 1), 10);
+                let ajaxCountTwo = parseInt(prefix2.substring(prefix1.indexOf('#') + 1), 10);
+                Assert.equal(1, ajaxCountTwo-ajaxCountOne, "the count should increase by 1");
+           }]
+        });
+
+        this.testCaseAsync({
             name: "AjaxPerf: check that performance tracking is reported, even if the entry is missing when enabled for xhr requests",
             stepDelay: 10,
             steps: [ (testContext) => {

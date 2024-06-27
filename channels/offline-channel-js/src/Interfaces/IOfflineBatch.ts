@@ -3,8 +3,7 @@
 
 import { IOfflineListener } from "@microsoft/applicationinsights-common";
 import {
-    IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride,
-    createEnumStyle
+    IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXHROverride, createEnumStyle
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 

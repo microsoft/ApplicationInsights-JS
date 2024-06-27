@@ -4,9 +4,8 @@
 import { EventPersistence } from "@microsoft/applicationinsights-common";
 import { INotificationManager, ITelemetryItem, NotificationManager, generateW3CId } from "@microsoft/applicationinsights-core-js";
 import { isString, objKeys, strSubstr } from "@nevware21/ts-utils";
-import { isValidPersistenceLevel } from "../Providers/IndexDbProvider";
 import { IPostTransmissionTelemetryItem } from "../Interfaces/IInMemoryBatch";
-
+import { isValidPersistenceLevel } from "../Providers/IndexDbProvider";
 
 // Endpoint schema
 // <prefix>.<suffix>
