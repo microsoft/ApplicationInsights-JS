@@ -47,7 +47,7 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "@microsoft/rush": "5.97.1",
+        "@microsoft/rush": "5.129.6",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@typescript-eslint/eslint-plugin": "^5.46.1",

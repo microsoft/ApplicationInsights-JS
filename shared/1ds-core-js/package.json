@@ -39,8 +39,8 @@
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/applicationinsights-core-js": "3.2.2",
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@nevware21/ts-utils": ">= 0.11.1 < 2.x",
-        "@nevware21/ts-async": ">= 0.5.1 < 2.x"
+        "@nevware21/ts-utils": ">= 0.11.3 < 2.x",
+        "@nevware21/ts-async": ">= 0.5.2 < 2.x"
     },
     "devDependencies": {
         "@types/qunit": "^2.19.3",
@@ -49,7 +49,7 @@
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "@microsoft/api-extractor": "^7.40.0",
-        "@nevware21/ts-async": ">= 0.5.1 < 2.x",
+        "@nevware21/ts-async": ">= 0.5.2 < 2.x",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-qunit": "^6.2.1",
