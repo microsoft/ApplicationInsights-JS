@@ -17,6 +17,15 @@ Users can also enable Integrity Check and minimize snippet loading time by setti
 - #2360 [main] set script attribut to avoid race condition when multiple sdks are inited #2355 
 - #2339 [main] create snippet mini loader 
 
+## 3.3.0 (July 1st, 2024)
+
+### Changelog
+
+- #2371 Bump @microsoft/rush from 5.97.1 to 5.129.6
+- #2340 [Main][Task]27939476: Initialization with iKey and endpoint to be promises
+- #2366 [Sdk Loader] Increase version to 1.2.0
+- #2367 [main] update the way to generate ajax perforamance mark prefix 
+
 ## 3.2.2 (June 11th, 2024)
 
 ### Changelog
