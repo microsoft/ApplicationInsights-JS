@@ -19,10 +19,16 @@ Users can also enable Integrity Check and minimize snippet loading time by setti
 
 ## 3.3.0 (July 1st, 2024)
 
+### Potential breaking change
+
+This release contains a potential break change due to enhancing the definition of the [IConfiguration](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IConfiguration.ts) to support Promise types for the connectionString, instrumentationKey and endpointURL; any extension that relies on these base interfaces will VERY likely cause TypeScript to fail with potential warnings about the types being different.
+
 ### Changelog
 
 - #2371 Bump @microsoft/rush from 5.97.1 to 5.129.6
 - #2340 [Main][Task]27939476: Initialization with iKey and endpoint to be promises
+
+!! potential breaking changes. IConfiguration support Promise types for the connectionString, instrumentationKey and endpointURL
 - #2366 [Sdk Loader] Increase version to 1.2.0
 - #2367 [main] update the way to generate ajax perforamance mark prefix 
 
