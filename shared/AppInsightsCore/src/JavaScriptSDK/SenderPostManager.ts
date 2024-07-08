@@ -57,7 +57,7 @@ export class SenderPostManager {
 
         dynamicProto(SenderPostManager, this, (_self, _base) => {
 
-            let _sendCredentials = true; // for 1ds
+            let _sendCredentials = true; // default
             _initDefaults();
 
 
@@ -93,9 +93,10 @@ export class SenderPostManager {
                     _disableFetchKeepAlive = !!config.disableFetchKeepAlive;
     
                     _fallbackInst = { sendPOST: _xhrSender} as IXHROverride;
-                    if (!_isOneDs) {
-                        _sendCredentials = false; // for appInsights, set it to false always
-                    }
+                    // remove since 3.3.1
+                    // if (!_isOneDs) {
+                    //     _sendCredentials = false; // for appInsights, set it to false always
+                    // }
     
                     if (_disableCredentials) {
                         let location = getLocation();

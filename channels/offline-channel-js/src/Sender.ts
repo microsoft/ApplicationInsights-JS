@@ -100,7 +100,8 @@ export class Sender {
                     let xhrOverride = offlineSenderCfg.httpXHROverride || senderConfig.httpXHROverride;
 
                     let customInterface = isOverrideFn(xhrOverride)? xhrOverride : null;
-                    _disableCredentials = !customInterface && _isOneDs;
+                    _disableCredentials = !customInterface || config.withCredentials === false; // if withCredentials is not defined, then should not change the default value
+                    // siyu: this is the place that determine the value, and would be used to pass into senderpostmanager
                     let sendPostMgrConfig = _getSendPostMgrConfig();
                     if (!_sendPostMgr) {
                         _sendPostMgr = new SenderPostManager();

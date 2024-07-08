@@ -238,7 +238,9 @@ export class HttpManager {
                         if (!isNullOrUndefined(channelConfig.useSendBeacon)) {
                             _useBeacons = !!channelConfig.useSendBeacon;
                         }
-
+                        if (core.config.withCredentials === false){
+                            _sendCredentials = false;
+                        }
                         let sendPostConfig = _getSendPostMgrConfig();
                         // only init it once
                         if (!_sendPostMgr) {

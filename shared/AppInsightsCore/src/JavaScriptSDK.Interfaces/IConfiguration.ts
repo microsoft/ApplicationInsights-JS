@@ -208,4 +208,11 @@ export interface IConfiguration {
      */
     initInMemoMaxSize?: number;
 
+    /**
+     * [Optional] Set whether or not cross-site Access-Control requests should be made using credentials
+     * such as cookies, authentication headers or TLS client certificates.
+     * See [here](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials) for more information.
+     */
+    withCredentials?: boolean;
+
 }
