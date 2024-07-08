@@ -97,13 +97,13 @@ export class SenderPostManager {
                     // if (!_isOneDs) {
                     //     _sendCredentials = false; // for appInsights, set it to false always
                     // }
-    
+                    let location = getLocation();
+                    if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
+                        // Special case where a local html file fails with a CORS error on Chromium browsers
+                        _sendCredentials = false;
+                    }
                     if (_disableCredentials) {
-                        let location = getLocation();
-                        if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
-                            // Special case where a local html file fails with a CORS error on Chromium browsers
-                            _sendCredentials = false;
-                        }
+                       _sendCredentials = false;
                     }
                     return true;
 
