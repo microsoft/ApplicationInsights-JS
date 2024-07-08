@@ -380,8 +380,7 @@ export class SenderPostManager {
                 }
 
 
-                if (_sendCredentials) {
-                    // for 1ds, Don't send credentials when URL is file://
+                if (_sendCredentials) {  // fetch request credentials
                     init.credentials = "include";
                 }
 
