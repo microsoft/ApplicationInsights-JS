@@ -380,7 +380,7 @@ export class SenderPostManager {
                 }
 
 
-                if (_sendCredentials && _isOneDs) {
+                if (_sendCredentials) {
                     // for 1ds, Don't send credentials when URL is file://
                     init.credentials = "include";
                 }
