@@ -45,7 +45,7 @@ export class SenderPostManager {
         let _diagLog: IDiagnosticLogger;
         let _isOneDs: boolean;
         let _onCompleteFuncs: _ISenderOnComplete;
-        let _disableCredentials: boolean;
+        let _sendCredentials: string;
         let _fallbackInst: IXHROverride;
         let _disableXhr: boolean;
         let _disableBeacon: boolean;
@@ -57,7 +57,7 @@ export class SenderPostManager {
 
         dynamicProto(SenderPostManager, this, (_self, _base) => {
 
-            let _sendCredentials = true; // default
+            let _sendCredentials = "true"; // default
             _initDefaults();
 
 
@@ -74,7 +74,7 @@ export class SenderPostManager {
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_isInitialized, _isOneDs, _disableCredentials, _enableSendPromise];
+                return [_isInitialized, _isOneDs, _sendCredentials, _enableSendPromise];
             };
 
             // This componet might get its config from sender, offline sender, 1ds post
@@ -82,7 +82,7 @@ export class SenderPostManager {
             _self.SetConfig = (config: _ISendPostMgrConfig): boolean => {
                 try {
                     _onCompleteFuncs = config.senderOnCompleteCallBack || {};
-                    _disableCredentials = !!config.disableCredentials;
+                    _sendCredentials = config.sendCredentials;
                     _isOneDs = !!config.isOneDs;
                     _enableSendPromise = !!config.enableSendPromise;
                     _disableXhr = !! config.disableXhr;
@@ -93,17 +93,14 @@ export class SenderPostManager {
                     _disableFetchKeepAlive = !!config.disableFetchKeepAlive;
     
                     _fallbackInst = { sendPOST: _xhrSender} as IXHROverride;
-                    // remove since 3.3.1
-                    // if (!_isOneDs) {
-                    //     _sendCredentials = false; // for appInsights, set it to false always
-                    // }
+                    
+                    if (!_isOneDs) {
+                        _sendCredentials = "false"; // for appInsights, set it to false always
+                    }
                     let location = getLocation();
                     if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
                         // Special case where a local html file fails with a CORS error on Chromium browsers
-                        _sendCredentials = false;
-                    }
-                    if (_disableCredentials) {
-                       _sendCredentials = false;
+                        _sendCredentials = "false";
                     }
                     return true;
 
@@ -289,8 +286,12 @@ export class SenderPostManager {
                     resolveFunc && resolveFunc(false);
                     return;
                 }
-
-                let xhr = openXhr(STR_POST_METHOD, endPointUrl, _sendCredentials, true, sync, payload.timeout);
+                var xhr: XMLHttpRequest;
+                if (_sendCredentials === "true" || _sendCredentials === "include") {
+                    xhr = openXhr(STR_POST_METHOD, endPointUrl, true, true, sync, payload.timeout);
+                } else {
+                    xhr = openXhr(STR_POST_METHOD, endPointUrl, false, true, sync, payload.timeout);
+                }
                 if (!_isOneDs) {
                     // application/json should NOT add to 1ds post by default
                     xhr.setRequestHeader("Content-type", "application/json");
@@ -380,8 +381,12 @@ export class SenderPostManager {
                 }
 
 
-                if (_sendCredentials) {  // fetch request credentials
+                if (_sendCredentials === "true" || _sendCredentials === "include") {  // fetch request credentials
                     init.credentials = "include";
+                } else if (_sendCredentials === "false") {
+                    init.credentials = "same-origin";
+                } else if (_sendCredentials === "omit"){
+                    init.credentials = "omit";
                 }
 
                 if (sync) {
@@ -606,7 +611,7 @@ export class SenderPostManager {
                 _diagLog = null;
                 _isOneDs = null;
                 _onCompleteFuncs = null;
-                _disableCredentials = null;
+                _sendCredentials = null;
                 _fallbackInst = null;
                 _disableXhr = false;
                 _disableBeacon = false;

@@ -209,10 +209,25 @@ export interface IConfiguration {
     initInMemoMaxSize?: number;
 
     /**
-     * [Optional] Set whether or not cross-site Access-Control requests should be made using credentials
-     * such as cookies, authentication headers or TLS client certificates.
-     * See [here](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials) for more information.
+     * [Optional] Specify whether cross-site Access-Control requests should include credentials such as cookies,
+     * authentication headers, or TLS client certificates.
+     *
+     * Possible values:
+     * - "true": For fetch requests, the credentials mode will be set to "include". For XHR (XMLHttpRequest),
+     *   the `withCredentials` property will be set to true.
+     * - "false": For fetch requests, the credentials mode will be set to "same-origin". For XHR, the `withCredentials`
+     *   property will be set to false.
+     * - "omit": For fetch requests, the credentials mode will be set to "omit". For XHR, the `withCredentials`
+     *   property will be set to false.
+     * - "include": For fetch requests, the credentials mode will be set to "include". For XHR, the `withCredentials`
+     *   property will be set to true.
+     *
+     * If not set, the default value will be false. This means For fetch requests, the credentials mode will be set to "same-origin".
+     * For XHR, the `withCredentials` property will be set to false.
+     *
+     * For more information, refer to:
+     * - [XMLHttpRequest.withCredentials](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials)
+     * - [Fetch API - Using Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
      */
-    withCredentials?: boolean;
-
+    withCredentials?: string;
 }

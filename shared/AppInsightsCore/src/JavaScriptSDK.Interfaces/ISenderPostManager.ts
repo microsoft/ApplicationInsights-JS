@@ -60,12 +60,13 @@ export interface _ISendPostMgrConfig {
      * @since version after 3.1.0
      */
     isOneDs?: boolean,
+   
     /**
-     * Identify if Credentials should be disabled for 1ds post channel, application insights sender will igore this config
-     * Default is false
+     * Identify if Credentials should be attached for 1ds post channel, application insights sender will igore this config
+     * Default is true
      * @since version after 3.1.0
      */
-    disableCredentials?: boolean;
+    sendCredentials?: string;
 
     /**
      * Identifies if XMLHttpRequest or XDomainRequest (for IE < 9) should be used

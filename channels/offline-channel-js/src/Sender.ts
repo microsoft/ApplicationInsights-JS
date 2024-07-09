@@ -10,7 +10,7 @@ import {
     formatErrorMessageXdr, getResponseText, onConfigChange, parseResponse, prependTransports
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
-import { isFunction } from "@nevware21/ts-utils";
+import { isFunction, isString } from "@nevware21/ts-utils";
 import { IOfflineChannelConfiguration, IOfflineSenderConfig } from "./Interfaces/IOfflineProvider";
 
 const DefaultOfflineIdentifier = "OfflineChannel";
@@ -41,12 +41,12 @@ export class Sender {
         let _onlineChannelId: string;
         let _isOneDs: boolean;
         let _sendPostMgr: SenderPostManager;
-        let _disableCredentials: boolean;
+        let _sendCredentials: string;
        
 
         dynamicProto(Sender, this, (_self, _base) => {
 
-            //let _sendCredentials = true; // for 1ds
+            _sendCredentials = "true";
             _initDefaults();
 
             _self.pause = () => {
@@ -100,7 +100,12 @@ export class Sender {
                     let xhrOverride = offlineSenderCfg.httpXHROverride || senderConfig.httpXHROverride;
 
                     let customInterface = isOverrideFn(xhrOverride)? xhrOverride : null;
-                    _disableCredentials = !customInterface || config.withCredentials === false; // if withCredentials is not defined, then should not change the default value
+                    if (isString(config.withCredentials)){
+                        _sendCredentials = config.withCredentials;
+                    }
+                    if (customInterface){
+                        _sendCredentials = "true";
+                    }
                     // siyu: this is the place that determine the value, and would be used to pass into senderpostmanager
                     let sendPostMgrConfig = _getSendPostMgrConfig();
                     if (!_sendPostMgr) {
@@ -163,7 +168,7 @@ export class Sender {
                 let config = {
                     enableSendPromise: _enableSendPromise,
                     isOneDs: _isOneDs,
-                    disableCredentials: _disableCredentials,
+                    sendCredentials: _sendCredentials,
                     senderOnCompleteCallBack: _getOnCompleteFuncs()
                 } as _ISendPostMgrConfig;
 

@@ -134,7 +134,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let config = {
                     enableSendPromise: false,
                     isOneDs: false,
-                    disableCredentials: false,
+                    sendCredentials: "true",
                     disableXhr: false,
                     disableBeacon: false,
                     disableBeaconSync: false,
@@ -173,7 +173,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 config = {
                     enableSendPromise: false,
                     isOneDs: false,
-                    disableCredentials: false,
+                    sendCredentials: "true",
                     disableXhr: true,
                     disableBeacon: false,
                     disableBeaconSync: false,
@@ -208,7 +208,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 config = {
                     enableSendPromise: false,
                     isOneDs: false,
-                    disableCredentials: false,
+                    sendCredentials: "true",
                     disableXhr: true,
                     disableBeacon: false,
                     disableBeaconSync: false,
@@ -228,7 +228,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 config = {
                     enableSendPromise: true,
                     isOneDs: true,
-                    disableCredentials: true,
+                    sendCredentials: "true",
                     disableXhr: false,
                     disableBeacon: true,
                     disableBeaconSync: false,

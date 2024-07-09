@@ -12,7 +12,7 @@ import {
     getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
     isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
-import { arrAppend } from "@nevware21/ts-utils";
+import { arrAppend, isString } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
 import {
@@ -181,7 +181,7 @@ export class HttpManager {
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
 
-            let _sendCredentials = true;
+            let _sendCredentials = "true";
 
             _self.initialize = (theConfig: IExtendedConfiguration, core: IAppInsightsCore, postChannel: IPostChannel) => {
                 if (!_isInitialized) {
@@ -238,8 +238,8 @@ export class HttpManager {
                         if (!isNullOrUndefined(channelConfig.useSendBeacon)) {
                             _useBeacons = !!channelConfig.useSendBeacon;
                         }
-                        if (core.config.withCredentials === false){
-                            _sendCredentials = false;
+                        if (isString(core.config.withCredentials)){
+                            _sendCredentials = core.config.withCredentials;
                         }
                         let sendPostConfig = _getSendPostMgrConfig();
                         // only init it once
@@ -427,7 +427,7 @@ export class HttpManager {
                     let config = {
                         enableSendPromise: false,
                         isOneDs: true,
-                        disableCredentials: !_sendCredentials,
+                        sendCredentials: _sendCredentials,
                         disableXhr: false,
                         disableBeacon: !_useBeacons,
                         disableBeaconSync: !_useBeacons,
