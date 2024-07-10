@@ -8,7 +8,7 @@ export interface SdkLoaderConfig {
     ld?: number;
     useXhr?: boolean;
     crossOrigin?: string;
-    cfg?: IConfiguration;
+    cfg?: any;
     cr?: boolean;
     dle?: boolean;
     sri?: boolean;
