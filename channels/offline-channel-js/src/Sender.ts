@@ -10,7 +10,7 @@ import {
     formatErrorMessageXdr, getResponseText, onConfigChange, parseResponse, prependTransports
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
-import { isFunction, isString } from "@nevware21/ts-utils";
+import { isFunction } from "@nevware21/ts-utils";
 import { IOfflineChannelConfiguration, IOfflineSenderConfig } from "./Interfaces/IOfflineProvider";
 
 const DefaultOfflineIdentifier = "OfflineChannel";
@@ -41,12 +41,13 @@ export class Sender {
         let _onlineChannelId: string;
         let _isOneDs: boolean;
         let _sendPostMgr: SenderPostManager;
-        let _sendCredentials: string;
+        let _disableCredentials: boolean;
+        let _fetchCredentials: RequestCredentials;
        
 
         dynamicProto(Sender, this, (_self, _base) => {
 
-            _sendCredentials = "true";
+            //let _sendCredentials = true; // for 1ds
             _initDefaults();
 
             _self.pause = () => {
@@ -83,14 +84,18 @@ export class Sender {
                         utlSetStoragePrefix(config.storagePrefix);
                     }
                     let ctx = createProcessTelemetryContext(null, config, core);
-                   
+
                     let offlineCfg = ctx.getExtCfg(DefaultOfflineIdentifier) as IOfflineChannelConfiguration;
                     _onlineChannelId = channelId || BreezeChannelIdentifier;
                     let senderConfig = ctx.getExtCfg(_onlineChannelId, {}) as any;
                     let offlineSenderCfg = offlineCfg.senderCfg || {} as IOfflineSenderConfig;
-                  
+                    _fetchCredentials = null;
                     if (_onlineChannelId == PostChannelId) {
                         _isOneDs = true;
+                        let channelConfig = ctx.getExtCfg(PostChannelId);
+                        if (channelConfig && channelConfig["fetchCredentials"]) {
+                            _fetchCredentials = channelConfig["fetchCredentials"];
+                        }
                     }
 
                     _alwaysUseCustomSend = offlineSenderCfg.alwaysUseXhrOverride;
@@ -100,13 +105,7 @@ export class Sender {
                     let xhrOverride = offlineSenderCfg.httpXHROverride || senderConfig.httpXHROverride;
 
                     let customInterface = isOverrideFn(xhrOverride)? xhrOverride : null;
-                    if (isString(config.withCredentials)){
-                        _sendCredentials = config.withCredentials;
-                    }
-                    if (customInterface){
-                        _sendCredentials = "true";
-                    }
-                    // siyu: this is the place that determine the value, and would be used to pass into senderpostmanager
+                    _disableCredentials = !customInterface && _isOneDs;
                     let sendPostMgrConfig = _getSendPostMgrConfig();
                     if (!_sendPostMgr) {
                         _sendPostMgr = new SenderPostManager();
@@ -168,7 +167,8 @@ export class Sender {
                 let config = {
                     enableSendPromise: _enableSendPromise,
                     isOneDs: _isOneDs,
-                    sendCredentials: _sendCredentials,
+                    disableCredentials: _disableCredentials,
+                    fetchCredentials: _fetchCredentials,
                     senderOnCompleteCallBack: _getOnCompleteFuncs()
                 } as _ISendPostMgrConfig;
 

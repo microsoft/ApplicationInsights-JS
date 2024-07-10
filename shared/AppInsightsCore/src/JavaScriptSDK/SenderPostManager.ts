@@ -18,7 +18,6 @@ import { DisabledPropertyName } from "./Constants";
 import { _throwInternal, _warnToConsole } from "./DiagnosticLogger";
 import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
 import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "./HelperFuncs";
-import { isString } from "../applicationinsights-core-js";
 
 const STR_EMPTY = "";
 const STR_NO_RESPONSE_BODY = "NoResponseBody";
