@@ -667,7 +667,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let config = {
                         enableSendPromise: _enableSendPromise,
                         isOneDs: false,
-                        sendCredentials: "true",
+                        disableCredentials: false,
                         disableXhr: _disableXhr,
                         disableBeacon: !_beaconNormalSupported,
                         disableBeaconSync: !_beaconOnUnloadSupported,

@@ -181,7 +181,7 @@ export class HttpManager {
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
 
-            let _sendCredentials = "true";
+            let _sendCredentials = "include";
 
             _self.initialize = (theConfig: IExtendedConfiguration, core: IAppInsightsCore, postChannel: IPostChannel) => {
                 if (!_isInitialized) {
@@ -238,8 +238,8 @@ export class HttpManager {
                         if (!isNullOrUndefined(channelConfig.useSendBeacon)) {
                             _useBeacons = !!channelConfig.useSendBeacon;
                         }
-                        if (isString(core.config.withCredentials)){
-                            _sendCredentials = core.config.withCredentials;
+                        if (isString(channelConfig.fetchCredentials)){
+                            _sendCredentials = channelConfig.fetchCredentials;
                         }
                         let sendPostConfig = _getSendPostMgrConfig();
                         // only init it once

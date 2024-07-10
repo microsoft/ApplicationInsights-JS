@@ -18,6 +18,7 @@ import { DisabledPropertyName } from "./Constants";
 import { _throwInternal, _warnToConsole } from "./DiagnosticLogger";
 import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
 import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "./HelperFuncs";
+import { isString } from "../applicationinsights-core-js";
 
 const STR_EMPTY = "";
 const STR_NO_RESPONSE_BODY = "NoResponseBody";
@@ -45,7 +46,8 @@ export class SenderPostManager {
         let _diagLog: IDiagnosticLogger;
         let _isOneDs: boolean;
         let _onCompleteFuncs: _ISenderOnComplete;
-        let _sendCredentials: string;
+        let _disableCredentials: boolean;
+        let _fetchCredentials: RequestCredentials;
         let _fallbackInst: IXHROverride;
         let _disableXhr: boolean;
         let _disableBeacon: boolean;
@@ -57,7 +59,7 @@ export class SenderPostManager {
 
         dynamicProto(SenderPostManager, this, (_self, _base) => {
 
-            let _sendCredentials = "true"; // default
+            let _sendCredentials = true; // for 1ds
             _initDefaults();
 
 
@@ -74,7 +76,7 @@ export class SenderPostManager {
             };
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_isInitialized, _isOneDs, _sendCredentials, _enableSendPromise];
+                return [_isInitialized, _isOneDs, _disableCredentials, _enableSendPromise];
             };
 
             // This componet might get its config from sender, offline sender, 1ds post
@@ -82,7 +84,8 @@ export class SenderPostManager {
             _self.SetConfig = (config: _ISendPostMgrConfig): boolean => {
                 try {
                     _onCompleteFuncs = config.senderOnCompleteCallBack || {};
-                    _sendCredentials = config.sendCredentials;
+                    _disableCredentials = !!config.disableCredentials;
+                    _fetchCredentials = config.fetchCredentials;
                     _isOneDs = !!config.isOneDs;
                     _enableSendPromise = !!config.enableSendPromise;
                     _disableXhr = !! config.disableXhr;
@@ -93,14 +96,16 @@ export class SenderPostManager {
                     _disableFetchKeepAlive = !!config.disableFetchKeepAlive;
     
                     _fallbackInst = { sendPOST: _xhrSender} as IXHROverride;
-                    
                     if (!_isOneDs) {
-                        _sendCredentials = "false"; // for appInsights, set it to false always
+                        _sendCredentials = false; // for appInsights, set it to false always
                     }
-                    let location = getLocation();
-                    if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
-                        // Special case where a local html file fails with a CORS error on Chromium browsers
-                        _sendCredentials = "false";
+    
+                    if (_disableCredentials) {
+                        let location = getLocation();
+                        if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
+                            // Special case where a local html file fails with a CORS error on Chromium browsers
+                            _sendCredentials = false;
+                        }
                     }
                     return true;
 
@@ -286,12 +291,8 @@ export class SenderPostManager {
                     resolveFunc && resolveFunc(false);
                     return;
                 }
-                var xhr: XMLHttpRequest;
-                if (_sendCredentials === "true" || _sendCredentials === "include") {
-                    xhr = openXhr(STR_POST_METHOD, endPointUrl, true, true, sync, payload.timeout);
-                } else {
-                    xhr = openXhr(STR_POST_METHOD, endPointUrl, false, true, sync, payload.timeout);
-                }
+
+                let xhr = openXhr(STR_POST_METHOD, endPointUrl, _sendCredentials, true, sync, payload.timeout);
                 if (!_isOneDs) {
                     // application/json should NOT add to 1ds post by default
                     xhr.setRequestHeader("Content-type", "application/json");
@@ -381,12 +382,11 @@ export class SenderPostManager {
                 }
 
 
-                if (_sendCredentials === "true" || _sendCredentials === "include") {  // fetch request credentials
+                if (_fetchCredentials) {  // if user passed in this value via post channel (1ds), then use it
+                    init.credentials = _fetchCredentials;
+                } else if (_sendCredentials && _isOneDs) {
+                    // for 1ds, Don't send credentials when URL is file://
                     init.credentials = "include";
-                } else if (_sendCredentials === "false") {
-                    init.credentials = "same-origin";
-                } else if (_sendCredentials === "omit"){
-                    init.credentials = "omit";
                 }
 
                 if (sync) {
@@ -611,7 +611,8 @@ export class SenderPostManager {
                 _diagLog = null;
                 _isOneDs = null;
                 _onCompleteFuncs = null;
-                _sendCredentials = null;
+                _disableCredentials = null;
+                _fetchCredentials = null;
                 _fallbackInst = null;
                 _disableXhr = false;
                 _disableBeacon = false;

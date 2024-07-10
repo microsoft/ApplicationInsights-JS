@@ -60,13 +60,12 @@ export interface _ISendPostMgrConfig {
      * @since version after 3.1.0
      */
     isOneDs?: boolean,
-   
     /**
-     * Identify if Credentials should be attached for 1ds post channel, application insights sender will igore this config
-     * Default is true
+     * Identify if Credentials should be disabled for 1ds post channel, application insights sender will igore this config
+     * Default is false
      * @since version after 3.1.0
      */
-    sendCredentials?: string;
+    disableCredentials?: boolean;
 
     /**
      * Identifies if XMLHttpRequest or XDomainRequest (for IE < 9) should be used
@@ -118,6 +117,22 @@ export interface _ISendPostMgrConfig {
      * @since version after 3.1.0
      */
     addNoResponse?: boolean;
+
+    /**
+     * [Optional] Specify whether cross-site Access-Control fetch requests should include credentials such as cookies,
+     * authentication headers, or TLS client certificates.
+     *
+     * Possible values:
+     * - "omit": never send credentials in the request or include credentials in the response.
+     * - "include": always include credentials, even cross-origin.
+     * - "same-origin": only send and include credentials for same-origin requests.
+     *
+     * If not set, the default value will be "include". 
+     *
+     * For more information, refer to:
+     * - [Fetch API - Using Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#including_credentials)
+     */
+    fetchCredentials?: RequestCredentials;
 
 }
 
