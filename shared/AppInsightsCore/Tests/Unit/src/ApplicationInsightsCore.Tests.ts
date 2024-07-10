@@ -228,7 +228,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 config = {
                     enableSendPromise: true,
                     isOneDs: true,
-                    disableCredentials: false,
+                    disableCredentials: true,
                     disableXhr: false,
                     disableBeacon: true,
                     disableBeaconSync: false,
