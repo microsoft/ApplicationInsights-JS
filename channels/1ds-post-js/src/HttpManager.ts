@@ -414,7 +414,7 @@ export class HttpManager {
             }
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces];
+                return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces, _getSendPostMgrConfig()];
             };
 
             function _getSendPostMgrConfig(): _ISendPostMgrConfig {
