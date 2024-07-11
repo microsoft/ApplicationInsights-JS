@@ -148,6 +148,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
             _self.trackEvent = (event: IEventTelemetry, customProperties?: ICustomProperties): void => {
                 try {
+                    console.log("track event called");
+                    console.log("event", JSON.stringify(event));
+                    console.log("customProperties", JSON.stringify(customProperties));
                     let telemetryItem = createTelemetryItem<IEventTelemetry>(
                         event,
                         EventTelemetry.dataType,

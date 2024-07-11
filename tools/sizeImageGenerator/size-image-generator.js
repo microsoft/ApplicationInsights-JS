@@ -3,6 +3,24 @@ const fs = require('fs');
 const http = require('http');
 const request = require('request');
 const zlib = require('zlib');
+const { makeBadge, ValidationError } = require('badge-maker')
+const format = {
+    label: 'build',
+    message: '320kb',
+    color: 'brightgreen',
+  }
+  
+  const svg = makeBadge(format)
+  console.log(svg) // <svg...
+  const filePath = './badge.svg';
+
+fs.writeFile(filePath, svg, (err) => {
+  if (err) {
+    console.error('Error writing file:', err);
+  } else {
+    console.log(`SVG badge saved to ${filePath}`);
+  }
+});
 
 async function generateSizeBadge(path, fileSize, isGzip = false, maxSize = 35, minSize = 30) {
     try {

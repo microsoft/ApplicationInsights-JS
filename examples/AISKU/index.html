@@ -29,5 +29,96 @@
       window.appInsights = appInsights;
     </script>
     <script src="./browser/es5/aisku-example-index.gbl.js"></script>
+    <script>
+      async function init() {
+          appInsights.trackEvent({ name: "testEvent" });
+
+          let str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam commodo non felis a aliquet. Praesent a felis congue, volutpat nibh sit amet, ultricies purus. Aenean nisl augue, condimentum at elementum sit amet, suscipit sed tortor. Curabitur dapibus eu ipsum id tristique. Phasellus hendrerit in eros sit amet mollis. Praesent commodo mollis rhoncus. Vivamus tempor ligula nisi, consequat venenatis nisi ultrices at.Nunc nec nibh molestie, sagittis lectus sit amet, facilisis ipsum. Morbi pretium, nisl non suscipit dapibus, mauris nulla sollicitudin lectus, a egestas mauris turpis quis magna. Nulla sit amet vehicula libero. Donec quis risus cursus, varius sapien vitae, tincidunt nibh. Sed molestie aliquet ultricies. Nam ac erat laoreet, pellentesque arcu ut, maximus neque. Proin dictum egestas faucibus. Maecenas sed accumsan lorem. Mauris molestie elit eget ultrices ornare. Vestibulum ante sem, pretium et nibh a, eleifend fermentum ipsum. Ut egestas blandit magna ut gravida. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus condimentum luctus justo sed aliquam. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vestibulum et sapien ipsum. Aenean tristique rhoncus orci, eget pretium arcu auctor nec.Morbi at dictum ipsum. Vestibulum elit arcu, laoreet vel suscipit nec, pharetra nec tellus. Cras nec tellus ut tellus consequat auctor. Nulla non malesuada lacus. Donec sed aliquet magna, at pharetra risus. Aliquam aliquet elit sit amet auctor pellentesque. Sed rhoncus justo nulla, quis finibus dolor feugiat ut. Fusce vitae tincidunt eros. Nulla urna enim, dictum vel velit semper, porta vehicula metus. Vivamus dictum nibh lectus, nec sodales ligula pharetra vel. Phasellus turpis nibh, volutpat sed felis eleifend, suscipit aliquam magna. Etiam pharetra volutpat ligula ut commodo. Mauris at dolor vitae purus porta sollicitudin a at justo. Quisque magna risus, consectetur nec posuere quis, euismod a magna. Sed ut purus accumsan, pharetra est at, interdum risus. Duis eget tincidunt nibh, nec condimentum velit.onec rutrum nisl quis iaculis iaculis. Mauris sodales vestibulum metus. Maecenas enim nibh, molestie sit amet libero vitae, eleifend consequat sem. Sed a dui quis eros pharetra semper. Fusce erat lorem, cursus non nisl ac, vestibulum laoreet nisl. Pellentesque blandit purus mi, ac lacinia felis semper in. Maecenas facilisis, dolor sit amet ullamcorper dignissim, elit nisi finibus odio, in tempus ante mauris ut libero. Suspendisse auctor eros augue, eu commodo ipsum fermentum at. Cras dignissim felis non augue ullamcorper sagittis. Vestibulum ut pellentesque tortor, vitae pellentesque ligula. Maecenas sit amet luctus lectus. Etiam laoreet velit mi, eget vulputate dolor varius euulla at risus non sapien eleifend hendrerit ac vitae mauris. Quisque semper, velit in sagittis vulputate, nisi diam placerat felis, id facilisis nisi diam nec nisl. Proin suscipit volutpat luctus. Integer sagittis congue risus ut aliquet. Integer tincidunt gravida pharetra. Maecenas commodo finibus orci gravida tincidunt. Mauris ac lorem accumsan, varius odio a, auctor lacus. Vestibulum nisl ligula, volutpat ut elit et, ultrices placerat quam. Morbi sodales lacus quam, vitae vulputate orci blandit sed. Sed non iaculis turpis, ut hendrerit nisl. Aenean imperdiet orci quis nisi placerat tempus. Duis sit amet placerat eros. Nulla faucibus eu orci ac luctus. Suspendisse vestibulum sed quam et varius. Suspendisse sagittis dolor libero, fringilla aliquet elit pharetra sit amet.";
+
+          async function compress(str) {
+              // Convert the string to a byte stream.
+              const stream = new Blob([str]).stream();
+
+              // Create a compressed stream.
+              const compressedStream = stream.pipeThrough(
+                  new CompressionStream("gzip")
+              );
+
+              // Read all the bytes from this stream.
+              const chunks = [];
+              for await (const chunk of compressedStream) {
+                  chunks.push(chunk);
+                  console.log("chunk", chunk)
+              }
+
+              // Concatenate Uint8Arrays into a single Uint8Array
+              const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+              const result = new Uint8Array(length);
+              let offset = 0;
+              for (const chunk of chunks) {
+                  result.set(chunk, offset);
+                  offset += chunk.length;
+              }
+
+              // Convert the result to a binary string
+              return result;
+              // return result.reduce((data, byte) => data + String.fromCharCode(byte), '');
+          }
+
+          // let compressedStr = await compress(str);
+
+          appInsights.trackEvent({ name: "test2", properties: { str } });
+          appInsights.trackPageView({ name: "testPageView" });
+
+
+
+          async function decompressUint8Array(compressedStr) {
+    // Create a ReadableStream from the Uint8Array
+    const readableStream = new ReadableStream({
+        start(controller) {
+            controller.enqueue(compressedStr);
+            controller.close();
+        }
+    });
+
+    // Create a DecompressionStream (gzip in this example, adjust as needed)
+    const decompressionStream = new DecompressionStream('gzip');
+
+    // Pipe the ReadableStream through the DecompressionStream
+    const decompressedStream = readableStream.pipeThrough(decompressionStream);
+
+    // Convert the decompressed stream to a string
+    const reader = decompressedStream.getReader();
+    let decompressedData = '';
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            decompressedData += new TextDecoder().decode(value);
+        }
+    } finally {
+        reader.releaseLock();
+    }
+
+    return decompressedData;
+}
+
+// Usage example
+// async function exampleUsage() {
+//     try {
+//         let decompressedData = await decompressUint8Array(compressedStr);
+//         console.log('Decompressed data:', decompressedData);
+//     } catch (error) {
+//         console.error('Error decompressing data:', error);
+//     }
+// }
+
+// exampleUsage();
+        }
+      init();
+  </script>
   </body>
 </html>

@@ -53,6 +53,7 @@ export function createTelemetryItem<T>(item: T,
     // Part C
     if (!isNullOrUndefined(customProperties)) {
         objForEachKey(customProperties, (prop, value) => {
+            console.log("now adding", prop, value);
             telemetryItem.data[prop] = value;
         });
     }

@@ -11,7 +11,7 @@
 <script type="text/javascript">
 !(function (cfg){function e(){cfg.onInit&&cfg.onInit(n)}var x,w,D,t,E,n,C=window,O=document,b=C.location,q="script",I="ingestionendpoint",L="disableExceptionTracking",j="ai.device.";"instrumentationKey"[x="toLowerCase"](),w="crossOrigin",D="POST",t="appInsightsSDK",E=cfg.name||"appInsights",(cfg.name||C[t])&&(C[t]=E),n=C[E]||function(g){var f=!1,m=!1,h={initialize:!0,queue:[],sv:"8",version:2,config:g};function v(e,t){var n={},i="Browser";function a(e){e=""+e;return 1===e.length?"0"+e:e}return n[j+"id"]=i[x](),n[j+"type"]=i,n["ai.operation.name"]=b&&b.pathname||"_unknown_",n["ai.internal.sdkVersion"]="javascript:snippet_"+(h.sv||h.version),{time:(i=new Date).getUTCFullYear()+"-"+a(1+i.getUTCMonth())+"-"+a(i.getUTCDate())+"T"+a(i.getUTCHours())+":"+a(i.getUTCMinutes())+":"+a(i.getUTCSeconds())+"."+(i.getUTCMilliseconds()/1e3).toFixed(3).slice(2,5)+"Z",iKey:e,name:"Microsoft.ApplicationInsights."+e.replace(/-/g,"")+"."+t,sampleRate:100,tags:n,data:{baseData:{ver:2}},ver:undefined,seq:"1",aiDataContract:undefined}}var n,i,t,a,y=-1,T=0,S=["js.monitor.azure.com","js.cdn.applicationinsights.io","js.cdn.monitor.azure.com","js0.cdn.applicationinsights.io","js0.cdn.monitor.azure.com","js2.cdn.applicationinsights.io","js2.cdn.monitor.azure.com","az416426.vo.msecnd.net"],o=g.url||cfg.src,r=function(){return s(o,null)};function s(d,t){if((n=navigator)&&(~(n=(n.userAgent||"").toLowerCase()).indexOf("msie")||~n.indexOf("trident/"))&&~d.indexOf("ai.3")&&(d=d.replace(/(\/)(ai\.3\.)([^\d]*)$/,function(e,t,n){return t+"ai.2"+n})),!1!==cfg.cr)for(var e=0;e<S.length;e++)if(0<d.indexOf(S[e])){y=e;break}var n,i=function(e){var a,t,n,i,o,r,s,c,u,l;h.queue=[],m||(0<=y&&T+1<S.length?(a=(y+T+1)%S.length,p(d.replace(/^(.*\/\/)([\w\.]*)(\/.*)$/,function(e,t,n,i){return t+S[a]+i})),T+=1):(f=m=!0,s=d,!0!==cfg.dle&&(c=(t=function(){var e,t={},n=g.connectionString;if(n)for(var i=n.split(";"),a=0;a<i.length;a++){var o=i[a].split("=");2===o.length&&(t[o[0][x]()]=o[1])}return t[I]||(e=(n=t.endpointsuffix)?t.location:null,t[I]="https://"+(e?e+".":"")+"dc."+(n||"services.visualstudio.com")),t}()).instrumentationkey||g.instrumentationKey||"",t=(t=(t=t[I])&&"/"===t.slice(-1)?t.slice(0,-1):t)?t+"/v2/track":g.endpointUrl,t=g.userOverrideEndpointUrl||t,(n=[]).push((i="SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)",o=s,u=t,(l=(r=v(c,"Exception")).data).baseType="ExceptionData",l.baseData.exceptions=[{typeName:"SDKLoadFailed",message:i.replace(/\./g,"-"),hasFullStack:!1,stack:i+"\nSnippet failed to load ["+o+"] -- Telemetry is disabled\nHelp Link: https://go.microsoft.com/fwlink/?linkid=2128109\nHost: "+(b&&b.pathname||"_unknown_")+"\nEndpoint: "+u,parsedStack:[]}],r)),n.push((l=s,i=t,(u=(o=v(c,"Message")).data).baseType="MessageData",(r=u.baseData).message='AI (Internal): 99 message:"'+("SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details) ("+l+")").replace(/\"/g,"")+'"',r.properties={endpoint:i},o)),s=n,c=t,JSON&&((u=C.fetch)&&!cfg.useXhr?u(c,{method:D,body:JSON.stringify(s),mode:"cors"}):XMLHttpRequest&&((l=new XMLHttpRequest).open(D,c),l.setRequestHeader("Content-type","application/json"),l.send(JSON.stringify(s)))))))},a=function(e,t){m||setTimeout(function(){!t&&h.core||i()},500),f=!1},p=function(e){var n=O.createElement(q),e=(n.src=e,t&&(n.integrity=t),n.setAttribute("data-ai-name",E),cfg[w]);return!e&&""!==e||"undefined"==n[w]||(n[w]=e),n.onload=a,n.onerror=i,n.onreadystatechange=function(e,t){"loaded"!==n.readyState&&"complete"!==n.readyState||a(0,t)},cfg.ld&&cfg.ld<0?O.getElementsByTagName("head")[0].appendChild(n):setTimeout(function(){O.getElementsByTagName(q)[0].parentNode.appendChild(n)},cfg.ld||0),n};p(d)}cfg.sri&&(n=o.match(/^((http[s]?:\/\/.*\/)\w+(\.\d+){1,5})\.(([\w]+\.){0,2}js)$/))&&6===n.length?(d="".concat(n[1],".integrity.json"),i="@".concat(n[4]),l=window.fetch,t=function(e){if(!e.ext||!e.ext[i]||!e.ext[i].file)throw Error("Error Loading JSON response");var t=e.ext[i].integrity||null;s(o=n[2]+e.ext[i].file,t)},l&&!cfg.useXhr?l(d,{method:"GET",mode:"cors"}).then(function(e){return e.json()["catch"](function(){return{}})}).then(t)["catch"](r):XMLHttpRequest&&((a=new XMLHttpRequest).open("GET",d),a.onreadystatechange=function(){if(a.readyState===XMLHttpRequest.DONE)if(200===a.status)try{t(JSON.parse(a.responseText))}catch(e){r()}else r()},a.send())):o&&r();try{h.cookie=O.cookie}catch(k){}function e(e){for(;e.length;)!function(t){h[t]=function(){var e=arguments;f||h.queue.push(function(){h[t].apply(h,e)})}}(e.pop())}var c,u,l="track",d="TrackPage",p="TrackEvent",l=(e([l+"Event",l+"PageView",l+"Exception",l+"Trace",l+"DependencyData",l+"Metric",l+"PageViewPerformance","start"+d,"stop"+d,"start"+p,"stop"+p,"addTelemetryInitializer","setAuthenticatedUserContext","clearAuthenticatedUserContext","flush"]),h.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4},(g.extensionConfig||{}).ApplicationInsightsAnalytics||{});return!0!==g[L]&&!0!==l[L]&&(e(["_"+(c="onerror")]),u=C[c],C[c]=function(e,t,n,i,a){var o=u&&u(e,t,n,i,a);return!0!==o&&h["_"+c]({message:e,url:t,lineNumber:n,columnNumber:i,error:a,evt:C.event}),o},g.autoExceptionInstrumented=!0),h}(cfg.cfg),(C[E]=n).queue&&0===n.queue.length?(n.queue.push(e),n.trackPageView({})):e();})({
     src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
-    // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
+    name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
     // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
     // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
     // dle: true, // Prevent the SDK from reporting load failure log
@@ -19,18 +19,113 @@
     // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
     sri: true, // Custom optional value to specify whether fetching the snippet from integrity file and do integrity check 
     cfg: { // Application Insights Configuration
-        connectionString: "Your-connection-string-here"
+        connectionString: "InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/"
     }
 });
   </script>
+  <!-- <script src="../dist/es5/applicationinsights-web.js"></script> -->
+  <script>
+    let appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: {connectionString: "InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/", disableInstrumentationKeyValidation: true}});
+    appInsights.loadAppInsights();
+    window.appInsights = appInsights;
+  </script>
+
   </head>
   <body>
     <h1>Microsoft Application Insights JavaScript SDK - AISKU</h1>
-    <script>
-      let appInsights = new ApplicationInsights.ApplicationInsights({ config: {connectionString: "InstrumentationKey=88888888", disableInstrumentationKeyValidation: true}});
-      appInsights.loadAppInsights();
-      window.appInsights = appInsights;
-    </script>
+    <!-- <script>
+      async function init() {
+          appInsights.trackEvent({ name: "testEvent" });
+
+          let str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam commodo non felis a aliquet. Praesent a felis congue, volutpat nibh sit amet, ultricies purus. Aenean nisl augue, condimentum at elementum sit amet, suscipit sed tortor. Curabitur dapibus eu ipsum id tristique. Phasellus hendrerit in eros sit amet mollis. Praesent commodo mollis rhoncus. Vivamus tempor ligula nisi, consequat venenatis nisi ultrices at.Nunc nec nibh molestie, sagittis lectus sit amet, facilisis ipsum. Morbi pretium, nisl non suscipit dapibus, mauris nulla sollicitudin lectus, a egestas mauris turpis quis magna. Nulla sit amet vehicula libero. Donec quis risus cursus, varius sapien vitae, tincidunt nibh. Sed molestie aliquet ultricies. Nam ac erat laoreet, pellentesque arcu ut, maximus neque. Proin dictum egestas faucibus. Maecenas sed accumsan lorem. Mauris molestie elit eget ultrices ornare. Vestibulum ante sem, pretium et nibh a, eleifend fermentum ipsum. Ut egestas blandit magna ut gravida. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus condimentum luctus justo sed aliquam. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vestibulum et sapien ipsum. Aenean tristique rhoncus orci, eget pretium arcu auctor nec.Morbi at dictum ipsum. Vestibulum elit arcu, laoreet vel suscipit nec, pharetra nec tellus. Cras nec tellus ut tellus consequat auctor. Nulla non malesuada lacus. Donec sed aliquet magna, at pharetra risus. Aliquam aliquet elit sit amet auctor pellentesque. Sed rhoncus justo nulla, quis finibus dolor feugiat ut. Fusce vitae tincidunt eros. Nulla urna enim, dictum vel velit semper, porta vehicula metus. Vivamus dictum nibh lectus, nec sodales ligula pharetra vel. Phasellus turpis nibh, volutpat sed felis eleifend, suscipit aliquam magna. Etiam pharetra volutpat ligula ut commodo. Mauris at dolor vitae purus porta sollicitudin a at justo. Quisque magna risus, consectetur nec posuere quis, euismod a magna. Sed ut purus accumsan, pharetra est at, interdum risus. Duis eget tincidunt nibh, nec condimentum velit.onec rutrum nisl quis iaculis iaculis. Mauris sodales vestibulum metus. Maecenas enim nibh, molestie sit amet libero vitae, eleifend consequat sem. Sed a dui quis eros pharetra semper. Fusce erat lorem, cursus non nisl ac, vestibulum laoreet nisl. Pellentesque blandit purus mi, ac lacinia felis semper in. Maecenas facilisis, dolor sit amet ullamcorper dignissim, elit nisi finibus odio, in tempus ante mauris ut libero. Suspendisse auctor eros augue, eu commodo ipsum fermentum at. Cras dignissim felis non augue ullamcorper sagittis. Vestibulum ut pellentesque tortor, vitae pellentesque ligula. Maecenas sit amet luctus lectus. Etiam laoreet velit mi, eget vulputate dolor varius euulla at risus non sapien eleifend hendrerit ac vitae mauris. Quisque semper, velit in sagittis vulputate, nisi diam placerat felis, id facilisis nisi diam nec nisl. Proin suscipit volutpat luctus. Integer sagittis congue risus ut aliquet. Integer tincidunt gravida pharetra. Maecenas commodo finibus orci gravida tincidunt. Mauris ac lorem accumsan, varius odio a, auctor lacus. Vestibulum nisl ligula, volutpat ut elit et, ultrices placerat quam. Morbi sodales lacus quam, vitae vulputate orci blandit sed. Sed non iaculis turpis, ut hendrerit nisl. Aenean imperdiet orci quis nisi placerat tempus. Duis sit amet placerat eros. Nulla faucibus eu orci ac luctus. Suspendisse vestibulum sed quam et varius. Suspendisse sagittis dolor libero, fringilla aliquet elit pharetra sit amet.";
+
+          async function compress(str) {
+              // Convert the string to a byte stream.
+              const stream = new Blob([str]).stream();
+
+              // Create a compressed stream.
+              const compressedStream = stream.pipeThrough(
+                  new CompressionStream("gzip")
+              );
+
+              // Read all the bytes from this stream.
+              const chunks = [];
+              for await (const chunk of compressedStream) {
+                  chunks.push(chunk);
+                  console.log("chunk", chunk)
+              }
+
+              // Concatenate Uint8Arrays into a single Uint8Array
+              const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+              const result = new Uint8Array(length);
+              let offset = 0;
+              for (const chunk of chunks) {
+                  result.set(chunk, offset);
+                  offset += chunk.length;
+              }
+
+              // Convert the result to a binary string
+              return result;
+              // return result.reduce((data, byte) => data + String.fromCharCode(byte), '');
+          }
+
+          let compressedStr = await compress(str);
+          // let compressedStr = str;
+
+          appInsights.trackEvent({ name: "test2", properties: { str } });
+          appInsights.trackPageView({ name: "testPageView" });
+
+
+
+          async function decompressUint8Array(compressedStr) {
+    // Create a ReadableStream from the Uint8Array
+    const readableStream = new ReadableStream({
+        start(controller) {
+            controller.enqueue(compressedStr);
+            controller.close();
+        }
+    });
+
+    // Create a DecompressionStream (gzip in this example, adjust as needed)
+    const decompressionStream = new DecompressionStream('gzip');
+
+    // Pipe the ReadableStream through the DecompressionStream
+    const decompressedStream = readableStream.pipeThrough(decompressionStream);
+
+    // Convert the decompressed stream to a string
+    const reader = decompressedStream.getReader();
+    let decompressedData = '';
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            decompressedData += new TextDecoder().decode(value);
+        }
+    } finally {
+        reader.releaseLock();
+    }
+
+    return decompressedData;
+}
+
+// Usage example
+// async function exampleUsage() {
+//     try {
+//         let decompressedData = await decompressUint8Array(compressedStr);
+//         console.log('Decompressed data:', decompressedData);
+//     } catch (error) {
+//         console.error('Error decompressing data:', error);
+//     }
+// }
+
+// exampleUsage();
+        }
+      init();
+  </script> -->
+
     <!-- <script src="aisku-example-index.gbl.js"></script> -->
   </body>
 </html>

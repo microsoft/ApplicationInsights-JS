@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decompression Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #output { white-space: pre-wrap; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Decompression Example</h1>
+    <input type="file" id="fileInput" accept=".gzip"/>
+    <div id="output"></div>
+
+    <script>
+        async function decompress(arrayBuffer) {
+            const compressedStream = new Response(arrayBuffer)
+                .body.pipeThrough(new DecompressionStream('gzip'));
+            const decompressedArrayBuffer = await new Response(compressedStream).arrayBuffer();
+            const textDecoder = new TextDecoder();
+            return textDecoder.decode(decompressedArrayBuffer);
+        }
+
+        document.getElementById('fileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const arrayBuffer = await file.arrayBuffer();
+                try {
+                    const decompressedText = await decompress(arrayBuffer);
+                    document.getElementById('output').textContent = decompressedText;
+                } catch (error) {
+                    console.error("Decompression failed", error);
+                    document.getElementById('output').textContent = "Decompression failed. See console for details.";
+                }
+            }
+        });
+    </script>
+</body>
+</html>

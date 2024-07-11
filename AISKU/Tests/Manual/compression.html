@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compression Sample</title>
+    <link rel="stylesheet" href="style/style.css"/>
+  </head>
+  <body>
+    <h1>Compression Example</h1>
+    <button id="downloadBtn">Download Compressed File</button>
+    <script>
+            async function compress(str) {
+            const compressedStream = new Response(str)
+                .body.pipeThrough(new CompressionStream('deflate'));
+            const bytes = await new Response(compressedStream).arrayBuffer(); 
+            return bytes;
+          }
+
+
+        function download(filename, blob) {
+            const url = URL.createObjectURL(blob);
+            const element = document.createElement('a');
+            element.setAttribute('href', url);
+            element.setAttribute('download', filename);
+
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+
+            URL.revokeObjectURL(url); // Clean up the URL object
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+          const url = 'https://js.monitor.azure.com/scripts/b/ai.3.1.2.min.js'; // Replace with your URL
+          const response = await fetch(url);
+          const text = await response.text();
+            let compressedStr = await compress(text);
+            console.log("downloadBtn", compressedStr);
+            console.log("downloadBtn", );
+            let compressedBlob = new Blob([compressedStr], { type: 'application/octet-stream' });
+            // Trigger the download of the compressed file
+            // download("compressed.deflate", compressedBlob);
+        });
+    </script>
+  </body>
+</html>
