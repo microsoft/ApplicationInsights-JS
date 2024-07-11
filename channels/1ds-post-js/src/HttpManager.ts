@@ -425,6 +425,7 @@ export class HttpManager {
                         xhrOnComplete: _xhrOnComplete,
                         beaconOnRetry: _onBeaconRetry
                     } as _ISenderOnComplete;
+
                     let config = {
                         enableSendPromise: false,
                         isOneDs: true,

@@ -198,26 +198,40 @@ export class PostChannelTest extends AITestClass {
         });
 
 
-        this.testCase({
-            name: "Fetch Credentials config default to be null and could be set later",
+        this.testCase({ // note that fetchCredentials does not support dynamic changes
+            name: "Fetch Credentials config default to be null",
             useFakeTimers: true,
             test: () => {
                 let config = this.config;
                 let core = this.core;
                 let postChannel = this.postChannel;
                 core.initialize(config, [postChannel]);
-
                 let actaulConfig =  postChannel["_getDbgPlgTargets"]()[1];
-                QUnit.assert.deepEqual(actaulConfig["fetchCredentials"], null, "fetchCredentials was null if not set");
+                QUnit.assert.deepEqual(actaulConfig["fetchCredentials"], undefined, "fetchCredentials was undefined if not set");
                 let httpManager =  postChannel["_getDbgPlgTargets"]()[0];
-                QUnit.assert.deepEqual(httpManager["_getDbgPlgTargets"]()[4].fetchCredentials, null, "fetchCredentials was null if not set");
+                QUnit.assert.deepEqual(httpManager["_getDbgPlgTargets"]()[4].fetchCredentials, undefined, "fetchCredentials was undefined if not set");
+            }
+        });
 
-                this.core.config.extensionConfig![this.postChannel.identifier].fetchCredentials = "omit";
-                this.clock.tick(1);
-                actaulConfig = postChannel["_getDbgPlgTargets"]()[1];
-                QUnit.assert.deepEqual(actaulConfig["fetchCredentials"], "omit", "fetchCredentials was set to omit");
-                httpManager =  postChannel["_getDbgPlgTargets"]()[0];
-                QUnit.assert.deepEqual(httpManager["_getDbgPlgTargets"]()[4].fetchCredentials, "omit", "fetchCredentials was set to omit");
+        this.testCase({  // note that fetchCredentials does not support dynamic changes
+            name: "Fetch Credentials config could be set to omit via postChannel config",
+            useFakeTimers: true,
+            test: () => {
+                let config = this.config;
+                let core = this.core;
+                config.extensionConfig = {
+                    [this.postChannel.identifier]: {
+                        fetchCredentials: "omit"
+                    }
+                }
+                let postChannel = this.postChannel;
+                core.initialize(config, [postChannel]);
+
+                let actaulConfig = postChannel["_getDbgPlgTargets"]()[1];
+                QUnit.assert.deepEqual(actaulConfig["fetchCredentials"], "omit", "post channel fetchCredentials was set to omit");
+                let httpManager =  postChannel["_getDbgPlgTargets"]()[0];
+                console.log("get", JSON.stringify(httpManager["_getDbgPlgTargets"]()[4]));
+                QUnit.assert.deepEqual(httpManager["_getDbgPlgTargets"]()[4].fetchCredentials, "omit", "http manager fetchCredentials was set to omit");
             }
         });
 

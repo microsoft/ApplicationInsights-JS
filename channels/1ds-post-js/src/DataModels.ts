@@ -256,7 +256,8 @@ export interface IChannelConfiguration {
      * - "same-origin": only send and include credentials for same-origin requests.
      *
      * If not set, the default value will be "include".
-     *
+     * Note that fetchCredentials does not support dynamic changes, once init, it will not be changed.
+     * 
      * For more information, refer to:
      * - [Fetch API - Using Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#including_credentials)
      * @since 3.3.1
