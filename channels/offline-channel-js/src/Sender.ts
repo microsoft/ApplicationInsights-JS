@@ -42,6 +42,7 @@ export class Sender {
         let _isOneDs: boolean;
         let _sendPostMgr: SenderPostManager;
         let _disableCredentials: boolean;
+        let _fetchCredentials: RequestCredentials;
        
 
         dynamicProto(Sender, this, (_self, _base) => {
@@ -83,14 +84,18 @@ export class Sender {
                         utlSetStoragePrefix(config.storagePrefix);
                     }
                     let ctx = createProcessTelemetryContext(null, config, core);
-                   
+
                     let offlineCfg = ctx.getExtCfg(DefaultOfflineIdentifier) as IOfflineChannelConfiguration;
                     _onlineChannelId = channelId || BreezeChannelIdentifier;
                     let senderConfig = ctx.getExtCfg(_onlineChannelId, {}) as any;
                     let offlineSenderCfg = offlineCfg.senderCfg || {} as IOfflineSenderConfig;
-                  
+                    _fetchCredentials = null;
                     if (_onlineChannelId == PostChannelId) {
                         _isOneDs = true;
+                        let channelConfig = ctx.getExtCfg(PostChannelId);
+                        if (channelConfig && channelConfig["fetchCredentials"]) {
+                            _fetchCredentials = channelConfig["fetchCredentials"];
+                        }
                     }
 
                     _alwaysUseCustomSend = offlineSenderCfg.alwaysUseXhrOverride;
@@ -163,6 +168,7 @@ export class Sender {
                     enableSendPromise: _enableSendPromise,
                     isOneDs: _isOneDs,
                     disableCredentials: _disableCredentials,
+                    fetchCredentials: _fetchCredentials,
                     senderOnCompleteCallBack: _getOnCompleteFuncs()
                 } as _ISendPostMgrConfig;
 

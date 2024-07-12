@@ -167,6 +167,7 @@ export class PostChannelTest extends AITestClass {
                     xhrTimeout: undefValue,
                     disableXhrSync: undefValue,
                     alwaysUseXhrOverride: false,
+                    fetchCredentials: undefValue,
                     maxEventRetryAttempts: 6,
                     maxUnloadEventRetryAttempts: 2,
                     addNoResponse: undefValue,
@@ -194,6 +195,31 @@ export class PostChannelTest extends AITestClass {
                 QUnit.assert.deepEqual(actaulConfig.eventsLimitInMem, 100, "eventsLimitInMem should be changed dynamically");
                 QUnit.assert.deepEqual(actaulConfig.maxEventRetryAttempts, 10, "maxEventRetryAttempt should should be changed dynamically");
                 QUnit.assert.deepEqual(actaulConfig.httpXHROverride, this.xhrOverride, "xhrOverride should be changed dynamically");
+            }
+        });
+
+
+        this.testCase({
+            name: "Fetch Credentials config default to be null, and support dynamic change",
+            useFakeTimers: true,
+            test: () => {
+                let config = this.config;
+                let core = this.core;
+                let postChannel = this.postChannel;
+                core.initialize(config, [postChannel]);
+                let actaulConfig =  postChannel["_getDbgPlgTargets"]()[1];
+                QUnit.assert.deepEqual(actaulConfig["fetchCredentials"], undefined, "fetchCredentials was undefined if not set");
+                let httpManager =  postChannel["_getDbgPlgTargets"]()[0];
+                QUnit.assert.deepEqual(httpManager["_getDbgPlgTargets"]()[4].fetchCredentials, undefined, "fetchCredentials was undefined if not set");
+                if (core.config.extensionConfig){
+                    core.config.extensionConfig[postChannel.identifier].fetchCredentials = "omit";
+                }
+                this.clock.tick(1);
+                actaulConfig = postChannel["_getDbgPlgTargets"]()[1];
+                QUnit.assert.deepEqual(actaulConfig["fetchCredentials"], "omit", "post channel fetchCredentials was set to omit");
+                httpManager =  postChannel["_getDbgPlgTargets"]()[0];
+                console.log("get", JSON.stringify(httpManager["_getDbgPlgTargets"]()[4]));
+                QUnit.assert.deepEqual(httpManager["_getDbgPlgTargets"]()[4].fetchCredentials, "omit", "http manager fetchCredentials was set to omit");
             }
         });
 

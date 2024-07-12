@@ -177,6 +177,7 @@ export class HttpManager {
         let _timeoutWrapper: ITimeoutOverrideWrapper;
         let _excludeCsMetaData: boolean;
         let _sendPostMgr: SenderPostManager;
+        let _fetchCredentials: RequestCredentials;
 
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
@@ -238,7 +239,9 @@ export class HttpManager {
                         if (!isNullOrUndefined(channelConfig.useSendBeacon)) {
                             _useBeacons = !!channelConfig.useSendBeacon;
                         }
-
+                        if (channelConfig.fetchCredentials){
+                            _fetchCredentials= channelConfig.fetchCredentials;
+                        }
                         let sendPostConfig = _getSendPostMgrConfig();
                         // only init it once
                         if (!_sendPostMgr) {
@@ -411,7 +414,7 @@ export class HttpManager {
             }
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces];
+                return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces, _getSendPostMgrConfig()];
             };
 
             function _getSendPostMgrConfig(): _ISendPostMgrConfig {
@@ -422,10 +425,12 @@ export class HttpManager {
                         xhrOnComplete: _xhrOnComplete,
                         beaconOnRetry: _onBeaconRetry
                     } as _ISenderOnComplete;
+
                     let config = {
                         enableSendPromise: false,
                         isOneDs: true,
                         disableCredentials: !_sendCredentials,
+                        fetchCredentials: _fetchCredentials,
                         disableXhr: false,
                         disableBeacon: !_useBeacons,
                         disableBeaconSync: !_useBeacons,

@@ -245,6 +245,23 @@ export interface IChannelConfiguration {
      * @since 4.1.0
      */
     excludeCsMetaData?: boolean;
+
+    /**
+     * [Optional] Specify whether cross-site Access-Control fetch requests should include credentials such as cookies,
+     * authentication headers, or TLS client certificates.
+     *
+     * Possible values:
+     * - "omit": never send credentials in the request or include credentials in the response.
+     * - "include": always include credentials, even cross-origin.
+     * - "same-origin": only send and include credentials for same-origin requests.
+     *
+     * If not set, the default value will be "include".
+     * 
+     * For more information, refer to:
+     * - [Fetch API - Using Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#including_credentials)
+     * @since 3.3.1
+     */
+    fetchCredentials?: RequestCredentials;
 }
 
 /**

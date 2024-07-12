@@ -1449,6 +1449,23 @@ export class HttpManagerTest extends AITestClass {
         });
 
         this.testCase({
+            name: "Fetch Credentials config could be set from post channel and pass into sendPostManager",
+            useFakeTimers: true,
+            test: () => {
+                var manager: HttpManager = new HttpManager(500, 2, 1, {
+                    requeue: _requeueNotification,
+                    send: _sendNotification,
+                    sent: _sentNotification,
+                    drop: _dropNotification
+                });
+                this.core.config.extensionConfig![this.postManager.identifier].fetchCredentials = "omit";
+                this.core.config.endpointUrl = "testEndpoint";
+                this.core.config.extensionConfig![this.postManager.identifier].alwaysUseXhrOverride = false;
+                manager.initialize(this.core.config, this.core, this.postManager);
+                QUnit.assert.equal(manager["_getDbgPlgTargets"]()[4].fetchCredentials, "omit", "Fetch credentials should be set to omit");
+            }
+        });
+        this.testCase({
             name: "Validate synchronous event with zero response - Default Send Type (Synchronous)",
             useFakeTimers: true,
             test: () => {

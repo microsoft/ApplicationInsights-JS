@@ -46,6 +46,7 @@ export class SenderPostManager {
         let _isOneDs: boolean;
         let _onCompleteFuncs: _ISenderOnComplete;
         let _disableCredentials: boolean;
+        let _fetchCredentials: RequestCredentials;
         let _fallbackInst: IXHROverride;
         let _disableXhr: boolean;
         let _disableBeacon: boolean;
@@ -83,6 +84,7 @@ export class SenderPostManager {
                 try {
                     _onCompleteFuncs = config.senderOnCompleteCallBack || {};
                     _disableCredentials = !!config.disableCredentials;
+                    _fetchCredentials = config.fetchCredentials;
                     _isOneDs = !!config.isOneDs;
                     _enableSendPromise = !!config.enableSendPromise;
                     _disableXhr = !! config.disableXhr;
@@ -379,7 +381,9 @@ export class SenderPostManager {
                 }
 
 
-                if (_sendCredentials && _isOneDs) {
+                if (_fetchCredentials) {  // if user passed in this value via post channel (1ds), then use it
+                    init.credentials = _fetchCredentials;
+                } else if (_sendCredentials && _isOneDs) {
                     // for 1ds, Don't send credentials when URL is file://
                     init.credentials = "include";
                 }
@@ -607,6 +611,7 @@ export class SenderPostManager {
                 _isOneDs = null;
                 _onCompleteFuncs = null;
                 _disableCredentials = null;
+                _fetchCredentials = null;
                 _fallbackInst = null;
                 _disableXhr = false;
                 _disableBeacon = false;

@@ -75,6 +75,7 @@ const defaultPostChannelConfig: IConfigDefaults<IChannelConfiguration> = objDeep
     stringifyObjects: undefValue,
     enableCompoundKey: undefValue,
     disableOptimizeObj: false,
+    fetchCredentials: undefValue,
     // disableCacheHeader: undefValue, // See Task #7178858 - Collector requires a change to support this
     transports: undefValue,
     unloadTransports: undefValue,
