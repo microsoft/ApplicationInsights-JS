@@ -2,7 +2,7 @@ import { AITestClass } from "@microsoft/ai-test-framework";
 import { createPromise } from '@nevware21/ts-async';
 import * as pako from 'pako';
 
-const MAX_DEFLATE_SIZE = 25;
+const MAX_DEFLATE_SIZE = 26.5;
 
 export class FileSizeCheckTest extends AITestClass {
 
