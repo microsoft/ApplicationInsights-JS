@@ -46,9 +46,16 @@ Function Write-LogParams
     }
 }
 
-Function GetReleaseFiles
+Function GetReleaseFiles (
+    [hashtable] $verDetails
+)
 {
     Write-Log "Folder   : $jsSdkDir"
+    $version = $verDetails.full
+    Write-Log "Version   : $($verDetails.full)"
+    Write-Log "  Number  : $($verDetails.ver)"
+    Write-Log "  Type    : $($verDetails.type)"
+    Write-Log "  BldNum  : $($verDetails.bldNum)"
 
     # check if the img dir exists
     $parentDir = Split-Path -Path $jsSdkDir -Parent
@@ -62,28 +69,15 @@ Function GetReleaseFiles
     }
 
     $files = New-Object 'system.collections.generic.dictionary[string,string]'
-    $nightFiles = New-Object 'system.collections.generic.dictionary[string,string]'
 
     Write-Log "Adding files";
     # Iterate over each version in the versionlist
-    $versions = $versionlist -split ","
-    foreach ($version in $versions) {
-        $version = $version.Trim()
-        Write-Host "Version : $version"
-        if ($version -like "*night*") {
-            Write-Host "The version contains 'night'"
-            AddReleaseFile $nightFiles $imgSrcDir "ai.$version.js.svg"
-            AddReleaseFile $nightFiles $imgSrcDir "ai.$version.gzip.min.js.svg"
-            AddReleaseFile $nightFiles $imgSrcDir "ai.$version.min.js.svg"
-        } else {
-            Write-Host "The version does not contain 'night'"
-            AddReleaseFile $files $imgSrcDir "ai.$version.js.svg"
-            AddReleaseFile $files $imgSrcDir "ai.$version.gzip.min.js.svg"
-            AddReleaseFile $files $imgSrcDir "ai.$version.min.js.svg"
-        }
-    }
 
-    return $files, $nightFiles
+    AddReleaseFile $files $imgSrcDir "ai.$version.js.svg"
+    AddReleaseFile $files $imgSrcDir "ai.$version.gzip.min.js.svg"
+    AddReleaseFile $files $imgSrcDir "ai.$version.min.js.svg"
+
+    return $files
 }
 
 #-----------------------------------------------------------------------------
@@ -117,23 +111,43 @@ if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -eq $true) {
 
 Write-Log "======================================================================"
 
-$releaseFiles, $releaseNightFiles = GetReleaseFiles 
-$actualCount = $releaseFiles.Count + $releaseNightFiles.Count
 $versions = $versionlist -split ","
-if ($null -eq $releaseFiles -and $null -eq $releaseNightFiles) {
-    Write-LogFailure "Unable to find any release files"
-} elseif ($actualCount -ne 3*$versions.Count) {
-    Write-LogWarning "Files number is incorrect. Expected: $($versions.Count*3), Actual: $actualCount"
-}
+    foreach ($version in $versions) {
+        $version = Get-VersionDetails $version.Trim()
+        $releaseFiles = GetReleaseFiles $version      # Get the versioned files only
+        if ($null -eq $releaseFiles -or $releaseFiles.Count -eq 0) {
+            Write-LogFailure "Unable to find any release files"
+        }
 
-Write-Log "Release Files : $($releaseFiles.Count)"
-Write-Log "Release Night Files : $($releaseNightFiles.Count)"
-Write-Log "----------------------------------------------------------------------"
+        Write-Log "Release Files : $($releaseFiles.Count)"
 
-$contentDisposition = "inline"
+        Write-Log "----------------------------------------------------------------------"
 
-# Publish the img to the folder that is same to the script folder.
-PublishFiles $releaseFiles "scripts/b" $cacheControl $contentType $overwrite $contentDisposition
-PublishFiles $releaseNightFiles "nightly" $cacheControl $contentType $overwrite $contentDisposition
+        # Publish the full versioned files to all release folders
+        if ($version.type -eq "release") {
+            # Normal publishing deployment
+            PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
+            PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
+            PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $contentType $overwrite
+        }
+        elseif ($version.type -eq "rc") {
+            PublishFiles $releaseFiles "beta" $cacheControl1Year $contentType $overwrite
+            PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
+        }
+        elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
+            # Publish to release type folder folder
+            PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
+        }
+        elseif ($version.type -eq "nightly" -or $version.type -eq "nightly3") {
+            # Publish to release nightly folder folder
+            PublishFiles $releaseFiles "nightly" $cacheControl1Year $contentType $overwrite
+        }
+        else {
+            # Upload to the test container rather than the supplied one
+            $global:connectDetails.testOnly = $true
+            $global:connectDetails.storeContainer = "tst"
+            PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
+        }
 
-Write-Log "======================================================================"
+        Write-Log "======================================================================"
+    }
