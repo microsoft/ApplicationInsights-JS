@@ -23,7 +23,7 @@ async function generateSizeBadge(version, fileSize, type, maxSize = 35, minSize 
         const format = {
             label: label,
             message: fileSize + ' KB',
-            color: sizecolor,
+            color: sizecolor
           }
           
         const svg = makeBadge(format);
