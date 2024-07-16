@@ -9,7 +9,8 @@ param (
     [switch] $overwrite = $false,                       # Overwrite any existing files   
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
     [switch] $cdn = $false,                             # (No longer used -- kept for now for backward compatibility)
-    [switch] $cacheTest = $false                        # Uploads the images with a shorter cache time
+    [switch] $cacheTest = $false,                       # Uploads the images with a shorter cache time
+    [string] $versionlist = $null                       # List of versions whose size images should be generated and published 
 )
 
 Import-Module -Force -Name "../../common/publish/Logging"
@@ -51,7 +52,7 @@ Function GetReleaseFiles
 
     # check if the img dir exists
     $parentDir = Split-Path -Path $jsSdkDir -Parent
-    $imgSrcDir = Join-Path -Path $parentDir -ChildPath "./AISKU/.cdn/img"
+    $imgSrcDir = Join-Path -Path $parentDir -ChildPath "AISKU/.cdn/img"
 
     Write-Log "Image Folder   : $imgSrcDir"
 
@@ -61,19 +62,28 @@ Function GetReleaseFiles
     }
 
     $files = New-Object 'system.collections.generic.dictionary[string,string]'
-
-    # Get all files in the imgSrcDir directory
-    $imgFiles = Get-ChildItem -Path $imgSrcDir -File
-
+    $nightFiles = New-Object 'system.collections.generic.dictionary[string,string]'
 
     Write-Log "Adding files";
-    # Iterate over each file
-    foreach ($file in $imgFiles) {
-        # Call AddReleaseFile for the current file
-        AddReleaseFile $files $imgSrcDir $file.Name
+    # Iterate over each version in the versionlist
+    $versions = $versionlist -split ","
+    foreach ($version in $versions) {
+        $version = $version.Trim()
+        Write-Host "Version : $version"
+        if ($version -like "*night*") {
+            Write-Host "The version contains 'night'"
+            AddReleaseFile $nightFiles $imgSrcDir "ai.$version.js.svg"
+            AddReleaseFile $nightFiles $imgSrcDir "ai.$version.gzip.min.js.svg"
+            AddReleaseFile $nightFiles $imgSrcDir "ai.$version.min.js.svg"
+        } else {
+            Write-Host "The version does not contain 'night'"
+            AddReleaseFile $files $imgSrcDir "ai.$version.js.svg"
+            AddReleaseFile $files $imgSrcDir "ai.$version.gzip.min.js.svg"
+            AddReleaseFile $files $imgSrcDir "ai.$version.min.js.svg"
+        }
     }
 
-    return $files
+    return $files, $nightFiles
 }
 
 #-----------------------------------------------------------------------------
@@ -107,18 +117,23 @@ if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -eq $true) {
 
 Write-Log "======================================================================"
 
-$releaseFiles = GetReleaseFiles 
-if ($null -eq $releaseFiles -or $releaseFiles.Count -eq 0) {
+$releaseFiles, $releaseNightFiles = GetReleaseFiles 
+$actualCount = $releaseFiles.Count + $releaseNightFiles.Count
+$versions = $versionlist -split ","
+if ($null -eq $releaseFiles -and $null -eq $releaseNightFiles) {
     Write-LogFailure "Unable to find any release files"
+} elseif ($actualCount -ne 3*$versions.Count) {
+    Write-LogWarning "Files number is incorrect. Expected: $($versions.Count*3), Actual: $actualCount"
 }
 
 Write-Log "Release Files : $($releaseFiles.Count)"
-
+Write-Log "Release Night Files : $($releaseNightFiles.Count)"
 Write-Log "----------------------------------------------------------------------"
 
 $contentDisposition = "inline"
 
 # Publish the img to the folder that is same to the script folder.
 PublishFiles $releaseFiles "scripts/b" $cacheControl $contentType $overwrite $contentDisposition
+PublishFiles $releaseNightFiles "nightly" $cacheControl $contentType $overwrite $contentDisposition
 
 Write-Log "======================================================================"

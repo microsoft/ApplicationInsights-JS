@@ -68,9 +68,12 @@
         "grunt-contrib-qunit": "^6.2.1",
         "grunt-contrib-uglify": "^5.2.1",
         "puppeteer": "19.2.0",
+        "request": "^2.88.2",
         "typedoc": "^0.23.22",
         "typescript": "^4.9.3",
-        "whatwg-fetch": "^3.6.2",
-        "request": "^2.88.2"
+        "whatwg-fetch": "^3.6.2"
+    },
+    "dependencies": {
+        "badge-maker": "^4.0.0"
     }
 }
