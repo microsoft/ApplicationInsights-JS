@@ -24,7 +24,7 @@ async function generateSizeBadge(version, fileSize, type, maxSize = 35, minSize 
             label: label,
             message: fileSize + ' KB',
             color: sizecolor
-          }
+        };
           
         const svg = makeBadge(format);
         console.log("write file: ", `./AISKU/.cdn/img/ai.${version}.svg`);
