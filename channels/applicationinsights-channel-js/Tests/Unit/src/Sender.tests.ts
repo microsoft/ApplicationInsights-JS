@@ -3861,6 +3861,77 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Channel Config: Process telemetry when offline and reponse code is 200",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                
+                this._sender.initialize(
+                    {
+                        instrumentationKey: "abc",
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                namePrefix: "offline"
+                            }
+                        }
+                        
+                    }, core, []
+                );
+                
+                const triggerSendSpy = this.sandbox.spy(this._sender, "triggerSend");
+                const telemetryItem: ITelemetryItem = {
+                    name: "testevent",
+                    iKey: "iKey",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                try {
+                    this._sender.processTelemetry(telemetryItem, undefined);
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, triggerSendSpy.called, "trigger send should not be called");
+
+                let keys = utlGetSessionStorageKeys();
+                QUnit.assert.deepEqual(keys.length, 2, "session buffer should contain only two keys");
+                let bufferKey = "offline_"+ BUFFER_KEY;
+                let sentKey = "offline_" + SENT_BUFFER_KEY;
+                QUnit.assert.ok(keys.indexOf(bufferKey) > -1, "session buffer key contain buffer key");
+                QUnit.assert.ok(keys.indexOf(sentKey) > -1, "session buffer key contain sent buffer key");
+                let itemsStr = sessionStorage.getItem(bufferKey) || "";
+                let items =JSON.parse(itemsStr);
+                QUnit.assert.equal(items.length, 1, "items should be saved");
+
+                this._sender.flush();
+
+                // Act - Go offline
+                const offlineEvent = new Event('offline');
+                window.dispatchEvent(offlineEvent);
+                QUnit.assert.equal(true, triggerSendSpy.called, "trigger send should be called");
+                itemsStr = sessionStorage.getItem(sentKey) || "";
+                items =JSON.parse(itemsStr);
+                QUnit.assert.equal(items.length, 1, "items should be saved into sent buffer");
+
+                let requests = this._getXhrRequests();
+                QUnit.assert.deepEqual(requests.length, 1, "should have only 1 requests");
+                let request = requests[0];
+                this.sendJsonResponse(request, {}, 200);
+
+                itemsStr = sessionStorage.getItem(bufferKey) || "";
+                items =JSON.parse(itemsStr);
+                QUnit.assert.equal(items.length, 0, "items should be cleared");
+
+                itemsStr = sessionStorage.getItem(sentKey) || "";
+                items =JSON.parse(itemsStr);
+                QUnit.assert.equal(items.length, 0, "sent items should be cleared");
+                
+            }
+        });
+
+        this.testCase({
             name: 'Envelope: operation.name is correctly truncated if required',
             test: () => {
                 const excessiveName = new Array(1234).join("a"); // exceeds max of 1024

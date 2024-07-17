@@ -982,6 +982,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             return;
                         }
                     }
+
+                    if (_offlineListener && !_offlineListener.isOnline()) { // offline
+                        // Note: Don't check for status == 0, since adblock gives this code
+                        if (!_isRetryDisabled) {
+                            const offlineBackOffMultiplier = 10; // arbritrary number
+                            _resendPayload(payload, offlineBackOffMultiplier);
+        
+                            _throwInternal(_self.diagLog(),
+                                eLoggingSeverity.WARNING,
+                                _eInternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${!_offlineListener.isOnline()}. Will retry to send ${payload.length} items.`);
+                        }
+                        return;
+                    }
                     if (!_isRetryDisabled && _isRetriable(status)) {
                         _resendPayload(payload);
                         _throwInternal(_self.diagLog(),
@@ -990,16 +1003,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             "Response code " + status + ". Will retry to send " + payload.length + " items.");
                     } else {
                         _self._onError(payload, errorMessage);
-                    }
-                } else if (_offlineListener && !_offlineListener.isOnline()) { // offline
-                    // Note: Don't check for status == 0, since adblock gives this code
-                    if (!_isRetryDisabled) {
-                        const offlineBackOffMultiplier = 10; // arbritrary number
-                        _resendPayload(payload, offlineBackOffMultiplier);
-    
-                        _throwInternal(_self.diagLog(),
-                            eLoggingSeverity.WARNING,
-                            _eInternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${!_offlineListener.isOnline()}. Will retry to send ${payload.length} items.`);
                     }
                 } else {
 
