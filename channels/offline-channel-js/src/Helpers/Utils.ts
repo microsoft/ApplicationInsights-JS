@@ -2,10 +2,21 @@
 // Licensed under the MIT License.
 
 import { EventPersistence } from "@microsoft/applicationinsights-common";
-import { INotificationManager, ITelemetryItem, NotificationManager, generateW3CId } from "@microsoft/applicationinsights-core-js";
-import { isString, objKeys, strSubstr } from "@nevware21/ts-utils";
+import {
+    INotificationManager, ITelemetryItem, NotificationManager, eLoggingSeverity, generateW3CId
+} from "@microsoft/applicationinsights-core-js";
+import { isNumber, isString, objKeys, strSubstr } from "@nevware21/ts-utils";
 import { IPostTransmissionTelemetryItem } from "../Interfaces/IInMemoryBatch";
-import { isValidPersistenceLevel } from "../Providers/IndexDbProvider";
+
+/**
+* Checks if the value is a valid EventPersistence.
+* @param {enum} value - The value that needs to be checked.
+* @return {boolean} True if the value is in EventPersistence, false otherwise.
+*/
+export function isValidPersistenceLevel(value: EventPersistence | number): boolean {
+    return (isNumber(value) && value >= eLoggingSeverity.DISABLED && value <= EventPersistence.Critical);
+}
+
 
 // Endpoint schema
 // <prefix>.<suffix>

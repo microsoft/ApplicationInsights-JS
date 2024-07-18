@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { EventPersistence } from "@microsoft/applicationinsights-common";
 import {
-    INotificationManager, IProcessTelemetryContext, IUnloadHookContainer, eBatchDiscardedReason, eLoggingSeverity, isNotNullOrUndefined,
-    isNumber, isString, newGuid, onConfigChange
+    INotificationManager, IProcessTelemetryContext, IUnloadHookContainer, eBatchDiscardedReason, isNotNullOrUndefined, isString, newGuid,
+    onConfigChange
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncAllPromise, createAsyncPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import { batchDropNotification, getEndpointDomain, getTimeFromId, getTimeId } from "../Helpers/Utils";
@@ -28,16 +27,6 @@ const MaxCriticalEvtsDropCnt = 2;
 export const DefaultDbName = "AIOffline";  // Db Name including the version number on the end so that if we ever have to upgrade old and new code can co-exist
 export const DbVersion = 1;                         // The Current version of the database (Used to trigger upgrades)
 export const EventObjectStoreName = "Evts";
-
-
-/**
-* Checks if the value is a valid EventPersistence.
-* @param {enum} value - The value that needs to be checked.
-* @return {boolean} True if the value is in EventPersistence, false otherwise.
-*/
-export function isValidPersistenceLevel(value: EventPersistence | number): boolean {
-    return (isNumber(value) && value >= eLoggingSeverity.DISABLED && value <= EventPersistence.Critical);
-}
 
 
 /**
