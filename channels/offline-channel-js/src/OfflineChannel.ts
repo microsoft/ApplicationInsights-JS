@@ -15,7 +15,7 @@ import {
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
 import { ITimerHandler, isFunction, isString, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import {
-    EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero
+    EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero, isValidPersistenceLevel
 } from "./Helpers/Utils";
 import { InMemoryBatch } from "./InMemoryBatch";
 import { IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
@@ -26,7 +26,6 @@ import {
     ILocalStorageProviderContext, IOfflineChannelConfiguration, IOfflineSenderConfig, IStorageTelemetryItem, eStorageProviders
 } from "./Interfaces/IOfflineProvider";
 import { OfflineBatchHandler } from "./OfflineBatchHandler";
-import { isValidPersistenceLevel } from "./Providers/IndexDbProvider";
 import { Sender } from "./Sender";
 
 const version = "#version#";
