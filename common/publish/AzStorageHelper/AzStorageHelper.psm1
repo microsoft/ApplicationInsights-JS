@@ -292,8 +292,14 @@ Function ValidateAccess (
         Write-Log "  Group       : $($connectDetails.resourceGroup)"
     }
 
-    Write-Log "  StoreName   : $storeName"    
-    $connectDetails.storageContext = $store.context
+    Write-Log "  StoreName   : $storeName"
+    if ($connectDetails.useConnectedAccount -eq $true -and [string]::IsNullOrWhiteSpace($storeName) -ne $true) {
+        Write-Log "  Using Connected Account"
+        $connectDetails.storageContext = New-AzStorageContext -StorageAccountName $storeName -UseConnectedAccount -ErrorAction SilentlyContinue
+    } else {
+        Write-Log "  Using User Account"
+        $connectDetails.storageContext = $store.context
+    }
     if ($null -eq $connectDetails.storageContext) {
         Write-LogFailure "  - Unable to access or locate a storage account $($connectDetails.cdnStorePath)"
         exit 301;
@@ -346,6 +352,11 @@ Function GetContainerContext(
     if ([string]::IsNullOrWhiteSpace($connectDetails.sasToken) -ne $true) {
         # Use the Sas token
         $azureContext = New-AzStorageContext -StorageAccountName $connectDetails.storeName -Sastoken $connectDetails.sasToken -ErrorAction SilentlyContinue
+    }
+
+    if ($connectDetails.useConnectedAccount -eq $true) {
+        Write-Log "Using Connected Account"
+        $azureContext = New-AzStorageContext -StorageAccountName $connectDetails.storeName -UseConnectedAccount -ErrorAction SilentlyContinue
     }
 
     $azContainer = Get-AzStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
@@ -651,7 +662,12 @@ Function PublishFiles(
         # Use the Sas token
         $azureContext = New-AzStorageContext -StorageAccountName $global:connectDetails.storeName -Sastoken $global:connectDetails.sasToken
     }
-    
+
+    if ($connectDetails.useConnectedAccount -eq $true) {
+        Write-Log "Using Connected Account"
+        $azureContext = New-AzStorageContext -StorageAccountName $global:connectDetails.storeName -UseConnectedAccount -ErrorAction SilentlyContinue
+    }
+
     $container = Get-AzStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
     if ($null -eq $container) {
         $Error.Clear()
