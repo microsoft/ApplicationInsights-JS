@@ -8,7 +8,8 @@ param (
     [string] $logPath = $null,                          # The location where logs should be written
     [switch] $overwrite = $false,                       # Overwrite any existing files   
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
-    [switch] $cdn = $false                              # (No longer used -- kept for now for backward compatibility)
+    [switch] $cdn = $false,                             # (No longer used -- kept for now for backward compatibility)
+    [switch] $useConnectedAccount = $false              # Use Entra Id to connect to Azure
 )
 
 Import-Module -Force -Name "../../common/publish/Logging"
@@ -23,6 +24,7 @@ $global:connectDetails.subscriptionId = $subscriptionId
 $global:connectDetails.sasToken = $sasToken
 $global:connectDetails.storageContext = $null
 $global:connectDetails.testOnly = $testOnly
+$global:connectDetails.useConnectedAccount = $useConnectedAccount
 
 $global:cacheValue = $null
 
@@ -36,7 +38,8 @@ Function Write-LogParams
     Write-Log "Test Mode         : $testOnly"
     Write-Log "SourcePath        : $jsSdkDir"
     Write-Log "Log Path          : $logDir"
-    
+    Write-Log "Use Connected Acct: $useConnectedAccount"
+
     if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -eq $true) {
         Write-Log "Mode      : User-Credentials"
     } else {

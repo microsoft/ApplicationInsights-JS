@@ -9,7 +9,8 @@ param (
     [switch] $showFiles = $false,                       # Show the individual files with details as well
     [switch] $activeOnly = $false,                      # Only show the active (deployed) versions
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
-    [switch] $cdn = $false                              # (No longer used -- kept for now for backward compatibility)
+    [switch] $cdn = $false,                             # (No longer used -- kept for now for backward compatibility)
+    [switch] $useConnectedAccount = $false              # Use Entra Id to connect to Azure
 )
 
 Import-Module -Force -Name "../../../common/publish/Logging"
@@ -24,6 +25,7 @@ $global:connectDetails.subscriptionId = $subscriptionId
 $global:connectDetails.sasToken = $sasToken
 $global:connectDetails.storageContext = $null
 $global:connectDetails.testOnly = $testOnly
+$global:connectDetails.useConnectedAccount = $useConnectedAccount
 
 Function Write-LogParams 
 {
@@ -35,6 +37,7 @@ Function Write-LogParams
     Write-Log "Log Path          : $logDir"
     Write-Log "Show Files        : $showFiles"
     Write-Log "Test Mode         : $testOnly"
+    Write-Log "Use Connected Acct: $useConnectedAccount"
     
     if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -eq $true) {
         Write-Log "Mode      : User-Credentials"
