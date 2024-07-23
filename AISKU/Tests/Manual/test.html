@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create and Download ZIP</title>
+</head>
+<body>
+    <button id="downloadZip">Download ZIP</button>
+
+    <script>
+        // Generate CRC32 Table
+        const crc32Table = Array.from({ length: 256 }, (_, i) => {
+            let crc = i;
+            for (let j = 8; j > 0; j--) {
+                if (crc & 1) crc = 0xedb88320 ^ (crc >>> 1);
+                else crc = crc >>> 1;
+            }
+            return crc >>> 0;
+        });
+
+        function crc32(data) {
+            let crc = 0xffffffff;
+            for (let i = 0; i < data.length; i++) {
+                crc = crc32Table[(crc ^ data[i]) & 0xff] ^ (crc >>> 8);
+            }
+            return crc ^ 0xffffffff;
+        }
+
+        function toHexString(uint8Array) {
+            return Array.from(uint8Array)
+                .map(byte => byte.toString(16).padStart(2, '0'))
+                .join(' ');
+        }
+
+        async function printBlobHex(blob) {
+            const arrayBuffer = await blob.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const hexString = toHexString(uint8Array);
+            console.log(hexString); // Optional: Log to console
+        }
+
+        function getDosDateTime(timestamp) {
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // 月份从0开始
+            const day = date.getDate();
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+            const seconds = date.getSeconds();
+
+            // 计算DOS日期字段
+            const dosDate = ((year - 1980) << 9) | (month << 5) | day;
+
+            // 计算DOS时间字段
+            const dosTime = (hours << 11) | (minutes << 5) | (seconds >> 1);
+
+            return { dosDate, dosTime };
+        }
+
+        async function compress(data) {
+            const compressedStream = new Response(data)
+                .body.pipeThrough(new CompressionStream('deflate-raw'));
+            const bytes = await new Response(compressedStream).arrayBuffer();
+            return new Uint8Array(bytes);
+        }
+
+        function totestHexString(value, length) {
+            return value.toString(16).padStart(length * 2, '0').toUpperCase();
+        }
+
+        async function createZip() {
+            const fileName = '123.txt';
+            const fileContent = 'test1test2test3test45678whathappentesttest';
+
+            const fileData = new TextEncoder().encode(fileContent);
+            const fileNameBytes = new TextEncoder().encode(fileName);
+
+            // Compress the file data
+            const compressedData = await compress(fileData);
+
+            console.log(compressedData);
+
+            const crc32Value = crc32(fileData);
+            const uncompressedSize = fileData.length;
+            const compressedSize = compressedData.length;
+            const { dosDate, dosTime } = getDosDateTime(Date.now());
+
+            // Local file header
+            const localFileHeader = new Uint8Array([
+                0x50, 0x4b, 0x03, 0x04, // Local file header signature
+                0x14, 0x00, // Version needed to extract
+                0x00, 0x00, // General purpose bit flag
+                0x08, 0x00, // Compression method (8 = deflate)
+                dosTime & 0xFF, dosTime >> 8,
+                dosDate & 0xFF, dosDate >> 8,
+                crc32Value & 0xFF, (crc32Value >> 8) & 0xFF, (crc32Value >> 16) & 0xFF, (crc32Value >> 24) & 0xFF,
+                compressedSize & 0xFF, (compressedSize >> 8) & 0xFF, (compressedSize >> 16) & 0xFF, (compressedSize >> 24) & 0xFF,
+                uncompressedSize & 0xFF, (uncompressedSize >> 8) & 0xFF, (uncompressedSize >> 16) & 0xFF, (uncompressedSize >> 24) & 0xFF,
+                fileNameBytes.length & 0xFF, 0x00, // File name length
+                0x00, 0x00, // Extra field length
+                ...fileNameBytes,
+                ...compressedData
+            ]);
+
+            console.log("dosTime (low byte):", totestHexString(dosTime & 0xFF, 1));
+            console.log("dosTime (high byte):", totestHexString(dosTime >> 8, 1));
+            console.log("dosDate (low byte):", totestHexString(dosDate & 0xFF, 1));
+            console.log("dosDate (high byte):", totestHexString(dosDate >> 8, 1));
+            console.log("crc32Value (byte 1):", totestHexString(crc32Value & 0xFF, 1));
+            console.log("crc32Value (byte 2):", totestHexString((crc32Value >> 8) & 0xFF, 1));
+            console.log("crc32Value (byte 3):", totestHexString((crc32Value >> 16) & 0xFF, 1));
+            console.log("crc32Value (byte 4):", totestHexString((crc32Value >> 24) & 0xFF, 1));
+
+            // Central directory header
+            const centralDirectoryHeader = new Uint8Array([
+                0x50, 0x4b, 0x01, 0x02, // Central directory file header signature
+                0x14, 0x00, // Version made by
+                0x14, 0x00, // Version needed to extract
+                0x00, 0x00, // General purpose bit flag
+                0x08, 0x00, // Compression method (8 = deflate)
+                dosTime & 0xFF, dosTime >> 8,
+                dosDate & 0xFF, dosDate >> 8,
+                crc32Value & 0xFF, (crc32Value >> 8) & 0xFF, (crc32Value >> 16) & 0xFF, (crc32Value >> 24) & 0xFF,
+                compressedSize & 0xFF, (compressedSize >> 8) & 0xFF, (compressedSize >> 16) & 0xFF, (compressedSize >> 24) & 0xFF,
+                uncompressedSize & 0xFF, (uncompressedSize >> 8) & 0xFF, (uncompressedSize >> 16) & 0xFF, (uncompressedSize >> 24) & 0xFF,
+                fileNameBytes.length & 0xFF, 0x00, // File name length
+                0x00, 0x00, // Extra field length
+                0x00, 0x00, // File comment length
+                0x00, 0x00, // Disk number start
+                0x00, 0x00, // Internal file attributes
+                0x00, 0x00, 0x00, 0x00, // External file attributes
+                0x00, 0x00, 0x00, 0x00, // External file attributes
+                // (localFileHeader.length & 0xFF), (localFileHeader.length >> 8), (localFileHeader.length >> 16), (localFileHeader.length >> 24), // Relative offset of local header
+                ...fileNameBytes
+            ]);
+
+            // Calculate central directory offset and size
+            const centralDirectoryOffset = localFileHeader.length;
+            const centralDirectorySize = centralDirectoryHeader.length;
+
+            // End of central directory record
+            const endOfCentralDirectoryRecord = new Uint8Array([
+                0x50, 0x4b, 0x05, 0x06, // End of central directory signature
+                0x00, 0x00, // Number of this disk
+                0x00, 0x00, // Disk where central directory starts
+                0x01, 0x00, // Number of central directory records on this disk
+                0x01, 0x00, // Total number of central directory records
+                (centralDirectorySize & 0xFF), (centralDirectorySize >> 8), (centralDirectorySize >> 16), (centralDirectorySize >> 24), // Size of central directory
+                (centralDirectoryOffset & 0xFF), (centralDirectoryOffset >> 8), (centralDirectoryOffset >> 16), (centralDirectoryOffset >> 24), // Offset of start of central directory
+                0x00, 0x00  // Comment length
+            ]);
+
+            // Combine all parts
+            const zipBlob = new Blob([
+                localFileHeader,
+                centralDirectoryHeader,
+                endOfCentralDirectoryRecord
+            ], { type: 'application/zip' });
+            printBlobHex(zipBlob); // Optional: Log to console
+
+            return zipBlob;
+        }
+
+        document.getElementById('downloadZip').addEventListener('click', async function() {
+            const zipBlob = await createZip();
+            const url = URL.createObjectURL(zipBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'output.zip'; // Name of the ZIP file
+            link.click(); // Trigger the download
+            URL.revokeObjectURL(url); // Clean up
+        });
+    </script>
+</body>
+</html>

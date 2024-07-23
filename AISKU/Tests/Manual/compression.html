@@ -1,47 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compression Sample</title>
-    <link rel="stylesheet" href="style/style.css"/>
-  </head>
-  <body>
-    <h1>Compression Example</h1>
-    <button id="downloadBtn">Download Compressed File</button>
+    <title> ZIP</title>
+</head>
+<body>
+    <button id="downloadZip">download ZIP</button>
+
     <script>
-            async function compress(str) {
-            const compressedStream = new Response(str)
-                .body.pipeThrough(new CompressionStream('deflate'));
-            const bytes = await new Response(compressedStream).arrayBuffer(); 
-            return bytes;
-          }
+        const crc32Table = Array.from({ length: 256 }, (_, i) => {
+            let crc = i;
+            for (let j = 8; j > 0; j--) {
+                if (crc & 1) crc = 0xedb88320 ^ (crc >>> 1);
+                else crc = crc >>> 1;
+            }
+            return crc >>> 0;
+        });
 
-
-        function download(filename, blob) {
-            const url = URL.createObjectURL(blob);
-            const element = document.createElement('a');
-            element.setAttribute('href', url);
-            element.setAttribute('download', filename);
-
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-
-            URL.revokeObjectURL(url); // Clean up the URL object
+        function crc32(data) {
+            let crc = 0xffffffff;
+            for (let i = 0; i < data.length; i++) {
+                crc = crc32Table[(crc ^ data[i]) & 0xff] ^ (crc >>> 8);
+            }
+            return crc ^ 0xffffffff;
         }
 
-        document.getElementById('downloadBtn').addEventListener('click', async () => {
-          const url = 'https://js.monitor.azure.com/scripts/b/ai.3.1.2.min.js'; // Replace with your URL
-          const response = await fetch(url);
-          const text = await response.text();
-            let compressedStr = await compress(text);
-            console.log("downloadBtn", compressedStr);
-            console.log("downloadBtn", );
-            let compressedBlob = new Blob([compressedStr], { type: 'application/octet-stream' });
-            // Trigger the download of the compressed file
-            // download("compressed.deflate", compressedBlob);
+        function toHexString(uint8Array) {
+            return Array.from(uint8Array)
+                .map(byte => byte.toString(16).padStart(2, '0'))
+                .join(' ');
+        }
+
+        async function printBlobHex(blob) {
+            const arrayBuffer = await blob.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const hexString = toHexString(uint8Array);
+            console.log(hexString); 
+        }
+
+        function getDosDateTime(timestamp) {
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; 
+            const day = date.getDate();
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+            const seconds = date.getSeconds();
+
+            const dosDate = ((year - 1980) << 9) | (month << 5) | day;
+
+            const dosTime = (hours << 11) | (minutes << 5) | (seconds >> 1);
+
+            return { dosDate, dosTime };
+        }
+
+        async function compress(data) {
+            const compressedStream = new Response(data)
+                .body.pipeThrough(new CompressionStream('deflate-raw'));
+            const bytes = await new Response(compressedStream).arrayBuffer();
+            return new Uint8Array(bytes);
+        }
+
+        function totestHexString(value, length) {
+            return value.toString(16).padStart(length * 2, '0').toUpperCase();
+        }
+
+        async function createZip() {
+            const files = [
+                { name: 'apple.txt', content: 'testtest' },
+                { name: 'abc.txt', content: 'testversionwhathappened' }
+            ];
+
+            let localFileHeaders = [];
+            let centralDirectoryHeaders = [];
+            let offset = 0;
+
+            for (const file of files) {
+                const fileNameBytes = new TextEncoder().encode(file.name);
+                const fileData = new TextEncoder().encode(file.content);
+                console.log("fileData:", fileData.length);
+
+                const compressedData = await compress(fileData);
+                const crc32Value = crc32(fileData);
+                const uncompressedSize = fileData.length;
+                const compressedSize = compressedData.length;
+                const { dosDate, dosTime } = getDosDateTime(Date.now());
+
+                const hexString = crc32Value.toString(16).padStart(8, '0').toUpperCase();
+
+                console.log(`CRC32 Value in Hex: ${hexString}`);
+
+                // local
+                const localFileHeader = new Uint8Array([
+                    0x50, 0x4b, 0x03, 0x04,
+                    0x14, 0x00,
+                    0x00, 0x00,
+                    0x08, 0x00,
+                    dosTime & 0xFF, dosTime >> 8,
+                    dosDate & 0xFF, dosDate >> 8,
+                    crc32Value & 0xFF, (crc32Value >> 8) & 0xFF, (crc32Value >> 16) & 0xFF, (crc32Value >> 24) & 0xFF,
+                    compressedSize & 0xFF, (compressedSize >> 8) & 0xFF, (compressedSize >> 16) & 0xFF, (compressedSize >> 24) & 0xFF,
+                    uncompressedSize & 0xFF, (uncompressedSize >> 8) & 0xFF, (uncompressedSize >> 16) & 0xFF, (uncompressedSize >> 24) & 0xFF,
+                    fileNameBytes.length & 0xFF, 0x00,
+                    0x00, 0x00,
+                    ...fileNameBytes,
+                    ...compressedData
+                ]);
+                console.log("compressedData:", compressedData.length);
+
+                console.log("fileNameBytes:", fileNameBytes.length);
+
+                localFileHeaders.push(localFileHeader);
+                console.log("localFileHeader:", localFileHeader.length);
+
+                // center
+                const centralDirectoryHeader = new Uint8Array([
+                    0x50, 0x4b, 0x01, 0x02,
+                    0x14, 0x00,
+                    0x14, 0x00,
+                    0x00, 0x00,
+                    0x08, 0x00,
+                    dosTime & 0xFF, dosTime >> 8,
+                    dosDate & 0xFF, dosDate >> 8,
+                    crc32Value & 0xFF, (crc32Value >> 8) & 0xFF, (crc32Value >> 16) & 0xFF, (crc32Value >> 24) & 0xFF,
+                    compressedSize & 0xFF, (compressedSize >> 8) & 0xFF, (compressedSize >> 16) & 0xFF, (compressedSize >> 24) & 0xFF,
+                    uncompressedSize & 0xFF, (uncompressedSize >> 8) & 0xFF, (uncompressedSize >> 16) & 0xFF, (uncompressedSize >> 24) & 0xFF,
+                    fileNameBytes.length & 0xFF, 0x00,
+                    // 0x00, 0x00,
+                    // 0x00, 0x00,
+                    // 0x00, 0x00,
+                    // 0x00, 0x00, 0x00, 0x00,
+                    // offset & 0xFF, (offset >> 8) & 0xFF, (offset >> 16) & 0xFF, (offset >> 24) & 0xFF,
+                    0x00, 0x00, // Extra field length
+                    0x00, 0x00, // File comment length
+                    0x00, 0x00, // Disk number start
+                    0x00, 0x00, // Internal file attributes
+                    0x00, 0x00, 0x00, 0x00, // External file attributes
+                    // 0x00, 0x00, 0x00, 0x00, // External file attributes
+                    offset & 0xFF, (offset >> 8) & 0xFF, (offset >> 16) & 0xFF, (offset >> 24) & 0xFF,
+                    ...fileNameBytes
+                ]);
+
+                centralDirectoryHeaders.push(centralDirectoryHeader);
+
+                offset += localFileHeader.length;
+            }
+
+            const centralDirectorySize = centralDirectoryHeaders.reduce((acc, header) => acc + header.length, 0);
+
+            // finish center
+            console.log("offset:", offset);
+
+            const endOfCentralDirectoryRecord = new Uint8Array([
+                0x50, 0x4b, 0x05, 0x06,
+                0x00, 0x00,
+                0x00, 0x00,
+                files.length & 0xFF, (files.length >> 8) & 0xFF,
+                files.length & 0xFF, (files.length >> 8) & 0xFF,
+                centralDirectorySize & 0xFF, (centralDirectorySize >> 8) & 0xFF, (centralDirectorySize >> 16) & 0xFF, (centralDirectorySize >> 24) & 0xFF,
+                offset & 0xFF, (offset >> 8) & 0xFF, (offset >> 16) & 0xFF, (offset >> 24) & 0xFF,
+                0x00, 0x00
+            ]);
+
+            // union
+            const zipBlob = new Blob([
+                ...localFileHeaders,
+                ...centralDirectoryHeaders,
+                endOfCentralDirectoryRecord
+            ], { type: 'application/zip' });
+            printBlobHex(zipBlob);
+
+            return zipBlob;
+        }
+
+        document.getElementById('downloadZip').addEventListener('click', async function() {
+            const zipBlob = await createZip();
+            const url = URL.createObjectURL(zipBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'output.zip';
+            link.click();
+            URL.revokeObjectURL(url);
         });
     </script>
-  </body>
+</body>
 </html>
