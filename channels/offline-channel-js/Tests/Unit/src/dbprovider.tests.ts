@@ -56,7 +56,7 @@ export class OfflineDbProviderTests extends AITestClass {
                 let expectedStorageKey = "AIOffline_1_dc.services.visualstudio.com";
                 Assert.equal(ctx[0], expectedStorageKey, "should have expected storage");
                 Assert.equal(ctx[1], "dc.services.visualstudio.com", "default endpoint is set");
-                let expectedMaxStorageTime = 10080000;
+                let expectedMaxStorageTime = 604800000;
                 Assert.equal(ctx[2], expectedMaxStorageTime, "default Max time is set");
                 Assert.ok(!provider.supportsSyncRequests(), "support sync should be set to false");
                 // this test will run database creation/dbupgrade as well
