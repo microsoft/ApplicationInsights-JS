@@ -31,7 +31,7 @@ let scriptContent = fs.readFileSync(scriptFilePath, 'utf8');
 // Replace the placeholder string with the actual connection string
 const connectionString = 'InstrumentationKey=1ae9e7ce-18f1-4e14-8fc0-acbf0ed28895;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/';
 let iKeyForCfgSync = "1ae9e7ce-18f1-4e14-8fc0-acbf0ed28895";
-scriptContent = scriptContent.replace(`connectionString: "YOUR_CONNECTION_STRING"`, `instrumentationKey: ${iKeyForCfgSync}`);
+scriptContent = scriptContent.replace(`connectionString: "YOUR_CONNECTION_STRING"`, `instrumentationKey: "${iKeyForCfgSync}",\n \t\textensionConfig: {\n\t\t\t"AppInsightsCfgSyncPlugin": {\n\t\t\t\tcfgUrl:"https://js.monitor.azure.com/beta/ai.config.1.cfg.json"\n\t\t\t}\n\t\t}`);
 //scriptContent = scriptContent.replace('YOUR_CONNECTION_STRING', connectionString);
 scriptContent = `<script type="text/javascript">${scriptContent}</script>`;
 
