@@ -94,7 +94,8 @@ export interface IOfflineChannelConfiguration {
 
     /**
      * [Optional] Identifies the maximum time in ms that items should be in persistent storage.
-     * default: 10080000 (around 7days)
+     * default: 10080000 (around 2.8 hours) for versions <= 3.3.0
+     * default: 604800000 (around 7days) for versions > 3.3.0
      */
     inStorageMaxTime?: number;
 

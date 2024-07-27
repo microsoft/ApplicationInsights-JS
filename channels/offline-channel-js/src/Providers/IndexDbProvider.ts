@@ -19,7 +19,7 @@ import { IndexedDbHelper } from "./IndexDbHelper";
 //TODO: move all const to one file
 const EventsToDropAtOneTime = 10;                   // If we fail to add a new event this is the max number of events we will attempt to remove to make space
 const StoreVersion = 1;                             // The Current version for the stored items, this will be used in the future for versioning
-const OrhpanedEventThresholdInMs = 10080000;        // 7 days
+const OrhpanedEventThresholdInMs = 604800000;        // 7 days
 const UnknowniKey = "Unknown";
 const ErrorMessageUnableToAddEvent = "DBError: Unable to add event";
 const MaxCriticalEvtsDropCnt = 2;

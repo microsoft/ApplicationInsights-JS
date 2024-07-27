@@ -19,7 +19,7 @@ const Version = "1";
 const DefaultStorageKey = "AIOffline";
 const DefaultMaxStorageSizeInBytes = 5000000;
 const MaxCriticalEvtsDropCnt = 2;
-const DefaultMaxInStorageTime = 10080000; //7*24*60*60*1000 7days
+const DefaultMaxInStorageTime = 604800000; //7*24*60*60*1000 7days
 // [Optional for version 1]: TODO: order event by time
 
 interface IJsonStoreDetails {
