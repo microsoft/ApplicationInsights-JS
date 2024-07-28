@@ -29,7 +29,8 @@ export {
     ICustomProperties,
     INotificationManager,
     IProcessTelemetryContext,
-    Tags
+    Tags,
+    ILoadedPlugin
 } from "@microsoft/applicationinsights-core-js";
 export {
     IConfig,
