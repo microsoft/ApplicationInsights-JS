@@ -202,3 +202,46 @@ export function findW3cTraceParent(selectIdx?: number): ITraceParent {
 
     return traceParent;
 }
+
+export interface scriptsInfo {
+    url: string;
+    crossOrigin?: string;
+    async?: boolean;
+    defer?: boolean;
+    referrePolicy?: string;
+}
+
+/**
+ * Find all script tags in the provided document and return the information about them.
+ * @param doc 
+ * @returns 
+ */
+export function findAllScripts(doc: any) {
+    let scripts = doc.getElementsByTagName("script");
+    let result: scriptsInfo[] = [];
+    for (let i = 0; i < scripts.length; i++) {
+        let script = scripts[i];
+        let src = script.getAttribute("src");
+        if (src) {
+            let crossOrigin = script.getAttribute("crossorigin");
+            let async = script.getAttribute("async") === "true";
+            let defer = script.getAttribute("defer") === "true";
+            let referrePolicy = script.getAttribute("referrerpolicy");
+            let info: scriptsInfo = { url: src };
+            if (crossOrigin) {
+                info.crossOrigin = crossOrigin;
+            }
+            if (async) {
+                info.async = async;
+            }
+            if (defer) {
+                info.defer = defer;
+            }
+            if (referrePolicy) {
+                info.referrePolicy = referrePolicy;
+            }
+            result.push(info);
+        }
+    }
+    return result;
+}
