@@ -389,6 +389,12 @@ export interface IConfig {
      * This URL takes precedence over the 'config.endpointUrl' and any endpoint in the connection string.
      */
     userOverrideEndpointUrl?: string;
+
+    /**
+     * [Optional] If set to true, when exception is sent out, the SDK will also send out all scripts basic info that are loaded on the page.
+     * Notice: This would increase the size of the exception telemetry.
+     */
+    getExceptionScriptsInfo?: boolean;
 }
 
 export class ConfigurationManager {

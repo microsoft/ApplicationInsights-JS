@@ -96,7 +96,6 @@ function _updateStorageUsage(extConfig: IConfig) {
 }
 
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "#version#"; // Not currently used anywhere
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
@@ -433,7 +432,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     systemProperties
                 );
                 let doc = getDocument();
-                if (doc){
+                if (doc && _self.config.getExceptionScriptsInfo){
                     let scriptsInfo = findAllScripts(doc);
                     console.log("get scripts info");
                     telemetryItem.tags["exceptionScripts"] = JSON.stringify(scriptsInfo);
