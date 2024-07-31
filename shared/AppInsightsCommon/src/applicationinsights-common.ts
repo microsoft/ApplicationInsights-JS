@@ -64,7 +64,7 @@ export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } f
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
     isBeaconsSupported as isBeaconApiSupported,
-    ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
+    ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent, findAllScripts
 } from "@microsoft/applicationinsights-core-js";
 export { createDomEvent } from "./DomHelperFuncs";
 export {

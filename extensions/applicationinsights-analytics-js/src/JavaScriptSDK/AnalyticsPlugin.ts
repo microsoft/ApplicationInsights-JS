@@ -17,8 +17,9 @@ import {
     IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
     ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
     cfgDfBoolean, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity,
-    eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction,
-    isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
+    eventOff, eventOn, findAllScripts, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory,
+    hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined,
+    throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
@@ -431,6 +432,12 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     customProperties,
                     systemProperties
                 );
+                let doc = getDocument();
+                if (doc){
+                    let scriptsInfo = findAllScripts(doc);
+                    console.log("get scripts info");
+                    telemetryItem.tags["exceptionScripts"] = JSON.stringify(scriptsInfo);
+                }
                 _self.core.track(telemetryItem);
             };
 

@@ -213,8 +213,8 @@ export interface scriptsInfo {
 
 /**
  * Find all script tags in the provided document and return the information about them.
- * @param doc 
- * @returns 
+ * @param doc
+ * @returns
  */
 export function findAllScripts(doc: any) {
     let scripts = doc.getElementsByTagName("script");
