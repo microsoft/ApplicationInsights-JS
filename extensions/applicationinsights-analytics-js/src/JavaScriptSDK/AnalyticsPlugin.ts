@@ -96,6 +96,7 @@ function _updateStorageUsage(extConfig: IConfig) {
 }
 
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
+    public static Version = '3.3.0'; // Not currently used anywhere
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
@@ -422,7 +423,12 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     exception.severityLevel,
                     exception.id
                 ).toInterface();
-        
+                var doc = getDocument();
+                if (doc && _self.config.getExceptionScriptsInfo){
+                    var scriptsInfo = findAllScripts(doc);
+                    console.log("get scripts info", JSON.stringify(scriptsInfo));
+                    exceptionPartB.properties["exceptionScripts"] = JSON.stringify(scriptsInfo);
+                }
                 let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
                     exceptionPartB,
                     Exception.dataType,
@@ -431,12 +437,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     customProperties,
                     systemProperties
                 );
-                let doc = getDocument();
-                if (doc && _self.config.getExceptionScriptsInfo){
-                    let scriptsInfo = findAllScripts(doc);
-                    console.log("get scripts info");
-                    telemetryItem.tags["exceptionScripts"] = JSON.stringify(scriptsInfo);
-                }
                 _self.core.track(telemetryItem);
             };
 
