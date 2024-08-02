@@ -204,6 +204,10 @@ export class ApplicationInsightsConfigTests extends AITestClass {
         this.testCase({
             name: 'Proxy function exist',
             test: () => {
+                this.onDone(() =>{
+                    ai.unload(false);
+                });
+                let _config = this._getTestConfig(this._sessionPrefix, true, false);
                 let ai = new ApplicationInsights(_config);
                 ApplicationInsightsConfigTests._expectedTrackMethods.forEach(method => {
                     Assert.ok(ai[method], `${method} exists`);
