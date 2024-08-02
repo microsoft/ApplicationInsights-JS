@@ -459,7 +459,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.equal(-1, JSON.stringify(prop).indexOf("https://www.example.com/test.js"), "script info is not included");
                 
                 
-                appInsights.config.exceptionConfig.includeScripts = true;
+                appInsights.config.expCfg.inclScripts = true;
                 this.clock.tick(1);
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
                 Assert.ok(trackStub.calledTwice, "single exception is tracked");

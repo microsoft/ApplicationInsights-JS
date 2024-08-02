@@ -394,7 +394,7 @@ export interface IConfig {
     /**
      * [Optional] Set additional configuration for exceptions, such as more scripts to include in the exception telemetry.
      */
-    exceptionConfig?: IExceptionConfig;
+    expCfg?: IExceptionConfig;
 }
 
 export class ConfigurationManager {

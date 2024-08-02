@@ -68,7 +68,7 @@ const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
     enableDebug: cfgDfBoolean(),
     disableFlushOnBeforeUnload: cfgDfBoolean(),
     disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
-    exceptionConfig: cfgDfMerge<IExceptionConfig>({includeScripts: false})
+    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false})
 });
 
 function _chkConfigMilliseconds(value: number, defValue: number): number {
@@ -425,7 +425,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     exception.id
                 ).toInterface();
                 var doc = getDocument();
-                if (doc && _self.config.exceptionConfig && _self.config.exceptionConfig.includeScripts) {
+                if (doc && _self.config.expCfg?.inclScripts) {
                     var scriptsInfo = findAllScripts(doc);
                     exceptionPartB.properties["exceptionScripts"] = JSON.stringify(scriptsInfo);
                 }
