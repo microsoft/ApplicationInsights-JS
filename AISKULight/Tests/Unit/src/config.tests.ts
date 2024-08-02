@@ -11,6 +11,20 @@ export class ApplicationInsightsConfigTests extends AITestClass {
     private readonly _iKey = "testKey";
     private _sessionPrefix: string = newId();
     static registerTests: any;
+    private static readonly _expectedTrackMethods = [
+        "flush",
+        "pollInternalLogs",
+        "stopPollingInternalLogs",
+        "unload",
+        "getPlugin",
+        "addPlugin",
+        "evtNamespace",
+        "addUnloadCb",
+        "onCfgChange",
+        "getTraceCtx",
+        "updateCfg",
+        "addTelemetryInitializer"
+    ];
 
     constructor(testName?: string) {
         super(testName || "ApplicationInsightsAISKULightTests");
@@ -185,6 +199,19 @@ export class ApplicationInsightsConfigTests extends AITestClass {
                 Assert.equal("function", typeof ai[flushMethod], `${flushMethod} is a function`);
             }
         });
+
+        
+        this.testCase({
+            name: 'Proxy function exist',
+            test: () => {
+                let ai = new ApplicationInsights(_config);
+                ApplicationInsightsConfigTests._expectedTrackMethods.forEach(method => {
+                    Assert.ok(ai[method], `${method} exists`);
+                    Assert.equal('function', typeof ai[method], `${method} is a function`);
+                });
+            }
+        });
+
 
         this.testCase({
             name: "TrackTests: BaseData and baseType should exist",

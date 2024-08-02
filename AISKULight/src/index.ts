@@ -6,7 +6,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
-    ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
+    ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions, IDistributedTraceContext
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createAsyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
@@ -65,7 +65,10 @@ export class ApplicationInsights {
                 "addPlugin",
                 "evtNamespace",
                 "addUnloadCb",
-                "onCfgChange"
+                "onCfgChange",
+                "getTraceCtx",
+                "updateCfg",
+                "addTelemetryInitializer"
             ]);
 
             function _initialize(): void {
@@ -225,6 +228,29 @@ export class ApplicationInsights {
     public addUnloadCb(handler: UnloadHandler): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
+    /**
+     * Gets the current distributed trace context for this instance if available
+     */
+    public getTraceCtx(): IDistributedTraceContext | null | undefined {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void): ITelemetryInitializerHandler {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+     /**
+     * Update the configuration used and broadcast the changes to all loaded plugins
+     * @param newConfig - The new configuration is apply
+     * @param mergeExisting - Should the new configuration merge with the existing or just replace it. Default is to merge.
+     */
+     public updateCfg<T extends IConfiguration = IConfiguration>(newConfig: T, mergeExisting?: boolean): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
 
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
