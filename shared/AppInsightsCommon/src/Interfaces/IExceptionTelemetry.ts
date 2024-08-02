@@ -4,6 +4,14 @@
 import { SeverityLevel } from "./Contracts/SeverityLevel";
 import { IPartC } from "./IPartC";
 
+export interface IExceptionConfig{
+    /**
+     * If set to true, when exception is sent out, the SDK will also send out all scripts basic info that are loaded on the page.
+     * Notice: This would increase the size of the exception telemetry.
+     */
+    includeScripts?: boolean;
+}
+
 /**
  * @export
  * @interface IExceptionTelemetry

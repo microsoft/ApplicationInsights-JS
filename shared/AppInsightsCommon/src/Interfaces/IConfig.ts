@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { IConfiguration, ICustomProperties, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 import { DistributedTracingModes } from "../Enums";
+import { IExceptionConfig } from "./IExceptionTelemetry";
 import { IRequestContext } from "./IRequestContext";
 import { IStorageBuffer } from "./IStorageBuffer";
 import { IThrottleMgrConfig } from "./IThrottleMgr";
@@ -391,10 +392,9 @@ export interface IConfig {
     userOverrideEndpointUrl?: string;
 
     /**
-     * [Optional] If set to true, when exception is sent out, the SDK will also send out all scripts basic info that are loaded on the page.
-     * Notice: This would increase the size of the exception telemetry.
+     * [Optional] Set additional configuration for exceptions, such as more scripts to include in the exception telemetry.
      */
-    getExceptionScriptsInfo?: boolean;
+    exceptionConfig?: IExceptionConfig;
 }
 
 export class ConfigurationManager {
