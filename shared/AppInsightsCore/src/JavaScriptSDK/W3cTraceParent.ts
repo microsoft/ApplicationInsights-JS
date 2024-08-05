@@ -1,4 +1,4 @@
-import { isArray, isString, strLeft, strTrim } from "@nevware21/ts-utils";
+import { arrForEach, isArray, isString, strLeft, strTrim } from "@nevware21/ts-utils";
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
@@ -219,8 +219,7 @@ export interface scriptsInfo {
 export function findAllScripts(doc: any) {
     let scripts = doc.getElementsByTagName("script");
     let result: scriptsInfo[] = [];
-    for (let i = 0; i < scripts.length; i++) {
-        let script = scripts[i];
+    arrForEach(scripts, (script: any) => {
         let src = script.getAttribute("src");
         if (src) {
             let crossOrigin = script.getAttribute("crossorigin");
@@ -242,6 +241,6 @@ export function findAllScripts(doc: any) {
             }
             result.push(info);
         }
-    }
+    });
     return result;
 }
