@@ -7,7 +7,7 @@ import {
     Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal, 
     AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent 
 } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr, findAllScripts } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin";
@@ -406,6 +406,76 @@ export class AnalyticsPluginTests extends AITestClass {
         this.addOnErrorTests();
         this.addTrackMetricTests();
         this.addTelemetryInitializerTests();
+        this.addScriptInfoTests();
+    }
+
+    private addScriptInfoTests(): void {
+        this.testCase({
+            name: "AppInsightsTests: findAllScripts function returns correct information",
+            useFakeTimers: true,
+            test: () => {
+                // Initialize Application Insights core with plugins
+                let script = window.document.createElement("script");
+                script.src = "https://www.example.com/test.js";
+                script.innerHTML = 'test script';
+                window.document.body.appendChild(script);
+
+                let doc = window.document;
+                let scriptsInfo = findAllScripts(doc);
+                Assert.deepEqual(true, JSON.stringify(scriptsInfo).indexOf("https://www.example.com/test.js") !== -1, "script info contains the correct url");
+            }
+        });
+        this.testCase({
+            name: "AppInsightsTests: trackException would contain scrips info when config turns on",
+            useFakeTimers: true,
+            test: () => {
+                const appInsights = new AnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const properties = new PropertiesPlugin();
+                // Configuration
+                const config = {
+                    instrumentationKey: 'ikey',
+                };
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                // Initialize Application Insights core with plugins
+                core.initialize(config, [appInsights, channel, properties]);
+
+                // add test script
+                let script = window.document.createElement("script");
+                script.src = "https://www.example1.com/test.js";
+                script.setAttribute("referrerpolicy", "no-referrer");
+                script.innerHTML = 'test script';
+                let script2 = window.document.createElement("script");
+                script2.src = "https://www.test.com/test.js";
+                script2.innerHTML = "test tests";
+                script2.setAttribute("async", ""); 
+                window.document.body.appendChild(script);
+                window.document.body.appendChild(script2);
+
+
+                const trackStub = this.sandbox.stub(appInsights.core, "track");
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                const baseData = (trackStub.args[0][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop = baseData.properties;
+                Assert.equal(-1, JSON.stringify(prop).indexOf("https://www.example.com/test.js"), "script info is not included");
+                
+                appInsights.config.expCfg.inclScripts = true;
+                this.clock.tick(1);
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledTwice, "single exception is tracked");
+                const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop2 = baseData2.properties;
+                Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.test.com/test.js","async":true}'))
+                Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.example1.com/test.js","referrerPolicy":"no-referrer"'))
+
+            }
+        });
+        
+
     }
 
     private addGenericTests(): void {
