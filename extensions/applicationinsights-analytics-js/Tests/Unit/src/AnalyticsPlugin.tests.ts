@@ -470,7 +470,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
                 const prop2 = baseData2.properties;
                 Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.test.com/test.js","async":true}'))
-                Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.example1.com/test.js","referrePolicy":"no-referrer"'))
+                Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.example1.com/test.js","referrerPolicy":"no-referrer"'))
 
             }
         });

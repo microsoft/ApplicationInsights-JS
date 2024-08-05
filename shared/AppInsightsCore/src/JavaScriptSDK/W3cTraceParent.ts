@@ -208,7 +208,7 @@ export interface scriptsInfo {
     crossOrigin?: string;
     async?: boolean;
     defer?: boolean;
-    referrePolicy?: string;
+    referrerPolicy?: string;
 }
 
 /**
@@ -225,7 +225,7 @@ export function findAllScripts(doc: any) {
             let crossOrigin = script.getAttribute("crossorigin");
             let async = script.hasAttribute("async") === true;
             let defer = script.hasAttribute("defer") === true;
-            let referrePolicy = script.getAttribute("referrerpolicy");
+            let referrerPolicy = script.getAttribute("referrerpolicy");
             let info: scriptsInfo = { url: src };
             if (crossOrigin) {
                 info.crossOrigin = crossOrigin;
@@ -236,8 +236,8 @@ export function findAllScripts(doc: any) {
             if (defer) {
                 info.defer = defer;
             }
-            if (referrePolicy) {
-                info.referrePolicy = referrePolicy;
+            if (referrerPolicy) {
+                info.referrerPolicy = referrerPolicy;
             }
             result.push(info);
         }
