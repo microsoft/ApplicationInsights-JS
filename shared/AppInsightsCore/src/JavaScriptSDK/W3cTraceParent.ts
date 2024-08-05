@@ -224,8 +224,8 @@ export function findAllScripts(doc: any) {
         let src = script.getAttribute("src");
         if (src) {
             let crossOrigin = script.getAttribute("crossorigin");
-            let async = script.getAttribute("async") === "true";
-            let defer = script.getAttribute("defer") === "true";
+            let async = script.hasAttribute("async") === true;
+            let defer = script.hasAttribute("defer") === true;
             let referrePolicy = script.getAttribute("referrerpolicy");
             let info: scriptsInfo = { url: src };
             if (crossOrigin) {

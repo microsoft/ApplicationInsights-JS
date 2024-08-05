@@ -443,12 +443,17 @@ export class AnalyticsPluginTests extends AITestClass {
                 // Initialize Application Insights core with plugins
                 core.initialize(config, [appInsights, channel, properties]);
 
-
                 // add test script
                 let script = window.document.createElement("script");
-                script.src = "https://www.example.com/test.js";
+                script.src = "https://www.example1.com/test.js";
+                script.setAttribute("referrerpolicy", "no-referrer");
                 script.innerHTML = 'test script';
+                let script2 = window.document.createElement("script");
+                script2.src = "https://www.test.com/test.js";
+                script2.innerHTML = "test tests";
+                script2.setAttribute("async", ""); 
                 window.document.body.appendChild(script);
+                window.document.body.appendChild(script2);
 
 
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
@@ -458,14 +463,15 @@ export class AnalyticsPluginTests extends AITestClass {
                 const prop = baseData.properties;
                 Assert.equal(-1, JSON.stringify(prop).indexOf("https://www.example.com/test.js"), "script info is not included");
                 
-                
                 appInsights.config.expCfg.inclScripts = true;
                 this.clock.tick(1);
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
                 Assert.ok(trackStub.calledTwice, "single exception is tracked");
                 const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
                 const prop2 = baseData2.properties;
-                Assert.ok(JSON.stringify(prop2).indexOf("https://www.example.com/test.js") !== -1, "script info is included");
+                Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.test.com/test.js","async":true}'))
+                Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.example1.com/test.js","referrePolicy":"no-referrer"'))
+
             }
         });
         
