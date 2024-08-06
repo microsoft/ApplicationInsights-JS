@@ -6,7 +6,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
-    IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
+    IEventTelemetry, IExceptionConfig, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
     PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
     createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage,
@@ -16,9 +16,10 @@ import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
     IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
     ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
-    cfgDfBoolean, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity,
-    eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction,
-    isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
+    cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj,
+    eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow,
+    hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr,
+    strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
@@ -66,7 +67,8 @@ const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
     namePrefix: cfgDfString(),
     enableDebug: cfgDfBoolean(),
     disableFlushOnBeforeUnload: cfgDfBoolean(),
-    disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload")
+    disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
+    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false})
 });
 
 function _chkConfigMilliseconds(value: number, defValue: number): number {
@@ -422,7 +424,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     exception.severityLevel,
                     exception.id
                 ).toInterface();
-        
+                var doc = getDocument();
+                if (doc && _self.config.expCfg?.inclScripts) {
+                    var scriptsInfo = findAllScripts(doc);
+                    exceptionPartB.properties["exceptionScripts"] = JSON.stringify(scriptsInfo);
+                }
                 let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
                     exceptionPartB,
                     Exception.dataType,
