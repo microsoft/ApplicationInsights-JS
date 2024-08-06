@@ -1,7 +1,7 @@
-import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { newId } from "@microsoft/applicationinsights-core-js";
+import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
+import { ITelemetryItem, newId } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights} from "../../../src/index";
-import { BreezeChannelIdentifier, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { BreezeChannelIdentifier, ContextTagKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 
 export class ApplicationInsightsConfigTests extends AITestClass {
@@ -260,6 +260,44 @@ export class ApplicationInsightsConfigTests extends AITestClass {
                 Assert.deepEqual(item.baseData, {a: "test2"}, "baseData exists test2");
                 Assert.equal(item.baseType, "test2", "baseType exists test2");
 
+            }
+        });
+
+        this.testCase({
+            name: 'Proxy function exist',
+            test: () => {
+                this.onDone(() =>{
+                    ai.unload(false);
+                });
+                let _config = this._getTestConfig(this._sessionPrefix, true, false);
+                let ai = new ApplicationInsights(_config);
+                ApplicationInsightsConfigTests._expectedTrackMethods.forEach(method => {
+                    Assert.ok(ai[method], `${method} exists`);
+                    Assert.equal('function', typeof ai[method], `${method} is a function`);
+                });
+            }
+        });
+
+        this.testCase({
+            name: 'test proxy function (telemetry initializer) works',
+            useFakeTimers: true,
+            test: () => {
+                this.onDone(() =>{
+                    ai.unload(false);
+                });
+                let _config = this._getTestConfig(this._sessionPrefix, true, false);
+                let ai = new ApplicationInsights(_config);
+                const telemetryInitializer = {
+                    initializer: (envelope) => { }
+                }
+                const spy = this.sandbox.spy(telemetryInitializer, "initializer");
+                // act
+                ai.addTelemetryInitializer(telemetryInitializer.initializer);
+                ai.track({name: 'test event'});
+                this.clock.tick(1);
+
+                 // verify
+                 Assert.ok(spy.calledOnce, 'telemetryInitializer was called');
             }
         });
     }
