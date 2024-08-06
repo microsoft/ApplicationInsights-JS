@@ -26,7 +26,7 @@ export { IEventTelemetry } from "./Interfaces/IEventTelemetry";
 export { ITraceTelemetry } from "./Interfaces/ITraceTelemetry";
 export { IMetricTelemetry } from "./Interfaces/IMetricTelemetry";
 export { IDependencyTelemetry } from "./Interfaces/IDependencyTelemetry";
-export { IExceptionTelemetry, IAutoExceptionTelemetry, IExceptionInternal } from "./Interfaces/IExceptionTelemetry";
+export { IExceptionTelemetry, IAutoExceptionTelemetry, IExceptionInternal, IExceptionConfig } from "./Interfaces/IExceptionTelemetry";
 export { IPageViewTelemetry, IPageViewTelemetryInternal } from "./Interfaces/IPageViewTelemetry";
 export { IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal } from "./Interfaces/IPageViewPerformanceTelemetry";
 export { Trace } from "./Telemetry/Trace";
@@ -64,7 +64,7 @@ export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } f
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
     isBeaconsSupported as isBeaconApiSupported,
-    ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
+    ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent, findAllScripts
 } from "@microsoft/applicationinsights-core-js";
 export { createDomEvent } from "./DomHelperFuncs";
 export {

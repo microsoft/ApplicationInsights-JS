@@ -1,4 +1,4 @@
-import { isArray, isString, strLeft, strTrim } from "@nevware21/ts-utils";
+import { arrForEach, isArray, isString, strLeft, strTrim } from "@nevware21/ts-utils";
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
@@ -201,4 +201,46 @@ export function findW3cTraceParent(selectIdx?: number): ITraceParent {
     }
 
     return traceParent;
+}
+
+export interface scriptsInfo {
+    url: string;
+    crossOrigin?: string;
+    async?: boolean;
+    defer?: boolean;
+    referrerPolicy?: string;
+}
+
+/**
+ * Find all script tags in the provided document and return the information about them.
+ * @param doc
+ * @returns
+ */
+export function findAllScripts(doc: any) {
+    let scripts = doc.getElementsByTagName("script");
+    let result: scriptsInfo[] = [];
+    arrForEach(scripts, (script: any) => {
+        let src = script.getAttribute("src");
+        if (src) {
+            let crossOrigin = script.getAttribute("crossorigin");
+            let async = script.hasAttribute("async") === true;
+            let defer = script.hasAttribute("defer") === true;
+            let referrerPolicy = script.getAttribute("referrerpolicy");
+            let info: scriptsInfo = { url: src };
+            if (crossOrigin) {
+                info.crossOrigin = crossOrigin;
+            }
+            if (async) {
+                info.async = async;
+            }
+            if (defer) {
+                info.defer = defer;
+            }
+            if (referrerPolicy) {
+                info.referrerPolicy = referrerPolicy;
+            }
+            result.push(info);
+        }
+    });
+    return result;
 }

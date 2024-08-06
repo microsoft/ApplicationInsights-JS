@@ -93,7 +93,7 @@ export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnlo
 export { IDistributedTraceContext } from "./JavaScriptSDK.Interfaces/IDistributedTraceContext";
 export { ITraceParent } from "./JavaScriptSDK.Interfaces/ITraceParent";
 export {
-    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
+    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent, findAllScripts
 } from "./JavaScriptSDK/W3cTraceParent";
 
 // Dynamic Config definitions
