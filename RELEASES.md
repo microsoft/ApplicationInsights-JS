@@ -22,7 +22,20 @@ Users can also enable Integrity Check and minimize snippet loading time by setti
 ### Changelog
 - #2365 [main][snippet] prepare new snippet release, add support for more config 
 - #2360 [main] set script attribut to avoid race condition when multiple sdks are inited #2355 
-- #2339 [main] create snippet mini loader 
+- #2339 [main] create snippet mini loader
+
+## 3.3.1 (Aug 7th, 2024)
+
+### Changelog
+
+- #2379 [Main][Task]28644993: Update Online Sender Status Code Check with Offline Mode
+- #2380 [Main][Task]28751664: Fix Offline Circular Dependency
+- #2386 [Main][Task]28846327: Fix Offline Default Max in Storage Time to 7 Days
+- #2387 [Main][Task]27760339: Typedoc is not including ILoadedPlugin
+- #2381 [Main] [CDN Publishing] Cleanup AzureRM scripts from AI and 1DS
+- #2377 Fix Nightly Size Tests
+- #2389 [main] fix AI Basic Sku by exporting proxy function
+- #2373 add withCredentials config
 
 ## 3.3.0 (July 1st, 2024)
 
