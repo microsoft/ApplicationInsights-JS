@@ -474,8 +474,60 @@ export class AnalyticsPluginTests extends AITestClass {
 
             }
         });
-        
 
+
+        this.testCase({
+            name: "AppInsightsTests: trackException would contain log info when config turns on",
+            useFakeTimers: true,
+            test: () => {
+                const appInsights = new AnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const properties = new PropertiesPlugin();
+                // Configuration
+                const config = {
+                    instrumentationKey: 'ikey',
+                };
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                // Initialize Application Insights core with plugins
+                core.initialize(config, [appInsights, channel, properties]);
+
+                const trackStub = this.sandbox.stub(appInsights.core, "track");
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                const baseData = (trackStub.args[0][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop = baseData.properties;
+                Assert.equal(-1, JSON.stringify(prop).indexOf("test message"), "log info is not included");
+                // check maxLength would truncate the log info
+                let myLogFunction = () => {
+                    return {message: ['test message'], maxLength: 7};
+                };
+                appInsights.config.expCfg.expLog = myLogFunction;
+                this.clock.tick(1);
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledTwice, "second exception is tracked");
+                const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop2 = baseData2.properties;
+                Assert.deepEqual(true, prop2["exceptionLog"].includes('test'), "log info is included");
+                Assert.equal(-1, prop2["exceptionLog"].indexOf("message"), "text after max length should not be included");
+
+                this.clock.tick(1);
+
+                // check maxLength default value
+                appInsights.config.expCfg.expLog = () => {
+                    return {message: ['apple'.repeat(10), 'banana'.repeat(10)]};
+                };;
+                this.clock.tick(1);
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledThrice, "third exception is tracked");
+                const baseData3 = (trackStub.args[2][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop3 = baseData3.properties;
+                Assert.deepEqual(true, prop3["exceptionLog"].includes('apple'), "log info is included");
+                Assert.equal(-1, prop3["exceptionLog"].indexOf("banana"), "text after max length should not be included");
+            }
+        });
     }
 
     private addGenericTests(): void {

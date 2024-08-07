@@ -68,7 +68,7 @@ const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
     enableDebug: cfgDfBoolean(),
     disableFlushOnBeforeUnload: cfgDfBoolean(),
     disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
-    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false})
+    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false, expLog: undefined})
 });
 
 function _chkConfigMilliseconds(value: number, defValue: number): number {
@@ -123,6 +123,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _autoUnhandledPromiseInstrumented: boolean;
         let _extConfig: IConfig;
         let _autoTrackPageVisitTime: boolean;
+        let _reportExpDetails: () => {message: string[], maxLength?: number};
 
         // Counts number of trackAjax invocations.
         // By default we only monitor X ajax call per view to avoid too much load.
@@ -429,6 +430,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     var scriptsInfo = findAllScripts(doc);
                     exceptionPartB.properties["exceptionScripts"] = JSON.stringify(scriptsInfo);
                 }
+                if (_self.config.expCfg?.expLog) {
+                    const { message, maxLength = 50 } = _reportExpDetails();
+                    exceptionPartB.properties["exceptionLog"] = JSON.stringify(message).substring(0, maxLength);
+                }
                 let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
                     exceptionPartB,
                     Exception.dataType,
@@ -624,6 +629,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extConfig = ctx.getExtCfg(identifier, defaultValues);
+                    if (_extConfig.expCfg?.expLog) {
+                        _reportExpDetails = _extConfig.expCfg.expLog;
+                    }
 
                     _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
 
