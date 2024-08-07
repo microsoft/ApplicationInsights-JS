@@ -14,7 +14,10 @@ const appInsights = new ApplicationInsights({
     config: {
         connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
         expCfg: {
-            inclScripts: true
+            inclScripts: true,
+            expLog : () => {
+                return {message: ["log info 1", "log info 2"], maxLength: 100};
+            }
         }
     }
 });
