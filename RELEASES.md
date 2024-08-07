@@ -36,6 +36,8 @@ Users can also enable Integrity Check and minimize snippet loading time by setti
 - #2377 Fix Nightly Size Tests
 - #2389 [main] fix AI Basic Sku by exporting proxy function
 - #2373 add withCredentials config
+- #2388 [main] enhance exception telemetry with optional script Information
+  - !! **New config `expCfg`** is available to provide more details of exception telemetry. See more details [here](https://microsoft.github.io/ApplicationInsights-JS/exceptionTelemetry)
 
 ## 3.3.0 (July 1st, 2024)
 

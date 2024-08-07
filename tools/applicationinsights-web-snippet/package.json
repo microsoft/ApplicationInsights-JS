@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-snippet",
-    "version": "1.2.2",
+    "version": "1.2.1",
     "description": "Microsoft Application Insights Web Snippet",
     "main": "dist/es5/node/applicationinsights-web-snippet.js",
     "module": "dist-es5/applicationinsights-web-snippet.js",
