@@ -21,6 +21,37 @@
 [![minified size size](https://js.monitor.azure.com/scripts/b/3.min.js.svg)](https://js.monitor.azure.com/scripts/b/ai.3.min.js)
 [![gzip size](https://js.monitor.azure.com/scripts/b/ai.3.min.js.gzip.svg)](https://js.monitor.azure.com/scripts/b/ai.3.min.js)
 
+# Menu
+- [Before Getting Started](#before-getting-started)
+- [Release Versions](#release-versions)
+- [Getting Started](#getting-started)
+- [Basic Usage](#basic-usage)
+- [Configuration](#configuration)
+- <details>
+  <summary>More</summary>
+  
+  - [Cookie Handling](#cookie-handling)
+  - [Tree-Shaking Support and Enhancements](#tree-shaking-support-and-enhancements)
+  - [Service Notification](#service-notification)
+  - [Single Page Applications](#single-page-applications)
+  - [Source Map Support](#source-map-support)
+  - [Examples](#examples)
+  - [Application Insights Web Basic](#application-insights-web-basic)
+  - [Available Extensions for the SDK](#available-extensions-for-the-sdk)
+  - [Build a New Extension for the SDK](#build-a-new-extension-for-the-sdk)
+  - [Build & Test This Repo](#build-and-test-this-repo)
+  - [Performance](#performance)
+  - [Module Formats](#module-formats)
+  - [Nightly Builds](#nightly-builds)
+  - [Release Notes](#release-notes)
+  - [Browser Support](#browser-support)
+  - [Contributing](#contributing)
+  - [Data Collection](#data-collection)
+  - [Trademarks](#trademarks)
+  - [License](#license)
+  
+  </details>
+
 ## Before Getting Started
 
 This SDK is not for non-browser environments, for example, the Node.js applications.
@@ -109,7 +140,7 @@ This version of the snippet detects and reports an exception when loading the SD
 - Missing telemetry on how your end users are using your site;
 - Missing JavaScript errors that could potentially be blocking your end users from successfully using your site.
 
-For details on this exception see [SDK Load Failure](docs/SdkLoadFailure.md) page.
+For details on this exception see [SDK Load Failure](https://microsoft.github.io/ApplicationInsights-JS/SdkLoadFailure) page.
 
 Reporting of this failure as an exception to the portal does not use the configuration option ```disableExceptionTracking``` from the application insights configuration and therefore if this failure occurs it will always be reported by the snippet, even when the window.onerror support is disabled.
 
@@ -321,6 +352,10 @@ The differences between a telemetry initializer and a dependency initializer are
 - When a dependency initializer returns `false` to drop the event the event does NOT count against the `maxAjaxCallsPerView` as this blocks the event call from being tracked, and while returning `false` from a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) will also stop the event from being reported because this is further down the processing pipeline the dependency event IS counted against the `maxAjaxCallsPerView` limit.
 - It has access to an optional "context" `{ [key: string]: any }` object that is also available to the Dependency Listeners. This allows a listener to add additional details to the context (before the XHR/fetch request is sent), and the initializer will be called after the request has completed.
 
+### Advanced Setting Using Config/Extensions
+- [How to add more details in my Exception Telemetry?](https://microsoft.github.io/ApplicationInsights-JS/exceptionTelemetry) 
+
+
 ## Configuration
 
 Most configuration fields are named such that they can be defaulted to falsey. All fields are optional except for `instrumentationKey` or a `connectionString` containing the instrumentation key.
@@ -383,7 +418,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | distributedTracingMode | numeric or `DistributedTracingModes` | `DistributedTracingModes.AI_AND_W3C` | Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services.
 | enableUnhandledPromiseRejectionTracking | boolean | false | If true, unhandled promise rejections will be autocollected and reported as a javascript error. When disableExceptionTracking is true (dont track exceptions) the config value will be ignored and unhandled promise rejections will not be reported.
 | disableInstrumentationKeyValidation | boolean | false | If true, instrumentation key validation check is bypassed. Default value is false.
-| enablePerfMgr | boolean | false | [Optional] When enabled (true) this will create local perfEvents for code that has been instrumented to emit perfEvents (via the doPerf() helper). This can be used to identify performance issues within the SDK based on your usage or optionally within your own instrumented code. [More details are available by the basic documentation](./docs/PerformanceMonitoring.md). Since v2.5.7
+| enablePerfMgr | boolean | false | [Optional] When enabled (true) this will create local perfEvents for code that has been instrumented to emit perfEvents (via the doPerf() helper). This can be used to identify performance issues within the SDK based on your usage or optionally within your own instrumented code. [More details are available by the basic documentation](https://microsoft.github.io/ApplicationInsights-JS/PerformanceMonitoring). Since v2.5.7
 | perfEvtsSendAll | boolean | false | [Optional] When _enablePerfMgr_ is enabled and the [IPerfManager](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IPerfManager.html) fires a [INotificationManager](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/INotificationManager.html).perfEvent() this flag determines whether an event is fired (and sent to all listeners) for all events (true) or only for 'parent' events (false &lt;default&gt;).<br />A parent [IPerfEvent](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IPerfEvent.html) is an event where no other IPerfEvent is still running at the point of this event being created and it's _parent_ property is not null or undefined. Since v2.5.7
 | createPerfMgr | (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager | undefined | Callback function that will be called to create a the IPerfManager instance when required and ```enablePerfMgr``` is enabled, this enables you to override the default creation of a PerfManager() without needing to ```setPerfMgr()``` after initialization.
 | idLength | numeric | 22 | [Optional] Identifies the default length used to generate new random session and user id's. Defaults to 22, previous default value was 5 (v2.5.8 or less), if you need to keep the previous maximum length you should set this value to 5.
@@ -396,7 +431,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | featureOptIn <br/><sub>since 3.0.3</sub> | IFeatureOptIn | undefined | [Optional]  Set Feature opt in details. |
 | throttleMgrCfg <br/><sub>since 3.0.3</sub> | `{[key: number]: IThrottleMgrConfig}` | undefined | [Optional]  Set throttle mgr configuration by key. |
 | retryCodes | number[] | undefined | Identifies the status codes that will cause event batches to be resent, when `null` or `undefined` the SDK will use it's defaults `[401, 408, 429, 500, 502, 503, 504]`. `403` was removed in version 3.1.1. |
-| expCfg | [`IExceptionConfig`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCommon/src/Interfaces/IExceptionTelemetry.ts) | undefined | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
+| expCfg <br/><sub>since 3.3.1</sub>| [`IExceptionConfig`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCommon/src/Interfaces/IExceptionTelemetry.ts) | undefined | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
 
 
 ### ExtensionConfig
@@ -483,13 +518,13 @@ As part of changes being introduced in version 2.6.0 we are deprecating and remo
 
 ## Service Notification
 
-As part of changes being introduced in version 3.0.3, we are intergrating [cfgSync plugin](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-cfgsync-js) and [throttle manager](./docs/ThrottleMgr.md) to AISKU.
+As part of changes being introduced in version 3.0.3, we are intergrating [cfgSync plugin](https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-cfgsync-js) and [throttle manager](https://microsoft.github.io/ApplicationInsights-JS/ThrottleMgr) to AISKU.
 For versions before 3.1.2, these components are disabled by default.
 
 For versions after 3.1.2, these components are **turned on by default**.
-See [feature opt-in status](./docs/WebConfig.md) for more details.
+See [feature opt-in status](https://microsoft.github.io/ApplicationInsights-JS/WebConfig) for more details.
 
-For users behind a firewall, see [how to disable fetching from default CfgSync CDN](./docs/WebConfig.md#basic-usage).
+For users behind a firewall, see [how to disable fetching from default CfgSync CDN](https://microsoft.github.io/ApplicationInsights-JS/WebConfig#basic-usage).
 
 ## Single Page Applications
 
@@ -717,16 +752,6 @@ It is expected that most users will be using the `Public` URL, however, it is al
 Latest ✔ | Latest ✔ | 9+ Full ✔ | Latest ✔ | Latest ✔ |
 
 > v3.x removed ES3 / IE8, if you need to retain ES3 (IE8) compatibility you will need to remain on the v2.x versions of the SDK. Which is now maintained on the old [master branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/master)
-
-### Build and Test this Project
-
-Note: With the recent update to the latest version of rush ```npm run build``` fails with exit code 1 on successful build, hence the addition of ```--silent``` to the ```npm run build``` command.
-
-```zsh
-npm install -g @microsoft/rush
-npm install
-npm run build --silent
-```
 
 ### Submitting a Change to this Project
 
