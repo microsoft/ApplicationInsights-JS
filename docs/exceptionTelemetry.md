@@ -24,3 +24,10 @@ const appInsights = new ApplicationInsights({
 });
 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
 ```
+
+### Where could I find those extra information?
+The extra info is added as properties into exception Telemetry.
+For script information, it would be stored under properties[exceptionScripts].
+For log information, it would be stored under properties[exceptionLog].
+You could find the info as shown in the pic:
+![alt text](./img/exceptionTelemetry.png)
