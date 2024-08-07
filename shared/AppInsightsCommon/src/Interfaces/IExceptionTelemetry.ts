@@ -11,18 +11,21 @@ export interface IExceptionConfig{
      */
     inclScripts?: boolean;
 
-    /**
-     * Callback function to generate a message and optionally specify its maximum length for inclusion in telemetry data.
-     * This function should be implemented to provide a custom message. The maximum length of the message is optional;
-     * if not provided, it will default to 50 characters.
+   /**
+     * Callback function for collecting logs to be included in telemetry data.
      *
-     * The callback will be invoked before sending out telemetry, allowing customization of the telemetry message.
+     * The length of logs to generate is controlled by the `maxLogs` parameter.
      *
-     * @returns {Object} An object containing:
-     * - message: A string representing the message to include in the telemetry.
-     * - maxLength: (Optional) A number specifying the maximum length allowed for the message. Defaults to 50 if not provided.
+     * This callback is called before telemetry data is sent, allowing for dynamic customization of the logs.
+     *
+     * @returns {Object} An object with the following property:
+     * - logs: An array of strings, where each string represents a log entry to be included in the telemetry.
+     *
+     * @property {number} maxLogs - Specifies the maximum number of logs that can be generated. If not explicitly set, it defaults to 10.
      */
-    expLog?: () => { message: string[], maxLength?: number };
+    expLog: () => { logs: string[] },
+    maxLogs: number
+
 }
 
 /**

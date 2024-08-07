@@ -16,8 +16,9 @@ const appInsights = new ApplicationInsights({
         expCfg: {
             inclScripts: true,
             expLog : () => {
-                return {message: ["log info 1", "log info 2"], maxLength: 100};
-            }
+                return {logs: ["log info 1", "log info 2"]};
+            },
+            maxLogs : 100
         }
     }
 });
