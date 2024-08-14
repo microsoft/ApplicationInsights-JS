@@ -504,7 +504,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // check maxLength default value
                 appInsights.config.expCfg.expLog = () => {
-                    return {logs: ['apple'.repeat(10), 'banana'.repeat(10)]};
+                    return {logs: ['apple', 'apple', 'apple', 'apple', 'pear', 'banana']};
                 };;
                 this.clock.tick(1);
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
@@ -512,15 +512,17 @@ export class AnalyticsPluginTests extends AITestClass {
                 const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
                 const prop2 = baseData2.properties;
                 Assert.deepEqual(true, prop2["exceptionLog"].includes('apple'), "log info before max length is included");
+                Assert.deepEqual(true, prop2["exceptionLog"].includes('pear'), "log info before max length is included");
+
                 Assert.equal(-1, prop2["exceptionLog"].indexOf("banana"), "text after max length should not be included");
 
 
                 // check maxLength would truncate the log info
                 let myLogFunction = () => {
-                    return {logs: ['test message', 'check message']};
+                    return {logs: ['test message', 'check message', 'banana']};
                 };
                 appInsights.config.expCfg.expLog = myLogFunction;
-                appInsights.config.expCfg.maxLogs = 15;
+                appInsights.config.expCfg.maxLogs = 2;
                 this.clock.tick(1);
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
                 this.clock.tick(1);
@@ -528,7 +530,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 const baseData3 = (trackStub.args[2][0] as ITelemetryItem).baseData as IExceptionInternal;
                 const prop3 = baseData3.properties;
                 Assert.deepEqual(true, prop3["exceptionLog"].includes('test'), "log info is included");
-                Assert.equal(-1, prop3["exceptionLog"].indexOf("message"), "text after max length should not be included");
+                Assert.equal(false, prop3["exceptionLog"].includes("banana"), "text after max length should not be included");
 
             }
         });

@@ -21,7 +21,7 @@ export interface IExceptionConfig{
      * @returns {Object} An object with the following property:
      * - logs: An array of strings, where each string represents a log entry to be included in the telemetry.
      *
-     * @property {number} maxLogs - Specifies the maximum number of logs that can be generated. If not explicitly set, it defaults to 10.
+     * @property {number} maxLogs - Specifies the maximum number of logs that can be generated. If not explicitly set, it defaults to 5.
      */
     expLog: () => { logs: string[] },
     maxLogs: number

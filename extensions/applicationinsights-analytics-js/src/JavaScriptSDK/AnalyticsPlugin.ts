@@ -22,7 +22,7 @@ import {
     strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -68,7 +68,7 @@ const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
     enableDebug: cfgDfBoolean(),
     disableFlushOnBeforeUnload: cfgDfBoolean(),
     disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
-    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false, expLog: undefined, maxLogs: 50})
+    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false, expLog: undefined, maxLogs: 5})
 });
 
 function _chkConfigMilliseconds(value: number, defValue: number): number {
@@ -431,7 +431,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     exceptionPartB.properties["exceptionScripts"] = JSON.stringify(scriptsInfo);
                 }
                 if (_self.config.expCfg?.expLog) {
-                    exceptionPartB.properties["exceptionLog"] = JSON.stringify(_reportExpDetails()).substring(0, _self.config.expCfg.maxLogs);
+                    let logs = _reportExpDetails();
+                    if (logs && logs.logs && isArray(logs.logs)) {
+                        exceptionPartB.properties["exceptionLog"] = logs.logs.slice(0, _self.config.expCfg.maxLogs).join("\n");
+                    }
                 }
                 let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
                     exceptionPartB,
