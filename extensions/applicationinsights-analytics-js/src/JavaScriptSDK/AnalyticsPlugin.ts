@@ -68,7 +68,7 @@ const defaultValues: IConfigDefaults<IConfig&IConfiguration> = objDeepFreeze({
     enableDebug: cfgDfBoolean(),
     disableFlushOnBeforeUnload: cfgDfBoolean(),
     disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
-    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false, expLog: undefined, maxLogs: 5})
+    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false, expLog: undefined, maxLogs: 50})
 });
 
 function _chkConfigMilliseconds(value: number, defValue: number): number {

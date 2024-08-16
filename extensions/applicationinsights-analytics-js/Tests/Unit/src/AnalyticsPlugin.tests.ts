@@ -501,10 +501,10 @@ export class AnalyticsPluginTests extends AITestClass {
                 const prop = baseData.properties;
                 Assert.equal(-1, JSON.stringify(prop).indexOf("test message"), "log info is not included");
                 
-
+                let applelist = new Array(49).fill("apple");
                 // check maxLength default value
                 appInsights.config.expCfg.expLog = () => {
-                    return {logs: ['apple', 'apple', 'apple', 'apple', 'pear', 'banana']};
+                    return {logs: applelist.concat(['pear', 'banana'])};
                 };;
                 this.clock.tick(1);
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
