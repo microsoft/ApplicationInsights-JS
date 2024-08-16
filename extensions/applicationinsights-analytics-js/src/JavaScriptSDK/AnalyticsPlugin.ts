@@ -6,7 +6,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
-    IEventTelemetry, IExceptionConfig, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
+    IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
     PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
     createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage,
@@ -14,12 +14,12 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
-    IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
-    ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
-    cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj,
-    eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow,
-    hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr,
-    strUndefined, throwError
+    IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
+    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent,
+    TelemetryInitializerFunction, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate,
+    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId,
+    getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString,
+    isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
@@ -52,7 +52,7 @@ function _getReason(error: any) {
 
 const MinMilliSeconds = 60000;
 
-const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
+const defaultValues: IConfigDefaults<IConfig&IConfiguration> = objDeepFreeze({
     sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
     sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
     disableExceptionTracking: cfgDfBoolean(),
@@ -101,7 +101,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
-    public readonly config: IConfig;
+    public readonly config: IConfig & IConfiguration;
     public queue: Array<() => void>;
     public autoRoutePVDelay = 500; // ms; Time to wait after a route change before triggering a pageview to allow DOM changes to take place
 
@@ -121,9 +121,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _autoExceptionInstrumented: boolean;
         let _enableUnhandledPromiseRejectionTracking: boolean;
         let _autoUnhandledPromiseInstrumented: boolean;
-        let _extConfig: IConfig;
+        let _extConfig: IConfig & IConfiguration;
         let _autoTrackPageVisitTime: boolean;
-        let _reportExpDetails: () => {logs: string[]};
+        let _expCfg: IExceptionConfig;
 
         // Counts number of trackAjax invocations.
         // By default we only monitor X ajax call per view to avoid too much load.
@@ -426,14 +426,14 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     exception.id
                 ).toInterface();
                 var doc = getDocument();
-                if (doc && _self.config.expCfg?.inclScripts) {
+                if (doc && _expCfg?.inclScripts) {
                     var scriptsInfo = findAllScripts(doc);
                     exceptionPartB.properties["exceptionScripts"] = JSON.stringify(scriptsInfo);
                 }
-                if (_self.config.expCfg?.expLog) {
-                    let logs = _reportExpDetails();
+                if (_expCfg?.expLog) {
+                    let logs = _expCfg.expLog();
                     if (logs && logs.logs && isArray(logs.logs)) {
-                        exceptionPartB.properties["exceptionLog"] = logs.logs.slice(0, _self.config.expCfg.maxLogs).join("\n");
+                        exceptionPartB.properties["exceptionLog"] = logs.logs.slice(0, _expCfg.maxLogs).join("\n");
                     }
                 }
                 let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
@@ -631,10 +631,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extConfig = ctx.getExtCfg(identifier, defaultValues);
-                    if (_extConfig.expCfg?.expLog) {
-                        _reportExpDetails = _extConfig.expCfg.expLog;
-                    }
 
+                    _expCfg = _extConfig.expCfg;
                     _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
 
                     if (config.storagePrefix){
