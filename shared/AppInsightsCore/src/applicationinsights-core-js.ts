@@ -4,6 +4,7 @@ export { IConfiguration } from "./JavaScriptSDK.Interfaces/IConfiguration";
 export { IChannelControls, MinChannelPriorty, IInternalOfflineSupport } from "./JavaScriptSDK.Interfaces/IChannelControls";
 export { IChannelControlsHost } from "./JavaScriptSDK.Interfaces/IChannelControlsHost";
 export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetryPlugin";
+export { IExceptionConfig } from "./JavaScriptSDK.Interfaces/IExceptionConfig";
 export { IAppInsightsCore, ILoadedPlugin } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
 export { ITelemetryItem, ICustomProperties, Tags } from "./JavaScriptSDK.Interfaces/ITelemetryItem";
 export { IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext } from "./JavaScriptSDK.Interfaces/IProcessTelemetryContext";
