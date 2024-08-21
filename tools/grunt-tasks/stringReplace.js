@@ -1,7 +1,46 @@
+const fs = require("fs");
 const chalk = require("chalk");
 
 function _mapReplacements(replacement) {
     return [replacement.pattern, replacement.replacement];
+}
+
+function readFileWithRetry(inst, filePath, retryCount, done) {
+    try {
+        let content = fs.readFileSync(filePath, "utf8");
+        if (retryCount > 0) {
+            inst.log.writeln(" -- Successfully read file after " + retryCount + " retries: " + filePath);
+        }
+        done(content);
+    } catch(e) {
+        if (retryCount > 5) {
+            throw "Failed to read file after 5 retries: " + filePath + " Error: " + e;
+        }
+
+        inst.log.writeln(" -- (Retrying" + (retryCount + 1) + ") Error reading file: " + filePath + " Error: " + e);
+        setTimeout(() => {
+            readFileWithRetry(inst, filePath, retryCount + 1, done);
+        }, 50);
+    }
+}
+
+function writeFileWithRetry(inst, filePath, content, retryCount, done) {
+    try {
+        fs.writeFileSync(filePath, content, "utf8");
+        if (retryCount > 0) {
+            inst.log.writeln(" -- Successfully wrote file after " + retryCount + " retries: " + filePath);
+        }
+        done();
+    } catch(e) {
+        if (retryCount > 5) {
+            throw "Failed to write file after 5 retries: " + filePath + " Error: " + e;
+        }
+
+        inst.log.writeln(" -- (Retrying:" + (retryCount + 1) + ") Error writing file: " + filePath + " Error: " + e);
+        setTimeout(() => {
+            writeFileWithRetry(inst, filePath, content, retryCount + 1, done);
+        }, 50);
+    }
 }
 
 function stringReplaceFn(inst) {
@@ -59,7 +98,7 @@ function stringReplaceFn(inst) {
     }
     
     function _doReplace(files, replacements, options, onComplete) {
-        let content, newContent, dest;
+        let newContent, dest;
         let counter = 0;
     
         if (!options.hasOwnProperty("saveUnchanged")) {
@@ -72,12 +111,12 @@ function stringReplaceFn(inst) {
             _process(file.src, function (src, srcDone) {
                 inst.log.debug("processing file: ", src);
     
-                if (!inst.file.exists(src)) {
+                if (!fs.existsSync(src)) {
                     inst.log.writeln("missing file:", src);
                     return srcDone(src + " file not found");
                 }
     
-                if (inst.file.isDir(src)) {
+                if (fs.statSync(src).isDirectory()) {
                     inst.log.writeln("src is a folder", src);
                     return srcDone();
                 }
@@ -100,18 +139,23 @@ function stringReplaceFn(inst) {
                 dest = dest.replace(/\\/g, '/');
                 inst.log.writeln("src path :", src);
                 inst.log.writeln("dest path:", dest);
-                content = inst.file.read(src);
-                newContent =_doMultiReplace(content, replacements, src, dest);
-    
-                if (content !== newContent || options.saveUnchanged) {
-                    inst.file.write(dest, newContent);
-                    counter += 1;
-                    inst.verbose.writeln("File " + chalk.cyan(dest) + " updated.");
-                } else {
-                    inst.log.writeln("File " + chalk.cyan(dest) + " " + chalk.red("not") + " updated; No replacements found.");
-                }
-    
-                return srcDone();
+                readFileWithRetry(inst, src, 0, function (content) {
+                    newContent =_doMultiReplace(content, replacements, src, dest);
+        
+                    if (content !== newContent || options.saveUnchanged) {
+                        writeFileWithRetry(inst, dest, newContent, 0, function () {
+                            counter += 1;
+                            inst.verbose.writeln("File " + chalk.cyan(dest) + " updated.");
+                            srcDone();
+                        });
+
+                        return;
+                    } else {
+                        inst.log.writeln("File " + chalk.cyan(dest) + " " + chalk.red("not") + " updated; No replacements found.");
+                    }
+        
+                    srcDone();
+                });
             }, filesDone);
         }, function (err) {
             inst.log.writeln("\n" + chalk.cyan(counter) + " files updated");

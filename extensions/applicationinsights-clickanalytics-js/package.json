@@ -38,7 +38,7 @@
         "@rollup/plugin-replace": "^5.0.2",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup": "^3.20.0",
-        "typedoc": "^0.24.8",
+        "typedoc": "^0.26.6",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-qunit": "^6.2.1",
