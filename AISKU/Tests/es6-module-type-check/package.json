@@ -29,7 +29,7 @@
         "typescript": "^4.9.3"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-common": "3.3.1",

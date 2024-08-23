@@ -260,6 +260,7 @@ temp
 common/temp/**
 package-deps.json
 package-lock.json
+rush-logs/
 
 # test output
 aicore.tests.js*

@@ -40,7 +40,7 @@
         "tslib": "^2.0.0"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "uglify-js": "3.16.0"

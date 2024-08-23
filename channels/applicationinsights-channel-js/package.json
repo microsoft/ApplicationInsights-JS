@@ -48,7 +48,7 @@
         "typedoc": "^0.26.6"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",

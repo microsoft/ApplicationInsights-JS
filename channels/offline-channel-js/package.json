@@ -34,7 +34,7 @@
         "@nevware21/ts-async": ">= 0.5.2 < 2.x"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

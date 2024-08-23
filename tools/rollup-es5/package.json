@@ -54,7 +54,7 @@
         "chromium": "^3.0.2"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
     }

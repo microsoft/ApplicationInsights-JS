@@ -46,7 +46,7 @@
         "@nevware21/grunt-eslint-ts": "^0.2.2"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
