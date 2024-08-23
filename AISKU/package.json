@@ -59,7 +59,7 @@
         "puppeteer": "19.2.0"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",

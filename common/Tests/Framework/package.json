@@ -48,7 +48,7 @@
         "magic-string": "^0.25.7"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",

@@ -51,7 +51,7 @@
         "sinon": "^7.3.1"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
