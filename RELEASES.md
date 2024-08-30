@@ -24,6 +24,13 @@ Users can also enable Integrity Check and minimize snippet loading time by setti
 - #2360 [main] set script attribut to avoid race condition when multiple sdks are inited #2355 
 - #2339 [main] create snippet mini loader
 
+## 3.3.2 (Sep 3rd, 2024)
+
+### Changelog
+
+- #2396 [Main] Update generated typedoc documentation
+- #2397[Main] Change tslib peerDependency from "*" to open range
+
 ## 3.3.1 (Aug 7th, 2024)
 
 ### Changelog
