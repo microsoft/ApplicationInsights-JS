@@ -9,7 +9,7 @@
 - #2396 [Main] Update generated typedoc documentation
 - #2397[Main] Change tslib peerDependency from "*" to open range
 - #2391 [Main] enhance exception telemetry with customer log Information
-  - Note: Config `expCfg` is moved to `IConfiguration`.
+  - Note: Config `expCfg` is moved from `IConfig` to `IConfiguration`(this change is going to cause the TypeScript type error).
 
 ## 3.3.1 (Aug 7th, 2024)
 
