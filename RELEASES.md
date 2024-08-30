@@ -2,6 +2,31 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.3.2 (Sep 3rd, 2024)
+
+### Changelog
+
+- #2396 [Main] Update generated typedoc documentation
+- #2397[Main] Change tslib peerDependency from "*" to open range
+- #2391 [Main] enhance exception telemetry with customer log Information
+  - Note: Config `expCfg` is moved to `IConfiguration`.
+
+## 3.3.1 (Aug 7th, 2024)
+
+### Changelog
+
+- #2379 [Main][Task]28644993: Update Online Sender Status Code Check with Offline Mode
+- #2380 [Main][Task]28751664: Fix Offline Circular Dependency
+- #2386 [Main][Task]28846327: Fix Offline Default Max in Storage Time to 7 Days
+- #2387 [Main][Task]27760339: Typedoc is not including ILoadedPlugin
+- #2381 [Main] [CDN Publishing] Cleanup AzureRM scripts from AI and 1DS
+- #2377 Fix Nightly Size Tests
+- #2389 [main] fix AI Basic Sku by exporting proxy function
+- #2373 add withCredentials config
+- #2388 [main] enhance exception telemetry with optional script Information
+  - !! **New config `expCfg`** is available to provide more details of exception telemetry. See more details [here](https://microsoft.github.io/ApplicationInsights-JS/exceptionTelemetry)
+
+
 ### Web snippet additional update to 1.2.1 (July 10th, 2024)
 
 This release includes fix for dependency problem in version 1.2.0, check [#2369](https://github.com/microsoft/ApplicationInsights-JS/issues/2369) for more detail.
@@ -23,28 +48,6 @@ Users can also enable Integrity Check and minimize snippet loading time by setti
 - #2365 [main][snippet] prepare new snippet release, add support for more config 
 - #2360 [main] set script attribut to avoid race condition when multiple sdks are inited #2355 
 - #2339 [main] create snippet mini loader
-
-## 3.3.2 (Sep 3rd, 2024)
-
-### Changelog
-
-- #2396 [Main] Update generated typedoc documentation
-- #2397[Main] Change tslib peerDependency from "*" to open range
-
-## 3.3.1 (Aug 7th, 2024)
-
-### Changelog
-
-- #2379 [Main][Task]28644993: Update Online Sender Status Code Check with Offline Mode
-- #2380 [Main][Task]28751664: Fix Offline Circular Dependency
-- #2386 [Main][Task]28846327: Fix Offline Default Max in Storage Time to 7 Days
-- #2387 [Main][Task]27760339: Typedoc is not including ILoadedPlugin
-- #2381 [Main] [CDN Publishing] Cleanup AzureRM scripts from AI and 1DS
-- #2377 Fix Nightly Size Tests
-- #2389 [main] fix AI Basic Sku by exporting proxy function
-- #2373 add withCredentials config
-- #2388 [main] enhance exception telemetry with optional script Information
-  - !! **New config `expCfg`** is available to provide more details of exception telemetry. See more details [here](https://microsoft.github.io/ApplicationInsights-JS/exceptionTelemetry)
 
 ## 3.3.0 (July 1st, 2024)
 
