@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "3.3.1",
+    "version": "3.3.2",
     "keywords": [
         "browser performance monitoring",
         "script errors",
