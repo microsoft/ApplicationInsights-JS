@@ -194,7 +194,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             // inMemo is full
                             if (!added) {
                                 _flushInMemoItems();
-                                let retry = _addEvtToMap(item)
+                                let retry = _addEvtToMap(item);
                                 if (!retry) {
                                     _evtDropNotification([evt], EventsDiscardedReason.QueueFull);
                                     _throwInternal(_diagLogger,
@@ -737,20 +737,18 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         // transfer previous events to new buffer
                         arrForEach(PersistenceKeys, (key) => {
                             // when init map, we will initize a in memo batch for each EventPersistence key
-                            // previous evts
-                            let curEvts = null;
                             // evts to be transferred to new inMemo map
                             let evts = null;
-                            let inMemoBatch = null;
                             
                             if ( _inMemoMap && _inMemoMap[key]) {
                                 let inMemoBatch = _inMemoMap[key];
-                                curEvts = inMemoBatch && inMemoBatch.getItems();
+                                let curEvts = inMemoBatch && inMemoBatch.getItems();
+                                if (curEvts && curEvts.length) {
+                                    evts = curEvts.slice(0);
+                                    inMemoBatch && inMemoBatch.clear();
+                                }
                             }
-                            if (curEvts && curEvts.length) {
-                                evts = curEvts.slice(0);
-                                inMemoBatch && inMemoBatch.clear();
-                            }
+                         
                             _inMemoMap[key] = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
 
                         });
