@@ -80,18 +80,22 @@ export class Offlinetimer extends AITestClass {
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(inMemoTimer, "in memo timer should be created");
                 Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled");
-                let inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                let inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                let inMemoBatch = inMemoMap[EventPersistence.Normal];
+                //let inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 2, "should have two events");
 
                 // offline, flush all events in memory, and processTelemetry is not called again
                 this.clock.tick(2000);
-                inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left");
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(!inMemoTimer.enabled, "in memo timer enabled should be false with no events in memory");
 
                 this.clock.tick(2000);
-                inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left");
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(!inMemoTimer.enabled, "in memo timer enabled should be false with no events in memory and no processTelemtry is called");
@@ -102,11 +106,13 @@ export class Offlinetimer extends AITestClass {
                 channel.processTelemetry(validEvt);
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled");
-                inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
+                //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event left after flush");
 
                 this.clock.tick(2000);
-                inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
+                //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left");
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(!inMemoTimer.enabled, "in memo timer should be canceld with no events in memory test1");
@@ -115,12 +121,14 @@ export class Offlinetimer extends AITestClass {
                 channel.processTelemetry(validEvt);
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled");
-                inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event left after flush");
 
                 offlineListener.setOnlineState(1);
                 this.clock.tick(2000);
-                inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left");
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(!inMemoTimer.enabled, "in memo timer should be canceld with no events in memory test2");
