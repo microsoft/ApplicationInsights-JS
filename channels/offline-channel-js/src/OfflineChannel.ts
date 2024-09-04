@@ -13,7 +13,7 @@ import {
     eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
-import { ITimerHandler, isFunction, isString, objDeepFreeze, objForEachKey, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, arrSlice, isFunction, isString, objDeepFreeze, objForEachKey, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero, isValidPersistenceLevel
 } from "./Helpers/Utils";
@@ -734,6 +734,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         };
                         _evtsLimitInMemo = storageConfig.eventsLimitInMem;
                         _inMemoMap = _inMemoMap  || {};
+                        let newMap = {};
                         // transfer previous events to new buffer
                         arrForEach(PersistenceKeys, (key) => {
                             // when init map, we will initize a in memo batch for each EventPersistence key
@@ -744,14 +745,17 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                                 let inMemoBatch = _inMemoMap[key];
                                 let curEvts = inMemoBatch && inMemoBatch.getItems();
                                 if (curEvts && curEvts.length) {
-                                    evts = curEvts.slice(0);
+                                    evts = arrSlice(curEvts);
                                     inMemoBatch && inMemoBatch.clear();
                                 }
                             }
+                            newMap[key] = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
+
                          
-                            _inMemoMap[key] = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
+                            //_inMemoMap[key] = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
 
                         });
+                        _inMemoMap = newMap;
                         // let curEvts = _inMemoBatch && _inMemoBatch.getItems();
                         // if (curEvts && curEvts.length) {
                         //     evts = curEvts.slice(0);
