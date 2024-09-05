@@ -224,10 +224,12 @@ export class ChannelTests extends AITestClass {
                 offlineListener.setOnlineState(2);
                 channel.processTelemetry(evt);
                 // inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 1, "offline should process");
 
                 this.clock.tick(2000);
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch.count(), 0, "provider should store item");
@@ -254,6 +256,7 @@ export class ChannelTests extends AITestClass {
                 let request = requests[0];
                 this.sendJsonResponse(request, {}, 200);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 0, "in memo should not have item");
 
@@ -379,6 +382,7 @@ export class ChannelTests extends AITestClass {
                 Assert.equal(inMemoBatch.count(), 1, "offline should process");
 
                 this.clock.tick(2000);
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch.count(), 0, "provider should store item");
@@ -470,6 +474,8 @@ export class ChannelTests extends AITestClass {
                 // let inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch.count(), 1, "online should process evt1");
 
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
                 channel.processTelemetry(evt2);
                 Assert.equal(inMemoBatch.count(), 1, "online should process evt2");
 
@@ -487,6 +493,8 @@ export class ChannelTests extends AITestClass {
 
                 let invalidEvt = mockTelemetryItem();
                 channel.processTelemetry(invalidEvt);
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 1, "online should not process invalid item");
                 this.clock.tick(1);
                 Assert.equal(this.evtDiscard, 1, "discard listener notification should be called once test2");
@@ -546,6 +554,7 @@ export class ChannelTests extends AITestClass {
                
                 channel.processTelemetry(evt);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 0, "should not process evt");
 
@@ -625,11 +634,13 @@ export class ChannelTests extends AITestClass {
                 channel.processTelemetry(evt);
                 
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 1, "offline should process evt");
 
                 this.clock.tick(300);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 0, "in Memo should have no events remaining");
                 let storage = AITestClass.orgLocalStorage;
@@ -691,6 +702,7 @@ export class ChannelTests extends AITestClass {
                 let evt = mockTelemetryItem();
                 channel.processTelemetry(evt);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 1, "offline should process evt");
 
@@ -701,6 +713,7 @@ export class ChannelTests extends AITestClass {
                 this.core.config.instrumentationKey = "test1";
                 this.clock.tick(1);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 1, "in memo has one events");
                 Assert.equal(inMemoBatch.endpoint(), expectedUrl, "in memo has expected url");
@@ -715,6 +728,7 @@ export class ChannelTests extends AITestClass {
                 this.core.config.endpointUrl = expectedUrl1;
                 this.clock.tick(1);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 1, "in memo has one events");
                 Assert.equal(inMemoBatch.endpoint(), expectedUrl1, "in memo has expected url test1");
@@ -731,6 +745,7 @@ export class ChannelTests extends AITestClass {
                 this.core.config.extensionConfig[sendChannel.identifier].endpointUrl = expectedUrl2;
                 this.clock.tick(1);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch.count(), 1, "in memo has one events");
                 Assert.equal(inMemoBatch.endpoint(), expectedUrl2, "in memo has expected url test1");
