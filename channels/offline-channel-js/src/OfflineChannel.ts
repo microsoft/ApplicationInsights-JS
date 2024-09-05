@@ -64,7 +64,7 @@ const defaultOfflineChannelConfig: IConfigDefaults<IOfflineChannelConfiguration>
     primaryOnlineChannelId: [BreezeChannelIdentifier, PostChannelIdentifier],
     overrideInstrumentationKey: undefValue,
     senderCfg: {} as IOfflineSenderConfig,
-    splitEvtsWithPersistenceLevel: false
+    splitEvts: false
 });
 
 //TODO: add tests for sharedAnanlytics
@@ -769,7 +769,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         _setRetryTime();
                         _maxBatchInterval = storageConfig.maxSentBatchInterval;
                         _maxBatchSize = storageConfig.maxBatchsize;
-                        _splitEvts = storageConfig.splitEvtsWithPersistenceLevel;
+                        _splitEvts = storageConfig.splitEvts;
                     }
                     _urlCfg = urlConfig;
                     _endpoint = curUrl;

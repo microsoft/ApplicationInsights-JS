@@ -149,9 +149,10 @@ export interface IOfflineChannelConfiguration {
      * Identifies when saving events into the persistent storage, events will be batched and saved separately based on persistence level
      * this is useful to help reduce the loss of critical events during cleaning process
      * but it will result in more frequest storage implementations.
+     * If it is set to false, all events will be saved into single in memory batch
      * Default: false
      */
-    splitEvtsWithPersistenceLevel?: boolean;
+    splitEvts?: boolean;
 
     //TODO: add do sampling
    
