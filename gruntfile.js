@@ -807,8 +807,8 @@ module.exports = function (grunt) {
 
                 testConfig: {
                     files: [
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai_test.config${configVer}.cfg.json` },
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai_test.config${configMajorVer}.cfg.json` }
+                        { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configVer}.cfg.json` },
+                        { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configMajorVer}.cfg.json` }
                     ]
                 }
             }
