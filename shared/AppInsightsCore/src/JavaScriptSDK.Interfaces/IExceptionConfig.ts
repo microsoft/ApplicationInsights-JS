@@ -25,8 +25,6 @@ export interface IExceptionConfig{
     /**
      * If set to true, when exception is sent out, the SDK will also send out all scripts basic info that are loaded on the page.
      * Notice: This would increase the size of the exception telemetry.
-     * @type {boolean}
-     * @memberof IExceptionConfig
      * @defaultvalue true
      */
     inclScripts?: boolean;
@@ -49,8 +47,6 @@ export interface IExceptionConfig{
      * The maximum number of logs to include in the telemetry data.
      * If not explicitly set, it defaults to 50.
      * This is used in conjunction with the `expLog` callback.
-     * @type {number}
-     * @memberof IExceptionConfig
      */
     maxLogs?: number
 }
