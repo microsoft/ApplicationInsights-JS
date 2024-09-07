@@ -75,7 +75,9 @@ export interface IOfflineChannelConfiguration {
     indexedDbName?: string;
 
     /**
-     * [Optional] Identifies the maximum number of events to store in memory before sending to persistent storage.
+     * [Optional] Identifies the maximum number of events to store in each memory batch before sending to persistent storage.
+     * For versions > 3.3.2, new config  splitEvts is added
+     * If splitEvts is set true, eventsLimitInMem will be applied to each persistent level batch
      */
     eventsLimitInMem?: number;
 

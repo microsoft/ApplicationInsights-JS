@@ -18,7 +18,7 @@ import {
     EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero, isValidPersistenceLevel
 } from "./Helpers/Utils";
 import { InMemoryBatch } from "./InMemoryBatch";
-import { IInMemoryBatch, IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
+import { IPostTransmissionTelemetryItem } from "./Interfaces/IInMemoryBatch";
 import {
     IOfflineBatchHandler, OfflineBatchCallback, OfflineBatchStoreCallback, eBatchSendStatus, eBatchStoreStatus
 } from "./Interfaces/IOfflineBatch";
@@ -193,7 +193,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             let added = _addEvtToMap(item);
                             // inMemo is full
                             if (!added) {
-                                _flushInMemoItems();
+                                _flushInMemoItems(false, item.persistence);
                                 let retry = _addEvtToMap(item);
                                 if (!retry) {
                                     _evtDropNotification([evt], EventsDiscardedReason.QueueFull);
@@ -346,15 +346,23 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             //flush only flush max batch size event, may still have events lefts
             // **********************************************************************************
             // do you need to add function to flush each individual batch (for addevent process)
-            function _flushInMemoItems(unload?: boolean) {
+            function _flushInMemoItems(unload?: boolean, mapKey?: number | EventPersistence) {
                 try {
                     // TODO: add while loop to flush everything
                     let hasEvts = false;
-                    objForEachKey(_inMemoMap, (key) => {
-                        let inMemoBatch: IInMemoryBatch = _inMemoMap[key];
+                    // can use objForEachKey(_inMemoMap, (key)), but keys returned by this function is always string
+                    arrForEach(PersistenceKeys, (key) => {
+                        let inMemoBatch: InMemoryBatch = _inMemoMap[key];
                         let inMemo = inMemoBatch;
                         let evts = inMemo && inMemo.getItems();
                         if (!evts || !evts.length) {
+                            return;
+                        }
+                        if (_splitEvts && mapKey && mapKey !== key) {
+                            // if split evts is set to true
+                            // specific mapkey is defined
+                            // for key !== mapkey, only check if there are any events left in order to refresh timer
+                            hasEvts = !!evts.length;
                             return;
                         }
                         let payloadArr:string[] = [];
@@ -429,6 +437,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         }
 
                     });
+                    // this is outside loop
                     if (!hasEvts) {
                         _inMemoFlushTimer && _inMemoFlushTimer.cancel();
                     }

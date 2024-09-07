@@ -88,6 +88,7 @@ export class Offlinetimer extends AITestClass {
                 // offline, flush all events in memory, and processTelemetry is not called again
                 this.clock.tick(2000);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left");
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
@@ -95,6 +96,7 @@ export class Offlinetimer extends AITestClass {
 
                 this.clock.tick(2000);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left");
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
@@ -106,11 +108,13 @@ export class Offlinetimer extends AITestClass {
                 channel.processTelemetry(validEvt);
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled");
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event left after flush");
 
                 this.clock.tick(2000);
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left");
@@ -122,18 +126,132 @@ export class Offlinetimer extends AITestClass {
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled");
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event left after flush");
 
                 offlineListener.setOnlineState(1);
                 this.clock.tick(2000);
                 //inMemoBatch = channel["_getDbgPlgTargets"]()[1];
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
                 inMemoBatch = inMemoMap[EventPersistence.Normal];
                 Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left");
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(!inMemoTimer.enabled, "in memo timer should be canceld with no events in memory test2");
 
                 channel.processTelemetry(validEvt);
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(!inMemoTimer.enabled, "in memo timer should be canceld when back online");
+
+              
+                channel.teardown();
+                
+            }
+        });
+
+        this.testCase({
+            name: "InMemo Timer: Handle in memory timer with splitEvts set to true",
+            useFakeTimers: true,
+            test: () => {
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {providers:[eStorageProviders.LocalStorage], inMemoMaxTime: 2000, eventsLimitInMem: 1, splitEvts: true } as IOfflineChannelConfiguration};
+                let channel = new OfflineChannel();
+                let onlineChannel = new TestChannel();
+                this.core.initialize(this.coreConfig,[channel, onlineChannel]);
+
+                this.clock.tick(1);
+                let offlineListener = channel.getOfflineListener() as any;
+
+                // online, processTelemetry is not called
+                offlineListener.setOnlineState(1);
+                let inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(!inMemoTimer, "in memo timer should be null");
+
+                // offline, processTelemetry is not called
+                offlineListener.setOnlineState(2);
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(!inMemoTimer, "in memo timer should be null test1");
+
+                // online, processTelemetry is called
+                offlineListener.setOnlineState(1);
+                let evt = mockTelemetryItem();
+                channel.processTelemetry(evt);
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(!inMemoTimer, "in memo timer should be null test2");
+
+                // offline, processTelemetry is called with normal event
+                offlineListener.setOnlineState(2);
+                evt = mockTelemetryItem();
+                channel.processTelemetry(evt);
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(inMemoTimer, "in memo timer should be created test3");
+                Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled test1");
+                let inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                let inMemoBatch = inMemoMap[EventPersistence.Normal];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one normal event");
+
+                // offline, processTelemetry is called with critical event
+                offlineListener.setOnlineState(2);
+                let criticalEvt = mockTelemetryItem(2) as IPostTransmissionTelemetryItem;
+                channel.processTelemetry(criticalEvt);
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(inMemoTimer, "in memo timer should be not null");
+                Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled test2");
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Critical];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one critical event");
+
+                // offline, processTelemetry is called with normal event again
+                offlineListener.setOnlineState(2);
+                evt = mockTelemetryItem();
+                channel.processTelemetry(evt);
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(inMemoTimer, "in memo timer should not be null test1");
+                Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled test2");
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one normal event test1");
+                inMemoBatch = inMemoMap[EventPersistence.Critical];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one critical event test1");
+
+                // offline, flush all events in memory, and processTelemetry is not called again
+                this.clock.tick(2000);
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no noraml event left");
+                inMemoBatch = inMemoMap[EventPersistence.Critical];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no critical event left");
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(!inMemoTimer.enabled, "in memo timer enabled should be false with no events in memory");
+
+                this.clock.tick(2000);
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no noraml event left test1");
+                inMemoBatch = inMemoMap[EventPersistence.Critical];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no critical event left tes1 ");
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(!inMemoTimer.enabled, "in memo timer enabled should be false with no events in memory");
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(!inMemoTimer.enabled, "in memo timer enabled should be false with no events in memory and no processTelemtry is called");
+            
+
+                // offline with one normal event saved in memory, and then online with processTelemetry called
+                channel.processTelemetry(evt);
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(inMemoTimer.enabled, "in memo timer should be enabled");
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one normal event left test1");
+
+                offlineListener.setOnlineState(1);
+                this.clock.tick(2000);
+                inMemoMap = channel["_getDbgPlgTargets"]()[1];
+                inMemoBatch = inMemoMap[EventPersistence.Normal];
+                Assert.equal(inMemoBatch && inMemoBatch.count(), 0, "should have no event left test1");
+                inMemoTimer = channel["_getDbgPlgTargets"]()[3];
+                Assert.ok(!inMemoTimer.enabled, "in memo timer should be canceld with no events in memory test2");
+
+                channel.processTelemetry(evt);
                 inMemoTimer = channel["_getDbgPlgTargets"]()[3];
                 Assert.ok(!inMemoTimer.enabled, "in memo timer should be canceld when back online");
 
