@@ -72,6 +72,31 @@ Function GetReleaseFiles (
     return $files
 }
 
+Function GetTestFiles (
+    [hashtable] $verDetails
+)
+{
+    $version = $verDetails.full
+    Write-Log "Version   : $($verDetails.full)"
+    Write-Log "  Number  : $($verDetails.ver)"
+    Write-Log "  Type    : $($verDetails.type)"
+    Write-Log "  BldNum  : $($verDetails.bldNum)"
+
+    # check if the minified dir exists
+    $jsSdkSrcDir = Join-Path $jssdkDir -ChildPath "browser\es5\";
+
+    if (-Not (Test-Path $jsSdkSrcDir)) {
+        Write-LogWarning "'$jsSdkSrcDir' directory doesn't exist. Compile JSSDK first.";
+        exit
+    }
+
+    $files = New-Object 'system.collections.generic.dictionary[string,string]'
+
+    Write-Log "Adding files";
+    AddReleaseFile $files $jsSdkSrcDir "ai_test.config.$version.cfg.json"
+    return $files
+}
+
 #-----------------------------------------------------------------------------
 # Start of Script
 #-----------------------------------------------------------------------------
@@ -104,6 +129,7 @@ Write-Log "=====================================================================
 $version = GetPackageVersion $jsSdkDir
 
 $releaseFiles = GetReleaseFiles $version      # Get the versioned files only
+$testFiles = GetTestFiles $version      # Get the versioned files only
 if ($null -eq $releaseFiles -or $releaseFiles.Count -eq 0) {
     Write-LogFailure "Unable to find any release files"
 }
@@ -128,7 +154,8 @@ elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
 }
 elseif ($version.type -eq "nightly" -or $version.type -eq "nightly3") {
     # Publish to release nightly folder folder
-    PublishFiles $releaseFiles "nightly" $cacheControl1Year $contentType $overwrite
+    # PublishFiles $releaseFiles "nightly" $cacheControl1Year $contentType $overwrite
+    PublishFiles $testFiles "nightly" $cacheControl1Year $contentType $overwrite
 }
 else {
     # Upload to the test container rather than the supplied one
