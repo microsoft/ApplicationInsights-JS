@@ -12,6 +12,9 @@ export interface SdkLoaderConfig {
     cr?: boolean;
     dle?: boolean;
     sri?: boolean;
+    pl?: boolean;
+    pn?: string;
+    ttp?: TrustedTypePolicy;
 }
 
 export abstract class TrustedTypePolicy {
@@ -32,7 +35,10 @@ export interface ISnippetConfig {
     cr?: boolean; // cdn retry would be proceed if ture
     dle?: boolean; // Custom optional value to disable sdk load error to be sent
     sri?: boolean; // Custom optional value to specify whether fetching the snippet from integrity file and do integrity check
-    pl?: boolean; // Custom optional value to specify whether to enable the trusted type policy check on snippet
+    /**
+     * Custom optional value to specify whether to enable the trusted type policy check on snippet
+     */
+    pl?: boolean;
     /**
      * Custom optional value to specify the name of the trusted type policy that would be implemented on the snippet, default is '1ds-default'
      */
