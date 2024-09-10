@@ -47,6 +47,10 @@ export interface ISnippetConfig {
     * Custom optional value to specify the trusted type policy that would be applied on the snippet src
     */
     ttp?: TrustedTypePolicy;
+    /**
+     * Custom optional value to specify the nounce tag value that would be applied on the script when we drop it on the page
+     */
+    nt?: string;
 }
 
 export interface Fields {

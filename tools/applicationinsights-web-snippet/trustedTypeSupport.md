@@ -1,9 +1,10 @@
-# Trust Type Support
+# Trusted Type Policy Support
 
-We offer two methods for implementing Trusted Type policy checks. Choose the one that best suits your needs.
+We provide two methods for implementing Trusted Type policy checks. Choose the one that best aligns with your application's security requirements.
 
-## Method 1: Using require-trusted-types-for 'script'
-If your page utilizes require-trusted-types-for 'script' to enforce script injection policies, configure your snippet as follows:
+## Case 1: Enforcing Trusted Types with require-trusted-types-for 'script'
+If your page enforces script injection policies using the require-trusted-types-for 'script' directive, configure the snippet with the following options.
+
 ### Configuration Options
 ```js
     /**
@@ -20,8 +21,8 @@ If your page utilizes require-trusted-types-for 'script' to enforce script injec
     ttp?: TrustedTypePolicy;
 ```
 ### Automatic Policy Creation
-To have the policy automatically created, set pl to true. You can optionally specify a policy name with pn.
-Example usage:
+To automatically create and apply a Trusted Type policy, set pl to true. Optionally, you can specify a custom policy name using the pn parameter.
+Example:
 ```html
 <script>
     !(function (cfg) ....)({
@@ -35,8 +36,7 @@ Example usage:
 </script>
 ```
 ### Using a Custom Trusted Type Policy
-If you prefer to pass your own Trusted Type Policy, create it and then apply it using the ttp option.
-
+If you prefer to use your own Trusted Type policy, you can create and pass it using the ttp option.
 Example:
 ```html
 <script>
@@ -57,6 +57,24 @@ Example:
 </script>
 ```
 ### Test
-Your could also check our [test](./Tests/manual/cspUsePolicyTest.html)
+You can test the Trusted Type policy implementation by using our [test example](./Tests/manual/cspUsePolicyTest.html)
 
-## Method 2: Using Nonce Tag and script-src
+## Method 2: Enforcing Script Policies with Nonce and script-src
+If your page enforces script injection policies via the script-src 'self' directive, you can configure the snippet to use a nonce value.
+Example:
+```html
+<script>
+    !(function (cfg) ....)({
+        src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
+        nt: "randomNonceValue",
+        cfg: {
+            connectionString: ""
+        }
+    });
+</script>
+```
+When the Application Insights script is added to your page, the provided nonce value will be tagged appropriately.
+Notice: Make sure to include the nonce value in your Content Security Policy (CSP) directive as follows:
+```html
+script-src 'self' 'nonce-randomNonceValue'
+```
