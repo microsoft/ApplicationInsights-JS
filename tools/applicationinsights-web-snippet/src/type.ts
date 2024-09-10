@@ -40,7 +40,7 @@ export interface ISnippetConfig {
      */
     pl?: boolean;
     /**
-     * Custom optional value to specify the name of the trusted type policy that would be implemented on the snippet, default is '1ds-default'
+     * Custom optional value to specify the name of the trusted type policy that would be implemented on the snippet, default is 'aiPolicy'
      */
     pn?: string;
     /*

@@ -11,7 +11,7 @@ If your page utilizes require-trusted-types-for 'script' to enforce script injec
      */
     pl?: boolean;
     /**
-     * Custom optional value to specify the name of the trusted type policy that would be implemented on the snippet, default is '1ds-default'
+     * Custom optional value to specify the name of the trusted type policy that would be implemented on the snippet, default is 'aiPolicy'
      */
     pn?: string;
     /*
@@ -27,7 +27,7 @@ Example usage:
     !(function (cfg) ....)({
         src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
         pl: true,
-        pn: "1ds",
+        pn: "aiPolicy",
         cfg: {
             connectionString: ""
         }
