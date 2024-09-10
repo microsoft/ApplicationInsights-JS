@@ -10,8 +10,9 @@
     },
     "scripts": {
         "clean": "git clean -xdf",
-        "build": "npm run build:browser",
+        "build": "npm run build:browser && npm run build:test",
         "build:browser": "grunt copy-config",
+        "build:test": "grunt copy-testConfig",
         "rebuild": "npm run build",
         "test": ""
     },

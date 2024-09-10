@@ -803,6 +803,13 @@ module.exports = function (grunt) {
                         { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configVer}.cfg.json` },
                         { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configMajorVer}.cfg.json` }
                     ]
+                },
+
+                testConfig: {
+                    files: [
+                        { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configVer}.cfg.json` },
+                        { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configMajorVer}.cfg.json` }
+                    ]
                 }
             }
         }));
@@ -955,6 +962,7 @@ module.exports = function (grunt) {
         grunt.registerTask("serve", ["connect:server:keepalive"]);
 
          grunt.registerTask("copy-config", ["copy:config"]);
+         grunt.registerTask("copy-testConfig", ["copy:testConfig"]);
 
          grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
          grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
