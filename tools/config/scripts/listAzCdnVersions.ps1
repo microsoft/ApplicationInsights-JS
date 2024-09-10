@@ -61,6 +61,13 @@ Function Get-AllVersionFiles(
     Get-VersionFiles $files "$storagePath" "ai.config." $null
 }
 
+Function Get-AllTestVersionFiles(
+    [system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]] $files,
+    [string] $storagePath
+) {
+    Get-VersionFiles $files "$storagePath" "ai_test.config." $null
+}
+
 $Error.Clear()
 
 #-----------------------------------------------------------------------------
@@ -96,15 +103,20 @@ if ([string]::IsNullOrWhiteSpace($container) -eq $true) {
     Get-AllVersionFiles $files "scripts/b"
     Get-AllVersionFiles $files "beta"
     Get-AllVersionFiles $files "next"
-    Get-AllVersionFiles $files "dev"
-    Get-AllVersionFiles $files "nightly"
+    #Get-AllVersionFiles $files "dev"
+    Get-AllTestVersionFiles $files "dev"
+    # Get-AllVersionFiles $files "nightly"
+    Get-AllTestVersionFiles $files "nightly"
 }
 
 if ([string]::IsNullOrWhiteSpace($container) -ne $true) {
     if ($container -eq "public") {
         Get-AllVersionFiles $files "scripts/b"
-    } elseif ($container -eq "beta" -or $container -eq "next" -or $container -eq "dev" -or $container -eq "nightly") {
+    } elseif ($container -eq "beta" -or $container -eq "next") {
         Get-AllVersionFiles $files "$container"
+    } elseif ($container -eq "dev" -or $container -eq "nightly") {
+        # Get-AllVersionFiles $files "$container"
+        Get-AllTestVersionFiles $files "$container"
     } else {
         $global:connectDetails.testOnly = $true
         $global:connectDetails.storeContainer = "tst"
