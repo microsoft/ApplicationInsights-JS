@@ -30,6 +30,7 @@ declare var cfg:ISnippetConfig;
     let strGetMethod = "GET";
     let sdkInstanceName = "appInsightsSDK";         // required for Initialization to find the current instance
     let aiName = cfg.name || "appInsights";  // provide non default instance name through snipConfig name value
+    let policyName = cfg.pn || "1ds-default";
     if (cfg.name || win[sdkInstanceName]) {
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
@@ -304,9 +305,44 @@ declare var cfg:ISnippetConfig;
                 loadFailed = false;
             }
 
+            function create_policy() {
+                // Function to handle URL validation
+                function validateURL(urlString: string): string | null {
+                    try {
+                        const url = new URL(urlString);
+                        if (url.host && url.host === "js.monitor.azure.com") {
+                            return urlString;
+                        } else {
+                            handleInvalidURL(urlString);
+                        }
+                    } catch {
+                        handleInvalidURL(urlString);
+                    }
+                }
+            
+                // Function to handle reporting failures
+                function handleInvalidURL(urlString: string) {
+                    _reportFailure("AI policy blocked URL: " + urlString);
+                }
+            
+                return (window as any).trustedTypes?.createPolicy(policyName, {
+                    createScriptURL: validateURL
+                });
+            }
+            
+           
             const _createScript = (src: string) => {
                 let scriptElement : HTMLElement = doc.createElement(scriptText);
-                (scriptElement as any)["src"] = src;
+                if (cfg.pl){
+                    if (cfg.ttp && cfg.ttp.createScript) {
+                        (scriptElement as any)["src"] = cfg.ttp.createScriptURL(src);
+                    } else {
+                        (scriptElement as any)["src"] = create_policy().createScriptURL(src);
+                    }
+                } else {
+                    (scriptElement as any)["src"] = src;
+                }
+               
                 if (integrity){
                     // Set the integrity attribute to the script tag if integrity is provided
                     (scriptElement as any).integrity = integrity;
