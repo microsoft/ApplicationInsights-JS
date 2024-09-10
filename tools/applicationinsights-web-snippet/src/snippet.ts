@@ -30,7 +30,7 @@ declare var cfg:ISnippetConfig;
     let strGetMethod = "GET";
     let sdkInstanceName = "appInsightsSDK";         // required for Initialization to find the current instance
     let aiName = cfg.name || "appInsights";  // provide non default instance name through snipConfig name value
-    let policyName = cfg.pn || "1ds-default";
+    let policyName = cfg.pn || "aiPolicy";
     if (cfg.name || win[sdkInstanceName]) {
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
