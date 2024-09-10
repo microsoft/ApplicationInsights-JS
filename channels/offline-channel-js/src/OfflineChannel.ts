@@ -82,7 +82,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             // Internal properties used for tracking the current state, these are "true" internal/private properties for this instance
             let _hasInitialized;
             let _paused;
-            //let _inMemoBatch: InMemoryBatch;
             let _sender: Sender;
             let _urlCfg: IUrlLocalStorageConfig;
             let _offlineListener: IOfflineListener;
@@ -189,7 +188,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             if (_overrideIkey) {
                                 item.iKey = _overrideIkey;
                             }
-                            //let added = _inMemoBatch.addEvent(evt);
                             let added = _addEvtToMap(item);
                             // inMemo is full
                             if (!added) {
@@ -248,9 +246,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     while (_hasEvts()) {
                         _flushInMemoItems(true);
                     }
-                    // while (_inMemoBatch && _inMemoBatch.count()) {
-                    //     _flushInMemoItems(true);
-                    // }
                     // TODO: unloadprovider might send events out of order
                 }
             };
@@ -293,7 +288,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _offlineListener = null;
                 _diagLogger = null;
                 _endpoint = null;
-                //_inMemoBatch = null;
                 _convertUndefined = undefValue;
                 _maxBatchSize = null;
                 _sendNextBatchTimer = null;
@@ -328,11 +322,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         let hasEvts = _hasEvts();
                         if (hasEvts && _inMemoFlushTimer) {
                             _inMemoFlushTimer.refresh();
-
                         }
-                        // if (_inMemoBatch && _inMemoBatch.count() && _inMemoFlushTimer) {
-                        //     _inMemoFlushTimer.refresh();
-                        // }
                         _setSendNextTimer();
 
                     }, _inMemoTimerOut);
@@ -344,8 +334,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             }
 
             //flush only flush max batch size event, may still have events lefts
-            // **********************************************************************************
-            // do you need to add function to flush each individual batch (for addevent process)
             function _flushInMemoItems(unload?: boolean, mapKey?: number | EventPersistence) {
                 try {
                     // TODO: add while loop to flush everything
@@ -362,7 +350,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             // if split evts is set to true
                             // specific mapkey is defined
                             // for key !== mapkey, only check if there are any events left in order to refresh timer
-                            hasEvts = !!evts.length;
+                            hasEvts = hasEvts || !!evts.length;
                             return;
                         }
                         let payloadArr:string[] = [];
@@ -393,7 +381,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             // keep track if there is any remaining events
                             hasEvts = true;
                         }
-                        _inMemoMap[key] = inMemoBatch.createNew(_endpoint, inMemo.getItems().slice(idx + 1), _evtsLimitInMemo);
+                        _inMemoMap[key] = inMemoBatch.createNew(_endpoint, arrSlice(inMemo.getItems(),idx + 1), _evtsLimitInMemo);
     
                         let payloadData: IStorageTelemetryItem = null;
                         if (_offineSupport && _offineSupport.createOneDSPayload) {
@@ -441,83 +429,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                     if (!hasEvts) {
                         _inMemoFlushTimer && _inMemoFlushTimer.cancel();
                     }
-
-
-                    // let inMemo = inMemoBatch;
-                    // let evts = inMemo && inMemo.getItems();
-                    // if (!evts || !evts.length) {
-                    //     return;
-                    // }
-                    // let payloadArr:string[] = [];
-                    // let size = 0;
-                    // let idx = -1;
-                    // let criticalCnt = 0;
-                    // arrForEach(evts, (evt, index) => {
-                    //     let curEvt = evt as IPostTransmissionTelemetryItem
-                    //     idx = index;
-                    //     let payload = _getPayload(curEvt);
-                    //     size += payload.length;
-                    //     if (size > _maxBatchSize) {
-                    //         return;
-                    //     }
-                    //     if(curEvt.persistence == EventPersistence.Critical) {
-                    //         criticalCnt ++;
-                    //     }
-                    //     idx = index;
-                    //     payloadArr.push(payload);
-
-                    // });
-                    // if (!payloadArr.length) {
-                    //     return;
-                    // }
-                    
-                    // let sentItems = evts.slice(0, idx + 1);
-                    // inMemoBatch = inMemoBatch.createNew(_endpoint, inMemo.getItems().slice(idx + 1), _evtsLimitInMemo);
-
-                    // let payloadData: IStorageTelemetryItem = null;
-                    // if (_offineSupport && _offineSupport.createOneDSPayload) {
-                    //     payloadData = _offineSupport.createOneDSPayload(sentItems);
-                    //     if (payloadData) {
-                    //         payloadData.criticalCnt = criticalCnt;
-                    //     }
-                        
-                    // } else {
-                    //     payloadData = _constructPayloadData(payloadArr, criticalCnt);
-                    // }
-                   
-               
-                    // let callback: OfflineBatchStoreCallback = (res) => {
-                    //     if (!res || !res.state) {
-                    //         return null;
-                    //     }
-                    //     let state = res.state;
-
-                    //     if (state == eBatchStoreStatus.Failure) {
-                    //         if (!unload) {
-                    //             // for unload, just try to add each batch once
-                    //             arrForEach(sentItems, (item) => {
-                    //                 inMemoBatch.addEvent(item);
-                    //             });
-                    //             _setupInMemoTimer();
-
-                    //         } else {
-                    //             // unload, drop events
-                    //             _evtDropNotification(sentItems, EventsDiscardedReason.NonRetryableStatus);
-                    //         }
-                          
-                    //     } else {
-                    //         // if eBatchStoreStatus is success
-                    //         _storeNotification(sentItems);
-                    //     }
-                    // };
-                    // if (payloadData && _urlCfg && _urlCfg.batchHandler) {
-                    //     let promise = _urlCfg.batchHandler.storeBatch(payloadData, callback, unload);
-                    //     _queueStorageEvent("storeBatch", promise);
-                    // }
-
-                    // if (_inMemoBatch && !_inMemoBatch.count()) {
-                    //     _inMemoFlushTimer && _inMemoFlushTimer.cancel();
-                    // }
 
                 } catch (e) {
                     // eslint-disable-next-line no-empty
@@ -760,17 +671,9 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             }
                             newMap[key] = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
 
-                         
-                            //_inMemoMap[key] = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
 
                         });
                         _inMemoMap = newMap;
-                        // let curEvts = _inMemoBatch && _inMemoBatch.getItems();
-                        // if (curEvts && curEvts.length) {
-                        //     evts = curEvts.slice(0);
-                        //     _inMemoBatch.clear();
-                        // }
-                        // _inMemoBatch = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
                         _inMemoTimerOut = storageConfig.inMemoMaxTime;
                         let onlineConfig = ctx.getExtCfg<any>(_primaryChannelId, {}) || {};
                         _convertUndefined = onlineConfig.convertUndefined;
