@@ -41,6 +41,8 @@ jobs:
       - run: node common/scripts/install-run-rush.js install
       - run: npm run build --verbose
         timeout-minutes: 20
+      - name: doc generate
+        run:  npm run api-docs
       - name: Inject Script
         run:  node ./tools/github-page-script-injection/injectScript.js
       - name: Setup Pages
