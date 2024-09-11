@@ -342,6 +342,10 @@ declare var cfg:ISnippetConfig;
                 } else {
                     (scriptElement as any)["src"] = src;
                 }
+                
+                if (cfg.nt) {
+                    (scriptElement as any).setAttribute("nonce", cfg.nt);
+                }
                
                 if (integrity){
                     // Set the integrity attribute to the script tag if integrity is provided
