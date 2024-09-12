@@ -33,7 +33,9 @@
                     "maxSendNumber": 1
                 },
                 "interval": {
-                    "dayInterval": 1
+                    "monthInterval": 1,
+                    "dayInterval": 1,
+                    "daysOfMonth":[13]
                 }
             }
         }
