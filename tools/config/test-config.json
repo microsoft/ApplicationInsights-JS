@@ -23,18 +23,19 @@
                     "maxSendNumber": 1
                 },
                 "interval": {
-                    "dayInterval": 2
+                    "dayInterval": 1
                 }
             },
             "106": { 
                 "disabled": false,
                 "limit": { 
-                    "samplingRate": 1,
+                    "samplingRate": 2000000,
                     "maxSendNumber": 1
                 },
                 "interval": {
-                    "monthInterval": 2,
-                    "daysOfMonth": [1]
+                    "monthInterval": 1,
+                    "dayInterval": 1,
+                    "daysOfMonth":[13]
                 }
             }
         }
