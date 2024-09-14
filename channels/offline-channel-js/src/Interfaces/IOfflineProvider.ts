@@ -75,7 +75,9 @@ export interface IOfflineChannelConfiguration {
     indexedDbName?: string;
 
     /**
-     * [Optional] Identifies the maximum number of events to store in memory before sending to persistent storage.
+     * [Optional] Identifies the maximum number of events to store in each memory batch before sending to persistent storage.
+     * For versions > 3.3.2, new config  splitEvts is added
+     * If splitEvts is set true, eventsLimitInMem will be applied to each persistent level batch
      */
     eventsLimitInMem?: number;
 
@@ -144,6 +146,15 @@ export interface IOfflineChannelConfiguration {
     * Identifies overridden for the Instrumentation key when the offline channel calls processTelemetry.
     */
     overrideInstrumentationKey?: string;
+
+    /**
+     * Identifies when saving events into the persistent storage, events will be batched and saved separately based on persistence level
+     * this is useful to help reduce the loss of critical events during cleaning process
+     * but it will result in more frequest storage implementations.
+     * If it is set to false, all events will be saved into single in memory batch
+     * Default: false
+     */
+    splitEvts?: boolean;
 
     //TODO: add do sampling
    

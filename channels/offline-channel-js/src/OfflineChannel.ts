@@ -13,7 +13,7 @@ import {
     eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
-import { ITimerHandler, isFunction, isString, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, arrSlice, isFunction, isString, objDeepFreeze, objForEachKey, scheduleTimeout } from "@nevware21/ts-utils";
 import {
     EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero, isValidPersistenceLevel
 } from "./Helpers/Utils";
@@ -33,6 +33,7 @@ const DefaultOfflineIdentifier = "OfflineChannel";
 const DefaultBatchInterval = 15000;
 const DefaultInMemoMaxTime = 15000;
 const PostChannelIdentifier = "PostChannel";
+const PersistenceKeys = [EventPersistence.Critical, EventPersistence.Normal];
 
 
 interface IUrlLocalStorageConfig {
@@ -62,7 +63,8 @@ const defaultOfflineChannelConfig: IConfigDefaults<IOfflineChannelConfiguration>
     maxSentBatchInterval: { isVal: isGreaterThanZero, v: DefaultBatchInterval},
     primaryOnlineChannelId: [BreezeChannelIdentifier, PostChannelIdentifier],
     overrideInstrumentationKey: undefValue,
-    senderCfg: {} as IOfflineSenderConfig
+    senderCfg: {} as IOfflineSenderConfig,
+    splitEvts: false
 });
 
 //TODO: add tests for sharedAnanlytics
@@ -80,7 +82,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             // Internal properties used for tracking the current state, these are "true" internal/private properties for this instance
             let _hasInitialized;
             let _paused;
-            let _inMemoBatch: InMemoryBatch;
             let _sender: Sender;
             let _urlCfg: IUrlLocalStorageConfig;
             let _offlineListener: IOfflineListener;
@@ -103,6 +104,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             let _notificationManager: INotificationManager | undefined;
             let _isLazyInit: boolean;
             let _dependencyPlugin: IChannelControls;
+            let _splitEvts: Boolean;
+            let _inMemoMap:  { [priority: EventPersistence]: InMemoryBatch };
 
 
             _initDefaults();
@@ -181,15 +184,15 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                       
                         //TODO: add function to better get level
                         item.persistence = item.persistence  || (item.baseData && item.baseData.persistence) || EventPersistence.Normal; // in case the level is in baseData
-                        if (_shouldCacheEvent(_urlCfg, item) && _inMemoBatch) {
+                        if (_shouldCacheEvent(_urlCfg, item) && _inMemoMap) {
                             if (_overrideIkey) {
                                 item.iKey = _overrideIkey;
                             }
-                            let added = _inMemoBatch.addEvent(evt);
+                            let added = _addEvtToMap(item);
                             // inMemo is full
                             if (!added) {
-                                _flushInMemoItems();
-                                let retry = _inMemoBatch.addEvent(evt);
+                                _flushInMemoItems(false, item.persistence);
+                                let retry = _addEvtToMap(item);
                                 if (!retry) {
                                     _evtDropNotification([evt], EventsDiscardedReason.QueueFull);
                                     _throwInternal(_diagLogger,
@@ -240,7 +243,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             
             _self.onunloadFlush = () => {
                 if (!_paused) {
-                    while (_inMemoBatch && _inMemoBatch.count()) {
+                    while (_hasEvts()) {
                         _flushInMemoItems(true);
                     }
                     // TODO: unloadprovider might send events out of order
@@ -273,7 +276,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
 
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_urlCfg, _inMemoBatch, _senderInst, _inMemoFlushTimer, _sendNextBatchTimer];
+                return [_urlCfg, _inMemoMap, _senderInst, _inMemoFlushTimer, _sendNextBatchTimer];
             };
             
 
@@ -285,7 +288,6 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _offlineListener = null;
                 _diagLogger = null;
                 _endpoint = null;
-                _inMemoBatch = null;
                 _convertUndefined = undefValue;
                 _maxBatchSize = null;
                 _sendNextBatchTimer = null;
@@ -299,6 +301,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 _evtsLimitInMemo = null;
                 _isLazyInit = false;
                 _dependencyPlugin = null;
+                _splitEvts= false;
+                _inMemoMap = null;
             }
 
 
@@ -315,7 +319,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 if (!_inMemoFlushTimer) {
                     _inMemoFlushTimer = scheduleTimeout(() => {
                         _flushInMemoItems();
-                        if (_inMemoBatch && _inMemoBatch.count() && _inMemoFlushTimer) {
+                        let hasEvts = _hasEvts();
+                        if (hasEvts && _inMemoFlushTimer) {
                             _inMemoFlushTimer.refresh();
                         }
                         _setSendNextTimer();
@@ -329,83 +334,99 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             }
 
             //flush only flush max batch size event, may still have events lefts
-            function _flushInMemoItems(unload?: boolean) {
+            function _flushInMemoItems(unload?: boolean, mapKey?: number | EventPersistence) {
                 try {
                     // TODO: add while loop to flush everything
-                    let inMemo = _inMemoBatch;
-                    let evts = inMemo && inMemo.getItems();
-                    if (!evts || !evts.length) {
-                        return;
-                    }
-                    let payloadArr:string[] = [];
-                    let size = 0;
-                    let idx = -1;
-                    let criticalCnt = 0;
-                    arrForEach(evts, (evt, index) => {
-                        let curEvt = evt as IPostTransmissionTelemetryItem
-                        idx = index;
-                        let payload = _getPayload(curEvt);
-                        size += payload.length;
-                        if (size > _maxBatchSize) {
+                    let hasEvts = false;
+                    // can use objForEachKey(_inMemoMap, (key)), but keys returned by this function is always string
+                    arrForEach(PersistenceKeys, (key) => {
+                        let inMemoBatch: InMemoryBatch = _inMemoMap[key];
+                        let inMemo = inMemoBatch;
+                        let evts = inMemo && inMemo.getItems();
+                        if (!evts || !evts.length) {
                             return;
                         }
-                        if(curEvt.persistence == EventPersistence.Critical) {
-                            criticalCnt ++;
+                        if (_splitEvts && mapKey && mapKey !== key) {
+                            // if split evts is set to true
+                            // specific mapkey is defined
+                            // for key !== mapkey, only check if there are any events left in order to refresh timer
+                            hasEvts = hasEvts || !!evts.length;
+                            return;
                         }
-                        idx = index;
-                        payloadArr.push(payload);
-
-                    });
-                    if (!payloadArr.length) {
-                        return;
-                    }
-                    
-                    let sentItems = evts.slice(0, idx + 1);
-                 
-                    _inMemoBatch = _inMemoBatch.createNew(_endpoint, inMemo.getItems().slice(idx + 1), _evtsLimitInMemo);
-
-                    let payloadData: IStorageTelemetryItem = null;
-                    if (_offineSupport && _offineSupport.createOneDSPayload) {
-                        payloadData = _offineSupport.createOneDSPayload(sentItems);
-                        if (payloadData) {
-                            payloadData.criticalCnt = criticalCnt;
+                        let payloadArr:string[] = [];
+                        let size = 0;
+                        let idx = -1;
+                        let criticalCnt = 0;
+                        arrForEach(evts, (evt, index) => {
+                            let curEvt = evt as IPostTransmissionTelemetryItem
+                            idx = index;
+                            let payload = _getPayload(curEvt);
+                            size += payload.length;
+                            if (size > _maxBatchSize) {
+                                return;
+                            }
+                            if(curEvt.persistence == EventPersistence.Critical) {
+                                criticalCnt ++;
+                            }
+                            idx = index;
+                            payloadArr.push(payload);
+    
+                        });
+                        if (!payloadArr.length) {
+                            return;
                         }
                         
-                    } else {
-                        payloadData = _constructPayloadData(payloadArr, criticalCnt);
-                    }
-                   
-               
-                    let callback: OfflineBatchStoreCallback = (res) => {
-                        if (!res || !res.state) {
-                            return null;
+                        let sentItems = evts.slice(0, idx + 1);
+                        if (idx + 1 < evts.length) {
+                            // keep track if there is any remaining events
+                            hasEvts = true;
                         }
-                        let state = res.state;
-
-                        if (state == eBatchStoreStatus.Failure) {
-                            if (!unload) {
-                                // for unload, just try to add each batch once
-                                arrForEach(sentItems, (item) => {
-                                    _inMemoBatch.addEvent(item);
-                                });
-                                _setupInMemoTimer();
-
-                            } else {
-                                // unload, drop events
-                                _evtDropNotification(sentItems, EventsDiscardedReason.NonRetryableStatus);
+                        _inMemoMap[key] = inMemoBatch.createNew(_endpoint, arrSlice(inMemo.getItems(),idx + 1), _evtsLimitInMemo);
+    
+                        let payloadData: IStorageTelemetryItem = null;
+                        if (_offineSupport && _offineSupport.createOneDSPayload) {
+                            payloadData = _offineSupport.createOneDSPayload(sentItems);
+                            if (payloadData) {
+                                payloadData.criticalCnt = criticalCnt;
                             }
-                          
+                            
                         } else {
-                            // if eBatchStoreStatus is success
-                            _storeNotification(sentItems);
+                            payloadData = _constructPayloadData(payloadArr, criticalCnt);
                         }
-                    };
-                    if (payloadData && _urlCfg && _urlCfg.batchHandler) {
-                        let promise = _urlCfg.batchHandler.storeBatch(payloadData, callback, unload);
-                        _queueStorageEvent("storeBatch", promise);
-                    }
 
-                    if (_inMemoBatch && !_inMemoBatch.count()) {
+                        let callback: OfflineBatchStoreCallback = (res) => {
+                            if (!res || !res.state) {
+                                return null;
+                            }
+                            let state = res.state;
+    
+                            if (state == eBatchStoreStatus.Failure) {
+                                if (!unload) {
+                                    // for unload, just try to add each batch once
+                                    arrForEach(sentItems, (item) => {
+                                        _addEvtToMap(item);
+                                    });
+                                    _setupInMemoTimer();
+    
+                                } else {
+                                    // unload, drop events
+                                    _evtDropNotification(sentItems, EventsDiscardedReason.NonRetryableStatus);
+                                }
+                              
+                            } else {
+                                // if eBatchStoreStatus is success
+                                _storeNotification(sentItems);
+                            }
+                        };
+
+                        if (payloadData && _urlCfg && _urlCfg.batchHandler) {
+                            let promise = _urlCfg.batchHandler.storeBatch(payloadData, callback, unload);
+                            _queueStorageEvent("storeBatch", promise);
+                        }
+
+                    });
+                    // this is outside loop
+                    if (!hasEvts) {
                         _inMemoFlushTimer && _inMemoFlushTimer.cancel();
                     }
 
@@ -632,14 +653,27 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                             batchHandler: handler
                         };
                         _evtsLimitInMemo = storageConfig.eventsLimitInMem;
+                        _inMemoMap = _inMemoMap  || {};
+                        let newMap = {};
                         // transfer previous events to new buffer
-                        let evts = null;
-                        let curEvts = _inMemoBatch && _inMemoBatch.getItems();
-                        if (curEvts && curEvts.length) {
-                            evts = curEvts.slice(0);
-                            _inMemoBatch.clear();
-                        }
-                        _inMemoBatch = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
+                        arrForEach(PersistenceKeys, (key) => {
+                            // when init map, we will initize a in memo batch for each EventPersistence key
+                            // evts to be transferred to new inMemo map
+                            let evts = null;
+                            
+                            if ( _inMemoMap && _inMemoMap[key]) {
+                                let inMemoBatch = _inMemoMap[key];
+                                let curEvts = inMemoBatch && inMemoBatch.getItems();
+                                if (curEvts && curEvts.length) {
+                                    evts = arrSlice(curEvts);
+                                    inMemoBatch && inMemoBatch.clear();
+                                }
+                            }
+                            newMap[key] = new InMemoryBatch(_self.diagLog(), curUrl, evts, _evtsLimitInMemo);
+
+
+                        });
+                        _inMemoMap = newMap;
                         _inMemoTimerOut = storageConfig.inMemoMaxTime;
                         let onlineConfig = ctx.getExtCfg<any>(_primaryChannelId, {}) || {};
                         _convertUndefined = onlineConfig.convertUndefined;
@@ -647,6 +681,7 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                         _setRetryTime();
                         _maxBatchInterval = storageConfig.maxSentBatchInterval;
                         _maxBatchSize = storageConfig.maxBatchsize;
+                        _splitEvts = storageConfig.splitEvts;
                     }
                     _urlCfg = urlConfig;
                     _endpoint = curUrl;
@@ -674,6 +709,29 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 }
                
                 return _dependencyPlugin;
+            }
+
+            function _hasEvts() {
+                let hasEvts = false;
+                objForEachKey(_inMemoMap, (key) => {
+                    let inMemoBatch = _inMemoMap[key];
+                    if (inMemoBatch && inMemoBatch.count()) {
+                        hasEvts = true;
+                        return -1;
+                    }
+                });
+                return hasEvts;
+
+            }
+
+            function _addEvtToMap(item:IPostTransmissionTelemetryItem) {
+                // if split evts is false, all events will be saved into EventPersistence.Normal batch
+                let mapKey = EventPersistence.Normal;
+                if (_splitEvts && item.persistence) {
+                    mapKey = item.persistence;
+                }
+                let inMemoBatch = _inMemoMap[mapKey];
+                return inMemoBatch.addEvent(item);
             }
 
             
