@@ -253,7 +253,7 @@ export class ApplicationInsightsTests extends AITestClass {
         });
 
         this.testCaseAsync({
-            name: "Init: init with cs promise, change with cs string",
+            name: "Init: init with cs promise, when it is resolved and then change with cs string",
             stepDelay: 100,
             useFakeTimers: true,
             steps: [() => {
@@ -273,6 +273,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
                 this._config.connectionString = csPromise;
                 this._config.initTimeOut= 80000;
+                this._ctx.csPromise = csPromise;
 
 
                 let init = new ApplicationInsights({
@@ -284,13 +285,78 @@ export class ApplicationInsightsTests extends AITestClass {
                 let core = this._ai.core;
                 let status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+                let csPromise = this._ctx.csPromise;
+                let config = this._ai.config;
+            
+                if (csPromise.state === "resolved" && activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
 
+                    config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                    this.clock.tick(1);
+                    let status = core.activeStatus && core.activeStatus();
+                    // promise is not resolved, no new changes applied
+                    Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active test1");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set test1");
+                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set test1");
+                    return true;
+                }
+                return false;
+            }, "Wait for new string response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Init: init with cs promise and change with cs string at the same time",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+                this._ctx.csPromise = csPromise;
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 
                 config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
-                // promise is not resolved, no new changes applied
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+
                 
                 
             }].concat(PollingAssert.createPollingAssert(() => {
@@ -298,13 +364,14 @@ export class ApplicationInsightsTests extends AITestClass {
                 let activeStatus = core.activeStatus && core.activeStatus();
             
                 if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
                     return true;
                 }
                 return false;
             }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
         });
+
 
         this.testCaseAsync({
             name: "Init: init with cs promise and offline channel",
@@ -353,8 +420,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 let activeStatus = core.activeStatus && core.activeStatus();
             
                 if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
                     let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
                     let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
                     Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
@@ -387,7 +454,6 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active");
 
                 let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
-                
                 config.connectionString = csPromise;
                 config.initTimeOut = 80000;
                 this.clock.tick(1);

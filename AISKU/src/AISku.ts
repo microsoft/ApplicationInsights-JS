@@ -209,7 +209,7 @@ export class AppInsightsSku implements IApplicationInsights {
                             let parsedCs = null;
                             if (!res.rejected && curCs) {
                                 // replace cs with resolved values in case of circular promises
-                                _config.connectionString = curCs;
+                                // _config.connectionString = curCs;
                                 parsedCs = parseConnectionString(curCs);
                             }
                             // if can't resolve cs promise, null will be returned
@@ -230,6 +230,7 @@ export class AppInsightsSku implements IApplicationInsights {
                             // return null in case any error happens
                             resolve(null);
                         });
+                        _config.connectionString = "";
 
                     });
                     
@@ -254,7 +255,7 @@ export class AppInsightsSku implements IApplicationInsights {
                     _config.endpointUrl = url;
                     
                 }
-                if (isString(configCs)) {
+                if (isString(configCs) && configCs) {
                     // confirm if promiselike function present
                     // handle cs promise here
                     // add cases to oneNote
