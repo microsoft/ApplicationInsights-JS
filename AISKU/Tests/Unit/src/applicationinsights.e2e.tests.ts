@@ -2,7 +2,7 @@ import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, Exc
 import { SinonSpy } from 'sinon';
 import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig } from '@microsoft/applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence } from '@microsoft/applicationinsights-common';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';
@@ -743,7 +743,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackEvent({ name: "offline event", properties: { "prop2": "value2" }, measurements: { "measurement2": 200 } });
                     inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
                     Assert.ok(inMemoTimer, "in memo timer should not be null");
-                    let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1];
+                    let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1][EventPersistence.Normal];
                     Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event");
 
                     return true
