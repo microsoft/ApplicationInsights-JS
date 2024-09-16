@@ -1340,7 +1340,8 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 core.config.endpointUrl = urlPromise;
                 this.clock.tick(1);
                 activeStatus = core.activeStatus();
-                Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
+                Assert.equal(activeStatus, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                //Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
 
             }].concat(PollingAssert.createPollingAssert(() => {
                 let core = this.ctx.core;

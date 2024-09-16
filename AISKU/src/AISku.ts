@@ -26,7 +26,7 @@ import {
     IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { IPromise, createAsyncPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { IPromise, createPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { arrForEach, arrIndexOf, isPromiseLike, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
@@ -203,13 +203,13 @@ export class AppInsightsSku implements IApplicationInsights {
                 let configCs =  _config.connectionString;
 
                 function _parseCs() {
-                    return createAsyncPromise<ConnectionString>((resolve, reject) => {
+                    return createSyncPromise<ConnectionString>((resolve, reject) => {
                         doAwaitResponse(configCs, (res) => {
                             let curCs = res && res.value;
                             let parsedCs = null;
                             if (!res.rejected && curCs) {
                                 // replace cs with resolved values in case of circular promises
-                                // _config.connectionString = curCs;
+                                _config.connectionString = curCs;
                                 parsedCs = parseConnectionString(curCs);
                             }
                             // if can't resolve cs promise, null will be returned
@@ -220,7 +220,7 @@ export class AppInsightsSku implements IApplicationInsights {
                 }
                 
                 if (isPromiseLike(configCs)) {
-                    let ikeyPromise = createAsyncPromise<string>((resolve, reject) => {
+                    let ikeyPromise = createSyncPromise<string>((resolve, reject) => {
                         _parseCs().then((cs) => {
                             let ikey = _config.instrumentationKey;
                             ikey = cs && cs.instrumentationkey || ikey;
@@ -230,13 +230,12 @@ export class AppInsightsSku implements IApplicationInsights {
                             // return null in case any error happens
                             resolve(null);
                         });
-                        _config.connectionString = "";
 
                     });
                     
                     let url: IPromise<string> | string = _config.userOverrideEndpointUrl;
                     if (isNullOrUndefined(url)) {
-                        url = createAsyncPromise<string>((resolve, reject) => {
+                        url = createSyncPromise<string>((resolve, reject) => {
                             _parseCs().then((cs) => {
                                 let url = _config.endpointUrl;
                                 let ingest = cs && cs.ingestionendpoint;

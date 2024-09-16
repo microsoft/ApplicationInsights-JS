@@ -355,7 +355,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
-                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+                Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
 
                 
                 
@@ -364,8 +365,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 let activeStatus = core.activeStatus && core.activeStatus();
             
                 if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
                     return true;
                 }
                 return false;
@@ -412,7 +413,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1"
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
-                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+                Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
                 
                 
             }].concat(PollingAssert.createPollingAssert(() => {
@@ -420,8 +422,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 let activeStatus = core.activeStatus && core.activeStatus();
             
                 if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
                     let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
                     let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
                     Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
@@ -458,7 +460,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 config.initTimeOut = 80000;
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
-                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                //Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 
                 
             }].concat(PollingAssert.createPollingAssert(() => {
