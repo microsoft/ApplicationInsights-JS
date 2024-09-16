@@ -3,7 +3,7 @@
 "use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IPromise, createAllSettledPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
     ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
     isPromiseLike, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
@@ -401,7 +401,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         _isStatusSet = false;
                         _activeStatus = eActiveStatus.PENDING;
                         let initTimeout = isNotNullOrUndefined(rootCfg.initTimeOut)?  rootCfg.initTimeOut : maxInitTimeout; // rootCfg.initTimeOut could be 0
-                        let allPromises = createAllSettledPromise<string>(promises);
+                        let allPromises = createSyncAllSettledPromise<string>(promises);
                         _initTimer = scheduleTimeout(() => {
                             // set _isStatusSet to true
                             // set active status

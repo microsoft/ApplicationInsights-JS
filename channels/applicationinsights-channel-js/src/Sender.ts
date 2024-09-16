@@ -15,7 +15,9 @@ import {
     prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
-import { ITimerHandler, isNumber, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout } from "@nevware21/ts-utils";
+import {
+    ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout
+} from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
@@ -264,8 +266,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         utlSetStoragePrefix(config.storagePrefix);
                     }
                     let ctx = createProcessTelemetryContext(null, config, core);
+                    // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
+                    if(isPromiseLike(senderConfig.endpointUrl)) {
+                        // if it is promise, means the endpoint url is from core.endpointurl
+                        senderConfig.endpointUrl = config.endpointUrl as any;
+                    }
 
+                    if(isPromiseLike(senderConfig.instrumentationKey)) {
+                        // if it is promise, means the endpoint url is from core.endpointurl
+                        senderConfig.instrumentationKey = config.instrumentationKey as any;
+                    }
                     objDefine(_self, "_senderConfig", {
                         g: function() {
                             return senderConfig;
@@ -356,7 +367,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
 
                     _instrumentationKey = senderConfig.instrumentationKey;
-                    if(!_validateInstrumentationKey(_instrumentationKey, config)) {
+                    if(!isPromiseLike(_instrumentationKey) && !_validateInstrumentationKey(_instrumentationKey, config)) {
                         _throwInternal(diagLog,
                             eLoggingSeverity.CRITICAL,
                             _eInternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key " + _instrumentationKey);

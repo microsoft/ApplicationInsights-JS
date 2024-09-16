@@ -1,9 +1,10 @@
 import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { BreezeChannelIdentifier, utlGetSessionStorage, utlRemoveSessionStorage } from '@microsoft/applicationinsights-common';
-import { dumpObj, getJSON, isArray } from '@microsoft/applicationinsights-core-js';
+import { ActiveStatus, dumpObj, getJSON, isArray } from '@microsoft/applicationinsights-core-js';
 import { SinonSpy } from 'sinon';
 import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
+import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 
 export class SenderE2ETests extends AITestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -122,6 +123,61 @@ export class SenderE2ETests extends AITestClass {
                     this._ai.trackTrace({message: 'test trace'});
                 }
             ]
+            .concat(this.waitForResponse())
+            .concat(this.boilerPlateAsserts)
+            .concat(PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionSentEmpty(), "SentBuffer Session storage is empty", 15, 1000) as any)
+            .concat(PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionEmpty(), "Buffer Session storage is empty", 15, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: 'SendBuffer: Session storage is cleared after a send with cs promise',
+            stepDelay: this.delay,
+            steps: [
+                () => {
+                    if (this._ai && this._ai.unload) {
+                        this._ai.unload(false);
+                    }
+
+                    let csPromise = createAsyncResolvedPromise(`InstrumentationKey=${this._instrumentationKey}`);
+                    let  init = new ApplicationInsights({
+                        config: {
+                            connectionString: csPromise,
+                            loggingLevelConsole: 999,
+                            extensionConfig: {
+                                'AppInsightsChannelPlugin': {
+                                    maxBatchInterval: 2000,
+                                    maxBatchSizeInBytes: 10*1024*1024 // 10 MB
+                                },
+                                ["AppInsightsCfgSyncPlugin"]: {
+                                    cfgUrl: ""
+                                }
+                                
+                            }
+                        },
+                        queue: [],
+                        version: 2.0
+                    });
+                    this._ai = init.loadAppInsights();
+        
+                    // Setup Sinon stuff
+                    this._sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
+                    this._sender._buffer.clear();
+                    this.errorSpy = this.sandbox.spy(this._sender, '_onError');
+                    this.successSpy = this.sandbox.spy(this._sender, '_onSuccess');
+                    this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');
+                    this.clearSpy = this.sandbox.spy(this._sender._buffer, 'clearSent');
+                    this._ai.trackTrace({message: 'test trace'});
+                }
+            ].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.appInsights.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE ) {
+                    Assert.equal(this._instrumentationKey, core.config.instrumentationKey, "ikey should be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
             .concat(this.waitForResponse())
             .concat(this.boilerPlateAsserts)
             .concat(PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionSentEmpty(), "SentBuffer Session storage is empty", 15, 1000) as any)
