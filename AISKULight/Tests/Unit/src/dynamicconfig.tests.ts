@@ -86,58 +86,11 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                 Assert.equal(3, onChangeCalled, "OnCfgChange was called again");
                 Assert.equal("newIkey", config.instrumentationKey);
 
-                // let sender = this._ai.getPlugin("AppInsightsChannelPlugin").plugin;
-                // let senderConfig = sender["_senderConfig"] as ISenderConfig; 
-                // let senderIkey = senderConfig.instrumentationKey;
-                // Assert.equal("testKey", senderIkey, "sender ikey is set from connection string");
-                // let senderUrl = senderConfig.endpointUrl;
-                // Assert.equal("TestUrl/v2/track", senderUrl, "sender endpoint url is set from connection string");
-
                 //Remove the handler
                 handler.rm();
             }
         });
-
-        // this.testCase({
-        //     name: "ConfigTests: ApplicationInsights config works correctly with connection string dynamic changes",
-        //     useFakeTimers: true,
-        //     test: () => {
-        //         let _config = this._getTestConfig(this._sessionPrefix);
-        //         Assert.ok(_config)
-        //         let ai = new ApplicationInsights(_config);
-        //         this.onDone(() =>{
-        //             ai.unload(false);
-        //         });
-        //         Assert.ok(ai, "ApplicationInsights light Instance is initialized");
-            
-        //         let config = ai.config;
-        //         let expectedIkey = ApplicationInsightsDynamicConfigTests._instrumentationKey;
-        //         let expectedConnectionString = ApplicationInsightsDynamicConfigTests._connectionString;
-        //         let expectedEndpointUrl = `https://dc.services.visualstudio.com/v2/track`;
-        //         let expectedLoggingLevel = 10000;
-        //         Assert.ok(config, "ApplicationInsights Light config exists");
-        //         Assert.equal(expectedConnectionString, config.connectionString, "connection string is set");
-        //         Assert.equal(expectedIkey, config.instrumentationKey, "ikey is set");
-        //         Assert.equal(expectedLoggingLevel, config.diagnosticLogInterval, "diagnosticLogInterval is set to 1000 by default");
-        //         Assert.equal(expectedEndpointUrl, config.endpointUrl, "endpoint url is set from connection string");
-
-        //         let cs = "InstrumentationKey=testKey;ingestionendpoint=TestUrl";
-        //         ai.config.connectionString = cs;
-        //         this.clock.tick(1);
-        //         config = ai.config;
-        //         Assert.equal(cs, config.connectionString, "connection string is set");
-        //         Assert.equal("testKey", config.instrumentationKey, "ikey is set test1");
-        //         Assert.equal(expectedLoggingLevel, config.diagnosticLogInterval, "diagnosticLogInterval is set to 1000 test1");
-        //         Assert.equal("TestUrl/v2/track", config.endpointUrl, "endpoint url is set from connection string test1");
-        //         let sender = ai.getPlugin("AppInsightsChannelPlugin").plugin;
-        //         let senderConfig = sender["_senderConfig"] as ISenderConfig; 
-        //         let senderIkey = senderConfig.instrumentationKey;
-        //         Assert.equal("testKey", senderIkey, "sender ikey is set from connection string");
-        //         let senderUrl = senderConfig.endpointUrl;
-        //         Assert.equal("TestUrl/v2/track", senderUrl, "sender endpoint url is set from connection string");
-
-        //     }
-        // });
+        
 
         this.testCaseAsync({
             name: "Init: init with cs promise",
