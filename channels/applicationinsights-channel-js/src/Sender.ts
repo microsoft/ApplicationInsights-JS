@@ -283,6 +283,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     });
 
+                    // Only update the endpoint if the original config !== the current config
+                    // This is so any redirect endpointUrl is not overwritten
+                    if (_orgEndpointUrl !== senderConfig.endpointUrl) {
+                        if (_orgEndpointUrl) {
+                            // TODO: add doc to remind users to flush before changing endpoint, otherwise all unsent payload will be sent to new endpoint
+                        }
+                        _endpointUrl = _orgEndpointUrl = senderConfig.endpointUrl;
+                    }
+
                     // or is not string
                     if (core.activeStatus() === ActiveStatus.PENDING) {
                         // waiting for core promises to be resolved
@@ -291,18 +300,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     } else if (core.activeStatus() === ActiveStatus.ACTIVE) {
                         // core status changed from pending to other status
                         _self.resume();
-
-                    }
-
-                    
-
-                    // Only update the endpoint if the original config !== the current config
-                    // This is so any redirect endpointUrl is not overwritten
-                    if (_orgEndpointUrl !== senderConfig.endpointUrl) {
-                        if (_orgEndpointUrl) {
-                            // TODO: add doc to remind users to flush before changing endpoint, otherwise all unsent payload will be sent to new endpoint
-                        }
-                        _endpointUrl = _orgEndpointUrl = senderConfig.endpointUrl;
+    
                     }
 
                     if (_customHeaders && _customHeaders !== senderConfig.customHeaders) {

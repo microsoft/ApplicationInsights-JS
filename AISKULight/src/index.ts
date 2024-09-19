@@ -9,17 +9,23 @@ import {
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction,
     cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise, createAsyncPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { IPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
 
+const UNDEFINED_VALUE: undefined = undefined;
 const defaultConfigValues: IConfigDefaults<IConfiguration> = {
-    diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000)
+    diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
+    connectionString: UNDEFINED_VALUE,
+    endpointUrl: UNDEFINED_VALUE,
+    instrumentationKey: UNDEFINED_VALUE,
+    extensionConfig: {}
 };
 
 function _chkDiagLevel(value: number) {
     // Make sure we have a value > 0
     return value && value > 0;
 }
+
 
 /**
  * @export
@@ -80,7 +86,7 @@ export class ApplicationInsights {
                     let configCs =  _config.connectionString;
                 
                     if (isPromiseLike(configCs)) {
-                        let ikeyPromise = createAsyncPromise<string>((resolve, reject) => {
+                        let ikeyPromise = createSyncPromise<string>((resolve, reject) => {
                             doAwaitResponse(configCs, (res) => {
                                 let curCs = res.value;
                                 let ikey = _config.instrumentationKey;
@@ -95,7 +101,7 @@ export class ApplicationInsights {
 
                         });
 
-                        let urlPromise = createAsyncPromise<string>((resolve, reject) => {
+                        let urlPromise = createSyncPromise<string>((resolve, reject) => {
                             doAwaitResponse(configCs, (res) => {
                                 let curCs = res.value;
                                 let url = _config.endpointUrl;
