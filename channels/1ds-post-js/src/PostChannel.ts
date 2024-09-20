@@ -14,7 +14,7 @@ import {
     setProcessTelemetryTimings
 } from "@microsoft/1ds-core-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
-import { ITimerHandler, objDeepFreeze } from "@nevware21/ts-utils";
+import { ITimerHandler, isPromiseLike, objDeepFreeze } from "@nevware21/ts-utils";
 import {
     BE_PROFILE, EventBatchNotificationReason, IChannelConfiguration, IPostChannel, IPostTransmissionTelemetryItem, NRT_PROFILE, RT_PROFILE
 } from "./DataModels";
@@ -144,13 +144,14 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
         let _unloadHandlersAdded: boolean;
         let _overrideInstrumentationKey: string;
         let _disableTelemetry: boolean;
+        let _endpointUrl: string | IPromise<string>;
 
         dynamicProto(PostChannel, this, (_self, _base) => {
             _initDefaults();
 
             // Special internal method to allow the DebugPlugin to hook embedded objects
             _self["_getDbgPlgTargets"] = () => {
-                return [_httpManager, _postConfig];
+                return [_httpManager, _postConfig, _endpointUrl];
             };
 
             _self.initialize = (theConfig: IExtendedConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => {
@@ -180,8 +181,17 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                             _maxUnloadEventSendAttempts = _postConfig.maxUnloadEventRetryAttempts;
                             _disableAutoBatchFlushLimit = _postConfig.disableAutoBatchFlushLimit;
 
-                            _setAutoLimits();
+                            let curUrl = coreConfig.endpointUrl;
+                            if (isPromiseLike(curUrl)) {
+                                _self.pause();
+                            } else if (isPromiseLike(_endpointUrl)) {
+                                // if previous url is promise, resume
+                                _self.resume();
+                            }
+                            _endpointUrl = curUrl;
 
+                            _setAutoLimits();
+ 
                             // Override iKey if provided in Post config if provided for during initialization
                             _overrideInstrumentationKey = _postConfig.overrideInstrumentationKey;
 
@@ -468,12 +478,12 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             _self.pause = () => {
                 _clearScheduledTimer();
                 _paused = true;
-                _httpManager.pause();
+                _httpManager && _httpManager.pause();
             };
 
             _self.resume = () => {
                 _paused = false;
-                _httpManager.resume();
+                _httpManager && _httpManager.resume();
                 _scheduleTimer();
             };
 
@@ -681,6 +691,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 _batchQueues = {};
                 _autoFlushEventsLimit = 0;
                 _unloadHandlersAdded = false;
+                _endpointUrl = null;
                 
                 // either MaxBatchSize * (1+ Max Connections) or _queueLimit / 6 (where 3 latency Queues [normal, realtime, cost deferred] * 2 [allow half full -- allow for retry])
                 _autoFlushBatchLimit = 0;
