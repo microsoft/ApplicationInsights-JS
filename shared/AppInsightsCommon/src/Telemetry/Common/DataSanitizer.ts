@@ -134,7 +134,7 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
     return exceptionTrunc || exception;
 }
 
-export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: any, maxLength = Number(DataSanitizerValues.MAX_PROPERTY_LENGTH)) {
+export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: any, maxLength: number = DataSanitizerValues.MAX_PROPERTY_LENGTH) {
     if (properties) {
         const tempProps = {};
         objForEachKey(properties, (prop, value) => {

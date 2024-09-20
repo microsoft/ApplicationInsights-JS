@@ -35,7 +35,7 @@ export class ApplicationInsightsTests extends AITestClass {
         });
 
         this.testCase({
-            name: 'DataSanitizerTests: property sanitizer respects max length.',
+            name: 'DataSanitizerTests: property sanitizer respects default truncation limit.',
             test: () => {
                 // const define
                 const MAX_PROPERTY_LENGTH = DataSanitizerValues.MAX_PROPERTY_LENGTH;
@@ -52,7 +52,7 @@ export class ApplicationInsightsTests extends AITestClass {
         })
 
         this.testCase({
-            name: 'DataSanitizerTests: property sanitizer respects max length.',
+            name: 'DataSanitizerTests: property sanitizer respects max length parameter being passed in.',
             test: () => {
                 // const define
                 const customMaxLength = 5;
