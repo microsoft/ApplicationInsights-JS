@@ -1,7 +1,7 @@
 import { strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import {  DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
-import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString } from "../../../src/Telemetry/Common/DataSanitizer";
+import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, dataSanitizeProperties DataSanitizerValues, dataSanitizeString } from "../../../src/Telemetry/Common/DataSanitizer";
 
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -74,7 +74,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 // const define
                 const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
                 const MAX_MESSAGE_LENGTH = DataSanitizerValues.MAX_MESSAGE_LENGTH;
-                
+
                 // use cases
                 const messageShort: String = "hi";
                 const messageLong = strRepeat("a", MAX_MESSAGE_LENGTH + 2);
