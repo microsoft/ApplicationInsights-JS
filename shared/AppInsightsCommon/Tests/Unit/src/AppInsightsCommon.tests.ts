@@ -43,28 +43,36 @@ export class ApplicationInsightsTests extends AITestClass {
                 // use cases
                 const messageShort: String = "hi";
                 const messageLong = strRepeat("abc", MAX_PROPERTY_LENGTH + 1);
-                
+                const testProperties = {
+                    "prop1": messageLong,
+                    "prop2": messageShort
+                }
+
                 // Assert
-                Assert.equal(messageShort.length, dataSanitizeProperties(this.logger, messageShort).length);
-                Assert.notEqual(messageLong.length, dataSanitizeProperties(this.logger, messageLong).length);
-                Assert.equal(MAX_PROPERTY_LENGTH, dataSanitizeProperties(this.logger, messageLong).length);
+                Assert.equal(messageShort.length, dataSanitizeProperties(this.logger, testProperties).messageShort.length);
+                Assert.notEqual(messageLong.length, dataSanitizeProperties(this.logger, testProperties).messageLong.length);
+                Assert.equal(MAX_PROPERTY_LENGTH, dataSanitizeProperties(this.logger, testProperties).messageLong.length);
             }
         })
 
         this.testCase({
             name: 'DataSanitizerTests: property sanitizer respects max length parameter being passed in.',
             test: () => {
-                // const define
+                // const define     
                 const customMaxLength = 5;
 
                 // use cases
                 const messageShort: String = "hi";
                 const messageLong = strRepeat("abc",  customMaxLength + 1);
+                const testProperties = {
+                    "prop1": messageLong,
+                    "prop2": messageShort
+                }
 
                 // Assert
-                Assert.equal(messageShort.length, dataSanitizeProperties(this.logger, messageShort, customMaxLength).length);
-                Assert.notEqual(messageLong.length, dataSanitizeProperties(this.logger, messageLong, customMaxLength).length);
-                Assert.equal(customMaxLength, dataSanitizeProperties(this.logger, messageLong, customMaxLength).length);
+                Assert.equal(messageShort.length, dataSanitizeProperties(this.logger, testProperties, customMaxLength).messageShort.length);
+                Assert.notEqual(messageLong.length, dataSanitizeProperties(this.logger, testProperties, customMaxLength).messageLong.length);
+                Assert.equal(customMaxLength, dataSanitizeProperties(this.logger, testProperties, customMaxLength).messageLong.length);
             }
         })
 
@@ -173,7 +181,7 @@ export class ApplicationInsightsTests extends AITestClass {
 
                 // const define
                 const MAX_STRING_LENGTH = DataSanitizerValues.MAX_STRING_LENGTH;
-               
+
                 // use cases
                 const strShort: String = "hi";
                 const strLong = strRepeat("a", MAX_STRING_LENGTH + 2);
@@ -196,7 +204,7 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // const define
                 const MAX_NAME_LENGTH = DataSanitizerValues.MAX_NAME_LENGTH;
-               
+
                 // use cases
                 const nameShort: String = "hi";
                 const nameLong = strRepeat("a", MAX_NAME_LENGTH + 2);
