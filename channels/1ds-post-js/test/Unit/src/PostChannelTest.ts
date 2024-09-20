@@ -1,8 +1,11 @@
-import { AITestClass, TestHelper } from "@microsoft/ai-test-framework";
+import { AITestClass, PollingAssert, TestHelper } from "@microsoft/ai-test-framework";
 import { IExtendedConfiguration, AppInsightsCore, EventLatency, ITelemetryItem, IExtendedTelemetryItem, SendRequestReason, EventSendType, isFetchSupported, objKeys, arrForEach, isBeaconsSupported, EventPersistence, isNullOrUndefined } from '@microsoft/1ds-core-js';
 import { PostChannel, IXHROverride, IPayloadData } from '../../../src/Index';
 import { IPostTransmissionTelemetryItem, IChannelConfiguration } from '../../../src/DataModels';
 import { SinonSpy } from 'sinon';
+import { createAsyncResolvedPromise } from "@nevware21/ts-async";
+import { ActiveStatus } from "@microsoft/1ds-core-js";
+
 
 interface IEventsSendRequests {
     sendReason: number;
@@ -32,6 +35,7 @@ export class PostChannelTest extends AITestClass {
     private eventsSendRequests: Array<IEventsSendRequests> = [];
     private testMessage: string;
     private beaconCalls = [];
+    private ctx: any;
 
     constructor(name?: string, emulateEs3?: boolean) {
         super(name, emulateEs3);
@@ -65,6 +69,7 @@ export class PostChannelTest extends AITestClass {
             this.testMessage = "testClearTimeout";
             clearTimeout(params);
         };
+        this.ctx = {};
     }
 
     public testFinishedCleanup(): void {
@@ -76,6 +81,7 @@ export class PostChannelTest extends AITestClass {
         if (this.core && this.core.isInitialized()) {
             this.core.unload(false);
         }
+        this.ctx = null;
     }
 
     public registerTests() {
@@ -308,6 +314,68 @@ export class PostChannelTest extends AITestClass {
 
             }
         });
+
+        this.testCaseAsync({
+            name: "Init: init with ikey Promise and endpointUrl Promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                let config = this.config;
+                config.initTimeOut = 80000;
+                let ikeyPromise = createAsyncResolvedPromise("testIkey-test");
+                let urlPromise = createAsyncResolvedPromise("https://testEndpoint");
+                this.ctx.ikeyPromise = ikeyPromise;
+                this.ctx.urlPromise = urlPromise;
+                config.instrumentationKey = ikeyPromise;
+                config.endpointUrl = urlPromise;
+                let core = this.core;
+                let postChannel = this.postChannel;
+                let identifier = postChannel.identifier;
+                let spy = this.sandbox.spy(this.xhrOverride, "sendPOST");
+                config.extensionConfig = {[identifier]: {}};
+                config.extensionConfig[identifier].httpXHROverride = this.xhrOverride;
+                this.ctx.spy = spy;
+         
+                core.initialize(config, [postChannel]);
+                let status = core.activeStatus && core.activeStatus();
+                QUnit.assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    iKey: "testIkey-test",
+                    latency: EventLatency.RealTime
+                };
+                postChannel.processTelemetry(event);
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this.core;
+                let activeStatus = core.activeStatus && core.activeStatus();
+                let ikeyPromise = this.ctx.ikeyPromise;
+                let urlPromise = this.ctx.urlPromise;
+                let config = this.core.config;
+                let spy = this.ctx.spy;
+              
+            
+                if (ikeyPromise.state === "resolved" && urlPromise.state === "resolved" && activeStatus === ActiveStatus.ACTIVE) {
+                    QUnit.assert.equal("testIkey-test", core.config.instrumentationKey, "ikey should be set");
+                    QUnit.assert.equal("https://testEndpoint", core.config.endpointUrl ,"endpoint shoule be set");
+
+                    let httpManager = this.postChannel["_getDbgPlgTargets"]()[0];
+                    QUnit.assert.ok(httpManager ,"http Manager exists");
+                    let url = httpManager["_getDbgPlgTargets"]()[5];
+                    QUnit.assert.ok(url.indexOf("https://testEndpoint") > -1 ,"http manager endpoint shoule be set");
+
+                    this.postChannel.flush(false);
+                    QUnit.assert.equal(spy.callCount, 1, "sendPOST count should be 1");
+                    QUnit.assert.equal(spy.getCall(0).args[0].data, "{\"name\":\"testEvent\",\"iKey\":\"o:testIkey\",\"data\":{\"baseData\":{}}}", "data should be set");
+                    
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
 
         this.testCase({
             name: "Post Channel: Offline Support",

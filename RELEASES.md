@@ -11,6 +11,7 @@
 - #2413 [Main][Task] 29445638: Fix Promise Initialization Sender Config Issue
   - **Note**: the issue [ApplicationInsights Channel (Sender) endpoint Url Promise is Always Pending](https://github.com/microsoft/ApplicationInsights-JS/issues/2414) is resolved
 - #2416 [Main][Task]29519574: Update AISKU Light to better handle Init Promise
+- #2418 [Main][Task]29465842: Update Promise Initialization Post Channel
 - #2404 [main] fix expCfg to be optional
 - #2407 [main] Custom Trusted Type Policy Support for Snippet Script Injection
 - #2409 [main] Trusted Type Policy Support for nounce tag
