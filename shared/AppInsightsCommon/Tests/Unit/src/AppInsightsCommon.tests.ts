@@ -35,6 +35,40 @@ export class ApplicationInsightsTests extends AITestClass {
         });
 
         this.testCase({
+            name: 'DataSanitizerTests: property sanitizer respects max length.',
+            test: () => {
+                // const define
+                const MAX_PROPERTY_LENGTH = DataSanitizerValues.MAX_PROPERTY_LENGTH;
+
+                // use cases
+                const messageShort: String = "hi";
+                const messageLong = strRepeat("abc", MAX_PROPERTY_LENGTH + 1);
+                
+                // Assert
+                Assert.equal(messageShort.length, dataSanitizeProperties(this.logger, messageShort).length);
+                Assert.notEqual(messageLong.length, dataSanitizeProperties(this.logger, messageLong).length);
+                Assert.equal(MAX_PROPERTY_LENGTH, dataSanitizeProperties(this.logger, messageLong).length);
+            }
+        })
+
+        this.testCase({
+            name: 'DataSanitizerTests: property sanitizer respects max length.',
+            test: () => {
+                // const define
+                const customMaxLength = 5;
+
+                // use cases
+                const messageShort: String = "hi";
+                const messageLong = strRepeat("abc",  customMaxLength + 1);
+
+                // Assert
+                Assert.equal(messageShort.length, dataSanitizeProperties(this.logger, messageShort, customMaxLength).length);
+                Assert.notEqual(messageLong.length, dataSanitizeProperties(this.logger, messageLong, customMaxLength).length);
+                Assert.equal(customMaxLength, dataSanitizeProperties(this.logger, messageLong, customMaxLength).length);
+            }
+        })
+
+        this.testCase({
             name: 'DataSanitizerTests: throwInternal function is called correctly in sanitizeMessage function',
             test: () => {
                 // const define

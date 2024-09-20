@@ -134,7 +134,7 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
     return exceptionTrunc || exception;
 }
 
-export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: any) {
+export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: any, maxLength = Number(DataSanitizerValues.MAX_PROPERTY_LENGTH)) {
     if (properties) {
         const tempProps = {};
         objForEachKey(properties, (prop, value) => {
@@ -146,7 +146,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
                     _throwInternal(logger,eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
                 }
             }
-            value = dataSanitizeString(logger, value, DataSanitizerValues.MAX_PROPERTY_LENGTH);
+            value = dataSanitizeString(logger, value, maxLength);
             prop = dataSanitizeKeyAndAddUniqueness(logger, prop, tempProps);
             tempProps[prop] = value;
         });

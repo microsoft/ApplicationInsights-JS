@@ -51,6 +51,11 @@ export interface ITelemetryItem {
      */
     baseData?: { [key: string]: any };
 
+    /**
+     * Custom metadata
+     */
+    metadata?: { [key: string]: any };
+
 }
 
 export interface Tags {

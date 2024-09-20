@@ -42,11 +42,11 @@ export class Event implements IEventData, ISerializable {
     /**
      * Constructs a new instance of the EventTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, properties?: any, measurements?: any) {
+    constructor(logger: IDiagnosticLogger, name: string, properties?: any, measurements?: any, maxLength?: number) {
         let _self = this;
         _self.ver = 2;
         _self.name = dataSanitizeString(logger, name) || strNotSpecified;
-        _self.properties = dataSanitizeProperties(logger, properties);
+        _self.properties = dataSanitizeProperties(logger, properties, maxLength);
         _self.measurements = dataSanitizeMeasurements(logger, measurements);
     }
 }
