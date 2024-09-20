@@ -561,6 +561,8 @@ This version comes with the bare minimum amount of features and functionalities 
 | [React](https://github.com/microsoft/applicationinsights-react-js) | [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-react-js.svg)](https://www.npmjs.com/package/@microsoft/applicationinsights-react-js)
 | [React Native](https://github.com/microsoft/applicationinsights-react-native) | [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-react-native.svg)](https://www.npmjs.com/package/@microsoft/applicationinsights-react-native)
 
+Click here for a [Type Error Fixed Guideline](https://microsoft.github.io/ApplicationInsights-JS/ExtensionErrorSteps)
+
 ## Build a new extension for the SDK
 
 The SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
