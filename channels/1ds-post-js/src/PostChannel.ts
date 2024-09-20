@@ -144,14 +144,13 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
         let _unloadHandlersAdded: boolean;
         let _overrideInstrumentationKey: string;
         let _disableTelemetry: boolean;
-        let _endpointUrl: string | IPromise<string>;
 
         dynamicProto(PostChannel, this, (_self, _base) => {
             _initDefaults();
 
             // Special internal method to allow the DebugPlugin to hook embedded objects
             _self["_getDbgPlgTargets"] = () => {
-                return [_httpManager, _postConfig, _endpointUrl];
+                return [_httpManager, _postConfig];
             };
 
             _self.initialize = (theConfig: IExtendedConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => {
@@ -181,14 +180,12 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                             _maxUnloadEventSendAttempts = _postConfig.maxUnloadEventRetryAttempts;
                             _disableAutoBatchFlushLimit = _postConfig.disableAutoBatchFlushLimit;
 
-                            let curUrl = coreConfig.endpointUrl;
-                            if (isPromiseLike(curUrl)) {
+                            if (isPromiseLike(coreConfig.endpointUrl)) {
                                 _self.pause();
-                            } else if (isPromiseLike(_endpointUrl)) {
+                            } else if (!!_paused) {
                                 // if previous url is promise, resume
                                 _self.resume();
                             }
-                            _endpointUrl = curUrl;
 
                             _setAutoLimits();
  
@@ -691,7 +688,6 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 _batchQueues = {};
                 _autoFlushEventsLimit = 0;
                 _unloadHandlersAdded = false;
-                _endpointUrl = null;
                 
                 // either MaxBatchSize * (1+ Max Connections) or _queueLimit / 6 (where 3 latency Queues [normal, realtime, cost deferred] * 2 [allow half full -- allow for retry])
                 _autoFlushBatchLimit = 0;
