@@ -38,14 +38,14 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'DataSanitizerTests: property sanitizer respects default truncation limit.',
             test: () => {
                 // const define
-                const MAX_PROPERTY_LENGTH = DataSanitizerValues.MAX_PROPERTY_LENGTH;
+                const MAX_PROPERTY_LENGTH: number = DataSanitizerValues.MAX_PROPERTY_LENGTH;
 
                 // use cases
-                const messageShort: String = "hi";
-                const messageLong = strRepeat("abc", MAX_PROPERTY_LENGTH + 1);
+                const messageShort: string = "hi";
+                const messageLong: string = strRepeat("abc", MAX_PROPERTY_LENGTH + 1);
                 const testProperties = {
-                    "prop1": messageLong,
-                    "prop2": messageShort
+                    messageLong,
+                    messageShort
                 }
 
                 // Assert
@@ -62,11 +62,11 @@ export class ApplicationInsightsTests extends AITestClass {
                 const customMaxLength = 5;
 
                 // use cases
-                const messageShort: String = "hi";
-                const messageLong = strRepeat("abc",  customMaxLength + 1);
+                const messageShort: string = "hi";
+                const messageLong: string = strRepeat("abc",  customMaxLength + 1);
                 const testProperties = {
-                    "prop1": messageLong,
-                    "prop2": messageShort
+                    messageLong,
+                    messageShort
                 }
 
                 // Assert
