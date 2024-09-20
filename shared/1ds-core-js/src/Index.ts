@@ -30,7 +30,7 @@ export {
     IConfiguration, ITelemetryItem, ITelemetryPlugin, BaseTelemetryPlugin, IProcessTelemetryContext, ProcessTelemetryContext, ITelemetryPluginChain,
     MinChannelPriorty, EventsDiscardedReason, IDiagnosticLogger, DiagnosticLogger, LoggingSeverity, SendRequestReason,
     IPerfEvent, IPerfManager, IPerfManagerProvider, PerfEvent, PerfManager, doPerf, ICustomProperties, Tags,
-    AppInsightsCore as InternalAppInsightsCore, _InternalLogMessage, _InternalMessageId,
+    AppInsightsCore as InternalAppInsightsCore, _InternalLogMessage, _InternalMessageId, eActiveStatus, ActiveStatus,
     createEnumStyle, eLoggingSeverity, _eInternalMessageId, _throwInternal, _warnToConsole, _logInternalMessage,
     // The HelperFuncs functions
     isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName,

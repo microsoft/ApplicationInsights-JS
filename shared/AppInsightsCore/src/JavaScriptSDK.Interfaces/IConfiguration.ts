@@ -4,6 +4,7 @@ import { IPromise } from "@nevware21/ts-async";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
+import { IExceptionConfig } from "./IExceptionConfig";
 import { IFeatureOptIn } from "./IFeatureOptIn";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
@@ -208,4 +209,9 @@ export interface IConfiguration {
      */
     initInMemoMaxSize?: number;
 
+    /**
+     * [Optional] Set additional configuration for exceptions, such as more scripts to include in the exception telemetry.
+     * @since 3.3.2
+     */
+    expCfg?: IExceptionConfig;
 }

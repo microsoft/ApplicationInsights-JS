@@ -248,6 +248,7 @@ function generateDtsNsFile(dtsFile, dtsContents, additionalBundles = [], attempt
     
     var newGenConfig = createGenConfig(genConfig, includeBundles);
     var apiNewGenConfig = path.resolve(projectPath, "build", "api-extractor.namespaced.json");
+    console.log("Writing: " + apiNewGenConfig);
     fs.writeFileSync(apiNewGenConfig, newGenConfig, (err, data) => {
         if (err) {
             console.error(err);
@@ -262,7 +263,7 @@ function generateDtsNsFile(dtsFile, dtsContents, additionalBundles = [], attempt
     // Check for unexpected transitive (indirect) imports
     var dtsFileNs = dtsFile.replace(".d.ts", ".namespaced.d.ts");
     if (!fs.existsSync(dtsFileNs)) {
-        throwError(`Failed to generate ${dtsFileNs}`);
+        throwError(`Failed to generate ${dtsFileNs} -- does not exist!`);
     }
 
     var nsData = fs.readFileSync(dtsFileNs, "utf8");

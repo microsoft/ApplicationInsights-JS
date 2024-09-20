@@ -192,6 +192,11 @@ export class SenderTests extends AITestClass {
                 if (activeStatus === ActiveStatus.ACTIVE) {
                     QUnit.assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
                     QUnit.assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                    // getExtCfg only finds undefined values from core
+                    let senderConfig = this._sender._senderConfig;
+                    QUnit.assert.equal("testIkey", senderConfig.instrumentationKey, "sender ikey should be set");
+                    QUnit.assert.equal("testUrl", senderConfig.endpointUrl ,"sender endpoint shoule be set");
+                    
                     return true;
                 }
                 return false;

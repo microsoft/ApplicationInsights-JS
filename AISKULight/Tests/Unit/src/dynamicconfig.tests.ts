@@ -1,7 +1,8 @@
-import { AITestClass, Assert } from "@microsoft/ai-test-framework";
+import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { IConfig } from "@microsoft/applicationinsights-common";
-import { IConfiguration, newId } from "@microsoft/applicationinsights-core-js";
-import { ApplicationInsights } from "../../../src/index";
+import { IConfiguration, isString, newId } from "@microsoft/applicationinsights-core-js";
+import { ApplicationInsights, ISenderConfig } from "../../../src/index";
+import { createAsyncResolvedPromise } from "@nevware21/ts-async";
 
 export class ApplicationInsightsDynamicConfigTests extends AITestClass {
     private static readonly _instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
@@ -10,6 +11,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
     private _sessionPrefix: string = newId();
     private _config: IConfiguration & IConfig;
     static registerTests: any;
+    private _ctx: any;
 
     constructor(testName?: string) {
         super(testName || "AISKU Dynamic Config");
@@ -27,6 +29,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
             this._config = this._getTestConfig(this._sessionPrefix);
 
             this._ai = new ApplicationInsights(this._config);
+            this._ctx = {};
         } catch (e) {
             console.error("Failed to initialize", e);
         }
@@ -37,6 +40,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
             // force unload
             this._ai.unload(false);
         }
+        this._ctx = null;
 
         console.log("* testCleanup(" + (AITestClass.currentTestInfo ? AITestClass.currentTestInfo.name : "<null>") + ")");
     }
@@ -72,19 +76,66 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     Assert.equal(expectedLoggingLevel, details.cfg.diagnosticLogInterval, "Expect the diagnosticLogInterval to be set");
                 });
 
-                Assert.equal(1, onChangeCalled, "OnCfgChange was not called");
+                Assert.equal(1, onChangeCalled, "OnCfgChange was called once");
 
                 expectedIkey = "newIkey";
                 expectedConnectionString = `InstrumentationKey=${expectedIkey}`;
                 config.connectionString = expectedConnectionString;
                 Assert.equal(1, onChangeCalled, "OnCfgChange was called");
                 this.clock.tick(1);
-                Assert.equal(2, onChangeCalled, "OnCfgChange was not called");
+                Assert.equal(3, onChangeCalled, "OnCfgChange was called again");
                 Assert.equal("newIkey", config.instrumentationKey);
 
                 //Remove the handler
                 handler.rm();
             }
+        });
+        
+
+        this.testCaseAsync({
+            name: "Init: init with cs promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+                this._ctx.csPromise = csPromise;
+
+
+                let init = new ApplicationInsights(this._config);
+                this._ai = init;
+                let config = this._ai.config;
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let csPromise = this._ctx.csPromise;
+                let config = this._ai.config;
+                let ikey = config.instrumentationKey;
+            
+                if (csPromise.state === "resolved" && isString(ikey)) {
+                    Assert.equal("testIkey", config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", config.endpointUrl ,"endpoint shoule be set");
+                    let sender = this._ai.getPlugin("AppInsightsChannelPlugin").plugin;
+                    let senderConfig = sender["_senderConfig"] as ISenderConfig; 
+                    let senderIkey = senderConfig.instrumentationKey;
+                    Assert.equal("testIkey", senderIkey, "sender ikey is set from connection string");
+                    let senderUrl = senderConfig.endpointUrl;
+                    Assert.equal("testUrl/v2/track", senderUrl, "sender endpoint url is set from connection string");
+                    
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
         });
     }
 

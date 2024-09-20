@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-perfmarkmeasure-js",
-    "version": "3.3.1",
+    "version": "3.3.2",
     "description": "Microsoft Application Insights Performance Mark and Measure Manager plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -42,7 +42,7 @@
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
-        "typedoc": "^0.24.8",
+        "typedoc": "^0.26.6",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
@@ -50,12 +50,12 @@
         "rollup": "^3.20.0"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-core-js": "3.3.1",
+        "@microsoft/applicationinsights-core-js": "3.3.2",
         "@nevware21/ts-utils": ">= 0.11.3 < 2.x"
     },
     "license": "MIT"

@@ -135,6 +135,7 @@ Write-Log "=====================================================================
 
 # List the files for each container
 $files = New-Object 'system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]'
+$testFiles = New-Object 'system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]'
 
 $storePath = "$container"
 if ($container -eq "public") {
@@ -145,8 +146,13 @@ if ($container -eq "public") {
 }
 
 Get-VersionFiles $files $storePath "ai.config." $activeVersion
+Get-VersionFiles $testFiles $storePath "ai_test.config." $activeVersion
 
-if ($files.ContainsKey($activeVersion) -ne $true) {
+if ($container -eq "dev" -or $container -eq "nightly") {
+    if ($testFiles.ContainsKey($activeVersion) -ne $true) {
+        Write-LogFailure "Test Version [$activeVersion] does not appear to be deployed to [$container]"
+    }
+} elseif ($files.ContainsKey($activeVersion) -ne $true) {
     Write-LogFailure "Version [$activeVersion] does not appear to be deployed to [$container]"
 } elseif ($files[$activeVersion].Count -ne 1) {          # Since 2.6.5
     Write-LogFailure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
@@ -157,6 +163,11 @@ if (Get-HasErrors -eq $true) {
     exit 2
 }
 
-SetActiveVersion $files[$activeVersion] $storePath $minorOnly
+if ($container -eq "dev" -or $container -eq "nightly") {
+    SetActiveVersion $testFiles[$activeVersion] $storePath $minorOnly
+} else {
+    SetActiveVersion $files[$activeVersion] $storePath $minorOnly
+}
+
 
 Write-Log "======================================================================"

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import { IConfiguration, ICustomProperties, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 import { DistributedTracingModes } from "../Enums";
-import { IExceptionConfig } from "./IExceptionTelemetry";
 import { IRequestContext } from "./IRequestContext";
 import { IStorageBuffer } from "./IStorageBuffer";
 import { IThrottleMgrConfig } from "./IThrottleMgr";
@@ -391,10 +390,6 @@ export interface IConfig {
      */
     userOverrideEndpointUrl?: string;
 
-    /**
-     * [Optional] Set additional configuration for exceptions, such as more scripts to include in the exception telemetry.
-     */
-    expCfg?: IExceptionConfig;
 }
 
 export class ConfigurationManager {

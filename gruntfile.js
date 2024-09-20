@@ -234,7 +234,7 @@ module.exports = function (grunt) {
     // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
     // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
     // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions=["3.3.1"];
+    const perfTestVersions=["3.3.2"];
 
     function buildConfig(modules) {
         var buildCmds = {
@@ -803,6 +803,13 @@ module.exports = function (grunt) {
                         { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configVer}.cfg.json` },
                         { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configMajorVer}.cfg.json` }
                     ]
+                },
+
+                testConfig: {
+                    files: [
+                        { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configVer}.cfg.json` },
+                        { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configMajorVer}.cfg.json` }
+                    ]
                 }
             }
         }));
@@ -955,6 +962,7 @@ module.exports = function (grunt) {
         grunt.registerTask("serve", ["connect:server:keepalive"]);
 
          grunt.registerTask("copy-config", ["copy:config"]);
+         grunt.registerTask("copy-testConfig", ["copy:testConfig"]);
 
          grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
          grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));

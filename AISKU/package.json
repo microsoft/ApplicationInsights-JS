@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web",
-    "version": "3.3.1",
+    "version": "3.3.2",
     "description": "Microsoft Application Insights JavaScript SDK - Web",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -32,7 +32,7 @@
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
-        "@microsoft/applicationinsights-offlinechannel-js": "0.3.1",
+        "@microsoft/applicationinsights-offlinechannel-js": "0.3.2",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "sinon": "^7.3.1",
@@ -53,24 +53,24 @@
         "rollup": "^3.20.0",
         "selenium-server-standalone-jar": "^3.141.5",
         "serve-static": "^1.13.2",
-        "typedoc": "^0.24.8",
+        "typedoc": "^0.26.6",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
         "puppeteer": "19.2.0"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-analytics-js": "3.3.1",
-        "@microsoft/applicationinsights-channel-js": "3.3.1",
-        "@microsoft/applicationinsights-cfgsync-js": "3.3.1",
-        "@microsoft/applicationinsights-common": "3.3.1",
-        "@microsoft/applicationinsights-core-js": "3.3.1",
-        "@microsoft/applicationinsights-dependencies-js": "3.3.1",
-        "@microsoft/applicationinsights-properties-js": "3.3.1",
+        "@microsoft/applicationinsights-analytics-js": "3.3.2",
+        "@microsoft/applicationinsights-channel-js": "3.3.2",
+        "@microsoft/applicationinsights-cfgsync-js": "3.3.2",
+        "@microsoft/applicationinsights-common": "3.3.2",
+        "@microsoft/applicationinsights-core-js": "3.3.2",
+        "@microsoft/applicationinsights-dependencies-js": "3.3.2",
+        "@microsoft/applicationinsights-properties-js": "3.3.2",
         "@nevware21/ts-utils": ">= 0.11.3 < 2.x",
         "@nevware21/ts-async": ">= 0.5.2 < 2.x"
     },
