@@ -14,7 +14,7 @@ import {
     setProcessTelemetryTimings
 } from "@microsoft/1ds-core-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
-import { ITimerHandler, objDeepFreeze } from "@nevware21/ts-utils";
+import { ITimerHandler, isPromiseLike, objDeepFreeze } from "@nevware21/ts-utils";
 import {
     BE_PROFILE, EventBatchNotificationReason, IChannelConfiguration, IPostChannel, IPostTransmissionTelemetryItem, NRT_PROFILE, RT_PROFILE
 } from "./DataModels";
@@ -180,8 +180,15 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                             _maxUnloadEventSendAttempts = _postConfig.maxUnloadEventRetryAttempts;
                             _disableAutoBatchFlushLimit = _postConfig.disableAutoBatchFlushLimit;
 
-                            _setAutoLimits();
+                            if (isPromiseLike(coreConfig.endpointUrl)) {
+                                _self.pause();
+                            } else if (!!_paused) {
+                                // if previous url is promise, resume
+                                _self.resume();
+                            }
 
+                            _setAutoLimits();
+ 
                             // Override iKey if provided in Post config if provided for during initialization
                             _overrideInstrumentationKey = _postConfig.overrideInstrumentationKey;
 
@@ -468,12 +475,12 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             _self.pause = () => {
                 _clearScheduledTimer();
                 _paused = true;
-                _httpManager.pause();
+                _httpManager && _httpManager.pause();
             };
 
             _self.resume = () => {
                 _paused = false;
-                _httpManager.resume();
+                _httpManager && _httpManager.resume();
                 _scheduleTimer();
             };
 
