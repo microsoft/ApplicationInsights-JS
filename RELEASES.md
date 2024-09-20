@@ -2,6 +2,20 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.3.3 (Sep 23rd 2024)
+
+### Changelog
+
+- #2401 [Main][Task]28966399: Separate critical events and non-critical events for Offline Support
+  - **Note**: New Config `splitEvts` is added to Offline Channel Config. By enabling it, offline events will be batched and saved separately based on persistence level
+- #2413 [Main][Task] 29445638: Fix Promise Initialization Sender Config Issue
+  - **Note**: the issue [ApplicationInsights Channel (Sender) endpoint Url Promise is Always Pending](https://github.com/microsoft/ApplicationInsights-JS/issues/2414) is resolved
+- #2416 [Main][Task]29519574: Update AISKU Light to better handle Init Promise
+- #2418 [Main][Task]29465842: Update Promise Initialization Post Channel
+- #2404 [main] fix expCfg to be optional
+- #2407 [main] Custom Trusted Type Policy Support for Snippet Script Injection
+- #2409 [main] Trusted Type Policy Support for nounce tag
+
 ## 3.3.2 (Sep 3rd, 2024)
 
 ### Changelog
