@@ -166,6 +166,20 @@ export interface ISenderConfig {
      * @since 3.2.0
      */
     maxRetryCnt?: number;
+
+    /**
+     * [Optional] Specifies the Cross-Origin Resource Policy (CORP) for the endpoint.
+     * This value is included in the response header as `Cross-Origin-Resource-Policy`,
+     * which helps control how resources can be shared across different origins.
+     *
+     * Possible values:
+     * - `same-site`: Allows access only from the same site.
+     * - `same-origin`: Allows access only from the same origin (protocol, host, and port).
+     * - `cross-origin`: Allows access from any origin.
+     *
+     * @since 3.3.3
+     */
+    crossOriginResourcePolicy?: string;
 }
 
 export interface IBackendResponse {

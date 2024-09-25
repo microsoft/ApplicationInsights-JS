@@ -78,6 +78,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     alwaysUseXhrOverride: cfgDfBoolean(),
     transports: UNDEFINED_VALUE,
     retryCodes: UNDEFINED_VALUE,
+    crossOriginResourcePolicy: UNDEFINED_VALUE,
     maxRetryCnt: {isVal: isNumber, v:10}
 });
 
