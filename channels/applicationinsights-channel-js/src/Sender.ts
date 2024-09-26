@@ -268,12 +268,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if (config.storagePrefix){
                         utlSetStoragePrefix(config.storagePrefix);
                     }
-                    if (config.crossOriginResourcePolicy){
-                        this.addHeader(CrossOriginResourcePolicyHeader, config.crossOriginResourcePolicy);
-                    }
+                   
                     let ctx = createProcessTelemetryContext(null, config, core);
                     // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
+                    if (senderConfig.corsPolicy){
+                        this.addHeader(CrossOriginResourcePolicyHeader, senderConfig.corsPolicy);
+                    }
                     if(isPromiseLike(senderConfig.endpointUrl)) {
                         // if it is promise, means the endpoint url is from core.endpointurl
                         senderConfig.endpointUrl = config.endpointUrl as any;

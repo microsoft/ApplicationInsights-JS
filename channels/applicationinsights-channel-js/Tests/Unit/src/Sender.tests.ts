@@ -2716,14 +2716,12 @@ export class SenderTests extends AITestClass {
                 let id = this._sender.identifier;
                 let coreConfig = {
                     instrumentationKey: 'abc',
-                    crossOriginResourcePolicy: "cross-origin",
                     isBeaconApiDisabled: true,
-                    customHeaders: [
-                        {
-                            header: 'testHeader',
-                            value: 'testValue'
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            corsPolicy: "cross-origin",
                         }
-                    ]
+                    }
                 }
                 core.initialize(coreConfig, [this._sender]);
 
@@ -2754,7 +2752,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.notOk(this._getXhrRequests()[0].requestHeaders.hasOwnProperty('testHeader'));
 
                 // dynamic change
-                core.config.crossOriginResourcePolicy = "same-origin";
+                core.config.extensionConfig[this._sender.identifier].corsPolicy = "same-origin";
                 this.clock.tick(1);
                 try {
                     this._sender.processTelemetry(telemetryItem, null);

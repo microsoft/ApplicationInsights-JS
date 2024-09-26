@@ -179,7 +179,7 @@ export interface ISenderConfig {
      *
      * @since 3.3.3
      */
-    crossOriginResourcePolicy?: string;
+    corsPolicy?: string;
 }
 
 export interface IBackendResponse {
