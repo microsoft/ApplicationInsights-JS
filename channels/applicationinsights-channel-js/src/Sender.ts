@@ -78,7 +78,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     alwaysUseXhrOverride: cfgDfBoolean(),
     transports: UNDEFINED_VALUE,
     retryCodes: UNDEFINED_VALUE,
-    crossOriginResourcePolicy: UNDEFINED_VALUE,
+    corsPolicy: UNDEFINED_VALUE,
     maxRetryCnt: {isVal: isNumber, v:10}
 });
 
@@ -271,9 +271,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
-                    if (senderConfig.corsPolicy){
-                        if (senderConfig.corsPolicy === "same-origin" || senderConfig.corsPolicy === "same-site" || senderConfig.corsPolicy === "cross-origin") {
-                            this.addHeader(CrossOriginResourcePolicyHeader, senderConfig.corsPolicy);
+                    let corsPolicy = senderConfig.corsPolicy;
+                    if (corsPolicy){
+                        if (corsPolicy === "same-origin" || corsPolicy === "same-site" || corsPolicy === "cross-origin") {
+                            this.addHeader(CrossOriginResourcePolicyHeader, corsPolicy);
                         }
                     } else {
                         delete _headers[CrossOriginResourcePolicyHeader];
