@@ -389,6 +389,7 @@ export interface IConfig {
      * This URL takes precedence over the 'config.endpointUrl' and any endpoint in the connection string.
      */
     userOverrideEndpointUrl?: string;
+
 }
 
 export class ConfigurationManager {

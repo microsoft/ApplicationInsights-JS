@@ -82,7 +82,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     maxRetryCnt: {isVal: isNumber, v:10}
 });
 
-const CrossOriginResourcePolicyHeader: string = "AI-Cross-Origin-Resource-Policy";
+const CrossOriginResourcePolicyHeader: string = "X-Cross-Origin-Resource-Policy";
 
 function _chkSampling(value: number) {
     return !isNaN(value) && value > 0 && value <= 100;
@@ -268,12 +268,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if (config.storagePrefix){
                         utlSetStoragePrefix(config.storagePrefix);
                     }
-                   
                     let ctx = createProcessTelemetryContext(null, config, core);
                     // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
                     if (senderConfig.corsPolicy){
-                        this.addHeader(CrossOriginResourcePolicyHeader, senderConfig.corsPolicy);
+                        if (senderConfig.corsPolicy === "same-origin" || senderConfig.corsPolicy === "same-site" || senderConfig.corsPolicy === "cross-origin") {
+                            this.addHeader(CrossOriginResourcePolicyHeader, senderConfig.corsPolicy);
+                        }
+                    } else {
+                        delete _headers[CrossOriginResourcePolicyHeader];
                     }
                     if(isPromiseLike(senderConfig.endpointUrl)) {
                         // if it is promise, means the endpoint url is from core.endpointurl
