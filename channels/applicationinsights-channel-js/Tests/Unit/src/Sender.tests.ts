@@ -2764,6 +2764,18 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(headers.hasOwnProperty('X-Cross-Origin-Resource-Policy'));  
                 QUnit.assert.equal(headers['X-Cross-Origin-Resource-Policy'], 'same-origin');
                 QUnit.assert.notOk(this._getXhrRequests()[1].requestHeaders.hasOwnProperty('testHeader'));
+
+                // dynamic change to null
+                core.config.extensionConfig[this._sender.identifier].corsPolicy = null;
+                this.clock.tick(1);
+                try {
+                    this._sender.processTelemetry(telemetryItem, null);
+                    this._sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+                headers = this._getXhrRequests()[2].requestHeaders;                
+                QUnit.assert.notOk(this._getXhrRequests()[2].requestHeaders.hasOwnProperty('X-Cross-Origin-Resource-Policy'));
             }
         });
 
