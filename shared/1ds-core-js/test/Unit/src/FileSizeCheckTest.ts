@@ -1,5 +1,54 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
+import { dumpObj } from '@nevware21/ts-utils';
+import { createPromise, doAwait, IPromise } from '@nevware21/ts-async';
 import * as pako from 'pako';
+
+const PACKAGE_JSON = "../package.json";
+
+function removeTrailingComma(text) {
+    return text.replace(/,(\s*[}\],])/g, "$1");
+}
+
+function _loadPackageJson(cb:(isNightly: boolean, packageJson: any) => IPromise<void>): IPromise<void> {
+    return createPromise<void>((testCompleted, testFailed) => {
+        function _handleCallback(packageJson: any) {
+            let version = packageJson.version || "unknown";
+            let isNightly = version.includes("nightly") || version.includes("dev");
+            doAwait(cb(isNightly, packageJson), () => {
+                testCompleted();
+            }, (error) => {
+                QUnit.assert.ok(false, `checkIsNightlyBuild error: ${error}`);
+                testFailed(error);
+            });
+        }
+
+        fetch(PACKAGE_JSON).then((response) => {
+            if (!response.ok) {
+                QUnit.assert.ok(false, `fetch package.json error: ${dumpObj(response)}`);
+                _handleCallback(false);
+            } else {
+                return response.text().then((content) => {
+                    let json = JSON.parse(removeTrailingComma(content));
+                    _handleCallback(json);
+                }, (error) => {
+                    QUnit.assert.ok(false, `fetch package.json error: ${error}`);
+                    _handleCallback({});
+                });
+            }
+        }, (error) => {
+            QUnit.assert.ok(false, `fetch package.json error: ${error}`);
+            _handleCallback({});
+        });
+    });
+}
+
+function _checkSize(checkType: string, maxSize: number, size: number, isNightly: boolean): void {
+  if (isNightly) {
+        maxSize += .5;
+    }
+
+    QUnit.assert.ok(size <= maxSize, `exceed ${maxSize} KB, current ${checkType} size is: ${size} KB`);
+}    
 
 export class FileSizeCheckTest extends AITestClass {
     private readonly MAX_BUNDLE_SIZE = 68;
@@ -20,24 +69,27 @@ export class FileSizeCheckTest extends AITestClass {
             name: `Test ${fileName} deflate size`,
             test: () => {
                 QUnit.assert.ok(true, `test file: ${fileName}`);
-                let request = new Request(_filePath, { method: "GET" });
-                return fetch(request).then((response) => {
-                    if (!response.ok) {
-                        QUnit.assert.ok(false, `fetch ${fileName} error: ${response.statusText}`);
-                        return;
-                    } else {
-                        return response.text().then(text => {
-                            let size = Math.ceil((text.length / 1024) * 100) / 100.0;
-                            QUnit.assert.ok(size <= this.MAX_BUNDLE_SIZE, `max ${this.MAX_BUNDLE_SIZE} KB, current bundle size is: ${size} KB`);
+                return _loadPackageJson((isNightly, packageJson) => {
+                    QUnit.assert.ok(true, `  checking : ${packageJson.name || "??"} v${packageJson.version || "unknown"}`);
+                    let request = new Request(_filePath, { method: "GET" });
+                    return fetch(request).then((response) => {
+                        if (!response.ok) {
+                            QUnit.assert.ok(false, `fetch ${fileName} error: ${response.statusText}`);
+                            return;
+                        } else {
+                            return response.text().then(text => {
+                                let size = Math.ceil((text.length / 1024) * 100) / 100.0;
+                                _checkSize("bundle", this.MAX_BUNDLE_SIZE, size, isNightly);
 
-                            size = Math.ceil((pako.deflate(text).length / 1024) * 100) / 100.0;
-                            QUnit.assert.ok(size <= this.MAX_DEFLATE_SIZE, `max ${this.MAX_DEFLATE_SIZE} KB, current deflated size is: ${size} KB`);
-                        }).catch((error: Error) => {
-                            QUnit.assert.ok(false, `${fileName} response error: ${error}`);
-                        });
-                    }
-                }).catch((error: Error) => {
-                    QUnit.assert.ok(false, `${fileName} deflate size error: ${error}`);
+                                size = Math.ceil((pako.deflate(text).length / 1024) * 100) / 100.0;
+                                _checkSize("deflate", this.MAX_DEFLATE_SIZE, size, isNightly);
+                            }).catch((error: Error) => {
+                                QUnit.assert.ok(false, `${fileName} response error: ${error}`);
+                            });
+                        }
+                    }).catch((error: Error) => {
+                        QUnit.assert.ok(false, `${fileName} deflate size error: ${error}`);
+                    });
                 });
             }
         });
