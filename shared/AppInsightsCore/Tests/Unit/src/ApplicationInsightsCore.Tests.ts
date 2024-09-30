@@ -256,6 +256,25 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
 
+        this.testCase({
+            name: "ApplicationInsightsCore: PerfMgr should be created as expected",
+            test: () => {
+                let channelPlugin = new TestChannelPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize(
+                    { 
+                        instrumentationKey: "testIkey", 
+                        channels: [[channelPlugin]],
+                        enablePerfMgr: true
+                    } as IConfiguration,
+                        
+                    []);
+                let perfMgr = appInsightsCore.getPerfMgr();
+                Assert.ok(perfMgr, "perfMgr should be created without customized createPerfMgr function");
+            }
+        });
+
+
 
         this.testCase({
             name: "ApplicationInsightsCore: Initialization initializes setNextPlugin",
