@@ -1299,7 +1299,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     let enablePerfMgr = details.cfg.enablePerfMgr;
                     if (enablePerfMgr) {
                         let createPerfMgr = details.cfg.createPerfMgr;
-                        if (prevCfgPerfMgr !== createPerfMgr) {
+                        // for preCfgPerfMgr = createPerfMgr = null
+                        // initial createPerfMgr function should be _createPerfManager
+                        if ((prevCfgPerfMgr !== createPerfMgr) || !prevCfgPerfMgr) {
                             if (!createPerfMgr) {
                                 createPerfMgr = _createPerfManager;
                             }
