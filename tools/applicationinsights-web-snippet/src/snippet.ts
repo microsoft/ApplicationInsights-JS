@@ -1,7 +1,8 @@
 import { Fields, ISnippetConfig } from "./type";
 import { IConfig, IEnvelope } from "@microsoft/applicationinsights-common";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
-
+// import { IExtendedConfiguration } from "@microsoft/1ds-core-js";
+import { IExtendedConfiguration, oneDsEnvelope } from "./1dsType";
 // To ensure that SnippetConfig resides at the bottom of snippet.min.js,
 // cfg needs to be declared globally at the top without being assigned values.
 // This allows us to later assign cfg into the function at the bottom.
@@ -10,6 +11,8 @@ import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 declare var cfg:ISnippetConfig;
 
 (function (win: Window, doc: Document) {
+    let isOneDS = true;
+    let UInt32Mask = 0x100000000;
     let locn: Location = win.location;
     let helpLink = "https://go.microsoft.com/fwlink/?linkid=2128109";
     let scriptText = "script";
@@ -28,23 +31,53 @@ declare var cfg:ISnippetConfig;
 
     let strPostMethod = "POST";
     let strGetMethod = "GET";
-    let sdkInstanceName = "appInsightsSDK";         // required for Initialization to find the current instance
+    let sdkInstanceName = "";
+    if (isOneDS) {
+        sdkInstanceName = "onedsSDK";
+    } else {
+        sdkInstanceName = "appInsightsSDK";
+    }
     let aiName = cfg.name || "appInsights";  // provide non default instance name through snipConfig name value
+    if (isOneDS) {
+        aiName = cfg.name || "oneDSWeb";  // provide non default instance name through snipConfig name value
+    }
     let policyName = cfg.pn || "aiPolicy";
+    let _sequence = 0;
+    let _epoch = 0;
+
     if (cfg.name || win[sdkInstanceName]) {
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
     }
-    let aiSdk = win[aiName] || (function (aiConfig: IConfiguration & IConfig) {
+    let aiSdk = win[aiName] || (function (aiConfig: IConfiguration & IConfig , aiExtensions?: any) {
         let loadFailed = false;
         let handled = false;
-        let appInsights: (Snippet & {initialize:boolean, cookie?:any, core?:any})= {
-            initialize: true,   // initialize sdk on download
-            queue: [],
-            sv: "8",            // Track the actual snippet version for reporting.
-            version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
-            config: aiConfig
-        };
+        let appInsights: (Snippet & {cookie?:any, core?:any, extensions?:any, initialize?: boolean, isInitialized?: () => boolean;}) = null;
+        if (isOneDS) {
+            appInsights= {
+                queue: [],
+                sv: "4",       // Track the actual snippet version for reporting.
+                config: aiConfig,
+                extensions: aiExtensions
+            };
+        } else {
+            appInsights = {
+                initialize: true,   // initialize sdk on download
+                queue: [],
+                sv: "8",            // Track the actual snippet version for reporting.
+                version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
+                config: aiConfig
+            };
+        }
+
+        if (isOneDS && !aiConfig["webAnalyticsConfiguration"]){
+            aiConfig["webAnalyticsConfiguration"] = {};
+        }
+
+        
+        let OneDSstrSnippetVersion = "1DS-Web-Snippet-" + appInsights.sv;
+    
+
         function isIE() {
             let nav = navigator;
             if (nav) {
@@ -56,31 +89,51 @@ declare var cfg:ISnippetConfig;
        
         function _parseConnectionString() {
             let fields:Fields = {};
-            let connectionString = aiConfig.connectionString;
-            if (typeof connectionString === "string" && connectionString) {
-                let kvPairs = connectionString.split(";");
-                for (let lp = 0; lp < kvPairs.length; lp++) {
-                    let kvParts = kvPairs[lp].split("=");
+            if (isOneDS){
+                let endpointUrl = aiConfig.endpointUrl || "https://browser.events.data.microsoft.com/OneCollector/1.0/";
+                let iKey = aiConfig["instrumentationKey"] || "";
+                let channelConfig = aiConfig["channelConfiguration"];
+                if (channelConfig) {
+                    endpointUrl = channelConfig.overrideEndpointUrl || endpointUrl;
+                    iKey = channelConfig["overrideInstrumentationKey"] || iKey;
+                }
     
-                    if (kvParts.length === 2) { // only save fields with valid formats
-                        fields[kvParts[0][strToLowerCase]()] = kvParts[1];
+                let dt = Date;
+                let now;
+                if (dt.now) {
+                    now = dt.now();
+                } else {
+                    now = new dt().getTime();
+                }
+                fields.OnedsUrl = endpointUrl + "?cors=true&content-type=application/x-json-stream&client-id=NO_AUTH&client-version=" + OneDSstrSnippetVersion + "&apikey=" + iKey + "&w=0&upload-time=" + now.toString();
+                fields.iKey = iKey;
+                return fields;
+            } else {
+                let connectionString = aiConfig.connectionString;
+                if (typeof connectionString === "string" && connectionString) {
+                    let kvPairs = connectionString.split(";");
+                    for (let lp = 0; lp < kvPairs.length; lp++) {
+                        let kvParts = kvPairs[lp].split("=");
+        
+                        if (kvParts.length === 2) { // only save fields with valid formats
+                            fields[kvParts[0][strToLowerCase]()] = kvParts[1];
+                        }
                     }
                 }
+    
+                // apply the default endpoints
+                if (!fields[strIngestionendpoint]) {
+                    // use endpoint suffix where overrides are not provided
+                    let endpointSuffix = fields.endpointsuffix;
+                    // Only fetch the location if a suffix was supplied
+                    let fLocation = endpointSuffix ? fields.location : null;
+                    fields[strIngestionendpoint] = "https://" + (fLocation ? fLocation + "." : strEmpty) + "dc." + (endpointSuffix || "services.visualstudio.com");
+                }
+                return fields;
             }
-
-            // apply the default endpoints
-            if (!fields[strIngestionendpoint]) {
-                // use endpoint suffix where overrides are not provided
-                let endpointSuffix = fields.endpointsuffix;
-                // Only fetch the location if a suffix was supplied
-                let fLocation = endpointSuffix ? fields.location : null;
-                fields[strIngestionendpoint] = "https://" + (fLocation ? fLocation + "." : strEmpty) + "dc." + (endpointSuffix || "services.visualstudio.com");
-            }
-
-            return fields;
         }
 
-        function _sendEvents(evts:IEnvelope[], endpointUrl?:any) {
+        function _sendEvents(evts:(IEnvelope | oneDsEnvelope)[], endpointUrl?:any) {
             if (JSON) {
                 let sender = win.fetch;
                 if (sender && !cfg.useXhr) {
@@ -96,22 +149,33 @@ declare var cfg:ISnippetConfig;
         }
 
         function _reportFailure(targetSrc:string) {
+            console.log("report failure");
             if(cfg.dle === true) {
                 return;
             }
             let conString = _parseConnectionString();
-            let iKey = conString[strConStringIKey] || aiConfig[strInstrumentationKey] || strEmpty;
-            let ingest = conString[strIngestionendpoint];
-            if (ingest && ingest.slice(-1) === "/"){
-                ingest = ingest.slice(0,-1);
+            let iKey = "";
+            let endpointUrl;
+            if (isOneDS){
+                endpointUrl = conString.OnedsUrl;
+                iKey = conString.iKey || strEmpty;
+            } else {
+                iKey = conString[strConStringIKey] || aiConfig[strInstrumentationKey] || strEmpty;
+                let ingest = conString[strIngestionendpoint];
+                if (ingest && ingest.slice(-1) === "/"){
+                    ingest = ingest.slice(0,-1);
+                }
+                endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
+                endpointUrl = aiConfig.userOverrideEndpointUrl ? aiConfig.userOverrideEndpointUrl : endpointUrl;
             }
-            let endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
-            endpointUrl = aiConfig.userOverrideEndpointUrl ? aiConfig.userOverrideEndpointUrl : endpointUrl;
+           
 
             let message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
-            let evts:IEnvelope[] = [];
+            let evts: (IEnvelope | oneDsEnvelope)[] = [];
             evts.push(_createException(iKey, message, targetSrc, endpointUrl));
-            evts.push(_createInternal(iKey, message, targetSrc, endpointUrl));
+            if (!isOneDS){
+                evts.push(_createInternal(iKey, message, targetSrc, endpointUrl));
+            }
 
             _sendEvents(evts, endpointUrl);
         }
@@ -138,35 +202,116 @@ declare var cfg:ISnippetConfig;
                 + "Z";
         }
 
-        function _createEnvelope(iKey:string, theType:string) {
-            let tags = {};
-            let type = "Browser";
-            tags[strAiDevice + "id"] = type[strToLowerCase]();
-            tags[strAiDevice + "type"] = type;
-            tags[strAiOperationName] = locn && locn.pathname || "_unknown_";
-            tags[strAiSdkVersion] = "javascript:snippet_" + (appInsights.sv || appInsights.version);
-
-            let envelope:IEnvelope = {
-                time: _getTime(),
-                iKey: iKey,
-                name: "Microsoft.ApplicationInsights." + iKey.replace(/-/g, strEmpty) + "." + theType,
-                sampleRate: 100,
-                tags: tags,
-                data: {
-                    baseData: {
-                        ver: 2
-                    }
-                },
-                ver: undefined,
-                seq: "1",
-                aiDataContract: undefined
+        function _addTimeZone(envelope: any): void {
+            // Add time zone
+            const timeZone: number = new Date().getTimezoneOffset();
+            let minutes: number = timeZone % 60;
+            let hours: number = (timeZone - minutes) / 60;
+            let timeZonePrefix: string = "+";
+            if (hours > 0) {
+                timeZonePrefix = "-";
+            }
+            hours = Math.abs(hours);
+            minutes = Math.abs(minutes);
+        
+            envelope.ext = envelope.ext || {};
+            envelope.ext.loc = {  // Add time zone
+                tz: timeZonePrefix + (hours < 10 ? "0" + hours : hours.toString()) + ":" + (minutes < 10 ? "0" + minutes : minutes.toString())
             };
+        }
 
-            return envelope;
+        function _getTenantId(apiKey: string): string {
+            let result: string = "";
+        
+            if (apiKey) {
+                const indexTenantId: number = apiKey.indexOf("-");
+                if (indexTenantId > -1) {
+                    result = apiKey.substring(0, indexTenantId);
+                }
+            }
+            return result;
+        }
+        
+        function _addUser(envelope: any): void {
+            const strUndefined: string = "undefined";
+            // Add user language
+            if (typeof navigator !== strUndefined) {
+                const nav: Navigator & { userLanguage?: string } = navigator;
+                envelope.ext = envelope.ext || {};
+                envelope.ext.user = {
+                    locale: nav.userLanguage || nav.language
+                };
+            }
+        }
+
+        function _createEnvelope(iKey:string, theType:string) {
+            if (_epoch === 0) {
+                _epoch = Math.floor((UInt32Mask * Math.random()) | 0) >>> 0;
+            }
+            if (isOneDS){
+                let envelope: oneDsEnvelope = {
+                    data: {
+                        baseData: {
+                            ver: 2
+                        }
+                    },
+                    ext: {
+                        app: { sesId: "0000" },
+                        intweb: {},
+                        sdk: {
+                            ver: "javascript:" + OneDSstrSnippetVersion,
+                            epoch: "" + _epoch,
+                            seq: _sequence++
+                        },
+                        utc: {
+                            popSample: 100
+                        },
+                        web: {
+                            userConsent: false
+                        }
+                    },
+                    time: _getTime(),
+                    iKey: "o:" + _getTenantId(iKey),
+                    name: theType,
+                    ver: "4.0"
+                };
+    
+                _addTimeZone(envelope);
+                _addUser(envelope);
+                console.log("create envelope")
+    
+                return envelope;
+            } else {
+                let tags = {};
+                let type = "Browser";
+                tags[strAiDevice + "id"] = type[strToLowerCase]();
+                tags[strAiDevice + "type"] = type;
+                tags[strAiOperationName] = locn && locn.pathname || "_unknown_";
+                tags[strAiSdkVersion] = "javascript:snippet_" + (appInsights.sv || appInsights.version);
+    
+                let envelope:IEnvelope = {
+                    time: _getTime(),
+                    iKey: iKey,
+                    name: "Microsoft.ApplicationInsights." + iKey.replace(/-/g, strEmpty) + "." + theType,
+                    sampleRate: 100,
+                    tags: tags,
+                    data: {
+                        baseData: {
+                            ver: 2
+                        }
+                    },
+                    ver: undefined,
+                    seq: "1",
+                    aiDataContract: undefined
+                };
+    
+                return envelope;
+            }
+            
         }
 
         function _createInternal(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
-            let envelope : IEnvelope = _createEnvelope(iKey, "Message");
+            let envelope : IEnvelope| oneDsEnvelope = _createEnvelope(iKey, "Message");
             let data = envelope.data;
             data.baseType = "MessageData";
             let baseData = data.baseData;
@@ -180,7 +325,12 @@ declare var cfg:ISnippetConfig;
         }
 
         function _createException(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
-            let envelope : IEnvelope = _createEnvelope(iKey, "Exception");
+            let envelope : IEnvelope | oneDsEnvelope;
+            if (isOneDS){
+                envelope = _createEnvelope(iKey, "Ms.Web.ClientError");
+            } else {
+                envelope = _createEnvelope(iKey, "Exception");
+            }
             let data = envelope.data;
             data.baseType = "ExceptionData";
             data.baseData.exceptions = [{
@@ -254,7 +404,7 @@ declare var cfg:ISnippetConfig;
             fallback(); // Fallback to original behavior
         }
         
-        
+
 
         function setScript(targetSrc: string, integrity: string | null) {
             if (isIE() && targetSrc.indexOf("ai.3") !== -1) {
@@ -297,9 +447,18 @@ declare var cfg:ISnippetConfig;
                     // IE10, Opera calls loaded before the script is processed.
                     // so delaying to give the script a chance to be processed
                     setTimeout(function() {
-                        if (isAbort || !appInsights.core) {
-                            _handleError();
+                        if (isAbort){
+                            if (isOneDS){
+                                if (typeof appInsights.isInitialized !== "function" || !appInsights.isInitialized()){
+                                    _handleError();
+                                }
+                            } else {
+                                if (!appInsights.core){
+                                    _handleError();
+                                }
+                            }
                         }
+                       
                     }, 500);
                 }
                 loadFailed = false;
@@ -412,22 +571,43 @@ declare var cfg:ISnippetConfig;
         let track = "track";
         let trackPage = "TrackPage";
         let trackEvent = "TrackEvent";
-        _createMethods([track + "Event",
-            track + "PageView",
-            track + "Exception",
-            track + "Trace",
-            track + "DependencyData",
-            track + "Metric",
-            track + "PageViewPerformance",
-            "start" + trackPage,
-            "stop" + trackPage,
-            "start" + trackEvent,
-            "stop" + trackEvent,
-            "addTelemetryInitializer",
-            "setAuthenticatedUserContext",
-            "clearAuthenticatedUserContext",
-            "flush"]);
-    
+
+        if (isOneDS){
+            let capturePage = "capturePage";
+            _createMethods([
+                track,
+                trackPage + "View",
+                track + "Exception",
+                track + "Event",
+                trackPage + "Action",
+                track + "ContentUpdate",
+                trackPage + "Unload",
+                trackPage + "ViewPerformance",
+                "addTelemetryInitializer",
+                capturePage + "View",
+                capturePage + "ViewPerformance",
+                capturePage + "Action",
+                capturePage + "Unload",
+                "captureContentUpdate"
+            ]);
+        } else {
+            _createMethods([track + "Event",
+                track + "PageView",
+                track + "Exception",
+                track + "Trace",
+                track + "DependencyData",
+                track + "Metric",
+                track + "PageViewPerformance",
+                "start" + trackPage,
+                "stop" + trackPage,
+                "start" + trackEvent,
+                "stop" + trackEvent,
+                "addTelemetryInitializer",
+                "setAuthenticatedUserContext",
+                "clearAuthenticatedUserContext",
+                "flush"]);
+        }
+
         // expose SeverityLevel enum
         appInsights["SeverityLevel"] = {
             Verbose : 0,
@@ -436,12 +616,23 @@ declare var cfg:ISnippetConfig;
             Error : 3,
             Critical : 4
         };
-    
         // Collect global errors
+        let globalErrorCollect = false;
+        if (isOneDS){
+            let autoCapture = aiConfig["webAnalyticsConfiguration"]["autoCapture"];
+            if (!autoCapture || autoCapture.jsError) {
+                globalErrorCollect = true;
+            }
+        } else {
         // Note: ApplicationInsightsAnalytics is the extension string identifier for
         //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
-        let analyticsCfg = ((aiConfig.extensionConfig || {}).ApplicationInsightsAnalytics ||{});
-        if (!(aiConfig[strDisableExceptionTracking] === true || analyticsCfg[strDisableExceptionTracking] === true)) {
+            let analyticsCfg = ((aiConfig.extensionConfig || {}).ApplicationInsightsAnalytics ||{});
+            if (!(aiConfig[strDisableExceptionTracking] === true || analyticsCfg[strDisableExceptionTracking] === true)) {
+                globalErrorCollect = true;
+            }
+        }
+
+        if (globalErrorCollect){
             let method = "onerror";
             _createMethods(["_" + method]);
             let originalOnError = win[method];
@@ -457,12 +648,12 @@ declare var cfg:ISnippetConfig;
                         evt: win.event
                     });
                 }
-    
+
                 return handled;
             };
             aiConfig["autoExceptionInstrumented"] = true;
         }
-    
+
         return appInsights;
     })(cfg.cfg);
 
@@ -478,7 +669,9 @@ declare var cfg:ISnippetConfig;
     // if somebody calls the snippet twice, don't report page view again
     if (aiSdk.queue && aiSdk.queue.length === 0) {
         aiSdk.queue.push(_onInit);
-        aiSdk.trackPageView({});
+        if (!isOneDS){
+            aiSdk.trackPageView({});
+        }
     } else {
         // Already loaded so just call the onInit
         _onInit();
