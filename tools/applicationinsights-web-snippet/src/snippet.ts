@@ -1,7 +1,6 @@
 import { Fields, ISnippetConfig } from "./type";
 import { IConfig, IEnvelope } from "@microsoft/applicationinsights-common";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
-// import { IExtendedConfiguration } from "@microsoft/1ds-core-js";
 import { IExtendedConfiguration, oneDsEnvelope } from "./1dsType";
 // To ensure that SnippetConfig resides at the bottom of snippet.min.js,
 // cfg needs to be declared globally at the top without being assigned values.
@@ -31,16 +30,8 @@ declare var cfg:ISnippetConfig;
 
     let strPostMethod = "POST";
     let strGetMethod = "GET";
-    let sdkInstanceName = "";
-    if (isOneDS) {
-        sdkInstanceName = "onedsSDK";
-    } else {
-        sdkInstanceName = "appInsightsSDK";
-    }
-    let aiName = cfg.name || "appInsights";  // provide non default instance name through snipConfig name value
-    if (isOneDS) {
-        aiName = cfg.name || "oneDSWeb";  // provide non default instance name through snipConfig name value
-    }
+    let sdkInstanceName = "onedsSDK";
+    let aiName = cfg.name || "oneDSWeb";  // provide non default instance name through snipConfig name value
     let policyName = cfg.pn || "aiPolicy";
     let _sequence = 0;
     let _epoch = 0;
@@ -50,6 +41,12 @@ declare var cfg:ISnippetConfig;
         win[sdkInstanceName] = aiName;
     }
     let aiSdk = win[aiName] || (function (aiConfig: IConfiguration & IConfig , aiExtensions?: any) {
+        let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
+        if (targetSrc.match(/ai./)){
+            isOneDS = false;
+            sdkInstanceName = "appInsightsSDK";
+            aiName = cfg.name || "appInsights";
+        }
         let loadFailed = false;
         let handled = false;
         let appInsights: (Snippet & {cookie?:any, core?:any, extensions?:any, initialize?: boolean, isInitialized?: () => boolean;}) = null;
@@ -73,8 +70,6 @@ declare var cfg:ISnippetConfig;
         if (isOneDS && !aiConfig["webAnalyticsConfiguration"]){
             aiConfig["webAnalyticsConfiguration"] = {};
         }
-
-        
         let OneDSstrSnippetVersion = "1DS-Web-Snippet-" + appInsights.sv;
     
 
@@ -357,7 +352,6 @@ declare var cfg:ISnippetConfig;
             "az416426.vo.msecnd.net" // this domain is supported but not recommended
         ];
 
-        let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
         const fallback = () => setScript(targetSrc, null);
         if (cfg.sri) {
             const match = targetSrc.match(/^((http[s]?:\/\/.*\/)\w+(\.\d+){1,5})\.(([\w]+\.){0,2}js)$/);
