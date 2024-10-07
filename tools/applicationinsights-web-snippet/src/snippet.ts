@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-condition */
 import { Fields, ISnippetConfig } from "./type";
 import { IConfig, IEnvelope } from "@microsoft/applicationinsights-common";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
@@ -10,7 +11,7 @@ import { IExtendedConfiguration, oneDsEnvelope } from "./1dsType";
 declare var cfg:ISnippetConfig;
 
 (function (win: Window, doc: Document) {
-    let isOneDS = true;
+    let isOneDS = false;  // place holder, will be removed during runtime
     let UInt32Mask = 0x100000000;
     let locn: Location = win.location;
     let helpLink = "https://go.microsoft.com/fwlink/?linkid=2128109";
@@ -30,11 +31,11 @@ declare var cfg:ISnippetConfig;
 
     let strPostMethod = "POST";
     let strGetMethod = "GET";
-    let sdkInstanceName = "onedsSDK";
-    let aiName = cfg.name || "oneDSWeb";  // provide non default instance name through snipConfig name value
     let policyName = cfg.pn || "aiPolicy";
     let _sequence = 0;
     let _epoch = 0;
+    let sdkInstanceName:string;
+    let aiName:string;
 
     if (cfg.name || win[sdkInstanceName]) {
         // Only set if supplied or another name is defined to avoid polluting the global namespace
@@ -42,37 +43,30 @@ declare var cfg:ISnippetConfig;
     }
     let aiSdk = win[aiName] || (function (aiConfig: IConfiguration & IConfig , aiExtensions?: any) {
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
-        if (targetSrc.match(/ai./)){
-            isOneDS = false;
+        if (isOneDS){
+            sdkInstanceName = "onedsSDK";
+            aiName = cfg.name || "oneDSWeb";  // provide non default instance name through snipConfig name value
+        } else {
             sdkInstanceName = "appInsightsSDK";
             aiName = cfg.name || "appInsights";
         }
+      
         let loadFailed = false;
         let handled = false;
         let appInsights: (Snippet & {cookie?:any, core?:any, extensions?:any, initialize?: boolean, isInitialized?: () => boolean;}) = null;
-        if (isOneDS) {
-            appInsights= {
-                queue: [],
-                sv: "4",       // Track the actual snippet version for reporting.
-                config: aiConfig,
-                extensions: aiExtensions
-            };
-        } else {
-            appInsights = {
-                initialize: true,   // initialize sdk on download
-                queue: [],
-                sv: "8",            // Track the actual snippet version for reporting.
-                version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
-                config: aiConfig
-            };
-        }
+        appInsights= {
+            queue: [],
+            sv: "8",       // Track the actual snippet version for reporting.
+            config: aiConfig,
+            extensions: aiExtensions,
+            initialize: true   // initialize sdk on download
+        };
 
         if (isOneDS && !aiConfig["webAnalyticsConfiguration"]){
             aiConfig["webAnalyticsConfiguration"] = {};
         }
         let OneDSstrSnippetVersion = "1DS-Web-Snippet-" + appInsights.sv;
     
-
         function isIE() {
             let nav = navigator;
             if (nav) {
@@ -84,48 +78,26 @@ declare var cfg:ISnippetConfig;
        
         function _parseConnectionString() {
             let fields:Fields = {};
-            if (isOneDS){
-                let endpointUrl = aiConfig.endpointUrl || "https://browser.events.data.microsoft.com/OneCollector/1.0/";
-                let iKey = aiConfig["instrumentationKey"] || "";
-                let channelConfig = aiConfig["channelConfiguration"];
-                if (channelConfig) {
-                    endpointUrl = channelConfig.overrideEndpointUrl || endpointUrl;
-                    iKey = channelConfig["overrideInstrumentationKey"] || iKey;
-                }
-    
-                let dt = Date;
-                let now;
-                if (dt.now) {
-                    now = dt.now();
-                } else {
-                    now = new dt().getTime();
-                }
-                fields.OnedsUrl = endpointUrl + "?cors=true&content-type=application/x-json-stream&client-id=NO_AUTH&client-version=" + OneDSstrSnippetVersion + "&apikey=" + iKey + "&w=0&upload-time=" + now.toString();
-                fields.iKey = iKey;
-                return fields;
-            } else {
-                let connectionString = aiConfig.connectionString;
-                if (typeof connectionString === "string" && connectionString) {
-                    let kvPairs = connectionString.split(";");
-                    for (let lp = 0; lp < kvPairs.length; lp++) {
-                        let kvParts = kvPairs[lp].split("=");
-        
-                        if (kvParts.length === 2) { // only save fields with valid formats
-                            fields[kvParts[0][strToLowerCase]()] = kvParts[1];
-                        }
+            let connectionString = aiConfig.connectionString;
+            if (typeof connectionString === "string" && connectionString) {
+                let kvPairs = connectionString.split(";");
+                for (let lp = 0; lp < kvPairs.length; lp++) {
+                    let kvParts = kvPairs[lp].split("=");
+                    if (kvParts.length === 2) { // only save fields with valid formats
+                        fields[kvParts[0][strToLowerCase]()] = kvParts[1];
                     }
                 }
-    
-                // apply the default endpoints
-                if (!fields[strIngestionendpoint]) {
-                    // use endpoint suffix where overrides are not provided
-                    let endpointSuffix = fields.endpointsuffix;
-                    // Only fetch the location if a suffix was supplied
-                    let fLocation = endpointSuffix ? fields.location : null;
-                    fields[strIngestionendpoint] = "https://" + (fLocation ? fLocation + "." : strEmpty) + "dc." + (endpointSuffix || "services.visualstudio.com");
-                }
-                return fields;
             }
+
+            // apply the default endpoints
+            if (!fields[strIngestionendpoint]) {
+                // use endpoint suffix where overrides are not provided
+                let endpointSuffix = fields.endpointsuffix;
+                // Only fetch the location if a suffix was supplied
+                let fLocation = endpointSuffix ? fields.location : null;
+                fields[strIngestionendpoint] = "https://" + (fLocation ? fLocation + "." : strEmpty) + "dc." + (endpointSuffix || "services.visualstudio.com");
+            }
+            return fields;
         }
 
         function _sendEvents(evts:(IEnvelope | oneDsEnvelope)[], endpointUrl?:any) {
@@ -144,17 +116,29 @@ declare var cfg:ISnippetConfig;
         }
 
         function _reportFailure(targetSrc:string) {
-            console.log("report failure");
             if(cfg.dle === true) {
                 return;
             }
-            let conString = _parseConnectionString();
             let iKey = "";
             let endpointUrl;
             if (isOneDS){
-                endpointUrl = conString.OnedsUrl;
-                iKey = conString.iKey || strEmpty;
+                let endpointUrl = aiConfig.endpointUrl || "https://browser.events.data.microsoft.com/OneCollector/1.0/";
+                let iKey = aiConfig["instrumentationKey"] || "";
+                let channelConfig = aiConfig["channelConfiguration"];
+                if (channelConfig) {
+                    endpointUrl = channelConfig.overrideEndpointUrl || endpointUrl;
+                    iKey = channelConfig["overrideInstrumentationKey"] || iKey;
+                }
+                let dt = Date;
+                let now;
+                if (dt.now) {
+                    now = dt.now();
+                } else {
+                    now = new dt().getTime();
+                }
+                endpointUrl = endpointUrl + "?cors=true&content-type=application/x-json-stream&client-id=NO_AUTH&client-version=" + OneDSstrSnippetVersion + "&apikey=" + iKey + "&w=0&upload-time=" + now.toString();
             } else {
+                let conString = _parseConnectionString();
                 iKey = conString[strConStringIKey] || aiConfig[strInstrumentationKey] || strEmpty;
                 let ingest = conString[strIngestionendpoint];
                 if (ingest && ingest.slice(-1) === "/"){
@@ -273,8 +257,6 @@ declare var cfg:ISnippetConfig;
     
                 _addTimeZone(envelope);
                 _addUser(envelope);
-                console.log("create envelope")
-    
                 return envelope;
             } else {
                 let tags = {};
@@ -565,19 +547,22 @@ declare var cfg:ISnippetConfig;
         let track = "track";
         let trackPage = "TrackPage";
         let trackEvent = "TrackEvent";
+        let capturePage = "capturePage";
+
+        _createMethods([
+            track + "Event",
+            track + "Exception",
+            trackPage + "View",
+            trackPage + "ViewPerformance",
+            "addTelemetryInitializer"
+        ]);
 
         if (isOneDS){
-            let capturePage = "capturePage";
             _createMethods([
                 track,
-                trackPage + "View",
-                track + "Exception",
-                track + "Event",
                 trackPage + "Action",
                 track + "ContentUpdate",
                 trackPage + "Unload",
-                trackPage + "ViewPerformance",
-                "addTelemetryInitializer",
                 capturePage + "View",
                 capturePage + "ViewPerformance",
                 capturePage + "Action",
@@ -585,18 +570,14 @@ declare var cfg:ISnippetConfig;
                 "captureContentUpdate"
             ]);
         } else {
-            _createMethods([track + "Event",
-                track + "PageView",
-                track + "Exception",
+            _createMethods([
                 track + "Trace",
                 track + "DependencyData",
                 track + "Metric",
-                track + "PageViewPerformance",
                 "start" + trackPage,
                 "stop" + trackPage,
                 "start" + trackEvent,
                 "stop" + trackEvent,
-                "addTelemetryInitializer",
                 "setAuthenticatedUserContext",
                 "clearAuthenticatedUserContext",
                 "flush"]);
