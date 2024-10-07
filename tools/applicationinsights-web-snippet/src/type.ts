@@ -57,8 +57,6 @@ export interface Fields {
     strIngestionendpoint?: any;
     endpointsuffix?: any;
     location?: any;
-    OnedsUrl?: any;
-    iKey?: any;
 
     // Add other properties as needed
 }
