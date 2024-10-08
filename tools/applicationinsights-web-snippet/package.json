@@ -12,7 +12,7 @@
     },
     "scripts": {
         "clean": "git clean -xdf",
-        "build": "npm run createIndividualSnippet && run build:esm && npm run snippet-generate && npm run build:browser && npm run dtsgen",
+        "build": "npm run createIndividualSnippet && npm run build:esm && npm run snippet-generate && npm run build:browser && npm run dtsgen",
         "createIndividualSnippet": "node createAiSnippet.js",
         "build:esm": "grunt websnippet ",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Web Snippet\"",
