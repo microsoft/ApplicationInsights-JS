@@ -119,11 +119,11 @@ declare var cfg:ISnippetConfig;
             if(cfg.dle === true) {
                 return;
             }
-            let iKey = "";
+            let iKey;
             let endpointUrl;
             if (isOneDS){
-                let endpointUrl = aiConfig.endpointUrl || "https://browser.events.data.microsoft.com/OneCollector/1.0/";
-                let iKey = aiConfig["instrumentationKey"] || "";
+                endpointUrl = aiConfig.endpointUrl || "https://browser.events.data.microsoft.com/OneCollector/1.0/";
+                iKey = aiConfig["instrumentationKey"] || "";
                 let channelConfig = aiConfig["channelConfiguration"];
                 if (channelConfig) {
                     endpointUrl = channelConfig.overrideEndpointUrl || endpointUrl;
