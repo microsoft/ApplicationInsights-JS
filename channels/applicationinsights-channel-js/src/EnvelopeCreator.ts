@@ -222,7 +222,7 @@ export function EventEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: I
         _convertPropsUndefinedToCustomDefinedValue(customProperties, customUndefinedValue);
     }
     const eventName = telemetryItem[strBaseData].name;
-    const eventData = new Event(logger, eventName, customProperties, customMeasurements);
+    const eventData = new Event(logger, eventName, customProperties, customMeasurements, telemetryItem.metadata["maxLength"]);
     const data = new Data<Event>(Event.dataType, eventData);
     return _createEnvelope<Event>(logger, Event.envelopeType, telemetryItem, data);
 }
