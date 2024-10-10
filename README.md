@@ -54,7 +54,7 @@
 
 ## Before Getting Started
 
-This SDK is not for non-browser environments, for example, the Node.js applications.
+This SDK is intended for browser environments and is not suitable for other environments, like Node.js applications.
 
 For instrumenting a Node.js app, the recommended SDK is the [ApplicationInsights-node.js repository](https://github.com/microsoft/ApplicationInsights-node.js).
 
