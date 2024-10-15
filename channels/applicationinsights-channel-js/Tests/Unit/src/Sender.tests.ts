@@ -83,6 +83,9 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal('https://example.com', extConfig.endpointUrl, 'Channel config can be set from root config (endpointUrl)');
                 QUnit.assert.notEqual(654, extConfig.maxBatchSizeInBytes, 'Channel config does not equal root config option if extensionConfig field is also set');
                 QUnit.assert.equal(456, extConfig.maxBatchSizeInBytes, 'Channel config prioritizes extensionConfig over root config');
+
+                let offlinelistener = this._sender.getOfflineListener();
+                QUnit.assert.ok(offlinelistener, "offline listener exists")
             }
         });
 
