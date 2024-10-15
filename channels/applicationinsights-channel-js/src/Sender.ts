@@ -492,6 +492,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             _self.isCompletelyIdle = () => {
                 return !_paused && _syncFetchPayload === 0 && _self._buffer.count() === 0;
             }
+
+            _self.getOfflineListener = () => {
+                return _offlineListener;
+            }
         
             /**
              * xhr state changes
@@ -1452,6 +1456,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @returns internal Offline Serializer object
      */
     public getOfflineSupport(): IInternalOfflineSupport {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Get Offline listener
+     * @returns offlineListener
+     * @since 3.3.4
+     */
+    public getOfflineListener(): IOfflineListener {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }
