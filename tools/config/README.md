@@ -24,7 +24,7 @@ https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json
 
 https://js.monitor.azure.com/nightly/ai_test.config.1-nightly3.cfg.json
 
-#### **Note**
+### **Note**
 
 For `config.json` changes:
 
