@@ -167,6 +167,34 @@ export class SenderTests extends AITestClass {
             }
         });
 
+        this.testCase({
+            name: "Channel Config: Endpoint Url can be set from root dynamically",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let id = this._sender.identifier;
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [id]: {
+                        
+                        }
+                    },
+                    endpointUrl: "test"
+                }
+                core.initialize(coreConfig, [this._sender]);
+
+                let senderConfig = this._sender._senderConfig;
+                QUnit.assert.equal(senderConfig.endpointUrl, "test", "Channel default endpoint url config is set from root");
+              
+                //check dynamic config
+                core.config.endpointUrl = "test1";
+                this.clock.tick(1);
+                let curSenderConfig = this._sender._senderConfig;
+                QUnit.assert.equal(curSenderConfig.endpointUrl,"test1", "Channel endpoint config is dynamically changed");
+            }
+        });
+
         this.testCaseAsync({
             name: "Channel Init: init with promise",
             stepDelay: 100,
