@@ -28,4 +28,4 @@ https://js.monitor.azure.com/nightly/ai_test.config.1-nightly3.cfg.json
 
 For `config.json` changes:
 
-whenever cfg changes, incoming new undefined fields will not replace previous values, so make sure that new configs have each field set as expected.
+whenever cfg changes, incoming new undefined fields will NOT replace previous values, so make sure that new configs have each field set as expected.
