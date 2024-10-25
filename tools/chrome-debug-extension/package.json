@@ -71,6 +71,7 @@
         "rollup-plugin-copy": "^3.4.0",
         "rollup-plugin-peer-deps-external": "^2.2.4",
         "rollup": "^3.20.0",
+        "rollup-plugin-sourcemaps": "^0.6.3",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "typescript": "^4.9.3",
