@@ -43,9 +43,10 @@
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
+        "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
-        "typedoc": "^0.26.6",
-        "rollup": "^3.20.0"
+        "rollup-plugin-sourcemaps": "^0.6.3",
+        "typedoc": "^0.26.6"
     },
     "peerDependencies": {
         "tslib": ">= 1.0.0"

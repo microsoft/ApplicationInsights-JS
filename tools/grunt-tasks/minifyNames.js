@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const globby = require("globby");
+const child_process = require("child_process");
 
 var MAX_IMPORT_LENGTH = 140;
 var IMPORT_INDENT_PREFIX = "    ";
@@ -1172,23 +1173,34 @@ function minifyNamesFn(grunt) {
         theOptions.autoConstEnums = [];
         var autoMinifyFilename = getAutoMinifyPath(theOptions);
         if (autoMinifyFilename) {
-            var autoMinify = grunt.file.readJSON(autoMinifyFilename);
-            if (autoMinify) {
-                autoMinify.pkgs = autoMinify.pkgs || {};
-                var packageDetails = autoMinify.pkgs[packageName] = autoMinify.pkgs[packageName] || {};
+            let retry = 0;
+            while(retry < 3) {
+                try {
+                    var autoMinifyTxt = fs.readFileSync(autoMinifyFilename);
+                    if (autoMinifyTxt) {
+                        var autoMinify = JSON.parse(autoMinifyTxt);
+                        autoMinify.pkgs = autoMinify.pkgs || {};
+                        var packageDetails = autoMinify.pkgs[packageName] = autoMinify.pkgs[packageName] || {};
+            
+                        mergePersistentValues(theOptions, packageDetails.constEnums);
+                        packageDetails.constEnums = [];
     
-                mergePersistentValues(theOptions, packageDetails.constEnums);
-                packageDetails.constEnums = [];
-
-                if (pkg.dependencies) {
-                    var names = Object.keys(pkg.dependencies) || [];
-                    names.forEach((name) => {
-                        if (name.startsWith("@microsoft")) {
-                            if (autoMinify.pkgs[name]) {
-                                mergePersistentValues(theOptions, autoMinify.pkgs[name].constEnums);
-                            }
+                        if (pkg.dependencies) {
+                            var names = Object.keys(pkg.dependencies) || [];
+                            names.forEach((name) => {
+                                if (name.startsWith("@microsoft")) {
+                                    if (autoMinify.pkgs[name]) {
+                                        mergePersistentValues(theOptions, autoMinify.pkgs[name].constEnums);
+                                    }
+                                }
+                            });
                         }
-                    });
+                    }
+                    break;
+                } catch (e) {
+                    console.log(" ** Sleeping -- Error: " + e);
+                    retry ++;
+                    child_process.execSync("sleep 1");
                 }
             }
         }
