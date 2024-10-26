@@ -3,6 +3,7 @@ import { Fields, ISnippetConfig } from "./type";
 import { IConfig, IEnvelope } from "@microsoft/applicationinsights-common";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 import { oneDsEnvelope } from "./1dsType";
+import { _createAiEnvelope, _createOneDsEnvelope, aiMethod, oneDsMethods } from "./support";
 // To ensure that SnippetConfig resides at the bottom of snippet.min.js,
 // cfg needs to be declared globally at the top without being assigned values.
 // This allows us to later assign cfg into the function at the bottom.
@@ -19,9 +20,6 @@ declare var cfg:ISnippetConfig;
     let strInstrumentationKey = "instrumentationKey";
     let strIngestionendpoint = "ingestionendpoint";
     let strDisableExceptionTracking = "disableExceptionTracking";
-    let strAiDevice = "ai.device.";
-    let strAiOperationName = "ai.operation.name";
-    let strAiSdkVersion = "ai.internal.sdkVersion";
     let strToLowerCase = "toLowerCase";
     let strConStringIKey = strInstrumentationKey[strToLowerCase]();
     let strEmpty = "";
@@ -65,7 +63,6 @@ declare var cfg:ISnippetConfig;
         if (isOneDS && !aiConfig["webAnalyticsConfiguration"]){
             aiConfig["webAnalyticsConfiguration"] = {};
         }
-        let OneDSstrSnippetVersion = "1DS-Web-Snippet-" + appInsights.sv;
     
         function isIE() {
             let nav = navigator;
@@ -136,7 +133,7 @@ declare var cfg:ISnippetConfig;
                 } else {
                     now = new dt().getTime();
                 }
-                endpointUrl = endpointUrl + "?cors=true&content-type=application/x-json-stream&client-id=NO_AUTH&client-version=" + OneDSstrSnippetVersion + "&apikey=" + iKey + "&w=0&upload-time=" + now.toString();
+                endpointUrl = endpointUrl + "?cors=true&content-type=application/x-json-stream&client-id=NO_AUTH&client-version=" + appInsights.sv + "&apikey=" + iKey + "&w=0&upload-time=" + now.toString();
             } else {
                 let conString = _parseConnectionString();
                 iKey = conString[strConStringIKey] || aiConfig[strInstrumentationKey] || strEmpty;
@@ -159,132 +156,14 @@ declare var cfg:ISnippetConfig;
             _sendEvents(evts, endpointUrl);
         }
 
-        // Gets the time as an ISO date format, using a function as IE7/8 doesn't support toISOString
-        function _getTime() {
-            let date = new Date();
-            function pad(num: Number) {
-                let r = strEmpty + num;
-                if (r.length === 1) {
-                    r = "0" + r;
-                }
-
-                return r;
-            }
-
-            return date.getUTCFullYear()
-                + "-" + pad(date.getUTCMonth() + 1)
-                + "-" + pad(date.getUTCDate())
-                + "T" + pad(date.getUTCHours())
-                + ":" + pad(date.getUTCMinutes())
-                + ":" + pad(date.getUTCSeconds())
-                + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5)
-                + "Z";
-        }
-
-        function _addTimeZone(envelope: any): void {
-            // Add time zone
-            const timeZone: number = new Date().getTimezoneOffset();
-            let minutes: number = timeZone % 60;
-            let hours: number = (timeZone - minutes) / 60;
-            let timeZonePrefix: string = "+";
-            if (hours > 0) {
-                timeZonePrefix = "-";
-            }
-            hours = Math.abs(hours);
-            minutes = Math.abs(minutes);
-        
-            envelope.ext = envelope.ext || {};
-            envelope.ext.loc = {  // Add time zone
-                tz: timeZonePrefix + (hours < 10 ? "0" + hours : hours.toString()) + ":" + (minutes < 10 ? "0" + minutes : minutes.toString())
-            };
-        }
-
-        function _getTenantId(apiKey: string): string {
-            let result: string = "";
-        
-            if (apiKey) {
-                const indexTenantId: number = apiKey.indexOf("-");
-                if (indexTenantId > -1) {
-                    result = apiKey.substring(0, indexTenantId);
-                }
-            }
-            return result;
-        }
-        
-        function _addUser(envelope: any): void {
-            const strUndefined: string = "undefined";
-            // Add user language
-            if (typeof navigator !== strUndefined) {
-                const nav: Navigator & { userLanguage?: string } = navigator;
-                envelope.ext = envelope.ext || {};
-                envelope.ext.user = {
-                    locale: nav.userLanguage || nav.language
-                };
-            }
-        }
-
         function _createEnvelope(iKey:string, theType:string) {
-            if (_epoch === 0) {
-                _epoch = Math.floor((UInt32Mask * Math.random()) | 0) >>> 0;
-            }
-            if (isOneDS){
-                let envelope: oneDsEnvelope = {
-                    data: {
-                        baseData: {
-                            ver: 2
-                        }
-                    },
-                    ext: {
-                        app: { sesId: "0000" },
-                        intweb: {},
-                        sdk: {
-                            ver: "javascript:" + OneDSstrSnippetVersion,
-                            epoch: "" + _epoch,
-                            seq: _sequence++
-                        },
-                        utc: {
-                            popSample: 100
-                        },
-                        web: {
-                            userConsent: false
-                        }
-                    },
-                    time: _getTime(),
-                    iKey: "o:" + _getTenantId(iKey),
-                    name: theType,
-                    ver: "4.0"
-                };
-    
-                _addTimeZone(envelope);
-                _addUser(envelope);
-                return envelope;
-            } else {
-                let tags = {};
-                let type = "Browser";
-                tags[strAiDevice + "id"] = type[strToLowerCase]();
-                tags[strAiDevice + "type"] = type;
-                tags[strAiOperationName] = locn && locn.pathname || "_unknown_";
-                tags[strAiSdkVersion] = "javascript:snippet_" + (appInsights.sv || appInsights.version);
-    
-                let envelope:IEnvelope = {
-                    time: _getTime(),
-                    iKey: iKey,
-                    name: "Microsoft.ApplicationInsights." + iKey.replace(/-/g, strEmpty) + "." + theType,
-                    sampleRate: 100,
-                    tags: tags,
-                    data: {
-                        baseData: {
-                            ver: 2
-                        }
-                    },
-                    ver: undefined,
-                    seq: "1",
-                    aiDataContract: undefined
-                };
-    
-                return envelope;
-            }
-            
+            // if (isOneDS) {
+            //     return _createOneDsEnvelope(iKey, theType, _epoch, _sequence, appInsights.sv);
+            //     // return _createOneDsEnvelope(iKey, theType); // Delegate to OneDS envelope function
+            // } else {
+            //     return _createAiEnvelope(iKey, theType, appInsights.sv, appInsights.version, locn);
+            // }
+            return {} as IEnvelope | oneDsEnvelope;
         }
 
         function _createInternal(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
@@ -544,43 +423,11 @@ declare var cfg:ISnippetConfig;
             }
         }
 
-        let track = "track";
-        let trackPage = "TrackPage";
-        let trackEvent = "TrackEvent";
-        let capturePage = "capturePage";
-
-        _createMethods([
-            track + "Event",
-            track + "Exception",
-            trackPage + "View",
-            trackPage + "ViewPerformance",
-            "addTelemetryInitializer"
-        ]);
 
         if (isOneDS){
-            _createMethods([
-                track,
-                trackPage + "Action",
-                track + "ContentUpdate",
-                trackPage + "Unload",
-                capturePage + "View",
-                capturePage + "ViewPerformance",
-                capturePage + "Action",
-                capturePage + "Unload",
-                "captureContentUpdate"
-            ]);
+            _createMethods(oneDsMethods);
         } else {
-            _createMethods([
-                track + "Trace",
-                track + "DependencyData",
-                track + "Metric",
-                "start" + trackPage,
-                "stop" + trackPage,
-                "start" + trackEvent,
-                "stop" + trackEvent,
-                "setAuthenticatedUserContext",
-                "clearAuthenticatedUserContext",
-                "flush"]);
+            _createMethods(aiMethod);
         }
 
         // expose SeverityLevel enum

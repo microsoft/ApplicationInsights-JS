@@ -13,10 +13,17 @@ fs.readFile(filePath, 'utf8', (err, data) => {
         process.exit(1);
     }
 
-    let remove = data.replace(/let isOneDS = false;/g, '');
+
+    let remove = data.replace(/let\s+isOneDS\s*=\s*\w+;/i, '');
+    // Check if the replace did anything
+    if (remove === data) {
+        // If no change was made, throw an error to break the build
+        throw new Error("Failed to remove 'let isOneDS' assignment. Possible content change.");
+    }
 
     // Replace all occurrences of "checkplace" with "true"
     let ai = remove.replace(/isOneDS/g, 'false');
+    ai = "// DO NOT EDIT - Automatically Generated\n" + ai;
 
     // Write the modified content back to the file (or a new file if you prefer)
     fs.writeFile(aiFilePath, ai, 'utf8', (err) => {
@@ -28,6 +35,7 @@ fs.readFile(filePath, 'utf8', (err, data) => {
     });
 
     let oneDS = remove.replace(/isOneDS/g, 'true');
+    oneDS = "// DO NOT EDIT - Automatically Generated\n" + oneDS;
     fs.writeFile(oneDSFilePath, oneDS, 'utf8', (err) => {
         if (err) {
             console.error('Error writing file:', err);

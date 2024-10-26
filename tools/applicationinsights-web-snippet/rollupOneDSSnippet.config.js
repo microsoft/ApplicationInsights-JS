@@ -5,7 +5,7 @@ const snippetOutputPath = "../../build/output/oneDSSnippet";
 
 export default createUnVersionedConfig("", 
   {
-    namespace: "Microsoft.ApplicationInsights",
+    namespace: "oneDS",
     version: "",
     browser: {
       entryPoint: snippetOutputName, 
