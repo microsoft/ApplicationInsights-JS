@@ -157,13 +157,14 @@ declare var cfg:ISnippetConfig;
         }
 
         function _createEnvelope(iKey:string, theType:string) {
-            // if (isOneDS) {
-            //     return _createOneDsEnvelope(iKey, theType, _epoch, _sequence, appInsights.sv);
-            //     // return _createOneDsEnvelope(iKey, theType); // Delegate to OneDS envelope function
-            // } else {
-            //     return _createAiEnvelope(iKey, theType, appInsights.sv, appInsights.version, locn);
-            // }
-            return {} as IEnvelope | oneDsEnvelope;
+            if (_epoch === 0) {
+                _epoch = Math.floor((UInt32Mask * Math.random()) | 0) >>> 0;
+            }
+            if (isOneDS){
+                return _createOneDsEnvelope(iKey, theType, _epoch, _sequence, appInsights.sv);
+            } else {
+                return _createAiEnvelope(iKey, theType, appInsights.sv, appInsights.version, locn);
+            }
         }
 
         function _createInternal(iKey:string, message:string, targetSrc:string, endpointUrl:any) {
@@ -422,8 +423,7 @@ declare var cfg:ISnippetConfig;
                 })(methods.pop());
             }
         }
-
-
+        
         if (isOneDS){
             _createMethods(oneDsMethods);
         } else {
