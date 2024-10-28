@@ -268,9 +268,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
-                    if(isPromiseLike(senderConfig.endpointUrl)) {
-                        // if it is promise, means the endpoint url is from core.endpointurl
-                        senderConfig.endpointUrl = config.endpointUrl as any;
+
+                    let curExtUrl = senderConfig.endpointUrl;
+                    // if it is not inital change (_endpointUrl has value)
+                    // if current sender endpoint url is not changed directly
+                    // means ExtCfg is not changed directly
+                    // then we need to monitor endpoint url changes from core
+                    if (_endpointUrl && curExtUrl === _endpointUrl) {
+                        let coreUrl = config.endpointUrl as any;
+                        // if core endpoint url is changed
+                        if (coreUrl && coreUrl !== curExtUrl) {
+                            // and endpoint promise changes is handled by this as well
+                            senderConfig.endpointUrl = coreUrl;
+                        }
                     }
 
                     if(isPromiseLike(senderConfig.instrumentationKey)) {
@@ -491,6 +501,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             _self.isCompletelyIdle = () => {
                 return !_paused && _syncFetchPayload === 0 && _self._buffer.count() === 0;
+            }
+
+            _self.getOfflineListener = () => {
+                return _offlineListener;
             }
         
             /**
@@ -1452,6 +1466,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @returns internal Offline Serializer object
      */
     public getOfflineSupport(): IInternalOfflineSupport {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Get Offline listener
+     * @returns offlineListener
+     * @since 3.3.4
+     */
+    public getOfflineListener(): IOfflineListener {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }

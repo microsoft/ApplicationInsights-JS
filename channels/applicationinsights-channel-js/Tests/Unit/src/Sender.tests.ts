@@ -83,6 +83,9 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal('https://example.com', extConfig.endpointUrl, 'Channel config can be set from root config (endpointUrl)');
                 QUnit.assert.notEqual(654, extConfig.maxBatchSizeInBytes, 'Channel config does not equal root config option if extensionConfig field is also set');
                 QUnit.assert.equal(456, extConfig.maxBatchSizeInBytes, 'Channel config prioritizes extensionConfig over root config');
+
+                let offlinelistener = this._sender.getOfflineListener();
+                QUnit.assert.ok(offlinelistener, "offline listener exists")
             }
         });
 
@@ -161,6 +164,34 @@ export class SenderTests extends AITestClass {
                 this.clock.tick(1);
                 QUnit.assert.equal("https://dc.services.visualstudio.com/v2/track", this._sender._senderConfig.endpointUrl, "Channel default endpointUrl config is set");
                 QUnit.assert.equal(false,  this._sender._senderConfig.emitLineDelimitedJson, "Channel default emitLineDelimitedJson config is set");
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Endpoint Url can be set from root dynamically",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let id = this._sender.identifier;
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [id]: {
+                        
+                        }
+                    },
+                    endpointUrl: "test"
+                }
+                core.initialize(coreConfig, [this._sender]);
+
+                let senderConfig = this._sender._senderConfig;
+                QUnit.assert.equal(senderConfig.endpointUrl, "test", "Channel default endpoint url config is set from root");
+              
+                //check dynamic config
+                core.config.endpointUrl = "test1";
+                this.clock.tick(1);
+                let curSenderConfig = this._sender._senderConfig;
+                QUnit.assert.equal(curSenderConfig.endpointUrl,"test1", "Channel endpoint config is dynamically changed");
             }
         });
 
