@@ -2,6 +2,18 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.3.4 (Oct 30th 2024)
+
+### Changelog
+
+- #2426 [Main][Task]29626594: PerfManager Should be Created without Customized CreatePerfMgr Function
+- #2421 [Main]: Make file size checks flexible for nightly/dev builds
+- #2434 [Main][Task]29884493: Add a Function to Export Offline Listener From Sender
+- #2437 [Main][Task]29519727: Better Handle Sender Dynamic Changes
+- #2438 [Main][Task]29445623: Update CfgSync Config Readme
+- #2439 [BUG] Sourcemap load errors in debugger from dependencies
+- #2429 Readme - Remove double negative
+
 ## 3.3.3 (Sep 23rd 2024)
 
 ### Changelog
