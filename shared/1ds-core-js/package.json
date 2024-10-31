@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/1ds-core-js",
-    "version": "4.3.3",
+    "version": "4.3.4",
     "description": "Microsoft Application Insights JavaScript SDK - 1ds-core-js",
     "author": "Microsoft Application Insights Team",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
@@ -37,7 +37,7 @@
     ],
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-core-js": "3.3.3",
+        "@microsoft/applicationinsights-core-js": "3.3.4",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-utils": ">= 0.11.3 < 2.x",
         "@nevware21/ts-async": ">= 0.5.2 < 2.x"
