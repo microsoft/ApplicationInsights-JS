@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 7 * * *'
 
+permissions:
+  actions: write
+  issues: write
+  pull-requests: write
+
 jobs:
   stale:
     runs-on: ubuntu-latest
@@ -21,7 +26,6 @@ jobs:
           close-issue-label: 'closed'
           close-pr-label: 'closed'
           exempt-issue-labels: 'bug,enhancement,documentation,waiting,keep'
+          exempt-pr-labels: 'waiting,keep'
           exempt-all-milestones: true
           exempt-all-assignees: true
-      - name: Print outputs
-        run: echo ${{ join(steps.stale.outputs.*, ',') }}
