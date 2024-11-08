@@ -88,8 +88,8 @@ let capturePage = "capturePage";
 export const oneDsMethods = [
     track + "Event",
     track + "Exception",
-    trackPage + "View",
-    trackPage + "ViewPerformance",
+    track + "PageView",
+    track + "PageViewPerformance",
     "addTelemetryInitializer",
     track,
     trackPage + "Action",

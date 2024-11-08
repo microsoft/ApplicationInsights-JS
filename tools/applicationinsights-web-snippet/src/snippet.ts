@@ -36,29 +36,33 @@ declare var cfg:ISnippetConfig;
     let sdkInstanceName:string;
     let aiName:string;
 
+   
+    if (isOneDS){
+        sdkInstanceName = "onedsSDK";
+        aiName = cfg.name || "oneDSWeb";  // provide non default instance name through snipConfig name value
+    } else {
+        sdkInstanceName = "appInsightsSDK";
+        aiName = cfg.name || "appInsights";
+    }
+
     if (cfg.name || win[sdkInstanceName]) {
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
     }
+
     let aiSdk = win[aiName] || (function (aiConfig: IConfiguration & IConfig , aiExtensions?: any) {
         let targetSrc : string = (aiConfig as any)["url"] || cfg.src;
-        if (isOneDS){
-            sdkInstanceName = "onedsSDK";
-            aiName = cfg.name || "oneDSWeb";  // provide non default instance name through snipConfig name value
-        } else {
-            sdkInstanceName = "appInsightsSDK";
-            aiName = cfg.name || "appInsights";
-        }
+        
       
         let loadFailed = false;
         let handled = false;
-        let appInsights: (Snippet & {cookie?:any, core?:any, extensions?:any, initialize?: boolean, isInitialized?: () => boolean;}) = null;
-        appInsights= {
+        let appInsights: (Snippet & {cookie?:any, core?:any, extensions?:any, initialize?: boolean, isInitialized?: () => boolean;}) = {
+            initialize: true,   // initialize sdk on download
             queue: [],
             sv: "8",       // Track the actual snippet version for reporting.
             config: aiConfig,
-            extensions: aiExtensions,
-            initialize: true   // initialize sdk on download
+            version: 2.0,
+            extensions: aiExtensions
         };
 
         if (isOneDS && !aiConfig["webAnalyticsConfiguration"]){
