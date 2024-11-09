@@ -145,7 +145,7 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * @param unloadComplete - An optional callback that will be called once the unload has completed
      * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
      * unload. Defaults to 5 seconds.
-     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * @returns Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * will only be returned when no callback is provided and isAsync is true
      */

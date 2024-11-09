@@ -11,7 +11,7 @@ import { IPostTransmissionTelemetryItem } from "../Interfaces/IInMemoryBatch";
 /**
 * Checks if the value is a valid EventPersistence.
 * @param {enum} value - The value that needs to be checked.
-* @return {boolean} True if the value is in EventPersistence, false otherwise.
+* @returns {boolean} True if the value is in EventPersistence, false otherwise.
 */
 export function isValidPersistenceLevel(value: EventPersistence | number): boolean {
     return (isNumber(value) && value >= eLoggingSeverity.DISABLED && value <= EventPersistence.Critical);
@@ -64,7 +64,7 @@ const _base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+
  *
  * @param data the Uint8Array or string to encode.
  *
- * @return the base64-encoded output string.
+ * @returns the base64-encoded output string.
  */
 export function base64Encode(data: string | Uint8Array) {
     let line = "";
@@ -105,7 +105,7 @@ export function base64Encode(data: string | Uint8Array) {
 /**
  * Base64-decodes an encoded string and transforms it back to a Uint8Array.
  * @param input the encoded string to decode
- * @return  Uint8Array
+ * @returns  Uint8Array
  */
 export function base64Decode(input: string) {
     var output = "";

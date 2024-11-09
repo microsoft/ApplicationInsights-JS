@@ -319,7 +319,7 @@ export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
  * @param eventName - {string} - The name of the event
  * @param callback - {any} - The callback function that needs to be executed for the given event
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
- * @return {boolean} - true if the handler was successfully added
+ * @returns {boolean} - true if the handler was successfully added
  */
 export function addEventHandler(eventName: string, callback: any, evtNamespace?: string | string[] | null): boolean {
     let result = false;
