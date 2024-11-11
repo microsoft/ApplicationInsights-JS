@@ -1,0 +1,78 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+    "tagDefinitions": [
+        {
+            "tagName": "@author",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@description",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@implements",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@since",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@default",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@property",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@type",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@export",
+            "syntaxKind": "modifier"
+        },
+        {
+            "tagName": "@interface",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@ignore",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@return",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@group",
+            "syntaxKind": "block"
+        }
+    ],
+    "supportForTags": {
+      "@author": true,
+      "@description": true,
+      "@implements": true,
+      "@since": true,
+      "@returns": true,
+      "@default": true,
+      "@property": true,
+      "@type": true,
+      "@export": true,
+      "@interface": true,
+      "@defaultValue": true,
+      "@param": true,
+      "@example": true,
+      "@deprecated": true,
+      "@throws": true,
+      "@link": true,
+      "@internal": true,
+      "@typeParam": true,
+      "@see": true,
+      "@ignore": true,
+      "@return": true,
+      "@group": true
+    }
+  }
+  
