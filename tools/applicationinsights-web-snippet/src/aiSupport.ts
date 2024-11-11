@@ -42,8 +42,8 @@ let trackEvent = "TrackEvent";
 export const aiMethod = [
     track + "Event",
     track + "Exception",
-    trackPage + "View",
-    trackPage + "ViewPerformance",
+    track + "PageView",
+    track + "PageViewPerformance",
     "addTelemetryInitializer",
     track + "Trace",
     track + "DependencyData",
