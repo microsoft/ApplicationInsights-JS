@@ -3,9 +3,9 @@
 
 import { objForEachKey } from "@microsoft/applicationinsights-core-js";
 import { IPopupSettings } from "./IPopupSettings";
+import { doAwait } from "@nevware21/ts-async";
 
 const popupWindowSettingsCacheKey = "popupWindowSettings";
-
 
 export function getPopupSettings() : IPopupSettings {
     let settings = {
@@ -13,19 +13,19 @@ export function getPopupSettings() : IPopupSettings {
         height: 860
     };
 
-    let popupSettings = localStorage.getItem(popupWindowSettingsCacheKey);
-    if (popupSettings) {
-        try {
-            settings = JSON.parse(popupSettings);
-        } catch (e) {
-            // Just ignore failures and we fallback to the defaults
+    doAwait(chrome.storage.local.get(popupWindowSettingsCacheKey), (popupSettings: any) => {
+        if (popupSettings) {
+            try {
+                settings = JSON.parse(popupSettings);
+            } catch (e) {
+                // Just ignore failures and we fallback to the defaults
+            }
         }
-    }
-
-    if (!settings.width) {
-        settings.width = 750;
-    }
-
+        if (!settings.width) {
+            settings.width = 750;
+        }
+        return settings;
+    });
     return settings;
 }
 
@@ -38,8 +38,7 @@ function _setPopupSettings(newSettings: IPopupSettings) {
             settings[name] = value;
         }
     });
-
-    localStorage.setItem(popupWindowSettingsCacheKey, JSON.stringify(settings));
+    chrome.storage.local.set({ popupWindowSettingsCacheKey: JSON.stringify(settings) });
 }
 
 export function setPopupSize(width?: number, height?: number) {
