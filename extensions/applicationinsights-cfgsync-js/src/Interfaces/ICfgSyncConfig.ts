@@ -28,7 +28,7 @@ export interface ICfgSyncConfig {
      */
     onCfgChangeReceive?: (event?: ICfgSyncEvent) => void;
     /**
-     * Overrides sync() function to broadcast changes.\
+     * Overrides sync() function to broadcast changes.
      * @default null
      */
     overrideSyncFn?: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
@@ -40,7 +40,7 @@ export interface ICfgSyncConfig {
     /**
      * When current instance is set with syncMode: `Receive`, config fields under nonOverrideConfigs will NOT be changed by any config details sent out from other instances.
      * NOTE: this config will be ONLY applied during initialization, so it won't be changed dynamically
-     * @default {instrumentationKey:true,connectionString:true,endpointUrl:true}
+     * @default \{instrumentationKey:true,connectionString:true,endpointUrl:true\}
      */
     nonOverrideConfigs?: NonOverrideCfg;
     /**
