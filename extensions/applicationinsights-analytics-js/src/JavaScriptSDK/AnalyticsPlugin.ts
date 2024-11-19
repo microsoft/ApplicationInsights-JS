@@ -204,7 +204,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @description Log a diagnostic message
              * @param trace
              * @param ICustomProperties.
-             * @memberof ApplicationInsights
              */
             _self.trackTrace = (trace: ITraceTelemetry, customProperties?: ICustomProperties): void => {
                 try {
@@ -233,7 +232,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param metric - input object argument. Only name and average are mandatory.
              * @param } customProperties additional data used to filter metrics in the
              * portal. Defaults to empty.
-             * @memberof ApplicationInsights
              */
             _self.trackMetric = (metric: IMetricTelemetry, customProperties?: ICustomProperties): void => {
                 try {
@@ -454,7 +452,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
              *
              * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
-             * @memberof ApplicationInsights
              */
             _self.trackException = (exception: IExceptionTelemetry, customProperties?: ICustomProperties): void => {
                 if (exception && !exception.exception && (exception as any).error) {
@@ -475,7 +472,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             /**
              * @description Custom error handler for Application Insights Analytics
              * @param exception
-             * @memberof ApplicationInsights
              */
             _self._onerror = (exception: IAutoExceptionTelemetry): void => {
                 let error = exception && exception.error;
@@ -961,7 +957,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * @description Log a diagnostic message
      * @param trace
      * @param ICustomProperties.
-     * @memberof ApplicationInsights
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -976,7 +971,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * @param metric - input object argument. Only name and average are mandatory.
      * @param } customProperties additional data used to filter metrics in the
      * portal. Defaults to empty.
-     * @memberof ApplicationInsights
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1059,7 +1053,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
      *
      * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
-     * @memberof ApplicationInsights
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1068,7 +1061,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     /**
      * @description Custom error handler for Application Insights Analytics
      * @param exception
-     * @memberof ApplicationInsights
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

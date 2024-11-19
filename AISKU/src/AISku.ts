@@ -628,7 +628,6 @@ export class AppInsightsSku implements IApplicationInsights {
      * Log a user action or other occurrence.
      * @param event
      * @param [customProperties]
-     * @memberof Initialization
      */
     public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -637,7 +636,6 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Logs that a page, or similar container was displayed to the user.
      * @param pageView
-     * @memberof Initialization
      */
     public trackPageView(pageView?: IPageViewTelemetry) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -646,7 +644,6 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Log a bag of performance information via the customProperties field.
      * @param pageViewPerformance
-     * @memberof Initialization
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -656,7 +653,6 @@ export class AppInsightsSku implements IApplicationInsights {
      * Log an exception that you have caught.
      * @param exception
      * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
-     * @memberof Initialization
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -666,7 +662,6 @@ export class AppInsightsSku implements IApplicationInsights {
      * Manually send uncaught exception telemetry. This method is automatically triggered
      * on a window.onerror event.
      * @param exception
-     * @memberof Initialization
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -676,7 +671,6 @@ export class AppInsightsSku implements IApplicationInsights {
      * Log a diagnostic scenario such entering or leaving a function.
      * @param trace
      * @param [customProperties]
-     * @memberof Initialization
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -694,7 +688,6 @@ export class AppInsightsSku implements IApplicationInsights {
      * the `sampleCount` field of {@link IMetricTelemetry}.
      * @param metric - input object argument. Only `name` and `average` are mandatory.
      * @param [customProperties]
-     * @memberof Initialization
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -766,7 +759,6 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Log a dependency call (e.g. ajax)
      * @param dependency
-     * @memberof Initialization
      */
     public trackDependencyData(dependency: IDependencyTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -796,7 +788,6 @@ export class AppInsightsSku implements IApplicationInsights {
      * Manually trigger an immediate send of all telemetry still in the buffer using beacon Sender.
      * Fall back to xhr sender if beacon is not supported.
      * @param [async=true]
-     * @memberof Initialization
      */
     public onunloadFlush(async: boolean = true) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -805,7 +796,6 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Initialize this instance of ApplicationInsights
      * @returns {IApplicationInsights}
-     * @memberof Initialization
      * @param legacyMode - MUST always be false, it is no longer supported from v3.x onwards
      */
     public loadAppInsights(legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights {
@@ -817,7 +807,6 @@ export class AppInsightsSku implements IApplicationInsights {
      * Overwrite the lazy loaded fields of global window snippet to contain the
      * actual initialized API methods
      * @param snippet
-     * @memberof Initialization
      */
     public updateSnippetDefinitions(snippet: Snippet) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -825,7 +814,6 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Call any functions that were queued before the main script was loaded
-     * @memberof Initialization
      */
     public emptyQueue() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -863,7 +851,7 @@ export class AppInsightsSku implements IApplicationInsights {
      * @param unloadComplete - An optional callback that will be called once the unload has completed
      * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
      * unload. Defaults to 5 seconds.
-     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * @returns Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * will only be returned when no callback is provided and isAsync is true
      */

@@ -73,7 +73,7 @@ export class ValueSanitizer implements IValueSanitizer {
 
     /**
      * Returns whether this ValueSanitizer is empty
-     * @return `true` if it contains no chained sanitizers or field sanitizers, otherwise `false`
+     * @returns `true` if it contains no chained sanitizers or field sanitizers, otherwise `false`
      */
     public isEmpty?: () => boolean;
 

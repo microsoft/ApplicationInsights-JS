@@ -266,7 +266,7 @@ export interface IOfflineProvider {
      * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
-     * @return Either the added element (for synchronous operation) or a Promise for an asynchronous processing
+     * @returns Either the added element (for synchronous operation) or a Promise for an asynchronous processing
      */
     addEvent(key: string, evt: IStorageTelemetryItem, itemCtx: IProcessTelemetryContext): IStorageTelemetryItem | IPromise<IStorageTelemetryItem> | null;
 
@@ -285,13 +285,13 @@ export interface IOfflineProvider {
     /**
      * Removes the value associated with the provided key
      * @param evts - The events to be removed
-     * @return Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
+     * @returns Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
      */
     removeEvents(evts: IStorageTelemetryItem[]): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null;
 
     /**
      * Removes all entries from the storage provider, if there are any.
-     * @return Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
+     * @returns Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
      */
     clear(): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null;
 

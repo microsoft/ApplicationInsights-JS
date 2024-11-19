@@ -318,7 +318,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
      * Unload and remove any state that this IDiagnosticLogger may be holding, this is generally called when the
      * owning SDK is being unloaded.
      * @param isAsync - Can the unload be performed asynchronously (default)
-     * @return If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
+     * @returns If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
      * the function should return an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * / Promise to allow any listeners to wait for the operation to complete.
      */
