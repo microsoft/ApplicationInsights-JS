@@ -136,8 +136,7 @@ function _isCfgEnabled(rootConfig: IConfiguration, cookieMgrConfig: ICookieMgrCo
 /**
  * Helper to return the ICookieMgr from the core (if not null/undefined) or a default implementation
  * associated with the configuration or a legacy default.
- * @param core
- * @param config
+ 
  * @returns
  */
 export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration) {

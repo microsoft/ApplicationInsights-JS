@@ -55,7 +55,6 @@ export function _cfgDeepCopy<T>(source: T): T {
 /**
  * @internal
  * Get the dynamic config handler if the value is already dynamic
- * @param value
  * @returns
  */
 export function getDynamicConfigHandler<T = IConfiguration, V = IConfiguration>(value: V | IDynamicConfigHandler<T>): IDynamicConfigHandler<T> | null {

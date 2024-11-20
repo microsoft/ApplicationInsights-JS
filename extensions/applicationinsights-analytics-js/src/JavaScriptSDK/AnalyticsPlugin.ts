@@ -202,8 +202,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * @description Log a diagnostic message
-             * @param trace
-             * @param ICustomProperties.
              */
             _self.trackTrace = (trace: ITraceTelemetry, customProperties?: ICustomProperties): void => {
                 try {
@@ -955,8 +953,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @description Log a diagnostic message
-     * @param trace
-     * @param ICustomProperties.
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -998,8 +994,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @ignore INTERNAL ONLY
-     * @param pageViewPerformance
-     * @param properties
      */
     public sendPageViewPerformanceInternal(pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1007,8 +1001,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Send browser performance metrics.
-     * @param pageViewPerformance
-     * @param customProperties
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1038,9 +1030,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
     * @ignore INTERNAL ONLY
-    * @param exception
-    * @param properties
-    * @param systemProperties
     */
     public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1060,7 +1049,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @description Custom error handler for Application Insights Analytics
-     * @param exception
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

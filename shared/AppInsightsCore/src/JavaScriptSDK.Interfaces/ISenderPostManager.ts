@@ -12,7 +12,6 @@ export interface _ISenderOnComplete {
     /**
      * defined xdr onload function to handle response
      * @param dxr - xdr request object
-
      * @param oncomplete - oncomplete function
      * @since version after 3.1.0
      */

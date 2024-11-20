@@ -424,8 +424,6 @@ export class WebStorageProvider implements IOfflineProvider {
              * @ignore
              * Creates a new json store with the StorageJSON (may be null), a null db value indicates that the store
              * associated with the key is empty and should be removed.
-             * @param dbKey
-             * @param forceRemove
              */
             function _newStore(dbKey: string, db: IStorageJSON): IJsonStoreDetails {
                 return {
