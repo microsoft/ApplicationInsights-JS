@@ -6,33 +6,28 @@ import { IPartC } from "./IPartC";
 export interface IMetricTelemetry extends IPartC {
     /**
      * @description (required) - name of this metric
-     * @type {string}
      */
     name: string;
 
     /**
      * @description (required) - Recorded value/average for this metric
-     * @type {number}
      */
     average: number;
 
     /**
      * @description (optional) Number of samples represented by the average.
-     * @type {number=}
      * @default sampleCount=1
      */
     sampleCount?: number;
 
     /**
      * @description (optional) The smallest measurement in the sample. Defaults to the average
-     * @type {number}
      * @default min=average
      */
     min?: number;
 
     /**
      * @description (optional) The largest measurement in the sample. Defaults to the average.
-     * @type {number}
      * @default max=average
      */
     max?: number;
@@ -44,7 +39,6 @@ export interface IMetricTelemetry extends IPartC {
 
      /**
      * @description custom defined iKey
-     * @type {string}
      */
     iKey?: string;
 }

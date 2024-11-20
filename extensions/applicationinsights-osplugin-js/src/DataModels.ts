@@ -14,13 +14,11 @@ export interface IOSPluginConfiguration {
     /**
      * Maximum time to wait for the OS plugin to return the OS information
      * Default: 200
-     * @type {number}
      */
     maxTimeout?: number;
     /**
      * Whether to merge the OS name and version into one field
      * Default: undefined
-     * @type {boolean}
      */
     mergeOsNameVersion?: boolean;
 }

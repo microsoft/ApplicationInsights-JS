@@ -7,19 +7,16 @@ import { IPartC } from "./IPartC";
 export interface ITraceTelemetry extends IPartC {
     /**
      * @description A message string
-     * @type {string}
      */
     message: string;
 
     /**
      * @description Severity level of the logging message used for filtering in the portal
-     * @type {SeverityLevel}
      */
     severityLevel?: SeverityLevel;
 
     /**
      * @description custom defiend iKey
-     * @type {SeverityLevel}
      */
     iKey?: string;
 }

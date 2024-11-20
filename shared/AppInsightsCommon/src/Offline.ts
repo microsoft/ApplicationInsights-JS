@@ -5,7 +5,7 @@ import {
 
 /**
  * this is the callback that will be called when the network status changes
- * @param onlineState this is the current network running state
+ * @param onlineState - this is the current network running state
  */
 export type OfflineCallback = (onlineState: IOfflineState) => void;
 

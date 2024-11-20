@@ -93,7 +93,6 @@ export interface IConfiguration {
     readonly channels?: IChannelControls[][];
 
     /**
-     * @type {boolean}
      * Flag that disables the Instrumentation Key validation.
      */
     disableInstrumentationKeyValidation?: boolean;
@@ -129,7 +128,6 @@ export interface IConfiguration {
     /**
      * @description Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. It
      * can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
-     * @type {string}
      * @defaultValue ""
      */
     cookieDomain?: string;
@@ -137,7 +135,6 @@ export interface IConfiguration {
     /**
      * @description Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application
      * gateway. It can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
-     * @type {string}
      * @defaultValue ""
      */
     cookiePath?: string;
