@@ -60,7 +60,6 @@ export interface IDiagnosticLogger {
 
     /**
      * Optional Callback hook to allow the diagnostic logger to update it's configuration
-     * @param updateState
      */
     update?(updateState: ITelemetryUpdateState): void;
 

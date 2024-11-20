@@ -1323,7 +1323,7 @@ export class HttpManager {
 
     /**
      * Add the batch of events to the queue for sending
-     * @param batch The batch with the events to send
+     * @param batch - The batch with the events to send
      * @returns True if the http manager has accepted the batch (including if the batch is empty) otherwise false
      */
     public addBatch(batch: EventBatch): boolean {
@@ -1420,7 +1420,7 @@ export class HttpManager {
 
     /**
      * Create payload data
-     * @param evts telemetry events
+     * @param evts - telemetry events
      * @returns payload
      */
     public createOneDSPayload(evts?: ITelemetryItem[], optimize?: boolean): IPayloadData {

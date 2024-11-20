@@ -420,12 +420,12 @@ export class Serializer {
 
     /**
      * Create a serializer payload package
-     * @param retryCnt The retry count for the events in this payload
-     * @param isTeardown Is this payload being created as part of a teardown request
-     * @param isSync Should this payload be sent as a synchronous request
-     * @param isReducedPayload Is this payload going to be sent via sendBeacon() API
-     * @param sendReason The reason the payload is being sent
-     * @param sendType Identifies how this payload will be sent
+     * @param retryCnt - The retry count for the events in this payload
+     * @param isTeardown - Is this payload being created as part of a teardown request
+     * @param isSync - Should this payload be sent as a synchronous request
+     * @param isReducedPayload - Is this payload going to be sent via sendBeacon() API
+     * @param sendReason - The reason the payload is being sent
+     * @param sendType - Identifies how this payload will be sent
      */
     public createPayload(retryCnt: number, isTeardown: boolean, isSync: boolean, isReducedPayload: boolean, sendReason: SendRequestReason, sendType: EventSendType): ISerializedPayload {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging

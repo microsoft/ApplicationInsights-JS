@@ -144,7 +144,7 @@ export class WebStorageProvider implements IOfflineProvider {
 
     /**
      * Creates a WebStorageProvider using the provider storageType
-     * @param storageType The type of Storage provider, normal values are "localStorage" or "sessionStorage"
+     * @param storageType - The type of Storage provider, normal values are "localStorage" or "sessionStorage"
      */
     constructor(storageType: string, id?: string, unloadHookContainer?: IUnloadHookContainer) {
         dynamicProto(WebStorageProvider, this, (_this) => {

@@ -36,7 +36,6 @@ export class ApplicationInsights {
 
     /**
      * Creates an instance of ApplicationInsights.
-     * @param config
      */
     constructor(config: IConfiguration & IConfig) {
         let core = new AppInsightsCore();
@@ -155,7 +154,6 @@ export class ApplicationInsights {
     /**
      * Send a manually constructed custom event
      *
-     * @param item
      */
     public track(item: ITelemetryItem) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -163,7 +161,6 @@ export class ApplicationInsights {
 
     /**
      * Immediately send all batched telemetry
-     * @param [async=true]
      */
     public flush(async: boolean = true) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -199,7 +196,6 @@ export class ApplicationInsights {
 
     /**
      * Find and return the (first) plugin with the specified identifier if present
-     * @param pluginIdentifier
      */
     public getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -258,7 +254,6 @@ export class ApplicationInsights {
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<IConfiguration>): IUnloadHook {

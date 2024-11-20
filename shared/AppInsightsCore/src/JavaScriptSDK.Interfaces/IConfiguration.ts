@@ -50,8 +50,8 @@ export interface IConfiguration {
      * be logged to console if their severity meets the configured loggingConsoleLevel
      *
      * 0: ALL console logging off
-     * 1: logs to console: severity >= CRITICAL
-     * 2: logs to console: severity >= WARNING
+     * 1: logs to console: severity \>= CRITICAL
+     * 2: logs to console: severity \>= WARNING
      */
     loggingLevelConsole?: number;
 
@@ -61,8 +61,8 @@ export interface IConfiguration {
      * the configured instrumentation key.
      *
      * 0: ALL iKey logging off
-     * 1: logs to iKey: severity >= CRITICAL
-     * 2: logs to iKey: severity >= WARNING
+     * 1: logs to iKey: severity \>= CRITICAL
+     * 2: logs to iKey: severity \>= WARNING
      */
     loggingLevelTelemetry?: number
 
