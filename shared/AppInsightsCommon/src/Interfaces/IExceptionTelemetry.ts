@@ -18,14 +18,12 @@ export interface IExceptionTelemetry extends IPartC {
     /**
      * @deprecated
      * @type {Error}
-     * @memberof IExceptionTelemetry
      * @description DEPRECATED: Please use exception instead. Behavior/usage for exception remains the same as this field.
      */
     error?: Error;
 
     /**
      * @type {Error}
-     * @memberof IExceptionTelemetry
      * @description Error Object(s)
      */
     exception?: Error | IAutoExceptionTelemetry;
@@ -34,7 +32,6 @@ export interface IExceptionTelemetry extends IPartC {
      * @description Specified severity of exception for use with
      * telemetry filtering in dashboard
      * @type {(SeverityLevel | number)}
-     * @memberof IExceptionTelemetry
      */
     severityLevel?: SeverityLevel | number;
 }
@@ -48,63 +45,54 @@ export interface IAutoExceptionTelemetry {
     /**
      * @description error message. Available as event in HTML onerror="" handler
      * @type {string}
-     * @memberof IAutoExceptionTelemetry
      */
     message: string;
 
     /**
      * @description URL of the script where the error was raised
      * @type {string}
-     * @memberof IAutoExceptionTelemetry
      */
     url: string;
 
     /**
      * @description Line number where error was raised
      * @type {number}
-     * @memberof IAutoExceptionTelemetry
      */
     lineNumber: number;
 
     /**
      * @description Column number for the line where the error occurred
      * @type {number}
-     * @memberof IAutoExceptionTelemetry
      */
     columnNumber: number;
 
     /**
      * @description Error Object (object)
      * @type {any}
-     * @memberof IAutoExceptionTelemetry
      */
     error: any;
     
     /**
      * @description The event at the time of the exception (object)
      * @type {Event|string}
-     * @memberof IAutoExceptionTelemetry
      */
     evt?: Event|string;
 
     /**
      * @description The provided stack for the error
      * @type {IStackDetails}
-     * @memberof IAutoExceptionTelemetry
      */
     stackDetails?: IStackDetails;
 
     /**
      * @description The calculated type of the error
      * @type {string}
-     * @memberof IAutoExceptionTelemetry
      */
     typeName?: string;
 
     /**
      * @description The descriptive source of the error
      * @type {string}
-     * @memberof IAutoExceptionTelemetry
      */
     errorSrc?: string;
 }
