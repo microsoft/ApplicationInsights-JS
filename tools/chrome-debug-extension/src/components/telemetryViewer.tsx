@@ -11,6 +11,7 @@ import { EventTable } from "./eventTable";
 import { IFilterSettings } from "./IFilterSettings";
 import { OptionsBar } from "./optionsBar";
 import { SplitPanel } from "./splitPanel";
+import { doAwait } from "@nevware21/ts-async";
 
 interface ITelemetryViewerProps {
     session: Session;
@@ -38,7 +39,7 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
 
     const handleNewFilterSettings = (newFilterSettings: IFilterSettings): void => {
         try {
-            localStorage.setItem(filterSettingsCacheKey, JSON.stringify(newFilterSettings));
+            chrome.storage.local.set({ filterSettingsCacheKey: JSON.stringify(newFilterSettings) });
         } catch {
             // Default is OK
         }
@@ -110,16 +111,17 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
 
     React.useEffect(() => {
         try {
-            const json = localStorage.getItem(filterSettingsCacheKey);
-            if (json) {
-                // Make sure we have any defaults set
-                let settings: IFilterSettings = {
-                    ...getDefaultFilterSettings(props.session.configuration),
-                    ...(JSON.parse(json))
-                };
-
-                setFilterSettings(settings);
-            }
+            doAwait(chrome.storage.local.get(filterSettingsCacheKey), (json: any) => {
+                if (json) {
+                    // Make sure we have any defaults set
+                    let settings: IFilterSettings = {
+                        ...getDefaultFilterSettings(props.session.configuration),
+                        ...(JSON.parse(json))
+                    };
+    
+                    setFilterSettings(settings);
+                }
+            });
         } catch {
             // Default is OK
         }

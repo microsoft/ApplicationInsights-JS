@@ -9,6 +9,7 @@ import { ConfigurationType, ConfigurationURLs } from "./configuration/Configurat
 import { IConfiguration } from "./configuration/IConfiguration";
 import { Session } from "./session";
 import { checkForUpdate } from "./UpdateCheck";
+import { doAwait } from "@nevware21/ts-async";
 
 type AppPhase =
     | "Startup"
@@ -29,7 +30,7 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
 
     function applyConfigurationType(newConfigurationType: ConfigurationType): void {
         if (newConfigurationType) {
-            localStorage.setItem(configurationTypeStorageKey, newConfigurationType);
+            chrome.storage.local.set({ configurationType: newConfigurationType });
         }
         setConfigurationType(newConfigurationType);
 
@@ -45,16 +46,18 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
 
         if (configurationTypeToLoad === "Custom") {
             try {
-                const savedValue = localStorage.getItem(customConfigurationStorageKey);
-                if (savedValue) {
-                    const newConfiguration = JSON.parse(savedValue) as IConfiguration;
-                    let newSession = new Session(newConfiguration, session);
-                    session && session.dispose();
-                    setSession(newSession);
-                    setAppPhase("ConfigurationLoaded");
-                } else {
-                    setAppPhase("ConfigurationLoadFailed");
-                }
+                doAwait(chrome.storage.local.get(customConfigurationStorageKey), (savedValue: any) => {
+                    if (savedValue) {
+                        const newConfiguration = JSON.parse(savedValue) as IConfiguration;
+                        let newSession = new Session(newConfiguration, session);
+                        session && session.dispose();
+                        setSession(newSession);
+                        setAppPhase("ConfigurationLoaded");
+                    } else {
+                        setAppPhase("ConfigurationLoadFailed");
+                    }
+                });
+                
             } catch {
                 setAppPhase("ConfigurationLoadFailed");
             }
@@ -115,19 +118,21 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
 
         let configurationTypeToSet: ConfigurationType = undefined;
         try {
-            const savedValue = localStorage.getItem(configurationTypeStorageKey);
-            if (savedValue && Object.keys(ConfigurationURLs).includes(savedValue)) {
-                configurationTypeToSet = savedValue as ConfigurationType;
-            }
+            doAwait(chrome.storage.local.get(configurationTypeStorageKey), (savedValue: any) => {
+                if (savedValue && Object.keys(ConfigurationURLs).includes(savedValue)) {
+                    configurationTypeToSet = savedValue as ConfigurationType;
+                }
+                setConfigurationType(configurationTypeToSet);
+                applyConfigurationType(configurationTypeToSet);
+
+                return () => {
+                    session && session.dispose();
+                };
+            });
+
         } catch {
             // That's OK
         }
-        setConfigurationType(configurationTypeToSet);
-        applyConfigurationType(configurationTypeToSet);
-
-        return () => {
-            session && session.dispose();
-        };
     }, []);
 
     function reset(): void {
