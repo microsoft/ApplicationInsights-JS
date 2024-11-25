@@ -121,7 +121,13 @@ The current version of the snippet is version 8, the version is identified by th
     // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
     // sri: false, // Custom optional value to specify whether fetching the snippet from integrity file and do integrity check 
     cfg: { // Application Insights Configuration
-        connectionString: "YOUR_CONNECTION_STRING"
+        connectionString: "YOUR_CONNECTION_STRING",
+        extensionConfig: { 
+          ApplicationInsightsAnalytics: {
+            autoExceptionInstrumented: true  // Workaround for older SDK versions to prevent duplicate hooking of window.onerror. 
+                                             // Fixed in v3.3.5; recommended for versions prior to this.
+          }
+        },
     }
 });
 </script>

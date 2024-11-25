@@ -700,7 +700,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _self._addHook(onConfigChange(_extConfig, () => {
                     _disableExceptionTracking = _extConfig.disableExceptionTracking;
 
-                    if (!_disableExceptionTracking && !_autoExceptionInstrumented && !_extConfig.autoExceptionInstrumented) {
+                    if (!_disableExceptionTracking && !_autoExceptionInstrumented && !_extConfig.autoExceptionInstrumented && !_self.core.config.autoExceptionInstrumented) {
                         // We want to enable exception auto collection and it has not been done so yet
                         _addHook(InstrumentEvent(_window, "onerror", {
                             ns: _evtNamespace,
