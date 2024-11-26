@@ -626,6 +626,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a user action or other occurrence.
+     * @param event - event to be sent
      * @param customProperties - properties that would be included as part of the event
      */
     public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
@@ -634,6 +635,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Logs that a page, or similar container was displayed to the user.
+     * @param pageView - page view to be sent
      */
     public trackPageView(pageView?: IPageViewTelemetry) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -641,6 +643,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a bag of performance information via the customProperties field.
+     * @param pageViewPerformance - performance information to be sent
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -648,6 +651,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log an exception that you have caught.
+     * @param exception - exception to be sent
      * @param customProperties - Additional data used to filter pages and metrics in the portal. Defaults to empty.
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
@@ -657,6 +661,7 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Manually send uncaught exception telemetry. This method is automatically triggered
      * on a window.onerror event.
+     * @param exception - The exception to be sent.
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -664,6 +669,8 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a diagnostic scenario such entering or leaving a function.
+     * @param trace - trace to be sent
+     * @param customProperties - Additional custom properties to include in the event.
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -680,6 +687,7 @@ export class AppInsightsSku implements IApplicationInsights {
      * aggregating multiple measurements and sending the resulting average and modifying
      * the `sampleCount` field of {@link IMetricTelemetry}.
      * @param metric - input object argument. Only `name` and `average` are mandatory.
+     * @param customProperties - Additional custom properties to include in the event.
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -731,6 +739,9 @@ export class AppInsightsSku implements IApplicationInsights {
      * Set the authenticated user id and the account id. Used for identifying a specific signed-in user. Parameters must not contain whitespace or ,;=|
      *
      * The method will only set the `authenticatedUserId` and `accountId` in the current page view. To set them for the whole session, you should set `storeInCookie = true`
+     * @param authenticatedUserId - The account ID to set
+     * @param accountId - The account ID to set
+     * @param storeInCookie - Whether the values should be set for the whole session
      */
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -747,6 +758,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a dependency call (e.g. ajax)
+     * @param dependencyData dependency data object
      */
     public trackDependencyData(dependency: IDependencyTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -794,6 +806,7 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Overwrite the lazy loaded fields of global window snippet to contain the
      * actual initialized API methods
+     * @param snippet - The global snippet
      */
     public updateSnippetDefinitions(snippet: Snippet) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -922,6 +935,7 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
+     * @param handler - The handler to call when the config changes
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<IConfiguration>): IUnloadHook {

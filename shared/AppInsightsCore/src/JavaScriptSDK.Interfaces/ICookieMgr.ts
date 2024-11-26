@@ -55,6 +55,7 @@ export interface ICookieMgr {
     /**
      * Optional Callback hook to allow the cookie manager to update it's configuration, not generally implemented now that
      * dynamic configuration is supported
+     * @param updateState - The new configuration state to apply to the cookie manager
      */
     update?(updateState: ITelemetryUpdateState): void;
 

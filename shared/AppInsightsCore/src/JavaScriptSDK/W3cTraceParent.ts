@@ -128,6 +128,7 @@ export function isValidSpanId(value: string): boolean {
 
 /**
  * Validates that the provided ITraceParent instance conforms to the currently supported specifications
+ * @param value - The parsed traceParent value
  * @returns
  */
 export function isValidTraceParent(value: ITraceParent) {
@@ -212,6 +213,7 @@ export interface scriptsInfo {
 
 /**
  * Find all script tags in the provided document and return the information about them.
+ * @param doc - The document to search for script tags
  * @returns
  */
 export function findAllScripts(doc: any) {

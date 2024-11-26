@@ -951,6 +951,8 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
             /**
              * This is the callback method is called as part of the manual flushing process.
+             * @param callback - The callback method to call after the flush is complete
+             * @param sendReason - The reason why the flush is being called
              */
             function _flushImpl(callback: () => void, sendReason: SendRequestReason) {
                 // Add any additional queued events and cause all queued events to be sent asynchronously
