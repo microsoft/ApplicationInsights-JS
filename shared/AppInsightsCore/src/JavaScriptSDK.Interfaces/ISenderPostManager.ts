@@ -11,32 +11,32 @@ import { IPayloadData, IXHROverride, OnCompleteCallback } from "./IXHROverride";
 export interface _ISenderOnComplete {
     /**
      * defined xdr onload function to handle response
-     * @param dxr xdr request object
-     * @param oncomplete oncomplete function
+     * @param dxr - xdr request object
+     * @param oncomplete - oncomplete function
      * @since version after 3.1.0
      */
     xdrOnComplete?(xdr: IXDomainRequest, onComplete: OnCompleteCallback, payload?: IPayloadData): void;
     /**
      * defined fetch on complete function to handle response
-     * @param response response object
-     * @param onComplete oncomplete function
-     * @param resValue response.text().value
+     * @param response - response object
+     * @param onComplete - oncomplete function
+     * @param resValue - response.text().value
      * @since version after 3.1.0
      */
     fetchOnComplete?(response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData): void;
     /**
      * defined xhr onreadystatechange function to handle response
-     * @param request request object
-     * @param oncomplete oncomplete function
+     * @param request - request object
+     * @param oncomplete - oncomplete function
      * @since version after 3.1.0
      */
     xhrOnComplete?(request: XMLHttpRequest, onComplete: OnCompleteCallback, payload?: IPayloadData):void;
 
     /**
      * Define functions during beacon can not send payload after first attempt. If not defined, will be apyload will be retried with fallback sender.
-     * @param data payload data
-     * @param onComplete oncomplete function
-     * @param canSend can the current data sent by beacon sender
+     * @param data - payload data
+     * @param onComplete - oncomplete function
+     * @param canSend - can the current data sent by beacon sender
      * @since version after 3.1.0
      */
     beaconOnRetry?(data: IPayloadData, onComplete: OnCompleteCallback, canSend:(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean): void;

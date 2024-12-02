@@ -202,8 +202,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * @description Log a diagnostic message
-             * @param trace
-             * @param ICustomProperties.
+             * @param trace - the trace message
+             * @param customProperties - Additional custom properties to include in the event
              */
             _self.trackTrace = (trace: ITraceTelemetry, customProperties?: ICustomProperties): void => {
                 try {
@@ -955,8 +955,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @description Log a diagnostic message
-     * @param trace
-     * @param ICustomProperties.
+     * @param trace - the trace message
+     * @param customProperties - Additional custom properties to include in the event
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -998,8 +998,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @ignore INTERNAL ONLY
-     * @param pageViewPerformance
-     * @param properties
+     * @param pageViewPerformance - The page view performance item to be sent
+     * @param properties - Custom properties (Part C) that a user can add to the telemetry item
      */
     public sendPageViewPerformanceInternal(pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1007,8 +1007,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Send browser performance metrics.
-     * @param pageViewPerformance
-     * @param customProperties
+     * @param pageViewPerformance - The page view performance item to be sent
+     * @param customProperties - Additional data used to filter pages and metrics in the portal. Defaults to empty.
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1038,9 +1038,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
     * @ignore INTERNAL ONLY
-    * @param exception
-    * @param properties
-    * @param systemProperties
+    * @param exception - The exception item to be sent
+    * @param properties - Custom properties (Part C) that a user can add to the telemetry item
+    * @param systemProperties - System level properties (Part A) that a user can add to the telemetry item
     */
     public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1060,7 +1060,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @description Custom error handler for Application Insights Analytics
-     * @param exception
+     * @param exception - The exception item to be sent
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

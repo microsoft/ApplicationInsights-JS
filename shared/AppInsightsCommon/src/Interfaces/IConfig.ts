@@ -147,7 +147,7 @@ export interface IConfig {
     disableFlushOnBeforeUnload?: boolean;
 
     /**
-     * Default value of {@link #disableFlushOnBeforeUnload}. If true, flush method will not be called when onPageHide or onVisibilityChange (hidden state) event(s) trigger.
+     * Default value of `disableFlushOnBeforeUnload`. If true, flush method will not be called when onPageHide or onVisibilityChange (hidden state) event(s) trigger.
      */
     disableFlushOnUnload?: boolean;
 
@@ -209,13 +209,13 @@ export interface IConfig {
     isStorageUseDisabled?: boolean;
 
     /**
-     * If false, the SDK will send all telemetry using the [Beacon API](https://www.w3.org/TR/beacon)
+     * If false, the SDK will send all telemetry using the <a href="https://www.w3.org/TR/beacon">Beacon API</a>.
      * @defaultValue true
      */
     isBeaconApiDisabled?: boolean;
 
     /**
-     * Don't use XMLHttpRequest or XDomainRequest (for IE < 9) by default instead attempt to use fetch() or sendBeacon.
+     * Don't use XMLHttpRequest or XDomainRequest (for IE \< 9) by default instead attempt to use fetch() or sendBeacon.
      * If no other transport is available it will still use XMLHttpRequest
      */
     disableXhr?: boolean;

@@ -36,10 +36,10 @@ export interface IExceptionConfig{
      *
      * This callback is called before telemetry data is sent, allowing for dynamic customization of the logs.
      *
-     * @returns {Object} An object with the following property:
+     * @returns An object with the following property:
      * - logs: An array of strings, where each string represents a log entry to be included in the telemetry.
      *
-     * @property {number} maxLogs - Specifies the maximum number of logs that can be generated. If not explicitly set, it defaults to 50.
+     * @property maxLogs - Specifies the maximum number of logs that can be generated. If not explicitly set, it defaults to 50.
      */
     expLog?: () => { logs: string[] },
 

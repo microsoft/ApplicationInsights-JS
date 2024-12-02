@@ -951,8 +951,8 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
             /**
              * This is the callback method is called as part of the manual flushing process.
-             * @param callback
-             * @param sendReason
+             * @param callback - The callback method to call after the flush is complete
+             * @param sendReason - The reason why the flush is being called
              */
             function _flushImpl(callback: () => void, sendReason: SendRequestReason) {
                 // Add any additional queued events and cause all queued events to be sent asynchronously
@@ -1103,8 +1103,8 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
             /**
              * This event represents that a batch of events have been successfully sent and a response received
-             * @param batches The notification handler for when the batches have been successfully sent
-             * @param reason For this event the reason will always be EventBatchNotificationReason.Complete
+             * @param batches - The notification handler for when the batches have been successfully sent
+             * @param reason - For this event the reason will always be EventBatchNotificationReason.Complete
              */
             function _eventsSentEvent(batches: EventBatch[], reason?: number) {
                 _notifyBatchEvents("eventsSent", batches, reason);
@@ -1168,9 +1168,9 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
     /**
      * Sets the event queue limits at runtime (after initialization), if the number of queued events is greater than the
      * eventLimit or autoFlushLimit then a flush() operation will be scheduled.
-     * @param eventLimit The number of events that can be kept in memory before the SDK starts to drop events. If the value passed is less than or
+     * @param eventLimit - The number of events that can be kept in memory before the SDK starts to drop events. If the value passed is less than or
      * equal to zero the value will be reset to the default (10,000).
-     * @param autoFlushLimit When defined, once this number of events has been queued the system perform a flush() to send the queued events
+     * @param autoFlushLimit - When defined, once this number of events has been queued the system perform a flush() to send the queued events
      * without waiting for the normal schedule timers. Passing undefined, null or a value less than or equal to zero will disable the auto flush.
      */
     public setEventQueueLimits(eventLimit: number, autoFlushLimit?: number) {

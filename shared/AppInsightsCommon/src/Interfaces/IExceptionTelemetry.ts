@@ -16,14 +16,12 @@ export interface IExceptionTelemetry extends IPartC {
     id?: string;
 
     /**
-     * @deprecated
-     * @type {Error}
-     * @description DEPRECATED: Please use exception instead. Behavior/usage for exception remains the same as this field.
+     * @deprecated Please use the `exception` field instead. The behavior and usage of `exception` remains the same as this field.
+     * Unique guid identifying this error.
      */
     error?: Error;
 
     /**
-     * @type {Error}
      * @description Error Object(s)
      */
     exception?: Error | IAutoExceptionTelemetry;
@@ -31,7 +29,6 @@ export interface IExceptionTelemetry extends IPartC {
     /**
      * @description Specified severity of exception for use with
      * telemetry filtering in dashboard
-     * @type {(SeverityLevel | number)}
      */
     severityLevel?: SeverityLevel | number;
 }
@@ -44,55 +41,46 @@ export interface IExceptionTelemetry extends IPartC {
 export interface IAutoExceptionTelemetry {
     /**
      * @description error message. Available as event in HTML onerror="" handler
-     * @type {string}
      */
     message: string;
 
     /**
      * @description URL of the script where the error was raised
-     * @type {string}
      */
     url: string;
 
     /**
      * @description Line number where error was raised
-     * @type {number}
      */
     lineNumber: number;
 
     /**
      * @description Column number for the line where the error occurred
-     * @type {number}
      */
     columnNumber: number;
 
     /**
      * @description Error Object (object)
-     * @type {any}
      */
     error: any;
     
     /**
      * @description The event at the time of the exception (object)
-     * @type {Event|string}
      */
     evt?: Event|string;
 
     /**
      * @description The provided stack for the error
-     * @type {IStackDetails}
      */
     stackDetails?: IStackDetails;
 
     /**
      * @description The calculated type of the error
-     * @type {string}
      */
     typeName?: string;
 
     /**
      * @description The descriptive source of the error
-     * @type {string}
      */
     errorSrc?: string;
 }

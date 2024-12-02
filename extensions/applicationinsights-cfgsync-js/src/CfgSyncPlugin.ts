@@ -413,7 +413,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
     /**
      * Get current configs of current instance.
-     * @param config current configs
+     * @param config - current configs
      */
     public getCfg(): IConfiguration & IConfig {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -422,7 +422,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
     /**
      * Manually set configs of current instance.
-     * @param config new configs
+     * @param config - new configs
     */
     public setCfg(config?: IConfiguration & IConfig): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -431,7 +431,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
 
     /**
      * Manually broadcast configs of current instance to all other instances.
-     * @param customDetails additional details should also be sent out to other instances
+     * @param customDetails - additional details should also be sent out to other instances
     */
     public sync(customDetails?: any): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -442,7 +442,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
      * Manually update event name.
      * If current instance is the main instance, then following config changes will be sent out under this new event name.
      * If current instance is listener instances, it will listen to event details under this new name.
-     * @param eventName new event name
+     * @param eventName - new event name
      */
     public updateEventListenerName(eventName?: string): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
