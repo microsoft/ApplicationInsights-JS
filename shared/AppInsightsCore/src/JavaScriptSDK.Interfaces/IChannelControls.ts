@@ -22,34 +22,33 @@ export interface IInternalOfflineSupport {
     getUrl: () => string;
     /**
      * Create payload data
-     * @param data data
      * @returns IPayloadData
      */
     createPayload: (data: string | Uint8Array) => IPayloadData;
     /**
      * Serialize an item into a string
-     * @param input telemetry item
-     * @param convertUndefined convert undefined to a custom-defined object
+     * @param input - telemetry item
+     * @param convertUndefined - convert undefined to a custom-defined object
      * @returns Serialized string
      */
     serialize?: (input: ITelemetryItem, convertUndefined?: any) => string;
     /**
      * Batch an array of strings into one string
-     * @param arr array of strings
+     * @param arr - array of strings
      * @returns a string represent all items in the given array
      */
     batch?: (arr: string[]) => string;
   
     /**
      * If the item should be processed by offline channel
-     * @param evt telemetry item
+     * @param evt - telemetry item
      * @returns should process or not
      */
     shouldProcess?: (evt: ITelemetryItem) => boolean;
 
     /**
      * Create 1ds payload data
-     * @param evts ITelemetryItems
+     * @param evts - ITelemetryItems
      * @returns IPayloadData
      */
       createOneDSPayload?: (evts: ITelemetryItem[]) => IPayloadData;

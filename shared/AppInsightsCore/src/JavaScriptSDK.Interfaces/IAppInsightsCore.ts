@@ -153,7 +153,6 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
 
     /**
      * Find and return the (first) plugin with the specified identifier if present
-     * @param pluginIdentifier
      */
     getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
   
@@ -217,7 +216,6 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook;

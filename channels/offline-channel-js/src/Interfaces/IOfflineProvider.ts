@@ -249,7 +249,7 @@ export interface ILocalStorageProviderContext {
 export interface IOfflineProvider {
     /**
      * Initializes the provider using the config
-     * @param providerContext The provider context that should be used to initialize the provider
+     * @param providerContext - The provider context that should be used to initialize the provider
      * @returns True if the provider is initialized and available for use otherwise false
      */
     initialize(providerContext: ILocalStorageProviderContext): boolean;
@@ -277,7 +277,7 @@ export interface IOfflineProvider {
 
      /**
      * Get all stored batches from the storage.
-     * @param cnt batch numbers if it is defined, it will returns given number of batches.
+     * @param cnt - batch numbers if it is defined, it will returns given number of batches.
      * if cnt is not defined, it will return all available batches
      */
      getAllEvents(cnt?: number): IStorageTelemetryItem[] | IPromise< IStorageTelemetryItem[]> | null;

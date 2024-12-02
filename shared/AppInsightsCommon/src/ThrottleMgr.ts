@@ -125,7 +125,7 @@ export class ThrottleMgr {
         /**
          * Set isReady State
          * if isReady set to true, message queue will be flushed automatically.
-         * @param isReady isReady State
+         * @param isReady - isReady State
          * @pa
          * @returns if message queue is flushed
          */

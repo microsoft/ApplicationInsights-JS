@@ -340,8 +340,8 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
 
             /**
              * Checks if the SDK should resend the payload after receiving this status code from the backend.
-             * @param statusCode
-            */
+             * @param statusCode - */
+
             function _isRetriable(item: IStorageTelemetryItem, statusCode: number): boolean {
                 if (!_shouldSend(item)) {
                     return false;

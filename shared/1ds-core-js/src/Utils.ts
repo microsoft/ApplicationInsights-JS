@@ -331,7 +331,7 @@ export function setProcessTelemetryTimings(event: ITelemetryItem, identifier: st
 
 /**
  * Returns a bitwise value for the FieldValueSanitizerType enum representing the decoded type of the passed value
- * @param value The value to determine the type
+ * @param value - The value to determine the type
  */
 export function getFieldValueType(value: any): FieldValueSanitizerType {
     let theType: FieldValueSanitizerType = FieldValueSanitizerType.NotSet;

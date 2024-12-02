@@ -144,7 +144,7 @@ export class WebStorageProvider implements IOfflineProvider {
 
     /**
      * Creates a WebStorageProvider using the provider storageType
-     * @param storageType The type of Storage provider, normal values are "localStorage" or "sessionStorage"
+     * @param storageType - The type of Storage provider, normal values are "localStorage" or "sessionStorage"
      */
     constructor(storageType: string, id?: string, unloadHookContainer?: IUnloadHookContainer) {
         dynamicProto(WebStorageProvider, this, (_this) => {
@@ -424,8 +424,8 @@ export class WebStorageProvider implements IOfflineProvider {
              * @ignore
              * Creates a new json store with the StorageJSON (may be null), a null db value indicates that the store
              * associated with the key is empty and should be removed.
-             * @param dbKey
-             * @param forceRemove
+             * @param dbKey - The key to associate with the database
+             * @param db - The database
              */
             function _newStore(dbKey: string, db: IStorageJSON): IJsonStoreDetails {
                 return {

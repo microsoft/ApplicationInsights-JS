@@ -27,14 +27,13 @@ export interface IDbContext {
     dbHdl: IDBDatabase[];
     /**
      * Adds a new handle to the array of open handles
-     * @param db
-     */
+     * @param db - */
+
     add(db: IDBDatabase): void;
 
     /**
      * Removes the given handle from the array of open handles (if present)
-     * @param db
-     */
+     * @param db - */
     remove(db: IDBDatabase): void;
 
     /**
@@ -94,8 +93,8 @@ export interface IIndexedDbOpenDbContext<C> {
      * The Promise returned by the openStore() method will not resolve until either the promise returned by the doAction() callback is resolved/rejected
      * or there was an error opening the store (The database was not or is no longer open).
      * Special Note: This method IS optional and will NOT exist for the versionChangeFunc() callback, but will always exist for the processFunc() provided during the openDb() method call.
-     * @param eventTable The name of the store (table) to open
-     * @param doAction The callback function to execute once the store is opened and will be passed a IIndexedDbStoreActionContext<> context instance, this
+     * @param eventTable - The name of the store (table) to open
+     * @param doAction - The callback function to execute once the store is opened and will be passed a IIndexedDbStoreActionContext<> context instance, this
      * context can be used to open a cursor and perform operations on the table. If the action does not return an Promise then open store will return a resolved promise with the returned value
      */
     openStore?<T>(
@@ -105,10 +104,10 @@ export interface IIndexedDbOpenDbContext<C> {
      * A helper method that opens the store and a cursor on the table previously opened by the openStore() method of the IIndexedDbOpenDbContext<> instance that was provided by the openDb() call.
      * This enables searching (query) and iterating over the request table. The returned Promise will be resolved with an array of the requested items (if successful) and whether
      * the passed processFunc() requests or manually inserts the elements into the array. Or rejected if there was an issue opening the cursor.
-     * @param eventTable The name of the store (table) to open
-     * @param query Either a string that will be used to construct a SimpleQuery definition or an instance of the IIndexedDbSimpleQuery interface used to open the cursor on the store.
+     * @param eventTable - The name of the store (table) to open
+     * @param query - Either a string that will be used to construct a SimpleQuery definition or an instance of the IIndexedDbSimpleQuery interface used to open the cursor on the store.
      * May be null to iterate over the entire store.
-     * @param processFunc [Optional] The callback method that will be called for every item found matching the query for the store.
+     * @param processFunc - [Optional] The callback method that will be called for every item found matching the query for the store.
      * - If no callback is provided then the returned Promise will include all items matching the provided query (if any are found)
      * - When provided it is the processFunc() responsibility to populate the passed values[] and this array will be the values used to resolve the outer Promise once the cursor has finished iterating.
      * - The result of the processFunc() (A CursorProcessResult value) will be used to determine whether the cursor will just Continue onto the next value (if present), Complete (stop iterating) or
@@ -145,9 +144,9 @@ export interface IIndexedDbStoreActionContext<C> {
      * A helper method that opens a cursor on the table previously opened by the openStore() method of the IIndexedDbOpenDbContext<> instance that was provided by the openDb() call.
      * This enables searching (query) and iterating over the request table. The returned Promise will be resolved with an array of the requested items (if successful) and whether
      * the passed processFunc() requests or manually inserts the elements into the array. Or rejected if there was an issue opening the cursor.
-     * @param query Either a string that will be used to construct a SimpleQuery definition or an instance of the IIndexedDbSimpleQuery interface used to open the cursor on the store.
+     * @param query - Either a string that will be used to construct a SimpleQuery definition or an instance of the IIndexedDbSimpleQuery interface used to open the cursor on the store.
      * May be null to iterate over the entire store.
-     * @param processFunc [Optional] The callback method that will be called for every item found matching the query for the store.
+     * @param processFunc - [Optional] The callback method that will be called for every item found matching the query for the store.
      * - If no callback is provided then the returned Promise will include all items matching the provided query (if any are found)
      * - When provided it is the processFunc() responsibility to populate the passed values[] and this array will be the values used to resolve the outer Promise once the cursor has finished iterating.
      * - The result of the processFunc() (A CursorProcessResult value) will be used to determine whether the cursor will just Continue onto the next value (if present), Complete (stop iterating) or
@@ -162,7 +161,7 @@ export interface IIndexedDbStoreActionContext<C> {
      * The Promise returned by the newTransaction() method will not resolve until either the promise returned by the doAction() callback is resolved/rejected
      * or there was an error opening the store (The database was not or is no longer open).
      * Special Note: This method IS optional and will NOT exist for the versionChangeFunc() callback, but will always exist for the processFunc() provided during the openDb() method call.
-     * @param doAction The callback function to execute once the store is opened and will be passed a IIndexedDbStoreActionContext<> context instance, this
+     * @param doAction - The callback function to execute once the store is opened and will be passed a IIndexedDbStoreActionContext<> context instance, this
      * context can be used to open a cursor and perform operations on the table.
      */
     newTransaction<T>(
@@ -213,7 +212,7 @@ export interface IIndexedDbSimpleQuery {
     /**
      * [Optional] Callback method used to provide additional validation on whether the returned value from the IndexedDB Api cursor iteration, this method
      * must return true for the processFunc() of the openCursor() is called or the value is just added to the identified items.
-     * @param value The value returned by the IndexedDB IDBCursorWithValue cursor event.
+     * @param value - The value returned by the IndexedDB IDBCursorWithValue cursor event.
      * @returns true if the value matches otherwise false
      */
     isMatch?(value: any): boolean;

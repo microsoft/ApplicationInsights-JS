@@ -66,7 +66,7 @@ function _hasProperty(theClass: any, property: string) {
 
 /**
  * Enable the lookup of test mock objects if requested
- * @param enabled
+ * @param enabled - A flag to enable or disable the mock
  */
 export function setEnableEnvMocks(enabled: boolean) {
     _enableMocks = enabled;
@@ -286,7 +286,7 @@ function _getNamedValue(values: any, name: string) {
 
 /**
  * Helper function to fetch the named meta-tag from the page.
- * @param name
+ * @param name - The name of the meta-tag to find.
  */
 export function findMetaTag(name: string): any {
     let doc = getDocument();
@@ -300,7 +300,7 @@ export function findMetaTag(name: string): any {
 
 /**
  * Helper function to fetch the named server timing value from the page response (first navigation event).
- * @param name
+ * @param name - The name of the server timing value to find.
  */
 export function findNamedServerTiming(name: string): any {
     let value: any;

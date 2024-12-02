@@ -50,8 +50,8 @@ export interface IConfiguration {
      * be logged to console if their severity meets the configured loggingConsoleLevel
      *
      * 0: ALL console logging off
-     * 1: logs to console: severity >= CRITICAL
-     * 2: logs to console: severity >= WARNING
+     * 1: logs to console: severity \>= CRITICAL
+     * 2: logs to console: severity \>= WARNING
      */
     loggingLevelConsole?: number;
 
@@ -61,8 +61,8 @@ export interface IConfiguration {
      * the configured instrumentation key.
      *
      * 0: ALL iKey logging off
-     * 1: logs to iKey: severity >= CRITICAL
-     * 2: logs to iKey: severity >= WARNING
+     * 1: logs to iKey: severity \>= CRITICAL
+     * 2: logs to iKey: severity \>= WARNING
      */
     loggingLevelTelemetry?: number
 
@@ -93,7 +93,6 @@ export interface IConfiguration {
     readonly channels?: IChannelControls[][];
 
     /**
-     * @type {boolean}
      * Flag that disables the Instrumentation Key validation.
      */
     disableInstrumentationKeyValidation?: boolean;
@@ -129,7 +128,6 @@ export interface IConfiguration {
     /**
      * @description Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. It
      * can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
-     * @type {string}
      * @defaultValue ""
      */
     cookieDomain?: string;
@@ -137,7 +135,6 @@ export interface IConfiguration {
     /**
      * @description Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application
      * gateway. It can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
-     * @type {string}
      * @defaultValue ""
      */
     cookiePath?: string;

@@ -26,7 +26,7 @@ export function isValidPersistenceLevel(value: EventPersistence | number): boole
 /**
  * Get domian from an endpoint url.
  * for example, https://test.com?auth=true, will return test.com
- * @param endpoint endpoint url
+ * @param endpoint - endpoint url
  * @returns domain string
  */
 export function getEndpointDomain(endpoint: string) {
@@ -47,7 +47,7 @@ export function getEndpointDomain(endpoint: string) {
 
 /**
  * If current value is equal or greater than zero.
- * @param value number
+ * @param value - number
  * @returns boolean
  */
 export function isGreaterThanZero(value: number) {
@@ -62,7 +62,7 @@ const _base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+
 /**
  * Base64-encodes a Uint8Array.
  *
- * @param data the Uint8Array or string to encode.
+ * @param data - the Uint8Array or string to encode.
  *
  * @returns the base64-encoded output string.
  */
@@ -104,7 +104,7 @@ export function base64Encode(data: string | Uint8Array) {
 
 /**
  * Base64-decodes an encoded string and transforms it back to a Uint8Array.
- * @param input the encoded string to decode
+ * @param input - the encoded string to decode
  * @returns  Uint8Array
  */
 export function base64Decode(input: string) {
@@ -157,7 +157,7 @@ export function getTimeId(): string {
 /**
  * Get time value from a time id that is generated from getTimeId() function.
  * For example, if time id is "12345678.randomfl", 12345678 will be returned
- * @param id time id string
+ * @param id - time id string
  * @returns time value number
  */
 export function getTimeFromId(id: string) {
@@ -179,7 +179,7 @@ export function getTimeFromId(id: string) {
  * Persistence level will be get from root, baseData or data in order.
  * For example, if persistence level is set both in root and baseData, the root one will be returned.
  * If no valid persistence level defined, normal level will be returned.
- * @param item telemetry item
+ * @param item - telemetry item
  * @returns persistent level
  */
 export function getPersistence(item: ITelemetryItem | IPostTransmissionTelemetryItem): number | EventPersistence {

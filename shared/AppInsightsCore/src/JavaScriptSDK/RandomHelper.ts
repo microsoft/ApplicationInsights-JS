@@ -40,7 +40,7 @@ function _autoSeedMwc() {
 /**
  * Generate a random value between 0 and maxValue, max value should be limited to a 32-bit maximum.
  * So maxValue(16) will produce a number from 0..16 (range of 17)
- * @param maxValue
+ * @param maxValue - The max value for the range
  */
 export function randomValue(maxValue: number) {
     if (maxValue > 0) {

@@ -626,8 +626,8 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a user action or other occurrence.
-     * @param event
-     * @param [customProperties]
+     * @param event - event to be sent
+     * @param customProperties - properties that would be included as part of the event
      */
     public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -635,7 +635,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Logs that a page, or similar container was displayed to the user.
-     * @param pageView
+     * @param pageView - page view to be sent
      */
     public trackPageView(pageView?: IPageViewTelemetry) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -643,7 +643,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a bag of performance information via the customProperties field.
-     * @param pageViewPerformance
+     * @param pageViewPerformance - performance information to be sent
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -651,8 +651,8 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log an exception that you have caught.
-     * @param exception
-     * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
+     * @param exception - exception to be sent
+     * @param customProperties - Additional data used to filter pages and metrics in the portal. Defaults to empty.
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -661,7 +661,7 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Manually send uncaught exception telemetry. This method is automatically triggered
      * on a window.onerror event.
-     * @param exception
+     * @param exception - The exception to be sent.
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -669,8 +669,8 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a diagnostic scenario such entering or leaving a function.
-     * @param trace
-     * @param [customProperties]
+     * @param trace - trace to be sent
+     * @param customProperties - Additional custom properties to include in the event.
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -687,7 +687,7 @@ export class AppInsightsSku implements IApplicationInsights {
      * aggregating multiple measurements and sending the resulting average and modifying
      * the `sampleCount` field of {@link IMetricTelemetry}.
      * @param metric - input object argument. Only `name` and `average` are mandatory.
-     * @param [customProperties]
+     * @param customProperties - Additional custom properties to include in the event.
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -705,10 +705,10 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Stops the timer that was started by calling `startTrackPage` and sends the pageview load time telemetry with the specified properties and measurements.
      * The duration of the page view will be the time between calling `startTrackPage` and `stopTrackPage`.
-     * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
-     * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
-     * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
-     * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+     * @param   name  - The string you used as the name in startTrackPage. Defaults to the document title.
+     * @param   url   - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
+     * @param   properties - additional data used to filter pages and metrics in the portal. Defaults to empty.
+     * @param   measurements - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
     public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -720,9 +720,9 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log an extended event that you started timing with `startTrackEvent`.
-     * @param   name    The string you used to identify this event in `startTrackEvent`.
-     * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
-     * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+     * @param   name  - The string you used to identify this event in `startTrackEvent`.
+     * @param   properties - map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+     * @param   measurements -  map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
     public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -739,9 +739,9 @@ export class AppInsightsSku implements IApplicationInsights {
      * Set the authenticated user id and the account id. Used for identifying a specific signed-in user. Parameters must not contain whitespace or ,;=|
      *
      * The method will only set the `authenticatedUserId` and `accountId` in the current page view. To set them for the whole session, you should set `storeInCookie = true`
-     * @param authenticatedUserId
-     * @param [accountId]
-     * @param [storeInCookie=false]
+     * @param authenticatedUserId - The account ID to set
+     * @param accountId - The account ID to set
+     * @param storeInCookie - Whether the values should be set for the whole session
      */
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -758,7 +758,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a dependency call (e.g. ajax)
-     * @param dependency
+     * @param dependencyData dependency data object
      */
     public trackDependencyData(dependency: IDependencyTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -806,7 +806,7 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Overwrite the lazy loaded fields of global window snippet to contain the
      * actual initialized API methods
-     * @param snippet
+     * @param snippet - The global snippet
      */
     public updateSnippetDefinitions(snippet: Snippet) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -935,7 +935,7 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
+     * @param handler - The handler to call when the config changes
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<IConfiguration>): IUnloadHook {

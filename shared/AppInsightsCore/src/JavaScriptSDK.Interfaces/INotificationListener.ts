@@ -35,7 +35,7 @@ export interface INotificationListener {
     /**
      * [Optional] This event is sent if you have enabled perf events, they are primarily used to track internal performance testing and debugging
      * the event can be displayed via the debug plugin extension.
-     * @param perfEvent
+     * @param perfEvent - The performance event object
      */
     perfEvent?: (perfEvent: IPerfEvent) => void;
 
