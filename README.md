@@ -272,16 +272,18 @@ When using stopTrackPage and stopTrackEvent, you can pass in data categorized by
 Strings: These should be included under the properties field.
 Numbers: Add these under the measurements field.
 Remember, the order of the properties and measurements should not be altered. You can achieve this using the following code structure:
+Note: Ensure that `properties` contains only string values. If you pass in a nested object (e.g., `{nested: {key: "value"}}`), it will be automatically stringified (e.g., `"[object Object]"`) before being sent with the event data.
 
 ```js
 appInsights.startTrackEvent("event name"); 
 appInsights.stopTrackEvent("event name", {
-  stringProp1: 'string',
-  stringProp2: {nested:"objects are okay too"}
+    stringProp1: 'string',
+    stringProp2: {nested: "objects are okay too", key: "value"} // In this example, stringProp2 will be sent as: "stringProp2": "{\"nested\":\"objects are okay too\",\"key\":\"value\"}".
   },
   {numProp1: 3.15, numProp2: 90000}
 )
 ```
+
 
 
 ### Setting Up Autocollection
