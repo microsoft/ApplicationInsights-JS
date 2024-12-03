@@ -130,8 +130,8 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
-             * @param severity - {LoggingSeverity} - The severity of the log message
-             * @param message - {_InternalLogMessage} - The log message.
+             * @param severity - The severity of the log message
+             * @param message  - The log message.
              */
             _self.throwInternal = (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => {
                 const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
@@ -258,7 +258,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
     /**
      * 0: OFF (default)
      * 1: CRITICAL
-     * 2: >= WARNING
+     * 2: \>= WARNING
      */
     public consoleLoggingLevel(): number {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -267,8 +267,8 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
     /**
      * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
-     * @param severity - {LoggingSeverity} - The severity of the log message
-     * @param message - {_InternalLogMessage} - The log message.
+     * @param severity  - The severity of the log message
+     * @param message - The log message.
      */
     public throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -276,7 +276,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
     /**
      * This will write a debug message to the console if possible
-     * @param message - {string} - The debug message
+     * @param message - The debug message
      */
     public debugToConsole(message: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -284,7 +284,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
     /**
      * This will write a warning to the console if possible
-     * @param message - {string} - The warning message
+     * @param message  - The warning message
      */
     public warnToConsole(message: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -292,7 +292,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
     /**
      * This will write an error to the console if possible
-     * @param message - {string} - The warning message
+     * @param message - The warning message
      */
     public errorToConsole(message: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -307,8 +307,8 @@ export class DiagnosticLogger implements IDiagnosticLogger {
 
     /**
      * Logs a message to the internal queue.
-     * @param severity - {LoggingSeverity} - The severity of the log message
-     * @param message - {_InternalLogMessage} - The message to log.
+     * @param severity - The severity of the log message
+     * @param message - The message to log.
      */
     public logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -337,8 +337,8 @@ function _getLogger(logger: IDiagnosticLogger) {
  * support minification as logger.throwInternal() will not compress the publish "throwInternal" used throughout
  * the code.
  * @param logger - The Diagnostic Logger instance to use.
- * @param severity - {LoggingSeverity} - The severity of the log message
- * @param message - {_InternalLogMessage} - The log message.
+ * @param severity - The severity of the log message
+ * @param message  - The log message.
  */
 export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
     _getLogger(logger).throwInternal(severity, msgId, msg, properties, isUserAct);
@@ -347,7 +347,7 @@ export function _throwInternal(logger: IDiagnosticLogger, severity: LoggingSever
 /**
  * This is a helper method which will call warnToConsole on the passed logger with the provided message.
  * @param logger - The Diagnostic Logger instance to use.
- * @param message - {_InternalLogMessage} - The log message.
+ * @param message  - The log message.
  */
 export function _warnToConsole(logger: IDiagnosticLogger, message: string) {
     _getLogger(logger).warnToConsole(message);
@@ -356,8 +356,8 @@ export function _warnToConsole(logger: IDiagnosticLogger, message: string) {
 /**
  * Logs a message to the internal queue.
  * @param logger - The Diagnostic Logger instance to use.
- * @param severity - {LoggingSeverity} - The severity of the log message
- * @param message - {_InternalLogMessage} - The message to log.
+ * @param severity  - The severity of the log message
+ * @param message - The message to log.
  */
 export function _logInternalMessage(logger: IDiagnosticLogger, severity: LoggingSeverity, message: _InternalLogMessage) {
     _getLogger(logger).logInternalMessage(severity, message);

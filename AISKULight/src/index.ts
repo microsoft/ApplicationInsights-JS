@@ -29,7 +29,6 @@ function _chkDiagLevel(value: number) {
 
 /**
  * @export
- * @class ApplicationInsights
  */
 export class ApplicationInsights {
     public readonly config: IConfiguration & IConfig;

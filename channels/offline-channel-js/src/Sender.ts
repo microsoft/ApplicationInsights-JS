@@ -298,7 +298,7 @@ export class Sender {
      * send is complete. The actual implementation of the `IPromise` will be a native Promise (if supported) or the default
      * as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param async - Indicates if the events should be sent asynchronously
-     * @param forcedSender - {SenderFunction} - Indicates the forcedSender, undefined if not passed
+     * @param forcedSender - Indicates the forcedSender, undefined if not passed
      * @returns - Nothing or optionally, if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * which will be resolved (or reject) once the send is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * should only be returned when async is true.

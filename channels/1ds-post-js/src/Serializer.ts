@@ -434,9 +434,9 @@ export class Serializer {
 
     /**
      * Append the batched events into the payload
-     * @param payload The serialized payload detail object
-     * @param theBatch The batched events to append to the payload
-     * @param maxEventsPerBatch The maximum number of events to allow in the payload
+     * @param payload - The serialized payload detail object
+     * @param theBatch - The batched events to append to the payload
+     * @param maxEventsPerBatch - The maximum number of events to allow in the payload
      * @returns True if the events from the new batch where attempted to be added to the payload otherwise false
      */
     public appendPayload(payload: ISerializedPayload, theBatch: EventBatch, maxEventsPerBatch: number): boolean {

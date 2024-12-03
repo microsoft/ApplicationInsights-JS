@@ -520,7 +520,7 @@ export class WebStorageProvider implements IOfflineProvider {
 
     /**
      * Initializes the provider using the config
-     * @param providerContext The provider context that should be used to initialize the provider
+     * @param providerContext - The provider context that should be used to initialize the provider
      * @returns True if the provider is initialized and available for use otherwise false
      */
     public initialize(providerContext: ILocalStorageProviderContext): boolean {

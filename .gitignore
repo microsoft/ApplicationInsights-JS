@@ -271,3 +271,7 @@ ai.tests.d.ts
 
 # Generated Constant File
 **/__DynamicConstants.ts
+
+# Generated Docs
+docs/webSdk/applicationinsights*/**
+docs/webSdk/1ds*/**
