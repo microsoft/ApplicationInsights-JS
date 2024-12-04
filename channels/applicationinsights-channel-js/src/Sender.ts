@@ -928,12 +928,48 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     return _getOnComplete(payload, status, headers, response);
                 }
                 let payloadData = _getPayload(payload);
-                let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST;
+                let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST; // maybe can check here
                 if (sendPostFunc && payloadData) {
                     // ***********************************************************************************************
                     // mark payload as sent at the beginning of calling each send function
                     if (markAsSent) {
                         _self._buffer.markAsSent(payload);
+                    }
+
+                    console.log("inside sender _doSend", payloadData);
+                    console.log("isAsync", isAsync);
+
+                    const CompressionStream = (window as any).CompressionStream;
+                    // If CompressionStream is available, use it
+                    if (isAsync && CompressionStream && typeof CompressionStream !== "undefined") {
+                        // compress the payload
+                        let body = new Response(payloadData.data).body;
+                        if (body) {
+                            const compressedStream = body.pipeThrough(new CompressionStream("deflate-raw"));
+                            return new Response(compressedStream)
+                                .arrayBuffer()
+                                .then((bytes) => {
+                                    payloadData.data = new Uint8Array(bytes); // Update the payloadData
+                                    console.log("Compressed payloadData", payloadData);
+                                    // Return the result of sending the compressed data
+                                    let result = sendPostFunc(payloadData, onComplete, !isAsync);
+                                    if (result) {
+                                        return result;
+                                    } else {
+                                        return null;
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.error("Error compressing payload:", error);
+                                    // Fallback to sending uncompressed data
+                                    let result = sendPostFunc(payloadData, onComplete, !isAsync);
+                                    if (result) {
+                                        return result;
+                                    } else {
+                                        return null;
+                                    }
+                                });
+                        }
                     }
 
                     return sendPostFunc(payloadData, onComplete, !isAsync);
@@ -1134,7 +1170,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     let syncFetchPayload = _sendPostMgr.getSyncFetchPayload();
 
-                    if ((syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {
+                    if ((syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {  // SIYU Q: do we want to zip here before fall into XHR?
                         transport = TransportType.Fetch;
                     } else if (isBeaconsSupported()) {
                         // Fallback to beacon sender as we at least get told which events can't be scheduled
