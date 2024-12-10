@@ -108,8 +108,8 @@ export interface IConfiguration {
     enablePerfMgr?: boolean;
 
     /**
-     * [Optional] Callback function that will be called to create a the IPerfManager instance when required and ```enablePerfMgr```
-     * is enabled, this enables you to override the default creation of a PerfManager() without needing to ```setPerfMgr()```
+     * [Optional] Callback function that will be called to create a the IPerfManager instance when required and `enablePerfMgr`
+     * is enabled, this enables you to override the default creation of a PerfManager() without needing to `setPerfMgr()`
      * after initialization.
      */
     createPerfMgr?: (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager;

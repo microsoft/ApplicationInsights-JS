@@ -254,9 +254,9 @@ export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNam
 /**
  * Removes an event handler for the specified event
  * @param Object - to remove the event from
- * @param eventName - {string} - The name of the event, with optional namespaces or just the namespaces,
+ * @param eventName - The name of the event, with optional namespaces or just the namespaces,
  * such as "click", "click.mynamespace" or ".mynamespace"
- * @param handlerRef - {any} - The callback function that needs to be removed from the given event, when using a
+ * @param handlerRef - The callback function that needs to be removed from the given event, when using a
  * namespace (with or without a qualifying event) this may be null to remove all previously attached event handlers
  * otherwise this will only remove events with this specific handler.
  * @param evtNamespace - [Optional] Additional namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace,
@@ -303,9 +303,9 @@ export function attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
 /**
  * Removes an event handler for the specified event
  * @param Object - to remove the event from
- * @param eventNameWithoutOn - {string} - The name of the event, with optional namespaces or just the namespaces,
+ * @param eventNameWithoutOn  - The name of the event, with optional namespaces or just the namespaces,
  * such as "click", "click.mynamespace" or ".mynamespace"
- * @param handlerRef - {any} - The callback function that needs to be removed from the given event, when using a
+ * @param handlerRef - The callback function that needs to be removed from the given event, when using a
  * namespace (with or without a qualifying event) this may be null to remove all previously attached event handlers
  * otherwise this will only remove events with this specific handler.
  * @param useCapture - [Optional] Defaults to false
@@ -316,10 +316,10 @@ export function detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: an
 
 /**
  * Trys to add an event handler for the specified event to the window, body and document
- * @param eventName - {string} - The name of the event
- * @param callback - {any} - The callback function that needs to be executed for the given event
+ * @param eventName  - The name of the event
+ * @param callback  - The callback function that needs to be executed for the given event
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
- * @returns {boolean} - true if the handler was successfully added
+ * @returns - true if the handler was successfully added
  */
 export function addEventHandler(eventName: string, callback: any, evtNamespace?: string | string[] | null): boolean {
     let result = false;
@@ -339,9 +339,9 @@ export function addEventHandler(eventName: string, callback: any, evtNamespace?:
 
 /**
  * Trys to remove event handler(s) for the specified event/namespace to the window, body and document
- * @param eventName - {string} - The name of the event, with optional namespaces or just the namespaces,
+ * @param eventName - The name of the event, with optional namespaces or just the namespaces,
  * such as "click", "click.mynamespace" or ".mynamespace"
- * @param callback - {any} - - The callback function that needs to be removed from the given event, when using a
+ * @param callback - The callback function that needs to be removed from the given event, when using a
  * namespace (with or without a qualifying event) this may be null to remove all previously attached event handlers
  * otherwise this will only remove events with this specific handler.
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.

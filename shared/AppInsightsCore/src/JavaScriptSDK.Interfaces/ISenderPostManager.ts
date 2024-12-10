@@ -68,9 +68,9 @@ export interface _ISendPostMgrConfig {
     disableCredentials?: boolean;
 
     /**
-     * Identifies if XMLHttpRequest or XDomainRequest (for IE < 9) should be used
+     * Identifies if `XMLHttpRequest` or `XDomainRequest` (for IE version before 9) should be used
      * Default: false
-     * @since version after 3.1.0
+     * @since 3.1.1
      */
     disableXhr?: boolean;
     

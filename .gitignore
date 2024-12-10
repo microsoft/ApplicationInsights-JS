@@ -271,3 +271,6 @@ ai.tests.d.ts
 
 # Generated Constant File
 **/__DynamicConstants.ts
+
+# Generated Docs
+docs/
