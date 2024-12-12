@@ -43,7 +43,7 @@
             "116": { 
                 "disabled": false,
                 "limit": { 
-                    "samplingRate": 10000,
+                    "samplingRate": 100000,
                     "maxSendNumber": 1
                 },
                 "interval": {
