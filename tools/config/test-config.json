@@ -1,16 +1,18 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "enabled": true,
     "featureOptIn": {
         "iKeyUsage": {
             "mode": 3,
             "onCfg": { 
                 "throttleMgrCfg.109.disabled": false,
-                "throttleMgrCfg.106.disabled": false
+                "throttleMgrCfg.106.disabled": false,
+                "throttleMgrCfg.110.disabled": false
             },
             "offCfg": { 
                 "throttleMgrCfg.109.disabled": true,
-                "throttleMgrCfg.106.disabled": true
+                "throttleMgrCfg.106.disabled": true,
+                "throttleMgrCfg.110.disabled": true
             }
         }
     },
@@ -36,6 +38,16 @@
                     "monthInterval": 1,
                     "dayInterval": 1,
                     "daysOfMonth":[13]
+                }
+            },
+            "116": { 
+                "disabled": false,
+                "limit": { 
+                    "samplingRate": 10000,
+                    "maxSendNumber": 1
+                },
+                "interval": {
+                    "dayInterval": 1
                 }
             }
         }
