@@ -52,6 +52,14 @@
   
   </details>
 
+> # URGENT ACTION: Stop using az416426.vo.msecnd.net
+>
+> To avoid any global OUTAGE you MUST change ALL of your CDN usage from “https://az416426.vo.msecnd.net/scripts/..” to our primary CDN endpoint https://js.monitor.azure.com/scripts/...
+>
+> See/follow [Issue #2457](https://github.com/microsoft/ApplicationInsights-JS/issues/2457) for updated details
+>
+> We are currently investigating the available options on how we can avoid / migrate / mitigate this situation, but at this point it is **HIGHLY** likely that there will be either a temporary or permanent outage of this domain. As we currently have no known way to “migrate” this domain to a different CDN.
+
 ## Before Getting Started
 
 This SDK is intended for browser environments and is not suitable for other environments, like Node.js applications.
@@ -189,14 +197,25 @@ cfg: { // Application Insights Configuration
 
 #### Active Public CDN endpoints
 
+> ## URGENT ACTION: Stop using az416426.vo.msecnd.net
+>
+> To avoid any global OUTAGE you MUST change ALL of your CDN usage from “https://az416426.vo.msecnd.net/scripts/..” to our primary CDN endpoint https://js.monitor.azure.com/scripts/...
+>
+> See/follow [Issue #2457](https://github.com/microsoft/ApplicationInsights-JS/issues/2457) for updated details
+>
+> We are currently investigating the available options on how we can avoid / migrate / mitigate this situation, but at this point it is **HIGHLY** likely that there will be either a temporary or permanent outage of this domain. As we currently have no known way to “migrate” this domain to a different CDN.
+
 To help with global resiliency, we have added and updated our primary CDN endpoint (source URL) so that if required we can address any outages without the need for everyone to update the URL used by the Application Insights snippet within their application.
 
-All active CDN endpoints contain all of the previous (and future) versions of the SDK and there is currently no plans to stop or block accessing the snippet from the previous (legacy/backup) URL.
+~~All active CDN endpoints contain all of the previous (and future) versions of the SDK and there is currently no plans to stop or block accessing the snippet from the previous (legacy/backup) URL.~~
+
+Due to [Issue #2457](https://github.com/microsoft/ApplicationInsights-JS/issues/2457) we are now declaring that you MUST always use `js.monitor.azure.com` domain.
+
 
 | State | CDN Endpoint | Description
 |-------|--------------|--------------------
 | Primary | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Provides additional resiliency, allowing us to redirect to a different CDN provider should there be an unexpected issue (if required).
-| ~~Legacy/Backup~~<br />:exclamation: Deprecated | ~~https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js~~ | Due to the legacy nature of this URL / Domain, __if there is an unexpected issue (outage) with this domain, your application will need to be updated and deployed to use the new URL__.<br />:exclamation: Due to #1813 this URL is now being classified as Deprecated and we will be actively making changes to the SDK to warnings in your telemetry if we detect this domain being used.
+| ~~Legacy/Backup~~<br />:exclamation: ~~Deprecated~~ DO NOT USE | ~~https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js~~ | ~~Due to the legacy nature of this URL / Domain, __if there is an unexpected issue (outage) with this domain, your application will need to be updated and deployed to use the new URL__.<br />:exclamation: Due to #1813 this URL is now being classified as Deprecated and we will be actively making changes to the SDK to warnings in your telemetry if we detect this domain being used.~~<br/>Due to [Issue #2457](https://github.com/microsoft/ApplicationInsights-JS/issues/2457) we are now declaring that you MUST always use `js.monitor.azure.com` domain.
 
 ### Connection String Setup
 
@@ -272,18 +291,16 @@ When using stopTrackPage and stopTrackEvent, you can pass in data categorized by
 Strings: These should be included under the properties field.
 Numbers: Add these under the measurements field.
 Remember, the order of the properties and measurements should not be altered. You can achieve this using the following code structure:
-Note: Ensure that `properties` contains only string values. If you pass in a nested object (e.g., `{nested: {key: "value"}}`), it will be automatically stringified (e.g., `"[object Object]"`) before being sent with the event data.
 
 ```js
 appInsights.startTrackEvent("event name"); 
 appInsights.stopTrackEvent("event name", {
-    stringProp1: 'string',
-    stringProp2: {nested: "objects are okay too", key: "value"} // In this example, stringProp2 will be sent as: "stringProp2": "{\"nested\":\"objects are okay too\",\"key\":\"value\"}".
+  stringProp1: 'string',
+  stringProp2: {nested: "objects are okay too", key: "value"} // In this example, stringProp2 will be sent as: "stringProp2": "{\"nested\":\"objects are okay too\",\"key\":\"value\"}".
   },
   {numProp1: 3.15, numProp2: 90000}
 )
 ```
-
 
 
 ### Setting Up Autocollection
