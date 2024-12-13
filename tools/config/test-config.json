@@ -6,14 +6,24 @@
             "mode": 3,
             "onCfg": { 
                 "throttleMgrCfg.109.disabled": false,
-                "throttleMgrCfg.106.disabled": false,
+                "throttleMgrCfg.106.disabled": false
+            },
+            "offCfg": { 
+                "throttleMgrCfg.109.disabled": true,
+                "throttleMgrCfg.106.disabled": true
+            }
+        },
+        "CdnUsage": {
+            "mode": 3,
+            "onCfg": { 
+                "throttleMgrCfg.109.disabled": false,
                 "throttleMgrCfg.110.disabled": false
             },
             "offCfg": { 
                 "throttleMgrCfg.109.disabled": true,
-                "throttleMgrCfg.106.disabled": true,
                 "throttleMgrCfg.110.disabled": true
             }
+
         }
     },
     "config": {
