@@ -50,7 +50,7 @@
                     "daysOfMonth": [1]
                 }
             },
-            "116": { 
+            "110": { 
                 "disabled": false,
                 "limit": { 
                     "samplingRate": 10000,
