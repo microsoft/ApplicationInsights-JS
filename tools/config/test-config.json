@@ -14,7 +14,7 @@
             }
         },
         "CdnUsage": {
-            "mode": 3,
+            "mode": 4,
             "onCfg": { 
                 "throttleMgrCfg.109.disabled": false,
                 "throttleMgrCfg.110.disabled": false
@@ -50,7 +50,7 @@
                     "daysOfMonth":[13]
                 }
             },
-            "116": { 
+            "110": { 
                 "disabled": false,
                 "limit": { 
                     "samplingRate": 100000,
