@@ -81,8 +81,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
 
 /**
  * Helper to create the default performance manager
- * @param core
- * @param notificationMgr
+ * @param core - The AppInsightsCore instance
+ * @param notificationMgr - The notification manager
  */
 function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
     return new PerfManager(notificationMgr);
@@ -1563,7 +1563,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
+     * @param handler - The watcher handler to call when the config changes
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook {

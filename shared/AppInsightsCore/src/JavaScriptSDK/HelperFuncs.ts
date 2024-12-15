@@ -165,8 +165,8 @@ function _createProxyFunction<S>(source: S | (() => S), funcName: (keyof S)) {
  *
  * Special ES3 Notes:
  * Updates (setting) of direct property values on the target or indirectly on the source object WILL NOT WORK PROPERLY, updates to the
- * properties of "referenced" object will work (target.context.newValue = 10 => will be reflected in the source.context as it's the
- * same object). ES3 Failures: assigning target.myProp = 3 -> Won't change source.myProp = 3, likewise the reverse would also fail.
+ * properties of "referenced" object will work (target.context.newValue = 10 =\> will be reflected in the source.context as it's the
+ * same object). ES3 Failures: assigning target.myProp = 3 -\> Won't change source.myProp = 3, likewise the reverse would also fail.
  * @param target - The target object to be assigned with the source properties and functions
  * @param source - The source object which will be assigned / called by setting / calling the targets proxies
  * @param chkSet - An optional callback to determine whether a specific property/function should be proxied
