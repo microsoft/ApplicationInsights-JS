@@ -1,7 +1,7 @@
 import { strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import {  DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
-import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString } from "../../../src/Telemetry/Common/DataSanitizer";
+import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, dataSanitizeProperties, DataSanitizerValues, dataSanitizeString } from "../../../src/Telemetry/Common/DataSanitizer";
 
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -35,12 +35,54 @@ export class ApplicationInsightsTests extends AITestClass {
         });
 
         this.testCase({
+            name: 'DataSanitizerTests: property sanitizer respects default truncation limit.',
+            test: () => {
+                // const define
+                const MAX_PROPERTY_LENGTH: number = DataSanitizerValues.MAX_PROPERTY_LENGTH;
+
+                // use cases
+                const messageShort: string = "hi";
+                const messageLong: string = strRepeat("abc", MAX_PROPERTY_LENGTH + 1);
+                const testProperties = {
+                    messageLong,
+                    messageShort
+                }
+
+                // Assert
+                Assert.equal(messageShort.length, dataSanitizeProperties(this.logger, testProperties).messageShort.length);
+                Assert.notEqual(messageLong.length, dataSanitizeProperties(this.logger, testProperties).messageLong.length);
+                Assert.equal(MAX_PROPERTY_LENGTH, dataSanitizeProperties(this.logger, testProperties).messageLong.length);
+            }
+        })
+
+        this.testCase({
+            name: 'DataSanitizerTests: property sanitizer respects max length parameter being passed in.',
+            test: () => {
+                // const define     
+                const customMaxLength = 5;
+
+                // use cases
+                const messageShort: string = "hi";
+                const messageLong: string = strRepeat("abc",  customMaxLength + 1);
+                const testProperties = {
+                    messageLong,
+                    messageShort
+                }
+
+                // Assert
+                Assert.equal(messageShort.length, dataSanitizeProperties(this.logger, testProperties, customMaxLength).messageShort.length);
+                Assert.notEqual(messageLong.length, dataSanitizeProperties(this.logger, testProperties, customMaxLength).messageLong.length);
+                Assert.equal(customMaxLength, dataSanitizeProperties(this.logger, testProperties, customMaxLength).messageLong.length);
+            }
+        })
+
+        this.testCase({
             name: 'DataSanitizerTests: throwInternal function is called correctly in sanitizeMessage function',
             test: () => {
                 // const define
                 const loggerStub = this.sandbox.stub(this.logger , "throwInternal");
                 const MAX_MESSAGE_LENGTH = DataSanitizerValues.MAX_MESSAGE_LENGTH;
-                
+
                 // use cases
                 const messageShort: String = "hi";
                 const messageLong = strRepeat("a", MAX_MESSAGE_LENGTH + 2);
@@ -139,7 +181,7 @@ export class ApplicationInsightsTests extends AITestClass {
 
                 // const define
                 const MAX_STRING_LENGTH = DataSanitizerValues.MAX_STRING_LENGTH;
-               
+
                 // use cases
                 const strShort: String = "hi";
                 const strLong = strRepeat("a", MAX_STRING_LENGTH + 2);
@@ -162,7 +204,7 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // const define
                 const MAX_NAME_LENGTH = DataSanitizerValues.MAX_NAME_LENGTH;
-               
+
                 // use cases
                 const nameShort: String = "hi";
                 const nameLong = strRepeat("a", MAX_NAME_LENGTH + 2);
