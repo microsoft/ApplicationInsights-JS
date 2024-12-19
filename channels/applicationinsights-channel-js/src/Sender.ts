@@ -949,6 +949,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             return new Response(compressedStream)
                                 .arrayBuffer()
                                 .then((bytes) => {
+                                    console.log("test origin sendPostFunc");
+                                    sendPostFunc(payloadData, onComplete, !isAsync);
                                     payloadData.data = new Uint8Array(bytes); // Update the payloadData
                                     console.log("Compressed payloadData", payloadData);
                                     // Return the result of sending the compressed data
