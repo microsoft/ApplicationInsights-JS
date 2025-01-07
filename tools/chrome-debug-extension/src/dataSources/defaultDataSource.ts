@@ -27,7 +27,15 @@ export class DefaultDataSource implements IDataSource {
         _self.startListening = (): void => {
             // Monitor network traffic for telemetry
             chrome.webRequest.onBeforeRequest.addListener(
-                _processWebRequest,
+                (details: chrome.webRequest.WebRequestBodyDetails) => {
+                    Promise.resolve(_processWebRequest(details)).then(() => {
+                        return {};
+                    }).catch((error) => {
+                        console.error("Error during processing:", error);
+                        return {};
+                    });
+                    return {};
+                },
                 // filters
                 {
                     urls
@@ -39,7 +47,15 @@ export class DefaultDataSource implements IDataSource {
         };
     
         _self.stopListening = (): void => {
-            chrome.webRequest.onBeforeRequest.removeListener(_processWebRequest);
+            chrome.webRequest.onBeforeRequest.removeListener((details: chrome.webRequest.WebRequestBodyDetails) => {
+                Promise.resolve(_processWebRequest(details)).then(() => {
+                    return {};
+                }).catch((error) => {
+                    console.error("Error during processing:", error);
+                    return {};
+                });
+                return {};
+            });
             chrome.runtime.onMessage.removeListener(_onMessageReceived);
         };
     
@@ -51,10 +67,90 @@ export class DefaultDataSource implements IDataSource {
         _self.removeListener = (id: number): boolean => {
             return listeners.delete(id);
         };
+
+        let decompressEvents = async function (compressedString: ArrayBuffer) {
+            // Step 1: Convert the binary string to a Uint8Array
+            const binaryData = compressedString;
+        
+            // Step 2: Create a ReadableStream from the Uint8Array
+            const compressedReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(binaryData);
+                    controller.close();
+                }
+            });
+
+            const DecompressionStream = (window as any).DecompressionStream;
+            if (!DecompressionStream) {
+                console.error("DecompressionStream is not available in this environment");
+                return null;  // Return null or handle the error accordingly
+            }
+        
+            // Step 3: Pipe through DecompressionStream
+            const decompressedReadableStream = compressedReadableStream.pipeThrough(
+                new (window as any).DecompressionStream("gzip")
+            );
+        
+            let decompressedUint8Array: Uint8Array;
+
+            // Read the decompressed chunks
+            const reader = decompressedReadableStream.getReader();
+            let result;
+            const chunks: Uint8Array[] = [];
+
+            // Read all chunks
+            while (!(result = await reader.read()).done) {
+                let chunk = result.value;
+                if (chunk instanceof Uint8Array) {
+                    chunks.push(chunk);
+                }
+            }
+
+            // Calculate the total size of all chunks
+            const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+
+            // Create a single Uint8Array to hold all chunks
+            decompressedUint8Array = new Uint8Array(totalLength);
+
+            // Copy all chunks into the decompressedUint8Array
+            let offset = 0;
+            for (const chunk of chunks) {
+                decompressedUint8Array.set(chunk, offset); // Copy the chunk into the array
+                offset += chunk.length; // Move the offset by the chunk length
+            }
+            return decompressedUint8Array.buffer;
+        };
     
-        function _processWebRequest(details: chrome.webRequest.WebRequestBodyDetails): void {
+        async function _processWebRequest(details: chrome.webRequest.WebRequestBodyDetails): Promise<void> {
             if (details && (details.type === "xmlhttprequest" || details.type === "ping")) {
-                const events = details.requestBody && _convertToStringArray(details.requestBody.raw);
+                let rawdata: chrome.webRequest.UploadData[] | undefined;
+                if (details.requestBody && details.requestBody.raw && details.requestBody.raw.length > 0 && details.requestBody.raw[0].bytes) {
+                    rawdata = details.requestBody.raw;
+                    const arrayBuffer = details.requestBody.raw[0].bytes;
+
+                    // Check if the data might be gzipped (first two bytes 0x1F 0x8B)
+                    const checkGzip = new Uint8Array(arrayBuffer);
+                    if (checkGzip[0] === 0x1F && checkGzip[1] === 0x8B) {
+                        console.log("This is gzipped.");
+                        
+                        // Decompress the gzipped data
+                        try {
+                            let decompressedData = await decompressEvents(arrayBuffer);
+                            if (decompressedData) {
+                                rawdata[0].bytes = decompressedData;
+                                console.log("After decompression:", rawdata);
+                            } else {
+                                console.error("Decompression failed.");
+                            }
+                            
+                        } catch (error) {
+                            console.error("Error during decompression:", error);
+                        }
+                    } else {
+                        console.log("Data is not gzipped.");
+                    }
+                }
+                const events = details.requestBody && _convertToStringArray(rawdata);
                 if (events) {
                     for (let i = events.length - 1; i >= 0; i--) {
                         try {
