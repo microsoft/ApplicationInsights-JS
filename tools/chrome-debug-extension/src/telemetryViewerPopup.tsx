@@ -30,7 +30,7 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
 
     function applyConfigurationType(newConfigurationType: ConfigurationType): void {
         if (newConfigurationType) {
-            chrome.storage.local.set({ configurationType: newConfigurationType });
+            chrome.storage.local.set({ [configurationTypeStorageKey]: newConfigurationType });
         }
         setConfigurationType(newConfigurationType);
 
@@ -46,9 +46,9 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
 
         if (configurationTypeToLoad === "Custom") {
             try {
-                doAwait(chrome.storage.local.get(customConfigurationStorageKey), (savedValue: any) => {
+                doAwait(chrome.storage.local.get([customConfigurationStorageKey]), (savedValue: any) => {
                     if (savedValue) {
-                        const newConfiguration = JSON.parse(savedValue) as IConfiguration;
+                        const newConfiguration = JSON.parse(savedValue[customConfigurationStorageKey]) as IConfiguration;
                         let newSession = new Session(newConfiguration, session);
                         session && session.dispose();
                         setSession(newSession);
@@ -118,9 +118,9 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
 
         let configurationTypeToSet: ConfigurationType = undefined;
         try {
-            doAwait(chrome.storage.local.get(configurationTypeStorageKey), (savedValue: any) => {
+            doAwait(chrome.storage.local.get([configurationTypeStorageKey]), (savedValue: any) => {
                 if (savedValue && Object.keys(ConfigurationURLs).includes(savedValue)) {
-                    configurationTypeToSet = savedValue as ConfigurationType;
+                    configurationTypeToSet = savedValue[configurationTypeStorageKey] as ConfigurationType;
                 }
                 setConfigurationType(configurationTypeToSet);
                 applyConfigurationType(configurationTypeToSet);

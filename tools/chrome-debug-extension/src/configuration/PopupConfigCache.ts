@@ -13,10 +13,10 @@ export function getPopupSettings() : IPopupSettings {
         height: 860
     };
 
-    doAwait(chrome.storage.local.get(popupWindowSettingsCacheKey), (popupSettings: any) => {
+    doAwait(chrome.storage.local.get([popupWindowSettingsCacheKey]), (popupSettings: any) => {
         if (popupSettings) {
             try {
-                settings = JSON.parse(popupSettings);
+                settings = JSON.parse(popupSettings[popupWindowSettingsCacheKey]);
             } catch (e) {
                 // Just ignore failures and we fallback to the defaults
             }
@@ -38,7 +38,7 @@ function _setPopupSettings(newSettings: IPopupSettings) {
             settings[name] = value;
         }
     });
-    chrome.storage.local.set({ popupWindowSettingsCacheKey: JSON.stringify(settings) });
+    chrome.storage.local.set({ [popupWindowSettingsCacheKey]: JSON.stringify(settings) });
 }
 
 export function setPopupSize(width?: number, height?: number) {
