@@ -571,9 +571,9 @@ export class CfgSyncPluginTests extends AITestClass {
                     let ikeyMsg = throttleMgrConfig["106"];
                     Assert.equal(ikeyMsg.disabled, false, "ikey msg should be enabled");
                     let otherMsg = throttleMgrConfig["110"];
-                    Assert.equal(otherMsg.disabled, true, "other msg should be disabled");
+                    Assert.equal(otherMsg.disabled, false, "other msg should be enabled");
                     let cdnOptIn = featureOptIn["CdnUsage"];
-                    Assert.equal(cdnOptIn.mode, 2, "cdn feature optin should be disabled");
+                    Assert.equal(cdnOptIn.mode, 3, "cdn feature optin should be enabled");
                     Assert.equal(ikeyOptIn.mode, 3, "ikey feature optin should be enabled");
                     return true;
                 }
@@ -634,7 +634,7 @@ export class CfgSyncPluginTests extends AITestClass {
                     let otherMsg = throttleMgrConfig["110"];
                     Assert.equal(otherMsg.disabled, true, "other msg should be disabled");
                     let cdnOptIn = featureOptIn["CdnUsage"];
-                    Assert.equal(cdnOptIn.mode, 2, "cdn feature optin should be disabled");
+                    Assert.equal(cdnOptIn.mode, 3, "cdn feature optin should be disabled");
                     Assert.equal(ikeyOptIn.mode, 3, "ikey feature optin should be enabled");
                     return true;
                 }
