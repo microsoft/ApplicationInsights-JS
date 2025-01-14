@@ -4,6 +4,7 @@
         "target": "es2016",
         "lib": [
             "es2017",
+            "ES2018.Promise",
             "dom"
         ],
         "sourceMap": true,

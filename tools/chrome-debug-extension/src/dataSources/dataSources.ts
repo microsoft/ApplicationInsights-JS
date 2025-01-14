@@ -37,7 +37,7 @@ export function createDataSource(configuration: IConfiguration): IDataSource {
         }
 
         if (!urls || urls.length === 0) {
-            urls = ["*://*.microsoft.com/OneCollector/*", "*://*.visualstudio.com/v2/track*", "*://*.eastus-8.in.applicationinsights.azure.com/v2/track*"];
+            urls = ["*://*.microsoft.com/OneCollector/*", "*://*.visualstudio.com/v2/track*", "*://*.applicationinsights.azure.com/v2/track*"];
         }
     }
 
