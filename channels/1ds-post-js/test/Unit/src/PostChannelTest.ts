@@ -37,8 +37,6 @@ export class PostChannelTest extends AITestClass {
     private beaconCalls = [];
     private ctx: any;
 
-    public successSpy:any
-
     constructor(name?: string, emulateEs3?: boolean) {
         super(name, emulateEs3);
         
