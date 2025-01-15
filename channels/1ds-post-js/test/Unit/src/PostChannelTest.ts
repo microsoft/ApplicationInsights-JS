@@ -1,9 +1,9 @@
 import { AITestClass, PollingAssert, TestHelper } from "@microsoft/ai-test-framework";
-import { IExtendedConfiguration, AppInsightsCore, EventLatency, ITelemetryItem, IExtendedTelemetryItem, SendRequestReason, EventSendType, isFetchSupported, objKeys, arrForEach, isBeaconsSupported, EventPersistence, isNullOrUndefined } from '@microsoft/1ds-core-js';
+import { IExtendedConfiguration, AppInsightsCore, EventLatency, ITelemetryItem, IExtendedTelemetryItem, SendRequestReason, EventSendType, isFetchSupported, objKeys, arrForEach, isBeaconsSupported, EventPersistence, isNullOrUndefined, getGlobal } from '@microsoft/1ds-core-js';
 import { PostChannel, IXHROverride, IPayloadData } from '../../../src/Index';
 import { IPostTransmissionTelemetryItem, IChannelConfiguration } from '../../../src/DataModels';
 import { SinonSpy } from 'sinon';
-import { createAsyncResolvedPromise } from "@nevware21/ts-async";
+import { createAsyncResolvedPromise, IPromise } from "@nevware21/ts-async";
 import { ActiveStatus } from "@microsoft/1ds-core-js";
 
 
@@ -36,6 +36,8 @@ export class PostChannelTest extends AITestClass {
     private testMessage: string;
     private beaconCalls = [];
     private ctx: any;
+
+    public successSpy:any
 
     constructor(name?: string, emulateEs3?: boolean) {
         super(name, emulateEs3);
@@ -177,7 +179,8 @@ export class PostChannelTest extends AITestClass {
                     maxEventRetryAttempts: 6,
                     maxUnloadEventRetryAttempts: 2,
                     addNoResponse: undefValue,
-                    excludeCsMetaData: undefValue
+                    excludeCsMetaData: undefValue,
+                    disableZip: true
                 };
                 let actaulConfig =  postChannel["_getDbgPlgTargets"]()[1];
                 QUnit.assert.deepEqual(expectedConfig, actaulConfig, "default config should be set");
@@ -314,6 +317,73 @@ export class PostChannelTest extends AITestClass {
 
             }
         });
+
+        this.testCaseAsync({
+            name: "zip test: gzip encode is working and content-encode header is set",
+            stepDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            steps: [
+                () => {
+                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                    this.config.extensionConfig[this.postChannel.identifier] = {
+                        httpXHROverride: this.xhrOverride,
+                        disableZip: false
+                    };
+                    this.core.initialize(this.config, [this.postChannel]);
+                    var event: IPostTransmissionTelemetryItem = {
+                        name: 'testEvent',
+                        sync: false,
+                        latency: EventLatency.Normal,
+                        iKey: 'testIkey'
+                    };
+                    this.postChannel.processTelemetry(event);
+                    this.postChannel.flush();
+                    this.clock.tick(10);
+                }].concat(PollingAssert.createPollingAssert(() => {
+                    if (this.genericSpy.called){
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
+                        QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            });
+        this.testCaseAsync({
+            name: "zip is default to be off",
+            stepDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            steps: [
+                () => {
+                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                    this.config.extensionConfig[this.postChannel.identifier] = {
+                        httpXHROverride: this.xhrOverride
+                    };
+                    this.core.initialize(this.config, [this.postChannel]);
+                    var event: IPostTransmissionTelemetryItem = {
+                        name: 'testEvent',
+                        sync: false,
+                        latency: EventLatency.Normal,
+                        iKey: 'testIkey'
+                    };
+                    this.postChannel.processTelemetry(event);
+                    this.postChannel.flush();
+                    this.clock.tick(10);
+                }].concat(PollingAssert.createPollingAssert(() => {
+                    if (this.genericSpy.called){
+                        let request = this.genericSpy.getCall(0).args[0];
+                        QUnit.assert.equal(request.headers["Content-Encoding"], undefined, "header should not be added");
+                        QUnit.assert.ok(JSON.stringify(request.data).includes("testEvent"), "telemetry should not be encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            });
+
 
         this.testCaseAsync({
             name: "Init: init with ikey Promise and endpointUrl Promise",

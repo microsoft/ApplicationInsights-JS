@@ -88,7 +88,8 @@ const defaultPostChannelConfig: IConfigDefaults<IChannelConfiguration> = objDeep
     maxEventRetryAttempts: { isVal: isNumber, v: MaxSendAttempts },
     maxUnloadEventRetryAttempts: { isVal: isNumber, v: MaxSyncUnloadSendAttempts},
     addNoResponse: undefValue,
-    excludeCsMetaData: undefValue
+    excludeCsMetaData: undefValue,
+    disableZip: true
 });
 
 function isOverrideFn(httpXHROverride: any) {
@@ -105,7 +106,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
     public identifier = "PostChannel";
     public priority = 1011;
-    public version = '4.3.4';
+    public version = "#version#";
 
     constructor() {
         super();

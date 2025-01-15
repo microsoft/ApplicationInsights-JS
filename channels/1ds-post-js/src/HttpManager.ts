@@ -165,7 +165,7 @@ export class HttpManager {
         let _isUnloading: boolean;
         let _useHeaders: boolean;
         let _xhrTimeout: number;
-        let _enableZip: boolean;
+        let _disableZip: boolean;
         let _disableXhrSync: boolean;
         let _disableFetchKeepAlive: boolean;
         let _canHaveReducedPayload: boolean;
@@ -223,7 +223,7 @@ export class HttpManager {
                         }
     
                         _xhrTimeout = channelConfig.xhrTimeout;
-                        _enableZip = !!channelConfig.enableZip;
+                        _disableZip = !!channelConfig.disableZip;
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
@@ -972,15 +972,11 @@ export class HttpManager {
 
                                 let isSync = thePayload.isTeardown || thePayload.isSync;
 
-                                console.log("inside sender _doSend", payload);
-
                                 const CompressionStream = (window as any).CompressionStream;
                                 // If CompressionStream is available, use it
-                                if (_enableZip && !isSync && CompressionStream && typeof CompressionStream !== "undefined") {
-                                    console.log("CompressionStream is available");
+                                if (!_disableZip && !isSync && CompressionStream && typeof CompressionStream !== "undefined") {
                                     // compress the payload
                                     let body = new Response(payload.data).body;
-                                    console.log("Body", JSON.stringify(body));
                                     if (body) {
                                         const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
                                         return new Response(compressedStream)
@@ -988,10 +984,8 @@ export class HttpManager {
                                             .then((bytes) => {
                                                 payload.data = new Uint8Array(bytes); // Update the payloadData
                                                 payload.headers["Content-Encoding"] = "gzip"; // Update the headers
-                                                console.log("Compressed payloadData", JSON.stringify(payload));
                                                 try {
                                                     sendInterface.sendPOST(payload, onComplete, isSync);
-                                                    console.log("Sent compressed payload");
                                                     if (_sendListener) {
                                                         // Send the original payload to the listener
                                                         _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
@@ -1003,8 +997,6 @@ export class HttpManager {
                                                 }
                                             })
                                             .catch((error) => {
-                                                console.log("Error compressing payload:", error);
-                                                console.error("Error compressing payload:", error);
                                                 // Fallback to sending uncompressed data
                                                 try {
                                                     sendInterface.sendPOST(payload, onComplete, isSync);

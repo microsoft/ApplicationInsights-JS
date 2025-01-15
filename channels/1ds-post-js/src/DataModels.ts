@@ -264,10 +264,12 @@ export interface IChannelConfiguration {
     fetchCredentials?: RequestCredentials;
 
     /*
-    * [Optional] When this is set to true and CompressionStream is available, the payload will be compressed using the CompressionStream API.
-    * We will only compress the payload if the event is async. Which means for events let unloads, we will not compress the payload.
+     * [Optional] If set to false and the CompressionStream API is available, the payload will be compressed using the CompressionStream API.
+     * Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied.
+     * @default true 
+     * Starting from minor version 4.4, the default will be changed to false (compression enabled by default).
     */
-    enableZip?: boolean;
+    disableZip?: boolean;
 }
 
 /**
