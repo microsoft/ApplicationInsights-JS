@@ -56,7 +56,6 @@ export class DefaultDataSource implements IDataSource {
         function isGzip(data: ArrayBuffer): boolean {
             const checkGzip = new Uint8Array(data);
             if (checkGzip[0] === 0x1F && checkGzip[1] === 0x8B) {
-                console.log("This is gzipped.");
                 return true;
             }
             return false;
@@ -125,7 +124,6 @@ export class DefaultDataSource implements IDataSource {
                     if (gzipped) {
                         doAwait(decompressEvents(details.requestBody.raw[0].bytes as ArrayBuffer), (decompressedData) => {
                             if (decompressedData) {
-                                // details.requestBody.raw[0].bytes = decompressedData;
                                 // console.log("After decompression:", decompressedData);
                                 events = _convertToStringArray([{bytes: decompressedData}]);
                                 processEvents(events, details);
