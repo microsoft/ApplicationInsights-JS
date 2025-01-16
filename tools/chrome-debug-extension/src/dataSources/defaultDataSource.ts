@@ -117,18 +117,20 @@ export class DefaultDataSource implements IDataSource {
         function _processWebRequest(details: chrome.webRequest.WebRequestBodyDetails): void {
             if (details && (details.type === "xmlhttprequest" || details.type === "ping")) {
                 if (details.requestBody && details.requestBody.raw) {
+     
                     let gzipped = isGzip(details.requestBody.raw[0].bytes as ArrayBuffer);
-                    console.log("Gzipped: " + gzipped);
+
+                    // console.log("Gzipped: " + gzipped);
                     var events: string[] | null;
                     if (gzipped) {
                         doAwait(decompressEvents(details.requestBody.raw[0].bytes as ArrayBuffer), (decompressedData) => {
                             if (decompressedData) {
                                 // details.requestBody.raw[0].bytes = decompressedData;
-                                console.log("After decompression:", decompressedData);
+                                // console.log("After decompression:", decompressedData);
                                 events = _convertToStringArray([{bytes: decompressedData}]);
                                 processEvents(events, details);
                             } else {
-                                console.error("Decompression failed.");
+                                // console.error("Decompression failed.");
                             }
                         });
                     } else {
