@@ -1,5 +1,5 @@
 {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "enabled": true,
     "featureOptIn": {
         "iKeyUsage": {
@@ -53,7 +53,7 @@
             "110": { 
                 "disabled": false,
                 "limit": { 
-                    "samplingRate": 10000,
+                    "samplingRate": 200000,
                     "maxSendNumber": 1
                 },
                 "interval": {
