@@ -8,7 +8,10 @@
     "module": "dist-es5/applicationinsights-teechannel-js.js",
     "types": "types/applicationinsights-teechannel-js.d.ts",
     "sideEffects": false,
-    "repository": "github:Microsoft/applicationinsights-js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/tee-channel-js"
+    },
     "scripts": {
         "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
