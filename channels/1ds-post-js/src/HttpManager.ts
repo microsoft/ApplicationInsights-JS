@@ -165,6 +165,7 @@ export class HttpManager {
         let _isUnloading: boolean;
         let _useHeaders: boolean;
         let _xhrTimeout: number;
+        let _disableZip: boolean;
         let _disableXhrSync: boolean;
         let _disableFetchKeepAlive: boolean;
         let _canHaveReducedPayload: boolean;
@@ -222,6 +223,7 @@ export class HttpManager {
                         }
     
                         _xhrTimeout = channelConfig.xhrTimeout;
+                        _disableZip = !!channelConfig.disableZip;
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
@@ -969,16 +971,54 @@ export class HttpManager {
                                 };
 
                                 let isSync = thePayload.isTeardown || thePayload.isSync;
-                                try {
-                                    sendInterface.sendPOST(payload, onComplete, isSync);
-                                    if (_sendListener) {
-                                        // Send the original payload to the listener
-                                        _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
-                                    }
-                                } catch (ex) {
-                                    _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
 
-                                    _doOnComplete(onComplete, 0, {});
+                                const CompressionStream = (window as any).CompressionStream;
+                                // If CompressionStream is available, use it
+                                if (!_disableZip && !isSync && CompressionStream && typeof CompressionStream !== "undefined") {
+                                    // compress the payload
+                                    let body = new Response(payload.data).body;
+                                    if (body) {
+                                        const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
+                                        return new Response(compressedStream)
+                                            .arrayBuffer()
+                                            .then((bytes) => {
+                                                payload.data = new Uint8Array(bytes); // Update the payloadData
+                                                payload.headers["Content-Encoding"] = "gzip"; // Update the headers
+                                                try {
+                                                    sendInterface.sendPOST(payload, onComplete, isSync);
+                                                    if (_sendListener) {
+                                                        // Send the original payload to the listener
+                                                        _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
+                                                    }
+                                                } catch (ex) {
+                                                    _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
+                
+                                                    _doOnComplete(onComplete, 0, {});
+                                                }
+                                            })
+                                            .catch((error) => {
+                                                // Fallback to sending uncompressed data
+                                                try {
+                                                    sendInterface.sendPOST(payload, onComplete, isSync);
+                                                    if (_sendListener) {
+                                                        // Send the original payload to the listener
+                                                        _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
+                                                    }
+                                                } catch (ex) {
+                                                    _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
+                                                }
+                                            });
+                                    }
+                                } else {
+                                    try {
+                                        sendInterface.sendPOST(payload, onComplete, isSync);
+                                        if (_sendListener) {
+                                            // Send the original payload to the listener
+                                            _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
+                                        }
+                                    } catch (ex) {
+                                        _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
+                                    }
                                 }
                             };
                         }
