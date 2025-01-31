@@ -368,6 +368,138 @@ export class AnalyticsPluginTests extends AITestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: autoExceptionInstrumented can be set correctly without root config",
+            test: () => {
+                let appInsights = new AnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+
+                let config: IConfig & IConfiguration = {
+                    instrumentationKey: "instrumentation_key",
+                    samplingPercentage: 12,
+                    extensionConfig: {}
+                };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                // Initialize
+                core.initialize(config, [appInsights, channel]);
+
+                let extConfig = (core.config.extensionConfig || {})[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal(extConfig.autoExceptionInstrumented, undefined, "auto exception hook should be undefined for extenstion config");
+                let autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be set true");
+                let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
+                Assert.equal(errorHookCnt, 1, "auto exception hook should be instrumented");
+                Assert.equal(extConfig.autoUnhandledPromiseInstrumented, false, "autoUnhandledPromise should not be Instrumented");
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: autoExceptionInstrumented can be set correctly without root config and with  enableUnhandledPromiseRejectionTracking ",
+            test: () => {
+                let appInsights = new AnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+
+                let config: IConfig & IConfiguration = {
+                    instrumentationKey: "instrumentation_key",
+                    samplingPercentage: 12,
+                    extensionConfig: {
+                        [appInsights.identifier]: {
+                            enableUnhandledPromiseRejectionTracking: true
+                        }
+                    }
+                };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                // Initialize
+                core.initialize(config, [appInsights, channel]);
+
+                let extConfig = (core.config.extensionConfig || {})[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal(extConfig.autoExceptionInstrumented, undefined, "auto exception hook should be undefined for extenstion config");
+                let autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be set true");
+                Assert.equal(extConfig.autoUnhandledPromiseInstrumented, true, "autoUnhandledPromiseInstrumented is set to true");
+                let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
+                Assert.equal(errorHookCnt, 2, "auto exception hook should be instrumented twice");
+            }
+        });
+
+
+        this.testCase({
+            name: "AppInsightsTests: autoExceptionInstrumented can be set correctly with root config",
+            test: () => {
+                let appInsights = new AnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+
+                let config: IConfig & IConfiguration = {
+                    instrumentationKey: "instrumentation_key",
+                    samplingPercentage: 12,
+                    autoExceptionInstrumented: true,
+                    extensionConfig: {}
+                };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                // Initialize
+                core.initialize(config, [appInsights, channel]);
+
+                let extConfig = (core.config.extensionConfig || {})[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal(extConfig.autoExceptionInstrumented, undefined, "auto exception hook should be undefined for extenstion config");
+                let autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be set true");
+                let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
+                Assert.equal(errorHookCnt, 0, "auto exception hook should not be instrumented again");
+                Assert.equal(extConfig.autoUnhandledPromiseInstrumented, false, "autoUnhandledPromise should not be Instrumented");
+
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: autoExceptionInstrumented can be set correctly with root config and enableUnhandledPromiseRejectionTracking",
+            test: () => {
+                let appInsights = new AnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+
+                let config: IConfig & IConfiguration = {
+                    instrumentationKey: "instrumentation_key",
+                    samplingPercentage: 12,
+                    autoExceptionInstrumented: true,
+                    extensionConfig: {
+                        [appInsights.identifier]: {
+                            enableUnhandledPromiseRejectionTracking: true
+                        }
+                    }
+                };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                // Initialize
+                core.initialize(config, [appInsights, channel]);
+
+                let extConfig = (core.config.extensionConfig || {})[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal(extConfig.autoExceptionInstrumented, undefined, "auto exception hook should be undefined for extenstion config");
+                let autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be set true");
+                Assert.equal(extConfig.autoUnhandledPromiseInstrumented, true, "autoUnhandledPromiseInstrumented is set to true");
+                let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
+                Assert.equal(errorHookCnt, 1, "auto exception hook should be instrumented for autoUnhandledPromiseInstrumented");
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: public members are correct",
             test: () => {
                 // setup
