@@ -72,7 +72,9 @@
       "@see": true,
       "@ignore": true,
       "@return": true,
-      "@group": true
+      "@group": true,
+      "@remarks": true,
+      "@class": true
     }
   }
   

@@ -228,8 +228,8 @@ export class SenderPostManager {
 
             /**
              * Send Beacon API request
-             * @param payload - {string} - The data payload to be sent.
-             * @param sync - {boolean} - not used
+             * @param payload - The data payload to be sent.
+             * @param sync - not used
              * Note: Beacon API does not support custom headers and we are not able to get
              * appId from the backend for the correct correlation.
              */
@@ -263,8 +263,8 @@ export class SenderPostManager {
         
             /**
              * Send XMLHttpRequest
-             * @param payload - {string} - The data payload to be sent.
-             * @param sync - {boolean} - Indicates if the request should be sent synchronously
+             * @param payload - The data payload to be sent.
+             * @param sync - Indicates if the request should be sent synchronously
              */
             function _xhrSender(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean): void | IPromise<boolean> {
                 //let  internalPayload = payload as IInternalPayloadData;
@@ -347,8 +347,8 @@ export class SenderPostManager {
 
             /**
              * Send fetch API request
-             * @param payload - {string} - The data payload to be sent.
-             * @param sync - {boolean} - For fetch this identifies whether we are "unloading" (false) or a normal request
+             * @param payload - The data payload to be sent.
+             * @param sync - For fetch this identifies whether we are "unloading" (false) or a normal request
              */
             function _doFetchSender(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean): void | IPromise<boolean> {
                 let endPointUrl = payload.urlString;
@@ -527,8 +527,8 @@ export class SenderPostManager {
         
             /**
              * Send XDomainRequest
-             * @param payload - {string} - The data payload to be sent.
-             * @param sync - {boolean} - Indicates if the request should be sent synchronously
+             * @param payload - The data payload to be sent.
+             * @param sync - Indicates if the request should be sent synchronously
              *
              * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
              * to maintain consistency with the xhrSender's contract

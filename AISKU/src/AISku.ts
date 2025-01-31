@@ -758,7 +758,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a dependency call (e.g. ajax)
-     * @param dependencyData dependency data object
+     * @param dependencyData - dependency data object
      */
     public trackDependencyData(dependency: IDependencyTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
