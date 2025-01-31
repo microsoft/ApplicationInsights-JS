@@ -172,7 +172,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
-             * @param   name    A string that identifies this event uniquely within the document.
+             * @param name - A string that identifies this event uniquely within the document.
              */
             _self.startTrackEvent = (name: string) => {
                 try {
@@ -187,9 +187,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * Log an extended event that you started timing with `startTrackEvent`.
-             * @param   name    The string you used to identify this event in `startTrackEvent`.
-             * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
-             * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+             * @param name - The string you used to identify this event in `startTrackEvent`.
+             * @param properties - map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+             * @param measurements - map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
              */
             _self.stopTrackEvent = (name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
                 try {
@@ -368,10 +368,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             /**
              * Stops the timer that was started by calling `startTrackPage` and sends the pageview load time telemetry with the specified properties and measurements.
              * The duration of the page view will be the time between calling `startTrackPage` and `stopTrackPage`.
-             * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
-             * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
-             * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
-             * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+             * @param name - The string you used as the name in startTrackPage. Defaults to the document title.
+             * @param url - String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
+             * @param properties - map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
+             * @param measurements - map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
              */
             _self.stopTrackPage = (name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) => {
                 try {
@@ -653,8 +653,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * Log a page visit time
-             * @param    pageName    Name of page
-             * @param    pageVisitDuration Duration of visit to the page in milliseconds
+             * @param pageName - Name of page
+             * @param pageVisitDuration - Duration of visit to the page in milliseconds
              */
             function trackPageVisitTime(pageName: string, pageUrl: string, pageVisitTime: number) {
                 let properties = { PageName: pageName, PageUrl: pageUrl };
@@ -877,8 +877,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
-             * @param severity - {eLoggingSeverity} - The severity of the log message
-             * @param msgId - {_eInternalLogMessage} - The log message.
+             * @param severity - The severity of the log message
+             * @param msgId - The log message.
              */
             function _throwInternal(severity: eLoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void {
                 _self.diagLog().throwInternal(severity, msgId, msg, properties, isUserAct);
@@ -947,7 +947,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
-     * @param   name    A string that identifies this event uniquely within the document.
+     * @param name - A string that identifies this event uniquely within the document.
      */
     public startTrackEvent(name: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -955,9 +955,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Log an extended event that you started timing with `startTrackEvent`.
-     * @param   name    The string you used to identify this event in `startTrackEvent`.
-     * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
-     * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+     * @param name - The string you used to identify this event in `startTrackEvent`.
+     * @param properties - map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+     * @param measurements - map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
     public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -979,7 +979,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements
      * and sending the resulting average at intervals
      * @param metric - input object argument. Only name and average are mandatory.
-     * @param } customProperties additional data used to filter metrics in the
+     * @param customProperties - additional data used to filter metrics in the
      * portal. Defaults to empty.
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
@@ -1037,10 +1037,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     /**
      * Stops the timer that was started by calling `startTrackPage` and sends the pageview load time telemetry with the specified properties and measurements.
      * The duration of the page view will be the time between calling `startTrackPage` and `stopTrackPage`.
-     * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
-     * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
-     * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
-     * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+     * @param name - The string you used as the name in startTrackPage. Defaults to the document title.
+     * @param url - String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
+     * @param properties - map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
+     * @param measurements - map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
     public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1059,8 +1059,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     /**
      * Log an exception you have caught.
      *
-     * @param exception -   Object which contains exception to be sent
-     * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
+     * @param exception - Object which contains exception to be sent
+     * @param customProperties - Additional data used to filter pages and metrics in the portal. Defaults to empty.
      *
      * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
      */

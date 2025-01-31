@@ -63,7 +63,7 @@ export interface ISenderConfig {
     isBeaconApiDisabled: boolean;
 
     /**
-     * Don't use XMLHttpRequest or XDomainRequest (for IE < 9) by default instead attempt to use fetch() or sendBeacon.
+     * Don't use XMLHttpRequest or XDomainRequest (for IE \< 9) by default instead attempt to use fetch() or sendBeacon.
      * If no other transport is available it will still use XMLHttpRequest
      */
     disableXhr: boolean;
