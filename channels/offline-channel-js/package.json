@@ -8,7 +8,10 @@
     "module": "dist-es5/applicationinsights-offlinechannel-js.js",
     "types": "types/applicationinsights-offlinechannel-js.d.ts",
     "sideEffects": false,
-    "repository": "github:Microsoft/applicationinsights-js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/offline-channel-js"
+    },
     "scripts": {
         "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
@@ -30,8 +33,8 @@
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/applicationinsights-core-js": "3.3.4",
         "@microsoft/applicationinsights-common": "3.3.4",
-        "@nevware21/ts-utils": ">= 0.11.3 < 2.x",
-        "@nevware21/ts-async": ">= 0.5.2 < 2.x"
+        "@nevware21/ts-utils": ">= 0.11.6 < 2.x",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x"
     },
     "peerDependencies": {
         "tslib": ">= 1.0.0"

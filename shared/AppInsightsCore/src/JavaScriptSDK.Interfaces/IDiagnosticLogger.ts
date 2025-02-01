@@ -28,7 +28,7 @@ export interface IDiagnosticLogger {
 
     /**
      * This will write a debug message to the console if possible
-     * @param message - {string} - The debug message
+     * @param message - The debug message
      */
     debugToConsole? (message: string): void
 
