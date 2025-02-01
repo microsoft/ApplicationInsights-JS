@@ -560,8 +560,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     
                         _preInitTelemetryInitializers = null;
                     }
-                    // make sure auto exception is instrumented only once and it won't be overriden by the following config changes
-                    _autoExceptionInstrumented = _autoExceptionInstrumented || config.autoExceptionInstrumented;
 
                     _populateDefaults(config);
     
@@ -637,6 +635,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extConfig = ctx.getExtCfg(identifier, defaultValues);
+                    // make sure auto exception is instrumented only once and it won't be overriden by the following config changes
+                    _autoExceptionInstrumented = _autoExceptionInstrumented || (config as any).autoExceptionInstrumented || _extConfig.autoExceptionInstrumented;
 
                     _expCfg = _extConfig.expCfg;
                     _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
