@@ -560,7 +560,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     
                         _preInitTelemetryInitializers = null;
                     }
-    
+                    // make sure auto exception is hooked only once and it won't be overriden by the following config changes
+                    _autoExceptionInstrumented = config.autoExceptionInstrumented;
+
                     _populateDefaults(config);
     
                     _pageViewPerformanceManager = new PageViewPerformanceManager(_self.core);
@@ -638,7 +640,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                     _expCfg = _extConfig.expCfg;
                     _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
-                    _autoExceptionInstrumented = (config as any).autoExceptionInstrumented;
 
                     if (config.storagePrefix){
                         utlSetStoragePrefix(config.storagePrefix);

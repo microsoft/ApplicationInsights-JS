@@ -434,6 +434,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
         this.testCase({
             name: "AppInsightsTests: autoExceptionInstrumented can be set correctly with root config",
+            useFakeTimers: true,
             test: () => {
                 let appInsights = new AnalyticsPlugin();
                 let core = new AppInsightsCore();
@@ -460,6 +461,14 @@ export class AnalyticsPluginTests extends AITestClass {
                 let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
                 Assert.equal(errorHookCnt, 0, "auto exception hook should not be instrumented again");
                 Assert.equal(extConfig.autoUnhandledPromiseInstrumented, false, "autoUnhandledPromise should not be Instrumented");
+
+                (core.config as IConfiguration & IConfig).autoExceptionInstrumented = false;
+                extConfig.autoExceptionInstrumented = false;
+                this.clock.tick(1);
+                autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be not be override");
+
+
 
             }
         });
