@@ -25,12 +25,12 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - name: Update rush shrinkwrap dependencies (for different node versions)
-      run: node common/scripts/install-run-rush.js update --full
+      run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
     - run: node common/scripts/install-run-rush.js check
-    - run: node common/scripts/install-run-rush.js install
+    - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
       timeout-minutes: 20
     - run: npm run test --verbose
