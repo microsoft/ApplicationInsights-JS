@@ -560,8 +560,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     
                         _preInitTelemetryInitializers = null;
                     }
-                    // make sure auto exception is hooked only once and it won't be overriden by the following config changes
-                    _autoExceptionInstrumented = config.autoExceptionInstrumented;
+                    // make sure auto exception is instrumented only once and it won't be overriden by the following config changes
+                    _autoExceptionInstrumented = _autoExceptionInstrumented || config.autoExceptionInstrumented;
 
                     _populateDefaults(config);
     
