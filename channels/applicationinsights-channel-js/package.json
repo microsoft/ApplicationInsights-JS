@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-channel-js",
-    "version": "3.3.4",
+    "version": "3.3.5",
     "description": "Microsoft Application Insights JavaScript SDK Channel",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -57,8 +57,8 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-core-js": "3.3.4",
-        "@microsoft/applicationinsights-common": "3.3.4",
+        "@microsoft/applicationinsights-core-js": "3.3.5",
+        "@microsoft/applicationinsights-common": "3.3.5",
         "@nevware21/ts-utils": ">= 0.11.6 < 2.x",
         "@nevware21/ts-async": ">= 0.5.4 < 2.x"
     },
