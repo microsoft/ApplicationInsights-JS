@@ -590,7 +590,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_notificationManager) {
                     _notificationManager.removeNotificationListener(listener);
                 }
-            }
+            };
         
             _self.getCookieMgr = (): ICookieMgr => {
                 if (!_cookieManager) {
@@ -708,7 +708,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _forceStopInternalLogPoller = true;
                 _internalLogPoller && _internalLogPoller.cancel();
                 _flushInternalLogs();
-            }
+            };
 
             // Add addTelemetryInitializer
             proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
@@ -729,7 +729,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     reason: TelemetryUnloadReason.SdkUnload,
                     isAsync: isAsync,
                     flushComplete: false
-                }
+                };
 
                 let result: IPromise<ITelemetryUnloadState>;
                 if (isAsync && !unloadComplete) {

@@ -31,7 +31,7 @@ function parseArgs(expectedArgs) {
     var argIdx = 2 + expIdx;
     while (argIdx < passedArgs.length) {
         let done = false;
-        value = passedArgs[argIdx++];
+        let value = passedArgs[argIdx++];
         // console.log(`${argIdx}: ${value}`);
         if (value && value.length > 2) {
             if (value[0] === "-") {
@@ -336,7 +336,7 @@ function createNsFile(dtsContents) {
     }
 
     // Read the generated dts file and append to the new content
-    var lastLine = ""
+    var lastLine = "";
 
     var nsLines = dtsContents.split("\n");
     console.log(`Lines: ${nsLines.length}`);

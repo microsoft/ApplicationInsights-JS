@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 import { oneDsEnvelope } from "./1dsType";
 import { _getTime } from "./support";
 

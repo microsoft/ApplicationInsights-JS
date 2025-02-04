@@ -29,7 +29,7 @@ const scriptFilePath = path.join(__dirname, '../applicationinsights-web-snippet/
 let scriptContent = fs.readFileSync(scriptFilePath, 'utf8');
 
 // Replace the placeholder string with the actual connection string
-const connectionString = 'InstrumentationKey=1ae9e7ce-18f1-4e14-8fc0-acbf0ed28895;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/';
+//const connectionString = 'InstrumentationKey=1ae9e7ce-18f1-4e14-8fc0-acbf0ed28895;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/';
 let iKeyForCfgSync = "1ae9e7ce-18f1-4e14-8fc0-acbf0ed28895";
 //let cfgUrl = "https://js.monitor.azure.com/beta/ai.config.1.cfg.json";
 let cfgUrl = "https://js.monitor.azure.com/nightly/ai_test.config.1-nightly3.cfg.json";

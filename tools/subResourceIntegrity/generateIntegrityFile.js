@@ -20,6 +20,7 @@ function getFilename(inputFile, packageVersion) {
         filename = inputFile.substring(pos + 1);
     }
 
+    var match = null;
     var module = filename;
     var matchType = "";
 
@@ -43,7 +44,7 @@ function getFilename(inputFile, packageVersion) {
     } else {
         // General Regex match
         matchType = "RegEx";
-        var match = extractFilename.exec(inputFile);
+        match = extractFilename.exec(inputFile);
         if (!match && filename.endsWith(".js")) {
             matchType = "Extension";
             // Handle files with no version eg. applicationinsights-core-js, etc
