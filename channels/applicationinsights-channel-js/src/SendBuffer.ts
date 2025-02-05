@@ -353,7 +353,7 @@ export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuf
                     newBuffer.markAsSent(sentItems);
                 }
                 return newBuffer;
-            }
+            };
         
             function _removePayloadsFromBuffer(payloads: IInternalStorageItem[], buffer: IInternalStorageItem[]): IInternalStorageItem[] {
                 const remaining: IInternalStorageItem[] = [];

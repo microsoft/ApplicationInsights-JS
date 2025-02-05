@@ -1,10 +1,13 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 import { ISnippetConfig, SdkLoaderConfig } from "./type";
+import { _ensureBoolean, _ensureNumber, _escapeUnsupportedChars } from "./common/utils";
 
 const originSnippet = "##replaceOriginSnippet##";
-const webSnippet = "##replaceIKeySnippet##";
-const webSnippetCs = "##replaceConnStringSnippet##";
+export const webSnippet = "##replaceIKeySnippet##";
+export const webSnippetCs = "##replaceConnStringSnippet##";
 
-function webSnippetVersion() {
+export function webSnippetVersion() {
     let parse = /sv:\"([^\"]+)\"/.exec(webSnippet);
     if (parse) {
         return parse[1];
@@ -13,29 +16,25 @@ function webSnippetVersion() {
     return "";
 }
 
-function getSdkLoaderScript(config: SdkLoaderConfig) {
+export function getSdkLoaderScript(config: SdkLoaderConfig): string {
     let snippetConfig: ISnippetConfig = {
-        src: config.src? config.src : "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
-        crossOrigin: config.crossOrigin ? config.crossOrigin : "anonymous",
+        src: _escapeUnsupportedChars(config.src? config.src : "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js"),
+        crossOrigin: _escapeUnsupportedChars(config.crossOrigin ? config.crossOrigin : "anonymous"),
         cfg: {},
-        name: config.name ? config.name : "appInsights",
-        ld: config.ld,
-        useXhr: config.useXhr,
-        cr: config.cr,
-        dle: config.dle,
-        sri: config.sri
+        name: _escapeUnsupportedChars(config.name ? config.name : "appInsights"),
+        ld: _ensureNumber(config.ld),
+        useXhr: _ensureBoolean(config.useXhr),
+        cr: _ensureBoolean(config.cr),
+        dle: _ensureBoolean(config.dle),
+        sri: _ensureBoolean(config.sri)
     };
 
     if (config.instrumentationKey) {
-        snippetConfig.cfg.instrumentationKey = config.instrumentationKey;
+        snippetConfig.cfg.instrumentationKey = _escapeUnsupportedChars(config.instrumentationKey);
     } else if (config.connectionString) {
-        snippetConfig.cfg.connectionString = config.connectionString;
+        snippetConfig.cfg.connectionString = _escapeUnsupportedChars(config.connectionString);
     }
 
-    let configString = JSON.stringify(snippetConfig);
-    let userSnippet = `!(function (cfg){${originSnippet}})(\n${configString}\n);`;
-    return userSnippet;
+    let configString: string = JSON.stringify(snippetConfig);
+    return "!(function (cfg){" + originSnippet + "}})(\n" + configString + "\n);";
 }
-
-
-export { webSnippet, webSnippetCs, webSnippetVersion, getSdkLoaderScript }

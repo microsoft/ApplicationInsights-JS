@@ -22,7 +22,7 @@ import {
 } from "./DependencyListener";
 import { IAjaxRecordResponse, ajaxRecord } from "./ajaxRecord";
 
-const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
+// const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
 const AJAX_DATA_CONTAINER = "_ajaxData";
 const STR_FETCH = "fetch";
@@ -809,9 +809,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                     if (ajaxData && _isMonitoredXhrInstance(xhr, ajaxData)) {
                                         _addSharedXhrHeaders(xhr, header, value);
                                         if (_enableRequestHeaderTracking && _canIncludeHeaders(header)) {
-                                            if (ajaxData) {
-                                                ajaxData.requestHeaders[header] = value;
-                                            }
+                                            ajaxData.requestHeaders[header] = value;
                                         }
                                     }
                                 }

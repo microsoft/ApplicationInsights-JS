@@ -213,7 +213,7 @@ export class DomContentHandler implements IContentHandler {
                         eLoggingSeverity.WARNING,
                         _eInternalMessageId.InvalidContentBlob, "Invalid content blob.  Missing required attributes (id, contentName. " +
                         " Content information will still be collected!"
-                    )
+                    );
                 }
 
                 return elementContent;
