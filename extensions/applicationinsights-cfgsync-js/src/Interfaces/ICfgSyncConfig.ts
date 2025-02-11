@@ -50,6 +50,13 @@ export interface ICfgSyncConfig {
      * @default 30mins (30*60*1000ms)
      */
     scheduleFetchTimeout?: number;
+
+    /**
+     * [Optional] Flag to indicate whether the internal endpoints will be taged as "DisabledPropertyName" to the xhr/fetch requests
+     * @default false
+     * @since 3.3.6
+     */
+    enableIntEndpointsTracking?: boolean;
 }
 
 export const enum ICfgSyncMode {

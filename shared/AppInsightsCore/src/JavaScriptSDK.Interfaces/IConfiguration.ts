@@ -206,13 +206,6 @@ export interface IConfiguration {
      */
     initInMemoMaxSize?: number;
 
-     /**
-     * [Optional] Flag to indicate whether the internal endpoints will be taged as "DisabledPropertyName" to the xhr/fetch requests
-     * @default false
-     * @since 3.3.6
-     */
-     enableIntEndpointsTracking?: boolean;
-
     /**
      * [Optional] Set additional configuration for exceptions, such as more scripts to include in the exception telemetry.
      * @since 3.3.2

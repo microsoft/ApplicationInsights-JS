@@ -73,7 +73,8 @@ export class CfgSyncPluginTests extends AITestClass {
                     onCfgChangeReceive: udfVal,
                     scheduleFetchTimeout: 1800000,
                     nonOverrideConfigs: defaultNonOverrideCfg,
-                    blkCdnCfg: udfVal
+                    blkCdnCfg: udfVal,
+                    enableIntEndpointsTracking: false
                 };
                 this.core.config.extensionConfig = this.core.config.extensionConfig || {};
                 let actualDefaults = this.core.config.extensionConfig[this.identifier];

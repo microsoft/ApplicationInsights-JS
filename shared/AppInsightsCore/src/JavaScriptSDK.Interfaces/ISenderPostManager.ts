@@ -118,13 +118,6 @@ export interface _ISendPostMgrConfig {
      */
     addNoResponse?: boolean;
 
-     /**
-     * [Optional] Flag to indicate whether the internal endpoints will be taged as "DisabledPropertyName" to the xhr/fetch requests
-     * @default false
-     * @since 3.3.6
-     */
-     enableIntEndpointsTracking?: boolean;
-
     /**
      * [Optional] Specify whether cross-site Access-Control fetch requests should include credentials such as cookies,
      * authentication headers, or TLS client certificates.

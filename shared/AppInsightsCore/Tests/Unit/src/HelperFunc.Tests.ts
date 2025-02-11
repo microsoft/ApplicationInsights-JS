@@ -78,25 +78,6 @@ export class HelperFuncTests extends AITestClass {
             }
         });
 
-        this.testCase({
-            name: "openXhr with enableIntEndpoints tracking",
-            test: () => {
-                let nonIntUrl = "test";
-                let intUrl = "https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json";
-
-                let xhr = openXhr("POST", nonIntUrl, false, false, false, 1);
-                Assert.equal(xhr[DisabledPropertyName], undefined, "non internal url should not be disabled");
-
-                xhr = openXhr("POST", nonIntUrl, false, false, false, 1, true);
-                Assert.equal(xhr[DisabledPropertyName], undefined, "non internal url should not be disabled test1");
-
-                xhr = openXhr("POST", intUrl, false, false, false, 1);
-                Assert.equal(!!xhr[DisabledPropertyName], true, "internal url should be disabled");
-
-                xhr = openXhr("POST", intUrl, false, false, false, 1, true);
-                Assert.equal(xhr[DisabledPropertyName], undefined, "internal url should not be disabled");
-            }
-        });
 
         this.testCase({
             name: 'default objExtend (shallow)',
