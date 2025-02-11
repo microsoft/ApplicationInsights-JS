@@ -296,6 +296,8 @@ export const DfltAjaxCorrelationHeaderExDomains = objFreeze([
 
 const _internalExcludeEndpoints = [
     /https:\/\/[^\/]*(\.pipe\.aria|aria\.pipe|events\.data|collector\.azure)\.[^\/]+\/(OneCollector\/1|Collector\/3)\.0/i
+    // Option2: add regex here (TO BE REMOVED)
+    // /https:\/\/[^\/]*js\.monitor\.azure\.com\/scripts\/b\/ai\.config\.\d/g
 ];
 
 export interface IDependenciesPlugin extends IDependencyListenerContainer {

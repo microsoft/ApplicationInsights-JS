@@ -183,6 +183,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _disableBeaconSplit: boolean;
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
+        let _enableIntTracking: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -390,6 +391,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _customHeaders = null;
                     }
                     _enableSendPromise = senderConfig.enableSendPromise;
+                    _enableIntTracking = !!config.enableIntEndpointsTracking;
                     let sendPostConfig = _getSendPostMgrConfig();
 
                     // only init it once
@@ -694,7 +696,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         disableXhr: _disableXhr,
                         disableBeacon: !_beaconNormalSupported,
                         disableBeaconSync: !_beaconOnUnloadSupported,
-                        senderOnCompleteCallBack: onCompleteFuncs
+                        senderOnCompleteCallBack: onCompleteFuncs,
+                        enableIntEndpointsTracking: _enableIntTracking
                     } as _ISendPostMgrConfig;
                     return config;
                  
@@ -1319,6 +1322,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 _xhrSend = null;
                 _fallbackSend = null;
                 _sendPostMgr = null;
+                _enableIntTracking = false;
 
                 objDefine(_self, "_senderConfig", {
                     g: function() {

@@ -54,6 +54,7 @@ export class SenderPostManager {
         let _disableFetchKeepAlive: boolean;
         let _addNoResponse: boolean;
         let _timeoutWrapper: _ITimeoutOverrideWrapper;
+        let _enableIntTracking: boolean;
        
 
         dynamicProto(SenderPostManager, this, (_self, _base) => {
@@ -93,6 +94,7 @@ export class SenderPostManager {
                     _timeoutWrapper = config.timeWrapper;
                     _addNoResponse = !!config.addNoResponse;
                     _disableFetchKeepAlive = !!config.disableFetchKeepAlive;
+                    _enableIntTracking = !!config.enableIntEndpointsTracking;
     
                     _fallbackInst = { sendPOST: _xhrSender} as IXHROverride;
                     if (!_isOneDs) {
@@ -291,7 +293,7 @@ export class SenderPostManager {
                     return;
                 }
 
-                let xhr = openXhr(STR_POST_METHOD, endPointUrl, _sendCredentials, true, sync, payload.timeout);
+                let xhr = openXhr(STR_POST_METHOD, endPointUrl, _sendCredentials, true, sync, payload.timeout, _enableIntTracking);
                 if (!_isOneDs) {
                     // application/json should NOT add to 1ds post by default
                     xhr.setRequestHeader("Content-type", "application/json");
@@ -410,6 +412,7 @@ export class SenderPostManager {
                 const request = new Request(endPointUrl, init);
                 try {
                     // Also try and tag the request (just in case the value in init is not copied over)
+                    // TODO: looks like fetch requests already has the tag
                     request[DisabledPropertyName] = true;
                 } catch(e) {
                     // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
@@ -619,6 +622,7 @@ export class SenderPostManager {
                 _disableFetchKeepAlive = false;
                 _addNoResponse = false;
                 _timeoutWrapper = null;
+                _enableIntTracking = false;
             }
         });
     }

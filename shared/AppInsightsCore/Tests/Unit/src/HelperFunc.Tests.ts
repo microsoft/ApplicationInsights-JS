@@ -1,10 +1,11 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { normalizeJsName, objExtend, _getObjProto, isFeatureEnabled } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { normalizeJsName, objExtend, _getObjProto, isFeatureEnabled, openXhr } from "../../../src/JavaScriptSDK/HelperFuncs";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { isArray, isObject, objKeys, strEndsWith, strStartsWith, isPlainObject, utcNow } from "@nevware21/ts-utils";
 import { FeatureOptInMode, IConfiguration, IFeatureOptInDetails, dumpObj } from "../../../src/applicationinsights-core-js";
+import { DisabledPropertyName } from "../../../src/JavaScriptSDK/Constants";
 
 
 
@@ -74,6 +75,26 @@ export class HelperFuncTests extends AITestClass {
                 Assert.ok(!strStartsWith("a", "ab"));
                 Assert.ok(!strStartsWith("abba", "abc"));
                 Assert.ok(!strStartsWith("abba", "bb"));
+            }
+        });
+
+        this.testCase({
+            name: "openXhr with enableIntEndpoints tracking",
+            test: () => {
+                let nonIntUrl = "test";
+                let intUrl = "https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json";
+
+                let xhr = openXhr("POST", nonIntUrl, false, false, false, 1);
+                Assert.equal(xhr[DisabledPropertyName], undefined, "non internal url should not be disabled");
+
+                xhr = openXhr("POST", nonIntUrl, false, false, false, 1, true);
+                Assert.equal(xhr[DisabledPropertyName], undefined, "non internal url should not be disabled test1");
+
+                xhr = openXhr("POST", intUrl, false, false, false, 1);
+                Assert.equal(!!xhr[DisabledPropertyName], true, "internal url should be disabled");
+
+                xhr = openXhr("POST", intUrl, false, false, false, 1, true);
+                Assert.equal(xhr[DisabledPropertyName], undefined, "internal url should not be disabled");
             }
         });
 

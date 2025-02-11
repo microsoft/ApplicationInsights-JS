@@ -403,6 +403,11 @@ export function prependTransports(theTransports: TransportType[], newTransports:
 const strDisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
 const strWithCredentials: string = "withCredentials";
 const strTimeout: string = "timeout";
+// used full url string here to avoid regex
+// or should we use regex here to include ...ai.config.1.cfg.json?dfkfhfhh as well
+const intExcludeTrackingEndpoints: string[] = [
+    "https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json"
+];
 
 /**
  * Create and open an XMLHttpRequest object
@@ -414,7 +419,7 @@ const strTimeout: string = "timeout";
  * @param timeout - Optional value identifying the timeout value that should be assigned to the XHR request
  * @returns A new opened XHR request
  */
-export function openXhr(method: string, urlString: string, withCredentials?: boolean, disabled: boolean = false, isSync: boolean = false, timeout?: number) {
+export function openXhr(method: string, urlString: string, withCredentials?: boolean, disabled: boolean = false, isSync: boolean = false, timeout?: number, enableIntTracking?: boolean) {
 
     function _wrapSetXhrProp<T>(xhr: XMLHttpRequest, prop: string, value: T) {
         try {
@@ -431,6 +436,10 @@ export function openXhr(method: string, urlString: string, withCredentials?: boo
         // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
         // cause the request to fail and we no telemetry would be sent
         _wrapSetXhrProp(xhr, strDisabledPropertyName, disabled);
+    }
+    
+    if (!enableIntTracking && intExcludeTrackingEndpoints.indexOf(urlString) > -1) {
+        _wrapSetXhrProp(xhr, strDisabledPropertyName, true);
     }
 
     if (withCredentials) {
