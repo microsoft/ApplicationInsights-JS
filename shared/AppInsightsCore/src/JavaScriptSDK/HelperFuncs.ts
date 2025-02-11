@@ -404,7 +404,6 @@ const strDisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassAja
 const strWithCredentials: string = "withCredentials";
 const strTimeout: string = "timeout";
 
-
 /**
  * Create and open an XMLHttpRequest object
  * @param method - The request method

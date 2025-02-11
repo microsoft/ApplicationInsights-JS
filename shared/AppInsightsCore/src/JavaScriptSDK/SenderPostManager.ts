@@ -54,7 +54,6 @@ export class SenderPostManager {
         let _disableFetchKeepAlive: boolean;
         let _addNoResponse: boolean;
         let _timeoutWrapper: _ITimeoutOverrideWrapper;
-
        
 
         dynamicProto(SenderPostManager, this, (_self, _base) => {
