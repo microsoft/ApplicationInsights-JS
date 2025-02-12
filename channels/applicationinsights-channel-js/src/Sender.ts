@@ -82,7 +82,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     maxRetryCnt: {isVal: isNumber, v:10}
 });
 
-const CrossOriginResourcePolicyHeader: string = "X-Cross-Origin-Resource-Policy";
+const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
 
 function _chkSampling(value: number) {
     return !isNaN(value) && value > 0 && value <= 100;
