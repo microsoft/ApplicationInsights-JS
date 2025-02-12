@@ -52,11 +52,12 @@ export interface ICfgSyncConfig {
     scheduleFetchTimeout?: number;
 
     /**
-     * [Optional] Flag to indicate whether the internal endpoints will be taged as "DisabledPropertyName" to the xhr/fetch requests
+     * An internal flag to determine if sending requests with the internal endpoints as dependency requests.
+     * @internal
      * @default false
      * @since 3.3.6
      */
-    enableIntEndpointsTracking?: boolean;
+    enableAjax?: boolean;
 }
 
 export const enum ICfgSyncMode {

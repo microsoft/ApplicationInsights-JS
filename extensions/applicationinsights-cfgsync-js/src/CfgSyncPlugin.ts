@@ -34,7 +34,7 @@ const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     onCfgChangeReceive: udfVal,
     scheduleFetchTimeout: FETCH_TIMEOUT,
     nonOverrideConfigs: defaultNonOverrideCfg,
-    enableIntEndpointsTracking: false
+    enableAjax: false
 });
 
 export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin {
@@ -62,7 +62,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _overrideFetchFn: SendGetFunction;
         let _overrideSyncFn: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
         let _paused = false;
-        let _enableIntTracking: boolean;
+        let _enableAjax: boolean;
 
         dynamicProto(CfgSyncPlugin, this, (_self, _base) => {
 
@@ -123,7 +123,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _fetchTimeout = null;
                 _retryCnt = null;
                 _blkCdnCfg = null;
-                _enableIntTracking = false;
+                _enableAjax = false;
                 _overrideFetchFn = null;
                 _overrideSyncFn = null;
                 _onCfgChangeReceive = null;
@@ -138,7 +138,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
                     let preBlkCdn = _blkCdnCfg;
                     _blkCdnCfg = !!_extensionConfig.blkCdnCfg;
-                    _enableIntTracking = !!_extensionConfig.enableIntEndpointsTracking;
+                    _enableAjax = !!_extensionConfig.enableAjax;
                     // avoid initial call
                     if (!isNullOrUndefined(preBlkCdn) && preBlkCdn !== _blkCdnCfg) {
                         if (!_blkCdnCfg && _cfgUrl) {
@@ -269,7 +269,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         const init: RequestInit = {
                             method: STR_GET_METHOD
                         };
-                        if (!_enableIntTracking) {
+                        if (!_enableAjax) {
                             init[DisabledPropertyName] = true;
                         }
 
@@ -299,7 +299,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             function _xhrSender(url: string, oncomplete: OnCompleteCallback, isAutoSync?: boolean) {
                 try {
                     let xhr = new XMLHttpRequest();
-                    if (!_enableIntTracking) {
+                    if (!_enableAjax) {
                         xhr[DisabledPropertyName] = true;
                     }
                     xhr.open(STR_GET_METHOD, url);

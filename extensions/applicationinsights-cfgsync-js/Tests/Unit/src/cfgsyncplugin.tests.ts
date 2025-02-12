@@ -3,7 +3,7 @@ import { AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IPlugin, ITelemetr
 import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { CfgSyncPlugin } from "../../../../applicationinsights-cfgsync-js/src/applicationinsights-cfgsync-js";
 import { ICfgSyncConfig, ICfgSyncMode, NonOverrideCfg } from "../../../src/Interfaces/ICfgSyncConfig";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { DisabledPropertyName, IConfig } from "@microsoft/applicationinsights-common";
 import { createSyncPromise } from "@nevware21/ts-async";
 
 
@@ -74,7 +74,7 @@ export class CfgSyncPluginTests extends AITestClass {
                     scheduleFetchTimeout: 1800000,
                     nonOverrideConfigs: defaultNonOverrideCfg,
                     blkCdnCfg: udfVal,
-                    enableIntEndpointsTracking: false
+                    enableAjax: false
                 };
                 this.core.config.extensionConfig = this.core.config.extensionConfig || {};
                 let actualDefaults = this.core.config.extensionConfig[this.identifier];
