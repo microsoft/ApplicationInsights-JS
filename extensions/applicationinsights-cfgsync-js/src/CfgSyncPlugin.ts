@@ -274,7 +274,16 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         }
 
                         const request = new Request(url, init);
-                       
+                        if (!_enableAjax) {
+                            try {
+                                // Also try and tag the request (just in case the value in init is not copied over)
+                                request[DisabledPropertyName] = true;
+                            } catch(e) {
+                                // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
+                                // cause the request to fail and we no telemetry would be sent
+                            }
+                        }
+                  
                         doAwaitResponse(fetch(request), (result) => {
                             let response = result.value;
                           

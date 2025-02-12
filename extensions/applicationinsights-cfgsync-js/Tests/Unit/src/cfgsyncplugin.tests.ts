@@ -294,6 +294,98 @@ export class CfgSyncPluginTests extends AITestClass {
         });
 
         this.testCaseAsync({
+            name: "CfgSyncPlugin: should fetch call with disabledProperty when enableAjax is true",
+            stepDelay: 10,
+            useFakeTimers: true,
+            steps: [ () => {
+                let doc = getGlobal();
+                let config = {
+                    instrumentationKey:"testIkey",
+                    enableAjaxPerfTracking: true
+                } as IConfiguration & IConfig;
+                let cdnCfg = {
+                    enabled: true,
+                    config: config
+                } as ICfgSyncConfig;
+                let res = new (doc as any).Response(JSON.stringify(cdnCfg), {
+                    status: 200,
+                    headers: { "Content-type": "application/json" }
+                });
+                this.onDone(() => {
+                    this.core.unload(false);
+                });
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve(res);
+                    }, 0);
+                });
+                let fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this._config.extensionConfig  = { [this.identifier]: {
+                    cfgUrl: "testURL"
+                }};
+                this._context["fetchStub"] = fetchStub;
+                this.core.initialize(this._config, [this._channel]);
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                if (fetchStub.called) {
+                    Assert.equal(fetchStub.callCount, 1, "fetch is called once");
+                    let rlt = fetchStub.args[0][0][DisabledPropertyName];
+                    Assert.equal(rlt, true, "disableProperty tag should be true")
+                    return true;
+                }
+                return false;
+            }, "response received", 60, 1000) as any)
+        
+        });
+
+        this.testCaseAsync({
+            name: "CfgSyncPlugin: should fetch call without disabledProperty when enableAjax is false",
+            stepDelay: 10,
+            useFakeTimers: true,
+            steps: [ () => {
+                let doc = getGlobal();
+                let config = {
+                    instrumentationKey:"testIkey",
+                    enableAjaxPerfTracking: true
+                } as IConfiguration & IConfig;
+                let cdnCfg = {
+                    enabled: true,
+                    config: config
+                } as ICfgSyncConfig;
+                let res = new (doc as any).Response(JSON.stringify(cdnCfg), {
+                    status: 200,
+                    headers: { "Content-type": "application/json" }
+                });
+                this.onDone(() => {
+                    this.core.unload(false);
+                });
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve(res);
+                    }, 0);
+                });
+                let fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this._config.extensionConfig  = { [this.identifier]: {
+                    cfgUrl: "testURL",
+                    enableAjax: true
+                }};
+                this._context["fetchStub"] = fetchStub;
+                this.core.initialize(this._config, [this._channel]);
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let fetchStub = this._context["fetchStub"];
+                if (fetchStub.called) {
+                    Assert.equal(fetchStub.callCount, 1, "fetch is called once");
+                    let rlt = fetchStub.args[0][0][DisabledPropertyName];
+                    Assert.equal(!!rlt, false, "disableProperty tag should be true")
+                    return true;
+                }
+                return false;
+            }, "response received", 60, 1000) as any)
+        
+        });
+
+
+        this.testCaseAsync({
             name: "CfgSyncPlugin: should fetch from config url at expected interval",
             stepDelay: 10,
             useFakeTimers: true,
