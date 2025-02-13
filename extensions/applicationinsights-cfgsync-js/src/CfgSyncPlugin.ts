@@ -4,7 +4,7 @@
 */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { DisabledPropertyName, IConfig } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext,
@@ -33,7 +33,8 @@ const _defaultConfig: IConfigDefaults<ICfgSyncConfig> = objDeepFreeze({
     overrideFetchFn: udfVal,
     onCfgChangeReceive: udfVal,
     scheduleFetchTimeout: FETCH_TIMEOUT,
-    nonOverrideConfigs: defaultNonOverrideCfg
+    nonOverrideConfigs: defaultNonOverrideCfg,
+    enableAjax: false
 });
 
 export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin {
@@ -61,6 +62,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
         let _overrideFetchFn: SendGetFunction;
         let _overrideSyncFn: (config?:IConfiguration & IConfig, customDetails?: any) => boolean;
         let _paused = false;
+        let _enableAjax: boolean;
 
         dynamicProto(CfgSyncPlugin, this, (_self, _base) => {
 
@@ -121,6 +123,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                 _fetchTimeout = null;
                 _retryCnt = null;
                 _blkCdnCfg = null;
+                _enableAjax = false;
                 _overrideFetchFn = null;
                 _overrideSyncFn = null;
                 _onCfgChangeReceive = null;
@@ -135,6 +138,7 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
                     let preBlkCdn = _blkCdnCfg;
                     _blkCdnCfg = !!_extensionConfig.blkCdnCfg;
+                    _enableAjax = !!_extensionConfig.enableAjax;
                     // avoid initial call
                     if (!isNullOrUndefined(preBlkCdn) && preBlkCdn !== _blkCdnCfg) {
                         if (!_blkCdnCfg && _cfgUrl) {
@@ -265,8 +269,21 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
                         const init: RequestInit = {
                             method: STR_GET_METHOD
                         };
+                        if (!_enableAjax) {
+                            init[DisabledPropertyName] = true;
+                        }
+
                         const request = new Request(url, init);
-                       
+                        if (!_enableAjax) {
+                            try {
+                                // Also try and tag the request (just in case the value in init is not copied over)
+                                request[DisabledPropertyName] = true;
+                            } catch(e) {
+                                // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
+                                // cause the request to fail and we no telemetry would be sent
+                            }
+                        }
+                  
                         doAwaitResponse(fetch(request), (result) => {
                             let response = result.value;
                           
@@ -291,6 +308,9 @@ export class CfgSyncPlugin extends BaseTelemetryPlugin implements ICfgSyncPlugin
             function _xhrSender(url: string, oncomplete: OnCompleteCallback, isAutoSync?: boolean) {
                 try {
                     let xhr = new XMLHttpRequest();
+                    if (!_enableAjax) {
+                        xhr[DisabledPropertyName] = true;
+                    }
                     xhr.open(STR_GET_METHOD, url);
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState === XMLHttpRequest.DONE) {

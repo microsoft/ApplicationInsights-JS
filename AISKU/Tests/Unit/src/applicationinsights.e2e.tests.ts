@@ -78,7 +78,7 @@ export class ApplicationInsightsTests extends AITestClass {
             disablePageUnloadEvents: [ "beforeunload" ],
             extensionConfig: {
                 ["AppInsightsCfgSyncPlugin"]: {
-                    cfgUrl: ""
+                    //cfgUrl: ""
                 }
             }
         };

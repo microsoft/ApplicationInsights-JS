@@ -50,6 +50,14 @@ export interface ICfgSyncConfig {
      * @default 30mins (30*60*1000ms)
      */
     scheduleFetchTimeout?: number;
+
+    /**
+     * An internal flag to determine if sending requests with the internal endpoints as dependency requests.
+     * @internal
+     * @default false
+     * @since 3.3.6
+     */
+    enableAjax?: boolean;
 }
 
 export const enum ICfgSyncMode {
