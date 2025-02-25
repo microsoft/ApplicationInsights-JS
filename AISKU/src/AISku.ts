@@ -5,7 +5,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
-import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { Sender, Statsbeat } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, ConnectionString, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
     IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
@@ -189,7 +189,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
             properties = new PropertiesPlugin();
             dependencies = new DependenciesPlugin();
-            _sender = new Sender();
+            _sender = new Sender(new Statsbeat());
             _core = new AppInsightsCore();
 
             objDefine(_self, "core", {

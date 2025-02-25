@@ -166,6 +166,8 @@ export interface ISenderConfig {
      * @since 3.2.0
      */
     maxRetryCnt?: number;
+
+    disableStatsbeat?: boolean;
 }
 
 export interface IBackendResponse {

@@ -246,7 +246,7 @@ export function ExceptionEnvelopeCreator(logger: IDiagnosticLogger, telemetryIte
 export function MetricEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
     EnvelopeCreatorInit(logger, telemetryItem);
 
-    const baseData = telemetryItem[strBaseData];
+    const baseData = telemetryItem[strBaseData] || {};
     const props = baseData[strProperties] || {};
     const measurements = baseData.measurements || {};
     _extractPropsAndMeasurements(telemetryItem.data, props, measurements);
