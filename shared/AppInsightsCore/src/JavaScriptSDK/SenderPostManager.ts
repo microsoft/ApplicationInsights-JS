@@ -535,7 +535,7 @@ export class SenderPostManager {
              * Note: XDomainRequest does not support custom headers and we are not able to get
              * appId from the backend for the correct correlation.
              */
-            function _xdrSender(payload: IPayloadData, oncomplete: OnCompleteCallback, startTime: number, sync?: boolean) {
+            function _xdrSender(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) {
                 // It doesn't support custom headers, so no action is taken with current requestHeaders
                 let _window = getWindow();
                 const xdr = new XDomainRequest();
@@ -546,7 +546,7 @@ export class SenderPostManager {
                     let response = getResponseText(xdr);
                     let onloadFunc = _onCompleteFuncs && _onCompleteFuncs.xdrOnComplete;
                     if (onloadFunc && isFunction(onloadFunc)) {
-                        onloadFunc(xdr, oncomplete, startTime, payload);
+                        onloadFunc(xdr, oncomplete, payload);
                     } else {
                         _doOnComplete(oncomplete, 200, {}, response);
 

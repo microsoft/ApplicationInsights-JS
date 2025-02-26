@@ -15,7 +15,7 @@ export interface _ISenderOnComplete {
      * @param oncomplete - oncomplete function
      * @since version after 3.1.0
      */
-    xdrOnComplete?(xdr: IXDomainRequest, onComplete: OnCompleteCallback, startTime:number, payload?: IPayloadData): void;
+    xdrOnComplete?(xdr: IXDomainRequest, onComplete: OnCompleteCallback, payload?: IPayloadData): void;
     /**
      * defined fetch on complete function to handle response
      * @param response - response object

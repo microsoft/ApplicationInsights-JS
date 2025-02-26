@@ -36,6 +36,7 @@ const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, 
 interface IInternalPayloadData extends IPayloadData {
     oriPayload: IInternalStorageItem[];
     retryCnt?: number;
+    statsBeat?: IStatsBeatEvent;
 }
 
 
@@ -98,7 +99,7 @@ const EnvelopeTypeCreator: { [key:string] : EnvelopeCreator } = {
     [RemoteDependencyData.dataType]:    DependencyEnvelopeCreator
 };
 
-export type SenderFunction = (payload: string[] | IInternalStorageItem[], isAsync: boolean, startTime?: number) => void | IPromise<boolean>;
+export type SenderFunction = (payload: string[] | IInternalStorageItem[], isAsync: boolean, statsBeatEvent?: IStatsBeatEvent) => void | IPromise<boolean>;
 
 export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
@@ -421,17 +422,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     httpInterface = _sendPostMgr && _sendPostMgr.getSenderInst(theTransports, false);
                   
                     let xhrInterface = _sendPostMgr && _sendPostMgr.getFallbackInst();
-                    _xhrSend = (payload: IInternalStorageItem[], isAsync: boolean, startTime: number) => {
-                        return _doSend(xhrInterface, payload, isAsync, true ,startTime);
+                    _xhrSend = (payload: IInternalStorageItem[], isAsync: boolean) => {
+                        return _doSend(xhrInterface, payload, isAsync, true ,statsbeat);
                     };
-                    _fallbackSend = (payload: IInternalStorageItem[], isAsync: boolean, startTime: number) => { // for fallback send, should NOT mark payload as sent again!
-                        return _doSend(xhrInterface, payload, isAsync, false, startTime);
+                    _fallbackSend = (payload: IInternalStorageItem[], isAsync: boolean) => { // for fallback send, should NOT mark payload as sent again!
+                        return _doSend(xhrInterface, payload, isAsync, false, statsbeat);
                     };
     
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
 
-                    _self._sender = (payload: IInternalStorageItem[], isAsync: boolean, startTime: number) => {
-                        return _doSend(httpInterface, payload, isAsync, true, startTime);
+                    _self._sender = (payload: IInternalStorageItem[], isAsync: boolean) => {
+                        return _doSend(httpInterface, payload, isAsync, true, statsbeat);
                     };
 
                     if (_fetchKeepAlive) {
@@ -675,12 +676,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _getSendPostMgrConfig(): _ISendPostMgrConfig {
                 try {
                     let onCompleteFuncs = {
-                        xdrOnComplete: (xdr: IXDomainRequest, oncomplete: OnCompleteCallback,startTime: number, payload?: IPayloadData) => {
+                        xdrOnComplete: (xdr: IXDomainRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
                             let data = _getPayloadArr(payload);
                             if (!data) {
                                 return;
                             }
-                            return _xdrOnLoad(xdr, data, startTime);
+                            return _xdrOnLoad(xdr, data);
                            
                         },
                         fetchOnComplete: (response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) => {
@@ -727,9 +728,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * xhr state changes
              */
-            function _xhrReadyStateChange (xhr: XMLHttpRequest, payload: IInternalStorageItem[], countOfItemsInPayload: number, startTime: number) {
+            function _xhrReadyStateChange (xhr: XMLHttpRequest, payload: IInternalStorageItem[], countOfItemsInPayload: number) {
                 if (xhr.readyState === 4) {
-                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response, startTime);
+                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
                 }
             }
 
@@ -933,20 +934,21 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 return _self._sample.isSampledIn(envelope);
             }
 
-            function _getOnComplete(payload: IInternalStorageItem[], status: number, headers: {[headerName: string]: string;}, response?: string) {
+            function _getOnComplete(payload: IInternalStorageItem[], status: number, headers: {[headerName: string]: string;}, statsBeatEvent: IStatsBeatEvent, response?: string) {
 
                 // ***********************************************************************************************
                 //TODO: handle other status codes
                 if (status === 200 && payload) {
                     _self._onSuccess(payload, payload.length);
+                    _self._statsbeat.countRequest(_endpointUrl, dateNow() - statsBeatEvent.startTime, true);
                 } else {
                     response && _self._onError(payload, response);
                 }
             }
 
-            function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true, startTime: number): void | IPromise<boolean> {
-                let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    return _getOnComplete(payload, status, headers, response);
+            function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true, statsBeatEvent: IStatsBeatEvent): void | IPromise<boolean> {
+                let onComplete = (status: number, headers: {[headerName: string]: string;}, statsBeatEvent: IStatsBeatEvent, response?: string) => {
+                    return _getOnComplete(payload, status, headers, response, statsBeatEvent);
                 }
                 let payloadData = _getPayload(payload);
                 let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST;
@@ -1007,7 +1009,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 return false;
             }
 
-            function _checkResponsStatus(status: number, payload: IInternalStorageItem[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any, startTime: number) {
+            function _checkResponsStatus(status: number, payload: IInternalStorageItem[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any) {
                 let response: IBackendResponse = null;
                 if (!_self._appId) {
                     response = parseResponse(res);
@@ -1122,10 +1124,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             droppedPayload.push(thePayload);
                         } else {
                             _self._onSuccess(arr, arr.length);
-                            if (_self._statsbeat && _self._statsbeat.isInitialized()) {
-                                let endTime = dateNow();
-                                _self._statsbeat.countRequest(_endPointUrl, endTime - startTime, true);
-                            }
                         }
                     }
                     if (droppedPayload.length > 0) {

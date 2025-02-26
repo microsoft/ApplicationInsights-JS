@@ -1,11 +1,13 @@
-import { IConfig } from "./IConfig";
-import { IConfiguration, IAppInsightsCore, IPlugin, ITelemetryPluginChain } from "@microsoft/applicationinsights-core-js";
+import { IAppInsightsCore } from "./IAppInsightsCore";
+import { IConfiguration } from "./IConfiguration";
+import { IPlugin } from "./ITelemetryPlugin";
+import { ITelemetryPluginChain } from "./ITelemetryPluginChain";
 
 /**
  * Defines the Statsbeat manager interface for tracking internal SDK performance metrics.
  */
 export interface IStatsbeatManager {
-    initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain, endpoint?: string): void;
+    initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain, endpoint?: string): void;
     isInitialized(): boolean;
     countRequest(endpoint: string, duration: number, success: boolean): void;
     countException(endpoint: string): void;
@@ -13,8 +15,3 @@ export interface IStatsbeatManager {
     countRetry(endpoint: string): void;
     trackShortIntervalStatsbeats(): void;
 }
-
-/**
- * Factory function to create and retrieve a single Statsbeat instance.
- */
-export function createStatsbeatManager(): IStatsbeatManager;
