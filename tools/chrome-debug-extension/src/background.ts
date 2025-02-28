@@ -5,6 +5,7 @@ import { objKeys } from "@microsoft/applicationinsights-core-js";
 import { MessageType } from "./Enums";
 import { getPopupSettings, setPopupSize } from "./configuration/PopupConfigCache";
 import { IMessage } from "./interfaces/IMessage";
+import { mathMax, mathMin } from "@nevware21/ts-utils";
 
 const openTabs: {[key: string]: chrome.windows.Window} = { };
 
@@ -60,8 +61,8 @@ function openPopup(tab: chrome.tabs.Tab) {
             url: "pages/popup.html?tabId=" + tab.id,
             type: "popup",
             focused: true,
-            width: Math.min(Math.max(settings.width || 0, 200), screenWidth),
-            height: Math.min(Math.max(settings.height || 0, 320), screenHeight)
+            width: mathMin(mathMax(settings.width || 0, 200), screenWidth),
+            height: mathMin(mathMax(settings.height || 0, 320), screenHeight)
         }, (value) => {
             setTabWindow(tab.id, value);
             if (value) {

@@ -1,5 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { dumpObj } from '@nevware21/ts-utils';
+import { dumpObj, mathCeil } from '@nevware21/ts-utils';
 import { createPromise, doAwait, IPromise } from '@nevware21/ts-async';
 import * as pako from 'pako';
 
@@ -78,10 +78,10 @@ export class FileSizeCheckTest extends AITestClass {
                             return;
                         } else {
                             return response.text().then(text => {
-                                let size = Math.ceil((text.length / 1024) * 100) / 100.0;
+                                let size = mathCeil((text.length / 1024) * 100) / 100.0;
                                 _checkSize("bundle", this.MAX_BUNDLE_SIZE, size, isNightly);
 
-                                size = Math.ceil((pako.deflate(text).length / 1024) * 100) / 100.0;
+                                size = mathCeil((pako.deflate(text).length / 1024) * 100) / 100.0;
                                 _checkSize("deflate", this.MAX_DEFLATE_SIZE, size, isNightly);
                             }).catch((error: Error) => {
                                 QUnit.assert.ok(false, `${fileName} response error: ${error}`);
