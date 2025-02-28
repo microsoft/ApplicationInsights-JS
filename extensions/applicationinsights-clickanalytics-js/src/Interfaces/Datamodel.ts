@@ -51,6 +51,11 @@ export interface IClickAnalyticsConfiguration {
     * Enables the logging of the query string of the URL. Default is "false."
     */
     urlCollectQuery?: boolean;
+
+    /**
+     * Additional element types to be tracked for click events.
+     */
+    clickCaptureElements?: { [element: string]: boolean };
 }
 
 /**
