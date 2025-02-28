@@ -2,8 +2,8 @@
     "name": "Telemetry Viewer - M3",
     "short_name": "Telemetry Viewer M3",
     "description": "A browser extension that provides a real time view of what's happening in Application Insights including what telemetry is being logged by the web application",
-    "version": "0.7.4",
-    "version_name": "0.7.4",
+    "version": "0.7.5",
+    "version_name": "0.7.5",
     "manifest_version": 3,
     "icons": {
         "16": "images/icon-16.png",

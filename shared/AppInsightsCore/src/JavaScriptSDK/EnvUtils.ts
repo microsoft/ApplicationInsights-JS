@@ -4,7 +4,7 @@
 
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import {
-    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, strIndexOf
+    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, mathMax, strIndexOf
 } from "@nevware21/ts-utils";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
@@ -186,7 +186,7 @@ export function getIEVersion(userAgentStr: string = null): number {
     // Also check for documentMode in case X-UA-Compatible meta tag was included in HTML.
     if (strContains(ua, strMsie)) {
         let doc = getDocument() || {} as Document;
-        return Math.max(parseInt(ua.split(strMsie)[1]), (doc[strDocumentMode] || 0));
+        return mathMax(parseInt(ua.split(strMsie)[1]), (doc[strDocumentMode] || 0));
     } else if (strContains(ua, strTrident)) {
         let tridentVer = parseInt(ua.split(strTrident)[1]);
         if (tridentVer) {
