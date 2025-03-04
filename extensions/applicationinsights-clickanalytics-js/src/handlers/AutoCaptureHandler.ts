@@ -13,7 +13,8 @@ import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IPageActionOverrideV
 import { isElementDnt, isKeyboardEnter, isKeyboardSpace, isLeftClick, isMiddleClick, isRightClick } from "../common/Utils";
 import { PageAction } from "../events/PageAction";
 
-const clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };
+const clickCaptureInputTypes : { [tag: string]: boolean; } = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };
+const defaultClickCaptureElements : { [tag: string]: boolean; } = { A: true, BUTTON: true, AREA: true, INPUT: true };
 
 export class AutoCaptureHandler implements IAutoCaptureHandler {
 
@@ -55,17 +56,22 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                     _self._pageAction.capturePageAction(element, overrideValues, customProperties, isRightClick);
                 }
             }
+
+            function defaultShouldCaptureElement(element: Element): boolean {
+                const tagNameUpperCased = element.tagName.toUpperCase();
+                return defaultClickCaptureElements[tagNameUpperCased];
+            }
         
             // Process click event
             function _processClick(clickEvent: any) {
-                var clickCaptureElements = _self._config.clickCaptureElements || { A: true, BUTTON: true, AREA: true, INPUT: true };
+                var shouldCapture = _self._config.shouldCaptureElement || defaultShouldCaptureElement;
                 let win = getWindow();
                 if (isNullOrUndefined(clickEvent) && win) {
                     clickEvent = win.event; // IE 8 does not pass the event
                 }
                 if (clickEvent) {
                     let element = clickEvent.srcElement || clickEvent.target;
-        
+                    
                     // populate overrideValues
                     var overrideValues: IPageActionOverrideValues = {
                         clickCoordinateX: clickEvent.pageX,
@@ -85,15 +91,15 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                     } else {
                         return;
                     }
-        
+                    
                     while (element && element.tagName) {
                         // control property will be available for <label> elements with 'for' attribute, only use it when is a
                         // valid JSLL capture element to avoid infinite loops
-                        if (element.control && clickCaptureElements[element.control.tagName.toUpperCase()]) {
+                        if (element.control && shouldCapture(element.control)) {
                             element = element.control;
                         }
                         const tagNameUpperCased = element.tagName.toUpperCase();
-                        if (!clickCaptureElements[tagNameUpperCased]) {
+                        if (!shouldCapture(element)) {
                             element = element.parentElement || element.parentNode;
                             continue;
                         } else {

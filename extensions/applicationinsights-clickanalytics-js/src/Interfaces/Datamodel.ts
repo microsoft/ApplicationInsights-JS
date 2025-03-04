@@ -53,9 +53,9 @@ export interface IClickAnalyticsConfiguration {
     urlCollectQuery?: boolean;
 
     /**
-     * Additional element types to be tracked for click events.
+     * Which elements should be tracked for click events. Defaults to the tags: A, BUTTON, AREA, INPUT
      */
-    clickCaptureElements?: { [element: string]: boolean };
+    shouldCaptureElement?: (value: Element) => boolean;
 }
 
 /**

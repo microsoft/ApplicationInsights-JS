@@ -130,7 +130,7 @@ appInsights.loadAppInsights();
 | behaviorValidator     | Function                           | null  | Callback function to use for the `data-*-bhvr` value validation. For more information, go to [behaviorValidator section](#behaviorvalidator).|
 | defaultRightClickBhvr | string (or) number                 | ''      | Default Behavior value when Right Click event has occurred. This value will be overridden if the element has the `data-*-bhvr` attribute. |
 | dropInvalidEvents     | boolean                            | false   | Flag to drop events that do not have useful click data.        
-| clickCaptureElements  | { [element: string]: boolean }     | { A: true, BUTTON: true, AREA: true, INPUT: true } | Element types to be tracked for click events.                                                                                 |
+| shouldCaptureElement  | (value: Element) => boolean;     | True when element.tagName in [A, BUTTON, AREA, INPUT] false otherwise | Return true if clicks should be auto captured for the given element. `autoCapture` must be true to have an effect.                                                                                |
 
 ### IValueCallback
 
