@@ -36,6 +36,7 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { IStatsBeat } from "../applicationinsights-core-js";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
@@ -51,6 +52,7 @@ import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain
 } from "./ProcessTelemetryContext";
+import { Statsbeat } from "./StatsBeat";
 import { _getPluginState, createDistributedTraceContext, initializePlugins, sortPlugins } from "./TelemetryHelpers";
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
@@ -275,6 +277,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _logger: IDiagnosticLogger;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
+        let _statsBeat: IStatsBeat | null;
         let _perfManager: IPerfManager | null;
         let _cfgPerfManager: IPerfManager | null;
         let _cookieManager: ICookieMgr | null;
@@ -357,6 +360,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     }
 
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
+                    if (config.disableStatsBeat === false){
+                        _statsBeat = new Statsbeat();
+                    }
                     // app Insights core only handle ikey and endpointurl, aisku will handle cs
                     let ikey = rootCfg.instrumentationKey;
                     let endpointUrl = rootCfg.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
@@ -610,6 +616,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             _self.getPerfMgr = (): IPerfManager => {
                 return _perfManager || _cfgPerfManager || getGblPerfMgr();
+            };
+
+            _self.getStatsBeat = (): IStatsBeat => {
+                return _statsBeat;
             };
 
             _self.setPerfMgr = (perfMgr: IPerfManager) => {
@@ -1012,6 +1022,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
                 _perfManager = null;
+                _statsBeat = null;
                 _cfgPerfManager = null;
                 runTargetUnload(_cookieManager, false);
                 _cookieManager = null;
@@ -1421,6 +1432,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
     public getPerfMgr(): IPerfManager {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public getStatsBeat(): IStatsBeat {
         return null;
     }
 

@@ -1,5 +1,5 @@
 import { IPromise } from "@nevware21/ts-async";
-import { SendRequestReason } from "../applicationinsights-core-js";
+import { IStatsBeatEvent, SendRequestReason } from "../applicationinsights-core-js";
 
 /** IPayloadData describes interface of payload sent via POST channel */
 export interface IPayloadData {
@@ -10,6 +10,7 @@ export interface IPayloadData {
     disableXhrSync?: boolean;
     disableFetchKeepAlive?: boolean;
     sendReason?: SendRequestReason;
+    statsBeatData?: IStatsBeatEvent;
 }
 
 /**
