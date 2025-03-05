@@ -1,6 +1,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { objKeys, utcNow } from "@nevware21/ts-utils";
-import { IChannelControls, IStatsBeat, ITelemetryItem } from "../applicationinsights-core-js";
+import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
+import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { NetworkStatsbeat } from "./NetworkStatsbeat";
 
 export const StatsbeatCounter = {
@@ -34,6 +36,7 @@ export class Statsbeat implements IStatsBeat {
         let _runTimeVersion: string;
         dynamicProto(Statsbeat, this, (_self, _base) => {
             _self.initialize = (ikey: string, channel: IChannelControls, endpoint: string, version?: string) => {
+                console.log("Statsbeat initialize called");
                 _networkCounter = new NetworkStatsbeat(endpoint);
                 _statsbeatMetrics = {};
                 _isEnabled = true;
@@ -54,6 +57,7 @@ export class Statsbeat implements IStatsBeat {
             }
 
             _self.countRequest = (endpoint: string, duration: number, success: boolean) => {
+                console.log("Statsbeat countRequest called", endpoint, duration, success);
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
