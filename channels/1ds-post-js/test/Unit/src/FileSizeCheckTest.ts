@@ -1,5 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { dumpObj } from '@nevware21/ts-utils';
+import { dumpObj, mathCeil } from '@nevware21/ts-utils';
 import { createPromise, doAwait, IPromise } from '@nevware21/ts-async';
 import * as pako from 'pako';
 
@@ -69,7 +69,7 @@ export class FileSizeCheckTest extends AITestClass {
                         let xhr = new XMLHttpRequest();
                         xhr.open('GET', '../bundle/es5/ms.post.min.js', true);
                         xhr.onload = () => {
-                            let size = Math.ceil(pako.deflate(xhr.responseText).length / 1024);
+                            let size = mathCeil(pako.deflate(xhr.responseText).length / 1024);
                             _checkSize("deflate", MAX_DEFLATE_SIZE, size, isNightly);
                             testCompleted();
                         };

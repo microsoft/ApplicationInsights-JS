@@ -1,3 +1,5 @@
+import { mathFloor, mathMin } from "@nevware21/ts-utils";
+
 /**
 * RetryPolicy.ts
 * @author Abhilash Panwar (abpanwar)
@@ -40,7 +42,7 @@ export function retryPolicyGetMillisToBackoffForRetry(retriesSoFar: number): num
     let waitDuration = 0;
     let minBackoff = BaseBackoff * RandomizationLowerThreshold;
     let maxBackoff = BaseBackoff * RandomizationUpperThreshold;
-    let randomBackoff = Math.floor(Math.random() * (maxBackoff - minBackoff)) + minBackoff;
+    let randomBackoff = mathFloor(Math.random() * (maxBackoff - minBackoff)) + minBackoff;
     waitDuration = Math.pow(2, retriesSoFar) * randomBackoff;
-    return Math.min(waitDuration, MaxBackoff);
+    return mathMin(waitDuration, MaxBackoff);
 }

@@ -8,6 +8,7 @@ import {
 import {
     IDiagnosticLogger, IDistributedTraceContext, arrForEach, isNullOrUndefined, isNumber, isString, normalizeJsName, objForEachKey, objKeys
 } from "@microsoft/applicationinsights-core-js";
+import { mathRound } from "@nevware21/ts-utils";
 import { STR_DURATION, STR_PROPERTIES } from "./InternalConstants";
 
 export interface IAjaxRecordResponse {
@@ -321,7 +322,7 @@ export class ajaxRecord {
         
             self.CreateTrackItem = (ajaxType:string, enableRequestHeaderTracking:boolean, getResponse:() => IAjaxRecordResponse):IDependencyTelemetry => {
                 // round to 3 decimal points
-                self.ajaxTotalDuration = Math.round(dateTimeUtilsDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
+                self.ajaxTotalDuration = mathRound(dateTimeUtilsDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
                 if (self.ajaxTotalDuration < 0) {
                     return null;
                 }

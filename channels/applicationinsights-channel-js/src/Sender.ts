@@ -16,7 +16,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
-    ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout
+    ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine, scheduleTimeout
 } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator,
@@ -1214,9 +1214,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 } else {
                     const backOffSlot = (Math.pow(2, _consecutiveErrors) - 1) / 2;
                     // tslint:disable-next-line:insecure-random
-                    let backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                    let backOffDelay = mathFloor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
                     backOffDelay = linearFactor * backOffDelay;
-                    delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
+                    delayInSeconds = mathMax(mathMin(backOffDelay, 3600), SlotDelayInSeconds);
                 }
         
                 // TODO: Log the backoff time like the C# version does.
@@ -1231,8 +1231,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              */
             function _setupTimer() {
                 if (!_timeoutHandle && !_paused) {
-                    const retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
-                    const timerValue = Math.max(_maxBatchInterval, retryInterval);
+                    const retryInterval = _retryAt ? mathMax(0, _retryAt - dateNow()) : 0;
+                    const timerValue = mathMax(_maxBatchInterval, retryInterval);
         
                     _timeoutHandle = scheduleTimeout(() => {
                         _timeoutHandle = null;

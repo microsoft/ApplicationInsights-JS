@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { IPlugin, arrForEach, isString } from "@microsoft/applicationinsights-core-js";
+import { mathFloor, mathRound } from "@nevware21/ts-utils";
 
 const strEmpty = "";
 
@@ -21,13 +22,13 @@ export function msToTimeSpan(totalms: number): string {
         totalms = 0;
     }
 
-    totalms = Math.round(totalms);
+    totalms = mathRound(totalms);
 
     let ms = strEmpty + totalms % 1000;
-    let sec = strEmpty + Math.floor(totalms / 1000) % 60;
-    let min = strEmpty + Math.floor(totalms / (1000 * 60)) % 60;
-    let hour = strEmpty + Math.floor(totalms / (1000 * 60 * 60)) % 24;
-    const days = Math.floor(totalms / (1000 * 60 * 60 * 24));
+    let sec = strEmpty + mathFloor(totalms / 1000) % 60;
+    let min = strEmpty + mathFloor(totalms / (1000 * 60)) % 60;
+    let hour = strEmpty + mathFloor(totalms / (1000 * 60 * 60)) % 24;
+    const days = mathFloor(totalms / (1000 * 60 * 60 * 24));
 
     ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
     sec = sec.length < 2 ? "0" + sec : sec;
