@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-perfmarkmeasure-js",
-    "version": "3.3.5",
+    "version": "3.3.6",
     "description": "Microsoft Application Insights Performance Mark and Measure Manager plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -56,7 +56,7 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-core-js": "3.3.5",
+        "@microsoft/applicationinsights-core-js": "3.3.6",
         "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
     },
     "license": "MIT"
