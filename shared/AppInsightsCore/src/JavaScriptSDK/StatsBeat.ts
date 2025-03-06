@@ -131,8 +131,7 @@ export class Statsbeat implements IStatsBeat {
                             average: 0,
                             properties: {"host": _networkCounter.host, ..._statsbeatMetrics.properties, ...networkProperties}
                         },
-                        baseType: "StatsbeatData"
-                        // baseType: Metric.dataType
+                        baseType: "MetricData"
                     };
                     _channel.processTelemetry(statsbeat);
                 }
