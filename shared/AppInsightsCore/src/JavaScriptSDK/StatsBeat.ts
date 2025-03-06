@@ -2,6 +2,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { objKeys, utcNow } from "@nevware21/ts-utils";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
+import { IStatsBeatEvent } from "../JavaScriptSDK.Interfaces/IStatsBeatEvent";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { NetworkStatsbeat } from "./NetworkStatsbeat";
 
@@ -41,14 +42,14 @@ export class Statsbeat implements IStatsBeat {
                 _isEnabled = true;
                 _channel = channel;
                 _sdkVersion = version;
-                if (_isEnabled) {
-                    _getCustomProperties(ikey);
-                    if (!_handle) {
-                        _handle = setInterval(() => {
-                            this.trackShortIntervalStatsbeats();
-                        }, STATS_COLLECTION_SHORT_INTERVAL);
-                    }
+
+                _getCustomProperties(ikey);
+                if (!_handle) {
+                    _handle = setInterval(() => {
+                        this.trackShortIntervalStatsbeats();
+                    }, STATS_COLLECTION_SHORT_INTERVAL);
                 }
+
             }
 
             _self.isInitialized = (): boolean => {
@@ -59,12 +60,14 @@ export class Statsbeat implements IStatsBeat {
                 _isEnabled = value;
             }
 
-            _self.countRequest = (endpoint: string, duration: number, success: boolean) => {
+            _self.countRequest = (endpoint: string, statsBeatData: IStatsBeatEvent, success: boolean) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
                 _networkCounter.totalRequestCount++;
-                _networkCounter.intervalRequestExecutionTime += duration;
+                if (statsBeatData && statsBeatData.startTime) {
+                    _networkCounter.intervalRequestExecutionTime += utcNow() - statsBeatData.startTime;
+                }
                 if (success === false) {
                     _networkCounter.totalFailedRequestCount++;
                 } else {
@@ -199,7 +202,7 @@ export class Statsbeat implements IStatsBeat {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public countRequest(endpoint: string, duration: number, success: boolean) {
+    public countRequest(endpoint: string, statsBeatData: IStatsBeatEvent, success: boolean) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

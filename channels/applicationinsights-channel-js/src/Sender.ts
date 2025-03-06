@@ -655,7 +655,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _consecutiveErrors = 0;
                     _self._onSuccess(payload, 0);
                     var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                    _statsBeat.countRequest(endpointHost, dateNow() - statsBeatData.startTime, true);
+                    _statsBeat.countRequest(endpointHost, statsBeatData, true);
                 } else {
                     const results = parseResponse(responseText);
         
@@ -1047,8 +1047,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _self._onError(payload, errorMessage);
                     }
                 } else {
-                    let endTime = dateNow();
-                    _statsBeat.countRequest(responseUrl, endTime - statsBeatData.startTime, status === 200);
+                    _statsBeat.countRequest(responseUrl, statsBeatData, status === 200);
                     // check if the xhr's responseURL or fetch's response.url is same as endpoint url
                     // TODO after 10 redirects force send telemetry with 'redirect=false' as query parameter.
                     _checkAndUpdateEndPointUrl(responseUrl);
@@ -1115,7 +1114,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             // Can't send anymore, so split the batch and drop the rest
                             droppedPayload.push(thePayload);
                         } else {
-                            _statsBeat.countRequest(urlParseUrl(_self._senderConfig.endpointUrl).hostname, dateNow() - payload.statsBeatData.startTime, true);
+                            _statsBeat.countRequest(urlParseUrl(_self._senderConfig.endpointUrl).hostname, payload.statsBeatData, true);
                             _self._onSuccess(arr, arr.length);
                         }
                     }
