@@ -2,31 +2,32 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Event, Exception, IConfig, IEnvelope, IOfflineListener, ISample,
     IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace,
-    createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
+    createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, urlParseUrl, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     ActiveStatus, BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration,
     IDiagnosticLogger, IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride,
-    OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete,
-    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
-    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion,
-    isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
-    prependTransports, runTargetUnload
+    IProcessTelemetryUnloadContext, IStatsBeat, IStatsBeatEvent, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
+    IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType,
+    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
+    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr,
+    getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend,
+    onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
     ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine, scheduleTimeout
 } from "@nevware21/ts-utils";
 import {
-    DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
-    PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
+    DependencyEnvelopeCreator, EnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator,
+    PageViewEnvelopeCreator, PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
 } from "./EnvelopeCreator";
 import { IInternalStorageItem, ISenderConfig } from "./Interfaces";
 import { ArraySendBuffer, ISendBuffer, SessionStorageSendBuffer } from "./SendBuffer";
 import { Serializer } from "./Serializer";
 import { Sample } from "./TelemetryProcessors/Sample";
 
+const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
 const UNDEFINED_VALUE: undefined = undefined;
 const EMPTY_STR = "";
 
@@ -160,6 +161,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _offlineListener: IOfflineListener;
         let _evtNamespace: string | string[];
         let _endpointUrl: string;
+        let _statsBeat: IStatsBeat;
         let _orgEndpointUrl: string;
         let _maxBatchSizeInBytes: number;
         let _beaconSupported: boolean;
@@ -270,6 +272,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
 
                     let curExtUrl = senderConfig.endpointUrl;
+                    _statsBeat = core.getStatsBeat();
+                    if (_statsBeat && !_statsBeat.isInitialized()) {
+                        _statsBeat.setInitialized(true); // otherwise, it will fall into infinite loop of creating new sender
+                        let senderConfig = {...config};
+                        senderConfig.instrumentationKey = INSTRUMENTATION_KEY;
+                        let statsBeatSender = new Sender();
+                        statsBeatSender.initialize(senderConfig, core, extensions, pluginChain);
+                        var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                        _statsBeat.initialize(senderConfig.instrumentationKey, statsBeatSender, endpointHost, EnvelopeCreator.Version);
+                    }
                     // if it is not inital change (_endpointUrl has value)
                     // if current sender endpoint url is not changed directly
                     // means ExtCfg is not changed directly
@@ -515,7 +527,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (_isStringArr(payload)) {
                     return;
                 }
-                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[],countOfItemsInPayload);
+                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[], countOfItemsInPayload);
 
             }
         
@@ -628,20 +640,22 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * xdr state changes
              */
-            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: IInternalStorageItem[] | string[]) => {
+            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: IInternalStorageItem[] | string[], statsBeatData?: IStatsBeatEvent) => {
                 // since version 3.1.3, string[] is no-op
                 if (_isStringArr(payload)) {
                     return;
                 }
-                return _xdrOnLoad(xdr, payload as IInternalStorageItem[]);
+                return _xdrOnLoad(xdr, payload as IInternalStorageItem[], statsBeatData);
 
             }
 
-            function _xdrOnLoad (xdr: IXDomainRequest, payload: IInternalStorageItem[]) {
+            function _xdrOnLoad (xdr: IXDomainRequest, payload: IInternalStorageItem[], statsBeatData?: IStatsBeatEvent) {
                 const responseText = _getResponseText(xdr);
                 if (xdr && (responseText + "" === "200" || responseText === "")) {
                     _consecutiveErrors = 0;
                     _self._onSuccess(payload, 0);
+                    var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                    _statsBeat.countRequest(endpointHost, statsBeatData, true);
                 } else {
                     const results = parseResponse(responseText);
         
@@ -659,26 +673,26 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 try {
                     let onCompleteFuncs = {
                         xdrOnComplete: (xdr: IXDomainRequest, oncomplete: OnCompleteCallback,payload?: IPayloadData) => {
-                            let data = _getPayloadArr(payload);
-                            if (!data) {
+                            let { payloadArr = null, statsBeat = null } = _getPayloadArr(payload);
+                            if (!payloadArr) {
                                 return;
                             }
-                            return _xdrOnLoad(xdr, data);
+                            return _xdrOnLoad(xdr, payloadArr, statsBeat);
                            
                         },
                         fetchOnComplete: (response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) => {
-                            let data = _getPayloadArr(payload);
-                            if (!data) {
+                            let { payloadArr = null, statsBeat = null } = _getPayloadArr(payload);
+                            if (!payloadArr) {
                                 return;
                             }
-                            return _checkResponsStatus(response.status, data, response.url, data.length, response.statusText, resValue || "");
+                            return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "", statsBeat);
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
-                            let data = _getPayloadArr(payload);
-                            if (!data) {
+                            let { payloadArr = null, statsBeat = null } = _getPayloadArr(payload);
+                            if (!payloadArr) {
                                 return;
                             }
-                            return _xhrReadyStateChange(request, data, data.length);
+                            return _xhrReadyStateChange(request, payloadArr, payloadArr.length, statsBeat);
                             
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
@@ -710,9 +724,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * xhr state changes
              */
-            function _xhrReadyStateChange (xhr: XMLHttpRequest, payload: IInternalStorageItem[], countOfItemsInPayload: number) {
+            function _xhrReadyStateChange (xhr: XMLHttpRequest, payload: IInternalStorageItem[], countOfItemsInPayload: number, statsBeat?: IStatsBeatEvent) {
                 if (xhr.readyState === 4) {
-                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
+                    
+                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response, statsBeat);
                 }
             }
 
@@ -727,11 +742,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     { message });
         
                 _self._buffer && _self._buffer.clearSent(payload);
+                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                _statsBeat.countException(endpointHost);
             }
             /**
              * partial success handler
              */
-            function _onPartialSuccess(payload: IInternalStorageItem[], results: IBackendResponse) {
+            function _onPartialSuccess(payload: IInternalStorageItem[], results: IBackendResponse, statsBeatData?: IStatsBeatEvent) {
                 const failed: IInternalStorageItem[] = [];
                 const retry: IInternalStorageItem[] = [];
         
@@ -780,16 +797,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if (payload) {
                         let internalPayload = payload as IInternalPayloadData;
                         let arr = internalPayload.oriPayload;
+                        let statsBeat = internalPayload.statsBeatData;
                         if (arr && arr.length)  {
-                            return arr
+                            return { payloadArr: arr, statsBeat };
                         }
-                        return null;
+                        return { payloadArr: null, statsBeat: undefined };
                     }
 
                 } catch (e) {
                     // eslint-disable-next-line no-empty
                 }
-                return null;
+                return { payloadArr: null, statsBeat: undefined };
 
             }
 
@@ -928,6 +946,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     return _getOnComplete(payload, status, headers, response);
                 }
                 let payloadData = _getPayload(payload);
+                payloadData.statsBeatData = {startTime: dateNow()};
                 let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST;
                 if (sendPostFunc && payloadData) {
                     // ***********************************************************************************************
@@ -986,7 +1005,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 return false;
             }
 
-            function _checkResponsStatus(status: number, payload: IInternalStorageItem[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any) {
+            function _checkResponsStatus(status: number, payload: IInternalStorageItem[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any, statsBeatData?: IStatsBeatEvent) {
                 let response: IBackendResponse = null;
                 if (!_self._appId) {
                     response = parseResponse(res);
@@ -1028,7 +1047,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _self._onError(payload, errorMessage);
                     }
                 } else {
-
+                    _statsBeat.countRequest(responseUrl, statsBeatData, status === 200);
                     // check if the xhr's responseURL or fetch's response.url is same as endpoint url
                     // TODO after 10 redirects force send telemetry with 'redirect=false' as query parameter.
                     _checkAndUpdateEndPointUrl(responseUrl);
@@ -1095,6 +1114,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             // Can't send anymore, so split the batch and drop the rest
                             droppedPayload.push(thePayload);
                         } else {
+                            _statsBeat.countRequest(urlParseUrl(_self._senderConfig.endpointUrl).hostname, payload.statsBeatData, true);
                             _self._onSuccess(arr, arr.length);
                         }
                     }
@@ -1104,6 +1124,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
                 } else {
                     _fallbackSend && _fallbackSend(data, true);
+                    _statsBeat.countException(urlParseUrl(_self._senderConfig.endpointUrl).hostname);
                     _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                 }
 
@@ -1159,6 +1180,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (!payload || payload.length === 0) {
                     return;
                 }
+                _statsBeat.countRetry(urlParseUrl(_self._senderConfig.endpointUrl).hostname);
         
                 const buffer = _self._buffer;
                 buffer.clearSent(payload);
@@ -1413,7 +1435,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @Internal
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _onError(payload: string[] | IInternalStorageItem[], message: string, event?: ErrorEvent) {
+    public _onError(payload: string[] | IInternalStorageItem[], message: string, event?: ErrorEvent, statsBeatData?: IStatsBeatEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1422,7 +1444,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @Internal
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _onPartialSuccess(payload: string[] | IInternalStorageItem[], results: IBackendResponse) {
+    public _onPartialSuccess(payload: string[] | IInternalStorageItem[], results: IBackendResponse, statsBeatData?: IStatsBeatEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1431,7 +1453,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @Internal
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _onSuccess(payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
+    public _onSuccess(payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number, statsBeatData?: IStatsBeatEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1440,7 +1462,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @deprecated
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _xdrOnLoad(xdr: IXDomainRequest, payload: string[] | IInternalStorageItem[]) {
+    public _xdrOnLoad(xdr: IXDomainRequest, payload: string[] | IInternalStorageItem[], statsBeatData?: IStatsBeatEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
