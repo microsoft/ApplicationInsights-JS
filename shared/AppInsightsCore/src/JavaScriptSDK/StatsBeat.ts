@@ -36,7 +36,6 @@ export class Statsbeat implements IStatsBeat {
         let _runTimeVersion: string;
         dynamicProto(Statsbeat, this, (_self, _base) => {
             _self.initialize = (ikey: string, channel: IChannelControls, endpoint: string, version?: string) => {
-                console.log("Statsbeat initialize called");
                 _networkCounter = new NetworkStatsbeat(endpoint);
                 _statsbeatMetrics = {};
                 _isEnabled = true;
@@ -56,8 +55,11 @@ export class Statsbeat implements IStatsBeat {
                 return !!_isEnabled;
             }
 
+            _self.setInitialized = (value: boolean) => {
+                _isEnabled = value;
+            }
+
             _self.countRequest = (endpoint: string, duration: number, success: boolean) => {
-                console.log("Statsbeat countRequest called", endpoint, duration, success);
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
@@ -128,7 +130,8 @@ export class Statsbeat implements IStatsBeat {
                             name: NETWORK,
                             average: 0,
                             properties: {"host": _networkCounter.host, ..._statsbeatMetrics.properties, ...networkProperties}
-                        }
+                        },
+                        baseType: "StatsbeatData"
                         // baseType: Metric.dataType
                     };
                     _channel.processTelemetry(statsbeat);
@@ -184,13 +187,17 @@ export class Statsbeat implements IStatsBeat {
         })
     }
     
-    public initialize(ikey: string, channel: IChannelControls, endpoint: string) {
+    public initialize(ikey: string, channel: IChannelControls, endpoint: string, version?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public isInitialized(): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return false;
+    }
+
+    public setInitialized(value: boolean) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public countRequest(endpoint: string, duration: number, success: boolean) {

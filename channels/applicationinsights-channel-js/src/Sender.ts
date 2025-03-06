@@ -274,6 +274,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let curExtUrl = senderConfig.endpointUrl;
                     _statsBeat = core.getStatsBeat();
                     if (_statsBeat && !_statsBeat.isInitialized()) {
+                        _statsBeat.setInitialized(true); // otherwise, it will fall into infinite loop of creating new sender
                         let senderConfig = {...config};
                         senderConfig.instrumentationKey = INSTRUMENTATION_KEY;
                         let statsBeatSender = new Sender();
@@ -526,7 +527,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (_isStringArr(payload)) {
                     return;
                 }
-                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[],countOfItemsInPayload);
+                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[], countOfItemsInPayload);
 
             }
         
@@ -672,32 +673,26 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 try {
                     let onCompleteFuncs = {
                         xdrOnComplete: (xdr: IXDomainRequest, oncomplete: OnCompleteCallback,payload?: IPayloadData) => {
-                            let data = _getPayloadArr(payload);
-                            if (!data) {
+                            let { payloadArr = null, statsBeat = null } = _getPayloadArr(payload);
+                            if (!payloadArr) {
                                 return;
                             }
-                            if (payload.statsBeatData){
-                                return _xdrOnLoad(xdr, data, payload.statsBeatData);
-                            }
-                            return _xdrOnLoad(xdr, data);
+                            return _xdrOnLoad(xdr, payloadArr, statsBeat);
                            
                         },
                         fetchOnComplete: (response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) => {
-                            let data = _getPayloadArr(payload);
-                            if (!data) {
+                            let { payloadArr = null, statsBeat = null } = _getPayloadArr(payload);
+                            if (!payloadArr) {
                                 return;
                             }
-                            if (payload.statsBeatData){
-                                return _checkResponsStatus(response.status, data, response.url, data.length, response.statusText, resValue || "", payload.statsBeatData);
-                            }
-                            return _checkResponsStatus(response.status, data, response.url, data.length, response.statusText, resValue || "");
+                            return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "", statsBeat);
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
-                            let data = _getPayloadArr(payload);
-                            if (!data) {
+                            let { payloadArr = null, statsBeat = null } = _getPayloadArr(payload);
+                            if (!payloadArr) {
                                 return;
                             }
-                            return _xhrReadyStateChange(request, data, data.length);
+                            return _xhrReadyStateChange(request, payloadArr, payloadArr.length, statsBeat);
                             
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
@@ -729,9 +724,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * xhr state changes
              */
-            function _xhrReadyStateChange (xhr: XMLHttpRequest, payload: IInternalStorageItem[], countOfItemsInPayload: number) {
+            function _xhrReadyStateChange (xhr: XMLHttpRequest, payload: IInternalStorageItem[], countOfItemsInPayload: number, statsBeat?: IStatsBeatEvent) {
                 if (xhr.readyState === 4) {
-                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
+                    
+                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response, statsBeat);
                 }
             }
 
@@ -801,16 +797,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if (payload) {
                         let internalPayload = payload as IInternalPayloadData;
                         let arr = internalPayload.oriPayload;
+                        let statsBeat = internalPayload.statsBeatData;
                         if (arr && arr.length)  {
-                            return arr
+                            return { payloadArr: arr, statsBeat };
                         }
-                        return null;
+                        return { payloadArr: null, statsBeat: undefined };
                     }
 
                 } catch (e) {
                     // eslint-disable-next-line no-empty
                 }
-                return null;
+                return { payloadArr: null, statsBeat: undefined };
 
             }
 
