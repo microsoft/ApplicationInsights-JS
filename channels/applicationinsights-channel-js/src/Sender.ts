@@ -522,12 +522,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * xhr state changes
              */
-            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) => {
+            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number, statsBeat?: IStatsBeatEvent) => {
                 // since version 3.2.0, this function is no-op
                 if (_isStringArr(payload)) {
                     return;
                 }
-                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[], countOfItemsInPayload);
+                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[], countOfItemsInPayload, statsBeat);
 
             }
         
@@ -1409,7 +1409,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @deprecated
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
+    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number, statsBeat?: IStatsBeatEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         // TODO: no-op
         // add note to users, this will be removed

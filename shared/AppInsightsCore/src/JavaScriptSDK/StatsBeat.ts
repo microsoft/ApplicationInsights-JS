@@ -6,15 +6,6 @@ import { IStatsBeatEvent } from "../JavaScriptSDK.Interfaces/IStatsBeatEvent";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { NetworkStatsbeat } from "./NetworkStatsbeat";
 
-export const StatsbeatCounter = {
-    REQUEST_SUCCESS: "Request Success Count",
-    REQUEST_FAILURE: "Requests Failure Count",
-    REQUEST_DURATION: "Request Duration",
-    RETRY_COUNT: "Retry Count",
-    THROTTLE_COUNT: "Throttle Count",
-    EXCEPTION_COUNT: "Exception Count"
-}
-
 const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
 const NETWORK = "Network";
@@ -98,9 +89,8 @@ export class Statsbeat implements IStatsBeat {
             }
 
             _self.trackShortIntervalStatsbeats = (): void => {
-                _trackRequestDuration();
-                _trackRequestsCount();
-                _sendStatsbeats();
+                _trackSendRequestDuration();
+                _trackSendRequestsCount();
             }
 
             function _checkEndpoint(endpoint: string) {
@@ -114,25 +104,27 @@ export class Statsbeat implements IStatsBeat {
                 _runTimeVersion = STATSBEAT_TYPE;
             }
 
-          
-
-            function _sendStatsbeats() {
+            function _sendStatsbeats(name: string, val: number, properties?: {}) {
                 // Add extra properties
-                let networkProperties = {
+                let baseProperties = {
+                    "rp": "unknown",
+                    "attach": "Manual",
                     "cikey": _cikey,
                     "runtimeVersion": _runTimeVersion,
+                    "os": _os,
                     "language": _language,
                     "version": _sdkVersion,
-                    "os": _os
+                    "endpoint": "breeze",
+                    "host": _networkCounter.host
                 }
                 if (objKeys(_statsbeatMetrics)) {
                     let statsbeat: ITelemetryItem = {
                         iKey: INSTRUMENTATION_KEY,
-                        name: NETWORK,
+                        name: name,
                         baseData: {
-                            name: NETWORK,
-                            average: 0,
-                            properties: {"host": _networkCounter.host, ..._statsbeatMetrics.properties, ...networkProperties}
+                            name: name,
+                            average: val,
+                            properties: {"host": _networkCounter.host, ...properties, ...baseProperties}
                         },
                         baseType: "MetricData"
                     };
@@ -142,7 +134,7 @@ export class Statsbeat implements IStatsBeat {
                 _channel.flush(true);
             }
 
-            function _trackRequestDuration() {
+            function _trackSendRequestDuration() {
                 var currentCounter = _networkCounter;
                 currentCounter.time = utcNow();
                 var intervalRequests = (currentCounter.totalRequestCount - currentCounter.lastRequestCount) || 0;
@@ -151,38 +143,33 @@ export class Statsbeat implements IStatsBeat {
                 currentCounter.lastIntervalRequestExecutionTime = currentCounter.intervalRequestExecutionTime; // reset
                 if (elapsedMs > 0 && intervalRequests > 0) {
                     _statsbeatMetrics.properties = _statsbeatMetrics.properties || {};
-                    _statsbeatMetrics.properties[StatsbeatCounter.REQUEST_DURATION] = averageRequestExecutionTime;
+                    _sendStatsbeats("Request_Duration", averageRequestExecutionTime);
                 }
                 // Set last counters
                 currentCounter.lastRequestCount = currentCounter.totalRequestCount;
                 currentCounter.lastTime = currentCounter.time;
             }
 
-            function _trackRequestsCount() {
+            function _trackSendRequestsCount() {
                 var currentCounter = _networkCounter;
                 if (currentCounter.totalSuccesfulRequestCount > 0) {
-                    _statsbeatMetrics.properties = _statsbeatMetrics.properties || {};
-                    _statsbeatMetrics.properties[StatsbeatCounter.REQUEST_SUCCESS] = currentCounter.totalSuccesfulRequestCount;
+                    _sendStatsbeats("Request_Success_Count", currentCounter.totalSuccesfulRequestCount);
                     currentCounter.totalSuccesfulRequestCount = 0; //Reset
                 }
                 if (currentCounter.totalFailedRequestCount > 0) {
-                    _statsbeatMetrics.properties = _statsbeatMetrics.properties || {};
-                    _statsbeatMetrics.properties[StatsbeatCounter.REQUEST_FAILURE] = currentCounter.totalFailedRequestCount;
+                    _sendStatsbeats("Requests_Failure_Count", currentCounter.totalFailedRequestCount);
                     currentCounter.totalFailedRequestCount = 0; //Reset
                 }
                 if (currentCounter.retryCount > 0) {
-                    _statsbeatMetrics.properties = _statsbeatMetrics.properties || {};
-                    _statsbeatMetrics.properties[StatsbeatCounter.RETRY_COUNT] = currentCounter.retryCount;
+                    _sendStatsbeats("Retry_Count", currentCounter.retryCount);
                     currentCounter.retryCount = 0; //Reset
                 }
                 if (currentCounter.throttleCount > 0) {
-                    _statsbeatMetrics.properties = _statsbeatMetrics.properties || {};
-                    _statsbeatMetrics.properties[StatsbeatCounter.THROTTLE_COUNT] = currentCounter.throttleCount;
+                    _sendStatsbeats("Throttle_Count", currentCounter.throttleCount);
                     currentCounter.throttleCount = 0; //Reset
                 }
                 if (currentCounter.exceptionCount > 0) {
-                    _statsbeatMetrics.properties = _statsbeatMetrics.properties || {};
-                    _statsbeatMetrics.properties[StatsbeatCounter.EXCEPTION_COUNT] = currentCounter.exceptionCount;
+                    _sendStatsbeats("Exception_Count", currentCounter.exceptionCount);
                     currentCounter.exceptionCount = 0; //Reset
                 }
             }
