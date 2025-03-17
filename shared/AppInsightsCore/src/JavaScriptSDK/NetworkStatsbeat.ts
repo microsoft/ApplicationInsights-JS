@@ -12,9 +12,9 @@ export class NetworkStatsbeat {
 
     public lastRequestCount: number;
 
-    public totalSuccesfulRequestCount: number;
+    public succesfulRequestCount: number;
 
-    public totalFailedRequestCount: number;
+    public failedRequestCount: number;
 
     public retryCount: number;
 
@@ -29,8 +29,8 @@ export class NetworkStatsbeat {
     constructor(host: string) {
         this.host = host;
         this.totalRequestCount = 0;
-        this.totalSuccesfulRequestCount = 0;
-        this.totalFailedRequestCount = 0;
+        this.succesfulRequestCount = 0;
+        this.failedRequestCount = 0;
         this.retryCount = 0;
         this.exceptionCount = 0;
         this.throttleCount = 0;

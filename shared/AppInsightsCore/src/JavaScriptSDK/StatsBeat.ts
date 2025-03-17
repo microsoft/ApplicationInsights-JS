@@ -1,5 +1,5 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { objKeys, utcNow } from "@nevware21/ts-utils";
+import { objKeys, strIncludes, utcNow } from "@nevware21/ts-utils";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { IStatsBeatEvent } from "../JavaScriptSDK.Interfaces/IStatsBeatEvent";
@@ -51,22 +51,29 @@ export class Statsbeat implements IStatsBeat {
                 _isEnabled = value;
             }
 
-            _self.countRequest = (endpoint: string, statsBeatData: IStatsBeatEvent, success: boolean) => {
+            _self.count = (status, payloadData, endpoint) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
                 _networkCounter.totalRequestCount++;
-                if (statsBeatData && statsBeatData.startTime) {
-                    _networkCounter.intervalRequestExecutionTime += utcNow() - statsBeatData.startTime;
+                if (payloadData && payloadData.startTime) {
+                    _networkCounter.intervalRequestExecutionTime += utcNow() - payloadData.startTime;
                 }
-                if (success === false) {
-                    _networkCounter.totalFailedRequestCount++;
+                if (status === 200) {
+                    _networkCounter.succesfulRequestCount++;
+                } else if (strIncludes("307,308,401,402,403,408,429,439,500,503", status.toString())) {
+                    // These statuses are not considered failures
+                    if (strIncludes("401,403,408,429,500,503", status.toString())) {
+                        _networkCounter.retryCount++;
+                    }
+                    if (strIncludes("402,439", status.toString())) {
+                        _networkCounter.throttleCount++;
+                    }
                 } else {
-                    _networkCounter.totalSuccesfulRequestCount++;
+                    _networkCounter.failedRequestCount++;
                 }
-                
-            }
-
+            };
+            
             _self.countException = (endpoint: string) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
@@ -74,19 +81,6 @@ export class Statsbeat implements IStatsBeat {
                 _networkCounter.exceptionCount++;
             }
             
-            _self.countThrottle = (endpoint: string) => {
-                if (!_isEnabled || !_checkEndpoint(endpoint)) {
-                    return;
-                }
-                _networkCounter.throttleCount++;
-            }
-
-            _self.countRetry = (endpoint: string) => {
-                if (!_isEnabled || !_checkEndpoint(endpoint)) {
-                    return;
-                }
-                _networkCounter.retryCount++;
-            }
 
             _self.trackShortIntervalStatsbeats = (): void => {
                 _trackSendRequestDuration();
@@ -152,13 +146,13 @@ export class Statsbeat implements IStatsBeat {
 
             function _trackSendRequestsCount() {
                 var currentCounter = _networkCounter;
-                if (currentCounter.totalSuccesfulRequestCount > 0) {
-                    _sendStatsbeats("Request_Success_Count", currentCounter.totalSuccesfulRequestCount);
-                    currentCounter.totalSuccesfulRequestCount = 0; //Reset
+                if (currentCounter.succesfulRequestCount > 0) {
+                    _sendStatsbeats("Request_Success_Count", currentCounter.succesfulRequestCount);
+                    currentCounter.succesfulRequestCount = 0; //Reset
                 }
-                if (currentCounter.totalFailedRequestCount > 0) {
-                    _sendStatsbeats("Requests_Failure_Count", currentCounter.totalFailedRequestCount);
-                    currentCounter.totalFailedRequestCount = 0; //Reset
+                if (currentCounter.failedRequestCount > 0) {
+                    _sendStatsbeats("Requests_Failure_Count", currentCounter.failedRequestCount);
+                    currentCounter.failedRequestCount = 0; //Reset
                 }
                 if (currentCounter.retryCount > 0) {
                     _sendStatsbeats("Retry_Count", currentCounter.retryCount);
@@ -189,19 +183,11 @@ export class Statsbeat implements IStatsBeat {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public countRequest(endpoint: string, statsBeatData: IStatsBeatEvent, success: boolean) {
+    public count(status: number, payloadData: any, endpoint: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
-
+  
     public countException(endpoint: string) {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public countThrottle(endpoint: string) {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public countRetry(endpoint: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
