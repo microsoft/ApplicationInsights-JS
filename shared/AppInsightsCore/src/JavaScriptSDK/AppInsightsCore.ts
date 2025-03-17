@@ -1436,6 +1436,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     public getStatsBeat(): IStatsBeat {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 

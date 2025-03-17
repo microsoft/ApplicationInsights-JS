@@ -10,7 +10,6 @@ export interface IPayloadData {
     disableXhrSync?: boolean;
     disableFetchKeepAlive?: boolean;
     sendReason?: SendRequestReason;
-    statsBeatData?: IStatsBeatEvent;
 }
 
 /**
