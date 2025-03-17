@@ -737,7 +737,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Use beta endpoint to pre-test any changes before public cdn
                 let random = utcNow();
                 fetch(`https://js.monitor.azure.com/beta/ai.3.gbl.min.js?${random}`, {
-                    method: "OPTIONS"
+                    method: "OPTIONS",
+                    mode: "no-cors"
                 }).then((res) => {
                     this._ctx.res = res;
                     res.text().then((val) => {
@@ -775,7 +776,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Use pubic endpoint for V2
                 let random = utcNow();
                 fetch(`https://js.monitor.azure.com/scripts/c/ai.2.gbl.min.js?${random}`, {
-                    method: "OPTIONS"
+                    method: "OPTIONS",
+                    mode: "no-cors"
                 }).then((res) => {
                     this._ctx.res = res;
                     res.text().then((val) => {
