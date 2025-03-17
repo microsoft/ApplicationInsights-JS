@@ -9,6 +9,7 @@ import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
 import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
 import { IStackFrame } from '@microsoft/applicationinsights-common/src/Interfaces/Contracts/IStackFrame';
+import { utcNow } from '@nevware21/ts-utils';
 
 function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame,  index: number) {
     Assert.equal(expectedFrame.assembly, actualFrame.assembly, index + ") Assembly is not as expected");
@@ -734,7 +735,8 @@ export class ApplicationInsightsTests extends AITestClass {
             useFakeFetch: false,
             steps: [() => {
                 // Use beta endpoint to pre-test any changes before public cdn
-                fetch("https://js.monitor.azure.com/beta/ai.3.gbl.min.js?dkjfashffafj", {
+                let random = utcNow();
+                fetch(`https://js.monitor.azure.com/beta/ai.3.gbl.min.js?${random}`, {
                     method: "OPTIONS"
                 }).then((res) => {
                     this._ctx.res = res;
@@ -771,7 +773,8 @@ export class ApplicationInsightsTests extends AITestClass {
             useFakeFetch: false,
             steps: [() => {
                 // Use pubic endpoint for V2
-                fetch("https://js.monitor.azure.com/scripts/c/ai.2.gbl.min.js?dkjfashffafj", {
+                let random = utcNow();
+                fetch(`https://js.monitor.azure.com/scripts/c/ai.2.gbl.min.js?${random}`, {
                     method: "OPTIONS"
                 }).then((res) => {
                     this._ctx.res = res;
