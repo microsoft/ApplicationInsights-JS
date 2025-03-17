@@ -160,6 +160,7 @@ export class ApplicationInsightsTests extends AITestClass {
         this.addDependencyPluginTests();
         this.addPropertiesPluginTests();
         this.addCDNOverrideTests();
+        this.addCdnMonitorTests()
     }
 
     public addGenericE2ETests(): void {
@@ -722,6 +723,82 @@ export class ApplicationInsightsTests extends AITestClass {
                     Assert.equal('function', typeof this._ai[method], `${method} is a function`);
                 });
             }
+        });
+    }
+
+    public addCdnMonitorTests(): void {
+        this.testCaseAsync({
+            name: "E2E.GenericTests: Fetch Current CDN V3",
+            stepDelay: 1,
+            useFakeServer: false,
+            useFakeFetch: false,
+            steps: [() => {
+                // Use beta endpoint to pre-test any changes before public cdn
+                fetch("https://js.monitor.azure.com/beta/ai.3.gbl.min.js?dkjfashffafj", {
+                    method: "OPTIONS"
+                }).then((res) => {
+                    this._ctx.res = res;
+                    res.text().then((val) => {
+                        this._ctx.val = val;
+                    });
+                });
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                if (this._ctx && this._ctx.res && this._ctx.val) {
+                    let res = this._ctx.res;
+                    let status = res.status;
+                    let val = this._ctx.val;
+                    if (status === 200) {
+                        let obj = JSON.parse(val);
+                        let itemReceived = obj.itemsReceived;
+                        let itemAccepted = obj.itemsAccepted;
+                        let errors = obj.errors;
+                        let appId = obj.appId;
+                        if (itemReceived === 1 && itemAccepted === 1 && errors.length === 0 && appId) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                return false;
+            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "E2E.GenericTests: Fetch Current CDN V2",
+            stepDelay: 1,
+            useFakeServer: false,
+            useFakeFetch: false,
+            steps: [() => {
+                // Use pubic endpoint for V2
+                fetch("https://js.monitor.azure.com/scripts/c/ai.2.gbl.min.js?dkjfashffafj", {
+                    method: "OPTIONS"
+                }).then((res) => {
+                    this._ctx.res = res;
+                    res.text().then((val) => {
+                        this._ctx.val = val;
+                    });
+                });
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                if (this._ctx && this._ctx.res && this._ctx.val) {
+                    let res = this._ctx.res;
+                    let status = res.status;
+                    let val = this._ctx.val;
+                    if (status === 200) {
+                        let obj = JSON.parse(val);
+                        let itemReceived = obj.itemsReceived;
+                        let itemAccepted = obj.itemsAccepted;
+                        let errors = obj.errors;
+                        let appId = obj.appId;
+                        if (itemReceived === 1 && itemAccepted === 1 && errors.length === 0 && appId) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                return false;
+            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
         });
     }
 
