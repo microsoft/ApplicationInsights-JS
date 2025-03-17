@@ -1,8 +1,8 @@
-import { IChannelControls } from "./IChannelControls";
+import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IStatsBeatEvent } from "./IStatsBeatEvent";
 
 export interface IStatsBeat {
-    initialize(ikey: string, channel: IChannelControls, endpoint: string, version?: string): void;
+    initialize(core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) : void;
     isInitialized(): boolean;
     setInitialized(value: boolean): void;
     count(status: number, payloadData: IStatsBeatEvent, endpoint: string): void;

@@ -1,5 +1,5 @@
 import { IPromise } from "@nevware21/ts-async";
-import { IStatsBeatEvent, SendRequestReason } from "../applicationinsights-core-js";
+import { SendRequestReason } from "../applicationinsights-core-js";
 
 /** IPayloadData describes interface of payload sent via POST channel */
 export interface IPayloadData {
@@ -30,7 +30,3 @@ export type OnCompleteCallback = (status: number, headers: { [headerName: string
 export interface IXHROverride {
    sendPOST: SendPOSTFunction;
 }
-
-
- 
-

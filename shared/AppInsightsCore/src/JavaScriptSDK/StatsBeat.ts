@@ -2,13 +2,12 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { objKeys, strIncludes, utcNow } from "@nevware21/ts-utils";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
-import { IStatsBeatEvent } from "../JavaScriptSDK.Interfaces/IStatsBeatEvent";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { NetworkStatsbeat } from "./NetworkStatsbeat";
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 
 const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
-const NETWORK = "Network";
 const STATSBEAT_LANGUAGE = "JavaScript";
 const STATSBEAT_TYPE = "Browser";
 
@@ -16,9 +15,8 @@ export class Statsbeat implements IStatsBeat {
     constructor() {
         let _networkCounter: NetworkStatsbeat;
         let _handle: any;
-        let _statsbeatMetrics: { properties?: {} };
         let _isEnabled: boolean;
-        let _channel: IChannelControls;
+        let _core: IAppInsightsCore;
 
         // Custom dimensions
         let _cikey: string;
@@ -27,11 +25,10 @@ export class Statsbeat implements IStatsBeat {
         let _os: string;
         let _runTimeVersion: string;
         dynamicProto(Statsbeat, this, (_self, _base) => {
-            _self.initialize = (ikey: string, channel: IChannelControls, endpoint: string, version?: string) => {
+            _self.initialize = (core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) => {
+                _core = core;
                 _networkCounter = new NetworkStatsbeat(endpoint);
-                _statsbeatMetrics = {};
                 _isEnabled = true;
-                _channel = channel;
                 _sdkVersion = version;
 
                 _getCustomProperties(ikey);
@@ -85,6 +82,7 @@ export class Statsbeat implements IStatsBeat {
             _self.trackShortIntervalStatsbeats = (): void => {
                 _trackSendRequestDuration();
                 _trackSendRequestsCount();
+                _networkCounter = new NetworkStatsbeat(_networkCounter.host);
             }
 
             function _checkEndpoint(endpoint: string) {
@@ -111,21 +109,17 @@ export class Statsbeat implements IStatsBeat {
                     "endpoint": "breeze",
                     "host": _networkCounter.host
                 }
-                if (objKeys(_statsbeatMetrics)) {
-                    let statsbeat: ITelemetryItem = {
-                        iKey: INSTRUMENTATION_KEY,
+                let statsbeatEvent: ITelemetryItem = {
+                    iKey: INSTRUMENTATION_KEY,
+                    name: name,
+                    baseData: {
                         name: name,
-                        baseData: {
-                            name: name,
-                            average: val,
-                            properties: {"host": _networkCounter.host, ...properties, ...baseProperties}
-                        },
-                        baseType: "MetricData"
-                    };
-                    _channel.processTelemetry(statsbeat);
-                }
-                _statsbeatMetrics = {};
-                _channel.flush(true);
+                        average: val,
+                        properties: {"host": _networkCounter.host, ...properties, ...baseProperties}
+                    },
+                    baseType: "MetricData"
+                };
+                _core.track(statsbeatEvent);
             }
 
             function _trackSendRequestDuration() {
@@ -136,41 +130,32 @@ export class Statsbeat implements IStatsBeat {
                 var averageRequestExecutionTime = ((currentCounter.intervalRequestExecutionTime - currentCounter.lastIntervalRequestExecutionTime) / intervalRequests) || 0;
                 currentCounter.lastIntervalRequestExecutionTime = currentCounter.intervalRequestExecutionTime; // reset
                 if (elapsedMs > 0 && intervalRequests > 0) {
-                    _statsbeatMetrics.properties = _statsbeatMetrics.properties || {};
                     _sendStatsbeats("Request_Duration", averageRequestExecutionTime);
                 }
-                // Set last counters
-                currentCounter.lastRequestCount = currentCounter.totalRequestCount;
-                currentCounter.lastTime = currentCounter.time;
             }
 
             function _trackSendRequestsCount() {
                 var currentCounter = _networkCounter;
                 if (currentCounter.succesfulRequestCount > 0) {
                     _sendStatsbeats("Request_Success_Count", currentCounter.succesfulRequestCount);
-                    currentCounter.succesfulRequestCount = 0; //Reset
                 }
                 if (currentCounter.failedRequestCount > 0) {
                     _sendStatsbeats("Requests_Failure_Count", currentCounter.failedRequestCount);
-                    currentCounter.failedRequestCount = 0; //Reset
                 }
                 if (currentCounter.retryCount > 0) {
                     _sendStatsbeats("Retry_Count", currentCounter.retryCount);
-                    currentCounter.retryCount = 0; //Reset
                 }
                 if (currentCounter.throttleCount > 0) {
                     _sendStatsbeats("Throttle_Count", currentCounter.throttleCount);
-                    currentCounter.throttleCount = 0; //Reset
                 }
                 if (currentCounter.exceptionCount > 0) {
                     _sendStatsbeats("Exception_Count", currentCounter.exceptionCount);
-                    currentCounter.exceptionCount = 0; //Reset
                 }
             }
         })
     }
     
-    public initialize(ikey: string, channel: IChannelControls, endpoint: string, version?: string) {
+    public initialize(core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
