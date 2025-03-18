@@ -11,8 +11,8 @@ import {
     IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType,
     _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
     createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr,
-    getExceptionName, getIEVersion, getResponseText, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend,
-    onConfigChange, parseResponse, prependTransports, runTargetUnload
+    getExceptionName, getIEVersion, getResponseText, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace,
+    objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
@@ -274,11 +274,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let curExtUrl = senderConfig.endpointUrl;
                     _statsBeat = core.getStatsBeat();
                     
-                    if (_statsBeat && !_statsBeat.isInitialized()) {
-                        _statsBeat.setInitialized(true); // otherwise, it will fall into infinite loop of creating new sender
-                        var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                        _statsBeat.initialize(core, senderConfig.instrumentationKey, endpointHost, EnvelopeCreator.Version);
-                    }
+                    
                    
                     // if it is not inital change (_endpointUrl has value)
                     // if current sender endpoint url is not changed directly
@@ -291,6 +287,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             // and endpoint promise changes is handled by this as well
                             senderConfig.endpointUrl = coreUrl;
                         }
+                    }
+
+                    if (_statsBeat && !_statsBeat.isInitialized()) {
+                        _statsBeat.setInitialized(true); // otherwise, it will fall into infinite loop of creating new sender
+                        var endpointHost = urlParseUrl(senderConfig.endpointUrl).hostname;
+                        _statsBeat.initialize(core, senderConfig.instrumentationKey, endpointHost, EnvelopeCreator.Version);
                     }
 
                     if(isPromiseLike(senderConfig.instrumentationKey)) {
@@ -941,7 +943,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    console.log("onComplete", status, headers, response, payloadData.statsBeatData.startTime);
                     var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                     _statsBeat.count(status, payloadData, endpointHost);
                     return _getOnComplete(payload, status, headers, response);
