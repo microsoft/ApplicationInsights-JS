@@ -11,7 +11,7 @@ import {
     IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType,
     _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
     createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr,
-    getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend,
+    getExceptionName, getIEVersion, getResponseText, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend,
     onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
@@ -279,9 +279,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                         _statsBeat.initialize(core, senderConfig.instrumentationKey, endpointHost, EnvelopeCreator.Version);
                     }
-                    if (config.disableStatsBeat !== false){
-                        _statsBeat.setInitialized(false);
-                    }
+                   
                     // if it is not inital change (_endpointUrl has value)
                     // if current sender endpoint url is not changed directly
                     // means ExtCfg is not changed directly
@@ -527,7 +525,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (_isStringArr(payload)) {
                     return;
                 }
-                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[], countOfItemsInPayload, statsBeat);
+                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[], countOfItemsInPayload);
 
             }
         
@@ -654,7 +652,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (xdr && (responseText + "" === "200" || responseText === "")) {
                     _consecutiveErrors = 0;
                     _self._onSuccess(payload, 0);
-                    var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                 } else {
                     const results = parseResponse(responseText);
         
@@ -676,6 +673,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
+                            // xdr could not pass in status code unless change the function signature
                             return _xdrOnLoad(xdr, payloadArr);
                            
                         },
@@ -684,6 +682,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
+                            onComplete(response.status, payload.headers, response.statusText);
                             return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
@@ -691,6 +690,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
+                            oncomplete(request.status, payload.headers, getResponseText(request));
                             return _xhrReadyStateChange(request, payloadArr, payloadArr.length);
                             
                         },
