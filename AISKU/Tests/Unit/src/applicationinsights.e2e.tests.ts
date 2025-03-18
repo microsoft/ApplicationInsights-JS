@@ -738,7 +738,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 let random = utcNow();
                 fetch(`https://js.monitor.azure.com/beta/ai.3.gbl.min.js?${random}`, {
                     method: "OPTIONS",
-                    mode: "no-cors"
+                    headers: {
+                        "Access-Control-Allow-Origin": "*"
+                    }
                 }).then((res) => {
                     this._ctx.res = res;
                     res.text().then((val) => {
@@ -777,7 +779,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 let random = utcNow();
                 fetch(`https://js.monitor.azure.com/scripts/c/ai.2.gbl.min.js?${random}`, {
                     method: "OPTIONS",
-                    mode: "no-cors"
+                    headers: {
+                        "Access-Control-Allow-Origin": "*"
+                    }
                 }).then((res) => {
                     this._ctx.res = res;
                     res.text().then((val) => {
