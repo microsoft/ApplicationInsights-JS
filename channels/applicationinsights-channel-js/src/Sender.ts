@@ -274,8 +274,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let curExtUrl = senderConfig.endpointUrl;
                     _statsBeat = core.getStatsBeat();
                     
-                    
-                   
                     // if it is not inital change (_endpointUrl has value)
                     // if current sender endpoint url is not changed directly
                     // means ExtCfg is not changed directly
@@ -727,7 +725,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              */
             function _xhrReadyStateChange (xhr: XMLHttpRequest, payload: IInternalStorageItem[], countOfItemsInPayload: number) {
                 if (xhr.readyState === 4) {
-                    
                     _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
                 }
             }

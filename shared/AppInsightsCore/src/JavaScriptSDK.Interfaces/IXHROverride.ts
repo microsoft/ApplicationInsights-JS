@@ -30,3 +30,6 @@ export type OnCompleteCallback = (status: number, headers: { [headerName: string
 export interface IXHROverride {
    sendPOST: SendPOSTFunction;
 }
+
+
+

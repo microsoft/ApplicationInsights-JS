@@ -67,7 +67,6 @@ export class Statsbeat implements IStatsBeat {
                         _networkCounter.throttleCount++;
                     }
                 } else {
-                    _networkCounter.failedRequestCount++;
                     _networkCounter.requests_Failure_Count[status] = (_networkCounter.requests_Failure_Count[status] || 0) + 1;
                 }
             };
@@ -76,7 +75,6 @@ export class Statsbeat implements IStatsBeat {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
-                _networkCounter.exceptionCount++;
                 _networkCounter.exception_Count[event.error.name] = (_networkCounter.exception_Count[event.error.name] || 0) + 1;
             }
             
@@ -164,7 +162,7 @@ export class Statsbeat implements IStatsBeat {
                
             }
         })
-    }
+    };
     
     public initialize(core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

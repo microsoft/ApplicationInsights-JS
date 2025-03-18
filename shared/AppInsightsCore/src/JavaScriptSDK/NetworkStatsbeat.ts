@@ -14,12 +14,6 @@ export class NetworkStatsbeat {
 
     public succesfulRequestCount: number;
 
-    public failedRequestCount: number;
-
-    public retryCount: number;
-
-    public exceptionCount: number;
-
     public throttleCount: number;
 
     public intervalRequestExecutionTime: number;
@@ -34,9 +28,6 @@ export class NetworkStatsbeat {
         this.host = host;
         this.totalRequestCount = 0;
         this.succesfulRequestCount = 0;
-        this.failedRequestCount = 0;
-        this.retryCount = 0;
-        this.exceptionCount = 0;
         this.throttleCount = 0;
         this.intervalRequestExecutionTime = 0;
         this.lastIntervalRequestExecutionTime = 0;
