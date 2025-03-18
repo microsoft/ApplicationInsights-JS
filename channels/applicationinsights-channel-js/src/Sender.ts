@@ -27,7 +27,6 @@ import { ArraySendBuffer, ISendBuffer, SessionStorageSendBuffer } from "./SendBu
 import { Serializer } from "./Serializer";
 import { Sample } from "./TelemetryProcessors/Sample";
 
-const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
 const UNDEFINED_VALUE: undefined = undefined;
 const EMPTY_STR = "";
 
@@ -274,17 +273,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     let curExtUrl = senderConfig.endpointUrl;
                     _statsBeat = core.getStatsBeat();
-                    if (config.disableStatsBeat !== false){
-                        _statsBeat.setInitialized(false);
-                    }
+                    
                     if (_statsBeat && !_statsBeat.isInitialized()) {
                         _statsBeat.setInitialized(true); // otherwise, it will fall into infinite loop of creating new sender
-                        let senderConfig = {...config};
-                        senderConfig.instrumentationKey = INSTRUMENTATION_KEY;
-                        let statsBeatSender = new Sender();
-                        statsBeatSender.initialize(senderConfig, core, extensions, pluginChain);
                         var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                        _statsBeat.initialize(senderConfig.instrumentationKey, statsBeatSender, endpointHost, EnvelopeCreator.Version);
+                        _statsBeat.initialize(core, senderConfig.instrumentationKey, endpointHost, EnvelopeCreator.Version);
+                    }
+                    if (config.disableStatsBeat !== false){
+                        _statsBeat.setInitialized(false);
                     }
                     // if it is not inital change (_endpointUrl has value)
                     // if current sender endpoint url is not changed directly
@@ -746,7 +742,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
                 _self._buffer && _self._buffer.clearSent(payload);
                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                _statsBeat.countException(endpointHost);
+                _statsBeat.countException(endpointHost, event);
             }
             /**
              * partial success handler
@@ -946,7 +942,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
                     console.log("onComplete", status, headers, response, payloadData.statsBeatData.startTime);
-                    _statsBeat.count(status, headers, response, payloadData);
+                    var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                    _statsBeat.count(status, payloadData, endpointHost);
                     return _getOnComplete(payload, status, headers, response);
                 }
                 let payloadData = _getPayload(payload);

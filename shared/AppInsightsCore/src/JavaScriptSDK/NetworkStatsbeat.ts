@@ -26,6 +26,10 @@ export class NetworkStatsbeat {
 
     public lastIntervalRequestExecutionTime: number;
 
+    public requests_Failure_Count: Record<number, number>;
+    public retry_Count: Record<number, number>;
+    public exception_Count: Record<number, number>;
+
     constructor(host: string) {
         this.host = host;
         this.totalRequestCount = 0;
@@ -38,5 +42,8 @@ export class NetworkStatsbeat {
         this.lastIntervalRequestExecutionTime = 0;
         this.lastTime = utcNow();
         this.lastRequestCount = 0;
+        this.requests_Failure_Count = {};
+        this.retry_Count = {};
+        this.exception_Count = {};
     }
 }

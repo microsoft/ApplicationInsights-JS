@@ -1,10 +1,10 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { objKeys, strIncludes, utcNow } from "@nevware21/ts-utils";
-import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
+import { strIncludes, utcNow } from "@nevware21/ts-utils";
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { IPayloadData } from "../JavaScriptSDK.Interfaces/IXHROverride";
 import { NetworkStatsbeat } from "./NetworkStatsbeat";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 
 const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
@@ -48,34 +48,36 @@ export class Statsbeat implements IStatsBeat {
                 _isEnabled = value;
             }
 
-            _self.count = (status, payloadData, endpoint) => {
+            _self.count = (status: number, payloadData: IPayloadData, endpoint: string) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
                 _networkCounter.totalRequestCount++;
-                if (payloadData && payloadData.startTime) {
-                    _networkCounter.intervalRequestExecutionTime += utcNow() - payloadData.startTime;
+                if (payloadData && payloadData["statsBeatData"] && payloadData["statsBeatData"]["startTime"]) {
+                    _networkCounter.intervalRequestExecutionTime += utcNow() - payloadData["statsBeatData"]["startTime"];
                 }
                 if (status === 200) {
                     _networkCounter.succesfulRequestCount++;
                 } else if (strIncludes("307,308,401,402,403,408,429,439,500,503", status.toString())) {
                     // These statuses are not considered failures
                     if (strIncludes("401,403,408,429,500,503", status.toString())) {
-                        _networkCounter.retryCount++;
+                        _networkCounter.retry_Count[status] = (_networkCounter.retry_Count[status] || 0) + 1;
                     }
                     if (strIncludes("402,439", status.toString())) {
                         _networkCounter.throttleCount++;
                     }
                 } else {
                     _networkCounter.failedRequestCount++;
+                    _networkCounter.requests_Failure_Count[status] = (_networkCounter.requests_Failure_Count[status] || 0) + 1;
                 }
             };
             
-            _self.countException = (endpoint: string) => {
+            _self.countException = (endpoint: string, event: ErrorEvent) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
                 _networkCounter.exceptionCount++;
+                _networkCounter.exception_Count[event.error.name] = (_networkCounter.exception_Count[event.error.name] || 0) + 1;
             }
             
 
@@ -133,24 +135,33 @@ export class Statsbeat implements IStatsBeat {
                     _sendStatsbeats("Request_Duration", averageRequestExecutionTime);
                 }
             }
+          
 
             function _trackSendRequestsCount() {
                 var currentCounter = _networkCounter;
                 if (currentCounter.succesfulRequestCount > 0) {
                     _sendStatsbeats("Request_Success_Count", currentCounter.succesfulRequestCount);
                 }
-                if (currentCounter.failedRequestCount > 0) {
-                    _sendStatsbeats("Requests_Failure_Count", currentCounter.failedRequestCount);
+                
+                for (const code in currentCounter.requests_Failure_Count) {
+                    const count = currentCounter.requests_Failure_Count[code];
+                    _sendStatsbeats("Requests_Failure_Count", count, { statusCode: code });
                 }
-                if (currentCounter.retryCount > 0) {
-                    _sendStatsbeats("Retry_Count", currentCounter.retryCount);
+
+                for (const code in currentCounter.retry_Count) {
+                    const count = currentCounter.retry_Count[code];
+                    _sendStatsbeats("Retry_Count", count, { statusCode: code });
                 }
+
+                for (const code in currentCounter.exception_Count) {
+                    const count = currentCounter.exception_Count[code];
+                    _sendStatsbeats("Exception_Count", count, { exceptionType: code });
+                }
+            
                 if (currentCounter.throttleCount > 0) {
                     _sendStatsbeats("Throttle_Count", currentCounter.throttleCount);
                 }
-                if (currentCounter.exceptionCount > 0) {
-                    _sendStatsbeats("Exception_Count", currentCounter.exceptionCount);
-                }
+               
             }
         })
     }
@@ -168,11 +179,11 @@ export class Statsbeat implements IStatsBeat {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public count(status: number, payloadData: any, endpoint: string) {
+    public count(status: number, payloadData: IPayloadData, endpoint: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
   
-    public countException(endpoint: string) {
+    public countException(endpoint: string, event: ErrorEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
