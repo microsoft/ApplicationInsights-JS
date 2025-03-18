@@ -736,11 +736,9 @@ export class ApplicationInsightsTests extends AITestClass {
             steps: [() => {
                 // Use beta endpoint to pre-test any changes before public cdn
                 let random = utcNow();
+                // Under Cors Mode, Options request will be triggered
                 fetch(`https://js.monitor.azure.com/beta/ai.3.gbl.min.js?${random}`, {
-                    method: "OPTIONS",
-                    headers: {
-                        "Access-Control-Allow-Origin": "*"
-                    }
+                    method: "GET"
                 }).then((res) => {
                     this._ctx.res = res;
                     res.text().then((val) => {
@@ -777,11 +775,9 @@ export class ApplicationInsightsTests extends AITestClass {
             steps: [() => {
                 // Use pubic endpoint for V2
                 let random = utcNow();
+                // Under Cors Mode, Options request will be triggered
                 fetch(`https://js.monitor.azure.com/scripts/c/ai.2.gbl.min.js?${random}`, {
-                    method: "OPTIONS",
-                    headers: {
-                        "Access-Control-Allow-Origin": "*"
-                    }
+                    method: "GET"
                 }).then((res) => {
                     this._ctx.res = res;
                     res.text().then((val) => {
