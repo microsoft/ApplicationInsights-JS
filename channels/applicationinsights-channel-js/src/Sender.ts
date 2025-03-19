@@ -288,7 +288,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
 
                     if (_statsBeat && !_statsBeat.isInitialized()) {
-                        _statsBeat.setInitialized(true); // otherwise, it will fall into infinite loop of creating new sender
                         var endpointHost = urlParseUrl(senderConfig.endpointUrl).hostname;
                         _statsBeat.initialize(core, senderConfig.instrumentationKey, endpointHost, EnvelopeCreator.Version);
                     }
@@ -741,7 +740,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
                 _self._buffer && _self._buffer.clearSent(payload);
                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                _statsBeat.countException(endpointHost, event);
+                _statsBeat.countException(endpointHost, message);
             }
             /**
              * partial success handler

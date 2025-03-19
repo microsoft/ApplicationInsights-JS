@@ -37,6 +37,7 @@ export class Statsbeat implements IStatsBeat {
                         this.trackShortIntervalStatsbeats();
                     }, STATS_COLLECTION_SHORT_INTERVAL);
                 }
+                _isEnabled = true;
 
             }
 
@@ -44,38 +45,34 @@ export class Statsbeat implements IStatsBeat {
                 return !!_isEnabled;
             }
 
-            _self.setInitialized = (value: boolean) => {
-                _isEnabled = value;
-            }
-
             _self.count = (status: number, payloadData: IPayloadData, endpoint: string) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
-                _networkCounter.totalRequestCount++;
                 if (payloadData && payloadData["statsBeatData"] && payloadData["statsBeatData"]["startTime"]) {
-                    _networkCounter.intervalRequestExecutionTime += utcNow() - payloadData["statsBeatData"]["startTime"];
+                    _networkCounter.totalRequest++;
+                    _networkCounter.requestDuration += utcNow() - payloadData["statsBeatData"]["startTime"];
                 }
                 if (status === 200) {
-                    _networkCounter.succesfulRequestCount++;
+                    _networkCounter.success++;
                 } else if (strIncludes("307,308,401,402,403,408,429,439,500,503", status.toString())) {
                     // These statuses are not considered failures
                     if (strIncludes("401,403,408,429,500,503", status.toString())) {
-                        _networkCounter.retry_Count[status] = (_networkCounter.retry_Count[status] || 0) + 1;
+                        _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
                     }
                     if (strIncludes("402,439", status.toString())) {
-                        _networkCounter.throttleCount++;
+                        _networkCounter.throttle++;
                     }
                 } else {
-                    _networkCounter.requests_Failure_Count[status] = (_networkCounter.requests_Failure_Count[status] || 0) + 1;
+                    _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
                 }
             };
             
-            _self.countException = (endpoint: string, event: ErrorEvent) => {
+            _self.countException = (endpoint: string, message: string) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
-                _networkCounter.exception_Count[event.error.name] = (_networkCounter.exception_Count[event.error.name] || 0) + 1;
+                _networkCounter.exception[message] = (_networkCounter.exception[message] || 0) + 1;
             }
             
 
@@ -124,45 +121,39 @@ export class Statsbeat implements IStatsBeat {
 
             function _trackSendRequestDuration() {
                 var currentCounter = _networkCounter;
-                currentCounter.time = utcNow();
-                var intervalRequests = (currentCounter.totalRequestCount - currentCounter.lastRequestCount) || 0;
-                var elapsedMs = currentCounter.time - currentCounter.lastTime;
-                var averageRequestExecutionTime = ((currentCounter.intervalRequestExecutionTime - currentCounter.lastIntervalRequestExecutionTime) / intervalRequests) || 0;
-                currentCounter.lastIntervalRequestExecutionTime = currentCounter.intervalRequestExecutionTime; // reset
-                if (elapsedMs > 0 && intervalRequests > 0) {
+                if (currentCounter.totalRequest > 0 ) {
+                    var averageRequestExecutionTime = currentCounter.requestDuration  / currentCounter.totalRequest;
                     _sendStatsbeats("Request_Duration", averageRequestExecutionTime);
                 }
             }
-          
 
             function _trackSendRequestsCount() {
                 var currentCounter = _networkCounter;
-                if (currentCounter.succesfulRequestCount > 0) {
-                    _sendStatsbeats("Request_Success_Count", currentCounter.succesfulRequestCount);
+                if (currentCounter.success > 0) {
+                    _sendStatsbeats("Request_Success_Count", currentCounter.success);
                 }
                 
-                for (const code in currentCounter.requests_Failure_Count) {
-                    const count = currentCounter.requests_Failure_Count[code];
-                    _sendStatsbeats("Requests_Failure_Count", count, { statusCode: code });
+                for (const code in currentCounter.failure) {
+                    const count = currentCounter.failure[code];
+                    _sendStatsbeats("failure", count, { statusCode: code });
                 }
 
-                for (const code in currentCounter.retry_Count) {
-                    const count = currentCounter.retry_Count[code];
-                    _sendStatsbeats("Retry_Count", count, { statusCode: code });
+                for (const code in currentCounter.retry) {
+                    const count = currentCounter.retry[code];
+                    _sendStatsbeats("retry", count, { statusCode: code });
                 }
 
-                for (const code in currentCounter.exception_Count) {
-                    const count = currentCounter.exception_Count[code];
-                    _sendStatsbeats("Exception_Count", count, { exceptionType: code });
+                for (const code in currentCounter.exception) {
+                    const count = currentCounter.exception[code];
+                    _sendStatsbeats("exception", count, { exceptionType: code });
                 }
             
-                if (currentCounter.throttleCount > 0) {
-                    _sendStatsbeats("Throttle_Count", currentCounter.throttleCount);
+                if (currentCounter.throttle > 0) {
+                    _sendStatsbeats("Throttle_Count", currentCounter.throttle);
                 }
-               
             }
         })
-    };
+    }
     
     public initialize(core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -173,15 +164,11 @@ export class Statsbeat implements IStatsBeat {
         return false;
     }
 
-    public setInitialized(value: boolean) {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
     public count(status: number, payloadData: IPayloadData, endpoint: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
   
-    public countException(endpoint: string, event: ErrorEvent) {
+    public countException(endpoint: string, message: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
