@@ -4,7 +4,7 @@ import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPayloadData } from "../JavaScriptSDK.Interfaces/IXHROverride";
-import { NetworkStatsbeat } from "./NetworkStatsbeat";
+import { NetworkStatsbeat, createNetworkStatsbeat } from "./NetworkStatsbeat";
 
 const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
@@ -27,7 +27,7 @@ export class Statsbeat implements IStatsBeat {
         dynamicProto(Statsbeat, this, (_self, _base) => {
             _self.initialize = (core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) => {
                 _core = core;
-                _networkCounter = new NetworkStatsbeat(endpoint);
+                _networkCounter = createNetworkStatsbeat(endpoint);
                 _isEnabled = true;
                 _sdkVersion = version;
 
@@ -79,7 +79,7 @@ export class Statsbeat implements IStatsBeat {
             _self.trackShortIntervalStatsbeats = (): void => {
                 _trackSendRequestDuration();
                 _trackSendRequestsCount();
-                _networkCounter = new NetworkStatsbeat(_networkCounter.host);
+                _networkCounter = createNetworkStatsbeat(_networkCounter.host);
             }
 
             function _checkEndpoint(endpoint: string) {

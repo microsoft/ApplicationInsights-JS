@@ -739,8 +739,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     { message });
         
                 _self._buffer && _self._buffer.clearSent(payload);
-                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                _statsBeat.countException(endpointHost, message);
+                if (_statsBeat) {
+                    var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                    _statsBeat.countException(endpointHost, message);
+                }
             }
             /**
              * partial success handler
@@ -939,8 +941,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                    _statsBeat.count(status, payloadData, endpointHost);
+                    if (_statsBeat) {
+                        var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                        _statsBeat.count(status, payloadData, endpointHost);
+                    }
                     return _getOnComplete(payload, status, headers, response);
                 }
                 let payloadData = _getPayload(payload);

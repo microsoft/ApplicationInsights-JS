@@ -1,25 +1,22 @@
-
-export class NetworkStatsbeat {
-
-    public host: string;
-
-    public totalRequest: number;
-    public success: number;
-    public throttle: number;
-    public failure: Record<number, number>;
-    public retry: Record<number, number>;
-    public exception: Record<string, number>;
-
-    public requestDuration: number;
-
-    constructor(host: string) {
-        this.host = host;
-        this.totalRequest = 0;
-        this.success = 0;
-        this.throttle = 0;
-        this.requestDuration = 0;
-        this.failure = {};
-        this.retry = {};
-        this.exception = {};
-    }
+export interface NetworkStatsbeat {
+    host: string;
+    totalRequest: number;
+    success: number;
+    throttle: number;
+    failure: Record<number, number>;
+    retry: Record<number, number>;
+    exception: Record<string, number>;
+    requestDuration: number;
+}
+export function createNetworkStatsbeat(host: string): NetworkStatsbeat {
+    return {
+        host,
+        totalRequest: 0,
+        success: 0,
+        throttle: 0,
+        failure: {},
+        retry: {},
+        exception: {},
+        requestDuration: 0,
+    };
 }
