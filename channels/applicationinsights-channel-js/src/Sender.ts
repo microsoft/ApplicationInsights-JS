@@ -185,6 +185,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _disableBeaconSplit: boolean;
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
+        let _core: IAppInsightsCore;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -260,7 +261,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 let diagLog = _self.diagLog();
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace("Sender"), core.evtNamespace && core.evtNamespace());
                 _offlineListener = createOfflineListener(_evtNamespace);
-
+                _core = core;
                 // This function will be re-called whenever any referenced configuration is changed
                 _self._addHook(onConfigChange(config, (details) => {
                     let config = details.cfg;
@@ -681,20 +682,24 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
+                            let result = _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
                             onComplete(response.status, payload.headers, response.statusText);
-                            return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
+                            return result;
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
                             let payloadArr = _getPayloadArr(payload);
                             if (!payloadArr) {
                                 return;
                             }
+                            let result = _xhrReadyStateChange(request, payloadArr, payloadArr.length);
                             oncomplete(request.status, payload.headers, getResponseText(request));
-                            return _xhrReadyStateChange(request, payloadArr, payloadArr.length);
+                            return result;
                             
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
-                            return _onBeaconRetry(data, onComplete, canSend);
+                            let result = _onBeaconRetry(data, onComplete, canSend);
+                            onComplete(-1, data.headers); // don't know status code here, but we know it's already a failued request
+                            return result;
                         }
     
                     } as _ISenderOnComplete;
@@ -937,9 +942,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    if (_statsBeat) {
+                    let statsbeat = _core.getStatsBeat();
+                    if (statsbeat) {
                         var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                        _statsBeat.count(status, payloadData, endpointHost);
+                        statsbeat.count(status, payloadData, endpointHost);
                     }
                     return _getOnComplete(payload, status, headers, response);
                 }
