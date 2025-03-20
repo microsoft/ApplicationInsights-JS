@@ -14,9 +14,9 @@ const STATSBEAT_TYPE = "Browser";
 export class Statsbeat implements IStatsBeat {
     constructor() {
         let _networkCounter: NetworkStatsbeat;
-        let _isEnabled: boolean;
+        let _isEnabled: boolean = false;
         let _core: IAppInsightsCore;
-        let _timeoutHandle: ITimerHandler;      // Handle to the timer for delayed sending of batches of data.
+        let _timeoutHandle: ITimerHandler;      // Handle to the timer for sending telemetry. This way, we would not send telemetry when system sleep.
         // Custom dimensions
         let _cikey: string;
         let _language: string;
@@ -29,13 +29,7 @@ export class Statsbeat implements IStatsBeat {
                 _networkCounter = createNetworkStatsbeat(endpoint);
                 _isEnabled = true;
                 _sdkVersion = version;
-
                 _getCustomProperties(ikey);
-               
-                   
-        
-                _isEnabled = true;
-
             }
 
             _self.isInitialized = (): boolean => {
@@ -159,7 +153,7 @@ export class Statsbeat implements IStatsBeat {
                     _sendStatsbeats("Throttle_Count", currentCounter.throttle);
                 }
             }
-        })
+        });
     }
     
     public initialize(core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) {

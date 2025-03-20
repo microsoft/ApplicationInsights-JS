@@ -361,7 +361,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
                     if (config.disableStatsBeat === false){
-                        _statsBeat = new Statsbeat();
+                        _statsBeat = _statsBeat || new Statsbeat();
                     } else {
                         _statsBeat = null;
                     }
