@@ -1,5 +1,5 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { strIncludes, utcNow } from "@nevware21/ts-utils";
+import { ITimerHandler, utcNow, scheduleTimeout} from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
@@ -14,10 +14,9 @@ const STATSBEAT_TYPE = "Browser";
 export class Statsbeat implements IStatsBeat {
     constructor() {
         let _networkCounter: NetworkStatsbeat;
-        let _handle: any;
         let _isEnabled: boolean;
         let _core: IAppInsightsCore;
-
+        let _timeoutHandle: ITimerHandler;      // Handle to the timer for delayed sending of batches of data.
         // Custom dimensions
         let _cikey: string;
         let _language: string;
@@ -32,11 +31,9 @@ export class Statsbeat implements IStatsBeat {
                 _sdkVersion = version;
 
                 _getCustomProperties(ikey);
-                if (!_handle) {
-                    _handle = setInterval(() => {
-                        this.trackShortIntervalStatsbeats();
-                    }, STATS_COLLECTION_SHORT_INTERVAL);
-                }
+               
+                   
+        
                 _isEnabled = true;
 
             }
@@ -53,28 +50,38 @@ export class Statsbeat implements IStatsBeat {
                     _networkCounter.totalRequest++;
                     _networkCounter.requestDuration += utcNow() - payloadData["statsBeatData"]["startTime"];
                 }
+                let retryArray = [401, 403, 408, 429, 500, 503];
+                let throttleArray = [402, 439];
                 if (status === 200) {
                     _networkCounter.success++;
-                } else if (strIncludes("307,308,401,402,403,408,429,439,500,503", status.toString())) {
-                    // These statuses are not considered failures
-                    if (strIncludes("401,403,408,429,500,503", status.toString())) {
+                } else if (retryArray.includes(status)) {
                         _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
-                    }
-                    if (strIncludes("402,439", status.toString())) {
+                } else if (throttleArray.includes(status)) {
                         _networkCounter.throttle++;
-                    }
-                } else {
+                } else if (status !== 307 && status !== 308) {
                     _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
                 }
+                _setupTimer();
             };
+
+            
             
             _self.countException = (endpoint: string, message: string) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
                 _networkCounter.exception[message] = (_networkCounter.exception[message] || 0) + 1;
+                _setupTimer();
             }
-            
+
+            function _setupTimer() {
+                if (!_timeoutHandle) {
+                    _timeoutHandle = scheduleTimeout(() => {
+                        _timeoutHandle = null;
+                        this.trackShortIntervalStatsbeats();
+                    }, STATS_COLLECTION_SHORT_INTERVAL);
+                }
+            }
 
             _self.trackShortIntervalStatsbeats = (): void => {
                 _trackSendRequestDuration();
