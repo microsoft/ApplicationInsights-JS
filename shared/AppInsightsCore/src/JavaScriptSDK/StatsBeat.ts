@@ -1,5 +1,5 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { ITimerHandler, utcNow, scheduleTimeout} from "@nevware21/ts-utils";
+import { ITimerHandler, scheduleTimeout, utcNow } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
@@ -49,9 +49,9 @@ export class Statsbeat implements IStatsBeat {
                 if (status === 200) {
                     _networkCounter.success++;
                 } else if (retryArray.includes(status)) {
-                        _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
+                    _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
                 } else if (throttleArray.includes(status)) {
-                        _networkCounter.throttle++;
+                    _networkCounter.throttle++;
                 } else if (status !== 307 && status !== 308) {
                     _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
                 }
@@ -60,11 +60,11 @@ export class Statsbeat implements IStatsBeat {
 
             
             
-            _self.countException = (endpoint: string, message: string) => {
+            _self.countException = (endpoint: string, exceptionType: string) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
                     return;
                 }
-                _networkCounter.exception[message] = (_networkCounter.exception[message] || 0) + 1;
+                _networkCounter.exception[exceptionType] = (_networkCounter.exception[exceptionType] || 0) + 1;
                 _setupTimer();
             }
 
@@ -81,6 +81,8 @@ export class Statsbeat implements IStatsBeat {
                 _trackSendRequestDuration();
                 _trackSendRequestsCount();
                 _networkCounter = createNetworkStatsbeat(_networkCounter.host);
+                _timeoutHandle && _timeoutHandle.cancel();
+                _timeoutHandle = null;
             }
 
             function _checkEndpoint(endpoint: string) {
@@ -169,7 +171,7 @@ export class Statsbeat implements IStatsBeat {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
   
-    public countException(endpoint: string, message: string) {
+    public countException(endpoint: string, exceptionType: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

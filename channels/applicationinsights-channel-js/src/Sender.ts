@@ -739,10 +739,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     { message });
         
                 _self._buffer && _self._buffer.clearSent(payload);
-                if (_statsBeat) {
-                    var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                    _statsBeat.countException(endpointHost, message);
-                }
             }
             /**
              * partial success handler

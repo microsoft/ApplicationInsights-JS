@@ -17,6 +17,6 @@ export function createNetworkStatsbeat(host: string): NetworkStatsbeat {
         failure: {},
         retry: {},
         exception: {},
-        requestDuration: 0,
+        requestDuration: 0
     };
 }
