@@ -161,7 +161,7 @@ export class ApplicationInsightsTests extends AITestClass {
         this.addDependencyPluginTests();
         this.addPropertiesPluginTests();
         this.addCDNOverrideTests();
-        this.addCdnMonitorTests()
+        this.addCdnMonitorTests();
     }
 
     public addGenericE2ETests(): void {
@@ -733,33 +733,52 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             useFakeServer: false,
             useFakeFetch: false,
+            fakeFetchAutoRespond: false,
             steps: [() => {
-                // Use beta endpoint to pre-test any changes before public cdn
+                // Use beta endpoint to pre-test any changes before public V3 cdn
                 let random = utcNow();
-                // Under Cors Mode, Options request will be triggered
-                fetch(`https://js.monitor.azure.com/beta/ai.3.gbl.min.js?${random}`, {
-                    method: "GET"
-                }).then((res) => {
-                    this._ctx.res = res;
-                    res.text().then((val) => {
-                        this._ctx.val = val;
+                // Under Cors Mode, Options request will be auto-triggered
+                try {
+                    fetch(`https://js.monitor.azure.com/beta/ai.3.gbl.min.js?${random}`, {
+                        method: "GET"
+                    }).then((res) => {
+                        this._ctx.res = res;
+                        res.text().then((val) => {
+                            this._ctx.val = val;
+                        });
                     });
-                });
+                } catch (e) {
+                    Assert.ok(false, "Fetch Error: " + e);
+                }
 
             }].concat(PollingAssert.createPollingAssert(() => {
+
                 if (this._ctx && this._ctx.res && this._ctx.val) {
                     let res = this._ctx.res;
                     let status = res.status;
-                    let val = this._ctx.val;
                     if (status === 200) {
-                        let obj = JSON.parse(val);
-                        let itemReceived = obj.itemsReceived;
-                        let itemAccepted = obj.itemsAccepted;
-                        let errors = obj.errors;
-                        let appId = obj.appId;
-                        if (itemReceived === 1 && itemAccepted === 1 && errors.length === 0 && appId) {
-                            return true;
-                        }
+                        // for Response headers:
+                        // content-type: text/javascript; charset=utf-8
+                        // x-ms-meta-aijssdksrc: should present
+                        // x-ms-meta-aijssdkver should present
+                        let headers = res.headers;
+                        let headerCnt = 0;
+                        headers.forEach((val, key) => {
+                            if (key === "content-type") {
+                                Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
+                                headerCnt ++;
+                            }
+                            if (key === "x-ms-meta-aijssdksrc") {
+                                Assert.ok(val, "should have sdk src response header");
+                                headerCnt ++;
+                            }
+                            if (key === "x-ms-meta-aijssdkver") {
+                                Assert.ok(val, "should have version number for response header");
+                                headerCnt ++;
+                            }
+                        });
+                        Assert.equal(headerCnt, 3, "all expected headers should be present");
+                        return true;
                     }
                     return false;
                 }
@@ -772,11 +791,12 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             useFakeServer: false,
             useFakeFetch: false,
+            fakeFetchAutoRespond: false,
             steps: [() => {
                 // Use pubic endpoint for V2
                 let random = utcNow();
                 // Under Cors Mode, Options request will be triggered
-                fetch(`https://js.monitor.azure.com/scripts/c/ai.2.gbl.min.js?${random}`, {
+                fetch(`https://js.monitor.azure.com/scripts/b/ai.2.gbl.min.js?${random}`, {
                     method: "GET"
                 }).then((res) => {
                     this._ctx.res = res;
@@ -789,18 +809,66 @@ export class ApplicationInsightsTests extends AITestClass {
                 if (this._ctx && this._ctx.res && this._ctx.val) {
                     let res = this._ctx.res;
                     let status = res.status;
-                    let val = this._ctx.val;
                     if (status === 200) {
-                        let obj = JSON.parse(val);
-                        let itemReceived = obj.itemsReceived;
-                        let itemAccepted = obj.itemsAccepted;
-                        let errors = obj.errors;
-                        let appId = obj.appId;
-                        if (itemReceived === 1 && itemAccepted === 1 && errors.length === 0 && appId) {
-                            return true;
-                        }
+                        // for Response headers:
+                        // content-type: text/javascript; charset=utf-8
+                        // x-ms-meta-aijssdksrc: should present
+                        // x-ms-meta-aijssdkver should present
+                        let headers = res.headers;
+                        let headerCnt = 0;
+                        headers.forEach((val, key) => {
+                            if (key === "content-type") {
+                                Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
+                                headerCnt ++;
+                            }
+                            if (key === "x-ms-meta-aijssdksrc") {
+                                Assert.ok(val, "should have sdk src response header");
+                                headerCnt ++;
+                            }
+                            if (key === "x-ms-meta-aijssdkver") {
+                                Assert.ok(val, "should have version number for response header");
+                                headerCnt ++;
+                            }
+                        });
+                        Assert.equal(headerCnt, 3, "all expected headers should be present");
+                        return true;
                     }
                     return false;
+                }
+                return false;
+            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "E2E.GenericTests: Fetch Static Web CDN V3",
+            stepDelay: 1,
+            useFakeServer: false,
+            useFakeFetch: false,
+            fakeFetchAutoRespond: false,
+            steps: [() => {
+                // Use beta endpoint to pre-test any changes before public V3 cdn
+                let random = utcNow();
+                // Under Cors Mode, Options request will be auto-triggered
+                try {
+                    fetch(`https://js0.tst.applicationinsights.io/scripts/b/ai.3.gbl.min.js?${random}`, {
+                        method: "GET"
+                    }).then((res) => {
+                        this._ctx.res = res;
+                        if (res.ok) {
+                            res.text().then((val) => {
+                                this._ctx.val = val;
+                            });
+                        }
+                    }).catch((e) => {
+                        this._ctx.err = e.message;
+                    })
+                } catch (e) {
+                    this._ctx.err = e;
+                }
+            }].concat(PollingAssert.createPollingAssert(() => {
+
+                if (this._ctx && this._ctx.err) {
+                    return true;
                 }
                 return false;
             }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
