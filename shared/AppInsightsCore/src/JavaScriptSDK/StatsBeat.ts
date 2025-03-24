@@ -51,7 +51,7 @@ export class Statsbeat implements IStatsBeat {
                 } else if (retryArray.includes(status)) {
                     _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
                 } else if (throttleArray.includes(status)) {
-                    _networkCounter.throttle++;
+                    _networkCounter.throttle[status] = (_networkCounter.throttle[status] || 0) + 1;
                 } else if (status !== 307 && status !== 308) {
                     _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
                 }
@@ -153,8 +153,9 @@ export class Statsbeat implements IStatsBeat {
                     _sendStatsbeats("exception", count, { exceptionType: code });
                 }
             
-                if (currentCounter.throttle > 0) {
-                    _sendStatsbeats("Throttle_Count", currentCounter.throttle);
+                for (const code in currentCounter.throttle) {
+                    const count = currentCounter.throttle[code];
+                    _sendStatsbeats("Throttle_Count", count, { statusCode: code });
                 }
             }
         });
