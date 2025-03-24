@@ -97,6 +97,9 @@ export class Statsbeat implements IStatsBeat {
             }
 
             function _sendStatsbeats(name: string, val: number, properties?: {}) {
+                if (val <= 0){
+                    return;
+                }
                 // Add extra properties
                 let baseProperties = {
                     "rp": "unknown",
@@ -132,9 +135,8 @@ export class Statsbeat implements IStatsBeat {
 
             function _trackSendRequestsCount() {
                 var currentCounter = _networkCounter;
-                if (currentCounter.success > 0) {
-                    _sendStatsbeats("Request_Success_Count", currentCounter.success);
-                }
+                
+                _sendStatsbeats("Request_Success_Count", currentCounter.success);
                 
                 for (const code in currentCounter.failure) {
                     const count = currentCounter.failure[code];
