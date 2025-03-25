@@ -41,16 +41,16 @@ export class Statsbeat implements IStatsBeat {
                     return;
                 }
                 if (payloadData && payloadData["statsBeatData"] && payloadData["statsBeatData"]["startTime"]) {
-                    _networkCounter.totalRequest++;
+                    _networkCounter.totalRequest = (_networkCounter.totalRequest || 0) + 1;
                     _networkCounter.requestDuration += utcNow() - payloadData["statsBeatData"]["startTime"];
                 }
                 let retryArray = [401, 403, 408, 429, 500, 503];
                 let throttleArray = [402, 439];
                 if (status === 200) {
                     _networkCounter.success++;
-                } else if (retryArray.includes(status)) {
+                } else if (retryArray.indexOf(status) !== -1) {
                     _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
-                } else if (throttleArray.includes(status)) {
+                } else if (throttleArray.indexOf(status) !== -1) {
                     _networkCounter.throttle[status] = (_networkCounter.throttle[status] || 0) + 1;
                 } else if (status !== 307 && status !== 308) {
                     _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
@@ -126,11 +126,14 @@ export class Statsbeat implements IStatsBeat {
             }
 
             function _trackSendRequestDuration() {
-                var currentCounter = _networkCounter;
-                if (currentCounter.totalRequest > 0 ) {
-                    var averageRequestExecutionTime = currentCounter.requestDuration  / currentCounter.totalRequest;
+              
+                var totalRequest = _networkCounter.totalRequest;
+            
+                if (_networkCounter.totalRequest > 0 ) {
+                    let averageRequestExecutionTime = _networkCounter.requestDuration / totalRequest;
                     _sendStatsbeats("Request_Duration", averageRequestExecutionTime);
                 }
+ 
             }
 
             function _trackSendRequestsCount() {
