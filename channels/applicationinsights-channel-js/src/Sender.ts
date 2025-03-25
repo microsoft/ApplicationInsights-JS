@@ -682,24 +682,24 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            let result = _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
+                            _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
                             onComplete(response.status, payload.headers, response.statusText);
-                            return result;
+                            return;
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
                             let payloadArr = _getPayloadArr(payload);
                             if (!payloadArr) {
                                 return;
                             }
-                            let result = _xhrReadyStateChange(request, payloadArr, payloadArr.length);
+                            _xhrReadyStateChange(request, payloadArr, payloadArr.length);
                             oncomplete(request.status, payload.headers, getResponseText(request));
-                            return result;
+                            return;
                             
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
-                            let result = _onBeaconRetry(data, onComplete, canSend);
+                            _onBeaconRetry(data, onComplete, canSend);
                             onComplete(-1, data.headers); // don't know status code here, but we know it's already a failued request
-                            return result;
+                            return;
                         }
     
                     } as _ISenderOnComplete;

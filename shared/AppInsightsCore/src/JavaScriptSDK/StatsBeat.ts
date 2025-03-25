@@ -44,7 +44,7 @@ export class Statsbeat implements IStatsBeat {
                     _networkCounter.totalRequest = (_networkCounter.totalRequest || 0) + 1;
                     _networkCounter.requestDuration += utcNow() - payloadData["statsBeatData"]["startTime"];
                 }
-                let retryArray = [401, 403, 408, 429, 500, 503];
+                let retryArray = [401, 403, 408, 429, 500, 502, 503];
                 let throttleArray = [402, 439];
                 if (status === 200) {
                     _networkCounter.success++;
@@ -52,7 +52,7 @@ export class Statsbeat implements IStatsBeat {
                     _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
                 } else if (throttleArray.indexOf(status) !== -1) {
                     _networkCounter.throttle[status] = (_networkCounter.throttle[status] || 0) + 1;
-                } else if (status !== 307 && status !== 308) {
+                } else if (status !== 307 && status !== 308 && status !== 206) {
                     _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
                 }
                 _setupTimer();
