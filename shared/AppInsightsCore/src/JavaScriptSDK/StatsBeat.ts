@@ -96,8 +96,8 @@ export class Statsbeat implements IStatsBeat {
                 _runTimeVersion = STATSBEAT_TYPE;
             }
 
-            function _sendStatsbeats(name: string, val: number, properties?: {}) {
-                if (val <= 0){
+            function _sendStatsbeats(name: string, val: number, properties?: { [name: string]: any }) {
+                if (!val || val <= 0){
                     return;
                 }
                 // Add extra properties
@@ -111,6 +111,24 @@ export class Statsbeat implements IStatsBeat {
                     "version": _sdkVersion,
                     "endpoint": "breeze",
                     "host": _networkCounter.host
+                } as { [key: string]: any };
+
+                // Manually merge properties instead of using spread syntax
+                let combinedProps: { [key: string]: any } = { "host": _networkCounter.host };
+                
+                // Add properties if present
+                if (properties) {
+                    for (let key in properties) {
+                        if (properties.hasOwnProperty(key)) {
+                            combinedProps[key] = properties[key];
+                        }
+                    }
+                }
+                // Add base properties
+                for (let key in baseProperties) {
+                    if (baseProperties.hasOwnProperty(key)) {
+                        combinedProps[key] = baseProperties[key];
+                    }
                 }
                 let statsbeatEvent: ITelemetryItem = {
                     iKey: INSTRUMENTATION_KEY,
@@ -118,7 +136,7 @@ export class Statsbeat implements IStatsBeat {
                     baseData: {
                         name: name,
                         average: val,
-                        properties: {"host": _networkCounter.host, ...properties, ...baseProperties}
+                        properties: combinedProps
                     },
                     baseType: "MetricData"
                 };
@@ -126,19 +144,16 @@ export class Statsbeat implements IStatsBeat {
             }
 
             function _trackSendRequestDuration() {
-              
                 var totalRequest = _networkCounter.totalRequest;
             
                 if (_networkCounter.totalRequest > 0 ) {
                     let averageRequestExecutionTime = _networkCounter.requestDuration / totalRequest;
                     _sendStatsbeats("Request_Duration", averageRequestExecutionTime);
                 }
- 
             }
 
             function _trackSendRequestsCount() {
                 var currentCounter = _networkCounter;
-                
                 _sendStatsbeats("Request_Success_Count", currentCounter.success);
                 
                 for (const code in currentCounter.failure) {
