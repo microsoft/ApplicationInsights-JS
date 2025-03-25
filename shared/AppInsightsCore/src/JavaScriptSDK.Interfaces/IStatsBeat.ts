@@ -6,5 +6,4 @@ export interface IStatsBeat {
     isInitialized(): boolean;
     count(status: number, payloadData: IPayloadData, endpoint: string): void;
     countException(endpoint: string, exceptionType: string): void;
-    trackShortIntervalStatsbeats(): void;
 }

@@ -72,12 +72,12 @@ export class Statsbeat implements IStatsBeat {
                 if (!_timeoutHandle) {
                     _timeoutHandle = scheduleTimeout(() => {
                         _timeoutHandle = null;
-                        this.trackShortIntervalStatsbeats();
+                        trackStatsbeats();
                     }, STATS_COLLECTION_SHORT_INTERVAL);
                 }
             }
 
-            _self.trackShortIntervalStatsbeats = (): void => {
+            function trackStatsbeats(){
                 _trackSendRequestDuration();
                 _trackSendRequestsCount();
                 _networkCounter = createNetworkStatsbeat(_networkCounter.host);
@@ -180,9 +180,4 @@ export class Statsbeat implements IStatsBeat {
     public countException(endpoint: string, exceptionType: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
-
-    public trackShortIntervalStatsbeats() {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
 }

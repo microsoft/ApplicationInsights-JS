@@ -288,7 +288,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
 
-                    if (_statsBeat && !_statsBeat.isInitialized()) {
+                    if (!config.disableStatsBeat && _statsBeat && !_statsBeat.isInitialized()) {
                         var endpointHost = urlParseUrl(senderConfig.endpointUrl).hostname;
                         _statsBeat.initialize(core, senderConfig.instrumentationKey, endpointHost, EnvelopeCreator.Version);
                     }
