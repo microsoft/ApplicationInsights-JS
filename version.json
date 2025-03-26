@@ -2,7 +2,7 @@
     "description": "The release value identifies the base version that will be applied via the tools/release-tools/setVersion.js",
     "usage": "When creating a new release you should update this value directly or via the eg. 'npm run setVersion -- 3.2.0' or 'npm run setVersion -- -patch' or 'npm run setVersion -- -minor'",
     "release": "3.3.6",
-    "next": "patch",
+    "next": "minor",
     "pkgs": {
         "@microsoft/applicationinsights-web": {
             "package": "package.json",
