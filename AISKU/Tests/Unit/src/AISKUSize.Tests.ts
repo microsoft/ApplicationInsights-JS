@@ -85,8 +85,8 @@ export class AISKUSizeCheck extends AITestClass {
     }
 
     public testCleanup() {
-        utlRemoveSessionStorage(null as any, "AI_sentBuffer", );
-        utlRemoveSessionStorage(null as any, "AI_buffer", );
+        utlRemoveSessionStorage(null as any, "AI_sentBuffer");
+        utlRemoveSessionStorage(null as any, "AI_buffer");
     }
 
     public registerTests() {
