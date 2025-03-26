@@ -25,16 +25,16 @@
         modules.add("pako","./node_modules/pako/dist/pako");
 
         loadFetchModule(modules, "whatwg-fetch");
-        loadCommonModules(modules);
+        loadCommonModules(modules, function () {
+            var testModule = modules.add("Tests/Unit/src/aiunittests", "./Unit/dist/aicoreunit.tests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
 
-        var testModule = modules.add("Tests/Unit/src/aiunittests", "./Unit/dist/aicoreunit.tests.js")
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
-
-        modules.run();
+            modules.run();
+        });
     </script>
 </head>
 

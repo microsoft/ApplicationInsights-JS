@@ -6,21 +6,10 @@ export {
     strShimObject,
     strShimUndefined,
     strShimPrototype,
-    strShimHasOwnProperty,
     strDefault,
     ObjClass,
-    ObjProto,
-    ObjAssign,
-    ObjCreate,
-    ObjDefineProperty,
-    ObjHasOwnProperty
+    ObjProto
 } from "./Constants"
-
-export {
-    throwTypeError,
-    objCreateFn,
-    getGlobal
-} from "./Helpers"
 
 export {
     __assignFn,
@@ -43,3 +32,10 @@ export {
 export {
     __exposeGlobalTsLib
 } from "./TsLibGlobals"
+
+export {
+    throwTypeError,
+    getGlobal,
+    objAssign as ObjAssign,
+    objDefineProp as ObjDefineProperty
+} from "@nevware21/ts-utils";

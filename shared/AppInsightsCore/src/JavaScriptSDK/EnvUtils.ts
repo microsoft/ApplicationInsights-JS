@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
-import { getDocument, getInst, getNavigator, getPerformance, hasNavigator, isString, isUndefined, strIndexOf } from "@nevware21/ts-utils";
+import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
+import {
+    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, mathMax, strIndexOf
+} from "@nevware21/ts-utils";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
@@ -20,7 +22,6 @@ declare var XDomainRequest: any;
 const strDocumentMode = "documentMode";
 const strLocation = "location";
 const strConsole = "console";
-const strPerformance = "performance";
 const strJSON = "JSON";
 const strCrypto = "crypto";
 const strMsCrypto = "msCrypto";
@@ -65,7 +66,7 @@ function _hasProperty(theClass: any, property: string) {
 
 /**
  * Enable the lookup of test mock objects if requested
- * @param enabled
+ * @param enabled - A flag to enable or disable the mock
  */
 export function setEnableEnvMocks(enabled: boolean) {
     _enableMocks = enabled;
@@ -185,7 +186,7 @@ export function getIEVersion(userAgentStr: string = null): number {
     // Also check for documentMode in case X-UA-Compatible meta tag was included in HTML.
     if (strContains(ua, strMsie)) {
         let doc = getDocument() || {} as Document;
-        return Math.max(parseInt(ua.split(strMsie)[1]), (doc[strDocumentMode] || 0));
+        return mathMax(parseInt(ua.split(strMsie)[1]), (doc[strDocumentMode] || 0));
     } else if (strContains(ua, strTrident)) {
         let tridentVer = parseInt(ua.split(strTrident)[1]);
         if (tridentVer) {
@@ -208,10 +209,12 @@ export function isSafari(userAgentStr ?: string) {
 
 /**
  * Checks if HTML5 Beacons are supported in the current environment.
+ * @param useCached - [Optional] used for testing to bypass the cached lookup, when `true` this will
+ * cause the cached global to be reset.
  * @returns True if supported, false otherwise.
  */
-export function isBeaconsSupported(): boolean {
-    if (_beaconsSupported === null) {
+export function isBeaconsSupported(useCached?: boolean): boolean {
+    if (_beaconsSupported === null || useCached === false) {
         _beaconsSupported = hasNavigator() && Boolean(getNavigator().sendBeacon);
     }
 
@@ -283,7 +286,7 @@ function _getNamedValue(values: any, name: string) {
 
 /**
  * Helper function to fetch the named meta-tag from the page.
- * @param name
+ * @param name - The name of the meta-tag to find.
  */
 export function findMetaTag(name: string): any {
     let doc = getDocument();
@@ -297,7 +300,7 @@ export function findMetaTag(name: string): any {
 
 /**
  * Helper function to fetch the named server timing value from the page response (first navigation event).
- * @param name
+ * @param name - The name of the server timing value to find.
  */
 export function findNamedServerTiming(name: string): any {
     let value: any;
@@ -309,4 +312,45 @@ export function findNamedServerTiming(name: string): any {
     }
 
     return value;
+}
+
+// TODO: should reuse this method for analytics plugin
+export function dispatchEvent(target:EventTarget, evnt: Event | CustomEvent): boolean {
+    if (target && target.dispatchEvent && evnt) {
+        target.dispatchEvent(evnt);
+        return true;
+    }
+    return false;
+}
+
+
+export function createCustomDomEvent(eventName: string, details?: any): CustomEvent {
+    let event: CustomEvent = null;
+    let detail = {detail: details || null } as CustomEventInit;
+    if (isFunction(CustomEvent)) { // Use CustomEvent constructor when available
+        event = new CustomEvent(eventName, detail);
+    } else { // CustomEvent has no constructor in IE
+        let doc = getDocument();
+        if (doc && doc.createEvent) {
+            event = doc.createEvent("CustomEvent");
+            event.initCustomEvent(eventName, true, true, detail);
+        }
+    }
+
+    return event;
+}
+
+
+
+export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any): boolean {
+    let global = getGlobal();
+    if (global && (global as any).CustomEvent) {
+        try {
+            let details = {cfg: cfg || null,  customDetails: customDetails || null} as any;
+            return dispatchEvent(global, createCustomDomEvent(evtName, details));
+        } catch(e) {
+            // eslint-disable-next-line no-empty
+        }
+    }
+    return false;
 }

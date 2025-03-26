@@ -1,6 +1,6 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sample } from "../../../src/TelemetryProcessors/Sample";
-import { ITelemetryItem, newId } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, isBeaconsSupported, newId } from "@microsoft/applicationinsights-core-js";
 import { PageView, TelemetryItemCreator, IPageViewTelemetry } from "@microsoft/applicationinsights-common";
 import { HashCodeScoreGenerator } from "../../../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
 
@@ -9,6 +9,8 @@ export class SampleTests extends AITestClass {
     private item: ITelemetryItem;
 
     public testInitialize() {
+        // Reset the cached isBeacons supported
+        isBeaconsSupported(false);
     }
 
     public testCleanup() {

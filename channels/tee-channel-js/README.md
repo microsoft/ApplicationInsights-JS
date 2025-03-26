@@ -4,8 +4,8 @@ This Channel is used to support multiple channel queues as defined by the `chann
 all of the channels as defined in the `channels` array from index 1 onwards (`channels[1..X]`). The main ApplicationInsights
 Core will process the channels as defined in the `channels[0]`.
 
-[![Build Status](https://travis-ci.org/microsoft/applicationinsights-js.svg?branch=master)](https://travis-ci.org/microsoft/applicationinsights-js)
-[![Build status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/1DS%20JavaScript%20SDK%20-%20Channel)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7614)
+[![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-channel-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-channel-js)
 
 ## Getting Started

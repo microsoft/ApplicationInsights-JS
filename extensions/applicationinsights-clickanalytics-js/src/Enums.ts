@@ -1,6 +1,6 @@
 /**
- * @copyright Microsoft 2020
- */
+* @copyright Microsoft 2020
+*/
 
 export const ActionType = {
     CLICKLEFT: "CL",

@@ -1,27 +1,29 @@
-import { AITestClass, Assert } from "@microsoft/ai-test-framework";
+import { AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
-import { createOfflineListener, IOfflineListener } from '../../../src/Offline';
+import { IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, getGlobalInst,  safeGetLogger, getJSON, isString, isArray, arrForEach } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus } from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
-import { ISenderConfig } from "../../../src/Interfaces";
+import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
+import { createAsyncResolvedPromise } from "@nevware21/ts-async";
 
 
-const BUFFER_KEY = "AI_buffer";
-const SENT_BUFFER_KEY = "AI_sentBuffer";
+
+const BUFFER_KEY = "AI_buffer_1";
+const SENT_BUFFER_KEY = "AI_sentBuffer_1";
 export class SenderTests extends AITestClass {
     private _sender: Sender;
     private _instrumentationKey = 'iKey';
     private _offline: IOfflineListener;
 
-    protected _getBuffer(key: string, logger: DiagnosticLogger, namePrefix?: string): string[] {
+    protected _getBuffer(key: string, logger: DiagnosticLogger, namePrefix?: string): IInternalStorageItem[] {
         let prefixedKey = key;
         try {
             prefixedKey = namePrefix ? namePrefix + "_" + prefixedKey : prefixedKey;
             const bufferJson = utlGetSessionStorage(logger, prefixedKey);
             if (bufferJson) {
-                let buffer: string[] = JSON.parse(bufferJson);
+                let buffer: IInternalStorageItem[] = JSON.parse(bufferJson);
                 if (isString(buffer)) {
                     buffer = JSON.parse(buffer as any);
                 }
@@ -39,6 +41,8 @@ export class SenderTests extends AITestClass {
     public testInitialize() {
         this._sender = new Sender();
         this._offline = createOfflineListener("SenderTests");
+        // Reset the cached isBeacons supported
+        isBeaconsSupported(false);
     }
 
     public testFinishedCleanup() {
@@ -48,6 +52,7 @@ export class SenderTests extends AITestClass {
 
         if (this._sender && this._sender.isInitialized()) {
             this._sender.pause();
+            this._sender._buffer.clear();
             this._sender.teardown();
         }
         this._sender = null;
@@ -78,6 +83,9 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal('https://example.com', extConfig.endpointUrl, 'Channel config can be set from root config (endpointUrl)');
                 QUnit.assert.notEqual(654, extConfig.maxBatchSizeInBytes, 'Channel config does not equal root config option if extensionConfig field is also set');
                 QUnit.assert.equal(456, extConfig.maxBatchSizeInBytes, 'Channel config prioritizes extensionConfig over root config');
+
+                let offlinelistener = this._sender.getOfflineListener();
+                QUnit.assert.ok(offlinelistener, "offline listener exists")
             }
         });
 
@@ -115,6 +123,10 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(undefined, defaultSenderConfig.customHeaders, "Channel default customHeaders config is set");
                 QUnit.assert.equal(undefined, defaultSenderConfig.convertUndefined, "Channel default convertUndefined config is set");
                 QUnit.assert.equal(10000, defaultSenderConfig.eventsLimitInMem, "Channel default eventsLimitInMem config is set");
+                QUnit.assert.equal(undefined, defaultSenderConfig.httpXHROverride, "Channel default httpXHROverride config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.alwaysUseXhrOverride, "Channel default alwaysUseXhrOverride config is set");
+                QUnit.assert.equal(true, defaultSenderConfig.disableSendBeaconSplit, "Channel default disableSendBeaconSplit config is set");
+                QUnit.assert.equal(10, defaultSenderConfig.maxRetryCnt, "Channel default maxRetryCnt config is set");
 
                 //check dynamic config
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -128,7 +140,9 @@ export class SenderTests extends AITestClass {
                     isRetryDisabled: true,
                     disableXhr: true,
                     samplingPercentage: 90,
-                    customHeaders: [{header: "header1",value:"value1"}]
+                    customHeaders: [{header: "header1",value:"value1"}],
+                    alwaysUseXhrOverride: true,
+                    disableSendBeaconSplit: false
                 }
                 core.config.extensionConfig[id] = config;
                 this.clock.tick(1);
@@ -142,6 +156,8 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(true, curSenderConfig.isRetryDisabled, "Channel isRetryDisabled config is dynamically set");
                 QUnit.assert.equal(90, curSenderConfig.samplingPercentage, "Channel samplingPercentage config is dynamically set");
                 QUnit.assert.deepEqual([{header: "header1",value:"value1"}], curSenderConfig.customHeaders, "Channel customHeaders config is dynamically set");
+                QUnit.assert.deepEqual(true, curSenderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is dynamically set");
+                QUnit.assert.equal(false, curSenderConfig.disableSendBeaconSplit, "Channel disableSendBeaconSplit config is dynamically set");
 
                 core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = undefined;
                 core.config.extensionConfig[this._sender.identifier].endpointUrl = undefined;
@@ -150,6 +166,355 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false,  this._sender._senderConfig.emitLineDelimitedJson, "Channel default emitLineDelimitedJson config is set");
             }
         });
+
+        this.testCase({
+            name: "Channel Config: Endpoint Url can be set from root dynamically",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let id = this._sender.identifier;
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [id]: {
+                        
+                        }
+                    },
+                    endpointUrl: "test"
+                }
+                core.initialize(coreConfig, [this._sender]);
+
+                let senderConfig = this._sender._senderConfig;
+                QUnit.assert.equal(senderConfig.endpointUrl, "test", "Channel default endpoint url config is set from root");
+              
+                //check dynamic config
+                core.config.endpointUrl = "test1";
+                this.clock.tick(1);
+                let curSenderConfig = this._sender._senderConfig;
+                QUnit.assert.equal(curSenderConfig.endpointUrl,"test1", "Channel endpoint config is dynamically changed");
+            }
+        });
+
+        this.testCaseAsync({
+            name: "Channel Init: init with promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                let core = new AppInsightsCore();
+                let ikeyPromise = createAsyncResolvedPromise("testIkey");
+                let urlPromise = createAsyncResolvedPromise("testUrl");
+                let coreConfig = {
+                    instrumentationKey: ikeyPromise,
+                    endpointUrl: urlPromise,
+                    initTimeOut: 80000,
+                    extensionConfig: {}
+                }
+                core.initialize(coreConfig, [this._sender]);
+        
+                let status = core.activeStatus && core.activeStatus();
+                QUnit.assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._sender.core;
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    QUnit.assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    QUnit.assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                    // getExtCfg only finds undefined values from core
+                    let senderConfig = this._sender._senderConfig;
+                    QUnit.assert.equal("testIkey", senderConfig.instrumentationKey, "sender ikey should be set");
+                    QUnit.assert.equal("testUrl", senderConfig.endpointUrl ,"sender endpoint shoule be set");
+                    
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCase({
+            name: "Channel Config: Sender override can be handled correctly",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let sentPayloadData: any[] = [];
+                var xhrOverride: IXHROverride = {
+                    sendPOST: (payload: IPayloadData, oncomplete: (status: number, headers: {[headerName: string]: string;}, response?: string) => void, sync?: boolean) => {
+                        sentPayloadData.push({payload: payload, sync: sync});
+                    }
+                };
+
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: xhrOverride
+                        }
+                    }
+                }
+                let testBatch: IInternalStorageItem[] = [{item: "test", cnt: 0}, {item: "test1", cnt: 0}];
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "test",
+                    baseType: "some type",
+                    baseData: {}
+                };
+                core.initialize(coreConfig, [this._sender]);
+
+                // with always override to false
+                QUnit.assert.deepEqual(xhrOverride, this._sender._senderConfig.httpXHROverride, "Channel httpXHROverride config is set");
+                QUnit.assert.deepEqual(false, this._sender._senderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is set");
+                this._sender._sender(testBatch, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once with always override to false");
+                this._sender._sender(testBatch, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once  with always override to false test1");
+
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+                this._sender.onunloadFlush();
+                QUnit.assert.deepEqual(0, sentPayloadData.length, "httpXHROverride should not be called again test2");
+
+
+                // with always override to true
+                core.config.extensionConfig = core.config.extensionConfig || {};
+                core.config.extensionConfig[this._sender.identifier].alwaysUseXhrOverride = true;
+                this.clock.tick(1);
+                QUnit.assert.deepEqual(true, this._sender._senderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is set to true dynamically");
+                this._sender._sender(testBatch, true);
+                QUnit.assert.deepEqual(1, sentPayloadData.length, "httpXHROverride should be called with always override to true");
+                let payload = sentPayloadData[0].payload;
+                let sync = sentPayloadData[0].sync;
+                QUnit.assert.equal(false, sync, "Channel httpXHROverride sync is called with false during send test1 (sender interface should be opposite with the sender)");
+                QUnit.assert.deepEqual(testBatch, payload.oriPayload, "Channel httpXHROverride sync is called with expected original payload");
+                QUnit.assert.deepEqual(this._sender._buffer.batchPayloads(testBatch),payload.data, "Channel httpXHROverride sync is called with expected batch payload");
+
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+                this._sender.onunloadFlush();
+                QUnit.assert.deepEqual(2, sentPayloadData.length, "httpXHROverride should be called");
+                let data = sentPayloadData[1].payload.oriPayload;
+                payload = JSON.parse(data[0].item);
+                QUnit.assert.deepEqual("test", payload.iKey, "httpXHROverride should send expected payload test1");
+                sync = sentPayloadData[1].sync;
+                QUnit.assert.equal(true, sync, "Channel httpXHROverride sync is called with true during send test2 (sender interface should be opposite with the sender)");
+                
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config MaxRetry Count: payload exceeds max retry count should not be sent again",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            //httpXHROverride: xhrOverride,
+                            //alwaysUseXhrOverride: true,
+                            maxRetryCnt: 1
+                        }
+                    }
+                }
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "test",
+                    baseType: "some type",
+                    baseData: {}
+                };
+                core.initialize(coreConfig, [this._sender]);
+              
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                    QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger).length, 1, "session storage buffer should have 1 item");
+                    QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty test1");
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+                
+                // inital send, cnt = 0
+                this._sender.flush(false);
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger).length, 1, "session storage sent buffer should have one event");
+
+                let requests = this._getXhrRequests();
+                QUnit.assert.deepEqual(requests.length, 1, "should have only 1 requests");
+                let request = requests[0];
+                this.sendJsonResponse(request, {}, 500);
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger).length, 1, "session storage buffer should have one item test2");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer should not have one event test2");
+                
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger)[0].cnt, 1, "session storage buffer should have item with retry cnt 1");
+                
+                // retry 1, cnt = 1
+                this._sender.flush(false);
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty test4");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger).length, 1, "session storage sent buffer should have one event test4");
+                
+                requests = this._getXhrRequests();
+                QUnit.assert.deepEqual(requests.length, 2, "should have only 1 requests");
+                request = requests[1];
+                this.sendJsonResponse(request, {}, 500);
+                // items should not be added back
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer should not have one item test5");
+                QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer should not have one event test5");
+                
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Invalid paylod Sender should not be sent",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let sentPayloadData: any[] = [];
+                var xhrOverride: IXHROverride = {
+                    sendPOST: (payload: IPayloadData, oncomplete: (status: number, headers: {[headerName: string]: string;}, response?: string) => void, sync?: boolean) => {
+                        sentPayloadData.push({payload: payload, sync: sync});
+                    }
+                };
+
+                let coreConfig = {
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: xhrOverride,
+                            alwaysUseXhrOverride: true
+                        }
+                    }
+                }
+                let testBatch: string[] = ["test", "test1"];
+           
+                core.initialize(coreConfig, [this._sender]);
+
+                QUnit.assert.deepEqual(xhrOverride, this._sender._senderConfig.httpXHROverride, "Channel httpXHROverride config is set");
+                QUnit.assert.deepEqual(true, this._sender._senderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is set");
+                // case 1: payload is null
+                this._sender._sender(null as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test1");
+                this._sender._sender(null as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test1");
+
+                // case 2: payload is none array
+                this._sender._sender({} as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test2");
+                this._sender._sender({} as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test2");
+
+                // case 3: payload is an empty array
+                this._sender._sender([] as any, true);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called test3");
+                this._sender._sender([] as any, false);
+                QUnit.assert.equal(0, sentPayloadData.length, "httpXHROverride is not called once sync test3");
+
+                
+                this._sender._sender(testBatch, true);
+                QUnit.assert.equal(1, sentPayloadData.length, "httpXHROverride is called test4");
+                this._sender._sender(testBatch, false);
+                QUnit.assert.equal(2, sentPayloadData.length, "httpXHROverride is called once sync test4");
+                
+                
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: sessionStorage can get items from previous buffers",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            namePrefix: "test"
+                        }
+                    }
+                }
+
+                let item1: ITelemetryItem = {
+                    name: "fake item1",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let item2: ITelemetryItem = {
+                    name: "fake item2",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let item3: ITelemetryItem = {
+                    name: "fake item3",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let item4: ITelemetryItem = {
+                    name: "fake item4",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let item5: ITelemetryItem = {
+                    name: "fake item5",
+                    iKey: "abc",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                let items = [item1, item2];
+                let sentItems = [item3];
+                let prefixItems = [item4, item5];
+                //mock previous items stored in previous buffer key
+                sessionStorage.setItem("AI_buffer",JSON.stringify(items));
+                sessionStorage.setItem("AI_sentBuffer",JSON.stringify(sentItems));
+                sessionStorage.setItem("test_AI_buffer",JSON.stringify(prefixItems));
+
+                let keys = utlGetSessionStorageKeys();
+                QUnit.assert.deepEqual(keys.length, 3, "session buffer should contain only three keys");
+
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+
+                core.initialize(coreConfig, [this._sender]);
+                QUnit.assert.equal(true, this._sender._senderConfig.enableSessionStorageBuffer, "Channel default enableSessionStorageBuffer config is set");
+                QUnit.assert.equal(true, utlCanUseSessionStorage(), "SessionStorage should be able to use");
+                QUnit.assert.deepEqual(this._getBuffer("test_" + BUFFER_KEY, logger).length, 5, "session storage buffer should contain all previous events");
+                QUnit.assert.deepEqual(this._getBuffer("test_" + SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
+                
+                let previousItems = this._sender._buffer.getItems();
+                
+                QUnit.assert.deepEqual(previousItems.length, 5, "buffer should contain 5 previous items");
+                
+                keys = utlGetSessionStorageKeys();
+                QUnit.assert.deepEqual(keys.length, 2, "session buffer should contain only two keys");
+                QUnit.assert.ok(keys.indexOf("test_" + BUFFER_KEY) > -1, "session buffer key contain buffer key");
+                QUnit.assert.ok(keys.indexOf("test_" +  SENT_BUFFER_KEY) > -1, "session buffer key contain sent buffer key");
+
+                utlRemoveSessionStorage(logger, "test_" + BUFFER_KEY);
+                utlRemoveSessionStorage(logger, "test_" + SENT_BUFFER_KEY);
+                
+
+            }
+        });
+
 
         this.testCase({
             name: "Channel Config: sessionStorage change from true to false can be handled correctly",
@@ -192,7 +557,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
                 let payload  = this._getBuffer(BUFFER_KEY, logger);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage");
                 let sentPayload  = this._getBuffer(SENT_BUFFER_KEY, logger);
                 QUnit.assert.deepEqual([], sentPayload, "sent payload is empty");
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "buffer length shoule be one");
@@ -204,13 +569,38 @@ export class SenderTests extends AITestClass {
                 this.clock.tick(1);
                 QUnit.assert.equal(false, this._sender._senderConfig.enableSessionStorageBuffer, "Channel enableSessionStorageBuffer config is disabled");
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "session storage buffer is transferred");
-                QUnit.assert.ok(this._sender._buffer.getItems()[0].indexOf("some type") > 1, "in memory storage buffer is set");
+                QUnit.assert.ok(this._sender._buffer.getItems()[0].item.indexOf("some type") > 1, "in memory storage buffer is set");
                 
                 this.clock.tick(15000);
                 QUnit.assert.equal(true, loggerSpy.calledOnce, "The send has been triggered");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer is empty");
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
 
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+            }
+        });
+
+        this.testCase({
+            name: "Storage Prefix Test: prefix should be added after init",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let setItemSpy = this.sandbox.spy(window.sessionStorage, "setItem");
+                let storagePrefix = "storageTestPrefix"
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13ttt",
+                    storagePrefix: storagePrefix,
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                        
+                        }
+                    }
+                }
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                core.logger = logger;
+                core.initialize(coreConfig, [this._sender]);
+                let firstCallArgs = setItemSpy.args[0]; // Arguments of the first call
+                QUnit.assert.true(JSON.stringify(firstCallArgs).includes(storagePrefix));
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
             }
         });
@@ -265,7 +655,7 @@ export class SenderTests extends AITestClass {
 
                 let payload  = this._getBuffer(BUFFER_KEY, logger);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage");
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "buffer length shoule be one");
                 let sentPayload  = this._getBuffer(SENT_BUFFER_KEY, logger);
                 QUnit.assert.deepEqual([], sentPayload, "sent payload is empty");
@@ -314,7 +704,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "session storage buffer is set");
                 let payload  = this._getBuffer(BUFFER_KEY, logger);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger, prefixName), [], "session storage buffer with prefix is empty");
 
 
@@ -328,7 +718,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer is empty");
                 payload  = this._getBuffer(BUFFER_KEY, logger, prefixName);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage with prefix");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage with prefix");
                 QUnit.assert.equal(this._sender._buffer.getItems().length, 1, "new session storage buffer is set");
                
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
@@ -377,7 +767,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
                 let payload  = this._getBuffer(BUFFER_KEY, logger);
                 QUnit.assert.equal(payload.length, 1, "payload length is equal to one");
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is saved to session storage");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is saved to session storage");
 
                 // change endpointUrl
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -388,7 +778,7 @@ export class SenderTests extends AITestClass {
                 payload  = this._sender._buffer.getItems();
                 QUnit.assert.deepEqual(payload.length, 1, "buffer is not changed");
                 payload  = this._getBuffer(BUFFER_KEY, logger);
-                QUnit.assert.ok(payload[0].indexOf("some type") > 0, "payload is not changed");
+                QUnit.assert.ok(payload[0].item.indexOf("some type") > 0, "payload is not changed");
 
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
             }
@@ -422,17 +812,58 @@ export class SenderTests extends AITestClass {
                 let arrBufferCopy= arrBuffer.createNew(logger, config, false); // set to false to make sure it is array buffer
                 QUnit.assert.deepEqual(arrBufferCopy.getItems(), [], "payload should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                //let payload = [{"payload1"}, "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
                 arrForEach(payload, (val) =>{
                     arrBuffer.enqueue(val);
                 });
                 arrBufferCopy = arrBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(payload, arrBufferCopy.getItems(), "payload should be same");
-                arrBuffer.enqueue("payload");
+                arrBuffer.enqueue({item:"payload", cnt: 0});
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 7, "arrBuffer length");
                 QUnit.assert.deepEqual(arrBufferCopy.getItems().length, 6, "copy is deep copy");
             }
         });
+
+        this.testCase({
+            name: "ArraySendBuffer Max Count: item exceeds max cnt should not be added again",
+            test: () => {
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled:true,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    maxRetryCnt: 1
+                } as ISenderConfig;
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+
+                let arrBuffer = new ArraySendBuffer(logger, config);
+                QUnit.assert.deepEqual(arrBuffer.getItems(), [], "payload should be empty");
+                let payload1 = {item: "payload1", cnt: 1};
+                arrBuffer.enqueue(payload1);
+                QUnit.assert.deepEqual(arrBuffer.getItems().length, 1, "buffer should have one item");
+
+                let payload2 = {item: "payload2", cnt: 2};
+                arrBuffer.enqueue(payload2);
+                QUnit.assert.deepEqual(arrBuffer.getItems().length, 1, "payload exceeds max cnt should not be added again");
+
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]))
+            }
+        });
+
 
         this.testCase({
             name: "ArraySendBuffer createNew: function createNew() can return expected sessionStorage buffer",
@@ -462,14 +893,15 @@ export class SenderTests extends AITestClass {
                 let sessionBuffer =  arrBuffer.createNew(logger, config, true); // set to false to make sure it is session storage buffer
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "payload should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                //let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
                 arrForEach(payload, (val) =>{
                     arrBuffer.enqueue(val);
                 });
                 sessionBuffer = arrBuffer.createNew(logger, config, true);
                 QUnit.assert.deepEqual(sessionBuffer.getItems(), payload, "payload should be same");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
-                arrBuffer.enqueue("payload");
+                arrBuffer.enqueue({item: "payload", cnt: 0});
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 7, "arrBuffer length");
                 QUnit.assert.deepEqual(sessionBuffer.getItems().length, 6, "copy is deep copy");
 
@@ -505,17 +937,57 @@ export class SenderTests extends AITestClass {
                 let arrBuffer = sessionBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(arrBuffer.getItems(), [], "payload should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                //let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
                 arrForEach(payload, (val) =>{
                     sessionBuffer.enqueue(val);
                 });
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), payload, "session storage buffer is set");
                 arrBuffer = sessionBuffer.createNew(logger, config, false);
                 QUnit.assert.deepEqual(arrBuffer.getItems(), payload, "payload should be same");
-                sessionBuffer.enqueue("payload");
+                sessionBuffer.enqueue({item: "payload", cnt: 0});
                 QUnit.assert.deepEqual(sessionBuffer.getItems().length, 1, "sessionBuffer length");
-                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), ["payload"], "session storage buffer is set");
+                QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [{item: "payload", cnt: 0}], "session storage buffer is set");
                 QUnit.assert.deepEqual(arrBuffer.getItems().length, 6, "copy is deep copy");
+
+                utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer Max Count: payload exceeds max retry cnt should not be added again",
+            test: () => {
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled:true,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    maxRetryCnt: 1
+                } as ISenderConfig;
+                let logger = new DiagnosticLogger({instrumentationKey: "abc"});
+                
+                let sessionBuffer = new SessionStorageSendBuffer(logger, config);
+                QUnit.assert.deepEqual(sessionBuffer.getItems(), [], "payload should be empty");
+                let payload1 = {item: "payload1", cnt: 1};
+                sessionBuffer.enqueue(payload1);
+                QUnit.assert.deepEqual(sessionBuffer.getItems().length, 1, "should have only one payload");
+
+                let payload2 = {item: "payload2", cnt: 2};
+                sessionBuffer.enqueue(payload2);
+                QUnit.assert.deepEqual(sessionBuffer.getItems().length, 1, "should have only one payload");
 
                 utlSetSessionStorage(logger, BUFFER_KEY,JSON.stringify([]));
             }
@@ -550,8 +1022,10 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual(sessionBufferCopy.getItems(), [], "payload should be empty");
                 QUnit.assert.deepEqual(this._getBuffer(BUFFER_KEY, logger), [], "session storage buffer should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
-                let sentPayload = ["sent1", "sent2","sent3","sent4"];
+                //let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
+                let sentPayload = [{item: "sent1", cnt: 0}, {item: "sent2", cnt: 0}, {item: "sent3", cnt: 0}, {item: "sent4", cnt: 0} ];
+                //let sentPayload = ["sent1", "sent2","sent3","sent4"];
                 arrForEach(payload, (val) =>{
                     sessionBuffer.enqueue(val);
                 });
@@ -605,8 +1079,10 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger), [], "session storage sent buffer should be empty");
                 QUnit.assert.deepEqual(this._getBuffer(SENT_BUFFER_KEY, logger, prefix), [], "session storage sent buffer with prefix should be empty");
 
-                let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
-                let sentPayload = ["sent1", "sent2","sent3","sent4"];
+                // let payload = ["payload1", "payload2", "payload3", "payload4", "payload5", "payload6"];
+                // let sentPayload = ["sent1", "sent2","sent3","sent4"];
+                let payload = [{item: "payload1", cnt: 0}, {item: "payload2", cnt: 0}, {item: "payload3", cnt: 0}, {item: "payload4", cnt: 0}, {item: "payload5", cnt: 0}, {item: "payload6", cnt: 0} ];
+                let sentPayload = [{item: "sent1", cnt: 0}, {item: "sent2", cnt: 0}, {item: "sent3", cnt: 0}, {item: "sent4", cnt: 0} ];
                 arrForEach(payload, (val) =>{
                     sessionBuffer.enqueue(val);
                 });
@@ -627,6 +1103,55 @@ export class SenderTests extends AITestClass {
                 utlSetSessionStorage(logger, SENT_BUFFER_KEY,JSON.stringify([]));
                 utlSetSessionStorage(logger, `${prefix}_${BUFFER_KEY}`,JSON.stringify([]));
                 utlSetSessionStorage(logger, `${prefix}_${SENT_BUFFER_KEY}`,JSON.stringify([]));
+            }
+        });
+
+        
+        this.testCase({
+            name: "Channel Config: Offline Support",
+            test: () => {
+                this._sender.initialize(
+                    {
+                        instrumentationKey: "abc",
+                        maxBatchInterval: 123,
+                        endpointUrl: DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH,
+                        maxBatchSizeInBytes: 654,
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 456
+                            }
+                        }
+
+                    }, new AppInsightsCore(), []
+                );
+
+                let event: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                let offlineSupport = this._sender.getOfflineSupport() as any;
+                QUnit.assert.ok(offlineSupport.serialize, "serialize exist");
+                let eventStr = offlineSupport.serialize(event);
+                let expectedStr = `"iKey":"iKey","name":"Microsoft.ApplicationInsights.iKey.Event","tags":{"ai.internal.sdkVersion":"javascript:${EnvelopeCreator.Version}"},"data":{"baseType":"EventData","baseData":{"ver":2,"name":"not_specified","properties":{"baseTypeSource":"some type"},"measurements":{}}}`;
+                QUnit.assert.ok(eventStr.indexOf(expectedStr) > -1, "get expected string");
+                
+                let testStr = `{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}}`;
+                QUnit.assert.ok(offlineSupport.batch, "batch should exit");
+                let batch = offlineSupport.batch([testStr, testStr]);
+                QUnit.assert.equal(batch, `[{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}},{"name":"testEvent","iKey":"o:testIkey","data":{"baseData":{}}}]`, "get expected batch");
+
+                QUnit.assert.ok(offlineSupport.shouldProcess, "should process should exit");
+                QUnit.assert.equal(offlineSupport.shouldProcess(event), true, "should process");
+
+                QUnit.assert.ok(offlineSupport.createPayload, "getOffline createPayload should exit");
+                let details = offlineSupport.createPayload("test");
+                QUnit.assert.equal(details.urlString, "https://dc.services.visualstudio.com/v2/track", "get expected Url");
+                QUnit.assert.ok(details.headers, "should have headers");
+                QUnit.assert.equal(details.headers["Sdk-Context"], "appId", "get expected headers");
+                QUnit.assert.equal(details.data, "test", "should use headers");
             }
         });
 
@@ -653,6 +1178,92 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH, this._sender._senderConfig.endpointUrl, 'Channel config can be set from root config (endpointUrl)');
                 QUnit.assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes, 'Channel config does not equal root config option if extensionConfig field is also set');
                 QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes, 'Channel config prioritizes extensionConfig over root config');
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Session storage can be enabled",
+            test: () => {
+                let setItemSpy = this.sandbox.spy(window.sessionStorage, "setItem");
+                let getItemSpy = this.sandbox.spy(window.sessionStorage, "getItem");
+
+                this._sender.initialize(
+                    {
+                        enableSessionStorageBuffer: true
+                    }, new AppInsightsCore(), []
+                );
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem, null);
+
+                QUnit.assert.true(this._sender._buffer instanceof SessionStorageSendBuffer, 'Channel config can be set from root config (enableSessionStorageBuffer)');
+                QUnit.assert.equal(false, setItemSpy.calledOnce, "The setItem has not yet been triggered");
+                QUnit.assert.equal(false, getItemSpy.calledOnce, "The getItemSpy has not yet been triggered");
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Session storage with buffer override is used",
+            test: () => {
+                let setItemSpy = this.sandbox.stub();
+                let getItemSpy = this.sandbox.stub();
+
+                this._sender.initialize(
+                    {
+                        enableSessionStorageBuffer: true,
+                        bufferOverride: {
+                            getItem: getItemSpy,
+                            setItem: setItemSpy
+                        }
+                    }, new AppInsightsCore(), []
+                );
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem, null);
+
+                QUnit.assert.true(this._sender._buffer instanceof SessionStorageSendBuffer, 'Channel config can be set from root config (enableSessionStorageBuffer)');
+                QUnit.assert.equal(false, setItemSpy.calledOnce, "The setItem has not yet been triggered");
+                QUnit.assert.equal(false, getItemSpy.calledOnce, "The getItemSpy has not yet been triggered");
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Session storage can be disabled",
+            test: () => {
+                this._sender.initialize(
+                    {
+                        enableSessionStorageBuffer: false
+                    }, new AppInsightsCore(), []
+                );
+
+                QUnit.assert.true(this._sender._buffer instanceof ArraySendBuffer, 'Channel config can be set from root config (enableSessionStorageBuffer)');
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Session storage ignores buffer override when disabled",
+            test: () => {
+                this._sender.initialize(
+                    {
+                        enableSessionStorageBuffer: false,
+                        bufferOverride: {
+                            getItem: this.sandbox.stub(),
+                            setItem: this.sandbox.stub()
+                        }
+                    }, new AppInsightsCore(), []
+                );
+
+                QUnit.assert.true(this._sender._buffer instanceof ArraySendBuffer, 'Channel config can be set from root config (enableSessionStorageBuffer)');
             }
         });
 
@@ -702,7 +1313,7 @@ export class SenderTests extends AITestClass {
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
                     let buffer = this._sender._buffer.getItems();
-                    let payload = JSON.parse(buffer[buffer.length-1]);
+                    let payload = JSON.parse(buffer[buffer.length-1].item);
                     var actualIkey = payload.iKey;
                 } catch(e) {
                     QUnit.assert.ok(false, "Exception - " + e);
@@ -842,10 +1453,510 @@ export class SenderTests extends AITestClass {
             }
         });
 
+        
         this.testCase({
-            name: 'BeaconAPI is not used when isBeaconApiDisabled flag is false but payload size is over 64k, fall off to xhr sender',
+            name: 'Unload Transport Type: User provide fetch in unloadtransports, but it is disabled, so we should use beacon',
+            test: () => {
+                let window = getWindow();
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled: false,
+                    disableXhr: false,
+                    onunloadDisableFetch: true,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    unloadTransports: [TransportType.Fetch]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API should be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(!fetchstub.called, "fetch sender is blocked");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+
+        this.testCase({
+            name: 'Unload Transport Type: User provide fetch in unloadtransports, we should use fetch',
+            test: () => {
+                let window = getWindow();
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled: false,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    unloadTransports: [TransportType.Fetch]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API should not be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(fetchstub.called, "fetch sender is called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+
+       
+        this.testCase({
+            name: 'Unload Transport Type: User provide beacon in unloadtransports, we should use beacon',
+            test: () => {
+                let window = getWindow();
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled: false,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    unloadTransports: [TransportType.Beacon]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API should be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(!fetchstub.called, "fetch sender is not called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+
+        this.testCase({
+            name: 'Transport Type: isBeaconApiDisabled is true and User provide beacon in transports, we should still block beacon',
+            test: () => {
+                let window = getWindow();
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return false;
+                });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled: true,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    transports: [TransportType.Beacon]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API is blocked, Beacon API should not be called");
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
+                QUnit.assert.ok(!fetchstub.called, "fetch sender is not called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+        this.testCase({
+            name: 'Transport Type: isBeaconApiDisabled is false and User provide beacon in transports, we should pick beacon',
             useFakeTimers: true,
             test: () => {
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+          let config = {
+                    isBeaconApiDisabled: false,
+                    disableXhr: false,
+                    transports: [TransportType.Beacon]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                this.clock.tick(15000);
+
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called when Beacon API is enabled");
+                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API is enabled, Beacon API is called");
+            }
+        });
+
+ 
+
+        this.testCase({
+            name: 'Transport Type: disableXhr is false, and user provide xhr in transports',
+            test: () => {
+                let window = getWindow();
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return false;
+                });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled:true,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    transports: [TransportType.Xhr]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API is disabled, Beacon API is not called");
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
+                QUnit.assert.ok(!fetchstub.called, "fetch sender is not called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+
+        this.testCase({
+            name: 'Transport Type: disableXhr is false, but user provide fetch in transports',
+            test: () => {
+                let window = getWindow();
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return false;
+                });
+
+                let config = {
+                    endpointUrl: "https//: test",
+                    emitLineDelimitedJson: false,
+                    maxBatchInterval: 15000,
+                    maxBatchSizeInBytes: 102400,
+                    disableTelemetry: false,
+                    enableSessionStorageBuffer: true,
+                    isRetryDisabled: false,
+                    isBeaconApiDisabled:true,
+                    disableXhr: false,
+                    onunloadDisableFetch: false,
+                    onunloadDisableBeacon: false,
+                    instrumentationKey:"key",
+                    namePrefix: "",
+                    samplingPercentage: 100,
+                    customHeaders: [{header:"header",value:"val" }],
+                    convertUndefined: "",
+                    eventsLimitInMem: 10000,
+                    transports: [TransportType.Fetch]
+                } as ISenderConfig;
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+                var coreConfig = {
+                    instrumentationKey: "",
+                    extensionConfig: {[sender.identifier]: config}
+                };
+
+                cr.initialize(coreConfig, [sender]);
+
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API is disabled, Beacon API is not called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(fetchstub.called, "fetch sender is called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+
+        this.testCase({
+            name: "disableBeaconSplit is set to true,  xhr should be used to send data diretly instead of splitting payloads.",
+            useFakeTimers: true,
+            test: () => {
+                let window = getWindow();
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
                 let sendBeaconCalled = false;
                 this.hookSendBeacon((url: string) => {
                     sendBeaconCalled = true;
@@ -854,58 +1965,637 @@ export class SenderTests extends AITestClass {
 
                 const sender = new Sender();
                 const cr = new AppInsightsCore();
-                cr["logger"] = new DiagnosticLogger();
-                const MAX_PROPERTIES_SIZE = 8000;
-                const payload = new Array(MAX_PROPERTIES_SIZE).join('a');
 
                 sender.initialize({
-                    instrumentationKey: 'abc',
-                    isBeaconApiDisabled: false
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            disableSendBeaconSplit: true,
+                            onunloadDisableFetch: true,
+                            disableXhr: true
+                            // to make sure beacon is used
+                        }
+                    }
+                    
                 }, cr, []);
                 this.onDone(() => {
                     sender.teardown();
                 });
 
-                const telemetryItems: ITelemetryItem[] = [];
-                for (let i = 0; i < 8; i ++) {
-                    const telemetryItem: ITelemetryItem = {
-                        name: 'fake item',
-                        iKey: 'iKey',
-                        baseType: 'some type',
-                        baseData: {},
-                        data: {
-                            properties: {
-                                payload
-                            }
-                        }
-                    };
-                    telemetryItems[i] = telemetryItem;
-                }
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "iKey",
+                    baseType: "some type",
+                    baseData: {
+                        largePayload: new Array(64 + 1).join("test")
+                    }
+                };
+
+                let buffer = sender._buffer;
 
                 QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
 
                 try {
-                    for (let i = 0; i < 8; i++) {
-                        sender.processTelemetry(telemetryItems[i], null);
-                    }
-                    sender.flush();
+                    sender.processTelemetry(telemetryItem, null);
+                    QUnit.assert.equal(1, buffer.getItems().length, "sender buffer should have one payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                    QUnit.assert.equal(bufferItems.length, 1, "sender buffer should have one payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
                 } catch(e) {
                     QUnit.assert.ok(false);
                 }
 
-                this.clock.tick(15000);
+                this.clock.tick(5);
 
-                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API is enabled but payload is over size, Beacon API is called");
-                QUnit.assert.ok(this._getXhrRequests().length > 0, "xhr sender is called when payload is over size");
+                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API should be called");
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender should be called");
+                let xhrRequest =  this._getXhrRequests()[0];
+                QUnit.assert.equal(false, fetchstub.called, "fetch sender is not called");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(1, sentItems.length, "sent buffer should have only one payload");
+
+                this.sendJsonResponse(xhrRequest, {}, 200);
+                bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(0, sentItems.length, "sent buffer should have no payload");
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+                
             }
         });
 
         this.testCase({
+            name: "disableBeaconSplit is set to false, xhr should not be called to send small payload.",
+            test: () => {
+                let window = getWindow();
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
+                let sendBeaconCalled = 0;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled += 1;
+                    return true;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            onunloadDisableFetch: true,
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                            // to make sure beacon is used
+                        }
+                    }
+                    
+                }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {}
+                };
+
+
+                let buffer = sender._buffer;
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    QUnit.assert.equal(1, buffer.getItems().length, "sender buffer should have one payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                    QUnit.assert.equal(bufferItems.length, 1, "sender buffer should have one payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(1, sendBeaconCalled, "Beacon API should be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender should be called");
+                QUnit.assert.equal(false, fetchstub.called, "fetch sender is not called");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(0, sentItems.length, "sent buffer should not have one payload");
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+                
+            }
+        });
+
+        this.testCase({
+            name: "disableBeaconSplit is set to false, xhr should be called to send large payload.",
+            useFakeTimers: true,
+            test: () => {
+                let window = getWindow();
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
+                let sendBeaconCalled = 0;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled += 1;
+                    if (sendBeaconCalled == 2) {
+                        return true;
+                    }
+                    return false;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            onunloadDisableFetch: true,
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                            
+                            // to make sure beacon is used
+                        }
+                    }
+                    
+                }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {}
+                };
+
+                const telemetryItem1: ITelemetryItem = {
+                    name: "item",
+                    iKey: "iKey1",
+                    baseType: "type",
+                    baseData: {}
+                };
+
+
+                let buffer = sender._buffer;
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.processTelemetry(telemetryItem1, null);
+                    QUnit.assert.equal(2, buffer.getItems().length, "sender buffer should have one payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                    QUnit.assert.equal(bufferItems.length, 2, "sender buffer should have one payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+                this.clock.tick(5);
+
+                QUnit.assert.equal(3, sendBeaconCalled, "Beacon API should be called 3 times");
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender should be called");
+                let xhrRequest = this._getXhrRequests()[0];
+                QUnit.assert.equal(false, fetchstub.called, "fetch sender is not called");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(1, sentItems.length, "sent buffer should have one payload");
+                QUnit.assert.ok(sentItems[0].item.indexOf("iKey1") >= 0, "sent buffer should have ikey1 payload");
+
+                this.sendJsonResponse(xhrRequest, {}, 200);
+                bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should have no payload test1");
+                sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload test1");
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+                
+            }
+        });
+
+        this.testCase({
+            name: "fetchKeepAliveSender should not send duplicacted events during unload.",
+            useFakeTimers: true,
+            test: () => {
+                let window = getWindow();
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                let sessionSpy = this.sandbox.spy(sessionStorage,"setItem");
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
+                let sendBeaconCalled = 0;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled += 1;
+                    return true;
+                });
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                        }
+                    }
+                    
+                }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {}
+                };
+
+
+                let buffer = sender._buffer;
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
+                QUnit.assert.equal(false, fetchstub.called, "fetch sender is not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    QUnit.assert.equal(1, buffer.getItems().length, "sender buffer should have one payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                    QUnit.assert.equal(bufferItems.length, 1, "sender buffer should have one payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+                this.clock.tick(5);
+
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API should be not called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender should not be called");
+                QUnit.assert.equal(true, fetchstub.calledOnce, "fetch sender is called once");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(0, sentItems.length, "sent buffer should have one payload test1");
+
+                let setItemCalled = 0;
+                let args = sessionSpy.args;
+                let itemCount = 0;
+                args.forEach((arg) => {
+                    if (arg && arg[0] === SENT_BUFFER_KEY) {
+                        let data = JSON.parse(arg[1]);
+                        let cnt = data.length;
+                        if(data && cnt) {
+                            setItemCalled ++;
+                            itemCount += cnt;
+                        }
+                    }
+                });
+                QUnit.assert.equal(1, setItemCalled, "sent buffer session should have be called once");
+                QUnit.assert.equal(1, itemCount, "sent buffer session should have be called once with one item");
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+                
+            }
+        });
+
+        this.testCase({
+            name: "fetchKeepAliveSender should only trigger fetch once during unload.",
+            useFakeTimers: true,
+            test: () => {
+                let window = getWindow();
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
+                let sendBeaconCalled = 0;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled += 1;
+                    return true;
+                });
+                let fetchCalls = this.hookFetch((resolve) => {
+                    setTimeout(function() {
+                        resolve();
+                    }, 0);
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                        }
+                    }
+                    
+                }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {}
+                };
+
+
+                let buffer = sender._buffer;
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
+                QUnit.assert.equal(0, fetchCalls.length, "fetch calls should not be called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    QUnit.assert.equal(1, buffer.getItems().length, "sender buffer should have one payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                    QUnit.assert.equal(bufferItems.length, 1, "sender buffer should have one payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+                this.clock.tick(5);
+
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API should be not called");
+                QUnit.assert.equal(1, fetchCalls.length, "fetch calls should be called only once");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender should not be called");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(0, sentItems.length, "sent buffer should not have one payload");
+
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+                
+            }
+        });
+
+        this.testCase({
+            name: "Onunloadflush: send payloads with fetch.",
+            test: () => {
+                let window = getWindow();
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                let sessionSpy = this.sandbox.spy(sessionStorage,"setItem");
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
+                let sendBeaconCalled = 0;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled += 1;
+                    return true;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            onunloadDisableFetch: false,
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                            // to make sure beacon is used
+                        }
+                    }
+
+                }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "large item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {
+                        name: "large item"
+
+                    }
+                };
+
+                const telemetryItem1: ITelemetryItem = {
+                    name: "smell item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {
+                        name: "small item"
+
+                    }
+                };
+
+
+                let buffer = sender._buffer;
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.processTelemetry(telemetryItem1, null);
+                    QUnit.assert.equal(2, buffer.getItems().length, "sender buffer should have two payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                    QUnit.assert.equal(bufferItems.length, 2, "sender buffer should have two payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API should not be called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender should not be called");
+                QUnit.assert.equal(true, fetchstub.called, "fetch sender is called");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(0, sentItems.length, "sent buffer should have no payload left");
+
+                let setItemCalled = 0;
+                let itemCount = 0;
+                let args = sessionSpy.args;
+                args.forEach((arg) => {
+                    if (arg && arg[0] === SENT_BUFFER_KEY) {
+                        let data = JSON.parse(arg[1]);
+                        let cnt = data.length;
+                        if(data && cnt) {
+                            setItemCalled ++;
+                            itemCount += cnt;
+                        }
+                    }
+                });
+                QUnit.assert.equal(1, setItemCalled, "sent buffer session should have be called once");
+                QUnit.assert.equal(2, itemCount, "sent buffer session should have be called once with two item");
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+
+            }
+        });
+
+        this.testCase({
+            name: "Onunloadflush: send payloads with beacon.",
+            test: () => {
+                let window = getWindow();
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                let sessionStorage = window.sessionStorage;
+                QUnit.assert.ok(sessionStorage, "sessionStorage API is supported");
+                sessionStorage.clear();
+
+                let sendBeaconCalled = 0;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled += 1;
+                    return false;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: "abc",
+                    extensionConfig: {
+                        [sender.identifier]: {
+                            onunloadDisableFetch: true,
+                            disableXhr: true,
+                            disableSendBeaconSplit: false
+                            // to make sure beacon is used
+                        }
+                    }
+
+                }, cr, []);
+                this.onDone(() => {
+                    sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "small item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {
+                        name: "small item"
+                    }
+                };
+
+                const telemetryItem1: ITelemetryItem = {
+                    name: "large item",
+                    iKey: "iKey",
+                    baseType: "type",
+                    baseData: {
+                        name: "large item"
+                    }
+                };
+
+
+                let buffer = sender._buffer;
+
+                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.processTelemetry(telemetryItem1, null);
+                    QUnit.assert.equal(2, buffer.getItems().length, "sender buffer should have two payload");
+                    let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                    QUnit.assert.equal(bufferItems.length, 2, "sender buffer should have two payload");
+                    let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                    QUnit.assert.equal(0, sentItems.length, "sent buffer should have zero payload");
+                    sender.onunloadFlush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(3, sendBeaconCalled, "Beacon API should be called");
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender should not be called");
+                QUnit.assert.equal(false, fetchstub.called, "fetch sender is called");
+                QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should not have one payload");
+                QUnit.assert.equal(0, buffer.count(), "sender buffer should not have any payload");
+                let bufferItems = JSON.parse(sessionStorage.getItem(BUFFER_KEY) as any);
+                QUnit.assert.equal(bufferItems.length, 0, "sender buffer should be clear payload");
+                let sentItems = JSON.parse(sessionStorage.getItem(SENT_BUFFER_KEY) as any);
+                QUnit.assert.equal(2, sentItems.length, "sent buffer should not have two payload");
+
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                sessionStorage.clear();
+
+            }
+        });
+
+
+        this.testCase({
             name: 'FetchAPI is used when isBeaconApiDisabled flag is true and disableXhr flag is true , use fetch sender.',
             test: () => {
-                let window = getGlobalInst("window");
+                let window = getWindow();
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
                 let fetchstub = this.sandbox.stub((window as any), "fetch");
 
@@ -956,7 +2646,7 @@ export class SenderTests extends AITestClass {
         this.testCase({
             name: 'FetchAPI is used when isBeaconApiDisabled flag is true and XMLHttpRequest is not supported, use fetch sender.',
             test: () => {
-                let window = getGlobalInst("window");
+                let window = getWindow();
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
                 (window as any).XMLHttpRequest = undefined;
                 let fetchstub = this.sandbox.stub((window as any), "fetch");
@@ -1152,8 +2842,10 @@ export class SenderTests extends AITestClass {
                         device: {
                             deviceClass: "Browser",
                             localId: "browser"
+                        },
+                        os: {
+                            osVer: "Windows11"
                         }
-
                     },
                     tags: [{"ai.internal.sdkVersion": "javascript:2.5.1"}],
                     data: {
@@ -1199,6 +2891,9 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(appInsightsEnvelope.tags);
                 QUnit.assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
                 QUnit.assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
+                QUnit.assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
+                QUnit.assert.equal("Windows11", appInsightsEnvelope.tags["ai.device.osVersion"]);
+
                 QUnit.assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
                 QUnit.assert.equal("javascript:2.5.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 
@@ -1300,7 +2995,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(baseData.ver);
                 QUnit.assert.equal(2, baseData.ver);
 
-                QUnit.assert.equal("javascript:2.8.11", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                QUnit.assert.equal(`javascript:${EnvelopeCreator.Version}`, appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
             }
         })
 
@@ -1808,11 +3503,12 @@ export class SenderTests extends AITestClass {
                 };
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
+                    this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
                     QUnit.assert.ok(false);
                 }
 
-                QUnit.assert.equal(true, loggerSpy.calledOnce);
+                QUnit.assert.equal(true, loggerSpy.called);
                 this.clock.tick(1);
                 QUnit.assert.ok(sendNotifications.length === 1);
                 QUnit.assert.ok(sendNotifications[0].sendReason === SendRequestReason.MaxBatchSize);
@@ -2149,6 +3845,125 @@ export class SenderTests extends AITestClass {
 
                 QUnit.assert.equal(1, sendNotifications.length);
                 QUnit.assert.equal(SendRequestReason.MaxBatchSize, sendNotifications[0].sendReason);
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Process telemetry when offline and exceeding the batch size limits",
+            useFakeTimers: true,
+            test: () => {
+                const maxBatchSizeInBytes = 1024;
+                let core = new AppInsightsCore();
+                
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        maxBatchSizeInBytes: maxBatchSizeInBytes,
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                        }
+                        
+                    }, core, []
+                );
+                
+                const triggerSendSpy = this.sandbox.spy(this._sender, "triggerSend");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                // Act - Go offline
+                const offlineEvent = new Event('offline');
+                window.dispatchEvent(offlineEvent);
+
+                // Keep sending events until the max payload size is exceeded
+                while (!triggerSendSpy.called && this._sender._buffer.size() < maxBatchSizeInBytes) {
+                    try {
+                        this._sender.processTelemetry(telemetryItem, null);
+                    } catch(e) {
+                        QUnit.assert.ok(false);
+                    }
+                }
+
+                QUnit.assert.equal(false, triggerSendSpy.called);
+
+                this.clock.tick(1);
+
+                QUnit.assert.equal(false, triggerSendSpy.called);
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Process telemetry when offline and reponse code is 200",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                
+                this._sender.initialize(
+                    {
+                        instrumentationKey: "abc",
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                namePrefix: "offline"
+                            }
+                        }
+                        
+                    }, core, []
+                );
+                
+                const triggerSendSpy = this.sandbox.spy(this._sender, "triggerSend");
+                const telemetryItem: ITelemetryItem = {
+                    name: "testevent",
+                    iKey: "iKey",
+                    baseType: "some type",
+                    baseData: {}
+                };
+
+                try {
+                    this._sender.processTelemetry(telemetryItem, undefined);
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, triggerSendSpy.called, "trigger send should not be called");
+
+                let keys = utlGetSessionStorageKeys();
+                QUnit.assert.deepEqual(keys.length, 2, "session buffer should contain only two keys");
+                let bufferKey = "offline_"+ BUFFER_KEY;
+                let sentKey = "offline_" + SENT_BUFFER_KEY;
+                QUnit.assert.ok(keys.indexOf(bufferKey) > -1, "session buffer key contain buffer key");
+                QUnit.assert.ok(keys.indexOf(sentKey) > -1, "session buffer key contain sent buffer key");
+                let itemsStr = sessionStorage.getItem(bufferKey) || "";
+                let items =JSON.parse(itemsStr);
+                QUnit.assert.equal(items.length, 1, "items should be saved");
+
+                this._sender.flush();
+
+                // Act - Go offline
+                const offlineEvent = new Event('offline');
+                window.dispatchEvent(offlineEvent);
+                QUnit.assert.equal(true, triggerSendSpy.called, "trigger send should be called");
+                itemsStr = sessionStorage.getItem(sentKey) || "";
+                items =JSON.parse(itemsStr);
+                QUnit.assert.equal(items.length, 1, "items should be saved into sent buffer");
+
+                let requests = this._getXhrRequests();
+                QUnit.assert.deepEqual(requests.length, 1, "should have only 1 requests");
+                let request = requests[0];
+                this.sendJsonResponse(request, {}, 200);
+
+                itemsStr = sessionStorage.getItem(bufferKey) || "";
+                items =JSON.parse(itemsStr);
+                QUnit.assert.equal(items.length, 0, "items should be cleared");
+
+                itemsStr = sessionStorage.getItem(sentKey) || "";
+                items =JSON.parse(itemsStr);
+                QUnit.assert.equal(items.length, 0, "sent items should be cleared");
+                
             }
         });
 

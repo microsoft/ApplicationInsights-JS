@@ -43,8 +43,9 @@ This is similar to [adding exceptions for end users](#add-exceptions-for-cdn-end
 As the snippet and its configuration are returned by your application as part of each generated page, you can change the snippet `src` configuration to use a different URL for the SDK. By using this approach, you could bypass the [CDN Blocked](#cdn-blocked) issue as the new URL should not be blocked.
 
 Current Application Insights JavaScript SDK CDN endpoints
-- https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js
-- https://js.monitor.azure.com/scripts/b/ai.2.min.js
+- ~~https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js~~
+- https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js (for snippet version >=7)
+- https://js.monitor.azure.com/scripts/b/ai.2.min.js (for snippet version <7)
 
 > :bulb: **Note**
 >
@@ -62,7 +63,7 @@ As with the snippet, it is also possible that your own scripts (with or without 
 
 ## Host SDK
  
-Rather than your end users downloading the Application Insights SDK from the public CDN you could host the Application Insights SDK from your own CDN endpoint. If using this approach, it is recommended that you use a specific version (ai.2.#.#.min.js) so that it's easier to identify which version you are using, it is also recommended that update it on a regular basis to the current version (ai.2.min.js) so you can leverage any bug fixes and new features that become available.
+Rather than your end users downloading the Application Insights SDK from the public CDN you could host the Application Insights SDK from your own CDN endpoint. If using this approach, it is recommended that you use a specific version (ai.3.gbl.#.#.min.js) so that it's easier to identify which version you are using, it is also recommended that update it on a regular basis to the current version (ai.3.gbl.min.js) so you can leverage any bug fixes and new features that become available.
 
 <div class="alert alert-info"> 
 

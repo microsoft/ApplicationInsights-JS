@@ -11,7 +11,7 @@ import {
     getExceptionName, isNullOrUndefined, onConfigChange, throwError, unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { hasDocument, objDeepFreeze, objDefineProp } from "@nevware21/ts-utils";
+import { getDocument, hasDocument, objDeepFreeze, strSubstring, strTrim } from "@nevware21/ts-utils";
 import {
     IAutoCaptureHandler, IClickAnalyticsConfiguration, IContentHandler, ICoreData, ICustomDataTags, IPageActionTelemetry, IValueCallback
 } from "./Interfaces/Datamodel";
@@ -34,7 +34,7 @@ const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFree
     }),
     pageTags: {},
     coreData: cfgDfMerge<ICoreData, IClickAnalyticsConfiguration>({
-        referrerUri: hasDocument ? document.referrer : "",
+        referrerUri: hasDocument() ? getDocument().referrer : "",
         requestUri: cfgDfString(),
         pageName: cfgDfString(),
         pageType: cfgDfString()
@@ -94,9 +94,16 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     }
                 });
                 // Append Click Analytics Plugin Version to SDK version.
-                if (_propertiesExtension && _propertiesExtension.context &&
-                    _propertiesExtension.context.internal && _propertiesExtension.context.internal.sdkVersion) {
-                    _propertiesExtension.context.internal.sdkVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
+                if (_propertiesExtension && _propertiesExtension.context && _propertiesExtension.context.internal) {
+                    let theVersion = _propertiesExtension.context.internal.sdkVersion;
+                    if (theVersion) {
+                        theVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
+                        if (theVersion.length > 64) {
+                            theVersion = strTrim(strSubstring(theVersion, 0, 64));
+                        }
+
+                        _propertiesExtension.context.internal.sdkVersion = theVersion
+                    }
                 }
             }
         
@@ -139,7 +146,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     let logger = _self.diagLog();
                     _contentHandler = new DomContentHandler(_config, logger);
                     let metaTags = _contentHandler.getMetadata();
-                    _pageAction = new PageAction(this, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
+                    _pageAction = new PageAction(_self, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
     
                     // Default to DOM autoCapture handler
                     if (_autoCaptureHandler) {
@@ -153,22 +160,15 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     _autoCapture = autoCapture;
                 }));
             }
+
+            function _initDefaults() {
+                _config = null;
+                _pageAction = null;
+                _autoCaptureHandler = null;
+                _contentHandler = null;
+                _autoCapture = false;
+            }
         });
-
-        function _initDefaults() {
-            _config = null;
-            _pageAction = null;
-            _autoCaptureHandler = null;
-            _contentHandler = null;
-            _autoCapture = false;
-
-            // Define _self.config
-            objDefineProp(self, "config", {
-                configurable: true,
-                enumerable: true,
-                get: () => _config
-            });
-        }
     }
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
@@ -181,7 +181,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
 
     /**
      * Logs a page action event.
-     * @param IPageActionTelemetry
+     * @param IPageActionTelemetry - The page action event to log.
      * @param customProperties - Additional data used to filter events and metrics. Defaults to empty.
      */
     public trackPageAction(pageAction?: IPageActionTelemetry, customProperties?: ICustomProperties) {

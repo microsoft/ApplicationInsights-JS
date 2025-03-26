@@ -634,17 +634,19 @@ export class PropertiesTests extends AITestClass {
         });
 
         this.testCase({
-            name: 'User: track is triggered if user context is first time initialized',
+            name: 'User: track is triggered if user context is first time initialized and _disableUserInitMessage is set to false',
+            useFakeTimers: true,
             test: () => {
-                // setup
                 var setCookieStub = this.sandbox.stub(this as any, "_setCookie").callsFake(() => {});
-                var loggingStub = this.sandbox.stub(this.core.logger, "logInternalMessage");
-
-                // Act
                 Assert.ok(setCookieStub.notCalled, 'Cookie not yet generated');
-                Assert.ok(loggingStub.notCalled, 'logInternalMessage is not yet triggered');
-                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+                this.core.initialize(this.getEmptyConfig(), [this.properties]);
                 Assert.ok(setCookieStub.called, 'Cookie generated');
+
+                var loggingStub = this.sandbox.stub(this.core.logger, "logInternalMessage");
+                Assert.ok(loggingStub.notCalled, 'logInternalMessage is not yet triggered');
+
+                this.core.config["disableUserInitMessage"] = false;
+                this.clock.tick(1000);
 
                 // Assert
                 Assert.equal(true, this.properties.context.user.isNewUser, 'current user is a new user');
@@ -1147,6 +1149,26 @@ export class PropertiesTests extends AITestClass {
                 Assert.equal(this.properties.context.getSessionId(), 'random id', 'automaticSession is stored in sesId')
             }
         });
+
+        
+        this.testCase({
+            name: "Storage Prefix Test for Property Plugin: prefix should be added after init",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let setItemSpy = this.sandbox.spy(window.localStorage, "setItem");
+                let storagePrefix = "storageTestPrefix"
+                let coreConfig = {
+                    instrumentationKey: "b7170927-2d1c-44f1-acec-59f4e1751c13ttt",
+                    storagePrefix: storagePrefix,
+                }
+                core.initialize(coreConfig, [this.properties, new TestChannelPlugin()])
+                utlCanUseLocalStorage(true);
+                let firstCallArgs = setItemSpy.args[0];
+                QUnit.assert.true(JSON.stringify(firstCallArgs).includes(storagePrefix));
+            }
+        });
+
     }
 
     private getEmptyConfig(): IConfiguration {

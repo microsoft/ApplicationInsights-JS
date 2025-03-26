@@ -29,7 +29,8 @@ export {
     ICustomProperties,
     INotificationManager,
     IProcessTelemetryContext,
-    Tags
+    Tags,
+    ILoadedPlugin
 } from "@microsoft/applicationinsights-core-js";
 export {
     IConfig,
@@ -52,9 +53,17 @@ export {
     RemoteDependencyData,
     Trace,
     DistributedTracingModes,
-    IRequestHeaders
+    IRequestHeaders,
+    EventPersistence
 } from "@microsoft/applicationinsights-common";
-export { Sender } from "@microsoft/applicationinsights-channel-js";
+export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";
 export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";
 export { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-export { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
+export {
+    AjaxPlugin as DependenciesPlugin, IDependenciesPlugin,
+    DependencyListenerFunction, DependencyInitializerFunction, IDependencyInitializerHandler, IDependencyListenerHandler
+} from "@microsoft/applicationinsights-dependencies-js";
+
+export { CfgSyncPlugin, ICfgSyncPlugin, ICfgSyncConfig, ICfgSyncEvent, ICfgSyncMode, NonOverrideCfg, OnCompleteCallback, SendGetFunction
+} from "@microsoft/applicationinsights-cfgsync-js";
+

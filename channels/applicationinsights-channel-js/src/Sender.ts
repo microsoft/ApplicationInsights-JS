@@ -1,38 +1,42 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, DisabledPropertyName, Event, Exception, IChannelControlsAI,
-    IConfig, IEnvelope, ISample, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate,
-    Trace, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage
+    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Event, Exception, IConfig, IEnvelope, IOfflineListener, ISample,
+    IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace,
+    createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IDiagnosticLogger, INotificationManager, IPlugin,
-    IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
-    SendRequestReason, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, getExceptionName, getIEVersion, getJSON,
-    getNavigator, getWindow, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isXhrSupported, mergeEvtNamespace, objExtend,
-    objKeys, onConfigChange, useXDomainRequest
+    ActiveStatus, BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration,
+    IDiagnosticLogger, IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride,
+    OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete,
+    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
+    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion,
+    isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
+    prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
-import { ITimerHandler, isTruthy, objDeepFreeze, objDefineProp, scheduleTimeout } from "@nevware21/ts-utils";
+import { IPromise } from "@nevware21/ts-async";
+import {
+    ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine, scheduleTimeout
+} from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
 } from "./EnvelopeCreator";
-import { IBackendResponse, ISenderConfig, XDomainRequest as IXDomainRequest } from "./Interfaces";
-import { IOfflineListener, createOfflineListener } from "./Offline";
+import { IInternalStorageItem, ISenderConfig } from "./Interfaces";
 import { ArraySendBuffer, ISendBuffer, SessionStorageSendBuffer } from "./SendBuffer";
 import { Serializer } from "./Serializer";
 import { Sample } from "./TelemetryProcessors/Sample";
 
 const UNDEFINED_VALUE: undefined = undefined;
+const EMPTY_STR = "";
 
 const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 
-declare var XDomainRequest: {
-    prototype: IXDomainRequest;
-    new(): IXDomainRequest;
-};
+interface IInternalPayloadData extends IPayloadData {
+    oriPayload: IInternalStorageItem[];
+    retryCnt?: number;
+}
 
-export type SenderFunction = (payload: string[], isAsync: boolean) => void;
 
 function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     try {
@@ -44,6 +48,11 @@ function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     return null;
 }
 
+function isOverrideFn(httpXHROverride: any) {
+    return httpXHROverride && httpXHROverride.sendPOST;
+}
+
+
 const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepFreeze({
     // Use the default value (handles empty string in the configuration)
     endpointUrl: cfgDfValidate(isTruthy, DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH),
@@ -54,6 +63,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     enableSessionStorageBuffer: cfgDfBoolean(true),
     isRetryDisabled: cfgDfBoolean(),
     isBeaconApiDisabled: cfgDfBoolean(true),
+    disableSendBeaconSplit: cfgDfBoolean(true),
     disableXhr: cfgDfBoolean(),
     onunloadDisableFetch: cfgDfBoolean(),
     onunloadDisableBeacon: cfgDfBoolean(),
@@ -62,7 +72,13 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     samplingPercentage: cfgDfValidate(_chkSampling, 100),
     customHeaders: UNDEFINED_VALUE,
     convertUndefined: UNDEFINED_VALUE,
-    eventsLimitInMem: 10000
+    eventsLimitInMem: 10000,
+    bufferOverride: false,
+    httpXHROverride: { isVal: isOverrideFn, v:UNDEFINED_VALUE },
+    alwaysUseXhrOverride: cfgDfBoolean(),
+    transports: UNDEFINED_VALUE,
+    retryCodes: UNDEFINED_VALUE,
+    maxRetryCnt: {isVal: isNumber, v:10}
 });
 
 function _chkSampling(value: number) {
@@ -81,7 +97,9 @@ const EnvelopeTypeCreator: { [key:string] : EnvelopeCreator } = {
     [RemoteDependencyData.dataType]:    DependencyEnvelopeCreator
 };
 
-export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
+export type SenderFunction = (payload: string[] | IInternalStorageItem[], isAsync: boolean) => void | IPromise<boolean>;
+
+export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
     public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger, convertUndefined?: any): IEnvelope {
         let envelope: ITelemetryItem;
@@ -138,7 +156,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         let _stamp_specific_redirects: number;
         let _headers: { [name: string]: string };
         let _syncFetchPayload = 0;              // Keep track of the outstanding sync fetch payload total (as sync fetch has limits)
-        let _fallbackSender: SenderFunction;    // The sender to use if the payload size is too large
         let _syncUnloadSender: SenderFunction;  // The identified sender to use for the synchronous unload stage
         let _offlineListener: IOfflineListener;
         let _evtNamespace: string | string[];
@@ -146,6 +163,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         let _orgEndpointUrl: string;
         let _maxBatchSizeInBytes: number;
         let _beaconSupported: boolean;
+        let _beaconOnUnloadSupported: boolean;
+        let _beaconNormalSupported: boolean;
         let _customHeaders: Array<{header: string, value: string}>;
         let _disableTelemetry: boolean;
         let _instrumentationKey: string;
@@ -153,7 +172,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         let _isRetryDisabled: boolean;
         let _maxBatchInterval: number;
         let _sessionStorageUsed: boolean;
+        let _bufferOverrideUsed: IStorageBuffer | false;
         let _namePrefix: string;
+        let _enableSendPromise: boolean;
+        let _alwaysUseCustomSend: boolean;
+        let _disableXhr: boolean;
+        let _fetchKeepAlive: boolean;
+        let _xhrSend: SenderFunction;
+        let _fallbackSend: SenderFunction;
+        let _disableBeaconSplit: boolean;
+        let _sendPostMgr: SenderPostManager;
+        let _retryCodes: number[];
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -175,13 +204,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
             };
         
-            _self.flush = (isAsync: boolean = true, callBack?: () => void, sendReason?: SendRequestReason) => {
+            _self.flush = (isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason) => {
                 if (!_paused) {
                     // Clear the normal schedule timer as we are going to try and flush ASAP
                     _clearScheduledTimer();
 
                     try {
-                        _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
+                        return _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                     } catch (e) {
                         _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
                             _eInternalMessageId.FlushFailed,
@@ -193,9 +222,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
             _self.onunloadFlush = () => {
                 if (!_paused) {
-                    if (_beaconSupported) {
+                    if (_beaconSupported || _alwaysUseCustomSend) {
                         try {
-                            _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
+                            return _self.triggerSend(true, _doUnloadSend, SendRequestReason.Unload);
                         } catch (e) {
                             _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
                                 _eInternalMessageId.FailedToSendQueuedTelemetry,
@@ -203,7 +232,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                                 { exception: dumpObj(e) });
                         }
                     } else {
-                        _self.flush();
+                        _self.flush(false);
                     }
                 }
             };
@@ -216,7 +245,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if (_self.isInitialized()) {
                     _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender is already initialized");
                 }
-                
+
+             
                 _base.initialize(config, core, extensions, pluginChain);
                 let identifier = _self.identifier;
                 _serializer = new Serializer(core.logger);
@@ -232,13 +262,33 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 // This function will be re-called whenever any referenced configuration is changed
                 _self._addHook(onConfigChange(config, (details) => {
                     let config = details.cfg;
+                    if (config.storagePrefix){
+                        utlSetStoragePrefix(config.storagePrefix);
+                    }
                     let ctx = createProcessTelemetryContext(null, config, core);
+                    // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
 
-                    objDefineProp(_self, "_senderConfig", {
-                        enumerable: true,
-                        configurable: true,
-                        get: function() {
+                    let curExtUrl = senderConfig.endpointUrl;
+                    // if it is not inital change (_endpointUrl has value)
+                    // if current sender endpoint url is not changed directly
+                    // means ExtCfg is not changed directly
+                    // then we need to monitor endpoint url changes from core
+                    if (_endpointUrl && curExtUrl === _endpointUrl) {
+                        let coreUrl = config.endpointUrl as any;
+                        // if core endpoint url is changed
+                        if (coreUrl && coreUrl !== curExtUrl) {
+                            // and endpoint promise changes is handled by this as well
+                            senderConfig.endpointUrl = coreUrl;
+                        }
+                    }
+
+                    if(isPromiseLike(senderConfig.instrumentationKey)) {
+                        // if it is promise, means the endpoint url is from core.endpointurl
+                        senderConfig.instrumentationKey = config.instrumentationKey as any;
+                    }
+                    objDefine(_self, "_senderConfig", {
+                        g: function() {
                             return senderConfig;
                         }
                     });
@@ -252,6 +302,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         _endpointUrl = _orgEndpointUrl = senderConfig.endpointUrl;
                     }
 
+                    // or is not string
+                    if (core.activeStatus() === ActiveStatus.PENDING) {
+                        // waiting for core promises to be resolved
+                        // NOTE: if active status is set to pending, stop sending, clear timer here
+                        _self.pause();
+                    } else if (core.activeStatus() === ActiveStatus.ACTIVE) {
+                        // core status changed from pending to other status
+                        _self.resume();
+    
+                    }
+
                     if (_customHeaders && _customHeaders !== senderConfig.customHeaders) {
                         // Removing any previously defined custom headers as they have changed
                         arrForEach(_customHeaders, customHeader => {
@@ -261,14 +322,23 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
                     _maxBatchSizeInBytes = senderConfig.maxBatchSizeInBytes;
                     _beaconSupported = (senderConfig.onunloadDisableBeacon === false || senderConfig.isBeaconApiDisabled === false) && isBeaconsSupported();
+                    _beaconOnUnloadSupported = senderConfig.onunloadDisableBeacon === false  && isBeaconsSupported();
+                    _beaconNormalSupported = senderConfig.isBeaconApiDisabled === false && isBeaconsSupported();
+
+                    _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
+                    _disableXhr = !!senderConfig.disableXhr;
+                    _retryCodes = senderConfig.retryCodes;
                     
-                    let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer && utlCanUseSessionStorage();
+                    let bufferOverride = senderConfig.bufferOverride;
+                    let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer &&
+                        (!!bufferOverride || utlCanUseSessionStorage());
                     let namePrefix = senderConfig.namePrefix;
                  
                     //Note: emitLineDelimitedJson and eventsLimitInMem is directly accessed via config in senderBuffer
                     //Therefore, if canUseSessionStorage is not changed, we do not need to re initialize a new one
                     let shouldUpdate = (canUseSessionStorage !== _sessionStorageUsed)
-                                    || (canUseSessionStorage && (_namePrefix !== namePrefix)); // prefixName is only used in session storage
+                                    || (canUseSessionStorage && (_namePrefix !== namePrefix))  // prefixName is only used in session storage
+                                    || (canUseSessionStorage && (_bufferOverrideUsed !== bufferOverride));
 
                     if (_self._buffer) {
                         // case1 (Pre and Now enableSessionStorageBuffer settings are same)
@@ -298,58 +368,84 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
                     _namePrefix = namePrefix;
                     _sessionStorageUsed = canUseSessionStorage;
+                    _bufferOverrideUsed = bufferOverride;
+                    _fetchKeepAlive = !senderConfig.onunloadDisableFetch && isFetchSupported(true);
+                    _disableBeaconSplit = !!senderConfig.disableSendBeaconSplit;
 
                     _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
 
                     _instrumentationKey = senderConfig.instrumentationKey;
-                    if(!_validateInstrumentationKey(_instrumentationKey, config)) {
+                    if(!isPromiseLike(_instrumentationKey) && !_validateInstrumentationKey(_instrumentationKey, config)) {
                         _throwInternal(diagLog,
                             eLoggingSeverity.CRITICAL,
                             _eInternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key " + _instrumentationKey);
                     }
 
                     _customHeaders = senderConfig.customHeaders;
-                    if (!isInternalApplicationInsightsEndpoint(_endpointUrl) && _customHeaders && _customHeaders.length > 0) {
+                    if (isString(_endpointUrl) && !isInternalApplicationInsightsEndpoint(_endpointUrl) && _customHeaders && _customHeaders.length > 0) {
                         arrForEach(_customHeaders, customHeader => {
                             this.addHeader(customHeader.header, customHeader.value);
                         });
                     } else {
                         _customHeaders = null;
                     }
+                    _enableSendPromise = senderConfig.enableSendPromise;
+                    let sendPostConfig = _getSendPostMgrConfig();
 
-                    let sendPostFunc: SenderFunction = null;
-                    if (!senderConfig.disableXhr && useXDomainRequest()) {
-                        sendPostFunc = _xdrSender; // IE 8 and 9
-                    } else if (!senderConfig.disableXhr && isXhrSupported()) {
-                        sendPostFunc = _xhrSender;
+                    // only init it once
+                    if (!_sendPostMgr) {
+                        _sendPostMgr = new SenderPostManager();
+                        _sendPostMgr.initialize(sendPostConfig, diagLog);
+                    } else {
+                        _sendPostMgr.SetConfig(sendPostConfig);
                     }
+
+                    let customInterface = senderConfig.httpXHROverride;
+                    let httpInterface: IXHROverride = null;
+                    let syncInterface: IXHROverride = null;
+                   
+                    // User requested transport(s) values > Beacon > Fetch > XHR
+                    // Beacon would be filtered out if user has set disableBeaconApi to true at _getSenderInterface
+                    let theTransports: TransportType[] = prependTransports([TransportType.Beacon, TransportType.Xhr, TransportType.Fetch], senderConfig.transports);
+
+                    httpInterface = _sendPostMgr && _sendPostMgr.getSenderInst(theTransports, false);
+                  
+                    let xhrInterface = _sendPostMgr && _sendPostMgr.getFallbackInst();
+                    _xhrSend = (payload: IInternalStorageItem[], isAsync: boolean) => {
+                        return _doSend(xhrInterface, payload, isAsync);
+                    };
+                    _fallbackSend = (payload: IInternalStorageItem[], isAsync: boolean) => { // for fallback send, should NOT mark payload as sent again!
+                        return _doSend(xhrInterface, payload, isAsync, false);
+                    };
     
-                    if (!sendPostFunc && isFetchSupported()) {
-                        sendPostFunc = _fetchSender;
-                    }
-    
-                    // always fallback to XHR
-                    _fallbackSender = sendPostFunc || _xhrSender;
-    
-                    if (!senderConfig.isBeaconApiDisabled && isBeaconsSupported()) {
-                        // Config is set to always used beacon sending
-                        sendPostFunc = _beaconSender;
-                    }
-    
-                    _self._sender = sendPostFunc || _xhrSender;
-    
-                    if (!senderConfig.onunloadDisableFetch && isFetchSupported(true)) {
+                    httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
+
+                    _self._sender = (payload: IInternalStorageItem[], isAsync: boolean) => {
+                        return _doSend(httpInterface, payload, isAsync);
+                    };
+
+                    if (_fetchKeepAlive) {
                         // Try and use the fetch with keepalive
                         _syncUnloadSender = _fetchKeepAliveSender;
-                    } else if (isBeaconsSupported()) {
-                        // Try and use sendBeacon
-                        _syncUnloadSender = _beaconSender;
-                    } else if (!senderConfig.disableXhr && useXDomainRequest()) {
-                        _syncUnloadSender = _xdrSender; // IE 8 and 9
-                    } else if (!senderConfig.disableXhr && isXhrSupported()) {
-                        _syncUnloadSender = _xhrSender;
-                    } else {
-                        _syncUnloadSender = _fallbackSender;
+                    }
+                    
+                    let syncTransports: TransportType[] = prependTransports([TransportType.Beacon, TransportType.Xhr], senderConfig.unloadTransports);
+                    if (!_fetchKeepAlive){
+                        // remove fetch from theTransports
+                        syncTransports = syncTransports.filter(transport => transport !== TransportType.Fetch);
+                    }
+
+                    syncInterface = _sendPostMgr && _sendPostMgr.getSenderInst(syncTransports, true);
+                    syncInterface = _alwaysUseCustomSend? customInterface : (syncInterface || customInterface);
+                   
+                    if ((_alwaysUseCustomSend || senderConfig.unloadTransports || !_syncUnloadSender) && syncInterface) {
+                        _syncUnloadSender = (payload: IInternalStorageItem[], isAsync: boolean) => {
+                            return _doSend(syncInterface, payload, isAsync);
+                        };
+                    }
+
+                    if (!_syncUnloadSender) {
+                        _syncUnloadSender = _xhrSend;
                     }
 
                     _disableTelemetry = senderConfig.disableTelemetry;
@@ -358,82 +454,20 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _maxBatchInterval = senderConfig.maxBatchInterval;
                 }));
             };
-        
+            
             _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
                 let diagLogger = itemCtx.diagLog();
                 
                 try {
-                    // if master off switch is set, don't send any data
-                    if (_disableTelemetry) {
-                        // Do not send/save data
+                    let isValidate = _validate(telemetryItem, diagLogger);
+                    if (!isValidate) {
                         return;
                     }
         
-                    // validate input
-                    if (!telemetryItem) {
-                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
-                        return;
-                    }
-        
-                    // validate event
-                    if (telemetryItem.baseData && !telemetryItem.baseType) {
-                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
-                        return;
-                    }
-        
-                    if (!telemetryItem.baseType) {
-                        // Default
-                        telemetryItem.baseType = "EventData";
-                    }
-        
-                    // ensure a sender was constructed
-                    if (!_self._sender) {
-                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender was not initialized");
-                        return;
-                    }
-                  
-                    // check if this item should be sampled in, else add sampleRate tag
-                    if (!_isSampledIn(telemetryItem)) {
-                        // Item is sampled out, do not send it
-                        _throwInternal(diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
-                            "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
-                        return;
-                    } else {
-                        telemetryItem[SampleRate] = _self._sample.sampleRate;
-                    }
-        
-                    // construct an envelope that Application Insights endpoint can understand
-                    // if ikey of telemetry is provided and not empty, envelope will use this iKey instead of senderConfig iKey
-                    let defaultEnvelopeIkey = telemetryItem.iKey || _instrumentationKey;
-                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, diagLogger, _convertUndefined);
+                    let aiEnvelope = _getEnvelope(telemetryItem, diagLogger);
                     if (!aiEnvelope) {
-                        _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
-                    }
-        
-                    let doNotSendItem = false;
-                    // this is for running in legacy mode, where customer may already have a custom initializer present
-                    if (telemetryItem.tags && telemetryItem.tags[ProcessLegacy]) {
-                        arrForEach(telemetryItem.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
-                            try {
-                                if (callBack && callBack(aiEnvelope) === false) {
-                                    doNotSendItem = true;
-                                    _warnToConsole(diagLogger, "Telemetry processor check returns false");
-                                }
-                            } catch (e) {
-                                // log error but dont stop executing rest of the telemetry initializers
-                                // doNotSendItem = true;
-                                _throwInternal(diagLogger,
-                                    eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
-                                    { exception: dumpObj(e) }, true);
-                            }
-                        });
-        
-                        delete telemetryItem.tags[ProcessLegacy];
-                    }
-                    if (doNotSendItem) {
-                        return; // do not send, no need to execute next plugin
                     }
         
                     // check if the incoming payload is too large, truncate if necessary
@@ -442,9 +476,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     // flush if we would exceed the max-size limit by adding this item
                     const buffer = _self._buffer;
                     _checkMaxSize(payload);
+                    let payloadItem = {
+                        item: payload,
+                        cnt: 0 // inital cnt will always be 0
+                    } as IInternalStorageItem;
 
                     // enqueue the payload
-                    buffer.enqueue(payload);
+                    buffer.enqueue(payloadItem);
         
                     // ensure an invocation timeout is set
                     _setupTimer();
@@ -460,22 +498,34 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 // hand off the telemetry item to the next plugin
                 _self.processNext(telemetryItem, itemCtx);
             };
+
+            _self.isCompletelyIdle = () => {
+                return !_paused && _syncFetchPayload === 0 && _self._buffer.count() === 0;
+            }
+
+            _self.getOfflineListener = () => {
+                return _offlineListener;
+            }
         
             /**
              * xhr state changes
              */
-            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) => {
-                if (xhr.readyState === 4) {
-                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, _formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
+            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) => {
+                // since version 3.2.0, this function is no-op
+                if (_isStringArr(payload)) {
+                    return;
                 }
-            };
+                return _xhrReadyStateChange(xhr, payload as IInternalStorageItem[],countOfItemsInPayload);
+
+            }
         
             /**
              * Immediately send buffered data
-             * @param async - {boolean} - Indicates if the events should be sent asynchronously
-             * @param forcedSender - {SenderFunction} - Indicates the forcedSender, undefined if not passed
+             * @param async - Indicates if the events should be sent asynchronously
+             * @param forcedSender - Indicates the forcedSender, undefined if not passed
              */
             _self.triggerSend = (async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) => {
+                let result: void | IPromise<boolean>;
                 if (!_paused) {
                     try {
                         const buffer = _self._buffer;
@@ -490,9 +540,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             
                                 // invoke send
                                 if (forcedSender) {
-                                    forcedSender.call(this, payload, async);
+                                    result = forcedSender.call(_self, payload, async);
                                 } else {
-                                    _self._sender(payload, async);
+                                    result = _self._sender(payload, async);
                                 }
                             }
             
@@ -515,33 +565,175 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         }
                     }
                 }
+
+                return result;
             };
+            
+            _self.getOfflineSupport = () => {
+                return {
+                    getUrl: () => {
+                        return _endpointUrl;
+                    },
+                    createPayload:_createPayload,
+                    serialize: _serialize,
+                    batch: _batch,
+                    shouldProcess:(evt) => {
+                        return !!_validate(evt);
+                    }
+                } as IInternalOfflineSupport;
+            }
         
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _self.onunloadFlush();
-                _offlineListener.unload();
+                runTargetUnload(_offlineListener, false);
                 _initDefaults();
             };
 
             /**
              * error handler
              */
-            _self._onError = (payload: string[], message: string, event?: ErrorEvent) => {
+            _self._onError = (payload: IInternalStorageItem[] | string[], message: string, event?: ErrorEvent) => {
+                // since version 3.1.3, string[] is no-op
+                if (_isStringArr(payload)) {
+                    return;
+                }
+                return _onError(payload as IInternalStorageItem[], message, event);
+            };
+        
+            /**
+             * partial success handler
+             */
+            _self._onPartialSuccess = (payload: IInternalStorageItem[] | string[], results: IBackendResponse) => {
+                // since version 3.1.3, string[] is no-op
+                if (_isStringArr(payload)) {
+                    return;
+                }
+                return _onPartialSuccess(payload as IInternalStorageItem[], results);
+            };
+        
+            /**
+             * success handler
+             */
+            _self._onSuccess = (payload: IInternalStorageItem[] | string[], countOfItemsInPayload: number) => {
+                // since version 3.1.3, string[] is no-op
+                if (_isStringArr(payload)) {
+                    return;
+                }
+                return _onSuccess(payload as IInternalStorageItem[], countOfItemsInPayload);
+                
+                //_self._buffer && _self._buffer.clearSent(payload);
+            };
+
+        
+            /**
+             * xdr state changes
+             */
+            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: IInternalStorageItem[] | string[]) => {
+                // since version 3.1.3, string[] is no-op
+                if (_isStringArr(payload)) {
+                    return;
+                }
+                return _xdrOnLoad(xdr, payload as IInternalStorageItem[]);
+
+            }
+
+            function _xdrOnLoad (xdr: IXDomainRequest, payload: IInternalStorageItem[]) {
+                const responseText = _getResponseText(xdr);
+                if (xdr && (responseText + "" === "200" || responseText === "")) {
+                    _consecutiveErrors = 0;
+                    _self._onSuccess(payload, 0);
+                } else {
+                    const results = parseResponse(responseText);
+        
+                    if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
+                        && !_isRetryDisabled) {
+                        _self._onPartialSuccess(payload, results);
+                    } else {
+                        _self._onError(payload, formatErrorMessageXdr(xdr));
+                    }
+                }
+
+            }
+
+            function _getSendPostMgrConfig(): _ISendPostMgrConfig {
+                try {
+                    let onCompleteFuncs = {
+                        xdrOnComplete: (xdr: IXDomainRequest, oncomplete: OnCompleteCallback,payload?: IPayloadData) => {
+                            let data = _getPayloadArr(payload);
+                            if (!data) {
+                                return;
+                            }
+                            return _xdrOnLoad(xdr, data);
+                           
+                        },
+                        fetchOnComplete: (response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) => {
+                            let data = _getPayloadArr(payload);
+                            if (!data) {
+                                return;
+                            }
+                            return _checkResponsStatus(response.status, data, response.url, data.length, response.statusText, resValue || "");
+                        },
+                        xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
+                            let data = _getPayloadArr(payload);
+                            if (!data) {
+                                return;
+                            }
+                            return _xhrReadyStateChange(request, data, data.length);
+                            
+                        },
+                        beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
+                            return _onBeaconRetry(data, onComplete, canSend);
+                        }
+    
+                    } as _ISenderOnComplete;
+
+                    let config = {
+                        enableSendPromise: _enableSendPromise,
+                        isOneDs: false,
+                        disableCredentials: false,
+                        disableXhr: _disableXhr,
+                        disableBeacon: !_beaconNormalSupported,
+                        disableBeaconSync: !_beaconOnUnloadSupported,
+                        senderOnCompleteCallBack: onCompleteFuncs
+                    } as _ISendPostMgrConfig;
+                    return config;
+                 
+
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+
+                }
+                return null;
+
+            }
+
+            /**
+             * xhr state changes
+             */
+            function _xhrReadyStateChange (xhr: XMLHttpRequest, payload: IInternalStorageItem[], countOfItemsInPayload: number) {
+                if (xhr.readyState === 4) {
+                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
+                }
+            }
+
+            /**
+             * error handler
+             */
+            function _onError(payload: IInternalStorageItem[], message: string, event?: ErrorEvent) {
                 _throwInternal(_self.diagLog(),
                     eLoggingSeverity.WARNING,
                     _eInternalMessageId.OnError,
                     "Failed to send telemetry.",
                     { message });
         
-                _self._buffer.clearSent(payload);
-            };
-        
+                _self._buffer && _self._buffer.clearSent(payload);
+            }
             /**
              * partial success handler
              */
-            _self._onPartialSuccess = (payload: string[], results: IBackendResponse) => {
-                const failed: string[] = [];
-                const retry: string[] = [];
+            function _onPartialSuccess(payload: IInternalStorageItem[], results: IBackendResponse) {
+                const failed: IInternalStorageItem[] = [];
+                const retry: IInternalStorageItem[] = [];
         
                 // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
                 const errors = results.errors.reverse();
@@ -560,7 +752,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
         
                 if (failed.length > 0) {
-                    _self._onError(failed, _formatErrorMessageXhr(null, ["partial success", results.itemsAccepted, "of", results.itemsReceived].join(" ")));
+                    _self._onError(failed, formatErrorMessageXhr(null, ["partial success", results.itemsAccepted, "of", results.itemsReceived].join(" ")));
                 }
         
                 if (retry.length > 0) {
@@ -572,53 +764,232 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         "Delivered: " + payload.length + ", Failed: " + failed.length +
                         ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
                 }
-            };
-        
+            }
+
+             
             /**
              * success handler
              */
-            _self._onSuccess = (payload: string[], countOfItemsInPayload: number) => {
-                _self._buffer.clearSent(payload);
-            };
-        
-            /**
-             * xdr state changes
-             */
-            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: string[]) => {
-                const responseText = _getResponseText(xdr);
-                if (xdr && (responseText + "" === "200" || responseText === "")) {
-                    _consecutiveErrors = 0;
-                    _self._onSuccess(payload, 0);
-                } else {
-                    const results = _parseResponse(responseText);
-        
-                    if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                        && !_isRetryDisabled) {
-                        _self._onPartialSuccess(payload, results);
-                    } else {
-                        _self._onError(payload, _formatErrorMessageXdr(xdr));
+            function _onSuccess(payload: IInternalStorageItem[], countOfItemsInPayload: number) {
+                _self._buffer && _self._buffer.clearSent(payload);
+            }
+
+
+            function _getPayloadArr(payload?: IPayloadData) {
+                try {
+                    if (payload) {
+                        let internalPayload = payload as IInternalPayloadData;
+                        let arr = internalPayload.oriPayload;
+                        if (arr && arr.length)  {
+                            return arr
+                        }
+                        return null;
                     }
+
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
                 }
-            };
+                return null;
+
+            }
+
+            function _validate(telemetryItem: ITelemetryItem, diagLogger?: IDiagnosticLogger) {
+                if (_disableTelemetry) {
+                    // Do not send/save data
+                    return false;
+                }
+    
+                // validate input
+                if (!telemetryItem) {
+                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                    return false;
+                }
+    
+                // validate event
+                if (telemetryItem.baseData && !telemetryItem.baseType) {
+                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                    return false;
+                }
+    
+                if (!telemetryItem.baseType) {
+                    // Default
+                    telemetryItem.baseType = "EventData";
+                }
+    
+                // ensure a sender was constructed
+                if (!_self._sender) {
+                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                    return false;
+                }
+              
+                // check if this item should be sampled in, else add sampleRate tag
+                if (!_isSampledIn(telemetryItem)) {
+                    // Item is sampled out, do not send it
+                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
+                        "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
+                    return false;
+                } else {
+                    telemetryItem[SampleRate] = _self._sample.sampleRate;
+                }
+                return true;
+            }
+
+            function _getEnvelope(telemetryItem: ITelemetryItem, diagLogger: IDiagnosticLogger) {
+                // construct an envelope that Application Insights endpoint can understand
+                // if ikey of telemetry is provided and not empty, envelope will use this iKey instead of senderConfig iKey
+                let defaultEnvelopeIkey = telemetryItem.iKey || _instrumentationKey;
+                let aiEnvelope = Sender.constructEnvelope(telemetryItem, defaultEnvelopeIkey, diagLogger, _convertUndefined);
+                if (!aiEnvelope) {
+                    _throwInternal(diagLogger, eLoggingSeverity.CRITICAL, _eInternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                    return;
+                }
+    
+                let doNotSendItem = false;
+                // this is for running in legacy mode, where customer may already have a custom initializer present
+                if (telemetryItem.tags && telemetryItem.tags[ProcessLegacy]) {
+                    arrForEach(telemetryItem.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
+                        try {
+                            if (callBack && callBack(aiEnvelope) === false) {
+                                doNotSendItem = true;
+                                _warnToConsole(diagLogger, "Telemetry processor check returns false");
+                            }
+                        } catch (e) {
+                            // log error but dont stop executing rest of the telemetry initializers
+                            // doNotSendItem = true;
+                            _throwInternal(diagLogger,
+                                eLoggingSeverity.CRITICAL, _eInternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
+                                { exception: dumpObj(e) }, true);
+                        }
+                    });
+    
+                    delete telemetryItem.tags[ProcessLegacy];
+                }
+                if (doNotSendItem) {
+                    return; // do not send, no need to execute next plugin
+                }
+                return aiEnvelope;
+            }
+
+            function _serialize(item: ITelemetryItem) {
+                let rlt = EMPTY_STR;
+                let diagLogger = _self.diagLog();
+                try {
+                    let valid = _validate(item, diagLogger);
+                    let envelope = null;
+                    if (valid) {
+                        envelope = _getEnvelope(item, diagLogger);
+                    }
+                    if (envelope) {
+                        rlt = _serializer.serialize(envelope);
+                    }
+
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+
+                }
+                return rlt;
+               
+            }
+
+            function _batch(arr: string[]) {
+                let rlt = EMPTY_STR;
+                if (arr && arr.length) {
+                    rlt = "[" + arr.join(",") + "]";
+                }
+                return rlt;
+            }
+
+            function _createPayload(data: string |Uint8Array) {
+                let headers = _getHeaders();
+                return {
+                    urlString: _endpointUrl,
+                    data: data,
+                    headers: headers
+                } as IPayloadData;
+            }
         
             function _isSampledIn(envelope: ITelemetryItem): boolean {
                 return _self._sample.isSampledIn(envelope);
             }
 
+            function _getOnComplete(payload: IInternalStorageItem[], status: number, headers: {[headerName: string]: string;}, response?: string) {
+
+                // ***********************************************************************************************
+                //TODO: handle other status codes
+                if (status === 200 && payload) {
+                    _self._onSuccess(payload, payload.length);
+                } else {
+                    response && _self._onError(payload, response);
+                }
+            }
+
+            function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
+                let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
+                    return _getOnComplete(payload, status, headers, response);
+                }
+                let payloadData = _getPayload(payload);
+                let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST;
+                if (sendPostFunc && payloadData) {
+                    // ***********************************************************************************************
+                    // mark payload as sent at the beginning of calling each send function
+                    if (markAsSent) {
+                        _self._buffer.markAsSent(payload);
+                    }
+
+                    return sendPostFunc(payloadData, onComplete, !isAsync);
+                }
+                return null;
+            }
+
+            function _getPayload(payload: IInternalStorageItem[]): IInternalPayloadData {
+                if (isArray(payload) && payload.length > 0) {
+                    let batch = _self._buffer.batchPayloads(payload);
+                    let headers = _getHeaders();
+                    let payloadData: IInternalPayloadData = {
+                        data: batch,
+                        urlString: _endpointUrl,
+                        headers: headers,
+                        disableXhrSync: _disableXhr,
+                        disableFetchKeepAlive: !_fetchKeepAlive,
+                        oriPayload: payload
+                    };
+                    return payloadData;
+                }
+                
+                return null;
+            }
+
+            function _getHeaders() {
+                try {
+                    let headers = _headers || {};
+                    if (isInternalApplicationInsightsEndpoint(_endpointUrl)) {
+                        headers[RequestHeaders[eRequestHeaders.sdkContextHeader]] = RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest];
+                    }
+                    return headers;
+
+                } catch(e) {
+                    // eslint-disable-next-line no-empty
+
+                }
+                return null;
+            }
+
             function _checkMaxSize(incomingPayload?: string): boolean {
                 let incomingSize = incomingPayload? incomingPayload.length : 0;
                 if ((_self._buffer.size() + incomingSize) > _maxBatchSizeInBytes) {
-                    _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                    if (!_offlineListener || _offlineListener.isOnline()) { // only trigger send when currently online
+                        _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                    }
+
                     return true;
                 }
                 return false;
             }
 
-            function _checkResponsStatus(status: number, payload: string[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any) {
+            function _checkResponsStatus(status: number, payload: IInternalStorageItem[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any) {
                 let response: IBackendResponse = null;
-
                 if (!_self._appId) {
-                    response = _parseResponse(res);
+                    response = parseResponse(res);
                     if (response && response.appId) {
                         _self._appId = response.appId;
                     }
@@ -634,6 +1005,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             return;
                         }
                     }
+
+                    if (_offlineListener && !_offlineListener.isOnline()) { // offline
+                        // Note: Don't check for status == 0, since adblock gives this code
+                        if (!_isRetryDisabled) {
+                            const offlineBackOffMultiplier = 10; // arbritrary number
+                            _resendPayload(payload, offlineBackOffMultiplier);
+        
+                            _throwInternal(_self.diagLog(),
+                                eLoggingSeverity.WARNING,
+                                _eInternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${!_offlineListener.isOnline()}. Will retry to send ${payload.length} items.`);
+                        }
+                        return;
+                    }
                     if (!_isRetryDisabled && _isRetriable(status)) {
                         _resendPayload(payload);
                         _throwInternal(_self.diagLog(),
@@ -643,16 +1027,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     } else {
                         _self._onError(payload, errorMessage);
                     }
-                } else if (_offlineListener && !_offlineListener.isOnline()) { // offline
-                    // Note: Don't check for status == 0, since adblock gives this code
-                    if (!_isRetryDisabled) {
-                        const offlineBackOffMultiplier = 10; // arbritrary number
-                        _resendPayload(payload, offlineBackOffMultiplier);
-    
-                        _throwInternal(_self.diagLog(),
-                            eLoggingSeverity.WARNING,
-                            _eInternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${!_offlineListener.isOnline()}. Will retry to send ${payload.length} items.`);
-                    }
                 } else {
 
                     // check if the xhr's responseURL or fetch's response.url is same as endpoint url
@@ -661,7 +1035,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     
                     if (status === 206) {
                         if (!response) {
-                            response = _parseResponse(res);
+                            response = parseResponse(res);
                         }
     
                         if (response && !_isRetryDisabled) {
@@ -692,260 +1066,96 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
                 return false;
             }
-        
-            function _doUnloadSend(payload: string[], isAsync: boolean) {
+
+            function _doUnloadSend(payload: IInternalStorageItem[], isAsync: boolean) {
+
                 if (_syncUnloadSender) {
                     // We are unloading so always call the sender with sync set to false
                     _syncUnloadSender(payload, false);
                 } else {
+                    
                     // Fallback to the previous beacon Sender (which causes a CORB warning on chrome now)
-                    _beaconSender(payload, isAsync);
+                    let beaconInst = _sendPostMgr && _sendPostMgr.getSenderInst([TransportType.Beacon], true);
+                    return _doSend(beaconInst, payload, isAsync);
                 }
             }
 
-            function _doBeaconSend(payload: string[]) {
-                const nav = getNavigator();
-                const buffer = _self._buffer;
-                const url = _endpointUrl;
-                const batch = _self._buffer.batchPayloads(payload);
-            
-                // Chrome only allows CORS-safelisted values for the sendBeacon data argument
-                // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
-                const plainTextBatch = new Blob([batch], { type: "text/plain;charset=UTF-8" });
-        
-                // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
-                const queued = nav.sendBeacon(url, plainTextBatch);
-                if (queued) {
-                    buffer.markAsSent(payload);
-                    // no response from beaconSender, clear buffer
-                    _self._onSuccess(payload, payload.length);
-                }
+            function _onBeaconRetry(payload: IPayloadData, onComplete: OnCompleteCallback, canSend:(payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) {
 
-                return queued;
-            }
-            /**
-             * Send Beacon API request
-             * @param payload - {string} - The data payload to be sent.
-             * @param isAsync - {boolean} - not used
-             * Note: Beacon API does not support custom headers and we are not able to get
-             * appId from the backend for the correct correlation.
-             */
-            function _beaconSender(payload: string[], isAsync: boolean) {
-                if (isArray(payload) && payload.length > 0) {
-                    // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
-                    if (!_doBeaconSend(payload)) {
-                        // Failed to send entire payload so try and split data and try to send as much events as possible
-                        let droppedPayload: string[] = [];
-                        for (let lp = 0; lp < payload.length; lp++) {
-                            const thePayload = payload[lp];
-    
-                            if (!_doBeaconSend([thePayload])) {
-                                // Can't send anymore, so split the batch and drop the rest
-                                droppedPayload.push(thePayload);
-                            }
-                        }
-    
-                        if (droppedPayload.length > 0) {
-                            _fallbackSender && _fallbackSender(droppedPayload, true);
-                            _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
+                let internalPayload = payload as IInternalPayloadData;
+                let data = internalPayload  && internalPayload.oriPayload;
+                if (!_disableBeaconSplit) {
+                    // Failed to send entire payload so try and split data and try to send as much events as possible
+                    let droppedPayload: IInternalStorageItem[] = [];
+                    for (let lp = 0; lp < data.length; lp++) {
+                        const thePayload = data[lp];
+                        let arr = [thePayload];
+                        let item = _getPayload(arr);
+                        if (!canSend(item, onComplete)) {
+                            // Can't send anymore, so split the batch and drop the rest
+                            droppedPayload.push(thePayload);
+                        } else {
+                            _self._onSuccess(arr, arr.length);
                         }
                     }
+                    if (droppedPayload.length > 0) {
+                        _fallbackSend && _fallbackSend(droppedPayload, true);
+                        _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
+                    }
+                } else {
+                    _fallbackSend && _fallbackSend(data, true);
+                    _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with normal sender.");
                 }
+
             }
-        
-            /**
-             * Send XMLHttpRequest
-             * @param payload - {string} - The data payload to be sent.
-             * @param isAsync - {boolean} - Indicates if the request should be sent asynchronously
-             */
-            function _xhrSender(payload: string[], isAsync: boolean) {
-                const xhr = new XMLHttpRequest();
-                const endPointUrl = _endpointUrl;
+
+            function _isStringArr(arr: string[] | IInternalStorageItem[]) {
                 try {
-                    xhr[DisabledPropertyName] = true;
-                } catch(e) {
-                    // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
-                    // cause the request to fail and we no telemetry would be sent
-                }
-                xhr.open("POST", endPointUrl, isAsync);
-                xhr.setRequestHeader("Content-type", "application/json");
-        
-                // append Sdk-Context request header only in case of breeze endpoint
-                if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
-                    xhr.setRequestHeader(RequestHeaders[eRequestHeaders.sdkContextHeader], RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest]);
-                }
+                    if (arr && arr.length){
+                        return (isString(arr[0]));
+                    }
 
-                arrForEach(objKeys(_headers), (headerName) => {
-                    xhr.setRequestHeader(headerName, _headers[headerName]);
-                });
-        
-                xhr.onreadystatechange = () => _self._xhrReadyStateChange(xhr, payload, payload.length);
-                xhr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXhr(xhr), event);
-        
-                // compose an array of payloads
-                const batch = _self._buffer.batchPayloads(payload);
-                xhr.send(batch);
-        
-                _self._buffer.markAsSent(payload);
+                } catch(e) {
+                    //TODO: log, sender use IInternalStorageItem instead of string since 3.1.3
+                }
+                return null;
+                
             }
 
-            function _fetchKeepAliveSender(payload: string[], isAsync: boolean) {
+
+            function _fetchKeepAliveSender(payload: IInternalStorageItem[], isAsync: boolean) {
+             
+                let transport  = null;
                 if (isArray(payload)) {
                     let payloadSize = payload.length;
                     for (let lp = 0; lp < payload.length; lp++) {
-                        payloadSize += payload[lp].length;
+                        payloadSize += payload[lp].item.length;
                     }
 
-                    if ((_syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {
-                        _doFetchSender(payload, false);
+                    let syncFetchPayload = _sendPostMgr.getSyncFetchPayload();
+
+                    if ((syncFetchPayload + payloadSize) <= FetchSyncRequestSizeLimitBytes) {
+                        transport = TransportType.Fetch;
                     } else if (isBeaconsSupported()) {
                         // Fallback to beacon sender as we at least get told which events can't be scheduled
-                        _beaconSender(payload, isAsync);
+                        transport = TransportType.Beacon;
                     } else {
                         // Payload is going to be too big so just try and send via XHR
-                        _fallbackSender && _fallbackSender(payload, true);
+                        transport = TransportType.Xhr;
                         _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
                     }
+                    let inst = _sendPostMgr && _sendPostMgr.getSenderInst([transport], true);
+                    return _doSend(inst, payload, isAsync);
                 }
-            }
-
-            /**
-             * Send fetch API request
-             * @param payload - {string} - The data payload to be sent.
-             * @param isAsync - {boolean} - not used
-             */
-            function _fetchSender(payload: string[], isAsync: boolean) {
-                _doFetchSender(payload, true);
-            }
-
-            /**
-             * Send fetch API request
-             * @param payload - {string} - The data payload to be sent.
-             * @param isAsync - {boolean} - For fetch this identifies whether we are "unloading" (false) or a normal request
-             */
-            function _doFetchSender(payload: string[], isAsync: boolean) {
-                const endPointUrl = _endpointUrl;
-                const batch = _self._buffer.batchPayloads(payload);
-                const plainTextBatch = new Blob([batch], { type: "application/json" });
-                let requestHeaders = new Headers();
-                let batchLength = batch.length;
-                let ignoreResponse = false;
-                let responseHandled = false;
-
-                // append Sdk-Context request header only in case of breeze endpoint
-                if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
-                    requestHeaders.append(RequestHeaders[eRequestHeaders.sdkContextHeader], RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest]);
-                }
-                
-                arrForEach(objKeys(_headers), (headerName) => {
-                    requestHeaders.append(headerName, _headers[headerName]);
-                });
-
-                const init: RequestInit = {
-                    method: "POST",
-                    headers: requestHeaders,
-                    body: plainTextBatch,
-                    [DisabledPropertyName]: true            // Mark so we don't attempt to track this request
-                };
-
-                if (!isAsync) {
-                    init.keepalive = true;
-                    // As a sync request (during unload), it is unlikely that we will get a chance to process the response so
-                    // just like beacon send assume that the events have been accepted and processed
-                    ignoreResponse = true;
-                    _syncFetchPayload += batchLength;
-                }
-
-                const request = new Request(endPointUrl, init);
-                try {
-                    // Also try and tag the request (just in case the value in init is not copied over)
-                    request[DisabledPropertyName] = true;
-                } catch(e) {
-                    // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
-                    // cause the request to fail and we no telemetry would be sent
-                }
-
-                _self._buffer.markAsSent(payload);
-
-                try {
-                    fetch(request).then(response => {
-                        if (!isAsync) {
-                            _syncFetchPayload -= batchLength;
-                            batchLength = 0;
-                        }
-    
-                        if (!responseHandled) {
-                            responseHandled = true;
-
-                            /**
-                             * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500.
-                             * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure
-                             * or if anything prevented the request from completing.
-                             */
-                            if (!response.ok) {
-                                _self._onError(payload, response.statusText)
-                            } else {
-                                response.text().then(text => {
-                                    _checkResponsStatus(response.status, payload, response.url, payload.length, response.statusText, text);
-                                });
-                            }
-                        }
-                    }).catch((error: Error) => {
-                        if (!isAsync) {
-                            _syncFetchPayload -= batchLength;
-                            batchLength = 0;
-                        }
-    
-                        if (!responseHandled) {
-                            responseHandled = true;
-                            _self._onError(payload, error.message)
-                        }
-                    });
-                } catch (e) {
-                    if (!responseHandled) {
-                        _self._onError(payload, dumpObj(e));
-                    }
-                }
-
-                if (ignoreResponse && !responseHandled) {
-                    // Assume success during unload processing as we most likely won't get the response
-                    responseHandled = true;
-                    _self._onSuccess(payload, payload.length);
-                }
-            }
-        
-            /**
-             * Parses the response from the backend.
-             * @param response - XMLHttpRequest or XDomainRequest response
-             */
-            function _parseResponse(response: any): IBackendResponse {
-                try {
-                    if (response && response !== "") {
-                        const result = getJSON().parse(response);
-        
-                        if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
-                            result.itemsReceived - result.itemsAccepted === result.errors.length) {
-                            return result;
-                        }
-                    }
-                } catch (e) {
-                    _throwInternal(_self.diagLog(),
-                        eLoggingSeverity.CRITICAL,
-                        _eInternalMessageId.InvalidBackendResponse,
-                        "Cannot parse the response. " + getExceptionName(e),
-                        {
-                            response
-                        });
-                }
-        
                 return null;
+
             }
-        
+
             /**
              * Resend payload. Adds payload back to the send buffer and setup a send timer (with exponential backoff).
              * @param payload
              */
-            function _resendPayload(payload: string[], linearFactor: number = 1) {
+            function _resendPayload(payload: IInternalStorageItem[], linearFactor: number = 1) {
                 if (!payload || payload.length === 0) {
                     return;
                 }
@@ -955,6 +1165,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _consecutiveErrors++;
         
                 for (const item of payload) {
+                    item.cnt = item.cnt || 0; // to make sure we have cnt for each payload
+                    item.cnt ++; // when resend, increase cnt
                     buffer.enqueue(item);
                 }
         
@@ -976,9 +1188,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 } else {
                     const backOffSlot = (Math.pow(2, _consecutiveErrors) - 1) / 2;
                     // tslint:disable-next-line:insecure-random
-                    let backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                    let backOffDelay = mathFloor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
                     backOffDelay = linearFactor * backOffDelay;
-                    delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
+                    delayInSeconds = mathMax(mathMin(backOffDelay, 3600), SlotDelayInSeconds);
                 }
         
                 // TODO: Log the backoff time like the C# version does.
@@ -993,8 +1205,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              */
             function _setupTimer() {
                 if (!_timeoutHandle && !_paused) {
-                    const retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
-                    const timerValue = Math.max(_maxBatchInterval, retryInterval);
+                    const retryInterval = _retryAt ? mathMax(0, _retryAt - dateNow()) : 0;
+                    const timerValue = mathMax(_maxBatchInterval, retryInterval);
         
                     _timeoutHandle = scheduleTimeout(() => {
                         _timeoutHandle = null;
@@ -1014,71 +1226,20 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * @param statusCode
              */
             function _isRetriable(statusCode: number): boolean {
+                // retryCodes = [] means should not retry
+                if (!isNullOrUndefined(_retryCodes)) {
+                    return _retryCodes.length && _retryCodes.indexOf(statusCode) > -1;
+                }
+
                 return statusCode === 401 // Unauthorized
-                    || statusCode === 403 // Forbidden
+                    // Removing as private links can return a 403 which causes excessive retries and session storage usage
+                    // || statusCode === 403 // Forbidden
                     || statusCode === 408 // Timeout
                     || statusCode === 429 // Too many requests.
                     || statusCode === 500 // Internal server error.
                     || statusCode === 502 // Bad Gateway.
                     || statusCode === 503 // Service unavailable.
                     || statusCode === 504; // Gateway timeout.
-            }
-        
-            function _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
-                if (xhr) {
-                    return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + _getResponseText(xhr) || xhr.response || "";
-                }
-        
-                return message;
-            }
-        
-            /**
-             * Send XDomainRequest
-             * @param payload - {string} - The data payload to be sent.
-             * @param isAsync - {boolean} - Indicates if the request should be sent asynchronously
-             *
-             * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
-             * to maintain consistency with the xhrSender's contract
-             * Note: XDomainRequest does not support custom headers and we are not able to get
-             * appId from the backend for the correct correlation.
-             */
-            function _xdrSender(payload: string[], isAsync: boolean) {
-                const buffer = _self._buffer;
-                let _window = getWindow();
-                const xdr = new XDomainRequest();
-                // NOTE: xdr may send previous retry payload to new endpoint since we are not able to check response URL
-                xdr.onload = () => _self._xdrOnLoad(xdr, payload);
-                xdr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXdr(xdr), event);
-        
-                // XDomainRequest requires the same protocol as the hosting page.
-                // If the protocol doesn't match, we can't send the telemetry :(.
-                const hostingProtocol = _window && _window.location && _window.location.protocol || "";
-                if (_endpointUrl.lastIndexOf(hostingProtocol, 0) !== 0) {
-                    _throwInternal(_self.diagLog(),
-                        eLoggingSeverity.WARNING,
-                        _eInternalMessageId.TransmissionFailed, ". " +
-                        "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
-        
-                    buffer.clear();
-                    return;
-                }
-        
-                const endpointUrl = _endpointUrl.replace(/^(https?:)/, "");
-                xdr.open("POST", endpointUrl);
-        
-                // compose an array of payloads
-                const batch = buffer.batchPayloads(payload);
-                xdr.send(batch);
-        
-                buffer.markAsSent(payload);
-            }
-        
-            function _formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
-                if (xdr) {
-                    return "XDomainRequest,Response:" + _getResponseText(xdr) || "";
-                }
-        
-                return message;
             }
         
             // Using function lookups for backward compatibility as the getNotifyMgr() did not exist until after v2.5.6
@@ -1105,6 +1266,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
                 }
             }
+
+            
 
             /**
              * Validate UUID Format
@@ -1137,7 +1300,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _serializer = null;
                 _stamp_specific_redirects = 0;
                 _syncFetchPayload = 0;
-                _fallbackSender = null;
                 _syncUnloadSender = null;
                 _evtNamespace = null;
                 _endpointUrl = null;
@@ -1151,11 +1313,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _isRetryDisabled = false;
                 _sessionStorageUsed = null;
                 _namePrefix = UNDEFINED_VALUE;
+                _disableXhr = false;
+                _fetchKeepAlive = false;
+                _disableBeaconSplit = false;
+                _xhrSend = null;
+                _fallbackSend = null;
+                _sendPostMgr = null;
 
-                objDefineProp(_self, "_senderConfig", {
-                    enumerable: true,
-                    configurable: true,
-                    get: function() {
+                objDefine(_self, "_senderConfig", {
+                    g: function() {
                         return objExtend({}, defaultAppInsightsChannelConfig);
                     }
                 });
@@ -1182,10 +1348,21 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     }
 
     /**
-     * Flush the batched events immediately (not synchronously).
-     * Will not flush if the Sender has been paused.
+     * Flush to send data immediately; channel should default to sending data asynchronously. If executing asynchronously (the default) and
+     * you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
+     * @param async - send data asynchronously when true
+     * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
+     * If the caller doesn't return true the caller should assume that it may never be called.
+     * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
+     * @returns - If a callback is provided `true` to indicate that callback will be called after the flush is complete otherwise the caller
+     * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
+     * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
+     * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
+     * and async is true.
      */
-    public flush() {
+    public flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1207,45 +1384,63 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
     /**
      * xhr state changes
+     * @deprecated
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
+    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        // TODO: no-op
+        // add note to users, this will be removed
     }
 
     /**
-     * Immediately send buffered data
-     * @param async - {boolean} - Indicates if the events should be sent asynchronously
-     * @param forcedSender - {SenderFunction} - Indicates the forcedSender, undefined if not passed
+     * Trigger the immediate send of buffered data; If executing asynchronously (the default) this may (not required) return
+     * an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) that will resolve once the
+     * send is complete. The actual implementation of the `IPromise` will be a native Promise (if supported) or the default
+     * as supplied by [ts-async library](https://github.com/nevware21/ts-async)
+     * @param async - Indicates if the events should be sent asynchronously
+     * @param forcedSender - Indicates the forcedSender, undefined if not passed
+     * @returns - Nothing or optionally, if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved (or reject) once the send is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * should only be returned when async is true.
      */
-    public triggerSend(async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) {
+    public triggerSend(async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason): void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * error handler
+     * @Internal
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _onError(payload: string[], message: string, event?: ErrorEvent) {
+    public _onError(payload: string[] | IInternalStorageItem[], message: string, event?: ErrorEvent) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * partial success handler
+     * @Internal
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _onPartialSuccess(payload: string[], results: IBackendResponse) {
+    public _onPartialSuccess(payload: string[] | IInternalStorageItem[], results: IBackendResponse) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * success handler
+     * @Internal
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _onSuccess(payload: string[], countOfItemsInPayload: number) {
+    public _onSuccess(payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * xdr state changes
+     * @deprecated
+     * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _xdrOnLoad(xdr: IXDomainRequest, payload: string[]) {
+    public _xdrOnLoad(xdr: IXDomainRequest, payload: string[] | IInternalStorageItem[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1257,4 +1452,32 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     public addHeader(name: string, value: string) {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
+
+    /**
+     * Check if there are no active requests being sent.
+     * @returns True if idle, false otherwise.
+     */
+    public isCompletelyIdle(): boolean {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return false;
+    }
+    /**
+     * Get Offline Serializer support
+     * @returns internal Offline Serializer object
+     */
+    public getOfflineSupport(): IInternalOfflineSupport {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Get Offline listener
+     * @returns offlineListener
+     * @since 3.3.4
+     */
+    public getOfflineListener(): IOfflineListener {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
 }

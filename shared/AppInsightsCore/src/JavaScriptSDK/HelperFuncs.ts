@@ -2,9 +2,13 @@
 // Licensed under the MIT License.
 import { ObjAssign, ObjClass } from "@microsoft/applicationinsights-shims";
 import {
-    arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isObject, isPlainObject, isString,
-    isUndefined, objDeepFreeze, objDefineAccessors, objForEachKey, objHasOwn, strIndexOf
+    arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject,
+    isString, isUndefined, objDeepFreeze, objDefine, objForEachKey, objHasOwn, strIndexOf, strTrim
 } from "@nevware21/ts-utils";
+import { FeatureOptInMode } from "../JavaScriptSDK.Enums/FeatureOptInEnums";
+import { TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
 import { STR_EMPTY } from "./InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
@@ -161,8 +165,8 @@ function _createProxyFunction<S>(source: S | (() => S), funcName: (keyof S)) {
  *
  * Special ES3 Notes:
  * Updates (setting) of direct property values on the target or indirectly on the source object WILL NOT WORK PROPERLY, updates to the
- * properties of "referenced" object will work (target.context.newValue = 10 => will be reflected in the source.context as it's the
- * same object). ES3 Failures: assigning target.myProp = 3 -> Won't change source.myProp = 3, likewise the reverse would also fail.
+ * properties of "referenced" object will work (target.context.newValue = 10 =\> will be reflected in the source.context as it's the
+ * same object). ES3 Failures: assigning target.myProp = 3 -\> Won't change source.myProp = 3, likewise the reverse would also fail.
  * @param target - The target object to be assigned with the source properties and functions
  * @param source - The source object which will be assigned / called by setting / calling the targets proxies
  * @param chkSet - An optional callback to determine whether a specific property/function should be proxied
@@ -184,16 +188,14 @@ export function proxyAssign<T, S>(target: T, source: S, chkSet?: (name: string, 
                         delete (target as any)[field];
                     }
 
-                    if (!objDefineAccessors(target, field, () => {
-                        return source[field];
-                    }, (theValue) => {
-                        source[field] = theValue;
-                    })) {
-                        // Unable to create an accessor, so just assign the values as a fallback
-                        // -- this will (mostly) work for objects
-                        // -- but will fail for accessing primitives (if the source changes it) and all types of "setters" as the source won't be modified
-                        target[field as string] = value;
-                    }
+                    objDefine<any>(target, field, {
+                        g: () => {
+                            return source[field];
+                        },
+                        s: (theValue) => {
+                            source[field] = theValue;
+                        }
+                    });
                 }
             }
         }
@@ -349,3 +351,177 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
 }
 
 export const asString = asString21;
+
+export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T): boolean {
+    let rlt = false;
+    let ft = cfg && cfg.featureOptIn && cfg.featureOptIn[feature];
+    if (feature && ft) {
+        let mode = ft.mode;
+        // NOTE: None will be considered as true
+        rlt = (mode == FeatureOptInMode.enable) || (mode == FeatureOptInMode.none);
+    }
+    return rlt;
+}
+
+export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
+    try {
+        return xhr.responseText;
+    } catch (e) {
+        // Best effort, as XHR may throw while XDR wont so just ignore
+    }
+
+    return null;
+}
+
+export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
+    if (xdr) {
+        return "XDomainRequest,Response:" + getResponseText(xdr) || "";
+    }
+
+    return message;
+}
+
+export function formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
+    if (xhr) {
+        return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + getResponseText(xhr) || xhr.response || "";
+    }
+
+    return message;
+}
+
+export function prependTransports(theTransports: TransportType[], newTransports: TransportType | TransportType[]) {
+    if (newTransports) {
+        if (isNumber(newTransports)) {
+            theTransports = [newTransports as TransportType].concat(theTransports);
+        } else if (isArray(newTransports)) {
+            theTransports = newTransports.concat(theTransports);
+        }
+    }
+    return theTransports;
+}
+
+const strDisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
+const strWithCredentials: string = "withCredentials";
+const strTimeout: string = "timeout";
+
+/**
+ * Create and open an XMLHttpRequest object
+ * @param method - The request method
+ * @param urlString - The url
+ * @param withCredentials - Option flag indicating that credentials should be sent
+ * @param disabled - Optional flag indicating that the XHR object should be marked as disabled and not tracked (default is false)
+ * @param isSync - Optional flag indicating if the instance should be a synchronous request (defaults to false)
+ * @param timeout - Optional value identifying the timeout value that should be assigned to the XHR request
+ * @returns A new opened XHR request
+ */
+export function openXhr(method: string, urlString: string, withCredentials?: boolean, disabled: boolean = false, isSync: boolean = false, timeout?: number) {
+
+    function _wrapSetXhrProp<T>(xhr: XMLHttpRequest, prop: string, value: T) {
+        try {
+            xhr[prop] = value;
+        } catch (e) {
+            // - Wrapping as depending on the environment setting the property may fail (non-terminally)
+        }
+    }
+
+    let xhr = new XMLHttpRequest();
+
+    if (disabled) {
+        // Tag the instance so it's not tracked (trackDependency)
+        // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
+        // cause the request to fail and we no telemetry would be sent
+        _wrapSetXhrProp(xhr, strDisabledPropertyName, disabled);
+    }
+
+    if (withCredentials) {
+        // Some libraries require that the withCredentials flag is set "before" open and
+        // - Wrapping as IE 10 has started throwing when setting before open
+        _wrapSetXhrProp(xhr, strWithCredentials, withCredentials);
+    }
+
+    xhr.open(method, urlString, !isSync);
+
+    if (withCredentials) {
+        // withCredentials should be set AFTER open (https://xhr.spec.whatwg.org/#the-withcredentials-attribute)
+        // And older firefox instances from 11+ will throw for sync events (current versions don't) which happens during unload processing
+        _wrapSetXhrProp(xhr, strWithCredentials, withCredentials);
+    }
+
+    // Only set the timeout for asynchronous requests as
+    // "Timeout shouldn't be used for synchronous XMLHttpRequests requests used in a document environment or it will throw an InvalidAccessError exception.""
+    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/timeout
+    if (!isSync && timeout) {
+        _wrapSetXhrProp(xhr, strTimeout, timeout);
+    }
+
+    return xhr;
+}
+
+/**
+* Converts the XHR getAllResponseHeaders to a map containing the header key and value.
+* @internal
+*/
+// tslint:disable-next-line: align
+export function convertAllHeadersToMap(headersString: string): { [headerName: string]: string } {
+    let headers = {};
+    if (isString(headersString)) {
+        let headersArray = strTrim(headersString).split(/[\r\n]+/);
+        arrForEach(headersArray, (headerEntry) => {
+            if (headerEntry) {
+                let idx = headerEntry.indexOf(": ");
+                if (idx !== -1) {
+                    // The new spec has the headers returning all as lowercase -- but not all browsers do this yet
+                    let header = strTrim(headerEntry.substring(0, idx)).toLowerCase();
+                    let value = strTrim(headerEntry.substring(idx + 1));
+                    headers[header] = value;
+                } else {
+                    headers[strTrim(headerEntry)] = 1;
+                }
+            }
+        });
+    }
+
+    return headers;
+}
+
+/**
+* append the XHR headers.
+* @internal
+*/
+export function _appendHeader(theHeaders: any, xhr: XMLHttpRequest, name: string) {
+    if (!theHeaders[name] && xhr && xhr.getResponseHeader) {
+        let value = xhr.getResponseHeader(name);
+        if (value) {
+            theHeaders[name] = strTrim(value);
+        }
+    }
+
+    return theHeaders;
+}
+
+const STR_KILL_DURATION_HEADER = "kill-duration";
+const STR_KILL_DURATION_SECONDS_HEADER = "kill-duration-seconds";
+const STR_TIME_DELTA_HEADER = "time-delta-millis";
+/**
+* get the XHR getAllResponseHeaders.
+* @internal
+*/
+export function _getAllResponseHeaders(xhr: XMLHttpRequest, isOneDs?: boolean) {
+    let theHeaders = {};
+
+    if (!xhr.getAllResponseHeaders) {
+        // Firefox 2-63 doesn't have getAllResponseHeaders function but it does have getResponseHeader
+        // Only call these if getAllResponseHeaders doesn't exist, otherwise we can get invalid response errors
+        // as collector is not currently returning the correct header to allow JS to access these headers
+        if (!!isOneDs) {
+            theHeaders = _appendHeader(theHeaders, xhr, STR_TIME_DELTA_HEADER);
+            theHeaders = _appendHeader(theHeaders, xhr, STR_KILL_DURATION_HEADER);
+            theHeaders = _appendHeader(theHeaders, xhr, STR_KILL_DURATION_SECONDS_HEADER);
+        }
+    
+    } else {
+        theHeaders = convertAllHeadersToMap(xhr.getAllResponseHeaders());
+    }
+
+    return theHeaders;
+}

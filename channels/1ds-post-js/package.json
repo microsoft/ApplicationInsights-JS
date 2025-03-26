@@ -1,0 +1,64 @@
+{
+    "name": "@microsoft/1ds-post-js",
+    "version": "4.3.6",
+    "description": "Microsoft Application Insights JavaScript SDK - 1ds-post-channel-js",
+    "author": "Microsoft Application Insights Team",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
+    "license": "MIT",
+    "sideEffects": false,
+    "scripts": {
+        "clean": "git clean -xdf",
+        "build": "npm run build:esm && npm run build:browser && npm run dtsgen && npm run sri",
+        "build:esm": "grunt 1dsPostBuild",
+        "build:browser": "npx rollup -c rollup.config.js --bundleConfigAsCjs",
+        "rebuild": "npm run build",
+        "ai-min": "grunt 1dsPost-min",
+        "ai-restore": "grunt 1dsPost-restore",
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"1DS JS SDK Post Channel\" -oneDs",
+        "test": "grunt 1dsPostTest",
+        "mintest": "grunt adsPostMinTest",
+        "perftest": "",
+        "makePublicPackage": "node ../../tools/makePublic/makePublicPackage.js ./package.json && npm pack",
+        "publishPackage": "npm publish",
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
+        "npm-pack": "npm pack",
+        "api-docs": "typedoc"
+    },
+    "dependencies": {
+        "@microsoft/applicationinsights-shims": "3.0.1",
+        "@microsoft/dynamicproto-js": "^2.0.3",
+        "@microsoft/1ds-core-js": "4.3.6",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x"
+    },
+    "devDependencies": {
+        "@microsoft/ai-test-framework": "0.0.1",
+        "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.2",
+        "@microsoft/api-extractor": "^7.40.0",
+        "globby": "^11.0.0",
+        "grunt": "^1.5.3",
+        "sinon": "^7.3.1",
+        "@rollup/plugin-commonjs": "^24.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@rollup/plugin-replace": "^5.0.2",
+        "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-sourcemaps": "^0.6.3",
+        "typedoc": "^0.26.6",
+        "typescript": "^4.9.3",
+        "pako": "^2.0.3"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/1ds-post-js"
+    },
+    "main": "dist/es5/ms.post.js",
+    "module": "dist-es5/Index.js",
+    "types": "types/1ds-post-js.d.ts",
+    "keywords": [
+        "1DS",
+        "Js",
+        "SDK"
+    ]
+}

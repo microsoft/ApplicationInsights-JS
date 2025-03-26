@@ -1,11 +1,22 @@
 import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
-import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
+import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier } from '@microsoft/applicationinsights-common';
-import { AppInsightsCore, ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext } from "@microsoft/applicationinsights-core-js";
+import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence } from '@microsoft/applicationinsights-common';
+import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
+import { createAsyncResolvedPromise } from '@nevware21/ts-async';
+import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
+import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
+import { IStackFrame } from '@microsoft/applicationinsights-common/src/Interfaces/Contracts/IStackFrame';
 
+function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame,  index: number) {
+    Assert.equal(expectedFrame.assembly, actualFrame.assembly, index + ") Assembly is not as expected");
+    Assert.equal(expectedFrame.fileName, actualFrame.fileName, index + ") FileName is not as expected");
+    Assert.equal(expectedFrame.line, actualFrame.line, index + ") Line is not as expected");
+    Assert.equal(expectedFrame.method, actualFrame.method, index + ") Method is not as expected");
+    Assert.equal(expectedFrame.level, actualFrame.level, index + ") Level is not as expected");    
+}
 
 export class ApplicationInsightsTests extends AITestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -43,13 +54,15 @@ export class ApplicationInsightsTests extends AITestClass {
     private tagKeys = new ContextTagKeys();
     private _config;
     private _appId: string;
+    private _ctx: any;
+
 
     constructor(testName?: string) {
         super(testName || "ApplicationInsightsTests");
     }
     
     protected _getTestConfig(sessionPrefix: string) {
-        return {
+        let config: IConfiguration | IConfig = {
             connectionString: ApplicationInsightsTests._connectionString,
             disableAjaxTracking: false,
             disableFetchTracking: false,
@@ -61,8 +74,16 @@ export class ApplicationInsightsTests extends AITestClass {
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             samplingPercentage: 50,
-            convertUndefined: "test-value"
+            convertUndefined: "test-value",
+            disablePageUnloadEvents: [ "beforeunload" ],
+            extensionConfig: {
+                ["AppInsightsCfgSyncPlugin"]: {
+                    //cfgUrl: ""
+                }
+            }
         };
+
+        return config;
     }
 
     public testInitialize() {
@@ -70,6 +91,7 @@ export class ApplicationInsightsTests extends AITestClass {
             this.isFetchPolyfill = fetch["polyfill"];
             this.useFakeServer = false;
             this._config = this._getTestConfig(this._sessionPrefix);
+            this._ctx = {};
 
             const init = new ApplicationInsights({
                 config: this._config
@@ -79,6 +101,29 @@ export class ApplicationInsightsTests extends AITestClass {
             this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
                 Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
             });
+
+            // Validate that the before unload event was not added
+            let unloadPresent = false;
+            let visibilityChangePresent = false;
+            let beforeUnloadPresent = false;
+            let theEvents = __getRegisteredEvents(window);
+            arrForEach(theEvents, (theEvent) => {
+                if (theEvent.name.startsWith("beforeunload")) {
+                    beforeUnloadPresent = true;
+                }
+
+                if (theEvent.name.startsWith("unload")) {
+                    unloadPresent = true;
+                }
+
+                if (theEvent.name.startsWith("visibilitychange")) {
+                    visibilityChangePresent = true;
+                }
+            });
+
+            Assert.ok(!beforeUnloadPresent, "The beforeunload event should not be present");
+            Assert.ok(unloadPresent, "The unload event should be present");
+            Assert.ok(visibilityChangePresent, "The visibilitychange event should be present");
 
             // Setup Sinon stuff
             const sender: Sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
@@ -114,6 +159,7 @@ export class ApplicationInsightsTests extends AITestClass {
         this.addAsyncTests();
         this.addDependencyPluginTests();
         this.addPropertiesPluginTests();
+        this.addCDNOverrideTests();
     }
 
     public addGenericE2ETests(): void {
@@ -213,6 +259,458 @@ export class ApplicationInsightsTests extends AITestClass {
                 handler.rm();
             }
         });
+
+        this.testCaseAsync({
+            name: "Init: init with cs promise, when it is resolved and then change with cs string",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+                this._ctx.csPromise = csPromise;
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+                let csPromise = this._ctx.csPromise;
+                let config = this._ai.config;
+            
+                if (csPromise.state === "resolved" && activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+
+                    config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                    this.clock.tick(1);
+                    let status = core.activeStatus && core.activeStatus();
+                    // promise is not resolved, no new changes applied
+                    Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active test1");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set test1");
+                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set test1");
+                    return true;
+                }
+                return false;
+            }, "Wait for new string response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Init: init with cs promise and change with cs string at the same time",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+                this._ctx.csPromise = csPromise;
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                
+                config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+
+        this.testCaseAsync({
+            name: "Init: init with cs promise and offline channel",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                let offlineChannel = new OfflineChannel();
+                this._config.channels = [[offlineChannel]];
+                this._config.initTimeOut= 80000;
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+
+                
+                config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1"
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
+                    let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
+                    Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                    Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                    let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                    Assert.ok(urlConfig, "offline url config is initialized");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+
+        
+        this.testCaseAsync({
+            name: "Init: init with cs string, change with cs promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+                let config = this._ai.config;
+                let expectedIkey = ApplicationInsightsTests._instrumentationKey;
+                let expectedConnectionString = ApplicationInsightsTests._connectionString;
+                let expectedEndpointUrl = "https://dc.services.visualstudio.com/v2/track";
+                Assert.ok(config, "ApplicationInsights config exists");
+                Assert.equal(expectedConnectionString, config.connectionString, "connection string is set");
+                Assert.equal(expectedIkey, config.instrumentationKey, "ikey is set");
+                Assert.equal(expectedEndpointUrl, config.endpointUrl, "endpoint url is set from connection string");
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active");
+
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                config.connectionString = csPromise;
+                config.initTimeOut = 80000;
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                //Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "Init: init with cs null, ikey promise, endpoint promise",
+            stepDelay: 100,
+            useFakeTimers: true,
+            steps: [() => {
+
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let ikeyPromise = createAsyncResolvedPromise("testIkey");
+                let endpointPromise = createAsyncResolvedPromise("testUrl");
+                //let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                //this._config.connectionString = csPromise;
+                this._config.connectionString = null;
+                this._config.instrumentationKey = ikeyPromise;
+                this._config.endpointUrl = endpointPromise;
+                this._config.initTimeOut= 80000;
+
+
+
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                Assert.equal(config.connectionString,null, "connection string shoule be null");
+                
+                
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let core = this._ai.core
+                let activeStatus = core.activeStatus && core.activeStatus();
+            
+                if (activeStatus === ActiveStatus.ACTIVE) {
+                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                    Assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                    return true;
+                }
+                return false;
+            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+
+        this.testCase({
+            name: "CfgSync DynamicConfigTests: Prod CDN is Fetched and feature is turned on/off as expected",
+            useFakeTimers: true,
+            test: () => {
+                let fetchcalled = 0;
+                let overrideFetchFn = (url: string, oncomplete: any, isAutoSync?: boolean) => {
+                    fetchcalled ++;
+                    Assert.equal(url, CONFIG_ENDPOINT_URL, "fetch should be called with prod cdn");
+                };
+                let config = {
+                    instrumentationKey: "testIKey",
+                    extensionConfig:{
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            overrideFetchFn: overrideFetchFn
+                        }
+
+                    }
+                } as IConfiguration & IConfig;
+                let ai = new ApplicationInsights({config: config});
+                ai.loadAppInsights();
+          
+                ai.config.extensionConfig = ai.config.extensionConfig || {};
+                let extConfig = ai.config.extensionConfig["AppInsightsCfgSyncPlugin"];
+                Assert.equal(extConfig.cfgUrl, CONFIG_ENDPOINT_URL, "default cdn endpoint should be set");
+                Assert.equal(extConfig.syncMode, 2, "default mode should be set to receive");
+
+                let featureOptIn = config.featureOptIn || {};
+                Assert.equal(featureOptIn["iKeyUsage"].mode, FeatureOptInMode.enable, "ikey message should be turned on");
+               
+                Assert.equal(fetchcalled, 1, "fetch should be called once");
+                config.extensionConfig = config.extensionConfig || {};
+                let expectedTimeout = 2000000000;
+                config.extensionConfig["AppInsightsCfgSyncPlugin"].scheduleFetchTimeout = expectedTimeout;
+                this.clock.tick(1);
+
+                extConfig = ai.config.extensionConfig["AppInsightsCfgSyncPlugin"];
+                Assert.equal(extConfig.scheduleFetchTimeout, expectedTimeout, "timeout should be changes dynamically");
+                ai.unload(false);
+                if (ai && ai["dependencies"]) {
+                    ai["dependencies"].teardown();
+                }
+            }
+        });
+
+        this.testCase({
+            name: "Init Promise: Offline Support can be added and initialized with endpoint url",
+            useFakeTimers: true,
+            test: () => {
+                this.clock.tick(1);
+                // if fake timer is turned on, session data will return 0 and will throw sesson not renew error
+                let offlineChannel = new OfflineChannel();
+                let config = {
+                    instrumentationKey: "testIKey",
+                    endpointUrl: "testUrl",
+                    extensionConfig:{
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            cfgUrl: ""
+                        }
+
+                    },
+                    extensions:[offlineChannel]
+                } as IConfiguration & IConfig;
+                let ai = new ApplicationInsights({config: config});
+                ai.loadAppInsights();
+                this.clock.tick(1);
+
+                let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
+                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
+                Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                Assert.ok(urlConfig, "offline url config is initialized");
+
+                ai.unload(false);
+                if (ai && ai["dependencies"]) {
+                    ai["dependencies"].teardown();
+                }
+                //offlineChannel.teardown();
+                
+            }
+        });
+
+        this.testCase({
+            name: "Init Promise: Offline Support can be added and initialized with channels",
+            useFakeTimers: true,
+            test: () => {
+                this.clock.tick(1);
+                let offlineChannel = new OfflineChannel();
+                let config = {
+                    instrumentationKey: "testIKey",
+                    endpointUrl: "testUrl",
+                    extensionConfig:{
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            cfgUrl: ""
+                        }
+
+                    },
+                    channels:[[offlineChannel]]
+                } as IConfiguration & IConfig;
+                let ai = new ApplicationInsights({config: config});
+                ai.loadAppInsights();
+                this.clock.tick(1);
+
+                let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
+                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
+                Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                Assert.ok(urlConfig, "offline url config is initialized");
+             
+
+                ai.unload(false);
+                if (ai && ai["dependencies"]) {
+                    ai["dependencies"].teardown();
+                }
+                
+            }
+        });
+
+        this.testCase({
+            name: "CfgSync DynamicConfigTests: Offline Support can be added and initialized without endpoint url",
+            useFakeTimers: true,
+            test: () => {
+                this.clock.tick(1);
+                let offlineChannel = new OfflineChannel();
+                let config = {
+                    connectionString: "InstrumentationKey=testIKey",
+                    extensionConfig:{
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            cfgUrl: ""
+                        }
+
+                    },
+                    channels:[[offlineChannel]]
+                } as IConfiguration & IConfig;
+                let ai = new ApplicationInsights({config: config});
+                ai.loadAppInsights();
+                this.clock.tick(1);
+
+                let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
+                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
+                Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+
+                this.clock.tick(1);
+                Assert.ok(urlConfig, "offline url config is initialized");
+
+                ai.unload(false);
+                if (ai && ai["dependencies"]) {
+                    ai["dependencies"].teardown();
+                }
+            }
+        });
+        
+    }
+
+    public addCDNOverrideTests(): void {
+        this.testCase({
+            name: 'CDNOverrideTests: customer could overwrite the url endpoint',
+            useFakeTimers: true,
+            test: () => {
+                let ingestionendpoint = "https://dc.services.visualstudio.com";
+                this._ai.config.connectionString = "InstrumentationKey=xxx;IngestionEndpoint=" + ingestionendpoint + ";LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/"
+                this.clock.tick(100);
+                Assert.deepEqual(this._ai.config.endpointUrl, ingestionendpoint + "/v2/track", "endpoint url is set from connection string");
+                this._ai.config.userOverrideEndpointUrl = "https://custom.endpoint";
+                this.clock.tick(100);
+                Assert.deepEqual(this._ai.config.endpointUrl, this._ai.config.userOverrideEndpointUrl, "endpoint url is override by userOverrideEndpointUrl");
+            }
+        });
     }
 
     public addAnalyticsApiTests(): void {
@@ -228,6 +726,52 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public addAsyncTests(): void {
+        this.testCaseAsync({
+            name: "E2E.GenericTests: Send events with offline support",
+            stepDelay: 1,
+            steps: [() => {
+                let offlineChannel = new OfflineChannel();
+                this._ai.addPlugin(offlineChannel);
+                this._ctx.offlineChannel = offlineChannel;
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                let offlineChannel = this._ctx.offlineChannel;
+                if (offlineChannel && offlineChannel.isInitialized()) {
+                    let urlConfig = offlineChannel["_getDbgPlgTargets"]()[0];
+                    Assert.ok(urlConfig, "offline url config is initialized");
+
+                    let offlineListener = offlineChannel.getOfflineListener() as any;
+                    Assert.ok(offlineListener, "offlineListener should be initialized");
+
+                    // online
+                    offlineListener.setOnlineState(1);
+                    let inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
+                    Assert.ok(!inMemoTimer, "offline in memo timer should be null");
+                    this._ai.trackEvent({ name: "online event", properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
+
+                    // set to offline status right way
+                    offlineListener.setOnlineState(2);
+                    this._ai.trackEvent({ name: "offline event", properties: { "prop2": "value2" }, measurements: { "measurement2": 200 } });
+                    inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
+                    Assert.ok(inMemoTimer, "in memo timer should not be null");
+                    let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1][EventPersistence.Normal];
+                    Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event");
+
+                    return true
+                }
+                return false
+            }, "Wait for init" + new Date().toISOString(), 60, 1000) as any).concat(this.asserts(1)).concat(() => {
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok( payload && payload.iKey);
+                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
+                    Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                    Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                }
+            })
+        });
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackEvent sends to backend',
             stepDelay: 1,
@@ -441,7 +985,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'E2E.GenericTests: trackException with CustomError sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackException({ exception: new CustomTestError("Test Custom Error!") });
+                this._ai.trackException({ id: "testID", exception: new CustomTestError("Test Custom Error!") });
             }].concat(this.asserts(1)).concat(() => {
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 if (payloadStr.length > 0) {
@@ -459,11 +1003,37 @@ export class ApplicationInsightsTests extends AITestClass {
                             Assert.ok(ex.stack.length > 0, "Has stack");
                             Assert.ok(ex.parsedStack, "Stack was parsed");
                             Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.equal(baseData.properties.id, "testID", "Make sure the error message id is present [" + baseData.properties + "]");
                         }
                     }
                 }
             })
         });
+
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: trackException will keep id from the original exception',
+            stepDelay: 1,
+            steps: [() => {
+                this._ai.trackException({id:"testId", error: new Error("test local exception"), severityLevel: 3});
+            }].concat(this.asserts(1)).concat(() => {
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            console.log(JSON.stringify(baseData.properties));
+                            Assert.equal(baseData.properties.id, "testId", "Make sure the error message id is present [" + ex.properties + "]");
+                        }
+                    }
+                }
+            })
+        });
+
 
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackException with CustomError sends to backend with custom properties',
@@ -495,6 +1065,193 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
             })
         });
+
+        this.testCaseAsync({
+            name: "E2E.GenericTests: trackException with multiple stack frame formats",
+            stepDelay: 1,
+            steps: [() => {
+                let errObj = {
+                    name: "E2E.GenericTests",
+                    reason:{
+                        message: "Test_Error_Throwing_Inside_UseCallback",
+                        stack: "Error: Test_Error_Throwing_Inside_UseCallback\n" +
+                            "at http://localhost:3000/static/js/main.206f4846.js:2:296748\n" +                      // Anonymous function with no function name attribution (firefox/ios)
+                            "at Object.Re (http://localhost:3000/static/js/main.206f4846.js:2:16814)\n" +           // With class.function attribution
+                            "at je (http://localhost:3000/static/js/main.206f4846.js:2:16968)\n" +                  // With function name attribution
+                            "at Object.<anonymous> (http://localhost:3000/static/js/main.206f4846.js:2:42819)\n" +  // With Object.<anonymous> attribution
+                            "at Object.<anonymous> (../localfile.js:2:1234)\n" +                                    // With Object.<anonymous> attribution and local file                  
+                            "at (anonymous) @ VM60:1\n" +                                                           // With (anonymous) attribution            
+                            "at [native code]\n" +                                                                  // With [native code] attribution
+                            "at (at eval at <anonymous> (http://localhost:3000/static/js/main.206f4846.js:2:296748), <anonymous>:1:1)\n" + // With eval attribution
+                            "at Object.eval (http://localhost:3000/static/js/main.206f4846.js:2:296748)\n" +        // With eval attribution
+                            "at eval (http://localhost:3000/static/js/main.206f4846.js:2:296748)\n" +               // With eval attribution
+                            "at eval (webpack-internal:///./src/App.tsx:1:1)\n" +                                   // With eval attribution
+                            "at [arguments not available])@file://localhost/stacktrace.js:21\n" +                   // With arguments not available attribution
+                            "at file://C:/Temp/stacktrace.js:27:1\n" +                                              // With file://localhost attribution
+                            " Line 21 of linked script file://localhost/C:/Temp/stacktrace.js\n" +                  // With Line 21 of linked script attribution
+                            " Line 11 of inline#1 script in http://localhost:3000/static/js/main.206f4846.js:2:296748\n" + // With Line 11 of inline#1 script attribution
+                            " Line 68 of inline#2 script in file://localhost/teststack.html\n" +                    // With Line 68 of inline#2 script attribution
+                            "at Function.Module._load (module.js:407:3)\n" +
+                            " at Function.Module.runMain (module.js:575:10)\n"+ 
+                            " at startup (node.js:159:18)\n" +
+                            "at Global code (http://example.com/stacktrace.js:11:1)\n" +
+                            "at Object.Module._extensions..js (module.js:550:10)\n" +
+                            "   at c@http://example.com/stacktrace.js:9:3\n" +
+                            "   at b@http://example.com/stacktrace.js:6:3\n" +
+                            "   at a@http://example.com/stacktrace.js:3:3\n" +
+                            "http://localhost:3000/static/js/main.206f4846.js:2:296748\n" +                      // Anonymous function with no function name attribution (firefox/ios)
+                            "   c@http://example.com/stacktrace.js:9:3\n" +
+                            "   b@http://example.com/stacktrace.js:6:3\n" +
+                            "   a@http://example.com/stacktrace.js:3:3\n" +
+                            "  at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)"
+                    }
+                };
+
+                let exception = Exception.CreateAutoException("Test_Error_Throwing_Inside_UseCallback",
+                    "url",
+                    9,
+                    0,
+                    errObj
+                );
+                this._ai.trackException({ exception: exception }, { custom: "custom value" });
+            }].concat(this.asserts(1)).concat(() => {
+
+                const expectedParsedStack: IStackFrame[] = [
+                    { level: 0, method: "<no_method>", assembly: "at http://localhost:3000/static/js/main.206f4846.js:2:296748", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 1, method: "Object.Re", assembly: "at Object.Re (http://localhost:3000/static/js/main.206f4846.js:2:16814)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 2, method: "je", assembly: "at je (http://localhost:3000/static/js/main.206f4846.js:2:16968)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 3, method: "Object.<anonymous>", assembly: "at Object.<anonymous> (http://localhost:3000/static/js/main.206f4846.js:2:42819)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 4, method: "Object.<anonymous>", assembly: "at Object.<anonymous> (../localfile.js:2:1234)", fileName: "../localfile.js", line: 2 },
+                    { level: 5, method: "<anonymous>", assembly: "at (anonymous) @ VM60:1", fileName: "VM60", line: 1 },
+                    { level: 6, method: "<no_method>", assembly: "at [native code]", fileName: "", line: 0 },
+                    { level: 7, method: "<no_method>", assembly: "at (at eval at <anonymous> (http://localhost:3000/static/js/main.206f4846.js:2:296748), <anonymous>:1:1)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 8, method: "Object.eval", assembly: "at Object.eval (http://localhost:3000/static/js/main.206f4846.js:2:296748)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 9, method: "eval", assembly: "at eval (http://localhost:3000/static/js/main.206f4846.js:2:296748)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 10, method: "eval", assembly: "at eval (webpack-internal:///./src/App.tsx:1:1)", fileName: "webpack-internal:///./src/App.tsx", line: 1 },
+                    { level: 11, method: "<no_method>", assembly: "at [arguments not available])@file://localhost/stacktrace.js:21", fileName: "file://localhost/stacktrace.js", line: 21 },
+                    { level: 12, method: "<no_method>", assembly: "at file://C:/Temp/stacktrace.js:27:1", fileName: "file://C:/Temp/stacktrace.js", line: 27 },
+                    { level: 13, method: "<no_method>", assembly: "Line 21 of linked script file://localhost/C:/Temp/stacktrace.js", fileName: "file://localhost/C:/Temp/stacktrace.js", line: 0 },
+                    { level: 14, method: "<no_method>", assembly: "Line 11 of inline#1 script in http://localhost:3000/static/js/main.206f4846.js:2:296748", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 15, method: "<no_method>", assembly: "Line 68 of inline#2 script in file://localhost/teststack.html", fileName: "file://localhost/teststack.html", line: 0 },
+                    { level: 16, method: "Function.Module._load", assembly: "at Function.Module._load (module.js:407:3)", fileName: "module.js", line: 407 },
+                    { level: 17, method: "Function.Module.runMain", assembly: "at Function.Module.runMain (module.js:575:10)", fileName: "module.js", line: 575 },
+                    { level: 18, method: "startup", assembly: "at startup (node.js:159:18)", fileName: "node.js", line: 159 },
+                    { level: 19, method: "<no_method>", assembly: "at Global code (http://example.com/stacktrace.js:11:1)", fileName: "http://example.com/stacktrace.js", line: 11 },
+                    { level: 20, method: "Object.Module._extensions..js", assembly: "at Object.Module._extensions..js (module.js:550:10)", fileName: "module.js", line: 550 },
+                    { level: 21, method: "c", assembly: "at c@http://example.com/stacktrace.js:9:3", fileName: "http://example.com/stacktrace.js", line: 9 },
+                    { level: 22, method: "b", assembly: "at b@http://example.com/stacktrace.js:6:3", fileName: "http://example.com/stacktrace.js", line: 6 },
+                    { level: 23, method: "a", assembly: "at a@http://example.com/stacktrace.js:3:3", fileName: "http://example.com/stacktrace.js", line: 3 },
+                    { level: 24, method: "<no_method>", assembly: "http://localhost:3000/static/js/main.206f4846.js:2:296748", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 25, method: "c", assembly: "c@http://example.com/stacktrace.js:9:3", fileName: "http://example.com/stacktrace.js", line: 9 },
+                    { level: 26, method: "b", assembly: "b@http://example.com/stacktrace.js:6:3", fileName: "http://example.com/stacktrace.js", line: 6 },
+                    { level: 27, method: "a", assembly: "a@http://example.com/stacktrace.js:3:3", fileName: "http://example.com/stacktrace.js", line: 3 },
+                    { level: 28, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)", fileName: "http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 53058 }
+                ];
+
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            Assert.ok(ex.message.indexOf("Test_Error_Throwing_Inside_UseCallback") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.equal(ex.parsedStack.length, 29);
+                            for (let lp = 0; lp < ex.parsedStack.length; lp++) {
+                                _checkExpectedFrame(expectedParsedStack[lp], ex.parsedStack[lp], lp);
+                            }                            
+
+                            Assert.ok(baseData.properties, "Has BaseData properties");
+                            Assert.equal(baseData.properties.custom, "custom value");
+
+                        }
+                    }
+                }
+            })
+        })
+
+        this.testCaseAsync({
+            name: "E2E.GenericTests: trackException with multiple line message",
+            stepDelay: 1,
+            steps: [() => {
+                let message = "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n" +
+                            "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
+                            "2. You might be breaking the Rules of Hooks\n" +
+                            "3. You might have more than one copy of React in the same app\n" + 
+                            "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.";
+                let errObj = {
+                    typeName: "Error",
+                    reason:{
+                        message: "Error: " + message,
+                        stack: "Error: " + message + "\n" +
+                            "    at Object.throwInvalidHookError (https://localhost:44365/static/js/bundle.js:201419:13)\n" +
+                            "    at useContext (https://localhost:44365/static/js/bundle.js:222943:25)\n" +
+                            "    at useTenantContext (https://localhost:44365/static/js/bundle.js:5430:68)\n" +
+                            "    at https://localhost:44365/static/js/bundle.js:4337:72\n" +
+                            "    at _ZoneDelegate.invoke (https://localhost:44365/static/js/bundle.js:227675:158)\n" +
+                            "    at ZoneImpl.run (https://localhost:44365/static/js/bundle.js:227446:35)\n" +
+                            "    at https://localhost:44365/static/js/bundle.js:229764:30\n" +
+                            "    at _ZoneDelegate.invokeTask (https://localhost:44365/static/js/bundle.js:227700:171)\n" +
+                            "    at ZoneImpl.runTask (https://localhost:44365/static/js/bundle.js:227499:37)\n" +
+                            "    at ZoneImpl.patchRunTask (https://localhost:44365/static/js/bundle.js:144112:27)"
+                    }
+                };
+
+                let exception = Exception.CreateAutoException(message,
+                    "url",
+                    9,
+                    0,
+                    errObj
+                );
+                this._ai.trackException({ exception: exception }, { custom: "custom value" });
+            }].concat(this.asserts(1)).concat(() => {
+
+                const expectedParsedStack: IStackFrame[] = [
+                    { level: 0, method: "Object.throwInvalidHookError", assembly: "at Object.throwInvalidHookError (https://localhost:44365/static/js/bundle.js:201419:13)", fileName: "https://localhost:44365/static/js/bundle.js", line: 201419 },
+                    { level: 1, method: "useContext", assembly: "at useContext (https://localhost:44365/static/js/bundle.js:222943:25)", fileName: "https://localhost:44365/static/js/bundle.js", line: 222943 },
+                    { level: 2, method: "useTenantContext", assembly: "at useTenantContext (https://localhost:44365/static/js/bundle.js:5430:68)", fileName: "https://localhost:44365/static/js/bundle.js", line: 5430 },
+                    { level: 3, method: "<no_method>", assembly: "at https://localhost:44365/static/js/bundle.js:4337:72", fileName: "https://localhost:44365/static/js/bundle.js", line: 4337 },
+                    { level: 4, method: "_ZoneDelegate.invoke", assembly: "at _ZoneDelegate.invoke (https://localhost:44365/static/js/bundle.js:227675:158)", fileName: "https://localhost:44365/static/js/bundle.js", line: 227675 },
+                    { level: 5, method: "ZoneImpl.run", assembly: "at ZoneImpl.run (https://localhost:44365/static/js/bundle.js:227446:35)", fileName: "https://localhost:44365/static/js/bundle.js", line: 227446 },
+                    { level: 6, method: "<no_method>", assembly: "at https://localhost:44365/static/js/bundle.js:229764:30", fileName: "https://localhost:44365/static/js/bundle.js", line: 229764 },
+                    { level: 7, method: "_ZoneDelegate.invokeTask", assembly: "at _ZoneDelegate.invokeTask (https://localhost:44365/static/js/bundle.js:227700:171)", fileName: "https://localhost:44365/static/js/bundle.js", line: 227700 },
+                    { level: 8, method: "ZoneImpl.runTask", assembly: "at ZoneImpl.runTask (https://localhost:44365/static/js/bundle.js:227499:37)", fileName: "https://localhost:44365/static/js/bundle.js", line: 227499 },
+                    { level: 9, method: "ZoneImpl.patchRunTask", assembly: "at ZoneImpl.patchRunTask (https://localhost:44365/static/js/bundle.js:144112:27)", fileName: "https://localhost:44365/static/js/bundle.js", line: 144112 }
+                ];
+
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            Assert.ok(ex.message.indexOf("Invalid hook call") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.equal(ex.parsedStack.length, 10);
+                            for (let lp = 0; lp < ex.parsedStack.length; lp++) {
+                                _checkExpectedFrame(expectedParsedStack[lp], ex.parsedStack[lp], lp);
+                            }                            
+
+                            Assert.ok(baseData.properties, "Has BaseData properties");
+                            Assert.equal(baseData.properties.custom, "custom value");
+
+                        }
+                    }
+                }
+            })
+        })
 
         this.testCaseAsync({
             name: "TelemetryContext: track metric",
@@ -694,6 +1451,8 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCaseAsync({
             name: "TelemetryContext: auto collection of ajax requests",
             stepDelay: 1,
+            useFakeServer: true,
+            fakeServerAutoRespond: true,
             steps: [
                 () => {
                     const xhr = new XMLHttpRequest();
@@ -708,6 +1467,8 @@ export class ApplicationInsightsTests extends AITestClass {
             this.testCaseAsync({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
                 stepDelay: 5000,
+                useFakeFetch: true,
+                fakeFetchAutoRespond: true,
                 steps: [
                     () => {
                         fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
@@ -721,8 +1482,7 @@ export class ApplicationInsightsTests extends AITestClass {
                         fetch('https://httpbin.org/status/200');
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
-                ]
-                    .concat(this.asserts(3, false, false))
+                ].concat(this.asserts(3, false, false))
                     .concat(() => {
                         let args = [];
                         this.trackSpy.args.forEach(call => {

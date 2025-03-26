@@ -67,6 +67,7 @@ function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem
     let extOs = itmExt.os;
     if (extOs) {
         _setValueIf(envTags, CtxTagKeys.deviceOS, extOs.name);
+        _setValueIf(envTags, CtxTagKeys.deviceOSVersion, extOs.osVer);
     }
 
     // No support for mapping Trace.traceState to 2.0 as it is currently empty
@@ -113,7 +114,7 @@ function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem
     let theTags = { ...envTags, ...tgs };
     if(!theTags[CtxTagKeys.internalSdkVersion]) {
         // Append a version in case it is not already set
-        theTags[CtxTagKeys.internalSdkVersion] = `javascript:${EnvelopeCreator.Version}`;
+        theTags[CtxTagKeys.internalSdkVersion] = dataSanitizeString(logger, `javascript:${EnvelopeCreator.Version}`, 64);
     }
     
     env.tags = optimizeObject(theTags);
@@ -147,6 +148,8 @@ function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, tel
 
     _setValueIf(envelope, "sampleRate", telemetryItem[SampleRate]);
     if ((telemetryItem[strBaseData] || {}).startTime) {
+        // Starting from Version 3.0.3, the time property will be assigned by the startTime value,
+        // which records the loadEvent time for the pageView event.
         envelope.time = toISOString(telemetryItem[strBaseData].startTime);
     }
     envelope.iKey = telemetryItem.iKey;

@@ -5,9 +5,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ master, beta, Release2.7 ]
+    branches: [ main, master, beta, Release2.7, release-3.0 ]
   pull_request:
-    branches: [ master, beta, Release2.7 ]
+    branches: [ main, master, beta, Release2.7, release-3.0 ]
 
 jobs:
   build:
@@ -16,19 +16,21 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [ 16, 18, 20 ]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Update rush shrinkwrap dependencies (for different node versions)
+      run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
     - run: node common/scripts/install-run-rush.js check
-    - run: node common/scripts/install-run-rush.js install
+    - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
       timeout-minutes: 20
     - run: npm run test --verbose

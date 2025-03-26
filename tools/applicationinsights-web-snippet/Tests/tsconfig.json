@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "inlineSources": true,
+        "noImplicitAny": false,
+        "module": "amd",
+        "moduleResolution": "node",
+        "target": "es5",
+        "alwaysStrict": true,
+        "declaration": true,
+        "importHelpers": false,
+        "noEmitHelpers": false,
+        "skipLibCheck": true,
+        "allowJs": true,
+    },
+    "files": [],
+    "exclude": [
+        "**/*.d.ts"
+    ]
+}

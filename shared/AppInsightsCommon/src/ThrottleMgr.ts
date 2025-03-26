@@ -1,11 +1,11 @@
 import {
-    IAppInsightsCore, IDiagnosticLogger, IUnloadHookContainer, _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf,
-    createDynamicConfig, createUnloadHookContainer, eLoggingSeverity, isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue,
-    safeGetLogger, strTrim
+    IAppInsightsCore, IConfiguration, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrIndexOf, eLoggingSeverity,
+    isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue, safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { IThrottleMsgKey } from "./Enums";
+import { arrForEach, mathFloor, mathMin, objForEachKey } from "@nevware21/ts-utils";
 import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
+import { IConfig } from "./applicationinsights-common";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
 
@@ -16,25 +16,25 @@ interface SendMsgParameter {
 }
 
 export class ThrottleMgr {
-    public canThrottle: () => boolean;
-    public sendMessage: (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity) => IThrottleResult | null;
+    public canThrottle: (msgId: _eInternalMessageId | number) => boolean;
+    public sendMessage: (msgId: _eInternalMessageId, message: string, severity?: eLoggingSeverity) => IThrottleResult | null;
     public getConfig: () => IThrottleMgrConfig;
-    public isTriggered: () => boolean; // this function is to get previous triggered status
+    public isTriggered: (msgId: _eInternalMessageId | number) => boolean; // this function is to get previous triggered status
     public isReady: () => boolean
-    public onReadyState: (isReady?: boolean) => boolean;
-    public flush: () => boolean;
+    public onReadyState: (isReady?: boolean, flushAll?: boolean) => boolean;
+    public flush: (msgId: _eInternalMessageId | number) => boolean;
+    public flushAll: () => boolean;
     public config: IThrottleMgrConfig;
 
-    constructor(config?: IThrottleMgrConfig, core?: IAppInsightsCore, namePrefix?: string, unloadHookContainer?: IUnloadHookContainer) {
+    constructor(core: IAppInsightsCore, namePrefix?: string) {
         let _self = this;
         let _canUseLocalStorage: boolean;
         let _logger: IDiagnosticLogger | null | undefined;
-        let _config: IThrottleMgrConfig;
-        let _localStorageName: string | null;
-        let _localStorageObj: IThrottleLocalStorageObj | null | undefined;
-        let _isTriggered: boolean; //_isTriggered is to make sure that we only trigger throttle once a day
+        let _config: {[msgKey: number]: IThrottleMgrConfig};
+        let _localStorageObj: {[msgKey: number]: IThrottleLocalStorageObj | null | undefined};
+        let _isTriggered: {[msgKey: number]: boolean}; //_isTriggered is to make sure that we only trigger throttle once a day
         let _namePrefix: string;
-        let _queue: Array<SendMsgParameter>;
+        let _queue: {[msgKey: number]: Array<SendMsgParameter>};
         let _isReady: boolean = false;
         let _isSpecificDaysGiven: boolean = false;
 
@@ -55,8 +55,10 @@ export class ThrottleMgr {
          * because we only allow triggering sendMessage() once a day.
          * @returns if the current date is the valid date to send message
          */
-        _self.canThrottle = (): boolean => {
-            return _canThrottle(_config, _canUseLocalStorage, _localStorageObj);
+        _self.canThrottle = (msgId: _eInternalMessageId | number ): boolean => {
+            let localObj = _getLocalStorageObjByKey(msgId);
+            let cfg = _getCfgByKey(msgId);
+            return _canThrottle(cfg, _canUseLocalStorage, localObj);
         }
 
         /**
@@ -64,8 +66,8 @@ export class ThrottleMgr {
          * if canThrottle returns false, isTriggered will return false
          * @returns if throttle is triggered on current day(UTC)
          */
-        _self.isTriggered = (): boolean => {
-            return _isTriggered;
+        _self.isTriggered = (msgId: _eInternalMessageId | number): boolean => {
+            return _isTrigger(msgId);
         }
 
         /**
@@ -79,14 +81,15 @@ export class ThrottleMgr {
         }
 
         /**
-         * Flush all message in queue with isReady state set to true.
+         * Flush all message with given message key in queue with isReady state set to true.
          * @returns if message queue is flushed
          */
-        _self.flush = (): boolean => {
+        _self.flush = (msgId: _eInternalMessageId | number): boolean => {
             try {
-                if (_isReady && _queue.length > 0) {
-                    let items = _queue.slice(0);
-                    _queue = [];
+                let queue = _getQueueByKey(msgId);
+                if (queue && queue.length > 0) {
+                    let items = queue.slice(0);
+                    _queue[msgId] = []
                     arrForEach(items, (item: SendMsgParameter) => {
                         _flushMessage(item.msgID, item.message, item.severity, false);
                     });
@@ -99,42 +102,71 @@ export class ThrottleMgr {
         }
 
         /**
-         * Set isReady State
-         * if isReady set to true, message queue will be flushed automatically.
-         * @param isReady isReady State
+         * Flush all message in queue with isReady state set to true.
          * @returns if message queue is flushed
          */
-        _self.onReadyState = (isReady?: boolean): boolean => {
-            _isReady  = isNullOrUndefined(isReady)? true : isReady;
-            return _self.flush();
-        }
-       
-        _self.sendMessage = (msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity): IThrottleResult | null => {
-            return _flushMessage(msgID, message, severity, true);
-    
+        _self.flushAll = (): boolean => {
+            try {
+                if (_queue) {
+                    let result = true;
+                    objForEachKey(_queue, (key) => {
+                        let isFlushed = _self.flush(parseInt(key));
+                        result = result && isFlushed;
+                    });
+                    return result;
+                }
+               
+            } catch(err) {
+                // eslint-disable-next-line no-empty
+            }
+            return false;
         }
 
-        function _flushMessage(msgID: _eInternalMessageId, message: string, severity?: eLoggingSeverity, saveUnsentMsg?: boolean) {
+        /**
+         * Set isReady State
+         * if isReady set to true, message queue will be flushed automatically.
+         * @param isReady - isReady State
+         * @pa
+         * @returns if message queue is flushed
+         */
+        _self.onReadyState = (isReady?: boolean, flushAll: boolean = true): boolean => {
+            _isReady  = isNullOrUndefined(isReady)? true : isReady;
+            if (_isReady && flushAll) {
+                return _self.flushAll();
+            }
+            return null;
+        }
+       
+        _self.sendMessage = (msgID: _eInternalMessageId | number, message: string, severity?: eLoggingSeverity): IThrottleResult | null => {
+            return _flushMessage(msgID, message, severity, true);
+
+        }
+
+        function _flushMessage(msgID: _eInternalMessageId | number, message: string, severity?: eLoggingSeverity, saveUnsentMsg?: boolean) {
             if (_isReady) {
-                let isSampledIn = _canSampledIn();
+                let isSampledIn = _canSampledIn(msgID);
                 if (!isSampledIn) {
                     return;
                 }
-                let canThrottle = _canThrottle(_config, _canUseLocalStorage, _localStorageObj);
+                let cfg = _getCfgByKey(msgID);
+                let localStorageObj = _getLocalStorageObjByKey(msgID);
+                let canThrottle = _canThrottle(cfg, _canUseLocalStorage, localStorageObj);
                 let throttled = false;
                 let number = 0;
+                let isTriggered = _isTrigger(msgID);
                 try {
-                    if (canThrottle && !_isTriggered) {
-                        number =  Math.min(_config.limit.maxSendNumber, _localStorageObj.count + 1);
-                        _localStorageObj.count = 0;
+                    if (canThrottle && !isTriggered) {
+                        number = mathMin(cfg.limit.maxSendNumber, localStorageObj.count + 1);
+                        localStorageObj.count = 0;
                         throttled = true;
-                        _isTriggered = true;
-                        _localStorageObj.preTriggerDate = new Date();
+                        _isTriggered[msgID] = true;
+                        localStorageObj.preTriggerDate = new Date();
                     } else {
-                        _isTriggered = canThrottle;
-                        _localStorageObj.count += 1;
+                        _isTriggered[msgID] = canThrottle;
+                        localStorageObj.count += 1;
                     }
-                    _resetLocalStorage(_logger, _localStorageName, _localStorageObj);
+                    let localStorageName = _getLocalStorageName(msgID);
+                    _resetLocalStorage(_logger, localStorageName, localStorageObj);
                     for (let i = 0; i < number; i++) {
                         _sendMessage(msgID, _logger, message, severity);
                     }
@@ -147,7 +179,8 @@ export class ThrottleMgr {
                 } as IThrottleResult;
             } else {
                 if (!!saveUnsentMsg) {
-                    _queue.push({
+                    let queue = _getQueueByKey(msgID);
+                    queue.push({
                         msgID: msgID,
                         message: message,
                         severity: severity
@@ -159,42 +192,48 @@ export class ThrottleMgr {
         
         function _initConfig() {
             _logger = safeGetLogger(core);
-            _isTriggered = false;
-            _queue = [];
+            _isTriggered = {};
+            _localStorageObj = {};
+            _queue = {};
+            _config = {};
+            _setCfgByKey(_eInternalMessageId.DefaultThrottleMsgKey);
             _namePrefix = isNotNullOrUndefined(namePrefix)? namePrefix : "";
-            unloadHookContainer = unloadHookContainer || createUnloadHookContainer();
-            // Make sure the root config is dynamic as it may be the global config
-            config = createDynamicConfig(config as any || {}, null, _logger).cfg;
 
-            let unloadHook = onConfigChange((config), () => {
+            core.addUnloadHook(onConfigChange<IConfig & IConfiguration>(core.config, (details) => {
+                let coreConfig = details.cfg;
                 _canUseLocalStorage = utlCanUseLocalStorage();
                 
-                let configMgr = config || {};
-                _config = {} as any;
-                _config.disabled = !!configMgr.disabled;
+                let configMgr = coreConfig.throttleMgrCfg || {};
+                objForEachKey(configMgr, (key, cfg) => {
+                    _setCfgByKey(parseInt(key), cfg)
+                });
+        
+            }));
+        }
 
-                _config.msgKey = configMgr.msgKey || IThrottleMsgKey.default;
-    
-                let configInterval = configMgr.interval || {};
+        function _getCfgByKey(msgID: _eInternalMessageId | number) {
+            return _config[msgID] || _config[_eInternalMessageId.DefaultThrottleMsgKey];
+        }
+
+        function _setCfgByKey(msgID: _eInternalMessageId | number, config?: IThrottleMgrConfig) {
+            try {
+                let cfg = config || {};
+                let curCfg = {} as IThrottleMgrConfig;
+                curCfg.disabled = !!cfg.disabled;
+                let configInterval = cfg.interval || {};
                 _isSpecificDaysGiven = configInterval?.daysOfMonth && configInterval?.daysOfMonth.length > 0;
-                _config.interval = _getIntervalConfig(configInterval);
-    
+                curCfg.interval = _getIntervalConfig(configInterval);
                 let limit = {
-                    samplingRate: configMgr.limit?.samplingRate || 100,
+                    samplingRate: cfg.limit?.samplingRate || 100,
                     // dafault: every time sent only 1 event
-                    maxSendNumber: configMgr.limit?.maxSendNumber || 1
+                    maxSendNumber: cfg.limit?.maxSendNumber || 1
                 };
-                _config.limit = limit;
-                _localStorageName = _getLocalStorageName(_config.msgKey, _namePrefix);
-                
-                if (_canUseLocalStorage && _localStorageName) {
-                    _localStorageObj = _getLocalStorageObj(utlGetLocalStorage(_logger, _localStorageName), _logger, _localStorageName);
-                }
-                if (_localStorageObj) {
-                    _isTriggered = _isTriggeredOnCurDate(_localStorageObj.preTriggerDate);
-                }
-            });
-            unloadHookContainer && unloadHookContainer.add(unloadHook);
+                curCfg.limit = limit;
+                _config[msgID] = curCfg;
+
+            } catch (e) {
+                // eslint-disable-next-line no-empty
+            }
         }
 
         function _getIntervalConfig(interval: IThrottleInterval) {
@@ -221,7 +260,7 @@ export class ThrottleMgr {
         }
 
         function _canThrottle(config: IThrottleMgrConfig, canUseLocalStorage: boolean, localStorageObj: IThrottleLocalStorageObj) {
-            if (!config.disabled && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
+            if (config && !config.disabled && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
                 let curDate = _getThrottleDate();
                 let date = localStorageObj.date;
                 let interval = config.interval;
@@ -235,7 +274,7 @@ export class ThrottleMgr {
                 if (_isSpecificDaysGiven) {
                     dayCheck = arrIndexOf(interval.daysOfMonth, curDate.getUTCDate());
                 } else if (interval?.dayInterval) {
-                    let daySpan =  Math.floor((curDate.getTime() - date.getTime()) / 86400000);
+                    let daySpan =  mathFloor((curDate.getTime() - date.getTime()) / 86400000);
                     dayCheck = _checkInterval(interval.dayInterval, 0, daySpan);
                 }
 
@@ -244,7 +283,7 @@ export class ThrottleMgr {
             return false;
         }
 
-        function _getLocalStorageName(msgKey: IThrottleMsgKey, prefix?: string) {
+        function _getLocalStorageName(msgKey: _eInternalMessageId | number, prefix?: string) {
             let fix = isNotNullOrUndefined(prefix)? prefix : "";
             if (msgKey) {
                 return THROTTLE_STORAGE_PREFIX + fix + "-" + msgKey;
@@ -276,15 +315,15 @@ export class ThrottleMgr {
                 } as IThrottleLocalStorageObj;
                 if (value) {
                     let obj = JSON.parse(value);
-                    return {
+                    let curObj = {
                         date: _getThrottleDate(obj.date) || storageObj.date,
                         count: obj.count || storageObj.count,
                         preTriggerDate: obj.preTriggerDate? _getThrottleDate(obj.preTriggerDate) : undefined
                     } as IThrottleLocalStorageObj;
+                    return curObj;
                 } else {
                     _resetLocalStorage(logger, storageName, storageObj);
                     return storageObj;
-
                 }
             } catch(e) {
                 // eslint-disable-next-line no-empty
@@ -316,7 +355,7 @@ export class ThrottleMgr {
             try {
                 return utlSetLocalStorage(logger, storageName, strTrim(JSON.stringify(obj)));
             } catch (e) {
-            //     // eslint-disable-next-line no-empty
+                // eslint-disable-next-line no-empty
             }
             return false;
         }
@@ -326,7 +365,7 @@ export class ThrottleMgr {
                 return 1;
             }
             // count from start year
-            return  (current >= start) && (current - start) % interval == 0 ? Math.floor((current - start) / interval) + 1 : -1;
+            return  (current >= start) && (current - start) % interval == 0 ? mathFloor((current - start) / interval) + 1 : -1;
         }
         
         function _sendMessage(msgID: _eInternalMessageId, logger: IDiagnosticLogger, message: string, severity?: eLoggingSeverity) {
@@ -338,8 +377,51 @@ export class ThrottleMgr {
 
         // NOTE: config.limit.samplingRate is set to 4 decimal places,
         // so config.limit.samplingRate = 1 means 0.0001%
-        function _canSampledIn() {
-            return randomValue(1000000) <= _config.limit.samplingRate;
+        function _canSampledIn(msgID: _eInternalMessageId) {
+            try {
+                let cfg = _getCfgByKey(msgID)
+                return randomValue(1000000) <= cfg.limit.samplingRate;
+            } catch (e) {
+                // eslint-disable-next-line no-empty
+            }
+            return false;
+        }
+
+        function _getLocalStorageObjByKey(key: _eInternalMessageId | number) {
+            try {
+                let curObj = _localStorageObj[key];
+                if (!curObj) {
+                    let localStorageName = _getLocalStorageName(key, _namePrefix);
+                    curObj = _getLocalStorageObj(utlGetLocalStorage(_logger, localStorageName), _logger, localStorageName);
+                    _localStorageObj[key] = curObj;
+                }
+                return _localStorageObj[key];
+
+            } catch (e) {
+                // eslint-disable-next-line no-empty
+            }
+            return null;
+        }
+
+        function _isTrigger(key: _eInternalMessageId | number) {
+            let isTrigger = _isTriggered[key];
+            if (isNullOrUndefined(isTrigger)) {
+                isTrigger = false;
+                let localStorageObj = _getLocalStorageObjByKey(key);
+                if (localStorageObj) {
+                    isTrigger = _isTriggeredOnCurDate(localStorageObj.preTriggerDate);
+                }
+                _isTriggered[key] = isTrigger;
+            }
+            return _isTriggered[key];
+        }
+
+        function _getQueueByKey(key: _eInternalMessageId | number) {
+            _queue = _queue || {};
+            if (isNullOrUndefined(_queue[key])) {
+                _queue[key] = [];
+            }
+            return _queue[key];
         }
     }
 }

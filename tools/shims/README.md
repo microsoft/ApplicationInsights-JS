@@ -1,6 +1,7 @@
 # Microsoft Application Insights JavaScript SDK - Shims
 
-[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
+[![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-shims.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-shims)
 
 Shims for the Application Insights Javascript SDK
@@ -11,6 +12,10 @@ mostly due to several breaking changes that have reduced our ability to publish 
 While the Application Insights JS SDK will use the stubs defined in this packaging for the browser instances (those that are
 uploaded to the CDN) they are built using the polyfill pattern, so if a global implementation of __extends() and __assign() already exist
 those versions will be used.
+
+## ES3 Support removed from v3.x
+
+ES3 support has been removed from the latest version (v3.x) which is also consumed by ApplicationInsights v3.x, if required [see for ES3/IE8 Support](https://microsoft.github.io/ApplicationInsights-JS/es3_Support.html) and you will need to remain on v2.x versions
 
 ## Global __extends() and __assign() changes - v2.0.0 or greater
 

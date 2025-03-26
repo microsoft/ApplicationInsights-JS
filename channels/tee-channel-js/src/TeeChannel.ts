@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IChannelControlsAI, IConfig } from "@microsoft/applicationinsights-common";
+import { IConfig } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
-    ITelemetryUpdateState, cfgDfBoolean, createProcessTelemetryContext, initializePlugins, onConfigChange, proxyFunctions
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IChannelControlsHost, IConfigDefaults, IConfiguration, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, ITelemetryUpdateState, SendRequestReason, cfgDfBoolean, createProcessTelemetryContext, initializePlugins,
+    onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
+import { IPromise } from "@nevware21/ts-async";
 import { arrForEach, isArray, objDeepFreeze, objFreeze, throwError } from "@nevware21/ts-utils";
 import { ChannelControllerPriority, IChannelController, _IInternalChannels, createChannelControllerPlugin } from "./ChannelController";
 import { ITeeChannelConfig } from "./Interfaces/ITeeChannelConfig";
@@ -64,7 +66,7 @@ function _createChannelQueues(config: ITeeChannelConfig, core: IAppInsightsCore,
     return channelQueue;
 }
 
-export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsAI {
+export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsHost {
     public readonly identifier: string = "TeeChannelController";
     public readonly priority: number = 999;
 
@@ -201,10 +203,21 @@ export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsA
     }
 
     /**
-     * Flush the batched events immediately (not synchronously).
-     * Will not flush if the Sender has been paused.
+     * Flush any batched events immediately; Will not flush if the paused and channel should default to sending data asynchronously.
+     * If executing asynchronously and you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
+     * @param async - send data asynchronously when true
+     * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
+     * If the caller doesn't return true the caller should assume that it may never be called.
+     * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
+     * @returns - If a callback is provided `true` to indicate that callback will be called after the flush is complete otherwise the caller
+     * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
+     * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
+     * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
+     * and isAsync is true.
      */
-    public flush() {
+    public flush(isAsync: boolean, callBack: (flushComplete?: boolean) => void, sendReason: SendRequestReason, cbTimeout?: number): void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -215,4 +228,14 @@ export class TeeChannel extends BaseTelemetryPlugin implements IChannelControlsA
     public onunloadFlush() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
+    /**
+     * Get and return the named channel instance (if present) from the queues
+     * @param pluginIdentifier - The identifier name of the plugin
+     */
+    public getChannel<T extends IPlugin = IPlugin>(pluginIdentifier: string): T {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
 }

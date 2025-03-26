@@ -1,10 +1,10 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { 
-    objCreateFn, getGlobal,
-    strShimFunction, strShimHasOwnProperty, strShimObject, strShimPrototype, strShimUndefined 
+    strShimFunction, strShimObject, strShimPrototype, strShimUndefined, ObjDefineProperty, ObjAssign, getGlobal 
 } from "../../../src/applicationinsights-shims";
 import { __extendsFn, __assignFn, __objAssignFnImpl }  from "../../../src/TsLibShims";
 import { __exposeGlobalTsLib }  from "../../../src/TsLibGlobals";
+import { objCreate } from "@nevware21/ts-utils";
 
 __exposeGlobalTsLib();
 
@@ -100,10 +100,10 @@ export class ShimsTests extends AITestClass {
         });
 
         this.testCase({
-            name: "objCreateFn should exist",
+            name: "objCreate should exist",
             test: () => {
                 
-                QUnit.assert.ok(objCreateFn !== undefined, "__extends should exist");
+                QUnit.assert.ok(objCreate !== undefined, "__extends should exist");
             }
         });
 
@@ -115,8 +115,16 @@ export class ShimsTests extends AITestClass {
                 QUnit.assert.ok(strShimObject === "object", "check object");
                 QUnit.assert.ok(strShimUndefined === "undefined", "check undefined");
                 QUnit.assert.ok(strShimPrototype === "prototype", "check prototype");
-                QUnit.assert.ok(strShimHasOwnProperty === "hasOwnProperty", "check hasOwnProperty");
             }
         });
+
+        this.testCase({
+            name: "Validate exported globals are references to the runtime versions",
+            test: () => {
+                QUnit.assert.equal(Object.create, objCreate, "The exported create should be an alias to the real create");
+                QUnit.assert.equal(Object.assign, ObjAssign, "The exported assign should be an alias to the real create");
+                QUnit.assert.equal(Object.defineProperty, ObjDefineProperty, "The exported define property should be an alias to the real create");
+            }
+        })
     }
 }

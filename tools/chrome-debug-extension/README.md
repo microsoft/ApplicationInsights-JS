@@ -1,5 +1,13 @@
 # Application Insights Debug Viewer
 
+## Breaking Changes from v0 to v1
+With Chrome discontinuing support for Manifest v2, we’ve updated our extension from version v0 to v1 to align with Manifest v3. This update introduces several changes:
+
+- Migration to Chrome Storage API: Manifest V3 no longer supports localStorage; instead, it uses the Chrome Storage API. Consequently, your existing configuration will not be automatically transferred to the new version.
+
+- New Extension Name: To ensure a smooth update experience, we’ve changed the extension’s name from Telemetry Viewer to Telemetry Viewer M3. This allows you to run both versions simultaneously and manually copy your settings from the old extension to the new one.
+
+
 ## What the tool does
 
 This tool runs in your browser, either Chrome or Edge, and provides you real time visualization of events flowing through Application Insights. You can use it to monitor the telemetry that your web application is emitting as part of your dev inner loop or bug investigations, or you can use it to monitor the internal calls within Application Insights to debug your integration of Application Insights into your web application.
@@ -41,7 +49,7 @@ We recommend building a configuration file to represent the schema of the teleme
 
 ## Configuring the tool
 
-Get the most out of the tool by customizing its configuration for your project. You can read about all of the options in the comments in [this file](https://github.com/microsoft/ApplicationInsights-JS/blob/master/tools/chrome-debug-extension/src/configuration/IConfiguration.ts)
+Get the most out of the tool by customizing its configuration for your project. You can read about all of the options in the comments in [this file](https://github.com/microsoft/ApplicationInsights-JS/blob/main/tools/chrome-debug-extension/src/configuration/IConfiguration.ts)
 
 You have several options for configurations:
 1. Use a preset configuration
@@ -55,12 +63,12 @@ You have several options for configurations:
    - The custom configuration is stored in local storage, so you won't lose it unless you uninstall the plugin
    - You can copy out the configuration and share it with coworkers - best for early prototyping or if you aren't able to add a preset configuration
 1. Create a new preset configuration
-   - To add your configuration to the preset configuration list, you'll need to check in a change to [`Configuration.types.ts`](https://github.com/microsoft/ApplicationInsights-JS/blob/master/tools/chrome-debug-extension/src/configuration/Configuration.types.ts) to add your configuration's URL to the list. 
+   - To add your configuration to the preset configuration list, you'll need to check in a change to [`Configuration.types.ts`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/tools/chrome-debug-extension/src/configuration/Configuration.types.ts) to add your configuration's URL to the list. 
    - Once your configuration is in the list, you will need to follow your team's process for updating the configuration file, since it is hosted in a team-specific location. It may be in a repo where you have to check in changes to it, or it may be on a OneDrive share that you can update directly.
 
 ## Contributing to the tool
 
-1. Please see the general information about contributing to this repository [here](https://github.com/microsoft/ApplicationInsights-JS/tree/master#contributing)
+1. Please see the general information about contributing to this repository [here](https://github.com/microsoft/ApplicationInsights-JS/tree/main#contributing)
 1. To specifically work on this tool, follow this dev inner loop:
    1. Startup:
       1. Go into Chrome or Edge, go to the `Manage Extensions` page (edge://extensions or chrome://extensions/), and `Remove` the tool if you already have it installed from somewhere other than your enlistment

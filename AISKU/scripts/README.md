@@ -25,11 +25,11 @@ Each script will create a log file in the specified logs folder (defaults to <sy
 The Scripts and examples are included below, but as a summary they are
 | Script Name | Description
 |-------------|------------
-| ./publishReleaseToCdn.ps1 | Publish (Copy) the created resource files from the `browser/` folder to the Azure Storage account used as the source for the CDN.
-| ./setActiveCdnVersion.ps1 | Set the available version of the major (ai.2.min.js) and minor (ai.2.#.min.js) to the previously deployed target version.
-| ./listCdnVersions.ps1 | List the versions of the resources that are deployed to the Azure Storage account, identifying the associated properties and metadata. Optionally, listing the individual files.
+| ./publishAzReleaseToCdn.ps1 | Publish (Copy) the created resource files from the `browser/` folder to the Azure Storage account used as the source for the CDN.
+| ./setAzActiveCdnVersion.ps1 | Set the available version of the major (ai.2.min.js) and minor (ai.2.#.min.js) to the previously deployed target version.
+| ./listAzCdnVersions.ps1 | List the versions of the resources that are deployed to the Azure Storage account, identifying the associated properties and metadata. Optionally, listing the individual files.
 
-### ./publishReleaseToCdn.ps1
+### ./publishAzReleaseToCdn.ps1
 
 This script has been created to automate the deployment of the CDN resources at the same time as publishing of the NPM packages. This script will publish the full version (v2.#.#) of the current build to all staging folders (beta, next and public) of the source storage account, it does NOT change the major (ai.2.min.js) or minor (ai.2.#.min.js) release versions
 
@@ -43,12 +43,13 @@ __Command line arguments__
 | logPath | string | [Optional] Identifies the location where the automatic log file will be written. Defaults to <systemDrive>:\Logs
 | overwrite | switch | By default the script will NOT overwrite any existing Blob with the same name in each container as it sets the CacheControl period to 1yr. As such this flag is provided primarily for testing and validation purposes, passing this switch will include the "-Force" switch for the Azure RM PowerShell functions to cause any existing blob to be overwritten.
 | testOnly | switch | [Optional] By default the script will upload to the production containers (beta, next and scripts), for testing this switch will effectively cause the files to be uploaded to the "tst" container with and the normal container names will instead be prepended (simulating folders) to the name. ([tst] scripts/b/ai.2.min.js)
+| useConnectedAccount | switch | [Optional] By default the script will use the current logged in user to authenticate with Azure using SAS tokens, if you have disabled SAS token support for the storage account then you will need to use this switch and grant the user "Storage Blob Data Contributor" role.
 
 #### Example Usage and output
 From the &lt;repo&gt;/AISKU/scripts folder in a powershell environment
 
 ~~~~
-PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\publishReleaseToCdn.ps1 -cdnStorePath "65b2f83e::tstcdnstore"
+PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\publishAzReleaseToCdn.ps1 -cdnStorePath "65b2f83e::tstcdnstore"
 [06/29/20 16:34:45] Store Path: 65b2f83e::tstcdnstore
 [06/29/20 16:34:45] Overwrite : False
 [06/29/20 16:34:45] Test Mode : False
@@ -104,7 +105,7 @@ PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\publishReleaseToCdn.ps1 -cdnSt
 [06/29/20 16:34:57] ======================================================================
 ~~~~
 
-### ./setActiveCdnVersion.ps1
+### ./setAzActiveCdnVersion.ps1
 
 This script will set the active release for the specified release folder (beta, next, public) to the requested full version (2.x.x) number. By default it will set both the major (ai.2.min.js) and minor (ai.2.x.min.js) versions to the requested full version, you can optionally only update the minor version.
 
@@ -123,12 +124,13 @@ __Command line arguments__
 | logPath | string | [Optional] Identifies the location where the automatic log file will be written. Defaults to <systemDrive>:\Logs
 | minorOnly | switch | By default the script will update both the major (ai.2.min.js) and minor (ai.2.#.min.js) available versions of the script. If this switch is set it will only update the minor version (ai.2.#.min.js) and the major version (ai.2.min.js) will be unaffected.
 | testOnly | switch | [Optional] By default the script will update the production containers (beta, next and scripts), for testing this switch will effectively only update the "tst" container versions with and the normal container names will instead be prepended (simulating folders) to the name. ([tst] scripts/b/ai.2.min.js)
+| useConnectedAccount | switch | [Optional] By default the script will use the current logged in user to authenticate with Azure using SAS tokens, if you have disabled SAS token support for the storage account then you will need to use this switch and grant the user "Storage Blob Data Contributor" role.
 
  #### Example Usage and output
  From the &lt;repo&gt;/AISKU/scripts folder in a powershell environment
 
 ~~~~ 
-PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\setActiveCdnVersion.ps1 public 2.4.1 -cdnStorePath "65b2f83e::tstcdnstore"
+PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\setAzActiveCdnVersion.ps1 public 2.4.1 -cdnStorePath "65b2f83e::tstcdnstore"
 [06/29/20 17:49:20] Container : public
 [06/29/20 17:49:20] Version   : 2.4.1
 [06/29/20 17:49:20] Store Path: 65b2f83e::tstcdnstore
@@ -182,7 +184,7 @@ PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\setActiveCdnVersion.ps1 public
 [06/29/20 17:49:47] ======================================================================
 ~~~~
 
-### ./listCdnVersions.ps1
+### ./listAzCdnVersions.ps1
 
 This script will list all of the currently deployed application insights versions that are available via the CDN, this script does not change any of the deployed or active versions.
 
@@ -200,12 +202,13 @@ __Command line arguments__
 | logPath | string | [Optional] Identifies the location where the automatic log file will be written. Defaults to <systemDrive>:\Logs
 | showFiles | switch | [Optional] Identifies whether the details of each located blob should be listed, this includes the CacheControl and metadata for each file
 | testOnly | switch | [Optional] By default the script will update the production containers (beta, next and scripts), for testing this switch will effectively only update the "tst" container versions with and the normal container names will instead be prepended (simulating folders) to the name. ([tst] scripts/b/ai.2.min.js)
+| useConnectedAccount | switch | [Optional] By default the script will use the current logged in user to authenticate with Azure using SAS tokens, if you have disabled SAS token support for the storage account then you will need to use this switch and grant the user "Storage Blob Data Contributor" role.
 
  #### Example Usages and output
  From the &lt;repo&gt;/AISKU/scripts folder in a powershell environment
 
 ~~~~
-PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\listCdnVersions.ps1 -cdnStorePath "65b2f83e::tstcdnstore"
+PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\listAzCdnVersions.ps1 -cdnStorePath "65b2f83e::tstcdnstore"
 [06/29/20 18:29:15] Container :
 [06/29/20 18:29:15] Store Path: 65b2f83e::tstcdnstore
 [06/29/20 18:29:15] Log Path  : C:\Logs
@@ -250,7 +253,7 @@ PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\listCdnVersions.ps1 -cdnStoreP
 
 And listing the individual the files
 ~~~~
-PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\listCdnVersions.ps1 public -showFiles -cdnStorePath "65b2f83e::tstcdnstore"
+PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\listAzCdnVersions.ps1 public -showFiles -cdnStorePath "65b2f83e::tstcdnstore"
 [06/29/20 18:31:24] Container : public
 [06/29/20 18:31:24] Store Path: 65b2f83e::tstcdnstore
 [06/29/20 18:31:24] Log Path  : C:\Logs

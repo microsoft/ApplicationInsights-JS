@@ -32,5 +32,5 @@ export function throwAggregationError(message: string, sourceErrors: any[]): nev
         theMessage += `\n${idx} > ${dumpObj(srcError)}`;
     });
 
-    throw new aggregationErrorType(message, sourceErrors || []);
+    throw new aggregationErrorType(theMessage, sourceErrors || []);
 }

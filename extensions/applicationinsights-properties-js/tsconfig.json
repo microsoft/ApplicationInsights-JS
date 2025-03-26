@@ -14,9 +14,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "extensions/applicationinsights-properties-js/types",
-    "outDir": "dist-esm",
-    "rootDir": "extensions/applicationinsights-properties-js/src"
+    "declarationDir": "build/types",
+    "outDir": "dist-es5",
+    "rootDir": "./src",
+    "removeComments": false
   },
   "include": [
     "./src/**/*.ts"

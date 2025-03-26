@@ -1,0 +1,65 @@
+{
+    "version": "1.0.2",
+    "enabled": true,
+    "featureOptIn": {
+        "iKeyUsage": {
+            "mode": 3,
+            "onCfg": { 
+                "throttleMgrCfg.109.disabled": false,
+                "throttleMgrCfg.106.disabled": false
+            },
+            "offCfg": { 
+                "throttleMgrCfg.109.disabled": true,
+                "throttleMgrCfg.106.disabled": true
+            }
+        },
+        "CdnUsage": {
+            "mode": 4,
+            "onCfg": { 
+                "throttleMgrCfg.109.disabled": false,
+                "throttleMgrCfg.110.disabled": false
+            },
+            "offCfg": { 
+                "throttleMgrCfg.109.disabled": true,
+                "throttleMgrCfg.110.disabled": true
+            }
+
+        }
+    },
+    "config": {
+        "throttleMgrCfg": {
+            "109": { 
+                "disabled": false,
+                "limit": { 
+                    "samplingRate": 2000000,
+                    "maxSendNumber": 1
+                },
+                "interval": {
+                    "dayInterval": 1
+                }
+            },
+            "106": { 
+                "disabled": false,
+                "limit": { 
+                    "samplingRate": 2000000,
+                    "maxSendNumber": 1
+                },
+                "interval": {
+                    "monthInterval": 1,
+                    "dayInterval": 1,
+                    "daysOfMonth":[13]
+                }
+            },
+            "110": { 
+                "disabled": false,
+                "limit": { 
+                    "samplingRate": 1000000,
+                    "maxSendNumber": 1
+                },
+                "interval": {
+                    "dayInterval": 1
+                }
+            }
+        }
+    }
+}

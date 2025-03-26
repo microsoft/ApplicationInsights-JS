@@ -5,7 +5,7 @@ import { IInternal } from "@microsoft/applicationinsights-common";
 import { IUnloadHookContainer, onConfigChange } from "@microsoft/applicationinsights-core-js";
 import { IPropertiesConfig } from "../Interfaces/IPropertiesConfig";
 
-const Version = "2.8.5";
+const Version = "#version#";
 
 export class Internal implements IInternal {
 

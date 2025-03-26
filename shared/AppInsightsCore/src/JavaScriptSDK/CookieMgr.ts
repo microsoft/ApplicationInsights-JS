@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IPromise } from "@nevware21/ts-async";
 import {
-    arrForEach, arrIndexOf, dumpObj, getDocument, getNavigator, isArray, isFunction, isNullOrUndefined, isString, isTruthy, isUndefined,
-    objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
+    ILazyValue, arrForEach, arrIndexOf, dumpObj, getDocument, getLazy, getNavigator, isArray, isFunction, isNullOrUndefined, isString,
+    isTruthy, isUndefined, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
@@ -12,6 +13,7 @@ import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
 import { _throwInternal } from "./DiagnosticLogger";
 import { getLocation, isIE } from "./EnvUtils";
 import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
@@ -28,7 +30,7 @@ const strConfigCookieMgr = "_ckMgr";
 let _supportsCookies: boolean = null;
 let _allowUaSameSite: boolean = null;
 let _parsedCookieValue: string = null;
-let _doc = getDocument();
+let _doc: ILazyValue<Document>;
 let _cookieCache = {};
 let _globalCookieConfig = {};
 
@@ -54,6 +56,10 @@ const rootDefaultConfig: IConfigDefaults<IConfiguration> = {
     cookiePath: UNDEFINED_VALUE,
     [strDisableCookiesUsage]: UNDEFINED_VALUE
 };
+
+function _getDoc() {
+    !_doc && (_doc = getLazy(() => getDocument()));
+}
 
 /**
  * @ignore
@@ -103,11 +109,35 @@ function _isBlockedCookie(cookieMgrCfg: ICookieMgrConfig, name: string) {
     return _isIgnoredCookie(cookieMgrCfg, name);
 }
 
+function _isCfgEnabled(rootConfig: IConfiguration, cookieMgrConfig: ICookieMgrConfig) {
+    let isCfgEnabled = cookieMgrConfig.enabled;
+    if (isNullOrUndefined(isCfgEnabled)) {
+        // Set the enabled from the provided setting or the legacy root values
+        let cookieEnabled: boolean;
+
+        // This field is deprecated and dynamic updates will not be fully supported
+        if (!isUndefined(rootConfig[strIsCookieUseDisabled])) {
+            cookieEnabled = !rootConfig[strIsCookieUseDisabled];
+        }
+
+        // If this value is defined it takes precedent over the above
+        if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
+            cookieEnabled = !rootConfig[strDisableCookiesUsage];
+        }
+
+        // Not setting the cookieMgrConfig.enabled as that will update (set) the global dynamic config
+        // So future "updates" then may not be as expected
+        isCfgEnabled = cookieEnabled;
+    }
+
+    return isCfgEnabled;
+}
+
 /**
  * Helper to return the ICookieMgr from the core (if not null/undefined) or a default implementation
  * associated with the configuration or a legacy default.
- * @param core
- * @param config
+ * @param core - The AppInsightsCore instance to get the cookie manager from
+ * @param config - The config to use if the core is not available
  * @returns
  */
 export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration) {
@@ -136,6 +166,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let cookieMgrConfig: ICookieMgrConfig;
     let _path: string;
     let _domain: string;
+    let unloadHandler: IUnloadHook;
 
     // Explicitly checking against false, so that setting to undefined will === true
     let _enabled: boolean;
@@ -147,37 +178,18 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     rootConfig = createDynamicConfig(rootConfig || _globalCookieConfig, null, logger).cfg;
 
     // Will get recalled if the referenced configuration is changed
-    onConfigChange(rootConfig, (details) => {
+    unloadHandler = onConfigChange(rootConfig, (details) => {
 
         // Make sure the root config has all of the the defaults to the root config to ensure they are dynamic
         details.setDf(details.cfg, rootDefaultConfig);
 
         // Create and apply the defaults to the cookieCfg element
         cookieMgrConfig = details.ref(details.cfg, "cookieCfg"); // details.setDf(details.cfg.cookieCfg, defaultConfig);
-        let isEnabled = cookieMgrConfig.enabled;
-        if (isNullOrUndefined(isEnabled)) {
-            // Set the enabled from the provided setting or the legacy root values
-            let cookieEnabled: boolean;
-
-            // This field is deprecated and dynamic updates will not be fully supported
-            if (!isUndefined(rootConfig[strIsCookieUseDisabled])) {
-                cookieEnabled = !rootConfig[strIsCookieUseDisabled];
-            }
-
-            // If this value is defined it takes precedent over the above
-            if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
-                cookieEnabled = !rootConfig[strDisableCookiesUsage];
-            }
-
-            // Not setting the cookieMgrConfig.enabled as that will update (set) the global dynamic config
-            // So future "updates" then may not be as expected
-            isEnabled = cookieEnabled;
-        }
 
         _path = cookieMgrConfig.path || "/";
         _domain = cookieMgrConfig.domain;
         // Explicitly checking against false, so that setting to undefined will === true
-        _enabled = isEnabled !== false;
+        _enabled = _isCfgEnabled(rootConfig, cookieMgrConfig) !== false;
 
         _getCookieFn = cookieMgrConfig.getCookie || _getCookieValue;
         _setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
@@ -186,7 +198,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
     let cookieMgr: ICookieMgr = {
         isEnabled: () => {
-            let enabled = _enabled && areCookiesSupported(logger);
+            let enabled = _isCfgEnabled(rootConfig, cookieMgrConfig) !== false && _enabled && areCookiesSupported(logger);
             // Using an indirect lookup for any global cookie manager to support tree shaking for SDK's
             // that don't use the "applicationinsights-core" version of the default cookie function
             let gblManager = _globalCookieConfig[strConfigCookieMgr];
@@ -201,6 +213,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         setEnabled: (value: boolean) => {
             // Explicitly checking against false, so that setting to undefined will === true
             _enabled = value !== false;
+            cookieMgrConfig.enabled = value;
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;
@@ -299,6 +312,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             }
 
             return result;
+        },
+        unload: (isAsync?: boolean): void | IPromise<void> => {
+            unloadHandler && unloadHandler.rm();
+            unloadHandler = null;
         }
     };
 
@@ -314,9 +331,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 export function areCookiesSupported(logger?: IDiagnosticLogger): any {
     if (_supportsCookies === null) {
         _supportsCookies = false;
+        !_doc && _getDoc();
 
         try {
-            let doc = _doc || {} as Document;
+            let doc = _doc.v || {} as Document;
             _supportsCookies = doc[strCookie] !== undefined;
         } catch (e) {
             _throwInternal(
@@ -370,8 +388,10 @@ function _formatCookieValue(value: string, values: any) {
 
 function _getCookieValue(name: string) {
     let cookieValue = STR_EMPTY;
-    if (_doc) {
-        let theCookie = _doc[strCookie] || STR_EMPTY;
+    !_doc && _getDoc();
+
+    if (_doc.v) {
+        let theCookie = _doc.v[strCookie] || STR_EMPTY;
         if (_parsedCookieValue !== theCookie) {
             _cookieCache = _extractParts(theCookie);
             _parsedCookieValue = theCookie;
@@ -384,8 +404,9 @@ function _getCookieValue(name: string) {
 }
 
 function _setCookieValue(name: string, cookieValue: string) {
-    if (_doc) {
-        _doc[strCookie] = name + "=" + cookieValue;
+    !_doc && _getDoc();
+    if (_doc.v) {
+        _doc.v[strCookie] = name + "=" + cookieValue;
     }
 }
 

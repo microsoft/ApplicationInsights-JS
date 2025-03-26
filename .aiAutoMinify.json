@@ -2,11 +2,17 @@
     "pkgs": {
         "@microsoft/applicationinsights-core-js": {
             "constEnums": [
+                "_eSetDynamicPropertyFlags",
                 "CallbackType",
                 "eEventsDiscardedReason",
+                "eBatchDiscardedReason",
+                "FeatureOptInMode",
+                "CdnFeatureMode",
+                "eActiveStatus",
                 "eLoggingSeverity",
                 "_eInternalMessageId",
                 "SendRequestReason",
+                "TransportType",
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason"
             ]
@@ -19,7 +25,8 @@
                 "eStorageType",
                 "FieldType",
                 "eDistributedTracingModes",
-                "IThrottleMsgKey",
+                "EventPersistenceValue",
+                "eOfflineValue",
                 "eRequestHeaders",
                 "DataPointType",
                 "DependencyKind",
@@ -61,6 +68,43 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-teechannel-js": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-cfgsync-js": {
+            "constEnums": [
+                "ICfgSyncMode"
+            ]
+        },
+        "@microsoft/1ds-core-js": {
+            "constEnums": [
+                "eValueKind",
+                "EventLatencyValue",
+                "eEventPropertyType",
+                "EventPersistenceValue",
+                "EventSendType",
+                "eTraceLevel",
+                "_eExtendedInternalMessageId",
+                "GuidStyle",
+                "FieldValueSanitizerType",
+                "TransportType"
+            ]
+        },
+        "@microsoft/1ds-post-js": {
+            "constEnums": [
+                "EventBatchNotificationReason"
+            ]
+        },
+        "@microsoft/applicationinsights-offlinechannel-js": {
+            "constEnums": [
+                "eStorageType",
+                "eBatchSendStatus",
+                "eBatchStoreStatus",
+                "CursorProcessResult",
+                "eStorageProviders",
+                "ValueQueryType"
+            ]
+        },
+        "@microsoft/applicationinsights-osplugin-js": {
             "constEnums": []
         }
     }

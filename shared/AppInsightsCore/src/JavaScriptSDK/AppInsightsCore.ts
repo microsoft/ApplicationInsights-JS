@@ -3,21 +3,24 @@
 "use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrAppend, arrForEach, arrIndexOf, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze,
-    objDefineProp, objForEachKey, objFreeze, objHasOwn, scheduleInterval, scheduleTimeout, throwError
+    ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
+    isPromiseLike, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
 import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
 import { IWatchDetails, WatcherFunction } from "../Config/IDynamicWatcher";
 import { eEventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
+import { ActiveStatus, eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
+import { IChannelControlsHost } from "../JavaScriptSDK.Interfaces/IChannelControlsHost";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -33,12 +36,13 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
 import { createUniqueNamespace } from "./DataCacheHelper";
 import { getDebugListener } from "./DbgExtensionUtils";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import { getSetValue, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
+import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
 import {
     STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
 } from "./InternalConstants";
@@ -56,6 +60,8 @@ const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";
 const strSdkNotInitialized = "SDK is not initialized";
+const maxInitQueueSize = 100;
+const maxInitTimeout = 50000;
 // const strPluginUnloadFailed = "Failed to unload plugin";
 
 /**
@@ -65,9 +71,9 @@ const strSdkNotInitialized = "SDK is not initialized";
  */
 const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     cookieCfg: {},
-    [STR_EXTENSIONS]: [],
-    [STR_CHANNELS]: [],
-    [STR_EXTENSION_CONFIG]: {},
+    [STR_EXTENSIONS]: { rdOnly: true, ref: true, v: [] },
+    [STR_CHANNELS]: { rdOnly: true, ref: true, v:[] },
+    [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
     diagnosticLogInterval: UNDEFINED_VALUE
@@ -75,8 +81,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
 
 /**
  * Helper to create the default performance manager
- * @param core
- * @param notificationMgr
+ * @param core - The AppInsightsCore instance
+ * @param notificationMgr - The notification manager
  */
 function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
     return new PerfManager(notificationMgr);
@@ -178,7 +184,7 @@ function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<
     let theListener = _findWatcher(listeners, newWatcher).l;
 
     if (!theListener) {
-        theListener ={
+        theListener = {
             w: newWatcher,
             rm: () => {
                 let fnd = _findWatcher(listeners, newWatcher);
@@ -204,6 +210,40 @@ function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: ()
     });
 }
 
+// Moved this outside of the closure to reduce the retained memory footprint
+function _initDebugListener(configHandler: IDynamicConfigHandler<IConfiguration>, unloadContainer: IUnloadHookContainer, notificationManager: INotificationManager, debugListener: INotificationListener) {
+    // Will get recalled if any referenced config values are changed
+    unloadContainer.add(configHandler.watch((details) => {
+        let disableDbgExt = details.cfg.disableDbgExt;
+
+        if (disableDbgExt === true && debugListener) {
+            // Remove any previously loaded debug listener
+            notificationManager.removeNotificationListener(debugListener);
+            debugListener = null;
+        }
+
+        if (notificationManager && !debugListener && disableDbgExt !== true) {
+            debugListener = getDebugListener(details.cfg);
+            notificationManager.addNotificationListener(debugListener);
+        }
+    }));
+
+    return debugListener
+}
+
+// Moved this outside of the closure to reduce the retained memory footprint
+function _createUnloadHook(unloadHook: IUnloadHook): IUnloadHook {
+    return objDefine<IUnloadHook | any>({
+        rm: () => {
+            unloadHook.rm();
+        }
+    }, "toJSON", { v: () => "aicore::onCfgChange<" + JSON.stringify(unloadHook) + ">" });
+}
+
+/**
+ * @group Classes
+ * @group Entrypoint
+ */
 export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> implements IAppInsightsCore<CfgType> {
     public config: CfgType;
     public logger: IDiagnosticLogger;
@@ -232,6 +272,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
         let _configHandler: IDynamicConfigHandler<CfgType>;
         let _isInitialized: boolean;
+        let _logger: IDiagnosticLogger;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
         let _perfManager: IPerfManager | null;
@@ -254,12 +295,18 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _extensions: IPlugin[];
         let _pluginVersionStringArr: string[];
         let _pluginVersionString: string;
+        let _activeStatus: eActiveStatus; // to indicate if ikey or endpoint url promised is resolved or not
+        let _endpoint: string;
+        let _initInMemoMaxSize: number; // max event count limit during wait for init promises to be resolved
+        let _isStatusSet: boolean; // track if active status is set in case of init timeout and init promises setting the status twice
+        let _initTimer: ITimerHandler;
     
         /**
          * Internal log poller
          */
         let _internalLogPoller: ITimerHandler;
         let _internalLogPollerListening: boolean;
+        let _forceStopInternalLogPoller: boolean;
 
         dynamicProto(AppInsightsCore, this, (_self) => {
 
@@ -268,10 +315,19 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             // Special internal method to allow the unit tests and DebugPlugin to hook embedded objects
             _self["_getDbgPlgTargets"] = () => {
-                return [_extensions];
+                return [_extensions, _eventQueue];
             };
 
             _self.isInitialized = () => _isInitialized;
+
+            // since version 3.3.0
+            _self.activeStatus = () => _activeStatus;
+
+            // since version 3.3.0
+            // internal
+            _self._setPendingStatus = () => {
+                _activeStatus = eActiveStatus.PENDING;
+            };
 
             // Creating the self.initialize = ()
             _self.initialize = (config: CfgType, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
@@ -291,8 +347,122 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 // This will be "re-run" if the referenced config properties are changed
                 _addUnloadHook(_configHandler.watch((details) => {
-                    _instrumentationKey = details.cfg.instrumentationKey;
+                    let rootCfg = details.cfg;
+                  
+                    let isPending = _activeStatus === eActiveStatus.PENDING;
+                    
+                    if (isPending){
+                        // means waiting for previous promises to be resolved, won't apply new changes
+                        return;
+                    }
 
+                    _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
+                    // app Insights core only handle ikey and endpointurl, aisku will handle cs
+                    let ikey = rootCfg.instrumentationKey;
+                    let endpointUrl = rootCfg.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
+
+                    if (isNullOrUndefined(ikey)) {
+                        _instrumentationKey = null;
+                        // if new ikey is null, set status to be inactive, all new events will be saved in memory or dropped
+                        _activeStatus = ActiveStatus.INACTIVE;
+                        let msg = "Please provide instrumentation key";
+
+                        if (!_isInitialized) {
+                            // only throw error during initialization
+                            throwError(msg);
+                        } else {
+                            _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, msg);
+                            _releaseQueues();
+                        }
+                        return;
+                      
+                    }
+
+                    let promises: IPromise<string>[] = [];
+                    if (isPromiseLike(ikey)) {
+                        promises.push(ikey);
+                        _instrumentationKey = null; // reset current local ikey variable (otherwise it will always be the previous ikeys if timeout is called before promise cb)
+                    } else {
+                        // string
+                        _instrumentationKey = ikey;
+                    }
+
+                    if (isPromiseLike(endpointUrl)) {
+                        promises.push(endpointUrl);
+                        _endpoint = null; // reset current local endpoint variable (otherwise it will always be the previous urls if timeout is called before promise cb)
+                    } else {
+                        // string or null
+                        _endpoint = endpointUrl;
+                    }
+
+                    // at least have one promise
+                    if (promises.length) {
+                        // reset to false for new dynamic changes
+                        _isStatusSet = false;
+                        _activeStatus = eActiveStatus.PENDING;
+                        let initTimeout = isNotNullOrUndefined(rootCfg.initTimeOut)?  rootCfg.initTimeOut : maxInitTimeout; // rootCfg.initTimeOut could be 0
+                        let allPromises = createSyncAllSettledPromise<string>(promises);
+                        _initTimer = scheduleTimeout(() => {
+                            // set _isStatusSet to true
+                            // set active status
+                            // release queues
+                            _initTimer = null;
+                            if (!_isStatusSet) {
+                                _setStatus();
+                            }
+                           
+                        }, initTimeout);
+                   
+                        doAwaitResponse(allPromises, (response) => {
+                            try {
+                                if (_isStatusSet) {
+                                    // promises take too long to resolve, ignore them
+                                    // active status should be set by timeout already
+                                    return;
+                                }
+
+                                if (!response.rejected) {
+                                    let values = response.value;
+                                    if (values && values.length) {
+                                        // ikey
+                                        let ikeyRes = values[0];
+                                        _instrumentationKey = ikeyRes && ikeyRes.value;
+
+                                        // endpoint
+                                        if (values.length > 1) {
+                                            let endpointRes = values[1];
+                                            _endpoint = endpointRes &&  endpointRes.value;
+                                            
+                                        }
+
+                                    }
+                                    if (_instrumentationKey) {
+                                        // if ikey is null, no need to trigger extra dynamic changes for extensions
+                                        config.instrumentationKey = _instrumentationKey; // set config.instrumentationKey for extensions to consume
+                                        config.endpointUrl = _endpoint; // set config.endpointUrl for extensions to consume
+                                    }
+
+                                }
+
+                                // set _isStatusSet to true
+                                // set active status
+                                // release queues
+                                _setStatus();
+
+                            } catch (e) {
+                                if (!_isStatusSet){
+                                    _setStatus();
+                                }
+                            }
+
+                        });
+                    } else {
+                        // means no promises
+                        _setStatus();
+                       
+                    }
+
+                    //_instrumentationKey = details.cfg.instrumentationKey;
                     // Mark the extensionConfig and all first level keys as referenced
                     // This is so that calls to getExtCfg() will always return the same object
                     // Even when a user may "re-assign" the plugin properties (or it's unloaded/reloaded)
@@ -300,19 +470,17 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     objForEachKey(extCfg, (key) => {
                         details.ref(extCfg, key);
                     });
-                
-                    if (isNullOrUndefined(_instrumentationKey)) {
-                        throwError("Please provide instrumentation key");
-                    }
+
+                  
                 }));
 
                 _notificationManager = notificationManager;
 
-                _initDebugListener();
+                // Initialize the debug listener outside of the closure to reduce the retained memory footprint
+                _debugListener = _initDebugListener(_configHandler, _hookContainer, _notificationManager && _self.getNotifyMgr(), _debugListener);
                 _initPerfManager();
 
-                _self.logger = logger || new DiagnosticLogger(config);
-                _configHandler.logger = _self.logger;
+                _self.logger = logger;
 
                 let cfgExtensions = config.extensions;
 
@@ -327,20 +495,21 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     throwError("No " + STR_CHANNELS + " available");
                 }
                 
-                if (_channels.length > 1) {
+                if (_channelConfig && _channelConfig.length > 1) {
                     let teeController = _self.getPlugin("TeeChannelController");
                     if (!teeController || !teeController.plugin) {
-                        _throwInternal(_self.logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "TeeChannel required");
+                        _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "TeeChannel required");
                     }
                 }
 
-                _registerDelayedCfgListener(config, _cfgListeners, _self.logger);
+                _registerDelayedCfgListener(config, _cfgListeners, _logger);
                 _cfgListeners = null;
 
                 _isInitialized = true;
-                _self.releaseQueue();
-
-                _self.pollInternalLogs();
+                if (_activeStatus === ActiveStatus.ACTIVE) {
+                    _releaseQueues();
+                }
+                
             };
         
             _self.getChannels = (): IChannelControls[] => {
@@ -377,12 +546,16 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     // Common Schema 4.0
                     telemetryItem.ver = telemetryItem.ver || "4.0";
             
-                    if (!_isUnloading && _self.isInitialized()) {
+                    if (!_isUnloading && _self.isInitialized() && _activeStatus === ActiveStatus.ACTIVE) {
                         // Process the telemetry plugin chain
                         _createTelCtx().processNext(telemetryItem);
-                    } else {
+                    } else if (_activeStatus !== ActiveStatus.INACTIVE){
                         // Queue events until all extensions are initialized
-                        _eventQueue.push(telemetryItem);
+                        if (_eventQueue.length <= _initInMemoMaxSize) {
+                            // set limit, if full, stop adding new events
+                            _eventQueue.push(telemetryItem);
+                        }
+                     
                     }
                 }, () => ({ item: telemetryItem }), !((telemetryItem as any).sync));
             };
@@ -391,11 +564,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             _self.getNotifyMgr = (): INotificationManager => {
                 if (!_notificationManager) {
-                    _addUnloadHook(_configHandler.watch((details) => {
-                        _notificationManager = new NotificationManager(details.cfg);
-                        // For backward compatibility only
-                        _self[strNotificationManager] = _notificationManager;
-                    }));
+                    _notificationManager = new NotificationManager(_configHandler.cfg);
+                    // For backward compatibility only
+                    _self[strNotificationManager] = _notificationManager;
                 }
 
                 return _notificationManager;
@@ -419,34 +590,25 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_notificationManager) {
                     _notificationManager.removeNotificationListener(listener);
                 }
-            }
+            };
         
             _self.getCookieMgr = (): ICookieMgr => {
                 if (!_cookieManager) {
-                    _addUnloadHook(_configHandler.watch((details) => {
-                        _cookieManager = createCookieMgr(details.cfg, _self.logger);
-                    }));
+                    _cookieManager = createCookieMgr(_configHandler.cfg, _self.logger);
                 }
 
                 return _cookieManager;
             };
 
             _self.setCookieMgr = (cookieMgr: ICookieMgr) => {
-                _cookieManager = cookieMgr;
+                if (_cookieManager !== cookieMgr) {
+                    runTargetUnload(_cookieManager, false);
+    
+                    _cookieManager = cookieMgr;
+                }
             };
 
             _self.getPerfMgr = (): IPerfManager => {
-                if (!_perfManager && !_cfgPerfManager) {
-                    _addUnloadHook(_configHandler.watch((details) => {
-                        if (details.cfg.enablePerfMgr) {
-                            let createPerfMgr = details.cfg.createPerfMgr;
-                            if (isFunction(createPerfMgr)) {
-                                _cfgPerfManager = createPerfMgr(_self, _self.getNotifyMgr());
-                            }
-                        }
-                    }));
-                }
-
                 return _perfManager || _cfgPerfManager || getGblPerfMgr();
             };
 
@@ -462,60 +624,96 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_isInitialized && _eventQueue.length > 0) {
                     let eventQueue = _eventQueue;
                     _eventQueue = [];
+                    if (_activeStatus === eActiveStatus.ACTIVE) {
+                        arrForEach(eventQueue, (event: ITelemetryItem) => {
+                            event.iKey = event.iKey || _instrumentationKey;
+                            _createTelCtx().processNext(event);
+                        });
 
-                    arrForEach(eventQueue, (event: ITelemetryItem) => {
-                        _createTelCtx().processNext(event);
-                    });
+                    } else {
+                        // new one for msg ikey
+                        _throwInternal(_logger, eLoggingSeverity.WARNING, _eInternalMessageId.FailedToSendQueuedTelemetry, "core init status is not active");
+                    }
+
+               
                 }
             };
 
-            /**
-             * Periodically check logger.queue for log messages to be flushed
-             */
             _self.pollInternalLogs = (eventName?: string): ITimerHandler => {
                 _internalLogsEventName = eventName || null;
+                _forceStopInternalLogPoller = false;
+                _internalLogPoller && _internalLogPoller.cancel();
 
-                function _startLogPoller(config: CfgType) {
-                    let interval: number = config.diagnosticLogInterval;
-                    if (!interval || !(interval > 0)) {
-                        interval = 10000;
-                    }
+                return _startLogPoller(true);
+            };
 
-                    _internalLogPoller && _internalLogPoller.cancel();
-                    _internalLogPoller = scheduleInterval(() => {
-                        _flushInternalLogs();
-                    }, interval) as any;
-                }
-
-                if (!_internalLogPollerListening) {
-                    _internalLogPollerListening = true;
-                    // listen to the configuration
-                    _addUnloadHook(_configHandler.watch((details) => {
-                        _startLogPoller(details.cfg);
-                    }));
+            function _setStatus() {
+                _isStatusSet = true;
+                if (isNullOrUndefined(_instrumentationKey)) {
+                    _activeStatus = ActiveStatus.INACTIVE;
+                    _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InitPromiseException, "ikey can't be resolved from promises");
                 } else {
-                    // We are being called again, so make sure the poller is running
-                    _startLogPoller(_configHandler.cfg);
+                    _activeStatus = ActiveStatus.ACTIVE;
+                }
+                _releaseQueues();
+
+            }
+
+            function _releaseQueues() {
+                if (_isInitialized) {
+                    _self.releaseQueue();
+                    _self.pollInternalLogs();
+                }
+            }
+
+            function _startLogPoller(alwaysStart?: boolean): ITimerHandler {
+                if ((!_internalLogPoller || !_internalLogPoller.enabled) && !_forceStopInternalLogPoller) {
+                    let shouldStart = alwaysStart || (_logger && _logger.queue.length > 0);
+                    if (shouldStart) {
+                        if (!_internalLogPollerListening) {
+                            _internalLogPollerListening = true;
+
+                            // listen for any configuration changes so that changes to the
+                            // interval will cause the timer to be re-initialized
+                            _addUnloadHook(_configHandler.watch((details) => {
+                                let interval: number = details.cfg.diagnosticLogInterval;
+                                if (!interval || !(interval > 0)) {
+                                    interval = 10000;
+                                }
+
+                                let isRunning = false;
+                                if (_internalLogPoller) {
+                                    // It was already created so remember it's running and cancel
+                                    isRunning = _internalLogPoller.enabled;
+                                    _internalLogPoller.cancel();
+                                }
+
+                                // Create / reconfigure
+                                _internalLogPoller = createTimeout(_flushInternalLogs, interval) as any;
+                                _internalLogPoller.unref();
+
+                                // Restart if previously running
+                                _internalLogPoller.enabled = isRunning;
+                            }));
+                        }
+
+                        _internalLogPoller.enabled = true;
+                    }
                 }
 
                 return _internalLogPoller;
             }
 
-            /**
-             * Stop polling log messages from logger.queue
-             */
             _self.stopPollingInternalLogs = (): void => {
-                if (_internalLogPoller) {
-                    _internalLogPoller.cancel();
-                    _internalLogPoller = null;
-                    _flushInternalLogs();
-                }
-            }
+                _forceStopInternalLogPoller = true;
+                _internalLogPoller && _internalLogPoller.cancel();
+                _flushInternalLogs();
+            };
 
             // Add addTelemetryInitializer
             proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
 
-            _self.unload = (isAsync: boolean = true, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void => {
+            _self.unload = (isAsync: boolean = true, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> => {
                 if (!_isInitialized) {
                     // The SDK is not initialized
                     throwError(strSdkNotInitialized);
@@ -531,14 +729,25 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     reason: TelemetryUnloadReason.SdkUnload,
                     isAsync: isAsync,
                     flushComplete: false
+                };
+
+                let result: IPromise<ITelemetryUnloadState>;
+                if (isAsync && !unloadComplete) {
+                    result = createPromise<ITelemetryUnloadState>((resolve) => {
+                        // Set the callback to the promise resolve callback
+                        unloadComplete = resolve;
+                    });
                 }
 
                 let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self);
                 processUnloadCtx.onComplete(() => {
                     _hookContainer.run(_self.logger);
 
-                    _initDefaults();
-                    unloadComplete && unloadComplete(unloadState);
+                    // Run any "unload" functions for the _cookieManager, _notificationManager and _logger
+                    doUnloadAll([_cookieManager, _notificationManager, _logger], isAsync, () => {
+                        _initDefaults();
+                        unloadComplete && unloadComplete(unloadState);
+                    });
                 }, _self);
 
                 function _doUnload(flushComplete: boolean) {
@@ -555,9 +764,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     processUnloadCtx.processNext(unloadState);
                 }
 
+                _flushInternalLogs();
+
                 if (!_flushChannels(isAsync, _doUnload, SendRequestReason.SdkUnload, cbTimeout)) {
                     _doUnload(false);
                 }
+
+                return result;
             };
 
             _self.getPlugin = _getPlugin;
@@ -627,12 +840,12 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     let cfg =  _configHandler.cfg;
 
                     // replace the immutable (if initialized) values
-                    newConfig.extensions = cfg.extensions;
-                    newConfig.channels = cfg.channels;
+                    // We don't currently allow updating the extensions and channels via the update config
+                    // So overwriting any user provided values to reuse the existing values
+                    (newConfig as any).extensions = cfg.extensions;
+                    (newConfig as any).channels = cfg.channels;
                 }
 
-                // We don't currently allow updating the extensions and channels via the update config
-                // So overwriting any user provided values to reuse the existing values
                 // Explicitly blocking any previous config watchers so that they don't get called because
                 // of this bulk update (Probably not necessary)
                 (_configHandler as _IInternalDynamicConfigHandler<CfgType>)._block((details) => {
@@ -653,7 +866,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                     // Apply defaults to the new config
                     details.setDf(theConfig, defaultConfig as any);
-                });
+                }, true);
 
                 // Now execute all of the listeners (synchronously) so they update their values immediately
                 _configHandler.notify();
@@ -694,41 +907,39 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     unloadHook = onConfigChange(_configHandler.cfg, handler, _self.logger);
                 }
 
-                return {
-                    rm: () => {
-                        unloadHook.rm();
-                    }
-                }
+                return _createUnloadHook(unloadHook);
             };
 
             _self.getWParam = () => {
                 return (hasDocument() || !!_configHandler.cfg.enableWParam) ? 0 : -1;
             };
 
+
             function _setPluginVersions() {
+                let thePlugins: { [key: string]: IPlugin } = {};
+
                 _pluginVersionStringArr = [];
 
+                const _addPluginVersions = (plugins: IPlugin[]) => {
+                    if (plugins) {
+                        arrForEach(plugins, (plugin) => {
+                            if (plugin.identifier && plugin.version && !thePlugins[plugin.identifier]) {
+                                let ver = plugin.identifier + "=" + plugin.version;
+                                _pluginVersionStringArr.push(ver);
+                                thePlugins[plugin.identifier] = plugin;
+                            }
+                        });
+                    }
+                }
+
+                _addPluginVersions(_channels);
                 if (_channelConfig) {
                     arrForEach(_channelConfig, (channels) => {
-                        if (channels) {
-                            arrForEach(channels, (channel) => {
-                                if (channel.identifier && channel.version) {
-                                    let ver = channel.identifier + "=" + channel.version;
-                                    _pluginVersionStringArr.push(ver);
-                                }
-                            });
-                        }
+                        _addPluginVersions(channels);
                     });
                 }
 
-                if (_configExtensions) {
-                    arrForEach(_configExtensions, (ext) => {
-                        if (ext && ext.identifier && ext.version) {
-                            let ver = ext.identifier + "=" + ext.version;
-                            _pluginVersionStringArr.push(ver);
-                        }
-                    });
-                }
+                _addPluginVersions(_configExtensions);
             }
 
             function _initDefaults() {
@@ -741,19 +952,15 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _configHandler.cfg.loggingLevelConsole = eLoggingSeverity.CRITICAL;
 
                 // Define _self.config
-                objDefineProp(_self, "config", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => _configHandler.cfg,
-                    set: (newValue) => {
+                objDefine(_self, "config", {
+                    g: () => _configHandler.cfg,
+                    s: (newValue) => {
                         _self.updateCfg(newValue, false);
                     }
                 });
 
-                objDefineProp(_self, "pluginVersionStringArr", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => {
+                objDefine(_self, "pluginVersionStringArr", {
+                    g: () => {
                         if (!_pluginVersionStringArr) {
                             _setPluginVersions();
                         }
@@ -762,10 +969,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     }
                 });
 
-                objDefineProp(_self, "pluginVersionString", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => {
+                objDefine(_self, "pluginVersionString", {
+                    g: () => {
                         if (!_pluginVersionString) {
                             if (!_pluginVersionStringArr) {
                                 _setPluginVersions();
@@ -778,19 +983,43 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     }
                 });
 
+                objDefine(_self, "logger", {
+                    g: () => {
+                        if (!_logger) {
+                            _logger = new DiagnosticLogger(_configHandler.cfg);
+                            _configHandler.logger = _logger;
+                        }
+
+                        return _logger;
+                    },
+                    s: (newLogger) => {
+                        _configHandler.logger = newLogger;
+                        if (_logger !== newLogger) {
+                            runTargetUnload(_logger, false);
+                            _logger = newLogger;
+                        }
+                    }
+                });
+
                 _self.logger = new DiagnosticLogger(_configHandler.cfg);
                 _extensions = [];
+                let cfgExtensions = _self.config.extensions || [];
+                cfgExtensions.splice(0, cfgExtensions.length);
+                arrAppend(cfgExtensions, _extensions);
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
                 _eventQueue = [];
+                runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
                 _perfManager = null;
                 _cfgPerfManager = null;
+                runTargetUnload(_cookieManager, false);
                 _cookieManager = null;
                 _pluginChain = null;
                 _configExtensions = [];
                 _channelConfig = null;
                 _channels = null;
+
                 _isUnloading = false;
                 _internalLogsEventName = null;
                 _evtNamespace = createUniqueNamespace("AIBaseCore", true);
@@ -801,10 +1030,21 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _cfgListeners = [];
                 _pluginVersionString = null;
                 _pluginVersionStringArr = null;
+                _forceStopInternalLogPoller = false;
+                _internalLogPoller = null;
+                _internalLogPollerListening = false;
+                _activeStatus = eActiveStatus.NONE; // default is None
+                _endpoint = null;
+                _initInMemoMaxSize = null;
+                _isStatusSet = false;
+                _initTimer = null;
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
-                return createProcessTelemetryContext(_getPluginChain(), _configHandler.cfg, _self);
+                let theCtx = createProcessTelemetryContext(_getPluginChain(), _configHandler.cfg, _self);
+                theCtx.onComplete(_startLogPoller);
+
+                return theCtx;
             }
 
             // Initialize or Re-initialize the plugins
@@ -828,8 +1068,15 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 // Required to allow plugins to call core.getPlugin() during their own initialization
                 _extensions = objFreeze(allExtensions);
 
+                // This has a side effect of adding the extensions passed during initialization
+                // into the config.extensions, so you can see all of the extensions loaded.
+                // This will also get updated by the addPlugin() and remove plugin code.
+                let cfgExtensions = _self.config.extensions || [];
+                cfgExtensions.splice(0, cfgExtensions.length);
+                arrAppend(cfgExtensions, _extensions);
+
                 let rootCtx = _createTelCtx();
-                
+
                 // Initializing the channels first
                 if (_channels && _channels.length > 0) {
                     initializePlugins(rootCtx.createNew(_channels), allExtensions);
@@ -846,6 +1093,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             function _getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
                 let theExt: ILoadedPlugin<T> = null;
                 let thePlugin: IPlugin = null;
+                let channelHosts: IChannelControlsHost[] = [];
 
                 arrForEach(_extensions, (ext: any) => {
                     if (ext.identifier === pluginIdentifier && ext !== _telemetryInitializerPlugin) {
@@ -853,14 +1101,19 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         return -1;
                     }
 
-                    // TODO: Check if the extension is an extension "host" (like the TeeChannel)
-                    // So that if the extension is not found we can ask the "host" plugins for the plugin
+                    if ((ext as IChannelControlsHost).getChannel) {
+                        channelHosts.push(ext as IChannelControlsHost);
+                    }
                 });
 
-                // if (!thePlugin && _channelControl) {
-                //     // Check the channel Controller
-                //     thePlugin = _channelControl.getChannel(pluginIdentifier);
-                // }
+                if (!thePlugin && channelHosts.length > 0) {
+                    arrForEach(channelHosts, (host) => {
+                        thePlugin = host.getChannel(pluginIdentifier);
+                        if (!thePlugin) {
+                            return -1;
+                        }
+                    });
+                }
 
                 if (thePlugin) {
                     theExt = {
@@ -956,6 +1209,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         }
 
                         removeComplete && removeComplete(removed);
+                        _startLogPoller();
                     });
 
                     unloadCtx.processNext(unloadState);
@@ -965,8 +1219,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             }
 
             function _flushInternalLogs() {
-                let queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
-                if (queue) {
+                if (_logger && _logger.queue) {
+                    let queue: _InternalLogMessage[] = _logger.queue.slice(0);
+                    _logger.queue.length = 0;
+
                     arrForEach(queue, (logMessage: _InternalLogMessage) => {
                         const item: ITelemetryItem = {
                             name: _internalLogsEventName ? _internalLogsEventName : "InternalMessageId: " + logMessage.messageId,
@@ -977,8 +1233,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         };
                         _self.track(item);
                     });
-
-                    queue.length = 0;
                 }
             }
 
@@ -1036,46 +1290,48 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 return true;
             }
 
-            function _initDebugListener() {
-                // Lazily ensure that the notification manager is created
-                !_notificationManager && _self.getNotifyMgr();
-
-                // Will get recalled if any referenced config values are changed
-                _addUnloadHook(_configHandler.watch((details) => {
-                    let disableDbgExt = details.cfg.disableDbgExt;
-
-                    if (disableDbgExt === true && _debugListener) {
-                        // Remove any previously loaded debug listener
-                        _notificationManager.removeNotificationListener(_debugListener);
-                        _debugListener = null;
-                    }
-    
-                    if (_notificationManager && !_debugListener && disableDbgExt !== true) {
-                        _debugListener = getDebugListener(details.cfg);
-                        _notificationManager.addNotificationListener(_debugListener);
-                    }
-                }));
-            }
-
             function _initPerfManager() {
+                // Save the previous config based performance manager creator to avoid creating new perf manager instances if unchanged
+                let prevCfgPerfMgr: (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager;
+
                 // Will get recalled if any referenced config values are changed
                 _addUnloadHook(_configHandler.watch((details) => {
                     let enablePerfMgr = details.cfg.enablePerfMgr;
+                    if (enablePerfMgr) {
+                        let createPerfMgr = details.cfg.createPerfMgr;
+                        // for preCfgPerfMgr = createPerfMgr = null
+                        // initial createPerfMgr function should be _createPerfManager
+                        if ((prevCfgPerfMgr !== createPerfMgr) || !prevCfgPerfMgr) {
+                            if (!createPerfMgr) {
+                                createPerfMgr = _createPerfManager;
+                            }
 
-                    if (!enablePerfMgr && _cfgPerfManager) {
+                            // Set the performance manager creation function if not defined
+                            getSetValue(details.cfg, STR_CREATE_PERF_MGR, createPerfMgr);
+                            prevCfgPerfMgr = createPerfMgr;
+
+                            // Remove any existing config based performance manager
+                            _cfgPerfManager = null;
+                        }
+
+                        // Only create the performance manager if it's not already created or manually set
+                        if (!_perfManager && !_cfgPerfManager && isFunction(createPerfMgr)) {
+                            // Create a new config based performance manager
+                            _cfgPerfManager = createPerfMgr(_self, _self.getNotifyMgr());
+                        }
+                    } else {
                         // Remove any existing config based performance manager
                         _cfgPerfManager = null;
-                    }
-    
-                    if (enablePerfMgr) {
-                        // Set the performance manager creation function if not defined
-                        getSetValue(details.cfg, STR_CREATE_PERF_MGR, _createPerfManager);
+
+                        // Clear the previous cached value so it can be GC'd
+                        prevCfgPerfMgr = null;
                     }
                 }));
             }
 
             function _doUpdate(updateState: ITelemetryUpdateState): void {
                 let updateCtx = createProcessTelemetryUpdateContext(_getPluginChain(), _self);
+                updateCtx.onComplete(_startLogPoller);
 
                 if (!_self._updateHook || _self._updateHook(updateCtx, updateState) !== true) {
                     updateCtx.processNext(updateState);
@@ -1087,6 +1343,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (logger) {
                     // there should always be a logger
                     _throwInternal(logger, eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, message);
+                    _startLogPoller();
                 } else {
                     throwError(message);
                 }
@@ -1177,7 +1434,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     /**
-     * Periodically check logger.queue for
+     * Enable the timer that checks the logger.queue for log messages to be flushed.
+     * Note: Since 3.0.1 and 2.8.13 this is no longer an interval timer but is a normal
+     * timer that is only started when this function is called and then subsequently
+     * only _if_ there are any logger.queue messages to be sent.
      */
     public pollInternalLogs(eventName?: string): ITimerHandler {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1185,7 +1445,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     /**
-     * Periodically check logger.queue for
+     * Stop the timer that log messages from logger.queue when available
      */
     public stopPollingInternalLogs(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1208,11 +1468,18 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * If you pass isAsync as `true` (also the default) and DO NOT pass a callback function then an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the unload is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param isAsync - Can the unload be performed asynchronously (default)
      * @param unloadComplete - An optional callback that will be called once the unload has completed
-     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the unload. Defaults to 5 seconds.
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
+     * unload. Defaults to 5 seconds.
+     * @returns Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will only be returned when no callback is provided and isAsync is true
      */
-    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void {
+    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1296,13 +1563,37 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
+     * @param handler - The watcher handler to call when the config changes
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
+
+    /**
+     * Watches and tracks status of initialization process
+     * @returns ActiveStatus
+     * @since 3.3.0
+     * If returned status is active, it means initialization process is completed.
+     * If returned status is pending, it means the initialization process is waiting for promieses to be resolved.
+     * If returned status is inactive, it means ikey is invalid or can 't get ikey or enpoint url from promsises.
+     */
+    public activeStatus(): eActiveStatus | number {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set Active Status to pending, which will block the incoming changes until internal promises are resolved
+     * @internal Internal use
+     * @since 3.3.0
+     */
+    public _setPendingStatus(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
 
     protected releaseQueue() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

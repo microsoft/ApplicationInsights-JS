@@ -7,7 +7,9 @@ import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerV
 export class ApplicationInsightsTests extends AITestClass {
     logger = new DiagnosticLogger();
 
+
     public testInitialize() {
+   
     }
 
     public testCleanup() {

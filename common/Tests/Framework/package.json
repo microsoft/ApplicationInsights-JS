@@ -12,19 +12,20 @@
         "browser performance monitoring",
         "web analytics"
     ],
-    "module": "dist-esm/src/ai-test-framework.js",
-    "types": "dist-esm/src/ai-test-framework.d.ts",
+    "main": "dist/es5/ai-test-framework.js",
+    "module": "dist-es5/ai-test-framework.js",
+    "types": "types/ai-test-framework.d.ts",
     "scripts": {
-        "clean": "grunt clean",
+        "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt tst-framework",
-        "build:browser": "rollup -c rollup.config.js",
+        "build:browser": "rollup -c rollup.config.js --bundleConfigAsCjs",
         "rebuild": "npm run build",
         "test": ""
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/common/Tests/Framework"
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/common/Tests/Framework"
     },
     "license": "MIT",
     "sideEffects": false,
@@ -34,11 +35,12 @@
         "grunt": "^1.5.3",
         "grunt-contrib-qunit": "^6.2.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
-        "@nevware21/ts-async": "^0.1.0",
-        "@rollup/plugin-commonjs": "^18.0.0",
-        "@rollup/plugin-node-resolve": "^11.2.1",
-        "@rollup/plugin-replace": "^2.3.3",
-        "rollup": "^2.32.0",
+        "@rollup/plugin-commonjs": "^24.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@rollup/plugin-replace": "^5.0.2",
+        "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-sourcemaps": "^0.6.3",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
         "qunit": "^2.11.2",
@@ -47,10 +49,11 @@
         "magic-string": "^0.25.7"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^1.1.7",
-        "@nevware21/ts-utils": ">= 0.8.1 < 2.x"
+        "@microsoft/dynamicproto-js": "^2.0.3",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x"
     }
 }

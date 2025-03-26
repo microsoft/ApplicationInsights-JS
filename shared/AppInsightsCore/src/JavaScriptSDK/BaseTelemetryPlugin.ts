@@ -20,6 +20,7 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { safeGetLogger } from "./DiagnosticLogger";
 import { isNotNullOrUndefined, proxyFunctionAs } from "./HelperFuncs";
 import { STR_EXTENSION_CONFIG } from "./InternalConstants";
 import {
@@ -268,7 +269,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
 
         function _setDefaults(config: IConfiguration, core: IAppInsightsCore, pluginChain: ITelemetryPluginChain) {
             // Make sure the extensionConfig exists and the config is dynamic
-            createDynamicConfig(config, defaultValues, core.logger);
+            createDynamicConfig(config, defaultValues, safeGetLogger(core));
     
             if (!pluginChain && core) {
                 // Get the first plugin from the core

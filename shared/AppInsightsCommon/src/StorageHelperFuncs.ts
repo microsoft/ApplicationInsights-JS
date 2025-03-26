@@ -9,10 +9,11 @@ import { StorageType } from "./Enums";
 
 let _canUseLocalStorage: boolean = undefined;
 let _canUseSessionStorage: boolean = undefined;
+let _storagePrefix: string = "";
 
 /**
  * Gets the localStorage object if available
- * @return {Storage} - Returns the storage object if available else returns null
+ * @returns {Storage} - Returns the storage object if available else returns null
  */
 function _getLocalStorageObject(): Storage {
     if (utlCanUseLocalStorage()) {
@@ -26,7 +27,7 @@ function _getLocalStorageObject(): Storage {
  * Tests storage object (localStorage or sessionStorage) to verify that it is usable
  * More details here: https://mathiasbynens.be/notes/localstorage-pattern
  * @param storageType - Type of storage
- * @return {Storage} Returns storage object verified that it is usable
+ * @returns {Storage} Returns storage object verified that it is usable
  */
 function _getVerifiedStorageObject(storageType: StorageType): Storage {
     try {
@@ -35,9 +36,10 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
         }
         let uid = (new Date).toString();
         let storage: Storage = getGlobalInst(storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage");
-        storage.setItem(uid, uid);
-        let fail = storage.getItem(uid) !== uid;
-        storage.removeItem(uid);
+        let name:string = _storagePrefix + uid;
+        storage.setItem(name, uid);
+        let fail = storage.getItem(name) !== uid;
+        storage.removeItem(name);
         if (!fail) {
             return storage;
         }
@@ -50,7 +52,7 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
 
 /**
  * Gets the sessionStorage object if available
- * @return {Storage} - Returns the storage object if available else returns null
+ * @returns {Storage} - Returns the storage object if available else returns null
  */
 function _getSessionStorageObject(): Storage {
     if (utlCanUseSessionStorage()) {
@@ -66,6 +68,10 @@ function _getSessionStorageObject(): Storage {
 export function utlDisableStorage() {
     _canUseLocalStorage = false;
     _canUseSessionStorage = false;
+}
+
+export function utlSetStoragePrefix(storagePrefix: string) {
+    _storagePrefix = storagePrefix || "";
 }
 
 /**

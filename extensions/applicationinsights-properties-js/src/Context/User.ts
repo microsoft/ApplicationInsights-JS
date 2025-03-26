@@ -7,7 +7,7 @@ import {
     IAppInsightsCore, ICookieMgr, IUnloadHookContainer, _eInternalMessageId, _throwInternal, eLoggingSeverity, newId, onConfigChange,
     safeGetCookieMgr, safeGetLogger, toISOString
 } from "@microsoft/applicationinsights-core-js";
-import { objDefineProp } from "@nevware21/ts-utils";
+import { objDefine } from "@nevware21/ts-utils";
 import { IPropertiesConfig } from "../Interfaces/IPropertiesConfig";
 
 function _validateUserInput(id: string): boolean {
@@ -76,10 +76,8 @@ export class User implements IUserContext {
 
         dynamicProto(User, this, (_self) => {
             // Define _self.config
-            objDefineProp(_self, "config", {
-                configurable: true,
-                enumerable: true,
-                get: () => config
+            objDefine(_self, "config", {
+                g: () => config
             });
 
             let unloadHook = onConfigChange(config, () => {
@@ -209,8 +207,8 @@ export class User implements IUserContext {
     /**
     * Sets the authenticated user id and the account id in this session.
     *
-    * @param authenticatedUserId - {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
-    * @param accountId - {string} - An optional string to represent the account associated with the authenticated user.
+    * @param authenticatedUserId - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+    * @param accountId - An optional string to represent the account associated with the authenticated user.
     */
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

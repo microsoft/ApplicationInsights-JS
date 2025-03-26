@@ -9,7 +9,7 @@ import {
     IAppInsightsCore, IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
     arrForEach, dumpObj, eLoggingSeverity, getDocument, getExceptionName, getLocation, isNullOrUndefined
 } from "@microsoft/applicationinsights-core-js";
-import { isWebWorker } from "@nevware21/ts-utils";
+import { ITimerHandler, getPerformance, isUndefined, isWebWorker, scheduleTimeout } from "@nevware21/ts-utils";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
 
 /**
@@ -32,9 +32,10 @@ export class PageViewManager {
         pageViewPerformanceManager: PageViewPerformanceManager) {
 
         dynamicProto(PageViewManager, this, (_self) => {
-            let intervalHandle: any = null;
+            let queueTimer: ITimerHandler = null;
             let itemQueue: Array<() => boolean> = [];
             let pageViewPerformanceSent: boolean = false;
+            let firstPageViewSent: boolean = false;
             let _logger: IDiagnosticLogger;
                     
             if (core) {
@@ -43,15 +44,16 @@ export class PageViewManager {
     
             function _flushChannels(isAsync: boolean) {
                 if (core) {
-                    core.flush(isAsync);
+                    core.flush(isAsync, () => {
+                        // Event flushed, callback added to prevent promise creation
+                    });
                 }
             }
         
-            function _addQueue(cb:() => boolean) {
-                itemQueue.push(cb);
-    
-                if (!intervalHandle) {
-                    intervalHandle = setInterval((() => {
+            function _startTimer() {
+                if (!queueTimer) {
+                    queueTimer = scheduleTimeout((() => {
+                        queueTimer = null;
                         let allItems = itemQueue.slice(0);
                         let doFlush = false;
                         itemQueue = [];
@@ -64,9 +66,8 @@ export class PageViewManager {
                             }
                         });
         
-                        if (itemQueue.length === 0) {
-                            clearInterval(intervalHandle);
-                            intervalHandle = null;
+                        if (itemQueue.length > 0) {
+                            _startTimer();
                         }
     
                         if (doFlush) {
@@ -75,6 +76,12 @@ export class PageViewManager {
                         }
                     }), 100);
                 }
+            }
+
+            function _addQueue(cb:() => boolean) {
+                itemQueue.push(cb);
+    
+                _startTimer();
             }
 
             _self.trackPageView = (pageView: IPageViewTelemetry, customProperties?: { [key: string]: any })  => {
@@ -88,6 +95,24 @@ export class PageViewManager {
                 if (isNullOrUndefined(uri) || typeof uri !== "string") {
                     let location = getLocation();
                     uri = pageView.uri = location && location.href || "";
+                }
+
+                if (!firstPageViewSent){
+                    let perf = getPerformance();
+                    // Access the performance timing object
+                    const navigationEntries = (perf && perf.getEntriesByType && perf.getEntriesByType("navigation"));
+    
+                    // Edge Case the navigation Entries may return an empty array and the timeOrigin is not supported on IE
+                    if (navigationEntries && navigationEntries[0] && !isUndefined(perf.timeOrigin)) {
+                        // Get the value of loadEventStart
+                        const loadEventStart = (navigationEntries[0] as PerformanceNavigationTiming).loadEventStart;
+                        pageView.startTime =  new Date(perf.timeOrigin + loadEventStart);
+                    } else {
+                        // calculate the start time manually
+                        let duration = ((customProperties || pageView.properties || {}).duration || 0);
+                        pageView.startTime = new Date(new Date().getTime() - duration);
+                    }
+                    firstPageViewSent = true;
                 }
         
                 // case 1a. if performance timing is not supported by the browser, send the page view telemetry with the duration provided by the user. If the user
@@ -211,9 +236,9 @@ export class PageViewManager {
             };
 
             _self.teardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
-                if (intervalHandle) {
-                    clearInterval(intervalHandle);
-                    intervalHandle = null;
+                if (queueTimer) {
+                    queueTimer.cancel();
+                    queueTimer = null;
 
                     let allItems = itemQueue.slice(0);
                     let doFlush = false;

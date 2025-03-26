@@ -6,7 +6,7 @@ import { IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeS
 import {
     IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getNavigator, getPerformance, safeGetLogger
 } from "@microsoft/applicationinsights-core-js";
-import { strIndexOf } from "@nevware21/ts-utils";
+import { mathFloor, strIndexOf } from "@nevware21/ts-utils";
 
 const MAX_DURATION_ALLOWED = 3600000; // 1h
 const botAgentNames = ["googlebot", "adsbot-google", "apis-google", "mediapartners-google"];
@@ -149,14 +149,14 @@ export class PageViewPerformanceManager {
                             "error calculating page view performance.",
                             { total, network, request, response, dom });
         
-                    } else if (!this.shouldCollectDuration(total, network, request, response, dom)) {
+                    } else if (!_self.shouldCollectDuration(total, network, request, response, dom)) {
                         _throwInternal(_logger,
                             eLoggingSeverity.WARNING,
                             _eInternalMessageId.InvalidDurationValue,
                             "Invalid page load duration value. Browser perf data won't be sent.",
                             { total, network, request, response, dom });
         
-                    } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
+                    } else if (total < mathFloor(network) + mathFloor(request) + mathFloor(response) + mathFloor(dom)) {
                         // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
                         // in this case, don't report client performance from this page
                         _throwInternal(_logger,

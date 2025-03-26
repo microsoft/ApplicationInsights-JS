@@ -129,6 +129,34 @@ export class Es5RollupTests extends AITestClass {
                 this.testCheckNoMatch(null, "ClassName.prototype.anotherMethod = function () {\n};\n");
                 this.testCheckNoMatch(null, "telemertyItem.time = CoreUtils.toISOString(new Date());");
                 this.testCheckNoMatch(null, "var responseHeaders = {};\nresponse.headers.forEach(function (value, name) {\n");
+                this.testCheckNoMatch(null, "   _this.startsWith(0, 1);");
+                this.testCheckNoMatch(null, "   this.startsWith(0, 1);");
+                this.testCheckNoMatch(null, "   _this.endsWith(0, 1);");
+                this.testCheckNoMatch(null, "   this.endsWith(0, 1);");
+                this.testCheckNoMatch(null, "   _this.find(0, 1);");
+                this.testCheckNoMatch(null, "   this.find(0, 1);");
+                this.testCheckNoMatch(null, "   _this.findIndex(0, 1);");
+                this.testCheckNoMatch(null, "   this.findIndex(0, 1);");
+                this.testCheckNoMatch(null, "   _this.findLast(0, 1);");
+                this.testCheckNoMatch(null, "   this.findLast(0, 1);");
+                this.testCheckNoMatch(null, "   _this.findLastIndex(0, 1);");
+                this.testCheckNoMatch(null, "   this.findLastIndex(0, 1);");
+                this.testCheckNoMatch(null, "   _self.startsWith(0, 1);");
+                this.testCheckNoMatch(null, "   self.startsWith(0, 1);");
+                this.testCheckNoMatch(null, "   _self.endsWith(0, 1);");
+                this.testCheckNoMatch(null, "   self.endsWith(0, 1);");
+                this.testCheckNoMatch(null, "   _self.find(0, 1);");
+                this.testCheckNoMatch(null, "   self.find(0, 1);");
+                this.testCheckNoMatch(null, "   _self.findIndex(0, 1);");
+                this.testCheckNoMatch(null, "   self.findIndex(0, 1);");
+                this.testCheckNoMatch(null, "   _self.findLast(0, 1);");
+                this.testCheckNoMatch(null, "   self.findLast(0, 1);");
+                this.testCheckNoMatch(null, "   _self.findLastIndex(0, 1);");
+                this.testCheckNoMatch(null, "   self.findLastIndex(0, 1);");
+                this.testCheckNoMatch(null, "export { doAwaitResponse, doAwait, doFinally } from \"./promise/await\";");
+                this.testCheckNoMatch(null, "export { doAwaitResponse, doAwait, doFinally } from \".\\promise\\await\";");
+                this.testCheckNoMatch(null, "export { ... } from \"./promise/async\";");
+                this.testCheckNoMatch(null, "export { ... } from \".\\promise\\async\";");
             }
         });
 
@@ -180,7 +208,7 @@ export class Es5RollupTests extends AITestClass {
                     null, 
                     "var arr = Object.is(a);\n",
                     "Invalid IE/ES5 function [Object.is(] found on line [1], column [11], position [10] during renderChunk - test.js\n" +
-                    "[Object.is(] is not supported in an IE/ES5 environment, use a helper function or add explicit check for existence\n" +
+                    "[Object.is(] is not supported in a IE/ES5 environment, use a helper function or add explicit check for existence\n" +
                     "1   :var arr = Object.is(a);\n" +
                     "               ^^^^^^^^^^\n" +
                     "\n" +
@@ -192,7 +220,7 @@ export class Es5RollupTests extends AITestClass {
                     null, 
                     "var arr = Object.fromEntries(a);\n",
                     "Invalid IE/ES5 function [Object.fromEntries(] found on line [1], column [11], position [10] during renderChunk - test.js\n" +
-                    "[Object.fromEntries(] is not supported in an IE/ES5 environment, use a helper function or add explicit check for existence\n" +
+                    "[Object.fromEntries(] is not supported in a IE/ES5 environment, use a helper function or add explicit check for existence\n" +
                     "1   :var arr = Object.fromEntries(a);\n" +
                     "               ^^^^^^^^^^^^^^^^^^^\n" +
                     "\n" +
@@ -204,7 +232,7 @@ export class Es5RollupTests extends AITestClass {
                     null, 
                     "var arr = Object.entries(a);\n",
                     "Invalid IE/ES5 function [Object.entries(] found on line [1], column [11], position [10] during renderChunk - test.js\n" +
-                    "[Object.entries(] is not supported in an IE/ES5 environment, use a helper function or add explicit check for existence\n" +
+                    "[Object.entries(] is not supported in a IE/ES5 environment, use a helper function or add explicit check for existence\n" +
                     "1   :var arr = Object.entries(a);\n" +
                     "               ^^^^^^^^^^^^^^^\n" +
                     "\n" +
@@ -216,7 +244,7 @@ export class Es5RollupTests extends AITestClass {
                     null, 
                     "var arr = Object.assign(a);\n",
                     "Invalid IE/ES5 function [Object.assign(] found on line [1], column [11], position [10] during renderChunk - test.js\n" +
-                    "[Object.assign(] is not supported in an IE/ES5 environment, use a helper function or add explicit check for existence\n" +
+                    "[Object.assign(] is not supported in a IE/ES5 environment, use a helper function or add explicit check for existence\n" +
                     "1   :var arr = Object.assign(a);\n" +
                     "               ^^^^^^^^^^^^^^\n" +
                     "\n" +
@@ -228,7 +256,7 @@ export class Es5RollupTests extends AITestClass {
                     null, 
                     "var x = Object.setPrototypeOf(a);\n",
                     "Invalid IE/ES5 function [Object.setPrototypeOf(] found on line [1], column [9], position [8] during renderChunk - test.js\n" +
-                    "[Object.setPrototypeOf(] is not supported in an IE/ES5 environment, use a helper function or add explicit check for existence\n" +
+                    "[Object.setPrototypeOf(] is not supported in a IE/ES5 environment, use a helper function or add explicit check for existence\n" +
                     "1   :var x = Object.setPrototypeOf(a);\n" +
                     "             ^^^^^^^^^^^^^^^^^^^^^^\n" +
                     "\n" +
@@ -240,13 +268,157 @@ export class Es5RollupTests extends AITestClass {
                     null, 
                     "var x = Object.keys(a);\n",
                     "Invalid IE/ES5 function [Object.keys(] found on line [1], column [9], position [8] during renderChunk - test.js\n" +
-                    "[Object.keys(] is not supported in an IE/ES5 environment, use a helper function or add explicit check for existence\n" +
+                    "[Object.keys(] is not supported in a IE/ES5 environment, use a helper function or add explicit check for existence\n" +
                     "1   :var x = Object.keys(a);\n" +
                     "             ^^^^^^^^^^^^\n" +
                     "\n" +
                     "--------------------=([Object.keys(])=--------------------\n"
                     );
-                                                                                                                                                                                                                                                                   
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = new Promise((resolve, reject) => {\n",
+                    "Invalid IE/ES5 function [ new Promise(] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ new Promise(] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = new Promise((resolve, reject) => {\n" +
+                    "            ^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ new Promise(])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Promise.all(a, b, c)\n",
+                    "Invalid IE/ES5 function [ Promise.all(] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Promise.all(] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Promise.all(a, b, c)\n" +
+                    "            ^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Promise.all(])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Promise.race(a, b, c)\n",
+                    "Invalid IE/ES5 function [ Promise.race(] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Promise.race(] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Promise.race(a, b, c)\n" +
+                    "            ^^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Promise.race(])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Promise.reject(a, b, c)\n",
+                    "Invalid IE/ES5 function [ Promise.reject(] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Promise.reject(] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Promise.reject(a, b, c)\n" +
+                    "            ^^^^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Promise.reject(])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Promise.resolve(a, b, c)\n",
+                    "Invalid IE/ES5 function [ Promise.resolve(] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Promise.resolve(] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Promise.resolve(a, b, c)\n" +
+                    "            ^^^^^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Promise.resolve(])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Promise.allSettled(a, b, c)\n",
+                    "Invalid IE/ES5 function [ Promise.allSettled(] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Promise.allSettled(] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Promise.allSettled(a, b, c)\n" +
+                    "            ^^^^^^^^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Promise.allSettled(])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Promise.reject(a, b, c)\n",
+                    "Invalid IE/ES5 function [ Promise.reject(] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Promise.reject(] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Promise.reject(a, b, c)\n" +
+                    "            ^^^^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Promise.reject(])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = await someFunction();\n",
+                    "Invalid IE/ES5 function [ await] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ await] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = await someFunction();\n" +
+                    "            ^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ await])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "export async function someFunction() {\n",
+                    "Invalid IE/ES5 function [ async function] found on line [1], column [7], position [6] during renderChunk - test.js\n" +
+                    "[ async function] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :export async function someFunction() {\n" +
+                    "           ^^^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ async function])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Symbol.for(\"tokenString\");\n",
+                    "Invalid IE/ES5 function [ Symbol.for] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Symbol.for] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Symbol.for(\"tokenString\");\n" +
+                    "            ^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Symbol.for])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Symbol.keyFor(\"tokenString\");\n",
+                    "Invalid IE/ES5 function [ Symbol.keyFor] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Symbol.keyFor] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Symbol.keyFor(\"tokenString\");\n" +
+                    "            ^^^^^^^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Symbol.keyFor])=--------------------\n"
+                    );
+
+                this.testError(
+                    es5Check(), 
+                    null, 
+                    "var x = Symbol(\"tokenString\");\n",
+                    "Invalid IE/ES5 function [ Symbol(] found on line [1], column [8], position [7] during renderChunk - test.js\n" +
+                    "[ Symbol(] is not supported in all IE/ES5 environments, use a helper function or add explicit check for existence\n" +
+                    "1   :var x = Symbol(\"tokenString\");\n" +
+                    "            ^^^^^^^^\n" +
+                    "\n" +
+                    "--------------------=([ Symbol(])=--------------------\n"
+                    );
+    
             }
         });
 

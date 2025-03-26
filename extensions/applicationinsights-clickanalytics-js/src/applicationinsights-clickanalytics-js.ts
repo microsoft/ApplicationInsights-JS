@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from "./ClickAnalyticsPlugin";
-export { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
+import { BehaviorEnumValidator, BehaviorMapValidator, BehaviorValueValidator, ClickAnalyticsPlugin } from "./ClickAnalyticsPlugin";
+import { IClickAnalyticsConfiguration } from "./Interfaces/Datamodel";
 
+export { IClickAnalyticsConfiguration, ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }

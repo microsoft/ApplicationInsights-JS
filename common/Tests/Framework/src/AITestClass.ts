@@ -1,11 +1,16 @@
 /// <reference path="../../External/qunit.d.ts" />
-
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { SinonSandbox, SinonSpy, SinonStub, SinonMock, SinonFakeXMLHttpRequest } from "sinon";
-import * as sinon from "sinon";
+import { arrForEach, dumpObj, getGlobal, isArray, objDefineProp, objForEachKey, objGetPrototypeOf, setBypassLazyCache, strStartsWith, throwError, getNavigator, getPerformance, strSubstr, strContains } from "@nevware21/ts-utils";
+import { SinonSandbox, SinonSpy, SinonStub, SinonMock, useFakeTimers, stub, createSandbox, useFakeXMLHttpRequest, assert as sinonAssert } from "sinon";
 import { Assert } from "./Assert";
-import { ITestContext, StepResult, TestCase, TestCaseAsync } from "./TestCase";
-import { getNavigator, getPerformance, setBypassLazyCache } from "@nevware21/ts-utils";
+import { ITestCaseAsync } from "./interfaces/ITestCaseAsync";
+import { ITestCase } from "./interfaces/ITestCase";
+import { ITestContext } from "./interfaces/ITestContext";
+import { StepResult } from "./StepResult";
+import { IFakeXMLHttpRequest } from "./interfaces/FakeXMLHttpRequest";
+import { IFetchRequest } from "./interfaces/IFetchRequest";
+import { IBeaconRequest } from "./interfaces/IBeaconRequest";
+import { createSyncPromise } from "@nevware21/ts-async";
 
 const stepRetryCnt = "retryCnt";
 
@@ -33,27 +38,17 @@ function _getObjName(target:any, unknownValue?:string) {
 function _getAllAiDataKeys<T = any>(target: T, callbackfn: (name: string, value: T[keyof T]) => void) {
     if (target) {
         let keys = Object.getOwnPropertyNames(target);
-        for (let lp = 0; lp < keys.length; lp++) {
-            if (keys[lp].startsWith("_aiData")) {
-                callbackfn.call(target, keys[lp], target[keys[lp]]);
+        arrForEach(keys, (key) => {
+            if (strStartsWith(key, "_aiData")) {
+                callbackfn.call(target, key, target[key]);
             }
-        }
-    }
-}
-
-function _objForEachKey<T = any>(target: T, callbackfn: (name: string, value: T[keyof T]) => void) {
-    if (target) {
-        for (let prop in target) {
-            if (Object.prototype.hasOwnProperty.call(target, prop)) {
-                callbackfn.call(target, prop, target[prop]);
-            }
-        }
+        });
     }
 }
 
 function _formatNamespace(namespaces: string | string[]) {
     if (namespaces) {
-        if (Array.isArray(namespaces)) {
+        if (isArray(namespaces)) {
             return namespaces.sort().join(".");
         }
     }
@@ -62,18 +57,46 @@ function _formatNamespace(namespaces: string | string[]) {
 }
 
 export class AITestClass {
+    public static orgSetTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
+    public static orgClearTimeout: (timeoutId: NodeJS.Timeout) => void;
+    public static orgLocalStorage: Storage;
+    public static orgObjectDefineProperty = Object.defineProperty;
     public static isPollingStepFlag = "isPollingStep";
 
     /** The instance of the currently running suite. */
     public static currentTestClass: AITestClass;
-    public static currentTestInfo: TestCase | TestCaseAsync;
+    public static currentTestInfo: ITestCase | ITestCaseAsync;
 
+    /**
+     * Find a named base class for the provided class instance, using an instance so that any dynamicProto() implementations have been resolved.
+     * @param rootInstance An instance of the Class that you want to find the named base class.
+     * @param baseClassName The name of the base class
+     * @returns The named base class constructor or null if not found
+     */
+    public static GetNamedBaseClass<T>(rootInstance: T, baseClassName: string) {
+        let rootPrototype = objGetPrototypeOf(rootInstance);
+        let parent = rootPrototype;
+        while (parent != null) {
+            if (parent != rootPrototype) {
+                let parentName = parent.constructor.name;
+                if (parentName == baseClassName) {
+                    return parent.constructor;
+                }
+        
+                if (!parentName || parentName == "Object") {
+                    break;
+                }
+            }
+    
+            parent = objGetPrototypeOf(parent);
+        }
+    
+        return null;
+    }
+    
     /** Turns on/off sinon's fake implementation of XMLHttpRequest. On by default. */
     public sandboxConfig: any = {};
 
-    public static orgSetTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
-    public static orgClearTimeout: (timeoutId: NodeJS.Timeout) => void;
-    public static orgObjectDefineProperty = Object.defineProperty;
     
     /**** Sinon methods and properties ***/
 
@@ -108,8 +131,11 @@ export class AITestClass {
     private _fetchRequests: IFetchArgs[] = [];
     private _orgNavigator: any;
     private _orgPerformance: any;
+    private _beaconHooked: boolean = false;
     private _beaconHooks: any[] = [];
     private _dynProtoOpts: any = null;
+    private _orgLocalStorage: any;
+    private _navOrgProduct:string;
 
     // Simulate an IE environment
     private _orgObjectFuncs: any = null;
@@ -120,7 +146,7 @@ export class AITestClass {
 
     constructor(name?: string, emulateIE?: boolean) {
         this._moduleName = (emulateIE ? "(IE) " : "") + (name || _getObjName(this, ""));
-        this.isEmulatingIe = emulateIE
+        this.isEmulatingIe = emulateIE;
         QUnit.module(this._moduleName);
         this.sandboxConfig.injectIntoThis = true;
         this.sandboxConfig.injectInto = null;
@@ -153,6 +179,18 @@ export class AITestClass {
         }
     }
 
+    get activeXhrRequests(): IFakeXMLHttpRequest[] {
+        let activeRequests: IFakeXMLHttpRequest[] = [];
+
+        this._xhrRequests.forEach((xhr) => {
+            if (xhr && xhr.url && xhr.method) {
+                activeRequests.push(xhr);
+            }
+        });
+
+        return activeRequests;
+    }
+
     /** Method called before the start of each test method */
     public testInitialize() {
     }
@@ -168,6 +206,10 @@ export class AITestClass {
      * This is the final step before the next test is executed
      */
     public testCleanup() {
+        let storage: Storage = sessionStorage;
+        if (storage) {
+            storage.clear();
+        }
     }
 
     /** Method in which test class instances should call this.testCase(...) to register each of this suite's tests. */
@@ -175,17 +217,17 @@ export class AITestClass {
     }
 
     /** Register an async Javascript unit testcase. */
-    public testCaseAsync(testInfo: TestCaseAsync) {
+    public testCaseAsync(testInfo: ITestCaseAsync) {
         if (!testInfo.name) {
-            throw new Error("Must specify name in testInfo context in registerTestcase call");
+            throwError("Must specify name in testInfo context in registerTestcase call");
         }
 
         if (isNaN(testInfo.stepDelay)) {
-            throw new Error("Must specify 'stepDelay' period between pre and post");
+            throwError("Must specify 'stepDelay' period between pre and post");
         }
 
         if (!testInfo.steps) {
-            throw new Error("Must specify 'steps' to take asynchronously");
+            throwError("Must specify 'steps' to take asynchronously");
         }
 
         if (testInfo.autoComplete === undefined) {
@@ -214,6 +256,7 @@ export class AITestClass {
             // Save the real clearTimeout (as _testStarting and enable sinon fake timers)
             const orgClearTimeout = clearTimeout;
             const orgSetTimeout = setTimeout;
+            AITestClass.orgLocalStorage = window.localStorage;
 
             AITestClass.orgSetTimeout = (handler: (...args: any[]) => void, timeout: number, ...args: any[]) => {
                 if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgSetTimeout) {
@@ -250,7 +293,7 @@ export class AITestClass {
             }
 
             if (testInfo.useFakeTimers) {
-                self.clock = sinon.useFakeTimers();
+                self.clock = useFakeTimers();
             }
 
             if (self.isEmulatingIe) {
@@ -300,7 +343,7 @@ export class AITestClass {
                     clock: testInfo.useFakeTimers ? self.clock : null
                 };
 
-                if (testInfo.timeOut !== undefined) {
+                if (testInfo.skipTimeout !== true && testInfo.timeOut !== undefined) {
                     timeOutTimer = AITestClass.orgSetTimeout(() => {
                         QUnit.assert.ok(false, "Test case timed out!");
                         testComplete = true;
@@ -313,7 +356,7 @@ export class AITestClass {
                 const steps = testInfo.steps;
                 const trigger = () => {
                     // The callback which activates the next test step.
-                    let nextTestStepTrigger = () => {
+                    const nextTestStepTrigger = () => {
                         AITestClass.orgSetTimeout(() => {
                             trigger();
                         }, testInfo.stepDelay);
@@ -329,6 +372,7 @@ export class AITestClass {
                         // it is responsibility of the polling test step to call the next test step.
                         try {
                             if (step) {
+                                testContext.clock = this.clock || null;
                                 if (step[AITestClass.isPollingStepFlag]) {
                                     step.call(this, testContext, nextTestStepTrigger);
                                 } else {
@@ -355,8 +399,9 @@ export class AITestClass {
                                 }
                             }
                         } catch (e) {
-                            console.error("Failed: Unexpected Exception: " + e);
-                            Assert.ok(false, e.toString());
+                            // tslint:disable-next-line:no-console
+                            console && console.error("Failed: Unexpected Exception: " + dumpObj(e));
+                            Assert.ok(false, dumpObj(e));
 
                             // done is QUnit callback indicating the end of the test
                             testDone();
@@ -374,8 +419,9 @@ export class AITestClass {
 
                 trigger();
             } catch (ex) {
-                console.error("Failed: Unexpected Exception: " + ex);
-                Assert.ok(false, "Unexpected Exception: " + ex);
+                // tslint:disable-next-line:no-console
+                console && console.error("Failed: Unexpected Exception: " + dumpObj(ex));
+                Assert.ok(false, "Unexpected Exception: " + dumpObj(ex));
                 self._testCompleted(true);
 
                 // done is QUnit callback indicating the end of the test
@@ -388,7 +434,7 @@ export class AITestClass {
     }
 
     /** Register a Javascript unit testcase. */
-    public testCase(testInfo: TestCase) {
+    public testCase(testInfo: ITestCase) {
         if (!testInfo.name) {
             throw new Error("Must specify name in testInfo context in registerTestcase call");
         }
@@ -428,13 +474,14 @@ export class AITestClass {
                     self._assertHooksRemoved();
                 }
 
-                AITestClass.currentTestClass._testCompleted(failed);
+                AITestClass.currentTestClass && AITestClass.currentTestClass._testCompleted(failed);
                 done();
             }
 
             // Save the real clearTimeout (as _testStarting and enable sinon fake timers)
             const orgClearTimeout = clearTimeout;
             const orgSetTimeout = setTimeout;
+            AITestClass.orgLocalStorage = window.localStorage;
 
             AITestClass.orgSetTimeout = (handler: (...args: any[]) => void, timeout: number, ...args: any[]) => {
                 if (AITestClass.currentTestInfo && AITestClass.currentTestInfo.orgSetTimeout) {
@@ -462,7 +509,7 @@ export class AITestClass {
             }
 
             if (testInfo.useFakeTimers) {
-                this.clock = sinon.useFakeTimers();
+                this.clock = useFakeTimers();
             }
 
             if (this.isEmulatingIe) {
@@ -505,8 +552,9 @@ export class AITestClass {
                     _testFinished();
                 }
             } catch (ex) {
-                console.error("Failed: Unexpected Exception: " + ex);
-                Assert.ok(false, "Unexpected Exception: " + ex);
+                // tslint:disable-next-line:no-console
+                console && console.error("Failed: Unexpected Exception: " + dumpObj(ex));
+                Assert.ok(false, "Unexpected Exception: " + dumpObj(ex));
                 _testFinished(true);
             }
         };
@@ -548,7 +596,7 @@ export class AITestClass {
      * @param data - Data to respond with.
      * @param errorCode - Optional error code to send with the request, default is 200
      */
-    public sendJsonResponse(request: SinonFakeXMLHttpRequest, data: any, errorCode?: number) {
+    public sendJsonResponse(request: IFakeXMLHttpRequest, data: any, errorCode?: number) {
         if (errorCode === undefined) {
             errorCode = 200;
         }
@@ -559,19 +607,22 @@ export class AITestClass {
             JSON.stringify(data));
     }
 
-
     public getPayloadMessages(spy: SinonSpy, includeInit:boolean = false) {
         let resultPayload: any[] = [];
         if (spy.called && spy.args && spy.args.length > 0) {
             spy.args.forEach(call => {
-                call[0].forEach((message: string) => {
+                call[0].forEach((item: any) => {
+                    let message = item;
+                    if (typeof item !== "string") {
+                        message = item.item;
+                    }
                     if (message) {
                         // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                         if (includeInit || message.indexOf("AI (Internal): 72 ") === -1) {
                             resultPayload.push(message);
                         }
                     }
-                })
+                });
             });
         }
 
@@ -596,90 +647,172 @@ export class AITestClass {
 
     protected setUserAgent(userAgent: string) {
         // Hook Send beacon which also mocks navigator
-        this.hookSendBeacon(null);
+        if (!this._orgNavigator) {
+            // Hook the navigator
+            this.hookSendBeacon(null);
+        }
+	
+        this.setNavigator({
+            userAgent: userAgent
+        }, true);
+    }
+
+    protected setUserAgentData(userAgentData: any) {
+        // Hook Send beacon which also mocks navigator
+        if (!this._orgNavigator) {
+            this.hookSendBeacon(null);
+        }
 
         try {
-            AITestClass.orgObjectDefineProperty(window.navigator, "userAgent",
+            AITestClass.orgObjectDefineProperty(getNavigator(), "userAgentData",
                 {
                     configurable: true,
-                    get () {
-                        return userAgent;
+                    get: function () {
+                        return userAgentData;
                     }
                 });
 
             setBypassLazyCache(true);
         } catch (e) {
-            QUnit.assert.ok(false, "Failed to set the userAgent - " + e);
+            Assert.ok(false, "Failed to set the userAgent - " + e);
             throw e;
         }
     }
 
-    protected hookSendBeacon(cb: (url: string, data?: BodyInit | null) => undefined|boolean) {
-        if (!this._orgNavigator) {
-            let newNavigator = <any>{};
-            this._orgNavigator = window.navigator;
-
-            newNavigator.sendBeacon = (url: string, body: any) => {
-                let handled: any;
-                this._beaconHooks.forEach(element => {
-                    let result = element(url, body);
-                    if (result !== undefined) {
-                        handled |= result;
-                    }
-                });
-
-                if (handled !== undefined) {
-                    return handled;
-                }
-
-                return this._orgNavigator.sendBeacon(url, body);
-            };
-
-            try {
-                // Just Blindly copy the properties over
-                // tslint:disable-next-line: forin
-                for (let name in navigator) {
-                    if (!newNavigator.hasOwnProperty(name)) {
-                        newNavigator[name] = navigator[name];
-                        if (!newNavigator.hasOwnProperty(name)) {
-                            // if it couldn't be set directly try and pretend
-                            AITestClass.orgObjectDefineProperty(newNavigator, name,
-                                {
-                                    configurable: true,
-                                    get: function () {
-                                        return navigator[name];
-                                    }
-                                });
-                        }
-                    }
-                }
-            } catch (e) {
-                QUnit.assert.ok(false, "Creating navigator copy failed - " + e);
-                throw e;
-            }
-
-            this.setNavigator(newNavigator);
-        }
-
-        this._beaconHooks.push(cb);
+    protected setReactNative() {
+        this._setNavProduct("ReactNative");
     }
 
-    protected setNavigator(newNavigator: any) {
-        try {
-            AITestClass.orgObjectDefineProperty(window, "navigator",
-                {
-                    configurable: true,
-                    get: function () {
-                        return newNavigator;
+    protected hookSendBeacon(cb: (url: string, data?: BodyInit | null) => void): IBeaconRequest[] {
+        let _self = this;
+        let calls:IBeaconRequest[] = [];
+
+        if (cb) {
+            _self._beaconHooks.push((url: string, data: any) => {
+                calls.push({
+                    url,
+                    data
+                });
+    
+                return cb(url, data);
+            });
+        }
+
+        if (!_self._beaconHooked) {
+            let newNavigator = <any>{};
+
+            newNavigator.sendBeacon = (url: string, data: any) => {
+                let returnValue = false;
+                let handled = false;
+    
+                // Note: Using the _self and not the current this
+                _self._beaconHooks.forEach(element => {
+                    let result = element(url, data);
+                    if (result !== undefined) {
+                        returnValue = returnValue || result;
+                        handled = true;
                     }
                 });
-
-            // clear any cached content
+                if (!handled) {
+                    return _self._orgNavigator.sendBeacon(url, data);
+                }
+    
+                return returnValue;
+            };
+    
+            _self.setNavigator(newNavigator, true);
             setBypassLazyCache(true);
-        } catch (e) {
-            QUnit.assert.ok(true, "Set Navigator failed - " + e);
-            sinon.stub(window, "navigator").returns(newNavigator);
+            _self._beaconHooked = true;
         }
+
+        return calls;
+    }
+
+    protected hookFetch<T>(executor: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void): IFetchRequest[] {
+        let calls: IFetchRequest[] = [];
+        let global = getGlobal() as any;
+
+        if (!this._orgFetch) {
+            // Save Previous fetch so we can restore it
+            this._orgFetch = global.fetch;
+        }
+
+        global.fetch = function(input: RequestInfo, init?: RequestInit) {
+            calls.push({
+                input,
+                init
+            });
+
+            return createSyncPromise(executor);
+        }
+    
+        return calls;
+    }
+
+    protected setNavigator(newNavigator: any, mergeWithExisting: boolean) {
+        let navigator = getNavigator();
+
+        if (!this._orgNavigator) {
+            this._orgNavigator = navigator;
+        }
+
+        if (newNavigator != this._orgNavigator || newNavigator !== navigator) {
+            if (mergeWithExisting) {
+                try {
+                    // Just Blindly copy the properties over onto the new Navigator
+                    // tslint:disable-next-line: forin
+                    for (let name in navigator) {
+                        if (!newNavigator.hasOwnProperty(name)) {
+                            newNavigator[name] = navigator[name];
+                            if (!newNavigator.hasOwnProperty(name)) {
+                                // if it couldn't be set directly try and pretend
+                                AITestClass.orgObjectDefineProperty(newNavigator, name,
+                                    {
+                                        configurable: true,
+                                        get: function () {
+                                            return navigator[name];
+                                        }
+                                    });
+                            }
+                        }
+                    }
+                } catch (e) {
+                    QUnit.assert.ok(false, "Creating navigator copy failed - " + e);
+                    throw e;
+                }
+            }
+
+            try {
+                AITestClass.orgObjectDefineProperty(window, "navigator",
+                    {
+                        configurable: true,
+                        get: function () {
+                            return newNavigator || navigator;
+                        }
+                    });
+
+                setBypassLazyCache(true);
+            } catch (e) {
+                Assert.ok(false, "Failed to set the navigator obejct");
+            }
+        }
+    }
+
+    protected setLocalStorage(newLocalStorage: Storage | undefined | null) {
+        if (!this._orgLocalStorage) {
+            // Save the original local storage
+            this._orgLocalStorage = AITestClass.orgLocalStorage;
+        }
+
+        AITestClass.orgObjectDefineProperty(window, "localStorage",
+            {
+                configurable: true,
+                get: function() {
+                    return newLocalStorage;
+                }
+            });
+
+        setBypassLazyCache(true);
     }
 
     protected setCrypto(crypto: Crypto | null) {
@@ -709,7 +842,7 @@ export class AITestClass {
             console.log("Set performance failed - " + e);
             QUnit.assert.ok(true, "Set performance failed - " + e);
             try {
-                sinon.stub(window, "performance").returns(newPerformance);
+                stub(window, "performance").returns(newPerformance);
             } catch (ex) {
                 console.log("Unable to fallback to stub performance failed - " + e);
                 QUnit.assert.ok(true, "Unable to fallback to stub performance failed - " + e);
@@ -757,7 +890,7 @@ export class AITestClass {
                 // throw e;
             }
 
-            this._orgNavigator = null;
+            this._orgPerformance = null;
         }
 
         getPerformance();
@@ -818,7 +951,7 @@ export class AITestClass {
             }
         } catch (e) {
             QUnit.assert.ok(true, "Set Location failed - " + e);
-            sinon.stub(window, "location").returns(newLocation);
+            stub(window, "location").returns(newLocation);
         }
     }
 
@@ -842,14 +975,14 @@ export class AITestClass {
             var cookie = cookies[i];
             if (cookie) {
                 var eqPos = cookie.indexOf("=");
-                var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                var name = eqPos > -1 ? strSubstr(cookie, 0, eqPos) : cookie;
                 document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
             }
         }
     }
 
-    protected _disableDynProtoBaseFuncs() {
-        let defOpts = dynamicProto["_dfOpts"];
+    protected _disableDynProtoBaseFuncs(dynamicProtoInst: typeof dynamicProto = dynamicProto) {
+        let defOpts = dynamicProtoInst["_dfOpts"];
         if (defOpts) {
             if (!this._dynProtoOpts) {
                 // Save the current settings so we can restore them
@@ -860,6 +993,7 @@ export class AITestClass {
             }
 
             defOpts.useBaseInst = false;
+            defOpts.strSetInstFuncs = false;
         }
     }
 
@@ -889,11 +1023,34 @@ export class AITestClass {
         this._assertRemoveFuncHooks(window.onunhandledrejection, "window.onunhandledrejection");
     }
 
+    private _setNavProduct(product: string) {
+        // Hook Send beacon which also mocks navigator
+        if (!this._orgNavigator) {
+            this.hookSendBeacon(null);
+        }
+        let nav = getNavigator();
+
+        if (!this._navOrgProduct) {
+            // Save the original navigator product if we have not already
+            this._navOrgProduct = nav.product;
+        }
+
+        objDefineProp(nav, "product",
+            {
+                configurable: true,
+                get: function () {
+                    return product;
+                }
+            });
+
+        setBypassLazyCache(true);
+    }
+
     /** Called when the test is starting. */
     private _testStarting() {
         let _self = this;
         // Initialize the sandbox similar to what is done in sinon.js "test()" override. See note on class.
-        _self.sandbox = sinon.createSandbox(this.sandboxConfig);
+        _self.sandbox = createSandbox(this.sandboxConfig);
 
 
         if (_self.isEmulatingIe) {
@@ -973,17 +1130,25 @@ export class AITestClass {
         }
 
         if (this._orgNavigator) {
-            this.setNavigator(this._orgNavigator);
+            this.setNavigator(this._orgNavigator, false);
+            Assert.ok(this._orgNavigator === getNavigator(), "Navigator should have been restored - " + this._orgNavigator.userAgent + "::" + getNavigator().userAgent);
             this._orgNavigator = null;
-            getNavigator();
+        }
+
+        if (this._orgLocalStorage) {
+            this.setLocalStorage(this._orgLocalStorage);
+            this._orgLocalStorage = null;
         }
 
         this._restorePerformance();
 
         this._beaconHooks = [];
+        this._beaconHooked = false;
         this._cleanupAllHooks();
         this._cleanupEvents();
         this._restoreIE();
+
+        Assert.equal(false, isIE(), "We should not be emulating IE anymore - " + getNavigator().userAgent);
 
         if (failed) {
             // Just cleanup the sandbox since the test has already failed.
@@ -1097,7 +1262,7 @@ export class AITestClass {
     }
 
     private _emulateIE() {
-        const objectNames = [ "assign"];
+        const objectNames = [ "assign" ];
         if (!this._orgObjectFuncs) {
             this._orgObjectFuncs = {};
             for (var lp = 0; lp < objectNames.length; lp++) {
@@ -1107,17 +1272,24 @@ export class AITestClass {
             }
         }
 
+        let global = getGlobal() as any;
         if (!this._orgFetch) {
-            let global = window as any;
             this._orgFetch = global.fetch;
             global.fetch = null;
         }
+
+        // Hook Send beacon which also mocks navigator
+        if (!this._orgNavigator) {
+            this.hookSendBeacon(null);
+        }
+
+        // Remove beacon support
+        global.sendBeacon = null;
 
         // Lets pretend to also be IE9
         this.setUserAgent("Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0)");
 
         if (!this._orgSymbol) {
-            let global = window as any;
             this._orgSymbol = global["Symbol"];
             global["Symbol"] = undefined;
         }
@@ -1142,7 +1314,7 @@ export class AITestClass {
         let _self = this;
         if (!_self._xhr) {
             // useFake Server is being re-enabled while we are running a test so we need to re-fake it
-            _self._xhr = sinon.useFakeXMLHttpRequest();
+            _self._xhr = useFakeXMLHttpRequest();
             _self._xhrRequests = [];
             _self._xhr.onCreate = (xhr: FakeXMLHttpRequest) => {
                 _self._xhrRequests.push(xhr);
@@ -1160,7 +1332,16 @@ export class AITestClass {
                 if (autoRespond && xhr && xhr.url && xhr.method) {
                     AITestClass.orgSetTimeout && AITestClass.orgSetTimeout(() => {
                         if (AITestClass.currentTestInfo && xhr && _self._xhrRequests && _self._xhrRequests.indexOf(xhr) !== -1) {
-                            xhr.respond(200, {}, "");
+                            var theResponse: any;
+                            if (xhr.url.endsWith("/v2/track")) {
+                                theResponse = {
+                                    itemsReceived: 1,
+                                    itemsAccepted: 1,
+                                    errors: [],
+                                    appId: "00000000-0000-0000-0000-000000000000"
+                                };
+                            }
+                            xhr.respond(200, {}, (theResponse && JSON.stringify(theResponse)) || "");
                         }
                     }, 5);
                 }
@@ -1230,7 +1411,7 @@ export class AITestClass {
             if (value && name.startsWith("_aiDataEvents")) {
                 let events = value.events;
                 if (events) {
-                    _objForEachKey(events, (evtName, evts) => {
+                    objForEachKey(events, (evtName, evts) => {
                         if (evts) {
                             for (let lp = 0; lp < evts.length; lp++) {
                                 let theEvent = evts[lp];
@@ -1257,7 +1438,7 @@ export class AITestClass {
                 dataName.push(name);
                 let events = value.events;
                 if (events) {
-                    _objForEachKey(events, (evtName, evts) => {
+                    objForEachKey(events, (evtName, evts) => {
                         if (evts) {
                             for (let lp = 0; lp < evts.length; lp++) {
                                 let theEvent = evts[lp];
@@ -1301,13 +1482,26 @@ export class AITestClass {
 }
 
 // Configure Sinon
-sinon.assert.fail = (msg?) => {
+sinonAssert.fail = (msg?) => {
     QUnit.assert.ok(false, msg);
 };
 
-sinon.assert.pass = (assertion) => {
+sinonAssert.pass = (assertion) => {
     QUnit.assert.ok(assertion, "sinon assert");
 };
+
+/**
+ * Identifies whether the current environment appears to be IE
+ */
+export function isIE() {
+    let nav = getNavigator();
+    if (nav) {
+        let userAgent = (nav.userAgent || "").toLowerCase();
+        return strContains(userAgent, "msie") || strContains(userAgent, "trident/");
+    }
+
+    return false;
+}
 
 // sinon.config = {
 //     injectIntoThis: true,

@@ -4,7 +4,6 @@
 import {
     asString, isArray, isDefined, isNullOrUndefined, isObject, isPlainObject, isUndefined, objForEachKey, objHasOwn
 } from "@nevware21/ts-utils";
-import { _cfgDeepCopy } from "./DynamicSupport";
 import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./IConfigDefaults";
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 
@@ -113,12 +112,14 @@ export function _applyDefaultValue<T, C>(dynamicHandler: IDynamicConfigHandler<T
     let mergeDf: boolean;
     let reference: boolean;
     let readOnly: boolean;
+    let blkDynamicValue: boolean;
 
     if (_isConfigDefaults<C, T>(cfgDefaults)) {
         // looks like a IConfigDefault
         isValid = cfgDefaults.isVal;
         setFn = cfgDefaults.set;
         readOnly = cfgDefaults.rdOnly;
+        blkDynamicValue = cfgDefaults.blkVal;
         mergeDf = cfgDefaults.mrg;
         reference = cfgDefaults.ref;
         if (!reference && isUndefined(reference)) {
@@ -128,6 +129,12 @@ export function _applyDefaultValue<T, C>(dynamicHandler: IDynamicConfigHandler<T
         defValue = _getDefault(dynamicHandler, theConfig, cfgDefaults);
     } else {
         defValue = defaultValue as C[keyof C];
+    }
+
+    if (blkDynamicValue) {
+        // Mark the property so that any value assigned will be blocked from conversion, we need to do this
+        // before assigning or fetching the value to ensure it's not converted
+        dynamicHandler.blkVal(theConfig, name);
     }
 
     // Set the value to the default value;

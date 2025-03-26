@@ -9,7 +9,7 @@ import { IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
 /**
  * This interface identifies the config which can track changes
  */
-export interface IDynamicConfigHandler<T extends IConfiguration> {
+export interface IDynamicConfigHandler<T = IConfiguration> {
     /**
      * Unique Id for this config handler
      */
@@ -21,7 +21,7 @@ export interface IDynamicConfigHandler<T extends IConfiguration> {
     cfg: T;
 
     /**
-     * The logger instance to use to loger any issues
+     * The logger instance to use to logger any issues
      */
     logger: IDiagnosticLogger,
 
@@ -53,7 +53,9 @@ export interface IDynamicConfigHandler<T extends IConfiguration> {
     /**
      * Set this named property of the target as referenced, which will cause any object or array instances
      * to be updated in-place rather than being entirely replaced. All other values will continue to be replaced.
-     * @returns The referenced properties current value
+     * @param target - The object which has (or will have) the named property
+     * @param name - The name of the property in the target
+     * @returns The referenced properties current value.
      */
     ref: <C, V = any>(target: C, name: string) => V;
 
@@ -62,19 +64,49 @@ export interface IDynamicConfigHandler<T extends IConfiguration> {
      * ever being changed for the target instance.
      * This does NOT freeze or seal the instance, it just stops the direct re-assignment of the named property,
      * if the value is a non-primitive (ie. an object or array) it's properties will still be mutable.
-     * @returns The referenced properties current value
+     * @param target - The object which has (or will have) the named property
+     * @param name - The name of the property in the target
+     * @returns The referenced properties current value.
      */
     rdOnly: <C, V = any>(target: C, name: string) => V;
+
+    /**
+     * Set the `value` that is or will be assigned to this named property of the target will not have it's
+     * properties converted into dynamic properties, this means that any changes the values properties will
+     * not be monitored for changes and therefore will not cause any listeners to be notified in any value
+     * is changed. If the value associated with the `target[name]` is change this is still dynamic and will
+     * cause listeners to be notified.
+     * @param target - The object which has (or will have) the named property
+     * @param name - The name of the property in the target
+     * @returns The referenced properties current value.
+     * @example
+     * ```ts
+     * let localValue = target[name];   // If within a listener this will cause the listener to be called again
+     * target[name] = newValue;         // This will notify listeners that accessed target[name]
+     *
+     * // This will not cause lsiteners to be called because propa is not converted and value of target[name]
+     * // did not change.
+     * target[name].propa = 1;
+     * target[name].propb = 2;
+     *
+     * // If within a listener this will caused the listener to be called again only if target[name] is reassigned
+     * // not if the value associated with propa is changed.
+     * let localValue = target[name].propa;
+     * ```
+     */
+    blkVal: <C, V = any>(target: C, name: string) => V;
 }
 
 /**
  * @internal
  * @ignore
  */
-export interface _IInternalDynamicConfigHandler<T extends IConfiguration> extends IDynamicConfigHandler<T> {
+export interface _IInternalDynamicConfigHandler<T = IConfiguration> extends IDynamicConfigHandler<T> {
     /**
      * @ignore
      * Internal function to explicitly block watching for any config updates
+     * @param configHandler - The Callback function to call after blocking update listening
+     * @param allowUpdate - An optional flag to enable updating config properties marked as readonly
      */
-    _block: (configHandler: WatcherFunction<T>) => void;
+    _block: (configHandler: WatcherFunction<T>, allowUpdate?: boolean) => void;
 }

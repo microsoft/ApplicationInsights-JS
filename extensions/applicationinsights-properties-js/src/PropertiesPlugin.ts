@@ -5,14 +5,15 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, createDistributedTraceContextFromTrace
+    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, createDistributedTraceContextFromTrace,
+    utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IDistributedTraceContext, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _InternalLogMessage, _eInternalMessageId,
     _logInternalMessage, createProcessTelemetryContext, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
-import { objDeepFreeze, objDefineProp } from "@nevware21/ts-utils";
+import { objDeepFreeze, objDefine } from "@nevware21/ts-utils";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 import { IPropertiesConfig } from "./Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "./TelemetryContext";
@@ -51,15 +52,14 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
         let _distributedTraceCtx: IDistributedTraceContext;
         let _previousTraceCtx: IDistributedTraceContext;
         let _context: IPropTelemetryContext;
+        let _disableUserInitMessage: boolean;
 
         dynamicProto(PropertiesPlugin, this, (_self, _base) => {
 
             _initDefaults();
 
-            objDefineProp(_self, "context", {
-                enumerable: true,
-                configurable: true,
-                get: function() {
+            objDefine(_self, "context", {
+                g: function() {
                     return _context;
                 }
             });
@@ -99,8 +99,10 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
     
                     if (userCtx && userCtx.isNewUser) {
                         userCtx.isNewUser = false;
-                        const message = new _InternalLogMessage(_eInternalMessageId.SendBrowserInfoOnUserInit, ((getNavigator()||{} as any).userAgent||""));
-                        _logInternalMessage(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, message);
+                        if (!_disableUserInitMessage){
+                            const message = new _InternalLogMessage(_eInternalMessageId.SendBrowserInfoOnUserInit, ((getNavigator()||{} as any).userAgent||""));
+                            _logInternalMessage(itemCtx.diagLog(), eLoggingSeverity.CRITICAL, message);
+                        }
                     }
     
                     _self.processNext(event, itemCtx);
@@ -124,15 +126,20 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 _distributedTraceCtx = null;
                 _previousTraceCtx = null;
                 _context = null;
+                _disableUserInitMessage = true;
             }
 
-            function _populateDefaults(config: IConfiguration) {
+            function _populateDefaults(config: IConfiguration & IConfig) {
                 let identifier = _self.identifier;
                 let core = _self.core;
 
                 // This function will be re-called whenever any referenced configuration is changed
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
+                    if (config.storagePrefix){
+                        utlSetStoragePrefix(config.storagePrefix);
+                    }
+                    _disableUserInitMessage = config.disableUserInitMessage === false ? false : true;
                     _extensionConfig = ctx.getExtCfg(identifier, _defaultConfig);
 
                     // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class

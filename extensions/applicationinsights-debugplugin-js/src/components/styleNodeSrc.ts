@@ -15,8 +15,6 @@ const BG_INFO = "#F0F6FF",
     BORDER_GREY_160 = "1px solid #605E5C",
     BORDER_GREY_60 = "1px solid #B3B0AD";
 
-console.log(getIEVersion());
-
 export const tempStyle = (prefix: string) => `
   .${prefix}-dbg-lgr-dashboard {
     z-index: 1000

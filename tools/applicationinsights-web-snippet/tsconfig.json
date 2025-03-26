@@ -13,13 +13,14 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "tools/applicationinsights-web-snippet/types",
-    "outDir": "./out",
-    "rootDir": "./tools/applicationinsights-web-snippet/dest"
+    "declarationDir": "build/types",
+    "outDir": "build/output",
+    "rootDir": "./src",
+    "removeComments": false
   },
   "include": [
-    "./dest/*.ts"
-  ],
+    "./src/*.ts"
+, "src/common/utils.ts"  ],
   "exclude": [
     "node_modules"
   ]

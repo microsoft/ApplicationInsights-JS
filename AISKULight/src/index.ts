@@ -5,13 +5,20 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, IConfigDefaults, IConfiguration, IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryItem, ITelemetryPlugin,
-    IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
+    AppInsightsCore, IConfigDefaults, IConfiguration, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, IPlugin,
+    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction,
+    cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
-import { isNullOrUndefined, objDefine, throwError } from "@nevware21/ts-utils";
+import { IPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
 
+const UNDEFINED_VALUE: undefined = undefined;
 const defaultConfigValues: IConfigDefaults<IConfiguration> = {
-    diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000)
+    diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
+    connectionString: UNDEFINED_VALUE,
+    endpointUrl: UNDEFINED_VALUE,
+    instrumentationKey: UNDEFINED_VALUE,
+    extensionConfig: {}
 };
 
 function _chkDiagLevel(value: number) {
@@ -19,17 +26,16 @@ function _chkDiagLevel(value: number) {
     return value && value > 0;
 }
 
+
 /**
  * @export
- * @class ApplicationInsights
  */
 export class ApplicationInsights {
     public readonly config: IConfiguration & IConfig;
 
     /**
      * Creates an instance of ApplicationInsights.
-     * @param config
-     * @memberof ApplicationInsights
+     * @param config - The configuration to use for this ApplicationInsights instance
      */
     constructor(config: IConfiguration & IConfig) {
         let core = new AppInsightsCore();
@@ -53,9 +59,9 @@ export class ApplicationInsights {
             _initialize();
           
             _self.initialize = _initialize;
+            _self.track = _track;
         
             proxyFunctions(_self, core, [
-                "track",
                 "flush",
                 "pollInternalLogs",
                 "stopPollingInternalLogs",
@@ -64,7 +70,10 @@ export class ApplicationInsights {
                 "addPlugin",
                 "evtNamespace",
                 "addUnloadCb",
-                "onCfgChange"
+                "onCfgChange",
+                "getTraceCtx",
+                "updateCfg",
+                "addTelemetryInitializer"
             ]);
 
             function _initialize(): void {
@@ -72,24 +81,71 @@ export class ApplicationInsights {
                 _config = cfgHandler.cfg;
     
                 core.addUnloadHook(onConfigChange(cfgHandler, () => {
-                    if (_config.connectionString) {
-                        const cs = parseConnectionString(_config.connectionString);
+                    let configCs =  _config.connectionString;
+                
+                    if (isPromiseLike(configCs)) {
+                        let ikeyPromise = createSyncPromise<string>((resolve, reject) => {
+                            doAwaitResponse(configCs, (res) => {
+                                let curCs = res.value;
+                                let ikey = _config.instrumentationKey;
+                                if (!res.rejected && curCs) {
+                                    // replace cs with resolved values in case of circular promises
+                                    _config.connectionString = curCs;
+                                    let resolvedCs = parseConnectionString(curCs);
+                                    ikey = resolvedCs.instrumentationkey || ikey;
+                                }
+                                resolve(ikey);
+                            });
+
+                        });
+
+                        let urlPromise = createSyncPromise<string>((resolve, reject) => {
+                            doAwaitResponse(configCs, (res) => {
+                                let curCs = res.value;
+                                let url = _config.endpointUrl;
+                                if (!res.rejected && curCs) {
+                                    let resolvedCs = parseConnectionString(curCs);
+                                    let ingest = resolvedCs.ingestionendpoint;
+                                    url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
+                                }
+                                resolve(url);
+                            });
+
+                        });
+
+                        _config.instrumentationKey = ikeyPromise;
+                        _config.endpointUrl = _config.userOverrideEndpointUrl || urlPromise;
+                    
+                    }
+                    
+                    if (isString(configCs)) {
+                        const cs = parseConnectionString(configCs);
                         const ingest = cs.ingestionendpoint;
-                        _config.endpointUrl = ingest ? (ingest + DEFAULT_BREEZE_PATH) : _config.endpointUrl; // only add /v2/track when from connectionstring
+                        _config.endpointUrl = _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : (ingest + DEFAULT_BREEZE_PATH); // only add /v2/track when from connectionstring
                         _config.instrumentationKey = cs.instrumentationkey || _config.instrumentationKey;
                     }
+                    // userOverrideEndpointUrl have the highest priority
+                    _config.endpointUrl = _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : _config.endpointUrl;
                 }));
     
                 // initialize core
                 core.initialize(_config, [new Sender()]);
             }
         });
+
+        function _track(item: ITelemetryItem) {
+            if (item) {
+                // to pass sender.processTelemetry()
+                item.baseData = item.baseData || {};
+                item.baseType = item.baseType || "EventData";
+            }
+            core.track(item);
+        }
     }
 
     /**
      * Initialize this instance of ApplicationInsights
      *
-     * @memberof ApplicationInsights
      */
     public initialize(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -97,9 +153,7 @@ export class ApplicationInsights {
 
     /**
      * Send a manually constructed custom event
-     *
-     * @param item
-     * @memberof ApplicationInsights
+     * @param item - The custom event to send
      */
     public track(item: ITelemetryItem) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -107,8 +161,7 @@ export class ApplicationInsights {
 
     /**
      * Immediately send all batched telemetry
-     * @param [async=true]
-     * @memberof ApplicationInsights
+     * @param async - Should the flush be performed asynchronously
      */
     public flush(async: boolean = true) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -129,15 +182,22 @@ export class ApplicationInsights {
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @param unloadComplete - An optional callback that will be called once the unload has completed
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
+     * unload. Defaults to 5 seconds.
+     * @returns Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will only be returned when no callback is provided and isAsync is true
      */
-    public unload(isAsync?: boolean, unloadComplete?: () => void): void {
+    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 
     /**
      * Find and return the (first) plugin with the specified identifier if present
-     * @param pluginIdentifier
+     * @param pluginIdentifier - The identifier of the plugin to search for
      */
     public getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -171,9 +231,32 @@ export class ApplicationInsights {
     }
 
     /**
+     * Gets the current distributed trace context for this instance if available
+     */
+    public getTraceCtx(): IDistributedTraceContext | null | undefined {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void): ITelemetryInitializerHandler {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Update the configuration used and broadcast the changes to all loaded plugins
+     * @param newConfig - The new configuration is apply
+     * @param mergeExisting - Should the new configuration merge with the existing or just replace it. Default is to merge.
+     */
+    public updateCfg<T extends IConfiguration = IConfiguration>(newConfig: T, mergeExisting?: boolean): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+
+    /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
+     * @param handler - The handler to call when the configuration changes
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<IConfiguration>): IUnloadHook {
@@ -210,4 +293,4 @@ export {
     IPageViewPerformanceTelemetry,
     ITraceTelemetry
 } from "@microsoft/applicationinsights-common";
-export { Sender } from "@microsoft/applicationinsights-channel-js";
+export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";

@@ -1,13 +1,12 @@
-import nodeResolve from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
 import commonjs from '@rollup/plugin-commonjs';
 
 const UglifyJs = require('uglify-js');
 
 const version = require("./package.json").version;
-const inputName = "./out/src/uglify3-js";
+const inputName = "./dist-es5/uglify3-js";
 const outputName = "rollup-plugin-uglify3-js";
-const distPath = "./dist/";
+const distPath = "./dist/es5/";
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Rollup Uglify3 Plugin, ${version}`,

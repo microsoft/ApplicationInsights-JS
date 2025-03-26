@@ -1,33 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IPromise } from "@nevware21/ts-async";
 import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../JavaScriptSDK/DiagnosticLogger";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
 
 export interface IDiagnosticLogger {
-    /**
-     * When this is true the SDK will throw exceptions to aid in debugging.
-     */
-    enableDebugExceptions: () => boolean;
-    
+
     /**
      * 0: OFF
      * 1: only critical (default)
      * 2: critical + info
      */
     consoleLoggingLevel: () => number;
-
-    /**
-     * 0: OFF (default)
-     * 1: CRITICAL
-     * 2: WARNING
-     */
-    telemetryLoggingLevel: () => number;
-
-    /**
-     * The maximum number of internal messages allowed to be sent per page view
-     */
-    maxInternalMessageLimit: () => number;
 
     /**
      * The internal logging queue
@@ -40,6 +25,12 @@ export interface IDiagnosticLogger {
      * @param message - The log message.
      */
     throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void;
+
+    /**
+     * This will write a debug message to the console if possible
+     * @param message - The debug message
+     */
+    debugToConsole? (message: string): void
 
     /**
      * This will write a warning to the console if possible
@@ -69,7 +60,17 @@ export interface IDiagnosticLogger {
 
     /**
      * Optional Callback hook to allow the diagnostic logger to update it's configuration
-     * @param updateState
+     * @param updateState - The new configuration state to apply to the diagnostic logger
      */
     update?(updateState: ITelemetryUpdateState): void;
+
+    /**
+     * Unload and remove any state that this IDiagnosticLogger may be holding, this is generally called when the
+     * owning SDK is being unloaded.
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @returns If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
+     * the function should return an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * / Promise to allow any listeners to wait for the operation to complete.
+     */
+    unload?(isAsync?: boolean): void | IPromise<void>;
 }

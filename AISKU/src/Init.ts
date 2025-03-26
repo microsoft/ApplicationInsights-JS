@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
+import { getInst } from "@nevware21/ts-utils";
 import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 import { Snippet } from "./Snippet";
 
@@ -11,6 +12,8 @@ import { Snippet } from "./Snippet";
 export {
     AppInsightsSku as ApplicationInsights
 } from "./AISku";
+export { IApplicationInsights } from "./IApplicationInsights";
+
 export { Snippet };
 export {
     LoggingSeverity,
@@ -50,7 +53,7 @@ export {
 
 function _logWarn(aiName:string, message:string) {
     // TODO: Find better place to warn to console when SDK initialization fails
-    var _console = typeof console !== strUndefined ? console : null;
+    var _console = getInst<Console>("console");
     if (_console && _console.warn) {
         _console.warn("Failed to initialize AppInsights JS SDK for instance " + (aiName || "<unknown>") + " - " + message);
     }
@@ -65,6 +68,9 @@ try {
     if (typeof window !== strUndefined) {
         var _window = window;
         aiName = _window["appInsightsSDK"] || "appInsights";
+        if (document.currentScript) {
+            aiName = document.currentScript.getAttribute("data-ai-name") || aiName;
+        }
         if (typeof JSON !== strUndefined) {
             // get snippet or initialize to an empty object
 

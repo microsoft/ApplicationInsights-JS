@@ -22,12 +22,12 @@
   <body>
     <h1>Microsoft Application Insights JavaScript SDK - AISKU</h1>
     <!-- this script is for local build testing -->
-    <script src="../../AISKU/dist/applicationinsights-web.js"></script>
+    <script src="../../AISKU/dist/es5/applicationinsights-web.js"></script>
     <script>
       let appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: {connectionString: "InstrumentationKey=key123", disableInstrumentationKeyValidation: true}});
       appInsights.loadAppInsights();
       window.appInsights = appInsights;
     </script>
-    <script src="./browser/aisku-example-index.gbl.js"></script>
+    <script src="./browser/es5/aisku-example-index.gbl.js"></script>
   </body>
 </html>

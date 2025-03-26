@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dumpObj, objDefineProp, objForEachKey } from "@nevware21/ts-utils";
+import { dumpObj, isUndefined, objDefine, objForEachKey } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { createUniqueNamespace } from "../JavaScriptSDK/DataCacheHelper";
 import { STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
 import { _applyDefaultValue } from "./ConfigDefaults";
-import { _makeDynamicObject, _setDynamicProperty } from "./DynamicProperty";
+import {
+    _eSetDynamicPropertyFlags, _makeDynamicObject, _setDynamicProperty, _setDynamicPropertyState, _throwDynamicError
+} from "./DynamicProperty";
 import { _createState } from "./DynamicState";
 import { CFG_HANDLER_LINK, _cfgDeepCopy, getDynamicConfigHandler, throwInvalidAccess } from "./DynamicSupport";
 import { IConfigDefaults } from "./IConfigDefaults";
@@ -34,6 +36,8 @@ function _createAndUseHandler<T>(state: _IDynamicConfigHandlerState<T>, configHa
         }
     };
 
+    objDefine<any>(handler, "toJSON", { v: () => "WatcherHandler" + (handler.fn ? "" : "[X]") });
+
     state.use(handler, configHandler);
 
     return handler;
@@ -45,8 +49,8 @@ function _createAndUseHandler<T>(state: _IDynamicConfigHandlerState<T>, configHa
  * @param inPlace - Should the passed config be converted in-place or a new proxy returned
  * @returns The existing dynamic handler or a new instance with the provided config values
  */
-function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogger, target: T, inPlace: boolean) : IDynamicConfigHandler<T> {
-    let dynamicHandler = getDynamicConfigHandler(target);
+function _createDynamicHandler<T = IConfiguration>(logger: IDiagnosticLogger, target: T, inPlace: boolean) : IDynamicConfigHandler<T> {
+    let dynamicHandler = getDynamicConfigHandler<T, T>(target);
     if (dynamicHandler) {
         // The passed config is already dynamic so return it's tracker
         return dynamicHandler;
@@ -62,25 +66,48 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
     }
 
     function _setValue<C, V>(target: C, name: string, value: V) {
-        return _setDynamicProperty(theState, target, name, value);
+        try {
+            target = _setDynamicProperty(theState, target, name, value);
+        } catch (e) {
+            // Unable to convert to dynamic property so just leave as non-dynamic
+            _throwDynamicError(logger, name, "Setting value", e);
+        }
+
+        return target[name];
     }
 
     function _watch(configHandler: WatcherFunction<T>) {
         return _createAndUseHandler(theState, configHandler);
     }
 
-    function _block(configHandler: WatcherFunction<T>) {
-        theState.use(null, configHandler);
+    function _block(configHandler: WatcherFunction<T>, allowUpdate?: boolean) {
+        theState.use(null, (details) => {
+            let prevUpd = theState.upd;
+            try {
+                if (!isUndefined(allowUpdate)) {
+                    theState.upd = allowUpdate;
+                }
+
+                configHandler(details);
+            } finally {
+                theState.upd = prevUpd;
+            }
+        });
     }
 
     function _ref<C>(target: C, name: string) {
         // Make sure it's dynamic and mark as referenced with it's current value
-        return _setDynamicProperty(theState, target, name, target[name], true);
+        return _setDynamicPropertyState(theState, target, name, { [_eSetDynamicPropertyFlags.inPlace]: true })[name];
     }
 
     function _rdOnly<C>(target: C, name: string) {
         // Make sure it's dynamic and mark as readonly with it's current value
-        return _setDynamicProperty(theState, target, name, target[name], false, true);
+        return _setDynamicPropertyState(theState, target, name, { [_eSetDynamicPropertyFlags.readOnly]: true })[name];
+    }
+
+    function _blkPropValue<C>(target: C, name: string) {
+        // Make sure it's dynamic and mark as readonly with it's current value
+        return _setDynamicPropertyState(theState, target, name, { [_eSetDynamicPropertyFlags.blockDynamicProperty]: true })[name];
     }
 
     function _applyDefaults<C>(theConfig: C, defaultValues: IConfigDefaults<C, T>): C {
@@ -105,27 +132,27 @@ function _createDynamicHandler<T extends IConfiguration>(logger: IDiagnosticLogg
         watch: _watch,
         ref: _ref,
         rdOnly: _rdOnly,
+        blkVal: _blkPropValue,
         _block: _block
     };
 
-    objDefineProp(cfgHandler, "uid", {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: uid
+    objDefine(cfgHandler, "uid", {
+        c: false,
+        e: false,
+        w: false,
+        v: uid
     });
 
     theState = _createState(cfgHandler);
 
     // Setup tracking for all defined default keys
-    _makeDynamicObject(theState, newTarget);
+    _makeDynamicObject(theState, newTarget, "config", "Creating");
 
     return cfgHandler;
 }
 
 /**
  * Log an invalid access message to the console
- * @param message
  */
 function _logInvalidAccess(logger: IDiagnosticLogger, message: string) {
     if (logger) {
@@ -144,7 +171,7 @@ function _logInvalidAccess(logger: IDiagnosticLogger, message: string) {
  * @param inPlace - Should the config be converted in-place into a dynamic config or a new instance returned, defaults to true
  * @returns The dynamic config handler for the config (whether new or existing)
  */
-export function createDynamicConfig<T extends IConfiguration>(config: T, defaultConfig?: IConfigDefaults<T>, logger?: IDiagnosticLogger, inPlace?: boolean): IDynamicConfigHandler<T> {
+export function createDynamicConfig<T = IConfiguration>(config: T, defaultConfig?: IConfigDefaults<T>, logger?: IDiagnosticLogger, inPlace?: boolean): IDynamicConfigHandler<T> {
     let dynamicHandler = _createDynamicHandler<T>(logger, config || {} as T, inPlace);
 
     if (defaultConfig) {
@@ -157,19 +184,17 @@ export function createDynamicConfig<T extends IConfiguration>(config: T, default
 /**
  * Watch and track changes for accesses to the current config, the provided config MUST already be
  * a dynamic config or a child accessed via the dynamic config
- * @param config
- * @param configHandler
  * @param logger - The logger instance to use if there is no existing handler
  * @returns A watcher handler instance that can be used to remove itself when being unloaded
  * @throws TypeError if the provided config is not a dynamic config instance
  */
-export function onConfigChange<T>(config: T, configHandler: WatcherFunction<T>, logger?: IDiagnosticLogger): IWatcherHandler<T> {
+export function onConfigChange<T = IConfiguration>(config: T, configHandler: WatcherFunction<T>, logger?: IDiagnosticLogger): IWatcherHandler<T> {
     let handler: IDynamicConfigHandler<T> = config[CFG_HANDLER_LINK] || config;
-    if (handler.cfg && (handler.cfg === config || handler.cfg[CFG_HANDLER_LINK] === handler)) {
+    if (handler.cfg && (handler.cfg === (config as any) || handler.cfg[CFG_HANDLER_LINK] === handler)) {
         return handler.watch(configHandler);
     }
 
     _logInvalidAccess(logger, STR_NOT_DYNAMIC_ERROR + dumpObj(config));
 
-    createDynamicConfig(config, null, logger).watch(configHandler);
+    return createDynamicConfig(config, null, logger).watch(configHandler);
 }

@@ -60,7 +60,7 @@ export class WebEvent implements IUnloadableComponent {
                 if (!isValueAssigned(event.name)) {
                     event.pageName = getPageName(_self._config, overrideValues);
                 }
-                if (!isValueAssigned(event.uri) && hasWindow) {
+                if (!isValueAssigned(event.uri) && hasWindow()) {
                     event.uri = getUri(_self._config, getLocation());
                 }
             };

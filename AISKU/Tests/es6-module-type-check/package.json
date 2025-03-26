@@ -1,0 +1,38 @@
+{
+    "name": "@microsoft/applicationinsights-test-module-type-check",
+    "author": "Microsoft Application Insights Team and Contributors",
+    "version": "3.3.6",
+    "description": "Microsoft Application Insights ES6 Module and Type check Example",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
+    "keywords": [
+        "example"
+    ],
+    "module": "dist-es5/applicationinsights-test-module-type-check.js",
+    "types": "types/applicationinsights-test-module-type-check.d.ts",
+    "scripts": {
+        "clean": "git clean -xdf",
+        "build": "tsc --project tsconfig.json --noEmit",
+        "rebuild": "npm run build",
+        "test": "",
+        "mintest": "",
+        "perftest": "",
+        "ai-min": "",
+        "ai-restore": ""
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/AISKU/Tests/es6-module-type-check"
+    },
+    "license": "MIT",
+    "sideEffects": false,
+    "devDependencies": {
+        "typescript": "^4.9.3"
+    },
+    "peerDependencies": {
+        "tslib": ">= 1.0.0"
+    },
+    "dependencies": {
+        "@microsoft/applicationinsights-common": "3.3.6",
+        "@microsoft/applicationinsights-web": "3.3.6"
+    }
+}

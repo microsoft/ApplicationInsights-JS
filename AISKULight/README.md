@@ -15,8 +15,8 @@
 
 # Microsoft Application Insights JavaScript SDK - Web Basic
 
-[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=master)
-[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
+[![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU%20vNext?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web-basic.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web-basic)
 
 Application Insights - Web Basic SDK
@@ -24,12 +24,12 @@ Application Insights - Web Basic SDK
 Application Insights AI SKU Light is a package that combines minimum required packages for Web scenarios.  
 Refer to [ApplicationInsights-JS](../README.md) for more details on getting started.
 
-## Beta Release Breaking changes
+## V3.x Release Breaking changes
 
 - Removed ES3 / IE8 Support
 - Removed V1 API Backward Compatibility (Upgrading V1 -> V3)
 
-See [Breaking Changes](./BETA_BREAKING_CHANGES.md)
+See [Breaking Changes](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v3_BreakingChanges.html)
 
 ## Contributing
 

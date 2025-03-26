@@ -19,19 +19,18 @@
             }
         });
 
-        // Load and define the app insights test framework module
-        modules.add("@microsoft/ai-test-framework", "./node_modules/@microsoft/ai-test-framework/dist/ai-test-framework");
-
         modules.add("qunit");
 
-        var testModule = modules.add("Tests/Unit/src/shims.tests", "./Unit/dist/shimstests.js")
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
+        loadCommonModules(modules, function() {
+            var testModule = modules.add("Tests/Unit/src/shims.tests", "./Unit/dist/shimstests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
 
-        modules.run();
+            modules.run();
+        });
     </script>
 </head>
 

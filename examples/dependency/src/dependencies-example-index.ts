@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { arrForEach } from "@microsoft/applicationinsights-core-js";
-import { addDependencyListener, addDependencyInitializer, stopDependencyEvent, changeConfig, initApplicationInsights, getConfig } from "./appinsights-init";
-import { addHandlersButtonId, buttonSectionId, changeConfigButtonId, clearDetailsButtonId, clearDetailsList, clearEle, configContainerId, configDetails, createButton, createContainers, createDetailList, createFetchRequest, createUnTrackRequest, createXhrRequest, dependencyInitializerDetails, dependencyInitializerDetailsContainerId, dependencyListenerButtonId, dependencyListenerDetails, dependencyListenerDetailsContainerId, fetchCallId, fetchXhrId, removeAllHandlersId, stopDependencyEventButtonId, untrackFetchRequestId } from "./utils";
+import { addDependencyListener, addDependencyInitializer, stopDependencyEvent, changeConfig, initApplicationInsights, getConfig, enableAjaxPerfTrackingConfig } from "./appinsights-init";
+import { addHandlersButtonId, ajaxCallId, buttonSectionId, changeConfigButtonId, clearDetailsButtonId, clearDetailsList, clearEle, configContainerId, configDetails, createButton, createContainers, createDetailList, createFetchRequest, createUnTrackRequest, createXhrRequest, dependencyInitializerDetails, dependencyInitializerDetailsContainerId, dependencyListenerButtonId, dependencyListenerDetails, dependencyListenerDetailsContainerId, fetchCallId, fetchXhrId, removeAllHandlersId, stopDependencyEventButtonId, untrackFetchRequestId } from "./utils";
 
 let dependencyListenerHandler: any = null;
 let dependencyInitializerHandler: any = null;
@@ -72,17 +72,25 @@ function onAddHandlersClick() {
     addDependencyInitializerOnClick();
 }
 
+function createAjaxPerformRequest() {
+    console.log("turn on perf tracking for ajax calls");
+    enableAjaxPerfTrackingConfig();
+    createConfigDetails();
+    createXhrRequest();
+}
+
 function createButtonSection() {
     let container = document.getElementById(buttonSectionId);
     let changeConfigBtn = createButton(changeConfigButtonId, changeConfigOnClick, changeConfigButtonId);
     let handlersBtn = createButton(addHandlersButtonId, onAddHandlersClick, dependencyListenerButtonId);
     let fetchButton = createButton(fetchCallId, createFetchRequest);
+    let ajaxPerfButton = createButton(ajaxCallId, createAjaxPerformRequest);
     let xhrButton = createButton(fetchXhrId, createXhrRequest);
     let untrackRequestButton = createButton(untrackFetchRequestId, createUnTrackRequest);
     let stopEventButton = createButton(stopDependencyEventButtonId, stopDependencyEvent);
     let removeHandlersButton = createButton(removeAllHandlersId, removeAllHandlers);
     let clearBtn = createButton(clearDetailsButtonId, clearDetailsList);
-    let buttons = [changeConfigBtn, handlersBtn, fetchButton, xhrButton, untrackRequestButton, stopEventButton, removeHandlersButton, clearBtn];
+    let buttons = [changeConfigBtn, handlersBtn, fetchButton, xhrButton, ajaxPerfButton, untrackRequestButton, stopEventButton, removeHandlersButton, clearBtn];
     arrForEach(buttons, ele => {
         container?.appendChild(ele);
     });

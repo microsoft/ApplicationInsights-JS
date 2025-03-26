@@ -23,8 +23,7 @@
         modules.add("qunit");
         modules.add("magic-string");
 
-        // Load and define the app insights test framework module
-        modules.add("@microsoft/ai-test-framework", "./node_modules/@microsoft/ai-test-framework/dist/ai-test-framework");
+        modules.add("@microsoft/ai-test-framework");
         
         var testModule = modules.add("Tests/Unit/src/Es5RollupTests", "./Unit/dist/es5rolluptests.js");
         testModule.run = function (tests) {
@@ -46,10 +45,10 @@
 </html>
 
         // Load Core
-        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
+        modules.add("@microsoft/applicationinsights-core-js");
 
         // Load Common
-        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
+        modules.add("@microsoft/applicationinsights-common");
 
         var testModule = modules.add("Tests/Unit/src/prop.tests", "./Unit/dist/prop.tests.js")
         testModule.run = function (tests) {

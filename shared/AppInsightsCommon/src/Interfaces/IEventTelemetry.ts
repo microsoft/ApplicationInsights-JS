@@ -6,15 +6,11 @@ import { IPartC } from "./IPartC";
 export interface IEventTelemetry extends IPartC {
     /**
      * @description An event name string
-     * @type {string}
-     * @memberof IEventTelemetry
      */
     name: string;
 
     /**
      * @description custom defined iKey
-     * @type {string}
-     * @memberof IEventTelemetry
      */
     iKey?: string;
 }

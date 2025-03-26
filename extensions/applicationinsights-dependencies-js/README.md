@@ -1,6 +1,7 @@
 # Microsoft Application Insights JavaScript SDK - Dependencies Plugin
 
-[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
+[![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-dependencies-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-dependencies-js)
 
 Dependencies Plugin for the Application Insights Javascript SDK
@@ -17,6 +18,34 @@ npm run build --silent
 
 ```javascript
 npm run test
+```
+
+## Basic Usage
+
+### NPM Setup (ignore if using Snippet Setup)
+
+```js
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
+
+const dependencyPlugin = new AjaxPlugin();
+const appInsights = new ApplicationInsights({
+    config: {
+        connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+        extensions: [dependencyPlugin],
+        extensionConfig: {
+            [dependencyPlugin.identifier]: {
+                ignoreHeaders:[
+                    "Authorization",
+                    "X-API-Key",
+                    "WWW-Authenticate"
+                ]
+            }
+        }
+    }
+});
+appInsights.loadAppInsights();
+appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
 ```
 
 ## Contributing

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ObjAssign } from "./Constants";
-import { getGlobal } from "./Helpers";
+import { getGlobal, objAssign } from "@nevware21/ts-utils";
 import { __assignFn, __createBindingFn, __extendsFn } from "./TsLibShims";
 
 // To address compile time errors declaring these here
@@ -18,7 +17,7 @@ export function __exposeGlobalTsLib() {
         // Assign the globally scoped versions of the functions -- used when consuming individual ts files
         // If check is to support NativeScript where these are marked as readonly
         if (!root.__assign) {
-            root.__assign = ObjAssign || assignFn;
+            root.__assign = objAssign || assignFn;
         }
         if (!root.__extends) {
             root.__extends = extendsFn;

@@ -1,23 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ITelemetryItem } from "./ITelemetryItem";
-import { IChannelControls } from "./IChannelControls";
-import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
-import { IConfiguration } from "./IConfiguration";
-import { INotificationManager } from "./INotificationManager";
-import { INotificationListener } from "./INotificationListener";
-import { IDiagnosticLogger } from "./IDiagnosticLogger";
-import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
-import { IPerfManagerProvider } from "./IPerfManager";
-import { ICookieMgr } from "./ICookieMgr";
-import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
-import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
-import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
-import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { IDistributedTraceContext } from "./IDistributedTraceContext";
-import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
-import { WatcherFunction } from "../Config/IDynamicWatcher";
+
+import { IPromise } from "@nevware21/ts-async";
 import { ITimerHandler } from "@nevware21/ts-utils";
+import { WatcherFunction } from "../Config/IDynamicWatcher";
+import { eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
+import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
+import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
+import { IChannelControls } from "./IChannelControls";
+import { IConfiguration } from "./IConfiguration";
+import { ICookieMgr } from "./ICookieMgr";
+import { IDiagnosticLogger } from "./IDiagnosticLogger";
+import { IDistributedTraceContext } from "./IDistributedTraceContext";
+import { INotificationListener } from "./INotificationListener";
+import { INotificationManager } from "./INotificationManager";
+import { IPerfManagerProvider } from "./IPerfManager";
+import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
+import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
+import { ITelemetryItem } from "./ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
+import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
+import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
 
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
@@ -135,15 +138,21 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * approach is to create a new instance and initialize that instance.
      * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
      * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * If you pass isAsync as `true` (also the default) and DO NOT pass a callback function then an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the unload is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param isAsync - Can the unload be performed asynchronously (default)
      * @param unloadComplete - An optional callback that will be called once the unload has completed
-     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the unload. Defaults to 5 seconds.
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
+     * unload. Defaults to 5 seconds.
+     * @returns Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will only be returned when no callback is provided and isAsync is true
      */
-    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void;
+    unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState>;
 
     /**
      * Find and return the (first) plugin with the specified identifier if present
-     * @param pluginIdentifier
      */
     getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
   
@@ -207,7 +216,6 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook;
@@ -216,4 +224,22 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * Function used to identify the get w parameter used to identify status bit to some channels
      */
     getWParam: () => number;
+
+    /**
+     * Watches and tracks status of initialization process
+     * @returns ActiveStatus
+     * @since 3.3.0
+     * If returned status is active, it means initialization process is completed.
+     * If returned status is pending, it means the initialization process is waiting for promieses to be resolved.
+     * If returned status is inactive, it means ikey is invalid or can 't get ikey or enpoint url from promsises.
+     */
+    activeStatus?: () => eActiveStatus | number;
+
+     /**
+     * Set Active Status to pending, which will block the incoming changes until internal promises are resolved
+     * @internal Internal use
+     * @since 3.3.0
+     */
+    _setPendingStatus?: () => void;
+
 }

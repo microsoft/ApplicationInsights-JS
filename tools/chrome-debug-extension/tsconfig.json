@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
-        "outDir": "dist-esm",
         "module": "esnext",
         "target": "es2016",
         "lib": [
             "es2017",
+            "ES2018.Promise",
             "dom"
         ],
         "sourceMap": true,
@@ -25,14 +25,15 @@
             "@types/chrome"
         ],
         "noEmit": false,
-        "declaration": true,
-        "declarationDir": "tools/chrome-debug-extension/types",
-        "rootDir": "tools/chrome-debug-extension/src",
-        "declarationMap": true,
         "inlineSourceMap": false,
         "inlineSources": true,
-        "allowJs": false
-    },
+        "allowJs": false,
+        "declaration": true,
+        "declarationDir": "build/types",
+        "outDir": "dist-es5",
+        "rootDir": "./src",
+        "removeComments": false
+        },
     "exclude": [
         "node_modules"
     ]

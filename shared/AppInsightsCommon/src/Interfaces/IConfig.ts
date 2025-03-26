@@ -3,6 +3,8 @@
 import { IConfiguration, ICustomProperties, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 import { DistributedTracingModes } from "../Enums";
 import { IRequestContext } from "./IRequestContext";
+import { IStorageBuffer } from "./IStorageBuffer";
+import { IThrottleMgrConfig } from "./IThrottleMgr";
 
 /**
  * Configuration settings for how telemetry is sent
@@ -145,30 +147,20 @@ export interface IConfig {
     disableFlushOnBeforeUnload?: boolean;
 
     /**
-     * Default value of {@link #disableFlushOnBeforeUnload}. If true, flush method will not be called when onPageHide or onVisibilityChange (hidden state) event(s) trigger.
+     * Default value of `disableFlushOnBeforeUnload`. If true, flush method will not be called when onPageHide or onVisibilityChange (hidden state) event(s) trigger.
      */
     disableFlushOnUnload?: boolean;
 
-    /**
-     * [Optional] An array of the page unload events that you would like to be ignored, special note there must be at least one valid unload
-     * event hooked, if you list all or the runtime environment only supports a listed "disabled" event it will still be hooked if required by the SDK.
-     * (Some page unload functionality may be disabled via disableFlushOnBeforeUnload or disableFlushOnUnload config entries)
-     * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide"
-     */
-    disablePageUnloadEvents?: string[];
-
-    /**
-     * [Optional] An array of page show events that you would like to be ignored, special note there must be at lease one valid show event
-     * hooked, if you list all or the runtime environment only supports a listed (disabled) event it will STILL be hooked if required by the SDK.
-     * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state)
-     */
-    disablePageShowEvents?: string[];
- 
     /**
      * If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load. Default is true.
      * @defaultValue true
      */
     enableSessionStorageBuffer?: boolean;
+
+    /**
+     * If specified, overrides the storage & retrieval mechanism that is used to manage unsent telemetry.
+     */
+    bufferOverride?: IStorageBuffer;
 
     /**
      * @deprecated Use either disableCookiesUsage or specify a cookieCfg with the enabled value set.
@@ -217,13 +209,13 @@ export interface IConfig {
     isStorageUseDisabled?: boolean;
 
     /**
-     * If false, the SDK will send all telemetry using the [Beacon API](https://www.w3.org/TR/beacon)
+     * If false, the SDK will send all telemetry using the <a href="https://www.w3.org/TR/beacon">Beacon API</a>.
      * @defaultValue true
      */
     isBeaconApiDisabled?: boolean;
 
     /**
-     * Don't use XMLHttpRequest or XDomainRequest (for IE < 9) by default instead attempt to use fetch() or sendBeacon.
+     * Don't use XMLHttpRequest or XDomainRequest (for IE \< 9) by default instead attempt to use fetch() or sendBeacon.
      * If no other transport is available it will still use XMLHttpRequest
      */
     disableXhr?: boolean;
@@ -374,12 +366,30 @@ export interface IConfig {
     disableIkeyDeprecationMessage?: boolean;
 
     /**
+     * [Optional] Sets to true if user wants to disable sending internal log message 'SendBrowserInfoOnUserInit'
+     * default to be false for versions 2.8.x and 3.0.x, true for versions 3.1.x and later
+     */
+    disableUserInitMessage?: boolean;
+
+    /**
      * [Optional] Flag to indicate whether the internal looking endpoints should be automatically
      * added to the `excludeRequestFromAutoTrackingPatterns` collection. (defaults to true).
      * This flag exists as the provided regex is generic and may unexpectedly match a domain that
      * should not be excluded.
      */
     addIntEndpoints?: boolean;
+
+    /**
+     * [Optional] Sets throttle mgr configuration by key
+     */
+    throttleMgrCfg?: {[key: number]: IThrottleMgrConfig};
+
+    /**
+     * [Optional] Specifies a Highest Priority custom endpoint URL where telemetry data will be sent.
+     * This URL takes precedence over the 'config.endpointUrl' and any endpoint in the connection string.
+     */
+    userOverrideEndpointUrl?: string;
+
 }
 
 export class ConfigurationManager {

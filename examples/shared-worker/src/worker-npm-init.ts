@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { ApplicationInsights, IConfiguration } from "@microsoft/applicationinsights-web"
+import { runTargetUnload } from "@microsoft/applicationinsights-core-js";
 
 // Cache the previously initialized instance to avoid creating multiple instances
 let _appInsights: ApplicationInsights;
@@ -43,7 +44,7 @@ export function initApplicationInsights(config: IConfiguration, onInitCallback: 
  */
 export function unloadApplicationInsights() {
     if (_appInsights) {
-        _appInsights.unload();
+        runTargetUnload(_appInsights);
         _appInsights = null;
         return true;
     }

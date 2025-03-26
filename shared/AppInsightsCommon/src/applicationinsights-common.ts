@@ -7,6 +7,7 @@ export {
 } from "./Util";
 export { ThrottleMgr } from "./ThrottleMgr";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
+export { ConnectionString } from "./Interfaces/ConnectionString";
 export { FieldType } from "./Enums";
 export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
 export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified } from "./Constants";
@@ -33,7 +34,7 @@ export { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 export { Data } from "./Telemetry/Common/Data";
 export { eSeverityLevel, SeverityLevel } from "./Interfaces/Contracts/SeverityLevel";
 export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
-export { IChannelControlsAI } from "./Interfaces/IChannelControlsAI";
+export { IStorageBuffer } from "./Interfaces/IStorageBuffer";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
 export {
     DataSanitizerValues,
@@ -47,6 +48,7 @@ export { IAppInsights } from "./Interfaces/IAppInsights";
 export { IWeb } from "./Interfaces/Context/IWeb";
 export { CtxTagKeys, Extensions } from "./Interfaces/PartAExtensions";
 export { ISession } from "./Interfaces/Context/ISession";
+export { ISessionManager } from "./Interfaces/Context/ISessionManager";
 export { ITelemetryContext } from "./Interfaces/ITelemetryContext";
 export { IApplication } from "./Interfaces/Context/IApplication";
 export { IDevice } from "./Interfaces/Context/IDevice";
@@ -58,19 +60,20 @@ export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 export { IUser, IUserContext } from "./Interfaces/Context/IUser";
 export { ITelemetryTrace, ITraceState } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
-export { eDistributedTracingModes, DistributedTracingModes, IThrottleMsgKey } from "./Enums";
+export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
     isBeaconsSupported as isBeaconApiSupported,
-    ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent
-} from "@microsoft/applicationinsights-core-js"
+    ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent, findAllScripts
+} from "@microsoft/applicationinsights-core-js";
 export { createDomEvent } from "./DomHelperFuncs";
 export {
     utlDisableStorage, utlEnableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage,
-    utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage
+    utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage, utlSetStoragePrefix
 } from "./StorageHelperFuncs";
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./UrlHelperFuncs";
 export { IThrottleLimit, IThrottleInterval, IThrottleMgrConfig, IThrottleLocalStorageObj, IThrottleResult } from "./Interfaces/IThrottleMgr";
+export { IOfflineListener, createOfflineListener, IOfflineState, eOfflineValue, OfflineCallback } from "./Offline";
 
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";

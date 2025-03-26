@@ -1,6 +1,7 @@
 # Microsoft Application Insights JavaScript SDK - Web Snippet
 
-[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
+[![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web-snippet.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web-snippet)
 
 Web Snippet for the Application Insights Javascript SDK
@@ -14,19 +15,39 @@ Add the Application Insights Web Snippet to your app's dependencies and package.
 npm i @microsoft/applicationinsights-web-snippet
 ```
 
-
-Import web snippet from the package.
+### Pass in Key via Function (available since v1.1.0)
+Import the helper function from the package to easily get the snippet
 ```
-import { webSnippet } from "@microsoft/applicationinsights-web-snippet";
+import { getSdkLoaderScript } from "@microsoft/applicationinsights-web-snippet";
 ```
 
-
-Replace "INSTRUMENTATION_KEY" with valid Instrumentation Key.
+Configure the snippet with your connectionString or other customerized field:
 ```
-webSnippet.replace("INSTRUMENTATION_KEY", your_valid_ikey);
+let config = {connectionString: "InstrumentationKey=xxx", name: "myAppInsights"}; 
+// or let config = {instrumentationKey: key, sri: true};
+let theSnippet = getSdkLoaderScript(config);
+```
+
+### Multiple Snippet Run Simutinously (available since v1.2.0)
+Configure two snippets with different name.
+```
+let firstConfig = {connectionString: "InstrumentationKey=xxx", name: "firstAppInsights"}; 
+let firstSnippet = getSdkLoaderScript(firstConfig);
+let secondConfig = {connectionString: "InstrumentationKey=xxx", name: "secondAppInsights"}; 
+let secondSnippet = getSdkLoaderScript(secondConfig);
+```
+
+### Snippet Run With Integrity Check and Minified Loading Time (available since v1.2.0)
+Configure the snippet with sri enabled.
+```
+let config = {connectionString: "InstrumentationKey=xxx", sri: true};
 ```
 
 More details on web snippet, see [Web Snippet](https://github.com/microsoft/ApplicationInsights-JS#snippet-setup-ignore-if-using-npm-setup).
+
+### Trusted Types Support (available since v1.2.2)
+For restrictions like require-trusted-types-for 'script', check [url policy check](./trustedTypeSupport.md)
+For restrictions like script-src 'self' ..., check [add nounce when inject script]()
 
 ## Build
 ```

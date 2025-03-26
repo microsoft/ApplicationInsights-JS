@@ -4,7 +4,7 @@ Dependencies Plugin for the Application Insights Javascript SDK
 
 ## Configuration
 
-[`ICorrelationConfig`](../../shared/AppInsightsCommon/src/Interfaces/ICorrelationConfig.ts)
+[`ICorrelationConfig`](https://github.com/Microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCommon/src/Interfaces/ICorrelationConfig.ts)
 
 ## Functions
 
@@ -12,7 +12,7 @@ Dependencies Plugin for the Application Insights Javascript SDK
 
 `addDependencyListener(dependencyListener: DependencyListenerFunction): IDependencyListenerHandler`
 
-A [dependency listener](../API-reference.md#adddependencylistener) is a callback function that **allows you to perform additional manipulation of the request details before the request is performed**.
+A [dependency listener](https://github.com/Microsoft/ApplicationInsights-JS/blob/main/API-reference.md#adddependencylistener) is a callback function that **allows you to perform additional manipulation of the request details before the request is performed**.
 
 This includes :-
 
@@ -54,7 +54,7 @@ handler.remove();
 
 `addDependencyInitializer(dependencyInitializer: DependencyInitializerFunction): IDependencyInitializerHandler`
 
-A [Dependency Initializer](../API-reference.md#adddependencyinitializer)  is very similar to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it **allows you modify the contents of collected telemetry before being sent from the user's browser**. And you can also returning `false` to cause the event to not be emitted.
+A [Dependency Initializer](https://github.com/Microsoft/ApplicationInsights-JS/blob/main/API-reference.md#adddependencyinitializer)  is very similar to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it **allows you modify the contents of collected telemetry before being sent from the user's browser**. And you can also returning `false` to cause the event to not be emitted.
 
 The differences between a telemetry initializer and a dependency initializer are :-
 
@@ -82,7 +82,7 @@ handler.remove();
 
 `trackDependencyData(dependency:` `IDependencyTelemetry``, properties?: { [key: string]: any }): void`
 
-[TrackDependencyData](../API-reference.md#trackdependencydata) function allows you to manually log a dependency call.
+[TrackDependencyData](https://github.com/Microsoft/ApplicationInsights-JS/blob/main/API-reference.md#trackdependencydata) function allows you to manually log a dependency call.
 
 ```javascript
 appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: 'some id'});
@@ -90,4 +90,4 @@ appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, met
 
 ## Sample
 
-A [sample](./../examples/dependency/README.md) is provided to show how to filter, modify, block and disable dependency data.
+A [sample](https://github.com/Microsoft/ApplicationInsights-JS/blob/main/examples/dependency/README.md) is provided to show how to filter, modify, block and disable dependency data.

@@ -2,14 +2,15 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
 import minify from 'rollup-plugin-minify-es';
+import cleanup from "rollup-plugin-cleanup";
 import { es5Poly, es5Check } from "@microsoft/applicationinsights-rollup-es5";
 
 const packageJson = require("./package.json");
 const version = packageJson.version;
 const pkgDesc = packageJson.description;
-const inputName = "./dist-esm/applicationinsights-shims";
+const inputName = "./dist-es5/applicationinsights-shims";
 const outputName = "applicationinsights-shims";
-const distPath = "./dist/";
+const distPath = "./dist/es5/";
 const banner = [
   "/*!",
   ` * ${pkgDesc}, ${version}`,
@@ -22,6 +23,30 @@ const replaceValues = {
   "// Licensed under the MIT License.": ""
 };
 
+const treeshakeCfg = {
+  preset: "smallest",
+  moduleSideEffects: false,
+  propertyReadSideEffects: false,
+  tryCatchDeoptimization: false,
+  unknownGlobalSideEffects: false,
+  manualPureFunctions: [
+       "getGlobal",
+       "createUniqueNamespace",
+       "createEnumStyle",
+       "createEnumKeyMap",
+       "_createKeyValueMap",
+       "objToString",
+       "_createObjIs",
+       "_createIs",
+       "createElmNodeData",
+       "createProcessTelemetryContext",
+       "createTelemetryProxyChain",
+       "createTelemetryPluginProxy",
+       "_getCache",
+       "_getPluginState"
+  ]
+};
+
 const browserUmdRollupConfigFactory = (isProduction) => {
   const browserRollupConfig = {
     input: `${inputName}.js`,
@@ -32,6 +57,7 @@ const browserUmdRollupConfigFactory = (isProduction) => {
       name: "Microsoft.ApplicationInsights.Shims",
       sourcemap: false
     },
+    treeshake: treeshakeCfg, 
     plugins: [
       replace({
         preventAssignment: true,
@@ -39,6 +65,7 @@ const browserUmdRollupConfigFactory = (isProduction) => {
         values: replaceValues
       }),
       nodeResolve(),
+      cleanup(),
       es5Poly(),
       es5Check()
     ]
@@ -50,7 +77,7 @@ const browserUmdRollupConfigFactory = (isProduction) => {
       uglify({
         ie8: false,
         ie: true,
-        toplevel: true,
+        toplevel: false,
         compress: {
           ie: true,
           passes:3,
@@ -77,6 +104,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
       name: "Microsoft.ApplicationInsights.Shims",
       sourcemap: false
     },
+    treeshake: treeshakeCfg,
     plugins: [
       replace({
         preventAssignment: true,
@@ -84,6 +112,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
         values: replaceValues
       }),
       nodeResolve(),
+      cleanup(),
       es5Poly(),
       es5Check()
     ]
@@ -96,7 +125,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
         uglify({
           ie8: false,
           ie: true,
-          toplevel: true,
+          toplevel: false,
           compress: {
             ie: true,
             passes:3,
@@ -114,7 +143,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
         minify({
           ie8: false,
           ie: true,
-          toplevel: true,
+          toplevel: false,
           compress: {
             ie: true,
             passes:3,

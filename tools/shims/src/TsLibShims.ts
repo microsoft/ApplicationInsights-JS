@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { getGlobal, objAssign, objCreate, objDefineProp, objHasOwnProperty, throwTypeError } from "@nevware21/ts-utils";
 import {
-    ObjAssign, ObjClass, ObjCreate, ObjDefineProperty, ObjHasOwnProperty, ObjProto,
-    strDefault, strShimFunction, strShimHasOwnProperty, strShimPrototype
+    ObjClass, ObjProto,
+    strDefault, strShimFunction, strShimPrototype
 } from "./Constants";
-import { getGlobal, objCreateFn, throwTypeError } from "./Helpers";
 
 // Most of these functions have been directly shamelessly "lifted" from the https://github.com/@microsoft/tslib and
 // modified to be ES5 compatible and applying several minification and tree-shaking techniques so that Application Insights
@@ -15,13 +15,13 @@ import { getGlobal, objCreateFn, throwTypeError } from "./Helpers";
 
 export const SymbolObj = (getGlobal()||{})["Symbol"];
 export const ReflectObj = (getGlobal()||{})["Reflect"];
-export const __hasSymbol = !!SymbolObj;
 export const __hasReflect = !!ReflectObj;
 
 const strDecorate = "decorate";
 const strMetadata = "metadata";
 const strGetOwnPropertySymbols = "getOwnPropertySymbols";
 const strIterator = "iterator";
+const strHasOwnProperty = "hasOwnProperty";
 
 export declare type ObjAssignFunc = (t: any, ...sources:any[]) => any;
 
@@ -30,7 +30,7 @@ export var __objAssignFnImpl: ObjAssignFunc = function(t: any): any {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
         for (var p in s) {
-            if (ObjProto[strShimHasOwnProperty].call(s, p)) {
+            if (ObjProto[strHasOwnProperty].call(s, p)) {
                 (t as any)[p] = s[p];
             }
         }
@@ -38,7 +38,7 @@ export var __objAssignFnImpl: ObjAssignFunc = function(t: any): any {
     return t;
 };
 
-export var __assignFn: ObjAssignFunc = ObjAssign || __objAssignFnImpl;
+export var __assignFn: ObjAssignFunc = objAssign || __objAssignFnImpl;
 
 // tslint:disable-next-line: only-arrow-functions
 var extendStaticsFn = function(d: any, b: any): any {
@@ -50,7 +50,7 @@ var extendStaticsFn = function(d: any, b: any): any {
         // tslint:disable-next-line: only-arrow-functions
         function (d: any, b: any) {
             for (var p in b) {
-                if (b[strShimHasOwnProperty](p)) {
+                if (b[strHasOwnProperty](p)) {
                     d[p] = b[p];
                 }
             }
@@ -67,13 +67,13 @@ export function __extendsFn(d: any, b: any) {
         this.constructor = d;
     }
     // tslint:disable-next-line: ban-comma-operator
-    d[strShimPrototype] = b === null ? objCreateFn(b) : (__[strShimPrototype] = b[strShimPrototype], new (__ as any)());
+    d[strShimPrototype] = b === null ? objCreate(b) : (__[strShimPrototype] = b[strShimPrototype], new (__ as any)());
 }
 
 export function __restFn(s: any, e: any) {
     var t = {};
     for (var k in s) {
-        if (ObjHasOwnProperty.call(s, k) && e.indexOf(k) < 0) {
+        if (objHasOwnProperty(s, k) && e.indexOf(k) < 0) {
             t[k] = s[k];
         }
     }
@@ -101,7 +101,7 @@ export function __decorateFn(decorators: any, target: any, key: any, desc: any) 
     }
 
     // tslint:disable-next-line:ban-comma-operator
-    return c > 3 && r && ObjDefineProperty(target, key, r), r;
+    return c > 3 && r && objDefineProp(target, key, r), r;
 }
 
 export function __paramFn(paramIndex: number, decorator: Function) {
@@ -118,7 +118,7 @@ export function __metadataFn(metadataKey: any, metadataValue: any) {
 
 export function __exportStarFn(m: any, o: any) {
     for (var p in m) {
-        if (p !== strDefault && !ObjHasOwnProperty.call(o, p)) {
+        if (p !== strDefault && !objHasOwnProperty(o, p)) {
             __createBindingFn(o, m, p);
         }
     }
@@ -129,8 +129,8 @@ export function __createBindingFn(o: any, m: any, k: any, k2?: any) {
         k2 = k;
     }
     
-    if (!!ObjCreate) {
-        ObjDefineProperty(o, k2, {
+    if (!!objDefineProp) {
+        objDefineProp(o, k2, {
             enumerable: true,
             get() {
                 return m[k];
@@ -219,8 +219,8 @@ export function __spreadArrayFn(to: any, from: any) {
 }
 
 export function __makeTemplateObjectFn(cooked: any, raw: any) {
-    if (ObjDefineProperty) {
-        ObjDefineProperty(cooked, "raw", { value: raw });
+    if (objDefineProp) {
+        objDefineProp(cooked, "raw", { value: raw });
     } else {
         cooked.raw = raw;
     }
@@ -243,8 +243,8 @@ export function __importStarFn(mod: any) {
     }
 
     // Set default module
-    if (!!ObjCreate) {
-        ObjDefineProperty( result, strDefault, { enumerable: true, value: mod });
+    if (!!objDefineProp) {
+        objDefineProp( result, strDefault, { enumerable: true, value: mod });
     } else {
         result[strDefault] = mod;
     }

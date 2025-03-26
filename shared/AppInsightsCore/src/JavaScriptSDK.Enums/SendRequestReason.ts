@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 /**
- * The EventsDiscardedReason enumeration contains a set of values that specify the reason for discarding an event.
- */
+* The EventsDiscardedReason enumeration contains a set of values that specify the reason for discarding an event.
+*/
 export const enum SendRequestReason {
     /**
      * No specific reason was specified
      */
-    Undefined       = 0,
+    Undefined = 0,
 
     /**
      * Events are being sent based on the normal event schedule / timer.
@@ -53,4 +53,23 @@ export const enum SendRequestReason {
      * The Maximum number of events have already been queued
      */
     MaxQueuedEvents = 20
+}
+
+export const enum TransportType {
+    /**
+     * Use the default available api
+     */
+    NotSet = 0,
+    /**
+     * Use XMLHttpRequest or XMLDomainRequest if available
+     */
+    Xhr = 1,
+    /**
+     * Use the Fetch api if available
+     */
+    Fetch = 2,
+    /**
+     * Use sendBeacon api if available
+     */
+    Beacon = 3
 }

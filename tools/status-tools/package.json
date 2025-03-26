@@ -1,0 +1,29 @@
+{
+    "name": "applicationinsights-js-status-tools",
+    "version": "3.1.3-dev",
+    "author": "Javascript Telemetry SDKs <TelReachSDK@microsoft.com>",
+    "description": "1DS Web SDK",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS",
+    "sideEffects": false,
+    "scripts": {
+        "clean": "git clean -xdf",
+        "update": "rush update",
+        "build": "",
+        "rebuild": "",
+        "test": "",
+        "issues": "node ./github-status.js"
+    },
+    "keywords": [
+        "1DS",
+        "Js",
+        "SDK"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/tools/status-tools"
+    },
+    "devDependencies": {
+        "grunt": "^1.5.3",
+        "globby": "^11.0.0"
+    }
+}

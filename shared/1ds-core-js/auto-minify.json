@@ -1,0 +1,15 @@
+{
+    "constEnums": [
+        "eValueKind",
+        "EventLatencyValue",
+        "eEventPropertyType",
+        "EventPersistenceValue",
+        "EventSendType",
+        "eTraceLevel",
+        "_eExtendedInternalMessageId",
+        "GuidStyle",
+        "FieldValueSanitizerType",
+        "TransportType",
+        "PromiseState"
+    ]
+}

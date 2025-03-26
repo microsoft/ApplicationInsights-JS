@@ -27,18 +27,17 @@
         modules.add("qunit");
 
         loadFetchModule(modules, "whatwg-fetch");
-        loadCommonModules(modules);
+        loadCommonModules(modules, function() {
+            var testModule = modules.add("aiskuperftests", "./Perf/dist/es5/aiskuperftests.tests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
 
-        modules.add("@microsoft/ai-test-framework", "./node_modules/@microsoft/ai-test-framework/dist/ai-test-framework");
+            modules.run();
+        });
 
-        var testModule = modules.add("Tests/Perf/src/aiskuperftests", "./Perf/dist/aiskuperftests.tests.js")
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
-
-        modules.run();
     </script>
 
     <script>

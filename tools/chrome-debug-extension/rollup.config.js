@@ -21,7 +21,7 @@ const replaceValues = {
 
 const generateBackground = (isProduction) => {
     const browserRollupConfig = {
-        input: `dist-esm/background.js`,
+        input: `dist-es5/background.js`,
         output: {
             file: `browser/scripts/background.js`,
             banner: banner,
@@ -52,7 +52,7 @@ const generateBackground = (isProduction) => {
             uglify({
                 ie8: false,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes: 3,
@@ -72,7 +72,7 @@ const generateBackground = (isProduction) => {
 
 const generatePopup = (isProduction) => {
     const browserRollupConfig = {
-        input: `dist-esm/popup.js`,
+        input: `dist-es5/popup.js`,
         output: {
             file: `browser/scripts/popup.js`,
             banner: banner,
@@ -111,7 +111,7 @@ const generatePopup = (isProduction) => {
             uglify({
                 ie8: false,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes: 3,
@@ -131,7 +131,7 @@ const generatePopup = (isProduction) => {
 
 const generateContentLoad = () => {
     const browserRollupConfig = {
-        input: `dist-esm/contentLoad.js`,
+        input: `dist-es5/contentLoad.js`,
         output: {
             file: `browser/scripts/contentLoad.min.js`,
             banner: banner,
@@ -154,7 +154,7 @@ const generateContentLoad = () => {
             uglify({
                 ie8: false,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes: 3,
@@ -174,7 +174,7 @@ const generateContentLoad = () => {
 
 const generatePageHelper = () => {
     const browserRollupConfig = {
-        input: `dist-esm/pageHelper.js`,
+        input: `dist-es5/pageHelper.js`,
         output: {
             file: `browser/scripts/pageHelper.min.js`,
             banner: banner,
@@ -199,7 +199,7 @@ const generatePageHelper = () => {
             uglify({
                 ie8: false,
                 ie: true,
-                toplevel: true,
+                toplevel: false,
                 compress: {
                     ie: true,
                     passes: 3,

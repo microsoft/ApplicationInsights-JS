@@ -2,8 +2,9 @@
 // // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { arrForEach, dumpObj } from "@nevware21/ts-utils";
+import { arrAppend, arrForEach, dumpObj } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import {
     ITelemetryInitializerContainer, ITelemetryInitializerHandler, TelemetryInitializerFunction
@@ -18,10 +19,59 @@ interface _IInternalTelemetryInitializerHandler {
     fn: TelemetryInitializerFunction;
 }
 
+function _addInitializer(_initializers: _IInternalTelemetryInitializerHandler[], id: number, telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler {
+    let theInitializer = {
+        id: id,
+        fn: telemetryInitializer
+    };
+
+    arrAppend(_initializers, theInitializer);
+
+    let handler: ITelemetryInitializerHandler = {
+        remove: () => {
+            arrForEach(_initializers, (initializer, idx) => {
+                if (initializer.id === theInitializer.id) {
+                    _initializers.splice(idx, 1);
+                    return -1;
+                }
+            });
+        }
+    }
+
+    return handler;
+}
+
+function _runInitializers(_initializers: _IInternalTelemetryInitializerHandler[], item: ITelemetryItem, logger: IDiagnosticLogger): boolean {
+    let doNotSendItem = false;
+    var telemetryInitializersCount = _initializers.length;
+    for (var i = 0; i < telemetryInitializersCount; ++i) {
+        var telemetryInitializer = _initializers[i];
+        if (telemetryInitializer) {
+            try {
+                if (telemetryInitializer.fn.apply(null, [item]) === false) {
+                    doNotSendItem = true;
+                    break;
+                }
+            } catch (e) {
+                // log error but dont stop executing rest of the telemetry initializers
+                // doNotSendItem = true;
+                _throwInternal(
+                    logger,
+                    eLoggingSeverity.WARNING,
+                    _eInternalMessageId.TelemetryInitializerFailed,
+                    "Telemetry initializer failed: " + getExceptionName(e),
+                    { exception: dumpObj(e) }, true);
+            }
+        }
+    }
+
+    return !doNotSendItem;
+}
+
 export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements ITelemetryInitializerContainer {
 
-    public identifier: string = "TelemetryInitializerPlugin";
-    priority: number = 199;
+    public readonly identifier: string = "TelemetryInitializerPlugin";
+    public readonly priority: number = 199;
 
     constructor() {
         super();
@@ -33,54 +83,12 @@ export class TelemetryInitializerPlugin extends BaseTelemetryPlugin implements I
         _initDefaults();
 
         dynamicProto(TelemetryInitializerPlugin, this, (_self, _base) => {
-
             _self.addTelemetryInitializer = (telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler => {
-                let theInitializer = {
-                    id: _id++,
-                    fn: telemetryInitializer
-                };
-
-                _initializers.push(theInitializer);
-
-                let handler: ITelemetryInitializerHandler = {
-                    remove: () => {
-                        arrForEach(_initializers, (initializer, idx) => {
-                            if (initializer.id === theInitializer.id) {
-                                _initializers.splice(idx, 1);
-                                return -1;
-                            }
-                        });
-                    }
-                }
-    
-                return handler;
-            }
+                return _addInitializer(_initializers, _id++, telemetryInitializer);
+            };
 
             _self.processTelemetry = (item: ITelemetryItem, itemCtx?: IProcessTelemetryContext): void => {
-                var doNotSendItem = false;
-                var telemetryInitializersCount = _initializers.length;
-                for (var i = 0; i < telemetryInitializersCount; ++i) {
-                    var telemetryInitializer = _initializers[i];
-                    if (telemetryInitializer) {
-                        try {
-                            if (telemetryInitializer.fn.apply(null, [item]) === false) {
-                                doNotSendItem = true;
-                                break;
-                            }
-                        } catch (e) {
-                            // log error but dont stop executing rest of the telemetry initializers
-                            // doNotSendItem = true;
-                            _throwInternal(
-                                itemCtx.diagLog(),
-                                eLoggingSeverity.WARNING,
-                                _eInternalMessageId.TelemetryInitializerFailed,
-                                "Telemetry initializer failed: " + getExceptionName(e),
-                                { exception: dumpObj(e) }, true);
-                        }
-                    }
-                }
-
-                if (!doNotSendItem) {
+                if (_runInitializers(_initializers, item, itemCtx ? itemCtx.diagLog() : _self.diagLog())) {
                     _self.processNext(item, itemCtx);
                 }
             };

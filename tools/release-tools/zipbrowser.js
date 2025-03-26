@@ -7,6 +7,8 @@ let packageJson = packageRoot + "/package.json";
 let sourceDir = null;
 let destPrefix = null;
 let destFolder = null;
+let done = false;
+let complete = false;
 
 function showHelp() {
     var scriptParts;
@@ -71,7 +73,7 @@ function normalizeName(filename) {
     return filename.replace(cwd, ".");
 }
 
-function packFolder() {
+async function packFolder() {
     const thePackage = require(packageJson);
     const packageVersion = thePackage.version;
     if (destFolder && !fs.existsSync(packageRoot + "/" + destFolder)) {
@@ -79,11 +81,31 @@ function packFolder() {
     }
 
     const outputName = packageRoot + "/" + (destFolder ? destFolder + "/" : "") + destPrefix + "." + packageVersion + ".zip";
+    console.log(`Creating Zip [${normalizeName(outputName)}] from [${normalizeName(sourceDir)}]`);
+
     const stream = fs.createWriteStream(outputName);
-    stream.on("open", () => console.info(`Creating Zip [${normalizeName(outputName)}] from [${normalizeName(sourceDir)}]`));
-    stream.on("close", () => console.info("Complete!", "\n"));
+    // stream.on("open", () => {
+    //     try {
+    //         console.log(`Creating Zip [${normalizeName(outputName)}] from [${normalizeName(sourceDir)}]`);
+    //     } catch (e) {
+    //         // Github is failing on this
+    //     }
+    // });
+    stream.on("close", () => {
+        try {
+            //console.log("Complete!", "\n");
+        } catch (e) {
+            // Github is failing on this
+        }
+        complete = true;
+    });
     stream.on("error", (err) => {
-        console.error(`Failed to write to zip file - ${err.message}\n`);
+        try {
+            console.error(`Failed to write to zip file - ${err.message}\n`);
+        } catch (e) {
+            // Github is failing on this
+            throw err;
+        }
         process.exit(2);
     });
     
@@ -94,7 +116,7 @@ function packFolder() {
         process.exit(2);
     });
     archive.pipe(stream);
-    archive.finalize();
+    await archive.finalize();
 
     return true;
 }
@@ -118,7 +140,28 @@ if (parseArgs()) {
         return false;
     }
 
-    packFolder();
+    console.log("Packing folder");
+    packFolder().then(() => {
+        //console.log("done");
+        done = true;
+    });
+
+    function waitUntilDone() {
+        //console.log("Waiting...");
+        let to = setTimeout(() => {
+            if (!done && !complete) {
+                waitUntilDone();
+            } else {
+                //console.log("All Done.");
+            }
+        }, 50);
+
+        // Make sure the timer is referenced so that Node doesn't terminate
+        to.ref();
+    }
+
+    console.log("Waiting for packing to complete");
+    waitUntilDone();
 } else {
     showHelp();
     process.exit(1);

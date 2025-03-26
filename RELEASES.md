@@ -2,9 +2,467 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.3.6 (March 4th, 2025)
+
+### Changelog
+
+- #2481 [Main][Task]31338239: Add Config to allow excluding the configuration endpoints from being reported
+- #2486 Minification improvements
+
+## 3.3.5 (Feb 3rd, 2025)
+
+### Changelog
+
+#### Issues
+
+- #2430 [BUG] Type signature for stopTrackEvent is incorrect
+- #2442 [BUG] [Snippet] Unhandled exceptions are reported twice
+- #2470 [BUG] @microsoft/applicationinsights-channel-js lacks a proper repository URL
+- #2467 [BUG] The regex used to parse the stack trace appears to be skipping anonymous lines
+  - This fixes the portal missing stack frames which are from anonymous functions due to missed parsing of stack frames with unexpected formatting.
+
+#### Commits
+
+- #2428 [main] [snippet] Integrate 1DS with AI Snippet Generation
+- #2443 Update Stale Issue action
+- #2445 [main] snippet generation fix for pr #2428
+- #2446 [main] eliminate warning raised by tsdoc
+- #2447 [main] [debug plugin] upgrade manifast to v3
+- #2450 [main][doc] Type signature for stopTrackEvent is incorrect #2430
+- #2448 [main] fix tsdoc error for param and type tag
+- #2452 [main][fix] rush fix
+- #2459 [Main][Task]30499129: Turn on CDN Deprecation Message with Sampling Rate with 10% Each Day
+- #2458 URGENT ACTION: Stop using az416426.vo.msecnd.net
+- #2460 [ThrottleMgr] Turn on Test CDN Deprecation Message with Sampling Rate with 100% Each Day
+- #2461 Update config version to 1.0.1
+- #2463 [main][cfgsync] update test based on new config setting
+- #2462 [main][debug tool] fix the way of calling chrome storage and add new url
+- #2464 Update Code Owners
+- #2465 [main][debug tool] enable check compressed data
+- #2468 [Main][Task]31041354: Increase CDN Deprecation Message Sampling Rate to 20%
+- #2471 [Main][Task]31111291: Fix Repo links in package.json
+- #2455 [main] fix rush warning message
+- #2473 Update rush version
+
+## 3.3.4 (Oct 30th 2024)
+
+### Changelog
+
+- #2426 [Main][Task]29626594: PerfManager Should be Created without Customized CreatePerfMgr Function
+- #2421 [Main]: Make file size checks flexible for nightly/dev builds
+- #2434 [Main][Task]29884493: Add a Function to Export Offline Listener From Sender
+- #2437 [Main][Task]29519727: Better Handle Sender Dynamic Changes
+- #2438 [Main][Task]29445623: Update CfgSync Config Readme
+- #2439 [BUG] Sourcemap load errors in debugger from dependencies
+- #2429 Readme - Remove double negative
+
+## 3.3.3 (Sep 23rd 2024)
+
+### Changelog
+
+- #2401 [Main][Task]28966399: Separate critical events and non-critical events for Offline Support
+  - **Note**: New Config `splitEvts` is added to Offline Channel Config. By enabling it, offline events will be batched and saved separately based on persistence level
+- #2413 [Main][Task] 29445638: Fix Promise Initialization Sender Config Issue
+  - **Note**: the issue [ApplicationInsights Channel (Sender) endpoint Url Promise is Always Pending](https://github.com/microsoft/ApplicationInsights-JS/issues/2414) is resolved
+- #2416 [Main][Task]29519574: Update AISKU Light to better handle Init Promise
+- #2418 [Main][Task]29465842: Update Promise Initialization Post Channel
+- #2404 [main] fix expCfg to be optional
+- #2407 [main] Custom Trusted Type Policy Support for Snippet Script Injection
+- #2409 [main] Trusted Type Policy Support for nounce tag
+
+## 3.3.2 (Sep 3rd, 2024)
+
+### Changelog
+
+- #2396 [Main] Update generated typedoc documentation
+- #2397[Main] Change tslib peerDependency from "*" to open range
+- #2391 [Main] enhance exception telemetry with customer log Information
+  - Note: Config `expCfg` is moved from `IConfig` to `IConfiguration`(this change is going to cause the TypeScript type error).
+
+## 3.3.1 (Aug 7th, 2024)
+
+### Changelog
+
+- #2379 [Main][Task]28644993: Update Online Sender Status Code Check with Offline Mode
+- #2380 [Main][Task]28751664: Fix Offline Circular Dependency
+- #2386 [Main][Task]28846327: Fix Offline Default Max in Storage Time to 7 Days
+- #2387 [Main][Task]27760339: Typedoc is not including ILoadedPlugin
+- #2381 [Main] [CDN Publishing] Cleanup AzureRM scripts from AI and 1DS
+- #2377 Fix Nightly Size Tests
+- #2389 [main] fix AI Basic Sku by exporting proxy function
+- #2373 add withCredentials config
+- #2388 [main] enhance exception telemetry with optional script Information
+  - !! **New config `expCfg`** is available to provide more details of exception telemetry. See more details [here](https://microsoft.github.io/ApplicationInsights-JS/exceptionTelemetry)
+
+
+### Web snippet additional update to 1.2.1 (July 10th, 2024)
+
+This release includes fix for dependency problem in version 1.2.0, check [#2369](https://github.com/microsoft/ApplicationInsights-JS/issues/2369) for more detail.
+
+### Changelog
+- #2374 [main][snippet] remove the snippet dependency on web package
+
+### Web snippet additional update to 1.2.0 (June 21st, 2024)
+
+This release includes support for multiple snippet loading. Snippets with different names (passed in by the user via configuration; check [##2355](https://github.com/microsoft/ApplicationInsights-JS/issues/2355) and README for more details) can now run simultaneously.
+
+
+Additionally, users can pass in a customized configuration with getSdkLoaderScript to get a ready-to-use snippet.
+
+Users can also enable Integrity Check and minimize snippet loading time by setting sri to true.
+
+
+### Changelog
+- #2365 [main][snippet] prepare new snippet release, add support for more config 
+- #2360 [main] set script attribut to avoid race condition when multiple sdks are inited #2355 
+- #2339 [main] create snippet mini loader
+
+## 3.3.0 (July 1st, 2024)
+
+### Potential breaking change
+
+This release contains a potential break change due to enhancing the definition of the [IConfiguration](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IConfiguration.ts) to support Promise types for the connectionString, instrumentationKey and endpointURL; any extension that relies on these base interfaces will VERY likely cause TypeScript to fail with potential warnings about the types being different.
+
+### Changelog
+
+- #2371 Bump @microsoft/rush from 5.97.1 to 5.129.6
+- #2340 [Main][Task]27939476: Initialization with iKey and endpoint to be promises
+
+!! potential breaking changes. IConfiguration support Promise types for the connectionString, instrumentationKey and endpointURL
+- #2366 [Sdk Loader] Increase version to 1.2.0
+- #2367 [main] update the way to generate ajax perforamance mark prefix 
+
+## 3.2.2 (June 11th, 2024)
+
+### Changelog
+
+- #2356 [Main][Task]27488189: Modify offline support enums for isolated mode
+- #2357 [Main][Task]28050373: Expose Offline Support SendNextBatch function
+- #2358 [Main][Task]27080650: Initialization Should Handle Offline Support Dependency
+- #2362 [Main]Publishing: Add support for Az Modules instead of AzureRM Modules
+- #2360 set script attribut to avoid race condition when multiple sdks are inited
+
+## 3.2.1 (May 9th, 2024)
+
+### Changelog
+
+- #2333 [Main][Task]27749889: Change AISKU Sync Mode to Receive
+- #2335 [Main][Task]27681441: Fix async tests for MsAzure Migration
+- #2338 [Main][Task]27923018: Post Channel getOfflineSupport should set correct headers and url based on payload data
+- #2342 [Main][Task]27923018: 1ds post getOffline support url fix
+
+
+## 3.2.0 (Apr 23rd, 2024)
+
+!! CfgSync plugin is turned on. Throttling Ikey depreciation message is enabled with sampling rate 0.0001%
+[##2317](https://github.com/microsoft/ApplicationInsights-JS/pull/2317)
+
+!! Sender has breaking changes. The key used for session storage is changed and items stored in the storage now contain retry counts.
+[##2324](https://github.com/microsoft/ApplicationInsights-JS/pull/2324)
+
+### Changelog
+
+- #2371 [Main][Task]27365739 Turn on Ikey depreciation message with sampling rate 0.0001%
+- #2319 [Main] Fix config release script overwrite flag and cache time
+- #2321 [Main] Default request headers content-type for 1ds should be x-json-stream only ing
+- #2324 [Main][Task]27079894 Add a max retry count for Sender
+- #2325 [Main][Task]25716927: Change default CfgSync values to turn on the ikey deprecation message
+- #2331 [Main] Resetting the DataCacheHelper version number back to current version (from 3.0.5)
+- #2332 [Main][Task]27742145: Change nonOverrideCfgs to be added only during initialization
+- #2333 [Main][Task]27749889: Change AISKU Sync Mode to Receive
+
+## 3.1.2 (Mar 21st, 2024)
+
+!! Critical Bug fix for Memoery Leak !!
+[#2311](https://github.com/microsoft/ApplicationInsights-JS/issues/2311)
+
+It also contains a packaging fix for webpack [#2307](https://github.com/microsoft/ApplicationInsights-JS/issues/2307) (caused by [#2306]](https://github.com/microsoft/ApplicationInsights-JS/issues/2306) ) and 
+
+### Changelog
+
+- #2307 ApplicationInsights-JS latest version 3.1.1 giving TypeError: Cannot read properties of undefined (reading 'getCrypto')
+- #2306 [BUG] Circular dependencies
+- #2311 [BUG] Excessive memory usage for SPA where unload hooks keep accumulating
+- #2299 [Main][Task]27156360: Add json config cdn details to tool folder
+- #2308 [Main][Task]27221819: Remove node 14 (from ci.yml)
+
+## 3.1.1 (Mar 12th, 2024)
+
+### Changelog
+
+- #2296 [BUG] remove 403 as a “retriable” error code
+- #2276 Update api-docs (typedoc) with the current 3.1.0 release details
+- #2281 [Main][Task]26681188: Handle endpoint url change for offline channel and add notification mgr
+- #2282 Addng two new PII Kind values for IPv6 scrubbing and dropping data.
+- #2285 [Main][Task]25693679: Extract common sendPost implementation for online and offline sender
+- #2197 [main] [BUG] using EndPointUrl (and IngestionEndpoint) results in Telemetry sent to incorrect urls
+- #2288 [Main][Task]27064950: Add doc on adding offline support channel
+- #2295 [Main][Task]27064983: Update post channel to use sender post common interfaces from core
+- #2290 chore: remove extraneous console log from debug plugin
+
+### Web snippet additional update to 1.1.2 (March 1st, 2024)
+Refer to #2284 [Web-Snippet] [BUG] @microsoft/applicationinsights-web-snippet version 1.1.1 type problem 
+
+### Web snippet additional update to 1.1.1 (Feb 16th, 2024)
+Refer to #2277 [Web-Snippet] dependency chain issues
+
+## 3.1.0 (Feb 14th, 2024)
+
+### Interface changes / Breaking changes
+
+This release includes support for a new Offline Channel which has changed the `IChannelsControls` interface to include additional support for the new `offline` channel. This change is to support the new `offline` channel and is a breaking change for any custom channels that implement the `IChannelsControls` interface. If you have a custom channel that implements the `IChannelsControls` interface you will need to update your implementation to include the new `offline` channel.
+
+### Configuration default changes
+
+As this is a minor version bump we have also change some default values for the following configuration options:
+
+- `disableUserInitMessage` is now `true` by default to disable the user init message.
+
+### Potential breaking change
+
+This release contains a potential break change with 'tags' type [change](https://github.com/microsoft/ApplicationInsights-JS/pull/2269)
+
+While the interface changes are breaking changes, the changes are not expected to affect the majority of users as when the code attempted to serialize the `tags` property it would have failed due to the `Tags[]` type being used instead of the correct `Tags` type.
+
+#### Old
+
+```ts
+    tags?: Tags & Tags[]; 
+```
+
+#### New
+
+```ts
+    tags?: Tags;
+
+```
+
+#### New Offline Channel
+
+This release also includes the new `offline` channel which is a new channel that is designed to support offline scenarios. The `offline` channel is designed to store telemetry items in local storage and then send them when the user comes back online.
+To take full advantage of the initial version you will need to implement your own IOfflineListener to handle situations where you may have "network" connectivity but not internet access. As the `navigator.onLine` property if available will only tell you if you have network connectivity and not internet access.
+
+### Changelog
+
+- #2186 [main] offlineListener preparation
+- #2241 [Main][Task]26451789: Add Offline Support
+- #2259 [Main][Task]26694421: Add Offline Support Publish Group
+- #2267 [Main][Task]26681220: Better handle timers in offline channel
+- #2028 [BUG] AI (Internal): 72 tracking
+  - Sets the default value for the `disableUserInitMessage` to `true` (was previously false since adding)
+- #2193 [main] Add extra config in sender to let users define transports type
+- #2200 [main] [doc] Highlight an issue with the default UMD module format when loading from the CDN into an environment that may have require.js
+- #2208 [Main][Task]26079397: Add disableBeaconSplit sender config and fix potential duplicated events during unload/fallback sender
+  - #2236 [Main][Task]26396663: Set default disableBeaconSplit to true
+- #2204 [BUG] Beacon sender reports error for success when diagnostics are enabled
+- #2214 [main] Merge Release-3.0 to main
+- #2221 [main] Fixup the ci.yml to address internal hash changes between different node versions
+- #2216 [Main][Task]26138416: Fix FetchKeepAliveSender send duplicated events during unload
+- #2228 [main] minor release preparation
+- #2229 [main] [doc] add requireJs problem in SdkLoadFailure.md
+- #2132 [BUG] Submitting NaN via trackEvent results in HTTP 400 Error Code
+- #2238 [Main] Merge release-3.0 to main
+- #2244 Internal Task: Update npm pack sequence
+- #2249 [main][1ds] Enhance Retry Policy Testing for Alignment with Collector Policy
+- #2245 [main] [snippet update] add functions to set configs of snippet
+- #2250 [main] [doc] minor comment update for avoidOptions
+- #2251 [Main][1DS][Post] Add support for the ext.metadata to NOT be included
+- #2253 [Main] Update Tests to support upcoming change in nevware21/tsutils dumpObj to better support JSON stringify and handle PURE comments
+- #2255 [main] #2225 pass customer exception id into telemetry
+- #2247 [main] [1ds-post] export add header func for auth-plugin to consume
+- #2209 [BUG] stopTrackEvent requires property values to be strings
+  - #2268 [main] Add example of how to use stopTrackEvent #2209
+  - #2270 [main] correct types define for stopTrackEvent and stopTrackPage for #2209
+- #2258 [BUG] ITelemetryItem uses intersection type instead of union type for tags property  
+  - #2269 [main] **[Possible Break]** Removed Tags[] from ITelemetryItem as this was breaking later versions of TypeScript by using the intersection type instead of union type for tags property
+- #2272 [release 3.0.8] Fix channel test
+- #2271 Cherry-pick from release-3.0 branch
+  - [Release-3.0] [Release] Increase version to 3.0.8 ([Release-3.0] [Release] Increase version to 3.0.8 #2264)
+  - [Release-3.0] Update namespaced types (DTS) generation to include referenced bundles
+
+
+## 3.0.8 (Feb, 7th, 2024)
+
+This release changes the new beacon splitting code (added in 3.0.4) to be `disabled` by default. This change is to address the issue where the SDK was splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload. This change is to address the issue where the SDK was splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload.
+
+### Changelog
+
+- #2235 [BUG] - CRITICAL - Application runs out of memory
+  - #2236 [release-3.0] Cherry-Pick: [Main][Task]26396663: Set default disableBeaconSplit to true
+- #2242 [release-3.0] Update components
+  - Update @microsoft/dynamicProto-js to address possible prototype pollution issue
+- #2254 [Release3.0] Update Tests to support upcoming change in nevware21/tsutils dumpObj to better support JSON stringify and handle PURE comments
+- [Release 3.0] Update components for release #2261
+  - Update @nevware21/ts-utils version for better minification support
+
+## 3.0.7 (Dec 14th, 2023)
+
+### Changelog
+
+This release is a hotfix for issue #2216, which is simular to the issue fixed in `3.0.6` but for the `fetch` (with the keep-alive flag).
+
+### Changelog
+
+- #2216 [release-3.0] Cherrypick (main): fix fetchkeepalive
+- #2221 [release-3.0] Cherrypick (main): Fixup the ci.yml to address internal hash changes between different node versions
+
+## 3.0.6 (Dec 7th, 2023)
+
+This release fixes an issue with the `sendBeacon` usage during page unload, where the SDK was not correctly splitting the payload into multiple requests when the payload size exceeded the maximum allowed size for a single request. This issue was introduced in the 3.0.4 release and only affects the `sendBeacon` usage during page unload, it does not affect the `fetch` usage during page unload.
+
+### Changelog
+
+- #2195 [BUG] Beacon sender causes flood of thousands of requests on page unload
+- #2201 [BUG] applicationinsights.azure.com/v2/track making hundreds of thousands of requests when third party cookies are disabled
+- #2205 [BUG] Duplicate customEvent entries
+- #2204 [BUG] Beacon sender reports error for success when diagnostics are enabled
+
+## 3.0.5 (Nov 1st, 2023)
+
+### Changelog
+
+- #2184 [main] deactive send beacon when local storage is available 
+- #2185 [main] retrieve reponseText when fetch in HttpManager
+- #2188 [main] generate typedoc
+- #2190 [Main][Task]25648004: Export ISenderConfig from Sender
+- #2191 [Main][Task]25649658: Update AISKU Light to add default baseType and baseData when calling track function 
+
+## 3.0.4 (Oct 16th, 2023)
+
+### Changelog
+
+- #2162 [BUG] window is not defined at _getStackFromErrorObj 
+- #2163 [BUG] Using App Insights connection string leads to double slash 
+- #2164 [BUG] Fetch with empty string as first parameter does not include traceparent and does not successfully save dependency to Application Insights
+- #2165 [main] use proper URL for tracking when fetch is passed an empty string 
+- #2180  [BUG] Same timestamp on multiple pageView-events after upgrade to 3.0.3 
+- CfgSyncPlugin improvment
+  - #2166 [main] correct throttle configdefault setting in aisku 
+  - #2168 [Main][Task]24499167: add cfgSync plugin doc 
+  - #2171 [main] test aisku config could correctly merge new config fetch from cdn 
+  - #2175 [main] Update Service Notifications to not send message twice 
+  - #2177 [Main]Set CfgSync version to 3.0.3 
+  - #2160 [Main] Include Config sync in publish group 
+- Documentation update
+  - #2169 [Main][Task]24499172: add throttle manager doc 
+  - #2170 [Main][Task]24499174: Add service notification doc 
+- Github workflow improvement 
+  - #2173 Add Issue state reporting script 
+- Sender Update
+  - #2113 [Main][Task]16238553: Provide an override option for the Sender
+
+## 3.0.3 (Sep 20th, 2023)
+
+### Changelog
+
+- #2157 [Main] Bug New minified bundles are corrupting global scope
+- #2120 Missing traceparent header when running multiple SDK instances
+  - #2144 [Main][Part 2] Missing traceparent header when running multiple SDK instances #2120
+  - #2141 [Main][Bug] Missing traceparent header when running multiple SDK instances #2120
+- #2149 [BUG] Fetch with empty string as first parameter ignores second parameter when fetch tracking is enabled
+  - #2152 [main] allow empty string as first parameter to fetch
+- #2127 [Main] Add automated ability to reset the npm latest tag to a specific build
+- #2106 Consider export IClickAnalyticsConfiguration from the click plugin?
+- #2086 [BUG] Field 'fileName' on type 'StackFrame' is too long. Expected: 1024 characters
+  - #2118 [Main] [BUG] Field 'fileName' on type 'StackFrame' is too long. Expected: 1024 characters #2086
+- #2094 _getVerifiedStorageObject - contentious sessionStorage element
+  - #2110 [main] add prefix before storage name when setting it
+- #2137 [Main] Fix: edge case where the navigation entry is not present
+- #2135 Update @nevware21 base versions
+- #2104 [main] Use the navigation entry timeing for page load event start time
+- #2116 [Main] Fixup setVersion to support automated nightly release
+- #2097 disablePageUnloadEvents lost somewhere #2097
+- Internal Task 15757413: [VSCode] [1DS] Move 1DS Core and 1DS Post to GitHub #2102
+- #2089 [BUG] The v3.x exporting of the TelemetryContext does not export the sessionManager "type"
+- [BUG] Readme Issue for perfmarkmeasure @microsoft/applicationinsights-applicationinsights-perfmarkmeasure-js@ #2150
+- #2139 V3 Public CDN URL
+- #2093 Update project clean to make faster
+
+- Add support for service level notifications (disabled by default in this release, will be enabled by default in a future release)
+  - #2147 [main] throttle manager in aisku sending message
+  - #2133 [Main][Task]24841107: Refactor throttleMgr to support multiple message keys
+  - #2090 [Main][Task]17874465:Support Config sync across instances
+  - #2125 [Main][Task]24677395:add configurations for CDN to enable specific users opt-in implementation
+  - #2115 [Main][Task]24662146: cfgSync plugin improvement: timer handling for fetch/xhr
+
+- SDK Loader Updates (version 7 - will be published after this release is deployed to the CDN)
+  - #2091 rework web snippet (Convert to TypeScript)
+  - #2099 change loader src when detect IE
+  - #2098 Extend the config part in Min
+  - #2131 [main] Adding round robin retry for snippet script src loading
+
+## 3.0.2 (May 23rd, 2023)
+
+### Changelog
+
+- #2068 [BUG] SDK fails to initialize when the config includes objects with properties that are not configurable
+- #2075 [BUG] ClickAnalytics throwing errors in console
+- #2065 Type 'T' does not satisfy the constraint 'IConfiguration'
+- #2079 [BUG] The SDK is not limiting the sdkVersion length, which causes the night builds to cause an error
+- #2061 [BUG] hasDocument should be invoked as function
+- #2064 [Main] Task 20788238: [AI] Add ApplicationInsights namespace and workaround to support v2 and v3 loaded from the CDN
+- #2070 [Main] Update Minify script to always sort imports
+
+## 3.0.1 (May 2nd, 2023)
+
+### Changelog
+
+- #2057 [Main] Add ability to disable the pollInternalLogs via config and change to stop using setInterval #2055
+- #2051 [Main] Fix Perf Tests
+- #2053 [Main] [BUG] Typing issue with generated types causing Type X is not assignable to type Y #2052
+- #2058 [Bug] Fix issues related to dynamic config listeners during unloading
+  - Add Promise support during unloading
+
+## 3.0.0 (Apr 12th, 2023)
+
+#### Major release with breaking changes from v2.x see [v3.x Breaking Changes](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v3_BreakingChanges.html) for details.
+
+Maintained from the `main` branch, v2.x is in maintenance mode on the `master` branch
+
+### Changelog
+
+- All code from 2.8.12 has been merged into the `main` branch and therefore this release
+
+#### Major Changes
+
+- Removed ES3 (IE8) Support
+- Enabled dynamic config changes after initialization
+  - #1427 Dynamically updating config (for extensions in my case)
+
+- Too many individual commits to include as most revolve around the breaking changes and enabling dynamic configuration support for each extension
+  - All Extensions now **share** the same configuration object `core.config` in previous releases each component maintained their own copy with their own default values, now all defaults and configuration values are exposed on the shared config.
+  - By default the config object passed in during initialization is NOT the same object as that used as the shared config. Any previous assumptions around this being the same object will now be broken as this was a previously unsupported scenario.
+  - All properties of the config object are now using get/set functions (via Object.defineProperty) to allow listeners to be registered (`core.onCfgChange` and internally `onConfigChange`) so that the callback function will be called if any referenced config property is changed. Yes, this means you can register your own configuration listener via `core.onCfgChange` see the [AISku Manual Test](./AISKU/Tests/Manual//HelloWorld.html) for an example.
+  - All properties present during initialization are converted into dynamic properties and may be monitored, properties added "after" creation (initialization) are not. This is to continue to support IE which does not support `Proxy` implementation which also means we are not using the `Proxy` class.
+  - Extensions are now responsible for listening and responding to the configuration changes that they want to support
+  - Updating the config `extensions` and `channels` is NOT supported, you must use the individual plugin add / remove functions if you want to dynamically add / remove extensions / channels
+  - Support for parallel channels was removed from the Core and SKU's and extracted to the new `TeeChannel`, if you require this support you will need to use npm and include this module. 
+- v2.x Extension support.
+  - While the basic API and support for Backward compatibility for the v2.x extension (plugin) API was maintained, due to the breaking changes (specifically the removal of the namespaced helpers) this will only support self contained components (without recompiling). Any npm module that attempts to import and use a removed helper function will potentially break and will need to be updated to use the newer or replacement helper functions (see the v3.x Breaking Changes for details), if you find an issue and are not able to work around please [raise an issue](https://github.com/microsoft/ApplicationInsights-JS/issues).
+
+## 2.8.13 (May 1st, 2023)
+
+### Changelog
+
+- #2052 [BUG] Typing issue with generated types causing Type X is not assignable to type Y
+- #2055 Add ability to disable the pollInternalLogs via config and change to stop using setInterval
+- #2049 [Master] Fix Perf Tests
+
+## 2.8.12 (Apr, 11th, 2023)
+
+### Changelog
+
+- #2014 [BUG] The documentation for enableDebug is incorrect, it should reference enableDebugExceptions
+- #2027 [BUG] SDK LOAD Failure reporting not working
+- #2034 [BUG] Failed XHR request after ever tracked item when gathered logs exceed maxBatchSizeInBytes while offline
+- #2037 [Master] Add local storage-based implementation #1419
+  - Add support for user provided storage option for Sender
+- #2029 [Master] Add npm-pack and npm-publish tasks
+- #2026 [Master] Fix examples, Throttle tests and export dependency types from Sku
+
 ## 2.8.11 (Mar 8th, 2023)
 
-## Changelog
+### Changelog
 
 - #1996 [BUG] SharedWorker does not Instrument fetch correctly
 - #1995 [BUG] App Insights not auto-capturing from a Web Worker
@@ -863,7 +1321,7 @@ With this release the source files can be loaded in an ES3 environment (IE7/8) a
 
 We have added upport to enable reusing the same plugin in different instances of AppInsights, owned by the same application (but using different Instrumentation keys) is required so that they can reuse a single Plugin instance for all instances.
 
-This changes introduces a new [`IProcessTelemetryContext`](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK/ProcessTelemetryContext.ts) interface that is passed to the processTelemetry() method so that the plugins can use the current request context for the event rather than the context during initialization.
+This changes introduces a new [`IProcessTelemetryContext`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IProcessTelemetryContext.html) interface that is passed to the processTelemetry() method so that the plugins can use the current request context for the event rather than the context during initialization.
 
 To assist with creating plugins we have also introduced a base class that you can use for creating new plugins [BaseTelemetryPlugin](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK/BaseTelemetryPlugin.ts), details are included on the [Readme](https://github.com/microsoft/ApplicationInsights-JS/blob/master/README.md)
 

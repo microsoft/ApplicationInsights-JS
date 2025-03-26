@@ -1,7 +1,15 @@
 export { Assert } from "./Assert";
+export { IBeaconRequest } from "./interfaces/IBeaconRequest";
+export { IFakeXMLHttpRequest } from "./interfaces/FakeXMLHttpRequest";
+export { IFetchRequest } from "./interfaces/IFetchRequest";
+export { ITestCase } from "./interfaces/ITestCase";
+export { ITestCaseAsync } from "./interfaces/ITestCaseAsync";
+export { ITestContext } from "./interfaces/ITestContext";
+
 export { PollingAssert } from "./PollingAssert";
-export { TestCase, TestCaseAsync } from "./TestCase";
-export { AITestClass } from "./AITestClass";
+export { StepResult } from "./StepResult";
+export { TestHelper } from "./TestHelper";
+export { AITestClass, FakeXMLHttpRequest, IFetchArgs } from "./AITestClass";
 
 export { ITypeValidator } from "./TelemetryValidation/ITypeValidator";
 export { CommonValidator } from "./TelemetryValidation/CommonValidator";

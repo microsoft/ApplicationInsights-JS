@@ -3,9 +3,10 @@
     "version": "3.1.3-dev",
     "author": "Javascript Telemetry SDKs <TelReachSDK@microsoft.com>",
     "description": "1DS Web SDK",
-    "homepage": "https://1dsdocs.azurewebsites.net/sdk.html",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS",
     "sideEffects": false,
     "scripts": {
+        "clean": "git clean -xdf",
         "update": "rush update",
         "build": "",
         "rebuild": "",
@@ -19,7 +20,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://msasg.visualstudio.com/DefaultCollection/Shared%20Data/_git/1DS.JavaScript"
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/tools/release-tools"
     },
     "devDependencies": {
         "grunt": "^1.5.3",

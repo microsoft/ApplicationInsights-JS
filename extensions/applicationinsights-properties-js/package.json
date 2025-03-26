@@ -1,21 +1,22 @@
 {
     "name": "@microsoft/applicationinsights-properties-js",
-    "version": "2.8.11",
+    "version": "3.3.6",
     "description": "Microsoft Application Insights properties (Part A) plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
-    "main": "dist/applicationinsights-properties-js.js",
-    "module": "dist-esm/applicationinsights-properties-js.js",
+    "main": "dist/es5/applicationinsights-properties-js.js",
+    "module": "dist-es5/applicationinsights-properties-js.js",
     "types": "types/applicationinsights-properties-js.d.ts",
     "sideEffects": false,
     "repository": {
         "type": "git",
-        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-properties-js"
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-properties-js"
     },
     "scripts": {
+        "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
         "build:esm": "grunt properties",
-        "build:browser": "rollup -c",
+        "build:browser": "rollup -c rollup.config.js --bundleConfigAsCjs",
         "rebuild": "npm run build",
         "test": "grunt propertiestests",
         "mintest": "grunt properties-mintests",
@@ -23,13 +24,15 @@
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights properties plugin\"",
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
         "ai-min": "grunt properties-min",
-        "ai-restore": "grunt properties-restore"
+        "ai-restore": "grunt properties-restore",
+        "npm-pack": "npm pack",
+        "api-docs": "typedoc"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
-        "@microsoft/applicationinsights-rollup-es5": "1.0.0",
-        "@microsoft/api-extractor": "^7.18.1",
+        "@microsoft/applicationinsights-rollup-es5": "1.0.2",
+        "@microsoft/api-extractor": "^7.40.0",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
         "grunt": "^1.5.3",
@@ -40,23 +43,25 @@
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
-        "@rollup/plugin-commonjs": "^18.0.0",
-        "@rollup/plugin-node-resolve": "^11.2.1",
-        "@rollup/plugin-replace": "^2.3.3",
+        "@rollup/plugin-commonjs": "^24.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@rollup/plugin-replace": "^5.0.2",
+        "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
-        "rollup": "^2.32.0",
+        "rollup-plugin-sourcemaps": "^0.6.3",
+        "typedoc": "^0.26.6",
         "qunit": "^2.11.2",
         "sinon": "^7.3.1"
     },
     "peerDependencies": {
-        "tslib": "*"
+        "tslib": ">= 1.0.0"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^1.1.7",
-        "@microsoft/applicationinsights-shims": "2.0.2",
-        "@microsoft/applicationinsights-core-js": "2.8.11",
-        "@microsoft/applicationinsights-common": "2.8.11",
-        "@nevware21/ts-utils": ">= 0.8.1 < 2.x"
+        "@microsoft/dynamicproto-js": "^2.0.3",
+        "@microsoft/applicationinsights-shims": "3.0.1",
+        "@microsoft/applicationinsights-core-js": "3.3.6",
+        "@microsoft/applicationinsights-common": "3.3.6",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
     },
     "license": "MIT"
 }

@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ObjDefineProperty } from "@microsoft/applicationinsights-shims";
+import { objDefine } from "@nevware21/ts-utils";
 import { normalizeJsName } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 import { newId } from "./RandomHelper";
-
-const _objDefineProperty = ObjDefineProperty;
 
 const version = "#version#";
 let instanceName = "." + newId(6);
@@ -17,24 +15,6 @@ export interface IDataCache {
     accept: (target: any) => boolean,
     get: <T>(target: any, name: string, defValue?: T, addDefault?: boolean) => T;
     kill: (target: any, name: string) => void;
-}
-
-function _createAccessor<T>(target: any, prop: string, value: T): boolean {
-    if (_objDefineProperty) {
-        try {
-            _objDefineProperty(target, prop, {
-                value: value,
-                enumerable: false,
-                configurable: true
-            });
-            return true;
-        } catch (e) {
-            // IE8 Defines a defineProperty on Object but it's only supported for DOM elements so it will throw
-            // We will just ignore this here.
-        }
-    }
-
-    return false;
 }
 
 // Accepts only:
@@ -54,10 +34,10 @@ function _getCache(data: IDataCache, target: Node) {
 
         try {
             if (_canAcceptData(target)) {
-                if (!_createAccessor(target, data.id, theCache)) {
-                    // Environment doesn't support accessor, so just use direct assignment
-                    target[data.id] = theCache;
-                }
+                objDefine<any>(target, data.id, {
+                    e: false,
+                    v: theCache
+                });
             }
         } catch (e) {
             // Not all environments allow extending all objects, so just ignore the cache in those cases

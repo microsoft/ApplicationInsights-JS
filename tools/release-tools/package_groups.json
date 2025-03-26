@@ -1,0 +1,71 @@
+// ------------------------------
+// NPM Publish group definitions
+// ------------------------------
+{
+    // Application Insights packages
+    "ai": [
+        "./shared/AppInsightsCore",
+        "./shared/AppInsightsCommon",
+        "./AISKU",
+        "./AISKULight",
+        "./extensions/applicationinsights-analytics-js",
+        "./extensions/applicationinsights-properties-js",
+        "./extensions/applicationinsights-osplugin-js",
+        "./channels/applicationinsights-channel-js",
+        "./extensions/applicationinsights-dependencies-js",
+        "./extensions/applicationinsights-clickanalytics-js",
+        "./extensions/applicationinsights-perfmarkmeasure-js",
+        "./extensions/applicationinsights-debugplugin-js",
+        "./extensions/applicationinsights-cfgsync-js",
+        "./channels/tee-channel-js",
+        "./shared/1ds-core-js",
+        "./channels/1ds-post-js",
+        "./channels/offline-channel-js"
+    ],
+    "1ds": [
+        "./shared/1ds-core-js",
+        "./channels/1ds-post-js"
+    ],
+    "aionly": [
+        "./shared/AppInsightsCore",
+        "./shared/AppInsightsCommon",
+        "./AISKU",
+        "./AISKULight",
+        "./extensions/applicationinsights-analytics-js",
+        "./extensions/applicationinsights-properties-js",
+        "./extensions/applicationinsights-osplugin-js",
+        "./channels/applicationinsights-channel-js",
+        "./extensions/applicationinsights-dependencies-js",
+        "./extensions/applicationinsights-clickanalytics-js",
+        "./extensions/applicationinsights-perfmarkmeasure-js",
+        "./extensions/applicationinsights-debugplugin-js",
+        "./extensions/applicationinsights-cfgsync-js",
+        "./channels/tee-channel-js",
+        "./channels/offline-channel-js"
+    ],
+    "cfgSync": [
+        "./extensions/applicationinsights-cfgsync-js"
+    ],
+    // Config for throttleMgr and feature Opt-in
+    "webConfig": [
+        "./tools/config"
+    ],
+    // Rollup packages
+    "rollup-es": [
+        "./tools/rollup-es5"
+    ],
+    // Shims packages
+    "shims": [
+        "./tools/shims/"
+    ],
+    // Snippet packages
+    "snippet": [
+        "./tools/applicationinsights-web-snippet"
+    ],
+    "examples": [
+        "./examples/AISKU",
+        "./examples/cfgSync",
+        "./examples/dependency",
+        "./examples/shared-worker"
+    ]
+}

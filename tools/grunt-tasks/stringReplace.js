@@ -1,7 +1,46 @@
+const fs = require("fs");
 const chalk = require("chalk");
 
 function _mapReplacements(replacement) {
     return [replacement.pattern, replacement.replacement];
+}
+
+function readFileWithRetry(inst, filePath, retryCount, done) {
+    try {
+        let content = fs.readFileSync(filePath, "utf8");
+        if (retryCount > 0) {
+            inst.log.writeln(" -- Successfully read file after " + retryCount + " retries: " + filePath);
+        }
+        done(content);
+    } catch(e) {
+        if (retryCount > 5) {
+            throw "Failed to read file after 5 retries: " + filePath + " Error: " + e;
+        }
+
+        inst.log.writeln(" -- (Retrying" + (retryCount + 1) + ") Error reading file: " + filePath + " Error: " + e);
+        setTimeout(() => {
+            readFileWithRetry(inst, filePath, retryCount + 1, done);
+        }, 50);
+    }
+}
+
+function writeFileWithRetry(inst, filePath, content, retryCount, done) {
+    try {
+        fs.writeFileSync(filePath, content, "utf8");
+        if (retryCount > 0) {
+            inst.log.writeln(" -- Successfully wrote file after " + retryCount + " retries: " + filePath);
+        }
+        done();
+    } catch(e) {
+        if (retryCount > 5) {
+            throw "Failed to write file after 5 retries: " + filePath + " Error: " + e;
+        }
+
+        inst.log.writeln(" -- (Retrying:" + (retryCount + 1) + ") Error writing file: " + filePath + " Error: " + e);
+        setTimeout(() => {
+            writeFileWithRetry(inst, filePath, content, retryCount + 1, done);
+        }, 50);
+    }
 }
 
 function stringReplaceFn(inst) {
@@ -59,7 +98,7 @@ function stringReplaceFn(inst) {
     }
     
     function _doReplace(files, replacements, options, onComplete) {
-        let content, newContent, dest;
+        let newContent, dest;
         let counter = 0;
     
         if (!options.hasOwnProperty("saveUnchanged")) {
@@ -72,18 +111,18 @@ function stringReplaceFn(inst) {
             _process(file.src, function (src, srcDone) {
                 inst.log.debug("processing file: ", src);
     
-                if (!inst.file.exists(src)) {
-                    inst.log.debug("missing file:", src);
+                if (!fs.existsSync(src)) {
+                    inst.log.writeln("missing file:", src);
                     return srcDone(src + " file not found");
                 }
     
-                if (inst.file.isDir(src)) {
-                    inst.log.debug("src is a folder", src);
+                if (fs.statSync(src).isDirectory()) {
+                    inst.log.writeln("src is a folder", src);
                     return srcDone();
                 }
     
                 if (file.dest[file.dest.length - 1] === "/") {
-                    inst.log.debug("dest is a folder");
+                    inst.log.writeln("dest is a folder");
     
                     if (inst.file.doesPathContain(file.dest, src)) {
                         dest = path.join(
@@ -98,19 +137,25 @@ function stringReplaceFn(inst) {
                 }
     
                 dest = dest.replace(/\\/g, '/');
-                inst.log.debug("dest path:", dest);
-                content = inst.file.read(src);
-                newContent =_doMultiReplace(content, replacements, src, dest);
-    
-                if (content !== newContent || options.saveUnchanged) {
-                    inst.file.write(dest, newContent);
-                    counter += 1;
-                    inst.verbose.writeln("File " + chalk.cyan(dest) + " updated.");
-                } else {
-                    inst.log.writeln("File " + chalk.cyan(dest) + " " + chalk.red("not") + " updated; No replacements found.");
-                }
-    
-                return srcDone();
+                inst.log.writeln("src path :", src);
+                inst.log.writeln("dest path:", dest);
+                readFileWithRetry(inst, src, 0, function (content) {
+                    newContent =_doMultiReplace(content, replacements, src, dest);
+        
+                    if (content !== newContent || options.saveUnchanged) {
+                        writeFileWithRetry(inst, dest, newContent, 0, function () {
+                            counter += 1;
+                            inst.verbose.writeln("File " + chalk.cyan(dest) + " updated.");
+                            srcDone();
+                        });
+
+                        return;
+                    } else {
+                        inst.log.writeln("File " + chalk.cyan(dest) + " " + chalk.red("not") + " updated; No replacements found.");
+                    }
+        
+                    srcDone();
+                });
             }, filesDone);
         }, function (err) {
             inst.log.writeln("\n" + chalk.cyan(counter) + " files updated");
@@ -127,12 +172,14 @@ function stringReplaceFn(inst) {
                 let options = this.options({
                     replacements: []
                 });
-
-                let replacements = options.replacements.map(_mapReplacements);
-
+                let replacements = options.replacements;
+                if (typeof replacements === "function") {
+                    replacements = replacements();
+                }
+                replacements = replacements.map(_mapReplacements);
                 _doReplace(this.files, replacements, options || {}, function (err) {
                     if (err) {
-                        done(false);
+                        done(new Error(err));
                     } else {
                         done();
                     }

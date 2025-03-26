@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "2.8.11",
+    "version": "3.3.6",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -12,7 +12,7 @@
     "scripts": {
         "postinstall": "node common/scripts/install-run-rush-silent.js update",
         "build": "node common/scripts/install-run-rush.js rebuild --verbose",
-        "rebuild": "npm run build",
+        "rebuild": "npm run build && npm run api-docs",
         "testx": "rush test --verbose",
         "test": "node common/scripts/install-run-rush.js test --verbose",
         "mintest": "node common/scripts/install-run-rush.js mintest --verbose",
@@ -23,10 +23,18 @@
         "serve": "grunt serve",
         "setVersion": "node ./tools/release-tools/setVersion.js",
         "purge": "node common/scripts/install-run-rush.js purge",
-        "fullClean": "git clean -xdf && npm install && rush update --recheck --full",
+        "rushClean": "node common/scripts/install-run-rush.js clean",
+        "fullClean": "npm run rushClean && git clean -xdf && npm install && rush update --recheck --full",
         "fullCleanBuild": "npm run fullClean && npm run rebuild",
         "ai-min": "node common/scripts/install-run-rush.js ai-min",
-        "ai-restore": "node common/scripts/install-run-rush.js ai-restore"
+        "ai-restore": "node common/scripts/install-run-rush.js ai-restore",
+        "npm-pack": "node common/scripts/install-run-rush.js npm-pack --verbose",
+        "npm-package": "node ./tools/release-tools/npm_package.js",
+        "npm-publish": "node ./tools/release-tools/npm_publish.js",
+        "npm-set-latest": "node ./tools/release-tools/npm_set_latest.js",
+        "gh-status": "node ./tools/status-tools/github-status.js",
+        "api-docs": "rush api-docs",
+        "imgsizegen": "node ./tools/sizeImageGenerator/size-image-generator.js"
     },
     "repository": {
         "type": "git",
@@ -39,11 +47,17 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "@microsoft/rush": "5.82.1",
+        "@microsoft/rush": "5.148.0",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@typescript-eslint/eslint-plugin": "^5.46.1",
         "@typescript-eslint/parser": "^5.46.1",
+        "@rollup/plugin-commonjs": "^24.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@rollup/plugin-replace": "^5.0.2",
+        "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-sourcemaps": "^0.6.3",
         "archiver": "^5.3.0",
         "chromium": "^3.0.2",
         "connect": "^3.7.0",
@@ -60,8 +74,9 @@
         "grunt-contrib-qunit": "^6.2.1",
         "grunt-contrib-uglify": "^5.2.1",
         "puppeteer": "19.2.0",
-        "typedoc": "^0.23.22",
+        "typedoc": "^0.26.6",
         "typescript": "^4.9.3",
-        "whatwg-fetch": "^3.6.2"
+        "whatwg-fetch": "^3.6.2",
+        "request": "^2.88.2"
     }
 }

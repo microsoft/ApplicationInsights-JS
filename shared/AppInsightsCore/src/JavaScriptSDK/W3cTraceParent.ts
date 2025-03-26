@@ -1,4 +1,4 @@
-import { isArray, isString, strLeft, strTrim } from "@nevware21/ts-utils";
+import { arrForEach, isArray, isString, strLeft, strTrim } from "@nevware21/ts-utils";
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
@@ -62,10 +62,11 @@ export function createTraceParent(traceId?: string, spanId?: string, flags?: num
 /**
  * Attempt to parse the provided string as a W3C TraceParent header value (https://www.w3.org/TR/trace-context/#traceparent-header)
  *
- * @param value
+ * @param value - The value to be parsed
+ * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
  * @returns
  */
-export function parseTraceParent(value: string): ITraceParent {
+export function parseTraceParent(value: string, selectIdx?: number): ITraceParent {
     if (!value) {
         // Don't pass a null/undefined or empty string
         return null;
@@ -79,6 +80,11 @@ export function parseTraceParent(value: string): ITraceParent {
     if (!value || !isString(value) || value.length > 8192) {
         // limit potential processing based on total length
         return null;
+    }
+
+    if (value.indexOf(",") !== -1) {
+        let values = value.split(",");
+        value = values[selectIdx > 0 && values.length > selectIdx ? selectIdx : 0];
     }
 
     // See https://www.w3.org/TR/trace-context/#versioning-of-traceparent
@@ -122,7 +128,7 @@ export function isValidSpanId(value: string): boolean {
 
 /**
  * Validates that the provided ITraceParent instance conforms to the currently supported specifications
- * @param value
+ * @param value - The parsed traceParent value
  * @returns
  */
 export function isValidTraceParent(value: ITraceParent) {
@@ -184,14 +190,57 @@ export function formatTraceParent(value: ITraceParent) {
 
 /**
  * Helper function to fetch the passed traceparent from the page, looking for it as a meta-tag or a Server-Timing header.
+ * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
  * @returns
  */
-export function findW3cTraceParent(): ITraceParent {
+export function findW3cTraceParent(selectIdx?: number): ITraceParent {
     const name = "traceparent";
-    let traceParent: ITraceParent = parseTraceParent(findMetaTag(name));
+    let traceParent: ITraceParent = parseTraceParent(findMetaTag(name), selectIdx);
     if (!traceParent) {
-        traceParent = parseTraceParent(findNamedServerTiming(name))
+        traceParent = parseTraceParent(findNamedServerTiming(name), selectIdx)
     }
 
     return traceParent;
+}
+
+export interface scriptsInfo {
+    url: string;
+    crossOrigin?: string;
+    async?: boolean;
+    defer?: boolean;
+    referrerPolicy?: string;
+}
+
+/**
+ * Find all script tags in the provided document and return the information about them.
+ * @param doc - The document to search for script tags
+ * @returns
+ */
+export function findAllScripts(doc: any) {
+    let scripts = doc.getElementsByTagName("script");
+    let result: scriptsInfo[] = [];
+    arrForEach(scripts, (script: any) => {
+        let src = script.getAttribute("src");
+        if (src) {
+            let crossOrigin = script.getAttribute("crossorigin");
+            let async = script.hasAttribute("async") === true;
+            let defer = script.hasAttribute("defer") === true;
+            let referrerPolicy = script.getAttribute("referrerpolicy");
+            let info: scriptsInfo = { url: src };
+            if (crossOrigin) {
+                info.crossOrigin = crossOrigin;
+            }
+            if (async) {
+                info.async = async;
+            }
+            if (defer) {
+                info.defer = defer;
+            }
+            if (referrerPolicy) {
+                info.referrerPolicy = referrerPolicy;
+            }
+            result.push(info);
+        }
+    });
+    return result;
 }

@@ -1,19 +1,41 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { eLoggingSeverity, _eInternalMessageId, LoggingSeverity, _InternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 import { IConfigDefaults } from "../../../src/Config/IConfigDefaults";
 import { IConfiguration } from "../../../src/JavaScriptSDK.Interfaces/IConfiguration";
-import { getDynamicConfigHandler } from "../../../src/Config/DynamicSupport";
+import { blockDynamicConversion, forceDynamicConversion, getDynamicConfigHandler } from "../../../src/Config/DynamicSupport";
 import { createDynamicConfig, onConfigChange } from "../../../src/Config/DynamicConfig";
-import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys, isPlainObject, objHasOwn } from "@nevware21/ts-utils";
+import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys, isPlainObject, objHasOwn, objDeepFreeze, objDefineProps, strContains } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { INotificationManager } from "../../../src/JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfManager } from "../../../src/JavaScriptSDK.Interfaces/IPerfManager";
-import { AppInsightsCore } from "../../../src/applicationinsights-core-js";
+import { AppInsightsCore, DiagnosticLogger, IDiagnosticLogger, IProcessTelemetryContext } from "../../../src/applicationinsights-core-js";
 import { ITelemetryItem } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryItem";
 import { ITelemetryPluginChain } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryPlugin } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
+import { TestPlugin, TestSamplingPlugin, TrackPlugin } from "./TestPlugins";
+import { STR_CHANNELS, STR_CREATE_PERF_MGR, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE } from "../../../src/JavaScriptSDK/InternalConstants";
+
+const coreDefaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
+    cookieCfg: {},
+    [STR_EXTENSIONS]: { rdOnly: true, ref: true, v: [] },
+    [STR_CHANNELS]: { rdOnly: true, ref: true, v:[] },
+    [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
+    [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
+    loggingLevelConsole: eLoggingSeverity.DISABLED,
+    diagnosticLogInterval: UNDEFINED_VALUE
+});
+
+const blockedChannelsDefaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
+    cookieCfg: {},
+    [STR_EXTENSIONS]: { rdOnly: true, ref: true, v: [] },
+    [STR_CHANNELS]: { blkVal: true, rdOnly: true, ref: true, v:[] },
+    [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
+    [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
+    loggingLevelConsole: eLoggingSeverity.DISABLED,
+    diagnosticLogInterval: UNDEFINED_VALUE
+});
 
 type NoRepeats<T extends readonly any[]> = { [M in keyof T]: { [N in keyof T]:
     N extends M ? never : T[M] extends T[N] ? unknown : never
@@ -31,14 +53,37 @@ function _expectException(cb: () => void, message: string) {
         Assert.ok(true, message);
     }
 }
+
 export class DynamicConfigTests extends AITestClass {
+    _throwInternalEvents: any[] = [];
+    _testLogger: IDiagnosticLogger ;
 
     public testInitialize() {
         super.testInitialize();
+
+        this._throwInternalEvents = [];
+        this._testLogger = new DiagnosticLogger({
+            loggingLevelConsole: eLoggingSeverity.DEBUG
+        });
+        this._testLogger.throwInternal = (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct?: boolean) => {
+                this._throwInternalEvents.push({
+                    severity,
+                    msgId,
+                    msg,
+                    properties,
+                    isUserAct
+                });
+            };
     }
 
     public testCleanup() {
         super.testCleanup();
+    }
+
+    public testFinishedCleanup() {
+        super.testFinishedCleanup();
+
+        Assert.equal(0, this._throwInternalEvents.length, "No internal events have been thrown - " + JSON.stringify(this._throwInternalEvents));
     }
 
     public registerTests() {
@@ -57,7 +102,7 @@ export class DynamicConfigTests extends AITestClass {
                     endpointUrl: "https://localhost:9001"
                 };
 
-                let dynamicHandler = createDynamicConfig(theConfig, theDefaults, null, false);
+                let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger, false);
                 let dynamicConfig = dynamicHandler.cfg;
 
                 Assert.equal(dynamicHandler, getDynamicConfigHandler(dynamicConfig), "The dynamic handler is returned when using the config to find it");
@@ -110,7 +155,7 @@ export class DynamicConfigTests extends AITestClass {
                     }
                 };
 
-                let dynamicHandler = createDynamicConfig(theConfig, theDefaults);
+                let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger);
                 let dynamicConfig = dynamicHandler.cfg;
 
                 Assert.equal(dynamicHandler, getDynamicConfigHandler(dynamicConfig), "The dynamic handler be returned when using the config to find it");
@@ -168,7 +213,7 @@ export class DynamicConfigTests extends AITestClass {
                 };
 
                 // Creates a dynamic config as a side-effect
-                let dynamicConfig = createDynamicConfig(theConfig, theDefaults).cfg;
+                let dynamicConfig = createDynamicConfig(theConfig, theDefaults, this._testLogger).cfg;
 
                 // default values should never be changed to dynamic
                 objForEachKey(theDefaults, (key, value) => {
@@ -209,7 +254,7 @@ export class DynamicConfigTests extends AITestClass {
                     endpointUrl: "https://localhost:9001"
                 };
 
-                let dynamicHandler = createDynamicConfig(theConfig, theDefaults);
+                let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger);
                 let dynamicConfig = dynamicHandler.cfg;
                 Assert.ok(!!dynamicHandler, "The config should have a dynamic config handler");
                 Assert.equal(dynamicConfig, theConfig, "The object should have been applied in-place");
@@ -256,7 +301,7 @@ export class DynamicConfigTests extends AITestClass {
                     endpointUrl: "https://localhost:9001"
                 };
 
-                let dynamicHandler = createDynamicConfig(theConfig, theDefaults);
+                let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger);
                 let dynamicConfig = dynamicHandler.cfg;
                 Assert.ok(!!dynamicHandler, "The config should have a dynamic config handler");
                 Assert.equal(dynamicConfig, theConfig, "The object should have been applied in-place");
@@ -302,7 +347,7 @@ export class DynamicConfigTests extends AITestClass {
                     endpointUrl: "https://localhost:9001"
                 };
 
-                let dynamicConfig = createDynamicConfig(theConfig, theDefaults).cfg;
+                let dynamicConfig = createDynamicConfig(theConfig, theDefaults, this._testLogger).cfg;
                 let dynamicHandler = getDynamicConfigHandler(dynamicConfig);
                 Assert.ok(!!dynamicHandler, "The config should have a dynamic config handler");
                 Assert.equal(dynamicConfig, theConfig, "The object should have been applied in-place");
@@ -340,7 +385,7 @@ export class DynamicConfigTests extends AITestClass {
                     endpointUrl: "https://localhost:9001"
                 };
 
-                let dynamicHandler = createDynamicConfig(theConfig, theDefaults);
+                let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger);
                 let dynamicConfig = dynamicHandler.cfg;
                 Assert.ok(!!dynamicHandler, "The config should have a dynamic config handler");
                 Assert.equal(dynamicConfig, theConfig, "The object should have been applied in-place");
@@ -505,59 +550,59 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: IConfiguration = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1
                 };
 
                 const channelPlugin = new TestChannelPlugin();
                 let core = new AppInsightsCore();
-                let expectedEnableDebugExceptions = theConfig.enableDebugExceptions;
+                let expectedEnableDebug = theConfig.enableDebug;
                 let expectedLoggingLevel = theConfig.loggingLevelConsole;
 
                 core.initialize(theConfig, [channelPlugin]);
                 let onChangeCalled = 0;
                 let handler = core.onCfgChange((details) => {
                     onChangeCalled ++;
-                    Assert.equal(expectedEnableDebugExceptions, details.cfg.enableDebugExceptions, "Expect the endpoint to be set");
-                    if (details.cfg.enableDebugExceptions) {
+                    Assert.equal(expectedEnableDebug, details.cfg.enableDebug, "Expect the endpoint to be set");
+                    if (details.cfg.enableDebug) {
                         Assert.equal(expectedLoggingLevel, details.cfg.loggingLevelConsole, "Expected the logging level console")
                     }
                 });
 
                 Assert.equal(1, onChangeCalled, "OnCfgChange was not called");
 
-                // This should not trigger the listener as enableDebugExceptions was false
+                // This should not trigger the listener as enableDebug was false
                 expectedLoggingLevel = 99;
                 core.config.loggingLevelConsole = expectedLoggingLevel;
 
                 this.clock.tick(10);
-                Assert.equal(1, onChangeCalled, "listener should not have been called as enableDebugExceptions was false");
+                Assert.equal(1, onChangeCalled, "listener should not have been called as enableDebug was false");
 
                 // Enable Debug extensions
-                expectedEnableDebugExceptions = true;
-                core.config.enableDebugExceptions = expectedEnableDebugExceptions;
+                expectedEnableDebug = true;
+                core.config.enableDebug = expectedEnableDebug;
                 this.clock.tick(10);
-                Assert.equal(2, onChangeCalled, "listener should have been called enableDebugExceptions");
+                Assert.equal(2, onChangeCalled, "listener should have been called enableDebug");
 
-                // This should trigger the listener as enableDebugExceptions was false
+                // This should trigger the listener as enableDebug was false
                 expectedLoggingLevel = 2;
                 core.config.loggingLevelConsole = expectedLoggingLevel;
 
                 this.clock.tick(10);
-                Assert.equal(3, onChangeCalled, "listener should have been called as enableDebugExceptions was true");
+                Assert.equal(3, onChangeCalled, "listener should have been called as enableDebug was true");
 
                 // Disable Debug extensions again
-                expectedEnableDebugExceptions = false;
-                core.config.enableDebugExceptions = expectedEnableDebugExceptions;
+                expectedEnableDebug = false;
+                core.config.enableDebug = expectedEnableDebug;
                 this.clock.tick(10);
-                Assert.equal(4, onChangeCalled, "listener should have been called enableDebugExceptions");
+                Assert.equal(4, onChangeCalled, "listener should have been called enableDebug");
 
-                // This should not call trigger the listener as enableDebugExceptions was false
+                // This should not call trigger the listener as enableDebug was false
                 expectedLoggingLevel = 42;
                 core.config.loggingLevelConsole = expectedLoggingLevel;
 
                 this.clock.tick(10);
-                Assert.equal(4, onChangeCalled, "listener should have been called as enableDebugExceptions was disabled");
+                Assert.equal(4, onChangeCalled, "listener should have been called as enableDebug was disabled");
             }
         });
 
@@ -568,7 +613,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
                         "test": {} as any
@@ -707,7 +752,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
                         "test": {} as any
@@ -715,7 +760,7 @@ export class DynamicConfigTests extends AITestClass {
                     anArray: [ 1, 2, 3 ]
                 };
 
-                let handler = createDynamicConfig(theConfig, undefined, undefined, true);
+                let handler = createDynamicConfig(theConfig, undefined, this._testLogger, true);
 
                 handler.rdOnly(theConfig, "instrumentationKey");
                 _expectException(() => {
@@ -761,7 +806,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
                         "test": {} as any
@@ -771,7 +816,7 @@ export class DynamicConfigTests extends AITestClass {
                     }
                 };
 
-                let handler = createDynamicConfig(theConfig, {});
+                let handler = createDynamicConfig(theConfig, {}, this._testLogger);
                 let config = handler.cfg;
                 let userCfg = handler.ref(theConfig, "userCfg");
 
@@ -861,12 +906,12 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     userCfg: undefined
                 };
 
-                let handler = createDynamicConfig(theConfig, {});
+                let handler = createDynamicConfig(theConfig, {}, this._testLogger);
                 let config = handler.cfg;
 
                 let userCfg = handler.ref(theConfig, "userCfg");
@@ -954,7 +999,7 @@ export class DynamicConfigTests extends AITestClass {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
                     endpointUrl: "https://localhost:9001",
-                    enableDebugExceptions: false,
+                    enableDebug: false,
                     loggingLevelConsole: 1,
                     userCfg: undefined,
                     extensionConfig: {
@@ -1043,6 +1088,661 @@ export class DynamicConfigTests extends AITestClass {
                     }
                 }
                 Assert.deepEqual(expectedExtCfg, config.extensionConfig, "Check the extension Config")
+            }
+        });
+
+        this.testCase({
+            name: "Direct Updating of readonly fields",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+                const iKey2 = "00000000-1111-7777-8888-999999999999";
+                const testEndpoint1 = "https://localhost:9001/TestEndpoint";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+
+                const config: IConfiguration = {
+                    instrumentationKey: iKey1
+                };
+                try {
+                    appInsightsCore.initialize(config, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin], this._testLogger);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(4, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                _expectException(() => {
+                    // casting to any to bypass TypeScript readonly error
+                    (appInsightsCore.config as any).extensions = []
+                }, "We should not be able to update the extensions directly");
+
+                _expectException(() => {
+                    // casting to any to bypass TypeScript readonly error
+                    (appInsightsCore.config as any).channels = [[]]
+                }, "We should not be able to update the channels directly");
+            }
+        });
+
+        this.testCase({
+            name: "Validate that extensions created as proxy objects are not converted into dynamic objects",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+                let mockChannel = {
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "testChannel",
+                    priority: 1003
+                };
+
+                let blockedMockChannel = blockDynamicConversion({
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "blockedTestChannel",
+                    priority: 1004
+                });
+
+                let forceMockChannel = forceDynamicConversion(new TestChannelPlugin());
+
+                let config: IConfiguration = {
+                    instrumentationKey: iKey1,
+                    extensions: [ mockChannel, blockedMockChannel, forceMockChannel ],
+                };
+
+                let dynamicHandler = createDynamicConfig(config, coreDefaultConfig, this._testLogger, true);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                try {
+                    appInsightsCore.initialize(dynamicConfig, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin], this._testLogger);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(null, getDynamicConfigHandler(channelPlugin), "The channel should not have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(forceMockChannel), "The channel should have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(mockChannel), "The channel should have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(blockedMockChannel), "This channel should not have been converted into a dynamic object");
+                let processSpy = this.sandbox.spy(blockedMockChannel, "processTelemetry");
+
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(7, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                Assert.equal(false, processSpy.called, "The spy has not been called yet");
+                appInsightsCore.track({
+                    name: "TestEvent"
+                });
+
+                Assert.equal(true, processSpy.called, "The processTelemetry should have been called");
+            }
+        });
+
+        this.testCase({
+            name: "Validate that channels created as proxy objects are not converted into dynamic objects",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+                let mockChannel = {
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "testChannel",
+                    priority: 1003
+                };
+
+                let blockedMockChannel = blockDynamicConversion({
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "blockedTestChannel",
+                    priority: 1004
+                });
+
+                let forceMockChannel = forceDynamicConversion(new TestChannelPlugin());
+
+                let config: IConfiguration = {
+                    instrumentationKey: iKey1,
+                    channels: [ [ mockChannel, blockedMockChannel, forceMockChannel ] ],
+                };
+
+                let dynamicHandler = createDynamicConfig(config, coreDefaultConfig, this._testLogger, true);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                try {
+                    appInsightsCore.initialize(dynamicConfig, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin], this._testLogger);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(null, getDynamicConfigHandler(channelPlugin), "The channel should not have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(forceMockChannel), "The channel should have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(mockChannel), "The channel should have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(blockedMockChannel), "This channel should not have been converted into a dynamic object");
+                let processSpy = this.sandbox.spy(blockedMockChannel, "processTelemetry");
+
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(7, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                Assert.equal(false, processSpy.called, "The spy has not been called yet");
+                appInsightsCore.track({
+                    name: "TestEvent"
+                });
+
+                Assert.equal(true, processSpy.called, "The processTelemetry should have been called");
+            }
+        });
+
+        this.testCase({
+            name: "Validate that channels created as Sealed objects are not converted into dynamic objects",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+                let mockChannel = {
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "testChannel",
+                    priority: 1003
+                };
+
+                let sealedProcessCalled = false;
+                let sealedMockChannel = Object.seal({
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { sealedProcessCalled = true; itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "sealedTestChannel",
+                    priority: 1004
+                });
+
+                let forceMockChannel = forceDynamicConversion(new TestChannelPlugin());
+
+                let config: IConfiguration = {
+                    instrumentationKey: iKey1,
+                    channels: [ [ mockChannel, sealedMockChannel, forceMockChannel ] ],
+                };
+
+                let dynamicHandler = createDynamicConfig(config, coreDefaultConfig, this._testLogger, true);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                try {
+                    appInsightsCore.initialize(dynamicConfig, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin], this._testLogger);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(null, getDynamicConfigHandler(channelPlugin), "The channel should not have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(forceMockChannel), "The channel should have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(mockChannel), "The channel should have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(sealedMockChannel), "This channel should not have been converted into a dynamic object");
+
+                sealedProcessCalled = false;
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(7, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                Assert.equal(false, sealedProcessCalled, "The spy has not been called yet");
+                appInsightsCore.track({
+                    name: "TestEvent"
+                });
+
+                Assert.equal(true, sealedProcessCalled, "The processTelemetry should have been called");
+                Assert.equal(2, this._throwInternalEvents.length, "We should have got 2 messages");
+                Assert.equal(eLoggingSeverity.DEBUG, this._throwInternalEvents[0].severity);
+                Assert.equal(_eInternalMessageId.DynamicConfigException, this._throwInternalEvents[0].msgId);
+                Assert.ok(strContains(this._throwInternalEvents[0].msg, "Cannot redefine property"));
+
+                Assert.equal(eLoggingSeverity.DEBUG, this._throwInternalEvents[1].severity);
+                Assert.equal(_eInternalMessageId.DynamicConfigException, this._throwInternalEvents[1].msgId);
+                Assert.ok(strContains(this._throwInternalEvents[1].msg, "Cannot redefine property"));
+
+                this._throwInternalEvents = [];
+            }
+        });
+
+        this.testCase({
+            name: "Validate that channels created as frozen objects are not converted into dynamic objects",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+                let mockChannel = {
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "testChannel",
+                    priority: 1003
+                };
+
+                let frozenProcessCalled = false;
+                let frozenMockChannel = Object.freeze({
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { frozenProcessCalled = true, itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "frozenTestChannel",
+                    priority: 1004
+                });
+
+                let forceMockChannel = forceDynamicConversion(new TestChannelPlugin());
+
+                let config: IConfiguration = {
+                    instrumentationKey: iKey1,
+                    channels: [ [ mockChannel, frozenMockChannel, forceMockChannel ] ],
+                };
+
+                let dynamicHandler = createDynamicConfig(config, coreDefaultConfig, this._testLogger, true);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                try {
+                    appInsightsCore.initialize(dynamicConfig, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin], this._testLogger);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(null, getDynamicConfigHandler(channelPlugin), "The channel should not have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(forceMockChannel), "The channel should have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(mockChannel), "The channel should have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(frozenMockChannel), "This channel should not have been converted into a dynamic object");
+
+                frozenProcessCalled = false;
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(7, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                Assert.equal(false, frozenProcessCalled, "The spy has not been called yet");
+                appInsightsCore.track({
+                    name: "TestEvent"
+                });
+
+                Assert.equal(true, frozenProcessCalled, "The processTelemetry should have been called");
+                Assert.equal(2, this._throwInternalEvents.length, "We should have got 2 messages");
+                Assert.equal(eLoggingSeverity.DEBUG, this._throwInternalEvents[0].severity);
+                Assert.equal(_eInternalMessageId.DynamicConfigException, this._throwInternalEvents[0].msgId);
+                Assert.ok(strContains(this._throwInternalEvents[0].msg, "Cannot redefine property"));
+
+                Assert.equal(eLoggingSeverity.DEBUG, this._throwInternalEvents[1].severity);
+                Assert.equal(_eInternalMessageId.DynamicConfigException, this._throwInternalEvents[1].msgId);
+                Assert.ok(strContains(this._throwInternalEvents[1].msg, "Cannot redefine property"));
+
+                this._throwInternalEvents = [];
+            }
+        });
+
+        this.testCase({
+            name: "Validate that channels created as readonly defined not configurable objects are not converted into dynamic objects",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+                let mockChannel = {
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "testChannel",
+                    priority: 1003
+                };
+
+                let definedProcessCalled = false;
+                let definedMockChannel: IChannelControls = objDefineProps<IChannelControls>({} as IChannelControls, {
+                    pause: { v: () => { }, w: false, c: false },
+                    resume: { v: () => { }, w: false, c: false },
+                    teardown: { v: () => { }, w: false, c: false },
+                    flush: { v: (async: any, callBack: any) => { }, w: false, c: false },
+                    processTelemetry: { v: (env: any, itemCtx?: IProcessTelemetryContext) => { definedProcessCalled = true; itemCtx?.processNext(env); }, w: false, c: false },
+                    setNextPlugin: { v: (next: any) => { }, w: false, c: false },
+                    initialize: { v: (config: any, core: any, extensions: any) => { }, w: false, c: false },
+                    identifier: { v: "definedMockChannel", w: false, c: false },
+                    priority: { v: 1004, w: false, c: false }
+                });
+
+                let forceMockChannel = forceDynamicConversion(new TestChannelPlugin());
+
+                let config: IConfiguration = {
+                    instrumentationKey: iKey1,
+                    channels: [ [ mockChannel, definedMockChannel, forceMockChannel ] ],
+                };
+
+                let dynamicHandler = createDynamicConfig(config, coreDefaultConfig, this._testLogger, true);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                try {
+                    appInsightsCore.initialize(dynamicConfig, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin], this._testLogger);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(null, getDynamicConfigHandler(channelPlugin), "The channel should not have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(forceMockChannel), "The channel should have been converted into a dynamic object");
+                Assert.notEqual(null, getDynamicConfigHandler(mockChannel), "The channel should have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(definedMockChannel), "This channel should not have been converted into a dynamic object");
+
+                definedProcessCalled = false;
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(7, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                Assert.equal(false, definedProcessCalled, "The spy has not been called yet");
+                appInsightsCore.track({
+                    name: "TestEvent"
+                });
+
+                Assert.equal(true, definedProcessCalled, "The processTelemetry should have been called");
+
+                Assert.equal(2, this._throwInternalEvents.length, "We should have got 2 messages");
+                Assert.equal(eLoggingSeverity.DEBUG, this._throwInternalEvents[0].severity);
+                Assert.equal(_eInternalMessageId.DynamicConfigException, this._throwInternalEvents[0].msgId);
+                Assert.ok(strContains(this._throwInternalEvents[0].msg, "Cannot redefine property"));
+
+                Assert.equal(eLoggingSeverity.DEBUG, this._throwInternalEvents[1].severity);
+                Assert.equal(_eInternalMessageId.DynamicConfigException, this._throwInternalEvents[1].msgId);
+                Assert.ok(strContains(this._throwInternalEvents[1].msg, "Cannot redefine property"));
+
+                this._throwInternalEvents = [];
+            }
+        });
+
+        this.testCase({
+            name: "Validate that when channels are blocked from dynamic and using readonly defined not configurable objects are not converted into dynamic objects",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+                let mockChannel = {
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "testChannel",
+                    priority: 1003
+                };
+
+                let definedProcessCalled = false;
+                let definedMockChannel: IChannelControls = objDefineProps<IChannelControls>({} as IChannelControls, {
+                    pause: { v: () => { }, w: false, c: false },
+                    resume: { v: () => { }, w: false, c: false },
+                    teardown: { v: () => { }, w: false, c: false },
+                    flush: { v: (async: any, callBack: any) => { }, w: false, c: false },
+                    processTelemetry: { v: (env: any, itemCtx?: IProcessTelemetryContext) => { definedProcessCalled = true; itemCtx?.processNext(env); }, w: false, c: false },
+                    setNextPlugin: { v: (next: any) => { }, w: false, c: false },
+                    initialize: { v: (config: any, core: any, extensions: any) => { }, w: false, c: false },
+                    identifier: { v: "definedMockChannel", w: false, c: false },
+                    priority: { v: 1004, w: false, c: false }
+                });
+
+                let forceMockChannel = forceDynamicConversion(new TestChannelPlugin());
+
+                let config: IConfiguration = {
+                    instrumentationKey: iKey1,
+                    channels: [ [ mockChannel, definedMockChannel, forceMockChannel ] ],
+                };
+
+                let dynamicHandler = createDynamicConfig(config, blockedChannelsDefaultConfig, this._testLogger, true);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                try {
+                    appInsightsCore.initialize(dynamicConfig, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin], this._testLogger);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(null, getDynamicConfigHandler(channelPlugin), "The channel should not have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(forceMockChannel), "The channel should not have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(mockChannel), "The channel should not have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(definedMockChannel), "This channel should not have been converted into a dynamic object");
+
+                definedProcessCalled = false;
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(7, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                Assert.equal(false, definedProcessCalled, "The spy has not been called yet");
+                appInsightsCore.track({
+                    name: "TestEvent"
+                });
+
+                Assert.equal(true, definedProcessCalled, "The processTelemetry should have been called");
+
+                Assert.equal(0, this._throwInternalEvents.length, "We should have got no messages");
+                this._throwInternalEvents = [];
+            }
+        });
+
+        this.testCase({
+            name: "Validate sealing the entire config",
+            test: () => {
+                const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
+
+                const channelPlugin = new TestChannelPlugin();
+                const trackPlugin = new TrackPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const testSamplingPlugin = new TestSamplingPlugin();
+                let mockChannel = {
+                    pause: () => { },
+                    resume: () => { },
+                    teardown: () => { },
+                    flush: (async: any, callBack: any) => { },
+                    processTelemetry: (env: any, itemCtx?: IProcessTelemetryContext) => { itemCtx?.processNext(env); },
+                    setNextPlugin: (next: any) => { },
+                    initialize: (config: any, core: any, extensions: any) => { },
+                    identifier: "testChannel",
+                    priority: 1003
+                };
+
+                let definedProcessCalled = false;
+                let definedMockChannel: IChannelControls = objDefineProps<IChannelControls>({} as IChannelControls, {
+                    pause: { v: () => { }, w: false, c: false },
+                    resume: { v: () => { }, w: false, c: false },
+                    teardown: { v: () => { }, w: false, c: false },
+                    flush: { v: (async: any, callBack: any) => { }, w: false, c: false },
+                    processTelemetry: { v: (env: any, itemCtx?: IProcessTelemetryContext) => { definedProcessCalled = true; itemCtx?.processNext(env); }, w: false, c: false },
+                    setNextPlugin: { v: (next: any) => { }, w: false, c: false },
+                    initialize: { v: (config: any, core: any, extensions: any) => { }, w: false, c: false },
+                    identifier: { v: "definedMockChannel", w: false, c: false },
+                    priority: { v: 1004, w: false, c: false }
+                });
+
+                let forceMockChannel = forceDynamicConversion(new TestChannelPlugin());
+
+                let config: IConfiguration = Object.seal({
+                    instrumentationKey: iKey1,
+                    channels: [ [ mockChannel, definedMockChannel, forceMockChannel ] ],
+                });
+
+                try {
+                    createDynamicConfig(config, blockedChannelsDefaultConfig, this._testLogger, true);
+                    Assert.ok(false, "Should not be able to update in-place");
+                } catch (e) {
+                    Assert.ok(true, "Expected to not be able to update the default config")
+                }
+
+                // Attempt to convert by deep copying the existing config
+                let dynamicHandler = createDynamicConfig(config, blockedChannelsDefaultConfig, this._testLogger, false);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                try {
+                    appInsightsCore.initialize(dynamicConfig, [channelPlugin, new TestPlugin(), trackPlugin, testSamplingPlugin], this._testLogger);
+                } catch (error) {
+                    Assert.ok(false, "Everything should be initialized");
+                }
+
+                Assert.equal(null, getDynamicConfigHandler(channelPlugin), "The channel should not have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(forceMockChannel), "The channel should not have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(mockChannel), "The channel should not have been converted into a dynamic object");
+                Assert.equal(null, getDynamicConfigHandler(definedMockChannel), "This channel should not have been converted into a dynamic object");
+
+                definedProcessCalled = false;
+                Assert.equal(1, channelPlugin.events.length, "We should have a track call");
+                Assert.equal(0, channelPlugin.events[0].data.trackPlugin);
+                Assert.equal(true, channelPlugin.events[0].data.sampled);
+
+                Assert.equal(iKey1, appInsightsCore.config.instrumentationKey, "Test Core Instrumentation Key");
+                Assert.equal(undefined, appInsightsCore.config.endpointUrl, "Test Core Endpoint 1");
+                Assert.equal(true, appInsightsCore.getCookieMgr().isEnabled(), "Cookie Manager should be enabled");
+
+                Assert.equal(iKey1, trackPlugin._config.instrumentationKey, "Test plugin Instrumentation Key");
+                Assert.equal(undefined, trackPlugin._config.endpointUrl, "Test plugin Endpoint 1");
+
+                Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
+
+                Assert.equal(7, appInsightsCore.config.extensions!.length, dumpObj(appInsightsCore.config.extensions));
+
+                Assert.equal(false, definedProcessCalled, "The spy has not been called yet");
+                appInsightsCore.track({
+                    name: "TestEvent"
+                });
+
+                Assert.equal(true, definedProcessCalled, "The processTelemetry should have been called");
+
+                Assert.equal(4, this._throwInternalEvents.length, "We should have got no messages");
+                Assert.ok(strContains(this._throwInternalEvents[0].msg, "Creating [config]"), JSON.stringify(this._throwInternalEvents[0]));
+                Assert.ok(strContains(this._throwInternalEvents[1].msg, "Setting value ["), JSON.stringify(this._throwInternalEvents[1]));
+                Assert.ok(strContains(this._throwInternalEvents[2].msg, "Setting value ["), JSON.stringify(this._throwInternalEvents[2]));
+                Assert.ok(strContains(this._throwInternalEvents[3].msg, "State ["), JSON.stringify(this._throwInternalEvents[3]));
+                this._throwInternalEvents = [];
             }
         });
 

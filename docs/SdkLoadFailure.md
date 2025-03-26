@@ -106,7 +106,7 @@ If your end users are on a corporate network, then they are most likely behind s
 
 ## Application Insights CDN outage
 
-You can confirm this scenario by attempting to access the CDN endpoint directly from the browser (for example, https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js) from a different location to that of your end users (probably from your own development machine - assuming that your organization has not blocked this domain).
+You can confirm this scenario by attempting to access the CDN endpoint directly from the browser (for example, https://js.monitor.azure.com/scripts/b/ai.2.min.js) from a different location to that of your end users (probably from your own development machine - assuming that your organization has not blocked this domain).
 
 ### Troubleshooting
 
@@ -127,5 +127,17 @@ Quick check: Using a browser that supports Developer tools (F12), validate on th
 
 ## <a name="next"></a> Next steps
 * [Get additional help by filing an issue on GitHub](https://github.com/Microsoft/ApplicationInsights-JS/issues)
-* [Back to Snippet setup](../README.md#reporting-script-load-failures)
+* [Back to Snippet setup](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md#reporting-script-load-failures)
 
+## Sdk Initialization Failure Due to RequireJs
+
+If you're experiencing issues with Application Insights not loading properly, it might be because there's a conflict with RequireJs. This usually happens when RequireJs has already been loaded by the time Application Insights tries to initialize. Refer to the documentation [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md#module-formats) for more detailed information.
+
+
+### Troubleshooting
+- Check if another script is calling require js
+- Check if RequireJS is loaded first before script is loaded
+
+### Recommended Workaround Solution
+- Instead of using 3.x.x.min.js or 2.x.x.js, opt for 3.x.x.gbl.min.js or 2.x.x.glb.js. 
+- Load application insight script prior to other scripts

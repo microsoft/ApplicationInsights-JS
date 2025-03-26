@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { arrForEach } from "@microsoft/applicationinsights-core-js";
+import { arrIncludes } from "@nevware21/ts-utils";
 
 export const detailsContainerId = "details-container";
 export const detailsWatchList = ["baseType", "name", "time", "properties"];
@@ -94,10 +95,10 @@ export function createDetailList(propsToWatch: string[], details: any, id: strin
                 obj =  details[prop] || details["baseData"];
             }
 
-            if (analyticsDetails.includes(prop)) {
+            if (arrIncludes(analyticsDetails, prop)) {
                 obj = details["extensionConfig"]["ApplicationInsightsAnalytics"][prop];
             }
-            if (ajaxDetails.includes(prop)) {
+            if (arrIncludes(ajaxDetails, prop)) {
                 obj = details["extensionConfig"]["AjaxDependencyPlugin"][prop];
             }
             if (prop === "item") {

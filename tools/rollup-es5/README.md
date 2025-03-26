@@ -1,7 +1,8 @@
-# Microsoft Application Insights JavaScript SDK - Rollup ES3 Plugin
+# Microsoft Application Insights JavaScript SDK - Rollup ES5 Plugin
 
-[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
-[![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-analytics-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-analytics-js)
+[![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
+[![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-rollup-es5.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-rollup-es5)
 
 Rollup ES5/IE Support Plugin for the Application Insights Javascript SDK
 

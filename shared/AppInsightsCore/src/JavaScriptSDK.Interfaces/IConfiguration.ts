@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ITelemetryPlugin } from "./ITelemetryPlugin";
+import { IPromise } from "@nevware21/ts-async";
+import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
+import { IExceptionConfig } from "./IExceptionConfig";
+import { IFeatureOptIn } from "./IFeatureOptIn";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
-import { IAppInsightsCore } from "./IAppInsightsCore";
+import { ITelemetryPlugin } from "./ITelemetryPlugin";
 
 "use strict";
 
@@ -16,15 +19,19 @@ export interface IConfiguration {
     /**
      * Instrumentation key of resource. Either this or connectionString must be specified.
      */
-    instrumentationKey?: string;
+    instrumentationKey?: string| IPromise<string>;
 
     /**
      * Connection string of resource. Either this or instrumentationKey must be specified.
      */
-    connectionString?: string;
+    connectionString?: string | IPromise<string> ;
 
     /**
-     * Polling interval (in ms) for internal logging queue
+     * Set the timer interval (in ms) for internal logging queue, this is the
+     * amount of time to wait after logger.queue messages are detected to be sent.
+     * Note: since 3.0.1 and 2.8.13 the diagnostic logger timer is a normal timeout timer
+     * and not an interval timer. So this now represents the timer "delay" and not
+     * the frequency at which the events are sent.
      */
     diagnosticLogInterval?: number;
 
@@ -43,8 +50,8 @@ export interface IConfiguration {
      * be logged to console if their severity meets the configured loggingConsoleLevel
      *
      * 0: ALL console logging off
-     * 1: logs to console: severity >= CRITICAL
-     * 2: logs to console: severity >= WARNING
+     * 1: logs to console: severity \>= CRITICAL
+     * 2: logs to console: severity \>= WARNING
      */
     loggingLevelConsole?: number;
 
@@ -54,20 +61,20 @@ export interface IConfiguration {
      * the configured instrumentation key.
      *
      * 0: ALL iKey logging off
-     * 1: logs to iKey: severity >= CRITICAL
-     * 2: logs to iKey: severity >= WARNING
+     * 1: logs to iKey: severity \>= CRITICAL
+     * 2: logs to iKey: severity \>= WARNING
      */
     loggingLevelTelemetry?: number
 
     /**
      * If enabled, uncaught exceptions will be thrown to help with debugging
      */
-    enableDebugExceptions?: boolean;
+    enableDebug?: boolean;
 
     /**
      * Endpoint where telemetry data is sent
      */
-    endpointUrl?: string;
+    endpointUrl?: string | IPromise<string>;
 
     /**
      * Extension configs loaded in SDK
@@ -77,16 +84,15 @@ export interface IConfiguration {
     /**
      * Additional plugins that should be loaded by core at runtime
      */
-    extensions?: ITelemetryPlugin[];
+    readonly extensions?: ITelemetryPlugin[];
 
     /**
      * Channel queues that is setup by caller in desired order.
      * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
-    channels?: IChannelControls[][];
+    readonly channels?: IChannelControls[][];
 
     /**
-     * @type {boolean}
      * Flag that disables the Instrumentation Key validation.
      */
     disableInstrumentationKeyValidation?: boolean;
@@ -102,8 +108,8 @@ export interface IConfiguration {
     enablePerfMgr?: boolean;
 
     /**
-     * [Optional] Callback function that will be called to create a the IPerfManager instance when required and ```enablePerfMgr```
-     * is enabled, this enables you to override the default creation of a PerfManager() without needing to ```setPerfMgr()```
+     * [Optional] Callback function that will be called to create a the IPerfManager instance when required and `enablePerfMgr`
+     * is enabled, this enables you to override the default creation of a PerfManager() without needing to `setPerfMgr()`
      * after initialization.
      */
     createPerfMgr?: (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager;
@@ -122,7 +128,6 @@ export interface IConfiguration {
     /**
      * @description Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. It
      * can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
-     * @type {string}
      * @defaultValue ""
      */
     cookieDomain?: string;
@@ -130,7 +135,6 @@ export interface IConfiguration {
     /**
      * @description Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application
      * gateway. It can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
-     * @type {string}
      * @defaultValue ""
      */
     cookiePath?: string;
@@ -173,4 +177,38 @@ export interface IConfiguration {
      * Default is false
      */
     enableWParam?: boolean;
+
+     /**
+     * Custom optional value that will be added as a prefix for storage name.
+     * @defaultValue undefined
+     */
+    storagePrefix?:string;
+
+    /**
+     * Custom optional value to opt in features
+     * @defaultValue undefined
+     */
+    featureOptIn?: IFeatureOptIn;
+
+    /**
+     * If your connection string, instrumentation key and endpoint url are promises,
+     * this config is to manually set timeout for those promises.
+     * Default: 50000ms
+     * @since 3.3.0
+     */
+    initTimeOut?: number;
+
+    /**
+     * If your connection string, instrumentation key and endpoint url are promises,
+     * this config is to manually set in memory proxy track calls count limit before promises finished.
+     * Default: 100
+     * @since 3.3.0
+     */
+    initInMemoMaxSize?: number;
+
+    /**
+     * [Optional] Set additional configuration for exceptions, such as more scripts to include in the exception telemetry.
+     * @since 3.3.2
+     */
+    expCfg?: IExceptionConfig;
 }

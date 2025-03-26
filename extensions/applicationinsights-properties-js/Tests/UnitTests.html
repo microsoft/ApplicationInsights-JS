@@ -24,22 +24,17 @@
         modules.add("pako","./node_modules/pako/dist/pako");
 
         loadFetchModule(modules, "whatwg-fetch");
-        loadCommonModules(modules);
+        loadCommonModules(modules, function() {
 
-        // Load Core
-        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
+            var testModule = modules.add("Tests/Unit/src/prop.tests", "./Unit/dist/prop.tests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
 
-        // Load Common
-        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
-
-        var testModule = modules.add("Tests/Unit/src/prop.tests", "./Unit/dist/prop.tests.js")
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
-
-        modules.run();
+            modules.run();
+        });
     </script>
 </head>
 

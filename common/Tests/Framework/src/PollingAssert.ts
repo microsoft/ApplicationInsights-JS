@@ -1,6 +1,6 @@
 import { Assert } from "./Assert";
 import { AITestClass } from "./AITestClass";
-import { ITestContext } from "./TestCase";
+import { ITestContext } from "./interfaces/ITestContext";
 import { scheduleTimeout } from "@nevware21/ts-utils";
 
 export class PollingAssert {

@@ -5,9 +5,9 @@ import minify from 'rollup-plugin-minify-es';
 
 const version = require("./package.json").version;
 const desc = require("./package.json").description;
-const inputName = "./out/applicationinsights-rollup-es5";
+const inputName = "./dist-es5/applicationinsights-rollup-es5";
 const outputName = "applicationinsights-rollup-es5";
-const distPath = "./dist/";
+const distPath = "./dist/es5/";
 const banner = [
   "/*!",
   ` * ${desc}, ${version}`,
@@ -46,7 +46,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       uglify({
         ie8: false,
         ie: true,
-        toplevel: true,
+        toplevel: false,
         compress: {
           ie: true,
           passes:3,
@@ -95,7 +95,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
         uglify({
           ie8: false,
           ie: true,
-          toplevel: true,
+          toplevel: false,
           compress: {
             ie: true,
             passes:3,
@@ -113,7 +113,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
         minify({
           ie8: false,
           ie: true,
-          toplevel: true,
+          toplevel: false,
           compress: {
             ie: true,
             passes:3,

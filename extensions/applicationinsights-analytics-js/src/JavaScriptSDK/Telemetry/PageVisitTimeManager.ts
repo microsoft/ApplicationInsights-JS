@@ -6,8 +6,9 @@ import {
     utlCanUseSessionStorage, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage
 } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, _warnToConsole, dateNow, dumpObj, getJSON, hasJSON, objDefineAccessors, throwError
+    IDiagnosticLogger, _warnToConsole, dateNow, dumpObj, getJSON, hasJSON, throwError
 } from "@microsoft/applicationinsights-core-js";
+import { objDefine } from "@nevware21/ts-utils";
 
 /**
  * Used to track page visit durations
@@ -47,8 +48,15 @@ export class PageVisitTimeManager {
                 let prevPageVisitData: PageVisitData = null;
                 try {
                     prevPageVisitData = stopPageVisitTimer();
-                    startPageVisitTimer(pageName, pageUrl);
+                    if (utlCanUseSessionStorage()) {
+                        if (utlGetSessionStorage(logger, prevPageVisitDataKeyName) != null) {
+                            throwError("Cannot call startPageVisit consecutively without first calling stopPageVisit");
+                        }
         
+                        const currPageVisitDataStr = getJSON().stringify(new PageVisitData(pageName, pageUrl));
+                        utlSetSessionStorage(logger, prevPageVisitDataKeyName, currPageVisitDataStr);
+                    }
+            
                 } catch (e) {
                     _warnToConsole(logger, "Call to restart failed: " + dumpObj(e));
                     prevPageVisitData = null;
@@ -56,29 +64,7 @@ export class PageVisitTimeManager {
 
                 return prevPageVisitData;
             }
-        
-            /**
-             * Starts timing visit duration of pageName
-             * @param pageName
-             * @returns {}
-             */
-            function startPageVisitTimer(pageName: string, pageUrl: string) {
-                try {
-                    if (utlCanUseSessionStorage()) {
-                        if (utlGetSessionStorage(logger, prevPageVisitDataKeyName) != null) {
-                            throwError("Cannot call startPageVisit consecutively without first calling stopPageVisit");
-                        }
-        
-                        const currPageVisitData = new PageVisitData(pageName, pageUrl);
-                        const currPageVisitDataStr = getJSON().stringify(currPageVisitData);
-                        utlSetSessionStorage(logger, prevPageVisitDataKeyName, currPageVisitDataStr);
-                    }
-                } catch (e) {
-                    // TODO: Remove this catch in next phase, since if start is called twice in a row the exception needs to be propagated out
-                    _warnToConsole(logger, "Call to start failed: " + dumpObj(e));
-                }
-            }
-        
+
             /**
              * Stops timing of current page, if exists.
              * @returns {PageVisitData} Page visit data (including duration) of pageName from call to start, if exists. Null if not.
@@ -112,8 +98,8 @@ export class PageVisitTimeManager {
             }
 
             // For backward compatibility
-            objDefineAccessors(_self, "_logger", () => logger);
-            objDefineAccessors(_self, "pageVisitTimeTrackingHandler", () => pageVisitTimeTrackingHandler);
+            objDefine<any>(_self, "_logger", { g: () => logger });
+            objDefine<any>(_self, "pageVisitTimeTrackingHandler", { g: () => pageVisitTimeTrackingHandler});
         });
     }
 

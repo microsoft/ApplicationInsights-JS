@@ -110,7 +110,7 @@ appInsights.loadAppInsights();
   };
   // Application Insights Snippet code
   !function(T,l,y){<!-- Removed the Snippet code for brevity -->}(window,document,{
-    src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
+    src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
     crossOrigin: "anonymous",
     cfg: configObj
   });

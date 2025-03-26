@@ -48,18 +48,32 @@ export const DistributedTracingModes = createEnumStyle<typeof eDistributedTracin
 });
 export type DistributedTracingModes = number | eDistributedTracingModes;
 
-export const enum IThrottleMsgKey {
+/**
+ * The EventPersistence contains a set of values that specify the event's persistence.
+ */
+export const enum EventPersistenceValue {
     /**
-     * Default Message key for non pre-defined message
+     * Normal persistence.
      */
-    default = 0,
+    Normal = 1,
     /**
-     * Message key for ikey Deprecation
+     * Critical persistence.
      */
-    ikeyDeprecate = 1,
-    /**
-     * Message key for cdn Deprecation
-     */
-    cdnDeprecate = 2
+    Critical = 2
 }
 
+/**
+ * The EventPersistence contains a set of values that specify the event's persistence.
+ */
+export const EventPersistence = createEnumStyle<typeof EventPersistenceValue>({
+    /**
+     * Normal persistence.
+     */
+    Normal: EventPersistenceValue.Normal,
+
+    /**
+     * Critical persistence.
+     */
+    Critical: EventPersistenceValue.Critical
+});
+export type EventPersistence = number | EventPersistenceValue;

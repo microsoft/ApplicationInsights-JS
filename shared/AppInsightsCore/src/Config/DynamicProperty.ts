@@ -2,12 +2,20 @@
 // Licensed under the MIT License.
 
 import {
-    arrForEach, arrIndexOf, dumpObj, isArray, isPlainObject, objDefineAccessors, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
+    arrForEach, arrIndexOf, dumpObj, isArray, objDefine, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
 } from "@nevware21/ts-utils";
+import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { UNDEFINED_VALUE } from "../JavaScriptSDK/InternalConstants";
-import { CFG_HANDLER_LINK, throwInvalidAccess } from "./DynamicSupport";
+import { CFG_HANDLER_LINK, _canMakeDynamic, blockDynamicConversion, throwInvalidAccess } from "./DynamicSupport";
 import { IWatcherHandler, _IDynamicDetail } from "./IDynamicWatcher";
 import { _IDynamicConfigHandlerState, _IDynamicGetter } from "./_IDynamicConfigHandlerState";
+
+export const enum _eSetDynamicPropertyFlags {
+    inPlace = 0,
+    readOnly = 1,
+    blockDynamicProperty = 2
+}
 
 const arrayMethodsToPatch = [
     "push",
@@ -17,7 +25,11 @@ const arrayMethodsToPatch = [
     "splice"
 ];
 
-function _patchArray<T>(state: _IDynamicConfigHandlerState<T>, target: any) {
+export const _throwDynamicError = (logger: IDiagnosticLogger, name: string, desc: string, e: Error) => {
+    logger && logger.throwInternal(eLoggingSeverity.DEBUG, _eInternalMessageId.DynamicConfigException, `${desc} [${name}] failed - ` + dumpObj(e));
+};
+
+function _patchArray<T>(state: _IDynamicConfigHandlerState<T>, target: any, name: string) {
     if (isArray(target)) {
         // Monkey Patch the methods that might change the array
         arrForEach(arrayMethodsToPatch, (method) => {
@@ -26,7 +38,7 @@ function _patchArray<T>(state: _IDynamicConfigHandlerState<T>, target: any) {
                 const result = orgMethod.apply(this, args);
 
                 // items may be added, removed or moved so need to make some new dynamic properties
-                _makeDynamicObject(state, target);
+                _makeDynamicObject(state, target, name, "Patching");
 
                 return result;
             }
@@ -39,7 +51,7 @@ function _getOwnPropGetter<T>(target: T, name: PropertyKey) {
     return propDesc && propDesc.get;
 }
 
-function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, theConfig: C, name: string, value: V): V {
+function _createDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, theConfig: C, name: string, value: V): void {
     // Does not appear to be dynamic so lets make it so
     let detail: _IDynamicDetail<T> = {
         n: name,
@@ -69,12 +81,12 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
     function _getProperty() {
 
         if (checkDynamic) {
-            isObjectOrArray = isObjectOrArray || (value && (isPlainObject(value) || isArray(value)));
+            isObjectOrArray = isObjectOrArray || _canMakeDynamic(_getProperty, state, value);
 
             // Make sure that if it's an object that we make it dynamic
             if (value && !value[CFG_HANDLER_LINK] && isObjectOrArray) {
                 // It doesn't look like it's already dynamic so lets make sure it's converted the object into a dynamic Config as well
-                value = _makeDynamicObject(state, value);
+                value = _makeDynamicObject(state, value, name, "Converting");
             }
 
             // If it needed to be converted it now has been
@@ -105,7 +117,7 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
             }
 
             if (checkDynamic) {
-                isObjectOrArray = isObjectOrArray || (value && (isPlainObject(value) || isArray(value)));
+                isObjectOrArray = isObjectOrArray || _canMakeDynamic(_getProperty, state, value);
                 checkDynamic = false;
             }
 
@@ -122,12 +134,20 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
                     });
     
                     // Now assign / re-assign value with all of the keys from newValue
-                    objForEachKey(newValue, (key, theValue) => {
-                        _setDynamicProperty(state, value, key, theValue);
-                    });
+                    try {
+                        objForEachKey(newValue, (key, theValue) => {
+                            _setDynamicProperty(state, value, key, theValue);
+                        });
 
-                    // Now drop newValue so when we assign value later it keeps the existing reference
-                    newValue = value;
+                        // Now drop newValue so when we assign value later it keeps the existing reference
+                        newValue = value;
+                    } catch (e) {
+                        // Unable to convert to dynamic property so just leave as non-dynamic
+                        _throwDynamicError((state.hdlr || {}).logger, name, "Assigning", e);
+                        // Mark as not an object or array so we don't try and do this again
+                        isObjectOrArray = false;
+                    }
+
                 } else if (value && value[CFG_HANDLER_LINK]) {
                     // As we are replacing the value, if it's already dynamic then we need to notify the listeners
                     // for every property it has already
@@ -144,10 +164,10 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
             }
 
             if (newValue !== value) {
-                let newIsObjectOrArray = newValue && (isPlainObject(newValue) || isArray(newValue));
+                let newIsObjectOrArray = newValue && _canMakeDynamic(_getProperty, state, newValue);
                 if (!isReferenced && newIsObjectOrArray) {
                     // As the newValue is an object/array lets preemptively make it dynamic
-                    _makeDynamicObject(state, newValue);
+                    newValue = _makeDynamicObject(state, newValue, name, "Converting");
                 }
 
                 // Now assign the internal "value" to the newValue
@@ -160,26 +180,53 @@ function _makeDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<
         }
     }
 
-    objDefineAccessors(theConfig, detail.n, _getProperty, _setProperty, true);
-
-    // Return the dynamic reference
-    return _getProperty();
+    objDefine<any>(theConfig, detail.n, { g: _getProperty, s: _setProperty });
 }
 
-export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, target: C, name: string, value: V, inPlace?: boolean, rdOnly?: boolean): V {
+export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandlerState<T>, target: C, name: string, value: V): C {
     if (target) {
         // To be a dynamic property it needs to have a get function
         let getter = _getOwnPropGetter(target, name);
         let isDynamic = getter && !!getter[state.prop];
     
         if (!isDynamic) {
-            value = _makeDynamicProperty(state, target, name, value);
-            if (inPlace || rdOnly) {
-                getter = _getOwnPropGetter(target, name);
-            }
+            _createDynamicProperty(state, target, name, value);
         } else {
             // Looks like it's already dynamic just assign the new value
             target[name] = value;
+        }
+    }
+
+    return target;
+}
+
+export function _setDynamicPropertyState<T, C>(state: _IDynamicConfigHandlerState<T>, target: C, name: string, flags?: { [key in _eSetDynamicPropertyFlags]?: boolean }): C {
+    if (target) {
+        // To be a dynamic property it needs to have a get function
+        let getter = _getOwnPropGetter(target, name);
+        let isDynamic = getter && !!getter[state.prop];
+        let inPlace = flags && flags[_eSetDynamicPropertyFlags.inPlace];
+        let rdOnly = flags && flags[_eSetDynamicPropertyFlags.readOnly];
+        let blkProp = flags && flags[_eSetDynamicPropertyFlags.blockDynamicProperty];
+    
+        if (!isDynamic) {
+            if (blkProp) {
+                try {
+                    // Attempt to mark the target as blocked from conversion
+                    blockDynamicConversion(target);
+                } catch (e) {
+                    _throwDynamicError((state.hdlr || {}).logger, name, "Blocking", e);
+                }
+            }
+
+            try {
+                // Make sure it's dynamic so that we can tag the property as per the state
+                _setDynamicProperty(state, target, name, target[name]);
+                getter = _getOwnPropGetter(target, name);
+            } catch (e) {
+                // Unable to convert to dynamic property so just leave as non-dynamic
+                _throwDynamicError((state.hdlr || {}).logger, name, "State", e);
+            }
         }
 
         // Assign the optional flags if true
@@ -190,29 +237,36 @@ export function _setDynamicProperty<T, C, V = any>(state: _IDynamicConfigHandler
         if (rdOnly) {
             getter[state.ro] = rdOnly;
         }
+
+        if (blkProp) {
+            getter[state.blkVal] = true;
+        }
     }
 
-    return value;
+    return target;
 }
 
-export function _makeDynamicObject<T>(state: _IDynamicConfigHandlerState<T>, target: any) {
-    // Assign target with new value properties (converting into dynamic properties in the process)
-    objForEachKey(target, (key, value) => {
-        // Assign and/or make the property dynamic
-        _setDynamicProperty(state, target, key, value);
-    });
-
-    if (!target[CFG_HANDLER_LINK]) {
-        // Link the config back to the dynamic config details
-        objDefineProp(target, CFG_HANDLER_LINK, {
-            configurable: false,
-            enumerable: false,
-            get: function() {
-                return state.hdlr;
-            }
+export function _makeDynamicObject<T>(state: _IDynamicConfigHandlerState<T>, target: any, name: string, desc: string) {
+    try {
+        // Assign target with new value properties (converting into dynamic properties in the process)
+        objForEachKey(target, (key, value) => {
+            // Assign and/or make the property dynamic
+            _setDynamicProperty(state, target, key, value);
         });
 
-        _patchArray(state, target);
+        if (!target[CFG_HANDLER_LINK]) {
+            // Link the config back to the dynamic config details
+            objDefineProp(target, CFG_HANDLER_LINK, {
+                get: function() {
+                    return state.hdlr;
+                }
+            });
+
+            _patchArray(state, target, name);
+        }
+    } catch (e) {
+        // Unable to convert to dynamic property so just leave as non-dynamic
+        _throwDynamicError((state.hdlr || {}).logger, name, desc, e);
     }
 
     return target;

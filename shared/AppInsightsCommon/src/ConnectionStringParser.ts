@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrReduce, objKeys } from "@microsoft/applicationinsights-core-js";
+import { arrReduce, objKeys, strEndsWith } from "@microsoft/applicationinsights-core-js";
 import { DEFAULT_BREEZE_ENDPOINT } from "./Constants";
 import { ConnectionString, ConnectionStringKey } from "./Interfaces/ConnectionString";
 
@@ -30,13 +30,17 @@ export function parseConnectionString(connectionString?: string): ConnectionStri
         // this is a valid connection string, so parse the results
 
         if (result.endpointsuffix) {
-            // use endpoint suffix where overrides are not provided
+            // apply the default endpoints
             const locationPrefix = result.location ? result.location + "." : "";
             result.ingestionendpoint = result.ingestionendpoint || ("https://" + locationPrefix + "dc." + result.endpointsuffix);
         }
 
-        // apply the default endpoints
+        // apply user override endpoint or the default endpoints
         result.ingestionendpoint = result.ingestionendpoint || DEFAULT_BREEZE_ENDPOINT;
+        
+        if (strEndsWith(result.ingestionendpoint, "/")) {
+            result.ingestionendpoint = result.ingestionendpoint.slice(0,-1);
+        }
     }
 
     return result;

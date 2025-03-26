@@ -4,6 +4,7 @@
 import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getJSON, hasJSON, isObject, objForEachKey, strTrim
 } from "@microsoft/applicationinsights-core-js";
+import { asString, strSubstr, strSubstring } from "@nevware21/ts-utils";
 
 export const enum DataSanitizerValues {
     /**
@@ -52,7 +53,7 @@ export function dataSanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key: 
         let uniqueField = field;
         while (map[uniqueField] !== undefined) {
             i++;
-            uniqueField = field.substring(0, DataSanitizerValues.MAX_NAME_LENGTH - 3) + dsPadNumber(i);
+            uniqueField = strSubstring(field, 0, DataSanitizerValues.MAX_NAME_LENGTH - 3) + dsPadNumber(i);
         }
         field = uniqueField;
     }
@@ -63,11 +64,11 @@ export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
     let nameTrunc: String;
     if (name) {
         // Remove any leading or trailing whitespace
-        name = strTrim(name.toString());
+        name = strTrim(asString(name));
 
         // truncate the string to 150 chars
         if (name.length > DataSanitizerValues.MAX_NAME_LENGTH) {
-            nameTrunc = name.substring(0, DataSanitizerValues.MAX_NAME_LENGTH);
+            nameTrunc = strSubstring(name, 0, DataSanitizerValues.MAX_NAME_LENGTH);
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.NameTooLong,
@@ -83,9 +84,9 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
     let valueTrunc : String;
     if (value) {
         maxLength = maxLength ? maxLength : DataSanitizerValues.MAX_STRING_LENGTH; // in case default parameters dont work
-        value = strTrim(value.toString());
+        value = strTrim(asString(value));
         if (value.length > maxLength) {
-            valueTrunc = value.substring(0, maxLength);
+            valueTrunc = strSubstring(value, 0, maxLength);
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.StringValueTooLong,
@@ -105,7 +106,7 @@ export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
     let messageTrunc : String;
     if (message) {
         if (message.length > DataSanitizerValues.MAX_MESSAGE_LENGTH) {
-            messageTrunc = message.substring(0, DataSanitizerValues.MAX_MESSAGE_LENGTH);
+            messageTrunc = strSubstring(message, 0, DataSanitizerValues.MAX_MESSAGE_LENGTH);
             _throwInternal(logger,
                 eLoggingSeverity.WARNING, _eInternalMessageId.MessageTruncated,
                 "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
@@ -123,7 +124,7 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
         // Make surte its a string
         let value:string = "" + exception;
         if (value.length > DataSanitizerValues.MAX_EXCEPTION_LENGTH) {
-            exceptionTrunc = value.substring(0, DataSanitizerValues.MAX_EXCEPTION_LENGTH);
+            exceptionTrunc = strSubstring(value, 0, DataSanitizerValues.MAX_EXCEPTION_LENGTH);
             _throwInternal(logger,
                 eLoggingSeverity.WARNING, _eInternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
                 { exception }, true);
@@ -176,9 +177,9 @@ export function dataSanitizeId(logger: IDiagnosticLogger, id: string): string {
 export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _eInternalMessageId) {
     let inputTrunc : String;
     if (input) {
-        input = strTrim(input.toString());
+        input = strTrim(asString(input));
         if (input.length > maxLength) {
-            inputTrunc = input.substring(0, maxLength);
+            inputTrunc = strSubstring(input, 0, maxLength);
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _msgId,
@@ -193,5 +194,5 @@ export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLeng
 
 export function dsPadNumber(num: number) {
     const s = "00" + num;
-    return s.substr(s.length - 3);
+    return strSubstr(s, s.length - 3);
 }

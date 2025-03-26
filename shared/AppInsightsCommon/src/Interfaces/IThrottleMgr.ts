@@ -1,4 +1,3 @@
-import { IThrottleMsgKey } from "../Enums";
 
 /**
  * Identifies limit number/percentage of items sent per time
@@ -48,11 +47,6 @@ export interface IThrottleInterval {
 * Identifies basic config
 */
 export interface IThrottleMgrConfig {
-    /**
-    * Identifies message key to be used for local storage key
-    * Default: IThrottleMsgKey.default
-    */
-    msgKey?: IThrottleMsgKey;
 
     /**
     * Identifies if throttle is disabled

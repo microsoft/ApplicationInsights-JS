@@ -12,18 +12,15 @@ const banner = [
 
 const nodeUmdRollupConfigFactory = () => {
   const nodeRollupConfig = {
-    input: `dist-esm/src/ai-test-framework.js`,
+    input: `dist-es5/ai-test-framework.js`,
     output: {
-      file: `dist/${outputName}.js`,
+      file: `dist/es5/${outputName}.js`,
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights",
       extend: true,
       freeze: false,
       sourcemap: true
-    },
-    globals: {
-      'qunit': 'QUnit'
     },
     plugins: [
       nodeResolve()

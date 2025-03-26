@@ -1,5 +1,6 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import {AppInsightsInitPerfTestClass} from "./AISKUPerf";
+import { AppInsightsInitPerfTestClass } from "./AISKUPerf";
+import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 
 function isNullOrUndefined(value: any): boolean {
     return value === undefined || value === null;
@@ -151,6 +152,8 @@ export class AISKUPerf extends AITestClass {
     }
 
     public testCleanup() {
+        utlRemoveSessionStorage(null as any, "AI_sentBuffer");
+        utlRemoveSessionStorage(null as any, "AI_buffer");
     }
 
     public registerTests() {

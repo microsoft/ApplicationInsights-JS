@@ -1,4 +1,4 @@
-import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
+import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup";
 import MagicString from "magic-string";
 
 const fs = require("fs");
@@ -26,7 +26,7 @@ const remapTsLibFuncs = {
 // You can use the following site to validate the resulting map file is valid
 // http://sokra.github.io/source-map-visualization/#custom
 
-// Function to remove the @DynamicProtoStubs and rewrite the headers for the dist-esm files
+// Function to remove the @DynamicProtoStubs and rewrite the headers for the dist-es5 files
 const getLines = (theValue) => {
     var value = "" + theValue;
     var lines = [];
@@ -289,9 +289,16 @@ const updateDistEsmFiles = (
     replaceValues,
     banner,
     replaceTsLib = true,
-    removeDynamic = true
+    removeDynamic = true,
+    buildPath = "dist-es5"
 ) => {
-    const files = globby.sync("./dist-esm/**/*.js");
+    console.log(`UpdateDistEsmFiles: ./${buildPath}/**/*.js`);
+    if (!fs.existsSync(`./${buildPath}`)) {
+        console.error(`Build path does not exist ./${buildPath} - from:${process.cwd()}`);
+        process.exit(10);
+    }
+
+    const files = globby.sync(`./${buildPath}/**/*.js`);
     files.map((inputFile) => {
         console.log("Loading - " + inputFile);
         var src = fs.readFileSync(inputFile, "utf8");

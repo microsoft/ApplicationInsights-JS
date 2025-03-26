@@ -15,8 +15,7 @@
 !/PRIVACY
 !/LICENSE
 !/LICENSE.TXT
-!dist-esm/**
+!dist-es*/**
 !dist/**
 !browser/**
 !types/**
-!src/**

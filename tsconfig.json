@@ -6,7 +6,8 @@
     "module": "amd",
     "target": "es5",
     "alwaysStrict": true,
-    "declaration": true
+    "declaration": true,
+    "removeComments": false
   },
   "files": [],
   "exclude": [

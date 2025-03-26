@@ -5,10 +5,11 @@ import { IApplication } from "./Context/IApplication";
 import { IDevice } from "./Context/IDevice";
 import { IInternal } from "./Context/IInternal";
 import { ILocation } from "./Context/ILocation";
-import { IUserContext } from "./Context/IUser";
-import { ISession } from "./Context/ISession";
-import { ITelemetryTrace } from "./Context/ITelemetryTrace";
 import { IOperatingSystem } from "./Context/IOperatingSystem";
+import { ISession } from "./Context/ISession";
+import { ISessionManager } from "./Context/ISessionManager";
+import { ITelemetryTrace } from "./Context/ITelemetryTrace";
+import { IUserContext } from "./Context/IUser";
 import { IWeb } from "./Context/IWeb";
 
 export interface ITelemetryContext {
@@ -46,6 +47,11 @@ export interface ITelemetryContext {
      * The object describing a session tracked by this object.
      */
     readonly session: ISession;
+
+    /**
+     * The session manager that manages the automatic session from the cookies
+     */
+    readonly sessionManager: ISessionManager;
 
     /**
      * The object describing os details tracked by this object.

@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/rush.schema.json",
-  "npmVersion": "8.19.3",
-  "rushVersion": "5.82.1",
+  "npmVersion": "9.9.3",
+  "rushVersion": "5.148.0",
   "projectFolderMaxDepth": 4,
   "projects": [
     {
@@ -80,8 +80,18 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-osplugin-js",
+      "projectFolder": "extensions/applicationinsights-osplugin-js",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-channel-js",
       "projectFolder": "channels/applicationinsights-channel-js",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-offlinechannel-js",
+      "projectFolder": "channels/offline-channel-js",
       "shouldPublish": true
     },
     {
@@ -110,6 +120,11 @@
       "shouldPublish": false
     },
     {
+      "packageName": "@microsoft/applicationinsights-example-cfgsync",
+      "projectFolder": "examples/cfgSync",
+      "shouldPublish": false
+    },
+    {
       "packageName": "@microsoft/applicationinsights-example-dependencies",
       "projectFolder": "examples/dependency",
       "shouldPublish": false
@@ -118,6 +133,26 @@
       "packageName": "@microsoft/applicationinsights-example-shared-worker",
       "projectFolder": "examples/shared-worker",
       "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-test-module-type-check",
+      "projectFolder": "AISKU/Tests/es6-module-type-check",
+      "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-cfgsync-js",
+      "projectFolder": "extensions/applicationinsights-cfgsync-js",
+      "shouldPublish": false
+    },
+    {
+      "packageName": "@microsoft/1ds-core-js",
+      "projectFolder": "shared/1ds-core-js",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@microsoft/1ds-post-js",
+      "projectFolder": "channels/1ds-post-js",
+      "shouldPublish": true
     }
   ]
 }

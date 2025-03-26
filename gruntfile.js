@@ -1,6 +1,6 @@
 module.exports = function (grunt) {
 
-   const versionPlaceholder = '"#version#"';
+    const versionPlaceholder = '"#version#"';
 
     const aiCoreDefaultNameReplacements = [
     ];
@@ -27,26 +27,114 @@ module.exports = function (grunt) {
 
     }
 
-    function generateNewSnippet() {
-        var snippetBuffer = grunt.file.read("./AISKU/snippet/snippet.min.js");
-        var snippetStr = _encodeStr(snippetBuffer.toString());
-        var expectedStr = "##replaceSnippet##";
-        var srcPath = "./tools/applicationinsights-web-snippet/src";
+    function generateNewSnippet(prefix) {
+        var srcPath = "./tools/applicationinsights-web-snippet/dist-es5";
         return {
             files: [{
                 expand: true,
                 cwd: srcPath,
-                dest: "./tools/applicationinsights-web-snippet/dest",
-                src: 'applicationinsights-web-snippet.ts'
+                dest: "./tools/applicationinsights-web-snippet/dist-es5",
+                src: "applicationinsights-web-snippet.js"
             }],
             options: {
-                replacements: [{
-                    pattern: expectedStr,
-                    replacement: snippetStr
-                }]
+                replacements: function() {
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
+                    if (prefix === "ConnString") {
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"YOUR_CONNECTION_STRING\"");
+                    } else if (prefix === "IKey") {
+                        snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"InstrumentationKey=INSTRUMENTATION_KEY\"");
+                    } else if (prefix === "Origin") {
+                        snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/originSnippet.min.js");
+                    }
+                    var snippetStr = _encodeStr(snippetBuffer.toString());
+                    var expectedStr = `##replace${prefix}Snippet##`;
+                    return [{
+                        pattern: expectedStr,
+                        replacement: snippetStr
+                    }];
+                }
             }
         };
     }
+
+    function expandMin() {
+        var srcPath = "./tools/applicationinsights-web-snippet/build/output";
+        return {
+            files: [{
+                expand: true,
+                cwd: srcPath,
+                dest: "./tools/applicationinsights-web-snippet/build/output",
+                src: "snippet.min.js"
+            }],
+            options: {
+                replacements: function() {
+               
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
+                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
+
+                    while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
+                        snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
+                    }
+
+                    // We assign a value to SnippetConfig and then forcefully overwrite it into the function input.
+                    if (snippetBuffer.startsWith("!(function")) {
+                        throw "Snippet prefix input is invalid -- replace will fail";
+                    }
+                    var overWriteString = "!(function (cfg){" + snippetBuffer
+
+                    let orgOverwrite = overWriteString;
+                    overWriteString = overWriteString.replace(/\n\/\/# source.*\n/, "})(" + snippetConfig + ");\n");
+                    if(overWriteString === orgOverwrite) {
+                        throw "Snippet postfix input is invalid -- replace will fail";
+                    }
+
+                    return [{
+                        pattern: snippetBuffer,
+                        replacement: overWriteString
+                    }];
+                }
+            }
+        };
+    }
+
+    function expandJS() {
+        var srcPath = "./tools/applicationinsights-web-snippet/build/output";
+        return {
+            files: [{
+                expand: true,
+                cwd: srcPath,
+                dest: "./tools/applicationinsights-web-snippet/build/output",
+                src: "snippet.js"
+            }],
+            options: {
+                replacements: function() {
+               
+                    var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.js");
+                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
+                    while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
+                        snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
+                    }
+
+                    var overWriteString = snippetBuffer.replace(/\(function \(win, doc\)/, "(function (win, doc, cfg)");
+                    if(overWriteString === snippetBuffer) {
+                        throw "Snippet prefix input is invalid -- replace will fail";
+                    }
+
+                    let orgOverwrite = overWriteString;
+                    overWriteString = overWriteString.replace(/}\)\(window, document\);/, "})(window, document, " + snippetConfig + ");")
+                    if(overWriteString === orgOverwrite) {
+                        throw "Snippet postfix input is invalid -- replace will fail";
+                    }
+
+                    return [{
+                        pattern: snippetBuffer,
+                        replacement: overWriteString
+                    }];
+                }
+            }
+        };
+    }
+
 
     function getConfigVersion(isMajorVer) {
         let version = "";
@@ -146,13 +234,15 @@ module.exports = function (grunt) {
     // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
     // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
     // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions=["2.8.11"];
+    const perfTestVersions=["3.3.6"];
 
     function buildConfig(modules) {
         var buildCmds = {
             ts: {
                 options: {
-                    comments: true
+                    comments: true,
+                    debug: true,
+                    logOutput: true
                 }            
             },
             "eslint-ts": {
@@ -176,7 +266,8 @@ module.exports = function (grunt) {
                 server: {
                     options: {
                         port: 9001,
-                        base: '.'
+                         base: '.',
+                         debug: true
                     }
                 }        
             },
@@ -295,6 +386,7 @@ module.exports = function (grunt) {
                             summaryOnly: false,
                             httpBase: ".",
                             puppeteer: {
+                                debug: true,
                                 headless: true,
                                 timeout: 30000,
                                 ignoreHTTPErrors: true,
@@ -318,7 +410,7 @@ module.exports = function (grunt) {
                         src: [
                             modulePath + "/test/Perf/src/**/*.ts"
                         ],
-                        out: modulePath + "/test/Perf/dist/" + (modules[key].perfTestName || key + ".perf.tests.js")
+                        out: modulePath + "/test/Perf/dist/es5/" + (modules[key].perfTestName || key + ".perf.tests.js")
                     };
                 } else if (grunt.file.exists(modulePath + '/Tests/PerfTests.html')) {
                     addQunit = true;
@@ -328,7 +420,7 @@ module.exports = function (grunt) {
                         src: [
                             modulePath + "/Tests/Perf/src/**/*.ts"
                         ],
-                        out: modulePath + "/Tests/Perf/dist/" + (modules[key].perfTestName || key + ".perf.tests.js")
+                        out: modulePath + "/Tests/Perf/dist/es5/" + (modules[key].perfTestName || key + ".perf.tests.js")
                     };
                 }
 
@@ -342,7 +434,7 @@ module.exports = function (grunt) {
 
                     buildCmds.qunit[key + "-perf"] = {
                         options: {
-                            urls: [testUrls],
+                            urls: testUrls,
                             timeout: 300 * 1000, // 5 min
                             console: true,
                             summaryOnly: false,
@@ -390,6 +482,10 @@ module.exports = function (grunt) {
                                         path: "./shared/AppInsightsCommon",
                                         unitTestName: "aicommon.tests.js"
                                     },
+            "1dsCore":                 { 
+                                        path: "./shared/1ds-core-js",
+                                        unitTestName: "core.unittests.js"
+                                    },
     
             // SKUs
             "aisku":                { 
@@ -414,7 +510,14 @@ module.exports = function (grunt) {
     
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
+            "offlinechannel":       {
+                                        path: "./channels/offline-channel-js"
+                                    },
             "teechannel":           { path: "./channels/tee-channel-js" },
+            "1dsPost":              {
+                                        path: "./channels/1ds-post-js",
+                                        unitTestName: "post.unittests.js"
+                                    },
 
             // Extensions
             "appinsights":          { 
@@ -438,6 +541,14 @@ module.exports = function (grunt) {
                                         path: "./extensions/applicationinsights-properties-js",
                                         unitTestName: "prop.tests.js"
                                     },
+            "osplugin":             { 
+                                        path: "./extensions/applicationinsights-osplugin-js",
+                                        unitTestName: "applicationinsights-osplugin.tests.js"
+                                    },
+            "cfgsync":               { 
+                                        path: "./extensions/applicationinsights-cfgsync-js",
+                                        unitTestName: "cfgsync.tests.js"
+                                    },
 
             // Examples
             "example-shared-worker": {
@@ -455,6 +566,11 @@ module.exports = function (grunt) {
             "example-dependency":   {
                                         autoMinify: false,
                                         path: "./examples/dependency",
+                                        testHttp: false
+                                    },
+            "example-cfgsync":        {
+                                        autoMinify: false,
+                                        path: "./examples/cfgSync",
                                         testHttp: false
                                     },
     
@@ -501,7 +617,7 @@ module.exports = function (grunt) {
                                         path: "./tools/applicationinsights-web-snippet",
                                         cfg: {
                                             src: [
-                                                "./tools/applicationinsights-web-snippet/dest/*.ts"
+                                                "./tools/applicationinsights-web-snippet/src/**/*.ts"
                                             ]
                                         }
                                     },
@@ -521,7 +637,6 @@ module.exports = function (grunt) {
             var actions = [
                 "eslint-ts:" + name + "-lint-fix"
             ];
-    
             var aiMinifyConfig = theBuildConfig["ai-minify"] || {};
             var gruntTsConfig = theBuildConfig["ts"];
             var replaceConfig = theBuildConfig["string-replace"] || {};
@@ -657,13 +772,41 @@ module.exports = function (grunt) {
                 }
             },
             'string-replace': {
-                'generate-snippet': generateNewSnippet()
+                'generate-expanded-JS': expandJS(),
+                'generate-expanded-min': expandMin(),
+                'generate-snippet-ikey': generateNewSnippet("IKey"),
+                'generate-snippet-connString': generateNewSnippet("ConnString"),
+                'generate-snippet-origin': generateNewSnippet("Origin")
             },
             copy: {
+                "originSnippet": {
+                    files: [
+                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js", dest: `./tools/applicationinsights-web-snippet/build/output/originSnippet.min.js` }
+                       ]
+                },
+                "snippetToDistEs5": {
+                    files: [
+                        { expand: true, cwd: "./tools/applicationinsights-web-snippet/build/output/", src: "snippet.**", dest: "./tools/applicationinsights-web-snippet/dist-es5/" },
+                        { expand: true, cwd: "./tools/applicationinsights-web-snippet/build/output/common/", src: "**", dest: "./tools/applicationinsights-web-snippet/dist-es5/common/" },
+                       ]
+                },
+
+                "web-snippet": {
+                    files: [  
+                        { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` }
+                    ]
+                },
                 config: {
                     files: [
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configVer}.cfg.json` },
-                        { src: "./tools/config/config.json", dest: `./tools/config/browser/ai.config${configMajorVer}.cfg.json`}
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configVer}.cfg.json` },
+                        { src: "./tools/config/config.json", dest: `./tools/config/browser/es5/ai.config${configMajorVer}.cfg.json` }
+                    ]
+                },
+
+                testConfig: {
+                    files: [
+                        { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configVer}.cfg.json` },
+                        { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configMajorVer}.cfg.json` }
                     ]
                 }
             }
@@ -684,7 +827,7 @@ module.exports = function (grunt) {
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
         
 
-        grunt.registerTask("core", tsBuildActions("core"));
+        grunt.registerTask("core", tsBuildActions("core", true));
         grunt.registerTask("core-min", minTasks("core"));
         grunt.registerTask("core-restore", restoreTasks("core"));
         grunt.registerTask("coreunittest", tsTestActions("core"));
@@ -733,6 +876,12 @@ module.exports = function (grunt) {
         grunt.registerTask("propertiestests", tsTestActions("properties"));
         grunt.registerTask("properties-mintests", tsTestActions("properties", true));
 
+        grunt.registerTask("cfgsync", tsBuildActions("cfgsync"));
+        grunt.registerTask("cfgsync-min", minTasks("cfgsync"));
+        grunt.registerTask("cfgsync-restore", restoreTasks("cfgsync"));
+        grunt.registerTask("cfgsynctests", tsTestActions("cfgsync"));
+        grunt.registerTask("cfgsync-mintests", tsTestActions("cfgsync", true));
+
         grunt.registerTask("deps", tsBuildActions("deps"));
         grunt.registerTask("deps-min", minTasks("deps"));
         grunt.registerTask("deps-restore", restoreTasks("deps"));
@@ -748,6 +897,12 @@ module.exports = function (grunt) {
         grunt.registerTask("aichannel-restore", restoreTasks("aichannel"));
         grunt.registerTask("aichanneltest", tsTestActions("aichannel"));
         grunt.registerTask("aichannel-mintest", tsTestActions("aichannel", true));
+
+        grunt.registerTask("offlinechannel", tsBuildActions("offlinechannel"));
+        grunt.registerTask("offlinechannel-min", minTasks("offlinechannel"));
+        grunt.registerTask("offlinechannel-restore", restoreTasks("offlinechannel"));
+        grunt.registerTask("offlinechanneltest", tsTestActions("offlinechannel"));
+        grunt.registerTask("offlinechannel-mintest", tsTestActions("offlinechannel", true));
 
         grunt.registerTask("teechannel", tsBuildActions("teechannel"));
         grunt.registerTask("teechannel-min", minTasks("teechannel"));
@@ -766,8 +921,13 @@ module.exports = function (grunt) {
         grunt.registerTask("chromedebugextension-min", minTasks("chrome-debug-extension"));
         grunt.registerTask("chromedebugextension-restore", restoreTasks("chrome-debug-extension"));
 
-        grunt.registerTask("websnippetReplace", ["string-replace:generate-snippet"]);
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
+        grunt.registerTask("snippetCopy", ["copy:snippetToDistEs5"]);
+        grunt.registerTask("originSnippetCopy", ["copy:originSnippet"]);
+        grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString", "string-replace:generate-snippet-origin"]);
+
+        grunt.registerTask("snippet-restore", restoreTasks("applicationinsights-web-snippet"));
+        grunt.registerTask("websnippettests", tsTestActions("applicationinsights-web-snippet"));
 
         grunt.registerTask("clickanalytics", tsBuildActions("clickanalytics"));
         grunt.registerTask("clickanalytics-min", minTasks("clickanalytics"));
@@ -775,17 +935,39 @@ module.exports = function (grunt) {
         grunt.registerTask("clickanalyticstests", tsTestActions("clickanalytics"));
         grunt.registerTask("clickanalytics-mintests", tsTestActions("clickanalytics", true));
 
+        grunt.registerTask("osplugin", tsBuildActions("osplugin"));
+        grunt.registerTask("osplugin-min", minTasks("osplugin"));
+        grunt.registerTask("osplugin-restore", restoreTasks("osplugin"));
+        grunt.registerTask("osplugintests", tsTestActions("osplugin"));
+        grunt.registerTask("osplugin-mintests", tsTestActions("osplugin", true));
+
+        grunt.registerTask("1dsCoreBuild", tsBuildActions("1dsCore"));
+        grunt.registerTask("1dsCoreTest", tsTestActions("1dsCore"));
+        grunt.registerTask("1dsCore", tsTestActions("1dsCore", true));
+        grunt.registerTask("1dsCore-min", minTasks("1dsCore"));
+        grunt.registerTask("1dsCore-restore", restoreTasks("1dsCore"));
+        
+        grunt.registerTask("1dsPostBuild", tsBuildActions("1dsPost"));
+        grunt.registerTask("1dsPostTest", tsTestActions("1dsPost"));
+        grunt.registerTask("1dsPostMinTest", tsTestActions("1dsPost", true));
+        grunt.registerTask("1dsPost-min", minTasks("1dsPost"));
+        grunt.registerTask("1dsPost-restore", restoreTasks("1dsPost"));
+
         grunt.registerTask("example-shared-worker", tsBuildActions("example-shared-worker"));
         grunt.registerTask("example-shared-worker-test", tsTestActions("example-shared-worker"));
 
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
         grunt.registerTask("serve", ["connect:server:keepalive"]);
 
-        
-        grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
-        grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
-    } catch (e) {
-        console.error(e);
-        console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
-    }
-};
+         grunt.registerTask("copy-config", ["copy:config"]);
+         grunt.registerTask("copy-testConfig", ["copy:testConfig"]);
+
+         grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
+         grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
+         grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
+     } catch (e) {
+         console.error(e);
+         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
+     }
+ };
+ 

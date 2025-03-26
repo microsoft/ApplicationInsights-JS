@@ -9,19 +9,20 @@ import {
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
     PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
-    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage
+    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage,
+    utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
-    IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
-    ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
-    cfgDfBoolean, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity,
-    eventOff, eventOn, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction,
-    isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, objDefineAccessors, onConfigChange, safeGetCookieMgr, strUndefined,
-    throwError
+    IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
+    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent,
+    TelemetryInitializerFunction, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate,
+    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId,
+    getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString,
+    isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
-import { isError, objDeepFreeze, objDefineProp, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -51,7 +52,7 @@ function _getReason(error: any) {
 
 const MinMilliSeconds = 60000;
 
-const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
+const defaultValues: IConfigDefaults<IConfig&IConfiguration> = objDeepFreeze({
     sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
     sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
     disableExceptionTracking: cfgDfBoolean(),
@@ -66,7 +67,8 @@ const defaultValues: IConfigDefaults<IConfig> = objDeepFreeze({
     namePrefix: cfgDfString(),
     enableDebug: cfgDfBoolean(),
     disableFlushOnBeforeUnload: cfgDfBoolean(),
-    disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload")
+    disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
+    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false, expLog: undefined, maxLogs: 50})
 });
 
 function _chkConfigMilliseconds(value: number, defValue: number): number {
@@ -99,7 +101,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
-    public readonly config: IConfig;
+    public readonly config: IConfig & IConfiguration;
     public queue: Array<() => void>;
     public autoRoutePVDelay = 500; // ms; Time to wait after a route change before triggering a pageview to allow DOM changes to take place
 
@@ -119,8 +121,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _autoExceptionInstrumented: boolean;
         let _enableUnhandledPromiseRejectionTracking: boolean;
         let _autoUnhandledPromiseInstrumented: boolean;
-        let _extConfig: IConfig;
+        let _extConfig: IConfig & IConfiguration;
         let _autoTrackPageVisitTime: boolean;
+        let _expCfg: IExceptionConfig;
 
         // Counts number of trackAjax invocations.
         // By default we only monitor X ajax call per view to avoid too much load.
@@ -132,6 +135,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _prevUri: string; // Assigned in the constructor
         let _currUri: string;
         let _evtNamespace: string | string[];
+        // For testing error hooks only
+        let _errorHookCnt: number;
 
         dynamicProto(AnalyticsPlugin, this, (_self, _base) => {
             let _addHook = _base._addHook;
@@ -167,7 +172,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
-             * @param   name    A string that identifies this event uniquely within the document.
+             * @param name - A string that identifies this event uniquely within the document.
              */
             _self.startTrackEvent = (name: string) => {
                 try {
@@ -182,9 +187,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * Log an extended event that you started timing with `startTrackEvent`.
-             * @param   name    The string you used to identify this event in `startTrackEvent`.
-             * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
-             * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+             * @param name - The string you used to identify this event in `startTrackEvent`.
+             * @param properties - map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+             * @param measurements - map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
              */
             _self.stopTrackEvent = (name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
                 try {
@@ -199,9 +204,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * @description Log a diagnostic message
-             * @param trace
-             * @param ICustomProperties.
-             * @memberof ApplicationInsights
+             * @param trace - the trace message
+             * @param customProperties - Additional custom properties to include in the event
              */
             _self.trackTrace = (trace: ITraceTelemetry, customProperties?: ICustomProperties): void => {
                 try {
@@ -230,7 +234,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param metric - input object argument. Only name and average are mandatory.
              * @param } customProperties additional data used to filter metrics in the
              * portal. Defaults to empty.
-             * @memberof ApplicationInsights
              */
             _self.trackMetric = (metric: IMetricTelemetry, customProperties?: ICustomProperties): void => {
                 try {
@@ -285,7 +288,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (doc) {
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
-        
+                if (isNullOrUndefined(pageView.startTime)) {
+                    // calculate the start time manually
+                    let duration = ((properties || pageView.properties || {}).duration || 0);
+                    pageView.startTime = new Date(new Date().getTime() - duration);
+                }
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,
                     PageView.dataType,
@@ -293,9 +300,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.diagLog(),
                     properties,
                     systemProperties);
-        
+
                 _self.core.track(telemetryItem);
-        
                 // reset ajaxes counter
                 _trackAjaxAttempts = 0;
             };
@@ -362,10 +368,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             /**
              * Stops the timer that was started by calling `startTrackPage` and sends the pageview load time telemetry with the specified properties and measurements.
              * The duration of the page view will be the time between calling `startTrackPage` and `stopTrackPage`.
-             * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
-             * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
-             * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
-             * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+             * @param name - The string you used as the name in startTrackPage. Defaults to the document title.
+             * @param url - String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
+             * @param properties - map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
+             * @param measurements - map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
              */
             _self.stopTrackPage = (name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) => {
                 try {
@@ -419,7 +425,17 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     exception.severityLevel,
                     exception.id
                 ).toInterface();
-        
+                var doc = getDocument();
+                if (doc && _expCfg?.inclScripts) {
+                    var scriptsInfo = findAllScripts(doc);
+                    exceptionPartB.properties["exceptionScripts"] = JSON.stringify(scriptsInfo);
+                }
+                if (_expCfg?.expLog) {
+                    let logs = _expCfg.expLog();
+                    if (logs && logs.logs && isArray(logs.logs)) {
+                        exceptionPartB.properties["exceptionLog"] = logs.logs.slice(0, _expCfg.maxLogs).join("\n");
+                    }
+                }
                 let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
                     exceptionPartB,
                     Exception.dataType,
@@ -438,7 +454,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
              *
              * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
-             * @memberof ApplicationInsights
              */
             _self.trackException = (exception: IExceptionTelemetry, customProperties?: ICustomProperties): void => {
                 if (exception && !exception.exception && (exception as any).error) {
@@ -459,7 +474,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             /**
              * @description Custom error handler for Application Insights Analytics
              * @param exception
-             * @memberof ApplicationInsights
              */
             _self._onerror = (exception: IAutoExceptionTelemetry): void => {
                 let error = exception && exception.error;
@@ -546,11 +560,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     
                         _preInitTelemetryInitializers = null;
                     }
-    
+
                     _populateDefaults(config);
     
                     _pageViewPerformanceManager = new PageViewPerformanceManager(_self.core);
-                    _pageViewManager = new PageViewManager(this, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
+                    _pageViewManager = new PageViewManager(_self, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
                     _pageVisitTimeManager = new PageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime))
 
                     _eventTracking = new Timing(_self.diagLog(), "trackEvent");
@@ -607,17 +621,29 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 eventOff(window, null, null, _evtNamespace);
                 _initDefaults();
             };
+
+           
+            _self["_getDbgPlgTargets"] = () => {
+                return [_errorHookCnt, _autoExceptionInstrumented];
+            };
             
             function _populateDefaults(config: IConfiguration) {
+                // it is used for 1DS as well, so config type should be IConfiguration only
                 let identifier = _self.identifier;
                 let core = _self.core;
 
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     _extConfig = ctx.getExtCfg(identifier, defaultValues);
+                    // make sure auto exception is instrumented only once and it won't be overriden by the following config changes
+                    _autoExceptionInstrumented = _autoExceptionInstrumented || (config as any).autoExceptionInstrumented || _extConfig.autoExceptionInstrumented;
 
+                    _expCfg = _extConfig.expCfg;
                     _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
 
+                    if (config.storagePrefix){
+                        utlSetStoragePrefix(config.storagePrefix);
+                    }
                     _updateStorageUsage(_extConfig);
 
                     // _updateBrowserLinkTracking
@@ -628,8 +654,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * Log a page visit time
-             * @param    pageName    Name of page
-             * @param    pageVisitDuration Duration of visit to the page in milliseconds
+             * @param pageName - Name of page
+             * @param pageVisitDuration - Duration of visit to the page in milliseconds
              */
             function trackPageVisitTime(pageName: string, pageUrl: string, pageVisitTime: number) {
                 let properties = { PageName: pageName, PageUrl: pageUrl };
@@ -683,7 +709,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 _self._addHook(onConfigChange(_extConfig, () => {
                     _disableExceptionTracking = _extConfig.disableExceptionTracking;
-
                     if (!_disableExceptionTracking && !_autoExceptionInstrumented && !_extConfig.autoExceptionInstrumented) {
                         // We want to enable exception auto collection and it has not been done so yet
                         _addHook(InstrumentEvent(_window, "onerror", {
@@ -701,6 +726,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 }
                             }
                         }, false));
+                        _errorHookCnt ++;
 
                         _autoExceptionInstrumented = true;
                     }
@@ -791,7 +817,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         scheduleTimeout(((uri: string) => {
                             // todo: override start time so that it is not affected by autoRoutePVDelay
                             _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
-                        }).bind(this, _prevUri), _self.autoRoutePVDelay);
+                        }).bind(_self, _prevUri), _self.autoRoutePVDelay);
                     }
                 }
 
@@ -844,7 +870,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 }
                             }
                         }, false));
-        
+                        _errorHookCnt ++;
                         _extConfig.autoUnhandledPromiseInstrumented = _autoUnhandledPromiseInstrumented = true;
                     }
                 }));
@@ -852,8 +878,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             /**
              * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
-             * @param severity - {eLoggingSeverity} - The severity of the log message
-             * @param msgId - {_eInternalLogMessage} - The log message.
+             * @param severity - The severity of the log message
+             * @param msgId - The log message.
              */
             function _throwInternal(severity: eLoggingSeverity, msgId: _eInternalMessageId, msg: string, properties?: Object, isUserAct?: boolean): void {
                 _self.diagLog().throwInternal(severity, msgId, msg, properties, isUserAct);
@@ -888,20 +914,19 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _currUri = null;
                 _evtNamespace = null;
                 _extConfig = null;
+                _errorHookCnt = 0;
 
                 // Define _self.config
-                objDefineProp(_self, "config", {
-                    configurable: true,
-                    enumerable: true,
-                    get: () => _extConfig
+                objDefine(_self, "config", {
+                    g: () => _extConfig
                 });
             }
         
             // For backward compatibility
-            objDefineAccessors(_self, "_pageViewManager", () => _pageViewManager);
-            objDefineAccessors(_self, "_pageViewPerformanceManager", () => _pageViewPerformanceManager);
-            objDefineAccessors(_self, "_pageVisitTimeManager", () => _pageVisitTimeManager);
-            objDefineAccessors(_self, "_evtNamespace", () => "." + _evtNamespace);
+            objDefine<any>(_self, "_pageViewManager", { g: () => _pageViewManager });
+            objDefine<any>(_self, "_pageViewPerformanceManager", { g: () => _pageViewPerformanceManager });
+            objDefine<any>(_self, "_pageVisitTimeManager", { g: () => _pageVisitTimeManager });
+            objDefine<any>(_self, "_evtNamespace", { g: () => "." + _evtNamespace });
         });
     }
 
@@ -923,7 +948,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
-     * @param   name    A string that identifies this event uniquely within the document.
+     * @param name - A string that identifies this event uniquely within the document.
      */
     public startTrackEvent(name: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -931,9 +956,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Log an extended event that you started timing with `startTrackEvent`.
-     * @param   name    The string you used to identify this event in `startTrackEvent`.
-     * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
-     * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+     * @param name - The string you used to identify this event in `startTrackEvent`.
+     * @param properties - map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+     * @param measurements - map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
     public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -941,9 +966,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @description Log a diagnostic message
-     * @param trace
-     * @param ICustomProperties.
-     * @memberof ApplicationInsights
+     * @param trace - the trace message
+     * @param customProperties - Additional custom properties to include in the event
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -956,9 +980,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements
      * and sending the resulting average at intervals
      * @param metric - input object argument. Only name and average are mandatory.
-     * @param } customProperties additional data used to filter metrics in the
+     * @param customProperties - additional data used to filter metrics in the
      * portal. Defaults to empty.
-     * @memberof ApplicationInsights
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -986,8 +1009,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @ignore INTERNAL ONLY
-     * @param pageViewPerformance
-     * @param properties
+     * @param pageViewPerformance - The page view performance item to be sent
+     * @param properties - Custom properties (Part C) that a user can add to the telemetry item
      */
     public sendPageViewPerformanceInternal(pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -995,8 +1018,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * Send browser performance metrics.
-     * @param pageViewPerformance
-     * @param customProperties
+     * @param pageViewPerformance - The page view performance item to be sent
+     * @param customProperties - Additional data used to filter pages and metrics in the portal. Defaults to empty.
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1015,10 +1038,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     /**
      * Stops the timer that was started by calling `startTrackPage` and sends the pageview load time telemetry with the specified properties and measurements.
      * The duration of the page view will be the time between calling `startTrackPage` and `stopTrackPage`.
-     * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
-     * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
-     * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
-     * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+     * @param name - The string you used as the name in startTrackPage. Defaults to the document title.
+     * @param url - String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
+     * @param properties - map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
+     * @param measurements - map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
     public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1026,9 +1049,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
     * @ignore INTERNAL ONLY
-    * @param exception
-    * @param properties
-    * @param systemProperties
+    * @param exception - The exception item to be sent
+    * @param properties - Custom properties (Part C) that a user can add to the telemetry item
+    * @param systemProperties - System level properties (Part A) that a user can add to the telemetry item
     */
     public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1037,11 +1060,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
     /**
      * Log an exception you have caught.
      *
-     * @param exception -   Object which contains exception to be sent
-     * @param } customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
+     * @param exception - Object which contains exception to be sent
+     * @param customProperties - Additional data used to filter pages and metrics in the portal. Defaults to empty.
      *
      * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
-     * @memberof ApplicationInsights
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1049,8 +1071,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     /**
      * @description Custom error handler for Application Insights Analytics
-     * @param exception
-     * @memberof ApplicationInsights
+     * @param exception - The exception item to be sent
      */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

@@ -7,7 +7,7 @@ import {
     Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal, 
     AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent 
 } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr, findAllScripts } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin";
@@ -368,6 +368,147 @@ export class AnalyticsPluginTests extends AITestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: autoExceptionInstrumented can be set correctly without root config",
+            test: () => {
+                let appInsights = new AnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+
+                let config: IConfig & IConfiguration = {
+                    instrumentationKey: "instrumentation_key",
+                    samplingPercentage: 12,
+                    extensionConfig: {}
+                };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                // Initialize
+                core.initialize(config, [appInsights, channel]);
+
+                let extConfig = (core.config.extensionConfig || {})[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal(extConfig.autoExceptionInstrumented, undefined, "auto exception hook should be undefined for extenstion config");
+                let autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be set true");
+                let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
+                Assert.equal(errorHookCnt, 1, "auto exception hook should be instrumented");
+                Assert.equal(extConfig.autoUnhandledPromiseInstrumented, false, "autoUnhandledPromise should not be Instrumented");
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: autoExceptionInstrumented can be set correctly without root config and with  enableUnhandledPromiseRejectionTracking ",
+            test: () => {
+                let appInsights = new AnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+
+                let config: IConfig & IConfiguration = {
+                    instrumentationKey: "instrumentation_key",
+                    samplingPercentage: 12,
+                    extensionConfig: {
+                        [appInsights.identifier]: {
+                            enableUnhandledPromiseRejectionTracking: true
+                        }
+                    }
+                };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                // Initialize
+                core.initialize(config, [appInsights, channel]);
+
+                let extConfig = (core.config.extensionConfig || {})[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal(extConfig.autoExceptionInstrumented, undefined, "auto exception hook should be undefined for extenstion config");
+                let autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be set true");
+                Assert.equal(extConfig.autoUnhandledPromiseInstrumented, true, "autoUnhandledPromiseInstrumented is set to true");
+                let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
+                Assert.equal(errorHookCnt, 2, "auto exception hook should be instrumented twice");
+            }
+        });
+
+
+        this.testCase({
+            name: "AppInsightsTests: autoExceptionInstrumented can be set correctly with root config",
+            useFakeTimers: true,
+            test: () => {
+                let appInsights = new AnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+
+                let config: IConfig & IConfiguration = {
+                    instrumentationKey: "instrumentation_key",
+                    samplingPercentage: 12,
+                    autoExceptionInstrumented: true,
+                    extensionConfig: {}
+                };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                // Initialize
+                core.initialize(config, [appInsights, channel]);
+
+                let extConfig = (core.config.extensionConfig || {})[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal(extConfig.autoExceptionInstrumented, undefined, "auto exception hook should be undefined for extenstion config");
+                let autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be set true");
+                let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
+                Assert.equal(errorHookCnt, 0, "auto exception hook should not be instrumented again");
+                Assert.equal(extConfig.autoUnhandledPromiseInstrumented, false, "autoUnhandledPromise should not be Instrumented");
+
+                (core.config as IConfiguration & IConfig).autoExceptionInstrumented = false;
+                extConfig.autoExceptionInstrumented = false;
+                this.clock.tick(1);
+                autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be not be override");
+
+
+
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: autoExceptionInstrumented can be set correctly with root config and enableUnhandledPromiseRejectionTracking",
+            test: () => {
+                let appInsights = new AnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+
+                let config: IConfig & IConfiguration = {
+                    instrumentationKey: "instrumentation_key",
+                    samplingPercentage: 12,
+                    autoExceptionInstrumented: true,
+                    extensionConfig: {
+                        [appInsights.identifier]: {
+                            enableUnhandledPromiseRejectionTracking: true
+                        }
+                    }
+                };
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                // Initialize
+                core.initialize(config, [appInsights, channel]);
+
+                let extConfig = (core.config.extensionConfig || {})[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal(extConfig.autoExceptionInstrumented, undefined, "auto exception hook should be undefined for extenstion config");
+                let autoExceptionHooked = appInsights["_getDbgPlgTargets"]()[1];
+                Assert.equal(autoExceptionHooked, true, "autoExceptionInstrumented should be set true");
+                Assert.equal(extConfig.autoUnhandledPromiseInstrumented, true, "autoUnhandledPromiseInstrumented is set to true");
+                let errorHookCnt = appInsights["_getDbgPlgTargets"]()[0];
+                Assert.equal(errorHookCnt, 1, "auto exception hook should be instrumented for autoUnhandledPromiseInstrumented");
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: public members are correct",
             test: () => {
                 // setup
@@ -406,6 +547,134 @@ export class AnalyticsPluginTests extends AITestClass {
         this.addOnErrorTests();
         this.addTrackMetricTests();
         this.addTelemetryInitializerTests();
+        this.addScriptInfoTests();
+    }
+
+    private addScriptInfoTests(): void {
+        this.testCase({
+            name: "AppInsightsTests: findAllScripts function returns correct information",
+            useFakeTimers: true,
+            test: () => {
+                // Initialize Application Insights core with plugins
+                let script = window.document.createElement("script");
+                script.src = "https://www.example.com/test.js";
+                script.innerHTML = 'test script';
+                window.document.body.appendChild(script);
+
+                let doc = window.document;
+                let scriptsInfo = findAllScripts(doc);
+                Assert.deepEqual(true, JSON.stringify(scriptsInfo).indexOf("https://www.example.com/test.js") !== -1, "script info contains the correct url");
+            }
+        });
+        this.testCase({
+            name: "AppInsightsTests: trackException would contain scrips info when config turns on",
+            useFakeTimers: true,
+            test: () => {
+                const appInsights = new AnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const properties = new PropertiesPlugin();
+                // Configuration
+                const config = {
+                    instrumentationKey: 'ikey',
+                };
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                // Initialize Application Insights core with plugins
+                core.initialize(config, [appInsights, channel, properties]);
+
+                // add test script
+                let script = window.document.createElement("script");
+                script.src = "https://www.example1.com/test.js";
+                script.setAttribute("referrerpolicy", "no-referrer");
+                script.innerHTML = 'test script';
+                let script2 = window.document.createElement("script");
+                script2.src = "https://www.test.com/test.js";
+                script2.innerHTML = "test tests";
+                script2.setAttribute("async", ""); 
+                window.document.body.appendChild(script);
+                window.document.body.appendChild(script2);
+
+
+                const trackStub = this.sandbox.stub(appInsights.core, "track");
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                const baseData = (trackStub.args[0][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop = baseData.properties;
+                Assert.equal(-1, JSON.stringify(prop).indexOf("https://www.example.com/test.js"), "script info is not included");
+                
+                appInsights.config.expCfg.inclScripts = true;
+                this.clock.tick(1);
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledTwice, "single exception is tracked");
+                const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop2 = baseData2.properties;
+                Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.test.com/test.js","async":true}'))
+                Assert.deepEqual(true, prop2["exceptionScripts"].includes('"url":"https://www.example1.com/test.js","referrerPolicy":"no-referrer"'))
+
+            }
+        });
+
+
+        this.testCase({
+            name: "AppInsightsTests: trackException would contain log info when config turns on",
+            useFakeTimers: true,
+            test: () => {
+                const appInsights = new AnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const properties = new PropertiesPlugin();
+                // Configuration
+                const config = {
+                    instrumentationKey: 'ikey',
+                };
+                this.onDone(() => {
+                    core.unload(false);
+                });
+                // Initialize Application Insights core with plugins
+                core.initialize(config, [appInsights, channel, properties]);
+
+                const trackStub = this.sandbox.stub(appInsights.core, "track");
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                const baseData = (trackStub.args[0][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop = baseData.properties;
+                Assert.equal(-1, JSON.stringify(prop).indexOf("test message"), "log info is not included");
+                
+                let applelist = new Array(49).fill("apple");
+                // check maxLength default value
+                appInsights.config.expCfg.expLog = () => {
+                    return {logs: applelist.concat(['pear', 'banana'])};
+                };;
+                this.clock.tick(1);
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                Assert.ok(trackStub.calledTwice, "second exception is tracked");
+                const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop2 = baseData2.properties;
+                Assert.deepEqual(true, prop2["exceptionLog"].includes('apple'), "log info before max length is included");
+                Assert.deepEqual(true, prop2["exceptionLog"].includes('pear'), "log info before max length is included");
+
+                Assert.equal(-1, prop2["exceptionLog"].indexOf("banana"), "text after max length should not be included");
+
+
+                // check maxLength would truncate the log info
+                let myLogFunction = () => {
+                    return {logs: ['test message', 'check message', 'banana']};
+                };
+                appInsights.config.expCfg.expLog = myLogFunction;
+                appInsights.config.expCfg.maxLogs = 2;
+                this.clock.tick(1);
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                this.clock.tick(1);
+                Assert.ok(trackStub.calledThrice, "third exception is tracked");
+                const baseData3 = (trackStub.args[2][0] as ITelemetryItem).baseData as IExceptionInternal;
+                const prop3 = baseData3.properties;
+                Assert.deepEqual(true, prop3["exceptionLog"].includes('test'), "log info is included");
+                Assert.equal(false, prop3["exceptionLog"].includes("banana"), "text after max length should not be included");
+
+            }
+        });
     }
 
     private addGenericTests(): void {
@@ -663,8 +932,10 @@ export class AnalyticsPluginTests extends AITestClass {
                 // Test
                 const dumpExMsg = throwSpy.args[0][3].exception;
                 Assert.ok(dumpExMsg.indexOf("stack: ") != -1);
-                Assert.ok(dumpExMsg.indexOf(`message: '${unexpectedError.message}'`) !== -1);
-                Assert.ok(dumpExMsg.indexOf("name: 'Error'") !== -1);
+                Assert.ok(dumpExMsg.indexOf(`message: \"${unexpectedError.message}\"`) !== -1 ||
+                    dumpExMsg.indexOf(`message: '${unexpectedError.message}'`) !== -1);
+                Assert.ok(dumpExMsg.indexOf("name: \"Error\"") !== -1 ||
+                    dumpExMsg.indexOf("name: 'Error'") !== -1);
             }
         });
 
@@ -824,7 +1095,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:string[], isAsync:boolean) => {
+                sender._sender = (payload:any[], isAsync:boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -840,10 +1111,10 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
             }].concat(this.waitForException(1))
             .concat(() => {
-
                 let isLocal = window.location.protocol === "file:";
                 let exp = this.trackSpy.args[0];
                 const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+            
                 if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
@@ -907,7 +1178,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:string[], isAsync:boolean) => {
+                sender._sender = (payload:any[], isAsync:boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -922,7 +1193,6 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
             }].concat(this.waitForException(1))
             .concat(() => {
-
                 let exp = this.trackSpy.args[0];
                 const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
                 if (payloadStr.length > 0) {
@@ -981,7 +1251,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:string[], isAsync:boolean) => {
+                sender._sender = (payload:any[], isAsync:boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -1063,7 +1333,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:string[], isAsync:boolean) => {
+                sender._sender = (payload:any[], isAsync:boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -1257,6 +1527,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
         this.testCase({
             name: "Timing Tests: Multiple startTrackPage",
+            useFakeTimers: true,
             test:
                 () => {
                     // setup
@@ -1274,7 +1545,8 @@ export class AnalyticsPluginTests extends AITestClass {
                     const appInsights = new AnalyticsPlugin();
                     core.addPlugin(appInsights);
                     const logStub = this.sandbox.stub(core.logger, "throwInternal");
-                    core.logger.consoleLoggingLevel = () => 999;
+                    core.config.loggingLevelConsole = 999;
+                    this.clock.tick(1);
 
                     // act
                     appInsights.startTrackPage();
@@ -1287,6 +1559,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
         this.testCase({
             name: "Timing Tests: stopTrackPage called without a corresponding start",
+            useFakeTimers: true,
             test:
                 () => {
                     // setup
@@ -1304,7 +1577,8 @@ export class AnalyticsPluginTests extends AITestClass {
                     const appInsights = new AnalyticsPlugin();
                     core.addPlugin(appInsights);
                     const logStub = this.sandbox.stub(core.logger, "throwInternal");
-                    core.logger.consoleLoggingLevel = () => 999;
+                    core.config.loggingLevelConsole = 999;
+                    this.clock.tick(1);
 
                     // act
                     appInsights.stopTrackPage();
@@ -1908,10 +2182,13 @@ export class AnalyticsPluginTests extends AITestClass {
             }
     
             Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking spy " + new Date().toISOString());
-
             try {
                 if (argCount >= expectedCount) {
-                    const payload = JSON.parse(this.trackSpy.args[0][0]);
+                    let payloads: any = []
+                    this.trackSpy.args[0][0].forEach(item => {
+                        payloads.push(item.item)
+                    });
+                    const payload = JSON.parse(payloads);
                     const baseType = payload.data.baseType;
                     // call the appropriate Validate depending on the baseType
                     switch (baseType) {

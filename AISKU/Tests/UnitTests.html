@@ -24,41 +24,20 @@
         modules.add("qunit");
         modules.add("sinon");
         modules.add("pako","./node_modules/pako/dist/pako");
+        modules.add("@microsoft/applicationinsights-offlinechannel-js");        // Load offline plugin
 
         loadFetchModule(modules, "whatwg-fetch");
-        loadCommonModules(modules);
+        loadCommonModules(modules, function () {
 
-        modules.add("@microsoft/dynamicproto-js", "./node_modules/@microsoft/dynamicproto-js/lib/dist/umd/dynamicproto-js", true);
-                
-                // Load and define the app insights Shims module
-        modules.add("@microsoft/applicationinsights-shims", "./node_modules/@microsoft/applicationinsights-shims/browser/applicationinsights-shims");
+            var testModule = modules.add("Tests/Unit/src/aiskuunittests", "./Unit/dist/aiskuunittests.tests.js")
+            testModule.run = function (tests) {
+                console && console.log("Starting tests");
+                QUnit.start();
+                tests.runTests();
+            };
 
-        // Load Core
-        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
-
-        // Load Common
-        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
-
-        // Load Analytics
-        modules.add("@microsoft/applicationinsights-analytics-js", "./node_modules/@microsoft/applicationinsights-analytics-js/browser/applicationinsights-analytics-js");
-
-        // Load Channel
-        modules.add("@microsoft/applicationinsights-channel-js", "./node_modules/@microsoft/applicationinsights-channel-js/browser/applicationinsights-channel-js");
-
-        // Load Properties
-        modules.add("@microsoft/applicationinsights-properties-js", "./node_modules/@microsoft/applicationinsights-properties-js/browser/applicationinsights-properties-js");
-
-        // Load Dependencies
-        modules.add("@microsoft/applicationinsights-dependencies-js", "./node_modules/@microsoft/applicationinsights-dependencies-js/browser/applicationinsights-dependencies-js");
-
-        var testModule = modules.add("Tests/Unit/src/aiskuunittests", "./Unit/dist/aiskuunittests.tests.js")
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
-
-        modules.run();
+            modules.run();
+        });
     </script>
 </head>
 

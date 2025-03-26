@@ -1,0 +1,48 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-control" content="no-Cache" />
+  <meta name="viewport" content="width=device-width">
+  <title>1DS Unit Tests</title>
+  <link rel="stylesheet" href="../../../common/Tests/External/qunit-2.9.1.css">
+  <script src="../../../common/Tests/Selenium/ExceptionHelper.js"></script>
+  <script src="../../../common/Tests/External/sinon-7.3.1.js"></script>
+  <script src="../../../common/Tests/External/require-2.2.0.js"></script>
+  <script src="../../../common/Tests/Selenium/ModuleLoader.js"></script>
+  <script>
+        var modules = new ModuleLoader({
+            baseUrl: '../',
+            paths: {
+                qunit:          "../../common/Tests/External/qunit-2.9.1",
+                "whatwg-fetch": "../../common/Tests/External/whatwg-fetch.3.0.0",
+                "sinon":        "../../common/Tests/External/sinon-7.3.1",
+                "pako":        "./node_modules/pako/dist/pako"
+            }
+        });
+
+        // Load qunit here instead of with tests, otherwise will not work
+        modules.add("qunit");
+        modules.add("pako");
+
+        loadFetchModule(modules, "whatwg-fetch");
+        loadCommonModules(modules, () => {
+          var testModule = modules.add("test/Unit/src/core.unittests", "./Unit/dist/core.unittests.js")
+          testModule.run = function () {
+              console && console.log("Starting tests...");
+              QUnit.start();
+          };
+
+          modules.run();
+        });
+
+  </script>
+</head>
+
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+  <div id="error-message"></div>
+</body>
+
+</html>

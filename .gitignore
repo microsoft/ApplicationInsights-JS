@@ -174,11 +174,15 @@ bundle/
 node_modules/
 out/
 coreSDK/node_modules
-dist-esm/
+build/
+dist-es*/
 browser/
 types/
 dist/
 dest/
+drop/
+.cdn/
+
 # Don't commit the sub resource integrity generated files
 **/*.integrity.json
 
@@ -256,6 +260,7 @@ temp
 common/temp/**
 package-deps.json
 package-lock.json
+rush-logs/
 
 # test output
 aicore.tests.js*
@@ -266,3 +271,7 @@ ai.tests.d.ts
 
 # Generated Constant File
 **/__DynamicConstants.ts
+
+# Generated Docs
+docs/webSdk/applicationinsights*/**
+docs/webSdk/1ds*/**

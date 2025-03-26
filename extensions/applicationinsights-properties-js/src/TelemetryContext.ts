@@ -5,8 +5,8 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    CtxTagKeys, Extensions, IApplication, IDevice, IInternal, ILocation, IOperatingSystem, ISession, ITelemetryTrace, IUserContext, IWeb,
-    PageView
+    CtxTagKeys, Extensions, IApplication, IDevice, IInternal, ILocation, IOperatingSystem, ISession, ISessionManager, ITelemetryTrace,
+    IUserContext, IWeb, PageView, dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, _InternalLogMessage,
@@ -44,7 +44,7 @@ export class TelemetryContext implements IPropTelemetryContext {
     public user: IUserContext; // The object describing a user tracked by this object.
     public internal: IInternal; // legacy
     public session: ISession; // The object describing a session tracked by this object.
-    public sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
+    public sessionManager: ISessionManager; // The session manager that manages session on the base of cookies.
     public os: IOperatingSystem;
     public web: IWeb;
     public appId: () => string;
@@ -85,7 +85,7 @@ export class TelemetryContext implements IPropTelemetryContext {
                     sesId = session.id;
                 } else {
                     // Gets the automatic session if it exists or an empty object
-                    let autoSession = (_self.sessionManager || {} as _SessionManager).automaticSession;
+                    let autoSession = (_self.sessionManager || {} as ISessionManager).automaticSession;
                 
                     sesId = autoSession && isString(autoSession.id) ? autoSession.id : null;
                 }
@@ -129,7 +129,7 @@ export class TelemetryContext implements IPropTelemetryContext {
                     let tags = getSetValue(evt, strTags);
 
                     setValue(tags, CtxTagKeys.internalAgentVersion, internal.agentVersion, isString); // not mapped in CS 4.0
-                    setValue(tags, CtxTagKeys.internalSdkVersion, internal.sdkVersion, isString);
+                    setValue(tags, CtxTagKeys.internalSdkVersion, dataSanitizeString(logger, internal.sdkVersion, 64), isString);
             
                     if (evt.baseType === _InternalLogMessage.dataType || evt.baseType === PageView.dataType) {
                         setValue(tags, CtxTagKeys.internalSnippet, internal.snippetVer, isString);

@@ -21,7 +21,7 @@ We strongly welcome and encourage contributions to this project. Please read the
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-[ContribGuide]: https://github.com/microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
+[ContribGuide]: https://github.com/microsoft/ApplicationInsights-Home/blob/main/CONTRIBUTING.md
 [GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
 [GitHubIssue]: https://github.com/microsoft/ApplicationInsights-JS/issues
 

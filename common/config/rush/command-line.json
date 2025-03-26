@@ -44,13 +44,15 @@
             "commandKind": "bulk",
             "summary": "Run all build for all packages",
             "name": "build",
-            "allowWarningsInSuccessfulBuild": true
+            "allowWarningsInSuccessfulBuild": true,
+            "enableParallelism": true
         },
         {
             "commandKind": "bulk",
             "summary": "Run all build for all packages",
             "name": "rebuild",
-            "allowWarningsInSuccessfulBuild": true
+            "allowWarningsInSuccessfulBuild": true,
+            "enableParallelism": true
         },
         {
             "commandKind": "bulk",
@@ -58,7 +60,7 @@
             "summary": "Run all ai-minify tasks for all packages",
             "description": "Runs ai-minify tasks for all projects",
             "safeForSimultaneousRushProcesses": false,
-            "enableParallelism": false,
+            "enableParallelism": true,
             "ignoreMissingScript": true,
             "allowWarningsInSuccessfulBuild": true
         },
@@ -68,7 +70,37 @@
             "summary": "Run all restore tasks for all packages to unminify the files",
             "description": "Runs all restore tasks for all projects to unminify the files",
             "safeForSimultaneousRushProcesses": false,
-            "enableParallelism": false,
+            "enableParallelism": true,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "npm-pack",
+            "summary": "Run all npm_pack tasks to create the npm bundle",
+            "description": "Run all npm_pack tasks to create the npm bundle",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": true,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "clean",
+            "summary": "Run all clean tasks to clean each project",
+            "description": "Run all clean tasks to clean each project",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": true,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
+            "name": "api-docs",
+            "summary": "Run all api-docs tasks for each project",
+            "description": "Run all api-docs tasks for each project",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": true,
             "ignoreMissingScript": true,
             "allowWarningsInSuccessfulBuild": true
         }
