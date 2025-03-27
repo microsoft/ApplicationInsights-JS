@@ -211,4 +211,5 @@ export interface IConfiguration {
      * @since 3.3.2
      */
     expCfg?: IExceptionConfig;
+    disableStatsBeat?: boolean;
 }

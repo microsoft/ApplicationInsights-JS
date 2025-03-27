@@ -249,7 +249,7 @@ export class SenderPostManager {
                             
                         } else {
                             // if can send
-                            _onSuccess(STR_EMPTY, oncomplete);
+                            _onSuccess(STR_EMPTY, oncomplete); // if success, onComplete is called with status code 200
                         }
                     }
 
