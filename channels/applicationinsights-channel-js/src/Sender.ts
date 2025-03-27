@@ -950,7 +950,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     return _getOnComplete(payload, status, headers, response);
                 }
                 let payloadData = _getPayload(payload);
-                payloadData.statsBeatData = {startTime: dateNow()};
+                if (payloadData) {
+                    payloadData.statsBeatData = {startTime: dateNow()};
+                }
                 let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST;
                 if (sendPostFunc && payloadData) {
                     // ***********************************************************************************************
