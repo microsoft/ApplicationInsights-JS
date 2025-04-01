@@ -7,12 +7,12 @@ import {
 import {
     ActiveStatus, BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration,
     IDiagnosticLogger, IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, IStatsBeat, IStatsBeatConfig, IStatsBeatEvent, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
-    IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType,
-    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr,
-    getExceptionName, getIEVersion, getResponseText, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace,
-    objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
+    IProcessTelemetryUnloadContext, IStatsBeat, IStatsBeatConfig, IStatsBeatEvent, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager,
+    TransportType, _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean,
+    cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr,
+    formatErrorMessageXhr, getExceptionName, getIEVersion, getResponseText, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined,
+    mergeEvtNamespace, objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
@@ -934,17 +934,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 return _self._sample.isSampledIn(envelope);
             }
 
-            function _getOnComplete(payload: IInternalStorageItem[], status: number, headers: {[headerName: string]: string;}, response?: string) {
-
-                // ***********************************************************************************************
-                //TODO: handle other status codes
-                if (status === 200 && payload) {
-                    _self._onSuccess(payload, payload.length);
-                } else {
-                    response && _self._onError(payload, response);
-                }
-            }
-
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
                     let statsbeat = _core.getStatsBeat();
@@ -952,7 +941,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                         statsbeat.count(status, payloadData, endpointHost);
                     }
-                    return _getOnComplete(payload, status, headers, response);
+                    return;
                 }
                 let payloadData = _getPayload(payload);
                 if (payloadData) {
