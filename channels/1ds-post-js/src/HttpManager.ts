@@ -223,7 +223,13 @@ export class HttpManager {
                         }
     
                         _xhrTimeout = channelConfig.xhrTimeout;
+                        const CompressionStream = (window as any).CompressionStream;
+
                         _disableZip = !!channelConfig.disableZip;
+                        if (typeof CompressionStream !== "function" || _sendHook) {
+                            _disableZip = true;
+                        }
+
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
@@ -971,55 +977,17 @@ export class HttpManager {
                                 };
 
                                 let isSync = thePayload.isTeardown || thePayload.isSync;
-
-                                const CompressionStream = (window as any).CompressionStream;
-                                // If CompressionStream is available, use it
-                                if (!_disableZip && !isSync && CompressionStream && typeof CompressionStream !== "undefined") {
-                                    // compress the payload
-                                    let body = new Response(payload.data).body;
-                                    if (body) {
-                                        const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
-                                        return new Response(compressedStream)
-                                            .arrayBuffer()
-                                            .then((bytes) => {
-                                                payload.data = new Uint8Array(bytes); // Update the payloadData
-                                                payload.headers["Content-Encoding"] = "gzip"; // Update the headers
-                                                try {
-                                                    sendInterface.sendPOST(payload, onComplete, isSync);
-                                                    if (_sendListener) {
-                                                        // Send the original payload to the listener
-                                                        _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
-                                                    }
-                                                } catch (ex) {
-                                                    _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
-                
-                                                    _doOnComplete(onComplete, 0, {});
-                                                }
-                                            })
-                                            .catch((error) => {
-                                                // Fallback to sending uncompressed data
-                                                try {
-                                                    sendInterface.sendPOST(payload, onComplete, isSync);
-                                                    if (_sendListener) {
-                                                        // Send the original payload to the listener
-                                                        _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
-                                                    }
-                                                } catch (ex) {
-                                                    _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
-                                                }
-                                            });
-                                    }
-                                } else {
+                                _preparePayload((processedPayload: IPayloadData) => {
                                     try {
-                                        sendInterface.sendPOST(payload, onComplete, isSync);
+                                        sendInterface.sendPOST(processedPayload, onComplete, isSync);
                                         if (_sendListener) {
                                             // Send the original payload to the listener
-                                            _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
+                                            _sendListener(orgPayloadData, processedPayload, isSync, thePayload.isBeacon);
                                         }
                                     } catch (ex) {
                                         _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
                                     }
-                                }
+                                }, payload, isSync);
                             };
                         }
 
@@ -1087,6 +1055,32 @@ export class HttpManager {
                     // Ensure that we send any discard events for events that could not be serialized even when there was no payload to send
                     _sendBatchesNotification(thePayload.failedEvts, EventBatchNotificationReason.InvalidEvent, thePayload.sendType);
                 }
+            }
+
+            function _preparePayload(callback, payload, isSync) {
+                if (_disableZip || isSync) {
+                    callback(payload);
+                }
+                const CompressionStream = (window as any).CompressionStream;
+                // Compression logic
+                let body = new Response(payload.data).body;
+                if (body) {
+                    const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
+                    return new Response(compressedStream)
+                        .arrayBuffer()
+                        .then((bytes) => {
+                            payload.data = new Uint8Array(bytes); // Update the payload data
+                            payload.headers["Content-Encoding"] = "gzip"; // Update headers
+                            callback(payload);
+                        })
+                        .catch(() => {
+                            // Fallback to sending uncompressed data
+                            callback(payload);
+                        });
+                }
+                // If body is null, fallback to uncompressed
+                callback(payload);
+
             }
 
             function _addEventCompletedTimings(theEvents: IPostTransmissionTelemetryItem[], sendEventCompleted: number) {
