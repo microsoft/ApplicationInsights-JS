@@ -1060,6 +1060,7 @@ export class HttpManager {
             function _preparePayload(callback, payload, isSync) {
                 if (_disableZip || isSync) {
                     callback(payload);
+                    return;
                 }
                 const CompressionStream = (window as any).CompressionStream;
                 // Compression logic
