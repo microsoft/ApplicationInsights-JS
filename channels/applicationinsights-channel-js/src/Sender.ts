@@ -271,6 +271,20 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let ctx = createProcessTelemetryContext(null, config, core);
                     // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
+                    let curExtUrl = senderConfig.endpointUrl;
+                    // if it is not inital change (_endpointUrl has value)
+                    // if current sender endpoint url is not changed directly
+                    // means ExtCfg is not changed directly
+                    // then we need to monitor endpoint url changes from core
+                    if (_endpointUrl && curExtUrl === _endpointUrl) {
+                        let coreUrl = config.endpointUrl as any;
+                        // if core endpoint url is changed
+                        if (coreUrl && coreUrl !== curExtUrl) {
+                            // and endpoint promise changes is handled by this as well
+                            senderConfig.endpointUrl = coreUrl;
+                        }
+                    }
+
                     let corsPolicy = senderConfig.corsPolicy;
                     if (corsPolicy){
                         if (corsPolicy === "same-origin" || corsPolicy === "same-site" || corsPolicy === "cross-origin") {
@@ -278,24 +292,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     } else {
                         delete _headers[CrossOriginResourcePolicyHeader];
-                    }
-                    if(isPromiseLike(senderConfig.endpointUrl)) {
-                        // if it is promise, means the endpoint url is from core.endpointurl
-                        senderConfig.endpointUrl = config.endpointUrl as any;
-
-                        let curExtUrl = senderConfig.endpointUrl;
-                        // if it is not inital change (_endpointUrl has value)
-                        // if current sender endpoint url is not changed directly
-                        // means ExtCfg is not changed directly
-                        // then we need to monitor endpoint url changes from core
-                        if (_endpointUrl && curExtUrl === _endpointUrl) {
-                            let coreUrl = config.endpointUrl as any;
-                            // if core endpoint url is changed
-                            if (coreUrl && coreUrl !== curExtUrl) {
-                                // and endpoint promise changes is handled by this as well
-                                senderConfig.endpointUrl = coreUrl;
-                            }
-                        }
                     }
 
                     if(isPromiseLike(senderConfig.instrumentationKey)) {
