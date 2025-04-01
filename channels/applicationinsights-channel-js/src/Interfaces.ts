@@ -177,7 +177,7 @@ export interface ISenderConfig {
      * - `same-origin`: Allows access only from the same origin (protocol, host, and port).
      * - `cross-origin`: Allows access from any origin.
      *
-     * @since 3.3.3
+     * @since 3.3.7
      */
     corsPolicy?: string;
 }

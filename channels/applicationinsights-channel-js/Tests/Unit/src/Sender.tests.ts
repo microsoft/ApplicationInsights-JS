@@ -2739,43 +2739,43 @@ export class SenderTests extends AITestClass {
                 };
 
                 try {
-                    this._sender.processTelemetry(telemetryItem, null);
-                    this._sender.flush();
+                    this._sender.processTelemetry(telemetryItem);
+                    this.clock.tick(30000);
                 } catch(e) {
                     QUnit.assert.ok(false);
                 }
-
+                const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
                 QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
                 let headers = this._getXhrRequests()[0].requestHeaders;
-                QUnit.assert.equal(headers['X-Cross-Origin-Resource-Policy'], 'cross-origin');
-                QUnit.assert.ok(headers.hasOwnProperty('X-Cross-Origin-Resource-Policy'));  
+                QUnit.assert.ok(headers.hasOwnProperty(CrossOriginResourcePolicyHeader));  
+                QUnit.assert.equal(headers[CrossOriginResourcePolicyHeader], 'cross-origin');
                 QUnit.assert.notOk(this._getXhrRequests()[0].requestHeaders.hasOwnProperty('testHeader'));
 
                 // dynamic change
                 core.config.extensionConfig[this._sender.identifier].corsPolicy = "same-origin";
                 this.clock.tick(1);
                 try {
-                    this._sender.processTelemetry(telemetryItem, null);
-                    this._sender.flush();
+                    this._sender.processTelemetry(telemetryItem);
+                    this.clock.tick(30000);
                 } catch(e) {
                     QUnit.assert.ok(false);
                 }
                 headers = this._getXhrRequests()[1].requestHeaders;                
-                QUnit.assert.ok(headers.hasOwnProperty('X-Cross-Origin-Resource-Policy'));  
-                QUnit.assert.equal(headers['X-Cross-Origin-Resource-Policy'], 'same-origin');
+                QUnit.assert.ok(headers.hasOwnProperty(CrossOriginResourcePolicyHeader));  
+                QUnit.assert.equal(headers[CrossOriginResourcePolicyHeader], 'same-origin');
                 QUnit.assert.notOk(this._getXhrRequests()[1].requestHeaders.hasOwnProperty('testHeader'));
 
                 // dynamic change to null
                 core.config.extensionConfig[this._sender.identifier].corsPolicy = null;
                 this.clock.tick(1);
                 try {
-                    this._sender.processTelemetry(telemetryItem, null);
-                    this._sender.flush();
+                    this._sender.processTelemetry(telemetryItem);
+                    this.clock.tick(30000);
                 } catch(e) {
                     QUnit.assert.ok(false);
                 }
                 headers = this._getXhrRequests()[2].requestHeaders;                
-                QUnit.assert.notOk(this._getXhrRequests()[2].requestHeaders.hasOwnProperty('X-Cross-Origin-Resource-Policy'));
+                QUnit.assert.notOk(this._getXhrRequests()[2].requestHeaders.hasOwnProperty(CrossOriginResourcePolicyHeader));
             }
         });
 
