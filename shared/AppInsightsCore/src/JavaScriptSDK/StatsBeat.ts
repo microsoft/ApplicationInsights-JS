@@ -1,7 +1,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ITimerHandler, scheduleTimeout, utcNow } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
+import { IStatsBeat, IStatsBeatConfig } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPayloadData } from "../JavaScriptSDK.Interfaces/IXHROverride";
 import { NetworkStatsbeat, createNetworkStatsbeat } from "./NetworkStatsbeat";
@@ -24,12 +24,12 @@ export class Statsbeat implements IStatsBeat {
         let _os: string;
         let _runTimeVersion: string;
         dynamicProto(Statsbeat, this, (_self, _base) => {
-            _self.initialize = (core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) => {
+            _self.initialize = (core: IAppInsightsCore, statsBeatConfig: IStatsBeatConfig) => {
                 _core = core;
-                _networkCounter = createNetworkStatsbeat(endpoint);
+                _networkCounter = createNetworkStatsbeat(statsBeatConfig.endpoint);
                 _isEnabled = true;
-                _sdkVersion = version;
-                _getCustomProperties(ikey);
+                _sdkVersion = statsBeatConfig.version;
+                _getCustomProperties(statsBeatConfig.ikey);
             }
 
             _self.isInitialized = (): boolean => {
@@ -44,15 +44,15 @@ export class Statsbeat implements IStatsBeat {
                     _networkCounter.totalRequest = (_networkCounter.totalRequest || 0) + 1;
                     _networkCounter.requestDuration += utcNow() - payloadData["statsBeatData"]["startTime"];
                 }
-                let retryArray = [401, 403, 408, 429, 500, 502, 503];
+                let retryArray = [401, 403, 408, 429, 500, 502, 503, 504];
                 let throttleArray = [402, 439];
-                if (status === 200) {
+                if (status >= 200 && status < 300) {
                     _networkCounter.success++;
                 } else if (retryArray.indexOf(status) !== -1) {
                     _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
                 } else if (throttleArray.indexOf(status) !== -1) {
                     _networkCounter.throttle[status] = (_networkCounter.throttle[status] || 0) + 1;
-                } else if (status !== 307 && status !== 308 && status !== 206) {
+                } else if (status !== 307 && status !== 308) {
                     _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
                 }
                 _setupTimer();
@@ -93,7 +93,6 @@ export class Statsbeat implements IStatsBeat {
                 _cikey = ikey;
                 _language = STATSBEAT_LANGUAGE;
                 _os = STATSBEAT_TYPE;
-                _runTimeVersion = STATSBEAT_TYPE;
             }
 
             function _sendStatsbeats(name: string, val: number, properties?: { [name: string]: any }) {
@@ -105,7 +104,6 @@ export class Statsbeat implements IStatsBeat {
                     "rp": "unknown",
                     "attach": "Manual",
                     "cikey": _cikey,
-                    "runtimeVersion": _runTimeVersion,
                     "os": _os,
                     "language": _language,
                     "version": _sdkVersion,
@@ -179,7 +177,7 @@ export class Statsbeat implements IStatsBeat {
         });
     }
     
-    public initialize(core: IAppInsightsCore, ikey: string, endpoint: string, version?: string) {
+    public initialize(core: IAppInsightsCore, statsBeatConfig: IStatsBeatConfig) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

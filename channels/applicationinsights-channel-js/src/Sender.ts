@@ -7,7 +7,7 @@ import {
 import {
     ActiveStatus, BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration,
     IDiagnosticLogger, IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, IStatsBeat, IStatsBeatEvent, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
+    IProcessTelemetryUnloadContext, IStatsBeat, IStatsBeatConfig, IStatsBeatEvent, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
     IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType,
     _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
     createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr,
@@ -288,9 +288,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
 
-                    if (!config.disableStatsBeat && _statsBeat && !_statsBeat.isInitialized()) {
+                    if (config.disableStatsBeat === false && _statsBeat && !_statsBeat.isInitialized()) {
                         var endpointHost = urlParseUrl(senderConfig.endpointUrl).hostname;
-                        _statsBeat.initialize(core, senderConfig.instrumentationKey, endpointHost, EnvelopeCreator.Version);
+                        let statsBeatConfig = {
+                            ikey: senderConfig.instrumentationKey,
+                            endpoint: senderConfig.endpointUrl,
+                            version: EnvelopeCreator.Version
+                        } as IStatsBeatConfig;
+                        // _statsBeat.initialize(core, statsBeatConfig); // uncomment this until throttle is implemented
                     }
 
                     if(isPromiseLike(senderConfig.instrumentationKey)) {

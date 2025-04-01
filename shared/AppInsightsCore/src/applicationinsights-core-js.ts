@@ -37,7 +37,7 @@ export { IXDomainRequest, IBackendResponse } from "./JavaScriptSDK.Interfaces/IX
 export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./JavaScriptSDK.Interfaces/ISenderPostManager";
 export { SenderPostManager } from "./JavaScriptSDK/SenderPostManager";
 export { IStatsBeatEvent } from "./JavaScriptSDK.Interfaces/IStatsBeatEvent";
-export { IStatsBeat } from "./JavaScriptSDK.Interfaces/IStatsBeat";
+export { IStatsBeat, IStatsBeatConfig } from "./JavaScriptSDK.Interfaces/IStatsBeat";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
     strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,

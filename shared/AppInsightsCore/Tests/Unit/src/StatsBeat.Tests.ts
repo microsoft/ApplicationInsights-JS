@@ -47,7 +47,11 @@ export class StatsBeatTests extends AITestClass {
                 Assert.equal(false, this._statsbeat.isInitialized(), "StatsBeat should not be initialized by default");
                 
                 // Initialize and test
-                this._statsbeat.initialize(this._core, "Test-iKey", "https://example.endpoint.com", "1.0.0");
+                this._statsbeat.initialize(this._core, {
+                    ikey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    version: "1.0.0"
+                });
                 Assert.equal(true, this._statsbeat.isInitialized(), "StatsBeat should be initialized after initialization");
             }
         });
@@ -57,7 +61,11 @@ export class StatsBeatTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize StatsBeat
-                this._statsbeat.initialize(this._core, "Test-iKey", "https://example.endpoint.com", "1.0.0");
+                this._statsbeat.initialize(this._core, {
+                    ikey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    version: "1.0.0"
+                });
                 
                 // Create mock payload data with timing information
                 const payloadData = {
@@ -96,7 +104,11 @@ export class StatsBeatTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize StatsBeat
-                this._statsbeat.initialize(this._core, "Test-iKey", "https://example.endpoint.com", "1.0.0");
+                this._statsbeat.initialize(this._core, {
+                    ikey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    version: "1.0.0"
+                });
                 
                 // Count an exception
                 this._statsbeat.countException("https://example.endpoint.com", "NetworkError");
@@ -128,7 +140,11 @@ export class StatsBeatTests extends AITestClass {
             name: "StatsBeat: does not send metrics for different endpoints",
             test: () => {
                 // Initialize StatsBeat for a specific endpoint
-                this._statsbeat.initialize(this._core, "Test-iKey", "https://example.endpoint.com", "1.0.0");
+                this._statsbeat.initialize(this._core, {
+                    ikey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    version: "1.0.0"
+                });
                 
                 // Create mock payload data
                 const payloadData = {
