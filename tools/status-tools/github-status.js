@@ -40,7 +40,7 @@ function showHelp() {
     console.log(" -noLabels                           - Don't report on any labels (overrides -l, -px and -all)");
     console.log(" -missingLabels                      - Identify issues with no assigned labels");
     console.log(" -noDefault                          - Don't add the default labels (bug,enhancement,feature,question,documentation,duplicate,invalid,wontfix)");
-    console.log(" -dump                               - Dump the raw JSON data to a file (issues.json)")
+    console.log(" -dump                               - Dump the raw JSON data to a file (issues.json)");
     console.log(" -? | -h | -help                     - This help message");
     console.log("");
     console.log("Examples:");

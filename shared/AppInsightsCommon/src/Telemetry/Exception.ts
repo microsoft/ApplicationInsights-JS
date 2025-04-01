@@ -4,20 +4,162 @@
 import {
     IDiagnosticLogger, arrForEach, arrMap, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { getWindow, strIndexOf } from "@nevware21/ts-utils";
+import { asString, getWindow, objFreeze, strIndexOf } from "@nevware21/ts-utils";
 import { strNotSpecified } from "../Constants";
 import { FieldType } from "../Enums";
 import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";
 import { IExceptionDetails } from "../Interfaces/Contracts/IExceptionDetails";
 import { IStackFrame } from "../Interfaces/Contracts/IStackFrame";
 import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
-import {
-    IAutoExceptionTelemetry, IExceptionDetailsInternal, IExceptionInternal, IExceptionStackFrameInternal, IStackDetails
-} from "../Interfaces/IExceptionTelemetry";
+import { IAutoExceptionTelemetry, IExceptionDetailsInternal, IExceptionInternal, IStackDetails } from "../Interfaces/IExceptionTelemetry";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import {
     dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString
 } from "./Common/DataSanitizer";
+
+// These Regex covers the following patterns
+// 1. Chrome/Firefox/IE/Edge:
+//    at functionName (filename:lineNumber:columnNumber)
+//    at functionName (filename:lineNumber)
+//    at filename:lineNumber:columnNumber
+//    at filename:lineNumber
+//    at functionName@filename:lineNumber:columnNumber
+// 2. Safari / Opera:
+//    functionName@filename:lineNumber:columnNumber
+//    functionName@filename:lineNumber
+//    filename:lineNumber:columnNumber
+//    filename:lineNumber
+//    Line ## of scriptname script filename:lineNumber:columnNumber
+//    Line ## of scriptname script filename
+// 3. IE/Edge (Additional formats)
+//    at functionName@filename:lineNumber
+
+const STACKFRAME_BASE_SIZE = 58; // '{"method":"","level":,"assembly":"","fileName":"","line":}'.length
+
+/**
+ * Check if the string conforms to what looks like a stack frame line and not just a general message
+ * comment or other non-stack related info.
+ *
+ * This  should be used to filter out any leading "message" lines from a stack trace, before attempting to parse
+ * the individual stack frames. Once you have estabilsted the start of the stack frames you can then use the
+ * FULL_STACK_FRAME_1, FULL_STACK_FRAME_2, FULL_STACK_FRAME_3, and EXTRACT_FILENAME to parse the individual
+ * stack frames to extract the method, filename, line number, and column number.
+ * These may still provide invalid matches, so the sequence of execution is important to avoid providing
+ * an invalid parsed stack.
+ */
+const IS_FRAME = /^\s{0,50}(from\s|at\s|Line\s{1,5}\d{1,10}\s{1,5}of|\w{1,50}@\w{1,80}|[^\(\s\n]+:[0-9\?]+(?::[0-9\?]+)?)/;
+
+/**
+ * Parse a well formed stack frame with both the line and column numbers
+ * ----------------------------------
+ * **Primary focus of the matching**
+ * - at functionName (filename:lineNumber:columnNumber)
+ * - at filename:lineNumber:columnNumber
+ * - at functionName@filename:lineNumber:columnNumber
+ * - functionName (filename:lineNumber:columnNumber)
+ * - filename:lineNumber:columnNumber
+ * - functionName@filename:lineNumber:columnNumber
+ */
+const FULL_STACK_FRAME_1 = /^(?:\s{0,50}at)?\s{0,50}([^\@\()\s]+)?\s{0,50}(?:\s|\@|\()\s{0,5}([^\(\s\n\]]+):([0-9\?]+):([0-9\?]+)\)?$/;
+
+/**
+ * Parse a well formed stack frame with only a line number.
+ * ----------------------------------
+ * > Note: this WILL also match with line and column number, but the line number is included with the filename
+ * > you should attempt to match with FULL_STACK_FRAME_1 first.
+ *
+ * **Primary focus of the matching (run FULL_STACK_FRAME_1 first)**
+ * - at functionName (filename:lineNumber)
+ * - at filename:lineNumber
+ * - at functionName@filename:lineNumber
+ * - functionName (filename:lineNumber)
+ * - filename:lineNumber
+ * - functionName@filename:lineNumber
+ *
+ * **Secondary matches**
+ * - at functionName (filename:lineNumber:columnNumber)
+ * - at filename:lineNumber:columnNumber
+ * - at functionName@filename:lineNumber:columnNumber
+ * - functionName (filename:lineNumber:columnNumber)
+ * - filename:lineNumber:columnNumber
+ * - functionName@filename:lineNumber:columnNumber
+ */
+const FULL_STACK_FRAME_2 = /^(?:\s{0,50}at)?\s{0,50}([^\@\()\s]+)?\s{0,50}(?:\s|\@|\()\s{0,5}([^\(\s\n\]]+):([0-9\?]+)\)?$/;
+
+/**
+ * Attempt to Parse a frame that doesn't include a line or column number.
+ * ----------------------------------
+ * > Note: this WILL also match lines with a line or line and column number, you should attempt to match with
+ * both FULL_STACK_FRAME_1 and FULL_STACK_FRAME_2 first to avoid false positives.
+ *
+ * **Unexpected Invalid Matches** (Matches that should be avoided -- by using the FULL_STACK_FRAME_1 and FULL_STACK_FRAME_2 first)
+ * - at https://localhost:44365/static/node_bundles/@microsoft/blah/js/bundle.js:144112:27
+ * - at https://localhost:44365/static/node_bundles/@microsoft/blah/js/bundle.js:144112:27
+ *
+ * **Primary focus of the matching (run FULL_STACK_FRAME_1 first)**
+ * - at functionName@filename
+ * - at functionName (filename)
+ * - at functionName filename
+ * - at filename  <- Will actuall match this as the "method" and not the filename (care should be taken to avoid this)
+ * - functionName@filename
+ * - functionName (filename)
+ * - functionName filename
+ * - functionName
+ *
+ * **Secondary matches** (The line and column numbers will be included with the matched filename)
+ * - at functionName (filename:lineNumber:columnNumber)
+ * - at functionName (filename:lineNumber)
+ * - at filename:lineNumber:columnNumber
+ * - at filename:lineNumber
+ * - at functionName@filename:lineNumber:columnNumber
+ * - at functionName@filename:lineNumber
+ * - functionName (filename:lineNumber:columnNumber)
+ * - functionName (filename:lineNumber)
+ * - filename:lineNumber:columnNumber
+ * - filename:lineNumber
+ * - functionName@filename:lineNumber:columnNumber
+ * - functionName@filename:lineNumber
+  */
+const FULL_STACK_FRAME_3 = /^(?:\s{0,50}at)?\s{0,50}([^\@\()\s]+)?\s{0,50}(?:\s|\@|\()\s{0,5}([^\(\s\n\)\]]+)\)?$/;
+
+/**
+ * Attempt to extract the filename (with or without line and column numbers) from a string.
+ * ----------------------------------
+ * > Note: this will only match the filename (with any line or column numbers) and will
+ * > return what looks like the filename, however, it will also match random strings that
+ * > look like a filename, so care should be taken to ensure that the filename is actually
+ * > a filename before using it.
+ * >
+ * > It is recommended to use this in conjunction with the FULL_STACK_FRAME_1, FULL_STACK_FRAME_2, and FULL_STACK_FRAME_3
+ * > to ensure first to reduce false matches, if all of these fail then you can use this to extract the filename from a random
+ * > strings to identify any potential filename from a known stack frame line.
+ *
+ * **Known Invalid matching**
+ *
+ * This regex will basically match any "final" string of a line or one that is trailed by a comma, so this should not
+ * be used as the "only" matching regex, but rather as a final fallback to extract the filename from a string.
+ * If you are certain that the string line is a stack frame and not part of the exception message (lines before the stack)
+ * or trailing comments, then you can use this to extract the filename and then further parse with PARSE_FILENAME_LINE_COL
+ * and PARSE_FILENAME_LINE_ONLY to extract any potential the line and column numbers.
+ *
+ * **Primary focus of the matching**
+ * - at (anonymous) @ VM60:1
+ * - Line 21 of linked script file://localhost/C:/Temp/stacktrace.js
+ * - Line 11 of inline#1 script in http://localhost:3000/static/js/main.206f4846.js:2:296748
+ * - Line 68 of inline#2 script in file://localhost/teststack.html
+ * - at Global code (http://example.com/stacktrace.js:11:1)
+ */
+const EXTRACT_FILENAME = /(?:^|\(|\s{0,10}[\w\)]+\@)?([^\(\n\s\]\)]+)(?:\:([0-9]+)(?:\:([0-9]+))?)?\)?(?:,|$)/;
+
+/**
+ * Attempt to extract the filename, line number, and column number from a string.
+ */
+const PARSE_FILENAME_LINE_COL = /([^\(\s\n]+):([0-9]+):([0-9]+)$/;
+
+/**
+ * Attempt to extract the filename and line number from a string.
+ */
+const PARSE_FILENAME_LINE_ONLY = /([^\(\s\n]+):([0-9]+)$/;
 
 const NoMethod = "<no_method>";
 const strError = "error";
@@ -26,6 +168,76 @@ const strStackDetails = "stackDetails";
 const strErrorSrc = "errorSrc";
 const strMessage = "message";
 const strDescription = "description";
+
+interface _ParseSequence {
+    /**
+     * The regular expression to match the frame
+     */
+    re: RegExp;
+
+    /**
+     * The expected number of matches in the regex, if this number is detected it will be considered a match
+     */
+    len: number;
+
+    /**
+     * The index into the matches to be used as the method name
+     */
+    m?: number;
+
+    /**
+     * The index into the matches to be used as the filename
+     */
+    fn: number;
+
+    /**
+     * The index into the matches to be used as the line number
+     */
+    ln?: number;
+
+    /**
+     * The index into the matches to be used as the column number
+     */
+    col?: number;
+    
+    /**
+     * A function to pre-process the frame before it is parsed, this is persistent and any changes
+     * will affect all subsequent frames
+     * @param frame
+     * @returns
+     */
+    pre?: (frame: string) => string;
+    
+    /**
+     * A Check function to determine if the frame should be processed or dropped
+     * @param frame
+     * @returns
+     */
+    chk?: (frame: string) => boolean;
+
+    /**
+     * Convert / Handle the matching frame
+     * @param frame - The frame to be processed
+     * @param matches - The matches from the regex
+     * @returns
+     */
+    hdl?: (frame: IStackFrame, parseSequence: _ParseSequence, matches: RegExpMatchArray) => void;
+}
+
+const _parseSequence: _ParseSequence[] = [
+    { re: FULL_STACK_FRAME_1, len: 5, m: 1, fn: 2, ln: 3, col: 4 },
+    { chk: _ignoreNative, pre: _scrubAnonymous, re: FULL_STACK_FRAME_2, len: 4, m: 1, fn: 2, ln: 3 },
+    { re: FULL_STACK_FRAME_3, len: 3, m: 1, fn: 2, hdl: _handleFilename },
+    { re: EXTRACT_FILENAME, len: 2, fn: 1, hdl: _handleFilename }
+];
+
+function _scrubAnonymous(frame: string) {
+    return frame.replace(/(\(anonymous\))/, "<anonymous>");
+}
+
+function _ignoreNative(frame: string) {
+    return strIndexOf(frame, "[native") < 0;
+}
 
 function _stringify(value: any, convertToString: boolean) {
     let result = value;
@@ -197,9 +409,7 @@ function _formatStackTrace(stackDetails: IStackDetails) {
 
     if (stackDetails) {
         if (stackDetails.obj) {
-            arrForEach(stackDetails.obj, (entry) => {
-                stack += entry + "\n";
-            });
+            stack = stackDetails.obj.join("\n");
         } else {
             stack = stackDetails.src || "";
         }
@@ -209,21 +419,27 @@ function _formatStackTrace(stackDetails: IStackDetails) {
     return stack;
 }
 
-function _parseStack(stack:IStackDetails): _StackFrame[] {
-    let parsedStack: _StackFrame[];
+function _parseStack(stack:IStackDetails): _IParsedStackFrame[] {
+    let parsedStack: _IParsedStackFrame[];
     let frames = stack.obj;
     if (frames && frames.length > 0) {
         parsedStack = [];
         let level = 0;
 
+        let foundStackStart = false;
         let totalSizeInBytes = 0;
-
         arrForEach(frames, (frame) => {
-            let theFrame = frame.toString();
-            if (_StackFrame.regex.test(theFrame)) {
-                const parsedFrame = new _StackFrame(theFrame, level++);
-                totalSizeInBytes += parsedFrame.sizeInBytes;
-                parsedStack.push(parsedFrame);
+            if (foundStackStart || _isStackFrame(frame)) {
+                let theFrame = asString(frame);
+
+                // Once we have found the first stack frame we treat the rest of the lines as part of the stack
+                foundStackStart = true;
+                let parsedFrame: _IParsedStackFrame = _extractStackFrame(theFrame, level);
+                if (parsedFrame) {
+                    totalSizeInBytes += parsedFrame.sizeInBytes;
+                    parsedStack.push(parsedFrame);
+                    level++;
+                }
             }
         });
 
@@ -374,7 +590,7 @@ export class Exception implements IExceptionData, ISerializable {
                 properties.id = id;
             }
             
-            _self.exceptions = [new _ExceptionDetails(logger, exception, properties)];
+            _self.exceptions = [_createExceptionDetails(logger, exception, properties)];
             _self.properties = dataSanitizeProperties(logger, properties);
             _self.measurements = dataSanitizeMeasurements(logger, measurements);
             if (severityLevel) {
@@ -432,8 +648,8 @@ export class Exception implements IExceptionData, ISerializable {
     }
 
     public static CreateFromInterface(logger: IDiagnosticLogger, exception: IExceptionInternal, properties?: any, measurements?: { [key: string]: number }): Exception {
-        const exceptions: _ExceptionDetails[] = exception.exceptions
-            && arrMap(exception.exceptions, (ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
+        const exceptions: _IExceptionDetails[] = exception.exceptions
+            && arrMap(exception.exceptions, (ex: IExceptionDetailsInternal) => _createExDetailsFromInterface(logger, ex));
         const exceptionData = new Exception(logger, {...exception, exceptions}, properties, measurements);
         return exceptionData;
     }
@@ -442,7 +658,7 @@ export class Exception implements IExceptionData, ISerializable {
         const { exceptions, properties, measurements, severityLevel, problemGroup, id, isManual } = this;
 
         const exceptionDetailsInterface = exceptions instanceof Array
-            && arrMap(exceptions, (exception: _ExceptionDetails) => exception.toInterface())
+            && arrMap(exceptions, (exception: _IExceptionDetails) => exception.toInterface())
             || undefined;
 
         return {
@@ -478,211 +694,250 @@ export class Exception implements IExceptionData, ISerializable {
     public static formatError = _formatErrorCode;
 }
 
-export class _ExceptionDetails implements IExceptionDetails, ISerializable {
+const exDetailsAiDataContract = objFreeze({
+    id: FieldType.Default,
+    outerId: FieldType.Default,
+    typeName: FieldType.Required,
+    message: FieldType.Required,
+    hasFullStack: FieldType.Default,
+    stack: FieldType.Default,
+    parsedStack: FieldType.Array
+});
 
-    public aiDataContract = {
-        id: FieldType.Default,
-        outerId: FieldType.Default,
-        typeName: FieldType.Required,
-        message: FieldType.Required,
-        hasFullStack: FieldType.Default,
-        stack: FieldType.Default,
-        parsedStack: FieldType.Array
+interface _IExceptionDetails extends IExceptionDetails, ISerializable {
+    toInterface: () => IExceptionDetailsInternal;
+}
+
+function _toInterface() {
+    let _self = this;
+    const parsedStack = isArray(_self.parsedStack)
+        && arrMap(_self.parsedStack, (frame: _IParsedStackFrame) => _parsedFrameToInterface(frame));
+
+    const exceptionDetailsInterface: IExceptionDetailsInternal = {
+        id: _self.id,
+        outerId: _self.outerId,
+        typeName: _self.typeName,
+        message: _self.message,
+        hasFullStack: _self.hasFullStack,
+        stack: _self[strStack],
+        parsedStack: parsedStack || undefined
     };
 
-    /**
-     * In case exception is nested (outer exception contains inner one), the id and outerId properties are used to represent the nesting.
-     */
-    public id: number;
+    return exceptionDetailsInterface;
+}
 
-    /**
-     * The value of outerId is a reference to an element in ExceptionDetails that represents the outer exception
-     */
-    public outerId: number;
- 
-    /**
-     * Exception type name.
-     */
-    public typeName: string;
-     
-    /**
-     * Exception message.
-     */
-    public message: string;
- 
-    /**
-     * Indicates if full exception stack is provided in the exception. The stack may be trimmed, such as in the case of a StackOverflow exception.
-     */
-    public hasFullStack: boolean;
- 
-    /**
-     * Text describing the stack. Either stack or parsedStack should have a value.
-     */
-    public stack: string;
- 
-    /**
-     * List of stack frames. Either stack or parsedStack should have a value.
-     */
-    public parsedStack: IStackFrame[]; /* [] */
- 
-    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionDetailsInternal | IAutoExceptionTelemetry, properties?: {[key: string]: any}) {
-        let _self = this;
-        if (!_isExceptionDetailsInternal(exception)) {
-            let error = exception as any;
-            let evt = error && error.evt;
-            if (!isError(error)) {
-                error = error[strError] || evt || error;
-            }
+export function _createExceptionDetails(logger: IDiagnosticLogger, exception: Error | IExceptionDetailsInternal | IAutoExceptionTelemetry, properties?: {[key: string]: any}): _IExceptionDetails {
 
-            _self.typeName = dataSanitizeString(logger, _getErrorType(error)) || strNotSpecified;
-            _self.message = dataSanitizeMessage(logger, _formatMessage(exception || error, _self.typeName)) || strNotSpecified;
-            const stack = exception[strStackDetails] || _getStackFromErrorObj(exception);
-            _self.parsedStack = _parseStack(stack);
+    let id: number;
+    let outerId: number;
+    let typeName: string;
+    let message: string;
+    let hasFullStack: boolean;
+    let theStack: string;
+    let parsedStack: IStackFrame[];
 
-            // after parsedStack is inited, iterate over each frame object, sanitize its assembly field
-            if (isArray(_self.parsedStack)){
-                arrMap(_self.parsedStack, (frame: _StackFrame) => {
-                    frame.assembly = dataSanitizeString(logger, frame.assembly);
-                    frame.fileName = dataSanitizeString(logger, frame.fileName);
-                });
-            }
-          
-            _self[strStack] = dataSanitizeException(logger, _formatStackTrace(stack));
-            _self.hasFullStack = isArray(_self.parsedStack) && _self.parsedStack.length > 0;
-
-            if (properties) {
-                properties.typeName = properties.typeName || _self.typeName;
-            }
-        } else {
-            _self.typeName = exception.typeName;
-            _self.message = exception.message;
-            _self[strStack] = exception[strStack];
-            _self.parsedStack = exception.parsedStack || [];
-            _self.hasFullStack = exception.hasFullStack;
+    if (!_isExceptionDetailsInternal(exception)) {
+        let error = exception as any;
+        let evt = error && error.evt;
+        if (!isError(error)) {
+            error = error[strError] || evt || error;
         }
+
+        typeName = dataSanitizeString(logger, _getErrorType(error)) || strNotSpecified;
+        message = dataSanitizeMessage(logger, _formatMessage(exception || error, typeName)) || strNotSpecified;
+        const stack = exception[strStackDetails] || _getStackFromErrorObj(exception);
+        parsedStack = _parseStack(stack);
+
+        // after parsedStack is inited, iterate over each frame object, sanitize its assembly field
+        if (isArray(parsedStack)){
+            arrMap(parsedStack, (frame: IStackFrame) => {
+                frame.assembly = dataSanitizeString(logger, frame.assembly);
+                frame.fileName = dataSanitizeString(logger, frame.fileName);
+            });
+        }
+      
+        theStack = dataSanitizeException(logger, _formatStackTrace(stack));
+        hasFullStack = isArray(parsedStack) && parsedStack.length > 0;
+
+        if (properties) {
+            properties.typeName = properties.typeName || typeName;
+        }
+    } else {
+        typeName = exception.typeName;
+        message = exception.message;
+        theStack = exception[strStack];
+        parsedStack = exception.parsedStack || [];
+        hasFullStack = exception.hasFullStack;
     }
 
-    public toInterface(): IExceptionDetailsInternal {
-        let _self = this;
-        const parsedStack = _self.parsedStack instanceof Array
-            && arrMap(_self.parsedStack, (frame: _StackFrame) => frame.toInterface());
+    return {
+        aiDataContract: exDetailsAiDataContract,
+        id: id,
+        outerId: outerId,
+        typeName: typeName,
+        message: message,
+        hasFullStack: hasFullStack,
+        stack: theStack,
+        parsedStack: parsedStack,
+        toInterface: _toInterface
+    };
+}
 
-        const exceptionDetailsInterface: IExceptionDetailsInternal = {
-            id: _self.id,
-            outerId: _self.outerId,
-            typeName: _self.typeName,
-            message: _self.message,
-            hasFullStack: _self.hasFullStack,
-            stack: _self[strStack],
-            parsedStack: parsedStack || undefined
-        };
+export function _createExDetailsFromInterface(logger:IDiagnosticLogger, exception: IExceptionDetailsInternal): _IExceptionDetails {
+    const parsedStack = (isArray(exception.parsedStack)
+        && arrMap(exception.parsedStack, frame => _stackFrameFromInterface(frame)))
+        || exception.parsedStack;
 
-        return exceptionDetailsInterface;
-    }
+    const exceptionDetails = _createExceptionDetails(logger, {...exception, parsedStack});
 
-    public static CreateFromInterface(logger:IDiagnosticLogger, exception: IExceptionDetailsInternal): _ExceptionDetails {
-        const parsedStack = (exception.parsedStack instanceof Array
-            && arrMap(exception.parsedStack, frame => _StackFrame.CreateFromInterface(frame)))
-            || exception.parsedStack;
+    return exceptionDetails;
+}
 
-        const exceptionDetails = new _ExceptionDetails(logger, {...exception, parsedStack});
-
-        return exceptionDetails;
+function _parseFilename(theFrame: IStackFrame, fileName: string) {
+    const lineCol = fileName.match(PARSE_FILENAME_LINE_COL);
+    if (lineCol && lineCol.length >= 4) {
+        theFrame.fileName = lineCol[1];
+        theFrame.line = parseInt(lineCol[2]);
+    } else {
+        const lineNo = fileName.match(PARSE_FILENAME_LINE_ONLY);
+        if (lineNo && lineNo.length >= 3) {
+            theFrame.fileName = lineNo[1];
+            theFrame.line = parseInt(lineNo[2]);
+        } else {
+            theFrame.fileName = fileName;
+        }
     }
 }
 
-export class _StackFrame implements IStackFrame, ISerializable {
+function _handleFilename(theFrame: IStackFrame, sequence: _ParseSequence, matches: RegExpMatchArray) {
+    let filename = theFrame.fileName;
+    
+    if (sequence.fn && matches && matches.length > sequence.fn) {
+        if (sequence.ln && matches.length > sequence.ln) {
+            filename = strTrim(matches[sequence.fn] || "");
+            theFrame.line = parseInt(strTrim(matches[sequence.ln] || "")) || 0;
+        } else {
+            filename = strTrim(matches[sequence.fn] || "");
+        }
+    }
 
-    // regex to match stack frames from ie/chrome/ff
-    // methodName=$2, fileName=$4, lineNo=$5, column=$6
-    public static regex = /^([\s]+at)?[\s]{0,50}([^\@\()]+?)[\s]{0,50}(\@|\()([^\(\n]+):([0-9]+):([0-9]+)(\)?)$/;
-    public static baseSize = 58; // '{"method":"","level":,"assembly":"","fileName":"","line":}'.length
+    if (filename) {
+        _parseFilename(theFrame, filename);
+    }
+}
 
-    public sizeInBytes: number; /* 0 */
+function _isStackFrame(frame: string) {
+    let result = false;
+    if (frame && isString(frame)) {
+        let trimmedFrame = strTrim(frame);
+        if (trimmedFrame) {
+            result = IS_FRAME.test(trimmedFrame);
+        }
+    }
 
-    public aiDataContract = {
-        level: FieldType.Required,
-        method: FieldType.Required,
-        assembly: FieldType.Default,
-        fileName: FieldType.Default,
-        line: FieldType.Default
+    return result;
+}
+
+export interface _IParsedStackFrame extends IStackFrame, ISerializable {
+    sizeInBytes: number;
+}
+
+const stackFrameAiDataContract = objFreeze({
+    level: FieldType.Required,
+    method: FieldType.Required,
+    assembly: FieldType.Default,
+    fileName: FieldType.Default,
+    line: FieldType.Default
+});
+
+export function _extractStackFrame(frame: string, level: number): _IParsedStackFrame | undefined {
+    let theFrame: _IParsedStackFrame;
+
+    if (frame && isString(frame) && strTrim(frame)) {
+        theFrame = {
+            aiDataContract: stackFrameAiDataContract,
+            level: level,
+            assembly: strTrim(frame),
+            method: NoMethod,
+            fileName: "",
+            line: 0,
+            sizeInBytes: 0
+        };
+
+        let idx = 0;
+        while(idx < _parseSequence.length) {
+            let sequence = _parseSequence[idx];
+            if (sequence.chk && !sequence.chk(frame)) {
+                break;
+            }
+            if (sequence.pre) {
+                frame = sequence.pre(frame);
+            }
+
+            // Attempt to "parse" the stack frame
+            const matches = frame.match(sequence.re);
+            if (matches && matches.length >= sequence.len) {
+                if (sequence.m) {
+                    theFrame.method = strTrim(matches[sequence.m] || NoMethod);
+                }
+
+                if (sequence.hdl) {
+                    // Run any custom handler
+                    sequence.hdl(theFrame, sequence, matches);
+                } else if (sequence.fn) {
+                    if (sequence.ln) {
+                        theFrame.fileName = strTrim(matches[sequence.fn] || "");
+                        theFrame.line = parseInt(strTrim(matches[sequence.ln] || "")) || 0;
+                    } else {
+                        _parseFilename(theFrame, matches[sequence.fn] || "");
+                    }
+                }
+
+                // We found a match so stop looking
+                break;
+            }
+            idx++;
+        }
+    }
+
+    return _populateFrameSizeInBytes(theFrame);
+}
+
+function _stackFrameFromInterface(frame: IStackFrame): _IParsedStackFrame {
+    let parsedFrame: _IParsedStackFrame = {
+        aiDataContract: stackFrameAiDataContract,
+        level: frame.level,
+        method: frame.method,
+        assembly: frame.assembly,
+        fileName: frame.fileName,
+        line: frame.line,
+        sizeInBytes: 0
     };
 
-    /**
-     * Level in the call stack. For the long stacks SDK may not report every function in a call stack.
-     */
-    public level: number;
+    return _populateFrameSizeInBytes(parsedFrame);
+}
 
-    /**
-     * Method name.
-     */
-    public method: string;
- 
-    /**
-     * Name of the assembly (dll, jar, etc.) containing this function.
-     */
-    public assembly: string;
- 
-    /**
-     * File name or URL of the method implementation.
-     */
-    public fileName: string;
- 
-    /**
-     * Line number of the code implementation.
-     */
-    public line: number;
- 
-    constructor(sourceFrame: string | IExceptionStackFrameInternal, level: number) {
-        let _self = this;
-        _self.sizeInBytes = 0;
+function _populateFrameSizeInBytes(frame: _IParsedStackFrame): _IParsedStackFrame {
+    let sizeInBytes = STACKFRAME_BASE_SIZE;
+    if (frame) {
+        sizeInBytes += frame.method.length;
+        sizeInBytes += frame.assembly.length;
+        sizeInBytes += frame.fileName.length;
+        sizeInBytes += frame.level.toString().length;
+        sizeInBytes += frame.line.toString().length;
 
-        // Not converting this to isString() as typescript uses this logic to "understand" the different
-        // types for the 2 different code paths
-        if (typeof sourceFrame === "string") {
-            const frame: string = sourceFrame;
-            _self.level = level;
-            _self.method = NoMethod;
-            _self.assembly = strTrim(frame);
-            _self.fileName = "";
-            _self.line = 0;
-            const matches = frame.match(_StackFrame.regex);
-            if (matches && matches.length >= 5) {
-                _self.method = strTrim(matches[2]) || _self.method;
-                _self.fileName = strTrim(matches[4]);
-                _self.line = parseInt(matches[5]) || 0;
-            }
-        } else {
-            _self.level = sourceFrame.level;
-            _self.method = sourceFrame.method;
-            _self.assembly = sourceFrame.assembly;
-            _self.fileName = sourceFrame.fileName;
-            _self.line = sourceFrame.line;
-            _self.sizeInBytes = 0;
-        }
-
-        _self.sizeInBytes += _self.method.length;
-        _self.sizeInBytes += _self.fileName.length;
-        _self.sizeInBytes += _self.assembly.length;
-
-        // todo: these might need to be removed depending on how the back-end settles on their size calculation
-        _self.sizeInBytes += _StackFrame.baseSize;
-        _self.sizeInBytes += _self.level.toString().length;
-        _self.sizeInBytes += _self.line.toString().length;
+        frame.sizeInBytes = sizeInBytes;
     }
 
-    public static CreateFromInterface(frame: IExceptionStackFrameInternal) {
-        return new _StackFrame(frame, null /* level is available in frame interface */);
-    }
+    return frame;
+}
 
-    public toInterface() {
-        let _self = this;
-        return {
-            level: _self.level,
-            method: _self.method,
-            assembly: _self.assembly,
-            fileName: _self.fileName,
-            line: _self.line
-        };
-    }
+export function _parsedFrameToInterface(frame: _IParsedStackFrame): IStackFrame {
+    return {
+        level: frame.level,
+        method: frame.method,
+        assembly: frame.assembly,
+        fileName: frame.fileName,
+        line: frame.line
+    };
 }

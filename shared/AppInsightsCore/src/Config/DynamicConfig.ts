@@ -153,7 +153,6 @@ function _createDynamicHandler<T = IConfiguration>(logger: IDiagnosticLogger, ta
 
 /**
  * Log an invalid access message to the console
- * @param message
  */
 function _logInvalidAccess(logger: IDiagnosticLogger, message: string) {
     if (logger) {
@@ -185,8 +184,6 @@ export function createDynamicConfig<T = IConfiguration>(config: T, defaultConfig
 /**
  * Watch and track changes for accesses to the current config, the provided config MUST already be
  * a dynamic config or a child accessed via the dynamic config
- * @param config
- * @param configHandler
  * @param logger - The logger instance to use if there is no existing handler
  * @returns A watcher handler instance that can be used to remove itself when being unloaded
  * @throws TypeError if the provided config is not a dynamic config instance

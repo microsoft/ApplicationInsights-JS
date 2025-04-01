@@ -600,6 +600,52 @@ export class ThrottleMgrTest extends AITestClass {
         });
 
         this.testCase({
+            name: "ThrottleMgrTest: message can be sent from the first day when dayInterval is set to one",
+            test: () => {
+
+                let config = {
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        dayInterval: 1
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let expectedConfig = {
+                    disabled: false,
+                    limit: {
+                        samplingRate: 100,
+                        maxSendNumber:1
+                    } as IThrottleLimit,
+                    interval: {
+                        monthInterval: undefined,
+                        dayInterval: 1,
+                        daysOfMonth: undefined
+                    } as IThrottleInterval
+                } as IThrottleMgrConfig;
+
+                let coreCfg = {
+                    instrumentationKey: "test",
+                    throttleMgrCfg: {[this._msgId]: config}
+                };
+                this._core.initialize(coreCfg, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+                let actualConfig = throttleMgr.getConfig();
+                Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
+
+                let isTriggered = throttleMgr.isTriggered(this._msgId);
+                Assert.equal(isTriggered, false);
+
+                let canSend = throttleMgr.canThrottle(this._msgId);
+                Assert.equal(canSend, true, "can send message from the day")
+            }
+        });
+
+        this.testCase({
             name: "ThrottleMgrTest: Throttle Manager should trigger when current date is in daysOfMonth",
             test: () => {
                 let date = new Date();

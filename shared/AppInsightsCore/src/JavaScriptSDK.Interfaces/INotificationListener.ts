@@ -35,7 +35,7 @@ export interface INotificationListener {
     /**
      * [Optional] This event is sent if you have enabled perf events, they are primarily used to track internal performance testing and debugging
      * the event can be displayed via the debug plugin extension.
-     * @param perfEvent
+     * @param perfEvent - The performance event object
      */
     perfEvent?: (perfEvent: IPerfEvent) => void;
 
@@ -43,7 +43,7 @@ export interface INotificationListener {
      * Unload and remove any state that this INotificationListener may be holding, this is generally called when the
      * owning Manager is being unloaded.
      * @param isAsync - Can the unload be performed asynchronously (default)
-     * @return If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
+     * @returns If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
      * the function should return an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * / Promise to allow any listeners to wait for the operation to complete.
      */

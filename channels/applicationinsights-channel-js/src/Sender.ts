@@ -16,7 +16,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
-    ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, objDeepFreeze, objDefine, scheduleTimeout
+    ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine, scheduleTimeout
 } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
@@ -282,6 +282,20 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if(isPromiseLike(senderConfig.endpointUrl)) {
                         // if it is promise, means the endpoint url is from core.endpointurl
                         senderConfig.endpointUrl = config.endpointUrl as any;
+
+                        let curExtUrl = senderConfig.endpointUrl;
+                        // if it is not inital change (_endpointUrl has value)
+                        // if current sender endpoint url is not changed directly
+                        // means ExtCfg is not changed directly
+                        // then we need to monitor endpoint url changes from core
+                        if (_endpointUrl && curExtUrl === _endpointUrl) {
+                            let coreUrl = config.endpointUrl as any;
+                            // if core endpoint url is changed
+                            if (coreUrl && coreUrl !== curExtUrl) {
+                                // and endpoint promise changes is handled by this as well
+                                senderConfig.endpointUrl = coreUrl;
+                            }
+                        }
                     }
 
                     if(isPromiseLike(senderConfig.instrumentationKey)) {
@@ -503,6 +517,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             _self.isCompletelyIdle = () => {
                 return !_paused && _syncFetchPayload === 0 && _self._buffer.count() === 0;
             }
+
+            _self.getOfflineListener = () => {
+                return _offlineListener;
+            }
         
             /**
              * xhr state changes
@@ -518,8 +536,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
             /**
              * Immediately send buffered data
-             * @param async - {boolean} - Indicates if the events should be sent asynchronously
-             * @param forcedSender - {SenderFunction} - Indicates the forcedSender, undefined if not passed
+             * @param async - Indicates if the events should be sent asynchronously
+             * @param forcedSender - Indicates the forcedSender, undefined if not passed
              */
             _self.triggerSend = (async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) => {
                 let result: void | IPromise<boolean>;
@@ -1185,9 +1203,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 } else {
                     const backOffSlot = (Math.pow(2, _consecutiveErrors) - 1) / 2;
                     // tslint:disable-next-line:insecure-random
-                    let backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                    let backOffDelay = mathFloor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
                     backOffDelay = linearFactor * backOffDelay;
-                    delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
+                    delayInSeconds = mathMax(mathMin(backOffDelay, 3600), SlotDelayInSeconds);
                 }
         
                 // TODO: Log the backoff time like the C# version does.
@@ -1202,8 +1220,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              */
             function _setupTimer() {
                 if (!_timeoutHandle && !_paused) {
-                    const retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
-                    const timerValue = Math.max(_maxBatchInterval, retryInterval);
+                    const retryInterval = _retryAt ? mathMax(0, _retryAt - dateNow()) : 0;
+                    const timerValue = mathMax(_maxBatchInterval, retryInterval);
         
                     _timeoutHandle = scheduleTimeout(() => {
                         _timeoutHandle = null;
@@ -1396,7 +1414,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * send is complete. The actual implementation of the `IPromise` will be a native Promise (if supported) or the default
      * as supplied by [ts-async library](https://github.com/nevware21/ts-async)
      * @param async - Indicates if the events should be sent asynchronously
-     * @param forcedSender - {SenderFunction} - Indicates the forcedSender, undefined if not passed
+     * @param forcedSender - Indicates the forcedSender, undefined if not passed
      * @returns - Nothing or optionally, if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * which will be resolved (or reject) once the send is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * should only be returned when async is true.
@@ -1463,6 +1481,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @returns internal Offline Serializer object
      */
     public getOfflineSupport(): IInternalOfflineSupport {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Get Offline listener
+     * @returns offlineListener
+     * @since 3.3.4
+     */
+    public getOfflineListener(): IOfflineListener {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
         return null;
     }

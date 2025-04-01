@@ -218,10 +218,9 @@ export function getCookieValue(cookieMgr: ICookieMgr, name: string, decode: bool
  * Create a new guid.
  * @param style - The style of guid to generated, defaults to Digits
  * Digits (Default) : 32 digits separated by hyphens: 00000000-0000-0000-0000-000000000000
- * Braces - 32 digits separated by hyphens, enclosed in braces: {00000000-0000-0000-0000-000000000000}
+ * Braces - 32 digits separated by hyphens, enclosed in braces: \{00000000-0000-0000-0000-000000000000\}
  * Parentheses - 32 digits separated by hyphens, enclosed in parentheses: (00000000-0000-0000-0000-000000000000)
  * Numeric - 32 digits: 00000000000000000000000000000000
- * @returns The formatted guid.
  */
 export function createGuid(style: GuidStyle = GuidStyle.Digits): string {
     let theGuid = newGuid();
@@ -331,7 +330,7 @@ export function setProcessTelemetryTimings(event: ITelemetryItem, identifier: st
 
 /**
  * Returns a bitwise value for the FieldValueSanitizerType enum representing the decoded type of the passed value
- * @param value The value to determine the type
+ * @param value - The value to determine the type
  */
 export function getFieldValueType(value: any): FieldValueSanitizerType {
     let theType: FieldValueSanitizerType = FieldValueSanitizerType.NotSet;
@@ -423,9 +422,9 @@ export function openXhr(method: string, urlString: string, withCredentials?: boo
 }
 
 /**
- * Check to see if the value is > 0
+ * Check to see if the value is \> 0
  * @param value - The value to check
- * @returns true if > 0 otherwise false
+ * @returns true if \> 0 otherwise false
  */
 export function isGreaterThanZero(value: number) {
     return value > 0;

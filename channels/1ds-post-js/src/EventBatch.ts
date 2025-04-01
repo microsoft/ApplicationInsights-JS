@@ -36,7 +36,7 @@ export class EventBatch {
 
     /**
      * Creates a new Event Batch object
-     * @param iKey The iKey associated with this batch of events
+     * @param iKey - The iKey associated with this batch of events
      */
     public static create(iKey: string, theEvents?: IPostTransmissionTelemetryItem[]): EventBatch {
         return new EventBatch(iKey, theEvents);
@@ -70,8 +70,8 @@ export class EventBatch {
     /**
      * Split this batch into 2 with any events > fromEvent returned in the new batch and all other
      * events are kept in the current batch.
-     * @param fromEvent The first event to remove from the current batch.
-     * @param numEvents The number of events to be removed from the current batch and returned in the new one. Defaults to all trailing events
+     * @param fromEvent - The first event to remove from the current batch.
+     * @param numEvents - The number of events to be removed from the current batch and returned in the new one. Defaults to all trailing events
      */
     public split: (fromEvent: number, numEvents?: number) => EventBatch;
 

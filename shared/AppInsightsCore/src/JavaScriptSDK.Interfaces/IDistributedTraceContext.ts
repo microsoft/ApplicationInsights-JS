@@ -10,7 +10,7 @@ export interface IDistributedTraceContext {
 
     /**
      * Sets the current name of the page
-     * @param pageName
+     * @param pageName - The name of the page
      */
     setName(pageName: string): void;
 
@@ -48,7 +48,7 @@ export interface IDistributedTraceContext {
 
     /**
      * https://www.w3.org/TR/trace-context/#trace-flags
-     * @param newValue
+     * @param newValue - An integer representation of the W3C TraceContext trace-flags.
      */
     setTraceFlags(newValue?: number): void;
 }

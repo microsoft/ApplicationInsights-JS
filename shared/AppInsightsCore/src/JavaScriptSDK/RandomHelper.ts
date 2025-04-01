@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { utcNow } from "@nevware21/ts-utils";
+import { mathFloor, utcNow } from "@nevware21/ts-utils";
 import { getCrypto, getMsCrypto, isIE } from "./EnvUtils";
 import { STR_EMPTY } from "./InternalConstants";
 
@@ -40,11 +40,11 @@ function _autoSeedMwc() {
 /**
  * Generate a random value between 0 and maxValue, max value should be limited to a 32-bit maximum.
  * So maxValue(16) will produce a number from 0..16 (range of 17)
- * @param maxValue
+ * @param maxValue - The max value for the range
  */
 export function randomValue(maxValue: number) {
     if (maxValue > 0) {
-        return Math.floor((random32() / MaxUInt32) * (maxValue + 1)) >>> 0;
+        return mathFloor((random32() / MaxUInt32) * (maxValue + 1)) >>> 0;
     }
 
     return 0;
@@ -76,7 +76,7 @@ export function random32(signed?: boolean) {
 
     if (value === 0) {
         // Make sure the number is converted into the specified range (-0x80000000..0x7FFFFFFF)
-        value = Math.floor((UInt32Mask * Math.random()) | 0);
+        value = mathFloor((UInt32Mask * Math.random()) | 0);
     }
 
     if (!signed) {

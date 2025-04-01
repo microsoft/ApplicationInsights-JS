@@ -87,8 +87,9 @@ export class InMemoryBatch implements IInMemoryBatch {
     /**
      * Split this batch into 2 with any events > fromEvent returned in the new batch and all other
      * events are kept in the current batch.
-     * @param fromEvt The first event to remove from the current batch.
-     * @param numEvts The number of events to be removed from the current batch and returned in the new one. Defaults to all trailing events
+     * @param fromEvt - The first event to remove from the current batch.
+
+     * @param numEvts - The number of events to be removed from the current batch and returned in the new one. Defaults to all trailing events
      */
     public split(fromEvt: number, numEvts?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -97,9 +98,9 @@ export class InMemoryBatch implements IInMemoryBatch {
 
     /**
      * create current buffer to a new endpoint
-     * @param endpoint if not defined, current endpoint will be used
-     * @param evts new events to be added
-     * @param addCurEvts if it is set to true, current itemss will be transferred to the new batch
+     * @param endpoint - if not defined, current endpoint will be used
+     * @param evts - new events to be added
+     * @param addCurEvts - if it is set to true, current itemss will be transferred to the new batch
      */
     public createNew(endpoint: string, evts?: IPostTransmissionTelemetryItem[] | ITelemetryItem[], evtsLimitInMem?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

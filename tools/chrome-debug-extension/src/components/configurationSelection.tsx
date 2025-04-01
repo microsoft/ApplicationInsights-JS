@@ -5,6 +5,7 @@ import React from "react";
 import { getConfiguration } from "../configuration/configuration";
 import { ConfigurationType, ConfigurationURLs } from "../configuration/Configuration.types";
 import { IConfiguration } from "../configuration/IConfiguration";
+import { doAwait } from "@nevware21/ts-async";
 
 export const customConfigurationStorageKey = "customConfiguration";
 export interface IConfigurationSelectionProps {
@@ -45,7 +46,8 @@ export const ConfigurationSelection = (
     function updateCustomConfiguration(newCustomConfiguration: string): void {
         setCustomConfigurationDirty(true);
         setCustomConfiguration(newCustomConfiguration);
-        localStorage.setItem(customConfigurationStorageKey, newCustomConfiguration);
+        chrome.storage.local.set({ [customConfigurationStorageKey]: newCustomConfiguration });
+
     }
 
     function onCopyToCustomConfiguration(): void {
@@ -64,16 +66,19 @@ export const ConfigurationSelection = (
 
     React.useEffect(() => {
         try {
-            const savedValue = localStorage.getItem(customConfigurationStorageKey);
-            if (savedValue) {
-                setCustomConfiguration(savedValue);
-            }
+            doAwait(chrome.storage.local.get([customConfigurationStorageKey]), (savedValue: any) => {
+                if (savedValue) {
+                    setCustomConfiguration(savedValue[customConfigurationStorageKey]);
+                }
+                if (textAreaRef.current) {
+                    textAreaRef.current.setAttribute("aria-labelledby", "customConfigurationLabel");
+                }
+            });
+           
         } catch {
             // That's OK
         }
-        if (textAreaRef.current) {
-            textAreaRef.current.setAttribute("aria-labelledby", "customConfigurationLabel");
-        }
+        
     }, []);
 
     const isCustomConfigurationTextareaReadonly = unsavedConfigurationType !== "Custom";

@@ -249,7 +249,7 @@ export interface ILocalStorageProviderContext {
 export interface IOfflineProvider {
     /**
      * Initializes the provider using the config
-     * @param providerContext The provider context that should be used to initialize the provider
+     * @param providerContext - The provider context that should be used to initialize the provider
      * @returns True if the provider is initialized and available for use otherwise false
      */
     initialize(providerContext: ILocalStorageProviderContext): boolean;
@@ -266,7 +266,7 @@ export interface IOfflineProvider {
      * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
      * can optionally use this to access the current core instance or define / pass additional information
      * to later plugins (vs appending items to the telemetry item)
-     * @return Either the added element (for synchronous operation) or a Promise for an asynchronous processing
+     * @returns Either the added element (for synchronous operation) or a Promise for an asynchronous processing
      */
     addEvent(key: string, evt: IStorageTelemetryItem, itemCtx: IProcessTelemetryContext): IStorageTelemetryItem | IPromise<IStorageTelemetryItem> | null;
 
@@ -277,7 +277,7 @@ export interface IOfflineProvider {
 
      /**
      * Get all stored batches from the storage.
-     * @param cnt batch numbers if it is defined, it will returns given number of batches.
+     * @param cnt - batch numbers if it is defined, it will returns given number of batches.
      * if cnt is not defined, it will return all available batches
      */
      getAllEvents(cnt?: number): IStorageTelemetryItem[] | IPromise< IStorageTelemetryItem[]> | null;
@@ -285,13 +285,13 @@ export interface IOfflineProvider {
     /**
      * Removes the value associated with the provided key
      * @param evts - The events to be removed
-     * @return Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
+     * @returns Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
      */
     removeEvents(evts: IStorageTelemetryItem[]): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null;
 
     /**
      * Removes all entries from the storage provider, if there are any.
-     * @return Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
+     * @returns Either the removed item array (for synchronous operation) or a Promise for an asynchronous processing
      */
     clear(): IStorageTelemetryItem[] | IPromise<IStorageTelemetryItem[]> | null;
 

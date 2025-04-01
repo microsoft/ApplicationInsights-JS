@@ -2,7 +2,7 @@ import {
     IAppInsightsCore, IConfiguration, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrIndexOf, eLoggingSeverity,
     isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue, safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { arrForEach, objForEachKey } from "@nevware21/ts-utils";
+import { arrForEach, mathFloor, mathMin, objForEachKey } from "@nevware21/ts-utils";
 import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
 import { IConfig } from "./applicationinsights-common";
@@ -125,7 +125,7 @@ export class ThrottleMgr {
         /**
          * Set isReady State
          * if isReady set to true, message queue will be flushed automatically.
-         * @param isReady isReady State
+         * @param isReady - isReady State
          * @pa
          * @returns if message queue is flushed
          */
@@ -156,7 +156,7 @@ export class ThrottleMgr {
                 let isTriggered = _isTrigger(msgID);
                 try {
                     if (canThrottle && !isTriggered) {
-                        number = Math.min(cfg.limit.maxSendNumber, localStorageObj.count + 1);
+                        number = mathMin(cfg.limit.maxSendNumber, localStorageObj.count + 1);
                         localStorageObj.count = 0;
                         throttled = true;
                         _isTriggered[msgID] = true;
@@ -274,7 +274,7 @@ export class ThrottleMgr {
                 if (_isSpecificDaysGiven) {
                     dayCheck = arrIndexOf(interval.daysOfMonth, curDate.getUTCDate());
                 } else if (interval?.dayInterval) {
-                    let daySpan =  Math.floor((curDate.getTime() - date.getTime()) / 86400000);
+                    let daySpan =  mathFloor((curDate.getTime() - date.getTime()) / 86400000);
                     dayCheck = _checkInterval(interval.dayInterval, 0, daySpan);
                 }
 
@@ -365,7 +365,7 @@ export class ThrottleMgr {
                 return 1;
             }
             // count from start year
-            return  (current >= start) && (current - start) % interval == 0 ? Math.floor((current - start) / interval) + 1 : -1;
+            return  (current >= start) && (current - start) % interval == 0 ? mathFloor((current - start) / interval) + 1 : -1;
         }
         
         function _sendMessage(msgID: _eInternalMessageId, logger: IDiagnosticLogger, message: string, severity?: eLoggingSeverity) {

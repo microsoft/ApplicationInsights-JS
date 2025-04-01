@@ -13,6 +13,10 @@ interface ISanitizerMapValue {
     fieldHandler?: IFieldValueSanitizerProvider;
 }
 
+function _isSpecialName(name: string) {
+    return (name == "__proto__" || name == "constructor" || name == "prototype");
+}
+
 export class ValueSanitizer implements IValueSanitizer {
 
     public static getFieldType = getFieldValueType;
@@ -73,7 +77,7 @@ export class ValueSanitizer implements IValueSanitizer {
 
     /**
      * Returns whether this ValueSanitizer is empty
-     * @return `true` if it contains no chained sanitizers or field sanitizers, otherwise `false`
+     * @returns `true` if it contains no chained sanitizers or field sanitizers, otherwise `false`
      */
     public isEmpty?: () => boolean;
 
@@ -134,7 +138,17 @@ export class ValueSanitizer implements IValueSanitizer {
                 }
 
                 if (!fieldLookup) {
+                    // Handle edge case to avoid prototype pollution
+                    if (_isSpecialName(path)) {
+                        return null;
+                    }
+
                     fieldLookup = _sanitizerMap[path] = {};
+                }
+
+                // Handle edge case to avoid prototype pollution
+                if (_isSpecialName(name)) {
+                    return null;
                 }
 
                 fieldLookup[name] = result;
@@ -145,7 +159,7 @@ export class ValueSanitizer implements IValueSanitizer {
 
         _self.clearCache = () => {
             _sanitizerMap = {};
-        }
+        };
 
         _self.addSanitizer = (newSanitizer: IValueSanitizer) => {
             if (newSanitizer) {
@@ -213,7 +227,7 @@ export class ValueSanitizer implements IValueSanitizer {
         _self.value = (path: string, name: string, value: FieldValueSanitizerTypes, stringifyObjects?: boolean): IEventProperty | null => {
             let mapValue: ISanitizerMapValue = _getFieldSanitizer(path, name);
             if (mapValue && mapValue.canHandle) {
-                if (!mapValue || !mapValue.canHandle) {
+                if (!mapValue.canHandle) {
                     return null;
                 }
 

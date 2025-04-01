@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-osplugin-js",
-    "version": "3.3.3",
+    "version": "3.3.6",
     "description": "Microsoft Application Insights OS Plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -30,11 +30,11 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-common": "3.3.3",
+        "@microsoft/applicationinsights-common": "3.3.6",
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@microsoft/applicationinsights-core-js": "3.3.3",
-        "@nevware21/ts-utils": ">= 0.11.3 < 2.x",
-        "@nevware21/ts-async": ">= 0.5.2 < 2.x"
+        "@microsoft/applicationinsights-core-js": "3.3.6",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
@@ -48,8 +48,9 @@
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
-        "rollup-plugin-cleanup": "^3.2.1",
         "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-sourcemaps": "^0.6.3",
         "typescript": "^4.9.3",
         "typedoc": "^0.26.6"
     },

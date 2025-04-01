@@ -8,6 +8,7 @@ import {
 } from "../configuration/IConfiguration";
 import { defaultDataEventTypes, defaultExcludeFromCondensedList, defaultSessionId } from "../configuration/defaultConfiguration";
 import { DataEventType, IDataEvent } from "./IDataEvent";
+import { mathTrunc } from "@nevware21/ts-utils";
 
 let _regExpMap: { [key: string]: RegExp } = {};
 
@@ -107,10 +108,10 @@ export function applyConverter(
         return value.replace("<safe>", "").replace("</safe>", "");
     }
     case "NumberToWholeMilliseconds": {
-        return `${Math.trunc(Number.parseInt(value, 10))} ms`;
+        return `${mathTrunc(Number.parseInt(value, 10))} ms`;
     }
     case "TruncateWithDigitGrouping": {
-        return `${Math.trunc(Number.parseInt(value, 10)).toLocaleString()}`;
+        return `${mathTrunc(Number.parseInt(value, 10)).toLocaleString()}`;
     }
     default: {
         return value;

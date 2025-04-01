@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-example-cfgsync",
     "author": "Microsoft Application Insights Team",
-    "version": "3.3.3",
+    "version": "3.3.6",
     "description": "Microsoft Application Insights CfgSync Plugin Example",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [
@@ -50,8 +50,9 @@
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
-        "rollup-plugin-cleanup": "^3.2.1",
         "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-sourcemaps": "^0.6.3",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
         "qunit": "^2.11.2",
@@ -62,10 +63,10 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-cfgsync-js": "3.3.3",
+        "@microsoft/applicationinsights-cfgsync-js": "3.3.6",
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@microsoft/applicationinsights-web": "3.3.3",
-        "@microsoft/applicationinsights-core-js": "3.3.3",
-        "@nevware21/ts-utils": ">= 0.11.3 < 2.x"
+        "@microsoft/applicationinsights-web": "3.3.6",
+        "@microsoft/applicationinsights-core-js": "3.3.6",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
     }
 }

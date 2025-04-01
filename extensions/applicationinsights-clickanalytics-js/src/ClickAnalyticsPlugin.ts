@@ -181,7 +181,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
 
     /**
      * Logs a page action event.
-     * @param IPageActionTelemetry
+     * @param IPageActionTelemetry - The page action event to log.
      * @param customProperties - Additional data used to filter events and metrics. Defaults to empty.
      */
     public trackPageAction(pageAction?: IPageActionTelemetry, customProperties?: ICustomProperties) {

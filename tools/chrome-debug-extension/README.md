@@ -1,5 +1,13 @@
 # Application Insights Debug Viewer
 
+## Breaking Changes from v0 to v1
+With Chrome discontinuing support for Manifest v2, we’ve updated our extension from version v0 to v1 to align with Manifest v3. This update introduces several changes:
+
+- Migration to Chrome Storage API: Manifest V3 no longer supports localStorage; instead, it uses the Chrome Storage API. Consequently, your existing configuration will not be automatically transferred to the new version.
+
+- New Extension Name: To ensure a smooth update experience, we’ve changed the extension’s name from Telemetry Viewer to Telemetry Viewer M3. This allows you to run both versions simultaneously and manually copy your settings from the old extension to the new one.
+
+
 ## What the tool does
 
 This tool runs in your browser, either Chrome or Edge, and provides you real time visualization of events flowing through Application Insights. You can use it to monitor the telemetry that your web application is emitting as part of your dev inner loop or bug investigations, or you can use it to monitor the internal calls within Application Insights to debug your integration of Application Insights into your web application.

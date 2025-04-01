@@ -28,7 +28,7 @@ export interface IDiagnosticLogger {
 
     /**
      * This will write a debug message to the console if possible
-     * @param message - {string} - The debug message
+     * @param message - The debug message
      */
     debugToConsole? (message: string): void
 
@@ -60,7 +60,7 @@ export interface IDiagnosticLogger {
 
     /**
      * Optional Callback hook to allow the diagnostic logger to update it's configuration
-     * @param updateState
+     * @param updateState - The new configuration state to apply to the diagnostic logger
      */
     update?(updateState: ITelemetryUpdateState): void;
 
@@ -68,7 +68,7 @@ export interface IDiagnosticLogger {
      * Unload and remove any state that this IDiagnosticLogger may be holding, this is generally called when the
      * owning SDK is being unloaded.
      * @param isAsync - Can the unload be performed asynchronously (default)
-     * @return If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
+     * @returns If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
      * the function should return an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * / Promise to allow any listeners to wait for the operation to complete.
      */

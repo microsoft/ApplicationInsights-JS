@@ -2,6 +2,60 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.3.6 (March 4th, 2025)
+
+### Changelog
+
+- #2481 [Main][Task]31338239: Add Config to allow excluding the configuration endpoints from being reported
+- #2486 Minification improvements
+
+## 3.3.5 (Feb 3rd, 2025)
+
+### Changelog
+
+#### Issues
+
+- #2430 [BUG] Type signature for stopTrackEvent is incorrect
+- #2442 [BUG] [Snippet] Unhandled exceptions are reported twice
+- #2470 [BUG] @microsoft/applicationinsights-channel-js lacks a proper repository URL
+- #2467 [BUG] The regex used to parse the stack trace appears to be skipping anonymous lines
+  - This fixes the portal missing stack frames which are from anonymous functions due to missed parsing of stack frames with unexpected formatting.
+
+#### Commits
+
+- #2428 [main] [snippet] Integrate 1DS with AI Snippet Generation
+- #2443 Update Stale Issue action
+- #2445 [main] snippet generation fix for pr #2428
+- #2446 [main] eliminate warning raised by tsdoc
+- #2447 [main] [debug plugin] upgrade manifast to v3
+- #2450 [main][doc] Type signature for stopTrackEvent is incorrect #2430
+- #2448 [main] fix tsdoc error for param and type tag
+- #2452 [main][fix] rush fix
+- #2459 [Main][Task]30499129: Turn on CDN Deprecation Message with Sampling Rate with 10% Each Day
+- #2458 URGENT ACTION: Stop using az416426.vo.msecnd.net
+- #2460 [ThrottleMgr] Turn on Test CDN Deprecation Message with Sampling Rate with 100% Each Day
+- #2461 Update config version to 1.0.1
+- #2463 [main][cfgsync] update test based on new config setting
+- #2462 [main][debug tool] fix the way of calling chrome storage and add new url
+- #2464 Update Code Owners
+- #2465 [main][debug tool] enable check compressed data
+- #2468 [Main][Task]31041354: Increase CDN Deprecation Message Sampling Rate to 20%
+- #2471 [Main][Task]31111291: Fix Repo links in package.json
+- #2455 [main] fix rush warning message
+- #2473 Update rush version
+
+## 3.3.4 (Oct 30th 2024)
+
+### Changelog
+
+- #2426 [Main][Task]29626594: PerfManager Should be Created without Customized CreatePerfMgr Function
+- #2421 [Main]: Make file size checks flexible for nightly/dev builds
+- #2434 [Main][Task]29884493: Add a Function to Export Offline Listener From Sender
+- #2437 [Main][Task]29519727: Better Handle Sender Dynamic Changes
+- #2438 [Main][Task]29445623: Update CfgSync Config Readme
+- #2439 [BUG] Sourcemap load errors in debugger from dependencies
+- #2429 Readme - Remove double negative
+
 ## 3.3.3 (Sep 23rd 2024)
 
 ### Changelog

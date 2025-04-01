@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-offlinechannel-js",
-    "version": "0.3.3",
+    "version": "0.3.6",
     "description": "Microsoft Application Insights JavaScript SDK Offline Channel",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -8,7 +8,10 @@
     "module": "dist-es5/applicationinsights-offlinechannel-js.js",
     "types": "types/applicationinsights-offlinechannel-js.d.ts",
     "sideEffects": false,
-    "repository": "github:Microsoft/applicationinsights-js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/channels/offline-channel-js"
+    },
     "scripts": {
         "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
@@ -28,10 +31,10 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-core-js": "3.3.3",
-        "@microsoft/applicationinsights-common": "3.3.3",
-        "@nevware21/ts-utils": ">= 0.11.3 < 2.x",
-        "@nevware21/ts-async": ">= 0.5.2 < 2.x"
+        "@microsoft/applicationinsights-core-js": "3.3.6",
+        "@microsoft/applicationinsights-common": "3.3.6",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x"
     },
     "peerDependencies": {
         "tslib": ">= 1.0.0"
@@ -51,8 +54,9 @@
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
-        "rollup-plugin-cleanup": "^3.2.1",
         "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-sourcemaps": "^0.6.3",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
         "sinon": "^7.3.1",

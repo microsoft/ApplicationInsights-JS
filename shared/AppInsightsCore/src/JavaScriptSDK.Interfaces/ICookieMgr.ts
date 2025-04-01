@@ -55,7 +55,7 @@ export interface ICookieMgr {
     /**
      * Optional Callback hook to allow the cookie manager to update it's configuration, not generally implemented now that
      * dynamic configuration is supported
-     * @param updateState
+     * @param updateState - The new configuration state to apply to the cookie manager
      */
     update?(updateState: ITelemetryUpdateState): void;
 
@@ -63,7 +63,7 @@ export interface ICookieMgr {
      * Unload and remove any state that this ICookieMgr may be holding, this is generally called when the
      * owning SDK is being unloaded.
      * @param isAsync - Can the unload be performed asynchronously (default)
-     * @return If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
+     * @returns If the unload occurs synchronously then nothing should be returned, if happening asynchronously then
      * the function should return an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * / Promise to allow any listeners to wait for the operation to complete.
      */

@@ -5,7 +5,7 @@
 * File containing the enums as constants.
 */
 
-import { _eInternalMessageId, createEnumStyle, objFreeze } from "@microsoft/applicationinsights-core-js";
+import { _eInternalMessageId, createEnumStyle } from "@microsoft/applicationinsights-core-js";
 
 /**
  * The eValueKind contains a set of values that specify value kind of the property.

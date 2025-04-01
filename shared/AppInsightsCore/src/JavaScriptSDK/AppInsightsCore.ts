@@ -81,8 +81,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
 
 /**
  * Helper to create the default performance manager
- * @param core
- * @param notificationMgr
+ * @param core - The AppInsightsCore instance
+ * @param notificationMgr - The notification manager
  */
 function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
     return new PerfManager(notificationMgr);
@@ -590,7 +590,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_notificationManager) {
                     _notificationManager.removeNotificationListener(listener);
                 }
-            }
+            };
         
             _self.getCookieMgr = (): ICookieMgr => {
                 if (!_cookieManager) {
@@ -708,7 +708,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _forceStopInternalLogPoller = true;
                 _internalLogPoller && _internalLogPoller.cancel();
                 _flushInternalLogs();
-            }
+            };
 
             // Add addTelemetryInitializer
             proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
@@ -729,7 +729,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     reason: TelemetryUnloadReason.SdkUnload,
                     isAsync: isAsync,
                     flushComplete: false
-                }
+                };
 
                 let result: IPromise<ITelemetryUnloadState>;
                 if (isAsync && !unloadComplete) {
@@ -1299,7 +1299,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     let enablePerfMgr = details.cfg.enablePerfMgr;
                     if (enablePerfMgr) {
                         let createPerfMgr = details.cfg.createPerfMgr;
-                        if (prevCfgPerfMgr !== createPerfMgr) {
+                        // for preCfgPerfMgr = createPerfMgr = null
+                        // initial createPerfMgr function should be _createPerfManager
+                        if ((prevCfgPerfMgr !== createPerfMgr) || !prevCfgPerfMgr) {
                             if (!createPerfMgr) {
                                 createPerfMgr = _createPerfManager;
                             }
@@ -1473,7 +1475,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
      * @param unloadComplete - An optional callback that will be called once the unload has completed
      * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
      * unload. Defaults to 5 seconds.
-     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * @returns Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * will only be returned when no callback is provided and isAsync is true
      */
@@ -1561,7 +1563,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
+     * @param handler - The watcher handler to call when the config changes
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook {

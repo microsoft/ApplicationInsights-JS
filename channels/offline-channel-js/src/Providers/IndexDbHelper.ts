@@ -39,8 +39,9 @@ const ErrorMessageFailedToOpenCursor = "DBError: Failed to Open Cursor";
 let _dbContext: IDbContext[] = [];
 /**
  * Constructs the IDbContext instance
- * @param dbName The current database name
- * @param diagLog The diagnostics logger to use
+ * @param dbName - The current database name
+
+ * @param diagLog - The diagnostics logger to use
  */
 function _getDbContext(dbName: string, diagLog?: IDiagnosticLogger): IDbContext {
     let dbCtx: IDbContext = null;
@@ -91,8 +92,8 @@ function _getDbContext(dbName: string, diagLog?: IDiagnosticLogger): IDbContext 
  * rejectEvent will be executed. This is used to ensure that we don't attempt to execute events out of order such as attempting to removed
  * an event from the indexedDb before the insertion of the event has completed. Only one of the startEvent or unableToStateEvent callbacks
  * functions will be called.
- * @param startEvent The event to execute after all outstanding events are complete, may be called synchronously or asynchronously.
- * @param actionName The name of the action being performed
+ * @param startEvent - The event to execute after all outstanding events are complete, may be called synchronously or asynchronously.
+ * @param actionName - The name of the action being performed
  */
 function _scheduleEvent<T>(dbName: string, actionName: string, startEvent: StartQueuedTaskFn<T>, evtTimeOut?: number): IPromise<T> {
     // Create or fetch the current scheduler for this dbName
@@ -608,7 +609,7 @@ export class IndexedDbHelper<C> {
      * This method will return immediately, however, the scheduled event to close the open Db handles will not occur until all outstanding database operations
      * (openDb, deleteDb, getDbDetails) started by IndexedDbHelper for the named db have completed. This will NOT affect or wait for any open database handles
      * which have been directly opened by the IndexedDB Api.
-     * @param dbName The name of the database to close, no error will be returned if the database does not exist or was not opened.
+     * @param dbName - The name of the database to close, no error will be returned if the database does not exist or was not opened.
      */
     public closeDb(dbName: string): void {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
@@ -619,7 +620,7 @@ export class IndexedDbHelper<C> {
      * It will also wait for all Promise objects from previous openDb, closeDb, getDbDetails to complete (resolve or reject) before attempting to
      * perform the delete operation. This operation may block or fail if the database is opened outstide of the IndexedDbHelper
      * The returned promise will be resolved or rejected depending on the outcome of the delete operation.
-     * @param dbName The name of the database to delete
+     * @param dbName - The name of the database to delete
      */
     public deleteDb(dbName: string): boolean | IPromise<boolean> {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
@@ -631,7 +632,7 @@ export class IndexedDbHelper<C> {
      * This method requires that the underlying browser support draft specification for IDBFactory.databases, if this is not supported then the returned
      * Promise will be rejected with an error message stating that the feature is not supported.
      * The returned Promise will be resolved with the details if available or rejected on error.
-     * @param dbName The name of the database to request the details for
+     * @param dbName - The name of the database to request the details for
      */
     public getDbDetails(dbName: string): IPromise<IIndexedDbDetails> {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
@@ -759,29 +760,28 @@ class SimpleQuery implements IIndexedDbSimpleQuery {
      * Processes the provided string and attempts to create a simple query from the values, this can be a ';' seperated list of values where each value represents a
      * <key>=<value> set with <key> being the property name to match and <value> being the value. If the <key> is prefixed with a '#' character then this will be used to as
      * the query "key" and will populate the keyRange() returned by the keyRange() method.
-     * @param query
-     */
+     * @param query - */
     public parseQuery?(query: string): void;
 
     /**
      * Creates a simple "startsWith" check. This is same as passing "<columnName>=<value>" to the parseQuery() method.
-     * @param columnName The property of the returned object
-     * @param value The value of the property from the returned object to perform a startsWith() match against
+     * @param columnName - The property of the returned object
+     * @param value - The value of the property from the returned object to perform a startsWith() match against
      */
     public startsWith?(columnName: string, value: string): void;
 
     /**
      * Creates a simple "contains" check. This will create a search query that will return true whenever the <columnName> value contains <value>
      * anywhere in the resulting string (i.e. it performs an xxxx.indexOf(<value>) != -1)
-     * @param columnName The property of the returned object
-     * @param value The value of the property from the returned object to perform a startsWith() match against
+     * @param columnName - The property of the returned object
+     * @param value - The value of the property from the returned object to perform a startsWith() match against
      */
     public contains?(columnName: string, value: string): void;
 
     /**
      * [Optional] Callback method used to provide additional validation on whether the returned value from the IndexedDB Api cursor iteration, this method
      * must return true for the processFunc() of the openCursor() is called or the value is just added to the identified items.
-     * @param value The value returned by the IndexedDB IDBCursorWithValue cursor event.
+     * @param value - The value returned by the IndexedDB IDBCursorWithValue cursor event.
      * @returns true if the value matches otherwise false
      */
     public isMatch?(value: any): boolean;

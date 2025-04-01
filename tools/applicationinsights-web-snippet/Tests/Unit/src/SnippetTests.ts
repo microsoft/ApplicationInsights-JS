@@ -65,5 +65,37 @@ export class SnippetTests extends AITestClass {
                 QUnit.assert.notEqual(-1, theSnippet.indexOf(key), "key is injected");
             }
         });
+
+        this.testCase({
+            name: "Verify config object doesn't include invalid keys",
+            test: () => {
+                let key = "InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/";
+                let config = {
+                    connectionString: key, 
+                    instrumentationKey: key,
+                    sri: { "</script>": "bad" },
+                    cr: "</script>",
+                    name: "</script>Name<script>alert('xss');</script>",
+                };
+                let theSnippet = getSdkLoaderScript(config);
+                QUnit.assert.ok(theSnippet.indexOf("</script>") === -1, "Make sure the Snippet does not contain </script> - " + theSnippet);
+                QUnit.assert.ok(theSnippet.indexOf("/script") !== -1, "Make sure the / character is not escaped - " + theSnippet);
+            }
+        });
+
+        this.testCase({
+            name: "Verify that the / character is not escaped",
+            test: () => {
+                let key = "InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/";
+                let config = {
+                    connectionString: key, 
+                    instrumentationKey: key
+                };
+                let theSnippet = getSdkLoaderScript(config);
+                QUnit.assert.ok(theSnippet.indexOf("https://eastus-8.") !== -1, "Make sure the / character is not escaped - " + theSnippet);
+                QUnit.assert.ok(theSnippet.indexOf("LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/") !== -1, "Make sure the / character is not escaped - " + theSnippet);
+            }
+        });
+
     }
 }

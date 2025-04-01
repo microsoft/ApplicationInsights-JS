@@ -3,8 +3,13 @@ import commonjs from "@rollup/plugin-commonjs";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
 import cleanup from "rollup-plugin-cleanup";
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup";
 import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
+import { resolve } from 'path';
+import { readFileSync } from "fs";
+
+const rootVersion = require("./package.json").version;
 
 const treeshakeCfg = {
     // preset: "smallest",
@@ -122,7 +127,151 @@ const getOutro = (format, theNameSpace, moduleName, version) => {
     return theOutro;
 }
 
-const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', useStrict = true, topLevel = false) => {
+let rNodeModule = /(.*[\\\/]node_modules[\\\/])((@\w+[\\\/]){0,1}([^\\\/]+))(.*)$/;
+let tLocalPackage = /^((\.\.\/)+)(\w+\/\w+)(\/.*\.ts)$/;
+let packageVerCache = { };
+
+function getPackageVer(source) {
+    let grps = rNodeModule.exec(source);
+    if (grps && grps.length > 5) {
+        if (!packageVerCache[grps[2]]) {
+            let pkg = readFileSync(grps[1] + grps[2] + "/package.json");
+            if (pkg) {
+                let ver = JSON.parse(pkg).version;
+
+                packageVerCache[grps[2]] = {
+                    name: grps[2],
+                    ver: ver,
+                    src: source,
+                    path: grps[5]
+                };
+            }
+        }
+
+        return packageVerCache[grps[2]];
+    }
+
+    return null;
+}
+
+function getLocalPackageVer(source, absPath) {
+    let grps = tLocalPackage.exec(source);
+    if (grps && grps.length > 4) {
+        if (!packageVerCache["local:" + grps[3]]) {
+            let idx = absPath.indexOf(grps[3] + "/");
+            if (idx != -1) {
+                let basePath = absPath.substring(0, idx + grps[3].length);
+                let pkg = readFileSync(basePath + "/package.json");
+                if (pkg) {
+                    let ver = JSON.parse(pkg).version;
+
+                    packageVerCache["local:" + grps[3]] = {
+                        name: grps[3],
+                        ver: ver,
+                        src: source,
+                        path: grps[4]
+                    };
+                }
+            }
+        }
+
+        return packageVerCache["local:" + grps[3]];
+    }
+
+    return null;
+}
+
+const NODE_MODULES_SRC = {
+    //"@nevware21/ts-async": "https://raw.githubusercontent.com/nevware21/ts-async/refs/tags/{version}{path}",
+    "@microsoft/dynamicproto-js": "https://raw.githubusercontent.com/microsoft/dynamicproto-js/refs/tags/{version}/lib{path}",
+    "tools/shims": "https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/refs/tags/{rootVersion}/tools/shims{path}"
+};
+
+function getSourceMapPathTransformer(distPath, theNameSpace) {
+    let rDistPath = /(.*[\\\/](dist|browser)(.es\d)?)([\\\/].*)$/;
+
+    let lastIdx = (theNameSpace.replace(/\\/g, "/")).lastIndexOf("/");
+    if (lastIdx != -1 && lastIdx !== theNameSpace.length - 1) {
+        // Strip off any leading path separators (snippet)
+        theNameSpace = theNameSpace.substring(0, lastIdx);
+    }
+
+    return (sourcePath) => {
+        let normalizedPath = sourcePath.replace(/\\/g, "/");
+        console.log(`NormalizedPath: ${normalizedPath}, distPath: ${distPath}, ns: ${theNameSpace}, dirname: ${__dirname}`);
+
+        // The resolved path that we will return as the "node" path
+        let resolvedPath = null;
+
+        let httpIdx = normalizedPath.indexOf("https:/");
+        if (httpIdx != -1) {
+            // Just reuse any https:// path as-is
+            resolvedPath = "https://" + normalizedPath.substring(httpIdx + 7);
+        }
+
+        // const absoluteSourcePath = resolve(distPath, sourcePath).replace(/\\/g, "/");
+        const absPath = resolve(distPath, normalizedPath).replace(/\\/g, "/");
+        if (!resolvedPath) {
+            console.log(` -- Absolute: ${absPath}`);
+            let idx = absPath.indexOf("node_modules");
+            if (idx != -1) {
+                console.log(` -- NodeModule: ${absPath}`);
+                let ver = getPackageVer(absPath);
+                if (ver) {
+                    console.log(` -- PackageVer: ${ver.name}@${ver.ver}`);
+                    let src = NODE_MODULES_SRC[ver.name];
+                    if (src) {
+                        resolvedPath = src.replace("{rootVersion}", rootVersion).replace("{version}", ver.ver).replace("{path}", ver.path);
+                    }
+
+                    if (!resolvedPath) {
+                        resolvedPath = "node_modules/" + ver.name + "@" + ver.ver + ver.path;
+                    }
+                }
+            }
+        }
+
+        if (!resolvedPath) {
+            let localVer = getLocalPackageVer(normalizedPath, absPath);
+            if (localVer) {
+                let src = NODE_MODULES_SRC[localVer.name];
+                if (src) {
+                    resolvedPath = src.replace("{rootVersion}", rootVersion).replace("{version}", localVer.ver).replace("{path}", localVer.path);
+                }
+            }
+        }
+
+        if (!resolvedPath && normalizedPath.startsWith("../")) {
+            // Just remove all leading relative path indicators
+            resolvedPath = theNameSpace + normalizedPath.replace(/\.\.\//g, "/").replace(/\/\//g, "/");
+
+        }
+
+        if (!resolvedPath) {
+            let distGrps = rDistPath.exec(absPath);
+            if (distGrps && distGrps.length > 4) {
+                resolvedPath = theNameSpace + distGrps[4];
+            }
+        }
+
+        if (!resolvedPath) {
+            resolvedPath = theNameSpace + "/" + absPath;
+        }
+
+        // Cleanup the path
+        resolvedPath = resolvedPath.replace(/\.\.\//g, "oo/").replace(/([^:])\/\//g, "$1/");
+
+        if (!resolvedPath) {
+            // Just leave the original path as-is for now.
+            resolvedPath = sourcePath;
+        }
+
+        console.log(` -- resolvedPath: ${resolvedPath}`);
+        return resolvedPath;
+    };
+}
+
+const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, theVersion, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', useStrict = true, topLevel = false) => {
     var outPath = isOneDs ? "bundle" : "browser";
     var thePostfix = `${postfix}`;
     if (libVersion) {
@@ -132,6 +281,7 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
     var outputPath = `${outPath}/${targetType}/${outputName}${teamExt}${thePostfix}.js`;
     var prodOutputPath = `${outPath}/${targetType}/${outputName}${teamExt}${thePostfix}.min.js`;
     var inputPath = `${entryInputName}.js`;
+    var rootNamespace = outputName + (theVersion ? ("@" + theVersion) : "");
 
     const browserRollupConfig = {
         input: inputPath,
@@ -143,12 +293,14 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
             extend: true,
             freeze: false,
             sourcemap: true,
+            sourcemapPathTransform: getSourceMapPathTransformer(`${outPath}/${targetType}`, rootNamespace),
             strict: false,
             intro: getIntro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver, useStrict),
             outro: getOutro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver)
         },
         treeshake: treeshakeCfg,
         plugins: [
+            sourcemaps(),
             dynamicRemove(),
             replace({
                 preventAssignment: true
@@ -192,12 +344,13 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
     return browserRollupConfig;
 };
 
-const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, isProduction, topLevel = false) => {
+const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNameSpace, theVersion, entryInputName, outputName, isProduction, topLevel = false) => {
 
     // console.log(`Node: ${targetType}, ${entryInputName}`);
     var outputPath = `dist/${targetType}/${outputName}.js`;
     var prodOutputPath = `dist/${targetType}/${outputName}.min.js`;
     var inputPath = `${entryInputName}.js`;
+    var rootNamespace = outputName + "@" + theVersion;
 
     const nodeRollupConfig = {
         input: inputPath,
@@ -208,10 +361,12 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             name: theNameSpace,
             extend: true,
             freeze: false,
-            sourcemap: true
+            sourcemap: true,
+            sourcemapPathTransform: getSourceMapPathTransformer(`dist/${targetType}`, rootNamespace),
         },
         treeshake: treeshakeCfg,
         plugins: [
+            sourcemaps(),
             dynamicRemove(),
             replace({
                 preventAssignment: true
@@ -259,8 +414,8 @@ export function createConfig(banner, cfg, importCheckNames, isOneDs) {
         let entryPoint = `${inputPath}/${cfg.node.entryPoint}`;
 
         tasks.push(
-            nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, entryPoint, cfg.node.outputName, true),
-            nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, entryPoint, cfg.node.outputName, false)
+            nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.version, entryPoint, cfg.node.outputName, true),
+            nodeUmdRollupConfigFactory(banner, importCheckNames, targetType, cfg.namespace, cfg.version, entryPoint, cfg.node.outputName, false)
         );
     }
 
@@ -320,10 +475,10 @@ export function createConfig(banner, cfg, importCheckNames, isOneDs) {
         let entryPoint = `${inputPath}/${cfg.browser.entryPoint}`;
 
         tasks.push(
-            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, majorVersion, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
-            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, majorVersion, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
-            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
-            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel)
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, majorVersion, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, majorVersion, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, cfg.version, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
+            browserRollupConfigFactory(isOneDs, banner, importCheckNames, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, cfg.version, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel)
         );
     }
 
@@ -341,8 +496,8 @@ export function createUnVersionedConfig(banner, cfg, importCheckName, isOneDs) {
         let entryPoint = `${inputPath}/${cfg.node.entryPoint}`;
 
         tasks.push(
-            nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, entryPoint, cfg.node.outputName, true),
-            nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, entryPoint, cfg.node.outputName, false)
+            nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.version, entryPoint, cfg.node.outputName, true),
+            nodeUmdRollupConfigFactory(banner, importCheckName, targetType, cfg.namespace, cfg.version, entryPoint, cfg.node.outputName, false)
         );
     }
 
@@ -395,8 +550,8 @@ export function createUnVersionedConfig(banner, cfg, importCheckName, isOneDs) {
         let entryPoint = `${inputPath}/${cfg.browser.entryPoint}`;
 
         tasks.push(
-            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, noVersion, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
-            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, noVersion, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel)
+            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, noVersion, true, browserFmt, browserPostfix, browserTeam, useStrict, topLevel),
+            browserRollupConfigFactory(isOneDs, banner, importCheckName, targetType, browserNamespace, entryPoint, cfg.browser.outputName, cfg.version, noVersion, false, browserFmt, browserPostfix, browserTeam, useStrict, topLevel)
         );
     }
 

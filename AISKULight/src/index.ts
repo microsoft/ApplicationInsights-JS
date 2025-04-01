@@ -29,15 +29,13 @@ function _chkDiagLevel(value: number) {
 
 /**
  * @export
- * @class ApplicationInsights
  */
 export class ApplicationInsights {
     public readonly config: IConfiguration & IConfig;
 
     /**
      * Creates an instance of ApplicationInsights.
-     * @param config
-     * @memberof ApplicationInsights
+     * @param config - The configuration to use for this ApplicationInsights instance
      */
     constructor(config: IConfiguration & IConfig) {
         let core = new AppInsightsCore();
@@ -148,7 +146,6 @@ export class ApplicationInsights {
     /**
      * Initialize this instance of ApplicationInsights
      *
-     * @memberof ApplicationInsights
      */
     public initialize(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -156,9 +153,7 @@ export class ApplicationInsights {
 
     /**
      * Send a manually constructed custom event
-     *
-     * @param item
-     * @memberof ApplicationInsights
+     * @param item - The custom event to send
      */
     public track(item: ITelemetryItem) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -166,8 +161,7 @@ export class ApplicationInsights {
 
     /**
      * Immediately send all batched telemetry
-     * @param [async=true]
-     * @memberof ApplicationInsights
+     * @param async - Should the flush be performed asynchronously
      */
     public flush(async: boolean = true) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -192,7 +186,7 @@ export class ApplicationInsights {
      * @param unloadComplete - An optional callback that will be called once the unload has completed
      * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
      * unload. Defaults to 5 seconds.
-     * @return Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * @returns Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * will only be returned when no callback is provided and isAsync is true
      */
@@ -203,7 +197,7 @@ export class ApplicationInsights {
 
     /**
      * Find and return the (first) plugin with the specified identifier if present
-     * @param pluginIdentifier
+     * @param pluginIdentifier - The identifier of the plugin to search for
      */
     public getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -262,7 +256,7 @@ export class ApplicationInsights {
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
+     * @param handler - The handler to call when the configuration changes
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<IConfiguration>): IUnloadHook {

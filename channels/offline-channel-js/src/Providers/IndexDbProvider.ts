@@ -406,8 +406,8 @@ export class IndexedDbProvider implements IOfflineProvider {
 
             /**
              * Removes the values
-             * @param evts
-             */
+             * @param evts - */
+
             _this.removeEvents = (evts: IStorageTelemetryItem[]) => {
                 if (_indexedDb == null || !_indexedDb.isAvailable()) {
                     return [];
@@ -611,7 +611,7 @@ export class IndexedDbProvider implements IOfflineProvider {
 
     /**
      * Initializes the provider using the config
-     * @param providerContext The provider context that should be used to initialize the provider
+     * @param providerContext - The provider context that should be used to initialize the provider
      * @returns True if the provider is initialized and available for use otherwise false
      */
     public initialize(providerContext: ILocalStorageProviderContext): boolean {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { createAsyncRejectedPromise, doAwait, IPromise } from "@nevware21/ts-async";
 import { MessageSource, MessageType } from "../Enums";
 import { IMessage } from "../interfaces/IMessage";
 import { IDataSource } from "./IDataSource";
@@ -21,7 +22,7 @@ export class DefaultDataSource implements IDataSource {
         let nextListenerId: number = 0;
 
         if (!urls || urls.length === 0) {
-            urls = ["*://*.microsoft.com/OneCollector/*", "*://*.visualstudio.com/v2/track*"]
+            urls = ["*://*.microsoft.com/OneCollector/*", "*://*.visualstudio.com/v2/track*", "*://*.eastus-8.in.applicationinsights.azure.com/v2/track*"];
         }
 
         _self.startListening = (): void => {
@@ -51,27 +52,90 @@ export class DefaultDataSource implements IDataSource {
         _self.removeListener = (id: number): boolean => {
             return listeners.delete(id);
         };
+
+        function isGzip(data: ArrayBuffer): boolean {
+            const checkGzip = new Uint8Array(data);
+            if (checkGzip[0] === 0x1F && checkGzip[1] === 0x8B) {
+                return true;
+            }
+            return false;
+        }
+
+        function decompressEvents(compressedString: ArrayBuffer): IPromise<Uint8Array> {
+            const DecompressionStream = (window as any).DecompressionStream;
+        
+            if (DecompressionStream && typeof DecompressionStream !== "undefined") {
+                // If DecompressionStream is available, use it
+                const binaryData = new Uint8Array(compressedString);
+        
+                // Create a ReadableStream from the Uint8Array
+                const compressedReadableStream = new ReadableStream({
+                    start(controller) {
+                        controller.enqueue(binaryData);
+                        controller.close();
+                    }
+                });
+        
+                // Pipe through the DecompressionStream (gzip)
+                const decompressedReadableStream = compressedReadableStream.pipeThrough(
+                    new DecompressionStream("gzip")
+                );
+        
+                // Read the decompressed stream and return a Uint8Array
+                return new Response(decompressedReadableStream)
+                    .arrayBuffer()
+                    .then((decompressedBuffer) => {
+                        return new Uint8Array(decompressedBuffer); // Return the decompressed data as Uint8Array
+                    });
+            } else {
+                return createAsyncRejectedPromise(new Error("DecompressionStream is not supported in this environment."));
+            }
+        }
+
+        function processEvents(events: string[] | null, details: chrome.webRequest.WebRequestBodyDetails): void {
+            if (events) {
+                for (let i = events.length - 1; i >= 0; i--) {
+                    try {
+                        const event = JSON.parse(events[i]);
+                        if (event !== undefined) {
+                            if (Array.isArray(event)) {
+                                for (const subEvent of event) {
+                                    _handleMessage(subEvent, details);
+                                }
+                            } else {
+                                _handleMessage(event, details);
+                            }
+                        }
+                    } catch (e) {
+                        // Ignore
+                    }
+                }
+            }
+        }
     
         function _processWebRequest(details: chrome.webRequest.WebRequestBodyDetails): void {
             if (details && (details.type === "xmlhttprequest" || details.type === "ping")) {
-                const events = details.requestBody && _convertToStringArray(details.requestBody.raw);
-                if (events) {
-                    for (let i = events.length - 1; i >= 0; i--) {
-                        try {
-                            const event = JSON.parse(events[i]);
-                            if (event !== undefined) {
-                                if (Array.isArray(event)) {
-                                    for (const subEvent of event) {
-                                        _handleMessage(subEvent, details);
-                                    }
-                                } else {
-                                    _handleMessage(event, details);
-                                }
+                if (details.requestBody && details.requestBody.raw) {
+     
+                    let gzipped = isGzip(details.requestBody.raw[0].bytes as ArrayBuffer);
+
+                    // console.log("Gzipped: " + gzipped);
+                    var events: string[] | null;
+                    if (gzipped) {
+                        doAwait(decompressEvents(details.requestBody.raw[0].bytes as ArrayBuffer), (decompressedData) => {
+                            if (decompressedData) {
+                                // console.log("After decompression:", decompressedData);
+                                events = _convertToStringArray([{bytes: decompressedData}]);
+                                processEvents(events, details);
+                            } else {
+                                // console.error("Decompression failed.");
                             }
-                        } catch (e) {
-                            // Ignore
-                        }
+                        });
+                    } else {
+                        events = details.requestBody && _convertToStringArray(details.requestBody.raw);
+                        processEvents(events, details);
                     }
+                    
                 }
             }
         }
