@@ -288,14 +288,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
 
-                    if (config.disableStatsBeat === false && _statsBeat && !_statsBeat.isInitialized()) {
-                        var endpointHost = urlParseUrl(senderConfig.endpointUrl).hostname;
+
+                    console.log("do we have statsbeat?", _statsBeat)
+                    if (config._sdk && config._sdk.intStats === true && _statsBeat && !_statsBeat.isInitialized()) {
+                        console.log("yes")
                         let statsBeatConfig = {
                             ikey: senderConfig.instrumentationKey,
-                            endpoint: senderConfig.endpointUrl,
+                            endpoint: urlParseUrl(senderConfig.endpointUrl).hostname,
                             version: EnvelopeCreator.Version
                         } as IStatsBeatConfig;
-                        // _statsBeat.initialize(core, statsBeatConfig); // uncomment this until throttle is implemented
+                        _statsBeat.initialize(core, statsBeatConfig);
                     }
 
                     if(isPromiseLike(senderConfig.instrumentationKey)) {

@@ -9,7 +9,7 @@ export class StatsBeatTests extends AITestClass {
     private _core: AppInsightsCore;
     private _config: IConfiguration;
     private _statsbeat: Statsbeat;
-    private _trackSpy: sinon.SinonSpy; // Fix: Properly type the spy
+    private _trackSpy: sinon.SinonSpy;
 
     constructor(emulateIe: boolean) {
         super("StatsBeatTests", emulateIe);
@@ -22,7 +22,9 @@ export class StatsBeatTests extends AITestClass {
         _self._config = {
             instrumentationKey: "Test-iKey",
             disableInstrumentationKeyValidation: true,
-            disableStatsBeat: false
+            _sdk: {
+                intStats: true  // Enable statsbeat by default
+            }
         };
         
         _self._core = new AppInsightsCore();
@@ -72,8 +74,8 @@ export class StatsBeatTests extends AITestClass {
                     urlString: "https://example.endpoint.com",
                     data: "testData",
                     headers: {},
-                    timeout: 0,  // Fix: Add required properties
-                    disableXhrSync: false, // Fix: Add required properties
+                    timeout: 0,
+                    disableXhrSync: false,
                     statsBeatData: {
                         startTime: "2023-10-01T00:00:00Z" // Simulated start time
                     }
@@ -114,7 +116,7 @@ export class StatsBeatTests extends AITestClass {
                 this._statsbeat.countException("https://example.endpoint.com", "NetworkError");
                 
                 // Verify that trackStatsbeats is called when the timer fires
-                this.clock.tick(900000 + 1); // STATS_COLLECTION_SHORT_INTERVAL + 1ms
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL + 1);
                 
                 // Verify that track was called
                 Assert.ok(this._trackSpy.called, "track should be called when statsbeat timer fires");
@@ -151,8 +153,8 @@ export class StatsBeatTests extends AITestClass {
                     urlString: "https://example.endpoint.com",
                     data: "testData",
                     headers: {},
-                    timeout: 0,  // Fix: Add required properties
-                    disableXhrSync: false, // Fix: Add required properties
+                    timeout: 0,
+                    disableXhrSync: false,
                     statsBeatData: {
                         startTime: Date.now()
                     }
@@ -182,7 +184,10 @@ export class StatsBeatTests extends AITestClass {
                 Assert.ok(statsbeat, "Statsbeat should be created");
                 
                 // Update configuration to disable statsbeat
-                this._core.config.disableStatsBeat = true;
+if (!this._core.config._sdk) {
+                this._core.config._sdk = {};
+                }
+                this._core.config._sdk.intStats = false;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
                 // Verify that statsbeat is removed
@@ -190,7 +195,7 @@ export class StatsBeatTests extends AITestClass {
                 Assert.ok(!updatedStatsbeat, "Statsbeat should be removed when disabled");
                 
                 // Re-enable statsbeat
-                this._core.config.disableStatsBeat = false;
+                this._core.config._sdk.intStats = true;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
                 // Verify that statsbeat is created again
@@ -202,19 +207,18 @@ export class StatsBeatTests extends AITestClass {
 }
 
 class ChannelPlugin implements IPlugin {
-
     public isFlushInvoked = false;
     public isTearDownInvoked = false;
     public isResumeInvoked = false;
     public isPauseInvoked = false;
 
     public identifier = "Sender";
-
     public priority: number = 1001;
 
     constructor() {
         this.processTelemetry = this._processTelemetry.bind(this);
     }
+    
     public pause(): void {
         this.isPauseInvoked = true;
     }
@@ -244,7 +248,6 @@ class ChannelPlugin implements IPlugin {
     }
 
     private _processTelemetry(env: ITelemetryItem) {
-
     }
 }
 

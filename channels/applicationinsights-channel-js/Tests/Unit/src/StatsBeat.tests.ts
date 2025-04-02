@@ -19,15 +19,14 @@ export class StatsbeatTests extends AITestClass {
         }
         this._sender = null;
         this._core = null;
-
     }
 
     public registerTests() {
         this.testCase({
-            name: "Statsbeat initializes when disableStatsBeat is false",
+            name: "Statsbeat initializes when intStats is true",
             test: () => {
                 let config = {
-                    disableStatsBeat: false,
+                    _sdk: {intStats: true},
                     instrumentationKey: "Test-iKey"
                 };
 
@@ -44,11 +43,11 @@ export class StatsbeatTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Statsbeat dynamically updates when disableStatsBeat changes",
+            name: "Statsbeat dynamically updates when intStats changes",
             useFakeTimers: true,
             test: () => {
                 let config = {
-                    disableStatsBeat: true,
+                    _sdk: {intStats: false},
                     instrumentationKey: "Test-iKey"
                 };
     
@@ -57,18 +56,21 @@ export class StatsbeatTests extends AITestClass {
     
                 // Initially, Statsbeat should be null
                 let statsbeat = this._core.getStatsBeat();
-                QUnit.assert.ok(!statsbeat, "Statsbeat is null when disableStatsBeat is true");
+                QUnit.assert.ok(!statsbeat, "Statsbeat is null when _sdk.intStats is false");
     
-                // Dynamically enable Statsbeat
-                this._core.config.disableStatsBeat = false;
+                // Dynamically enable Statsbeat using _sdk.intStats
+                if (!this._core.config._sdk) {
+                    this._core.config._sdk = {};
+                }
+                this._core.config._sdk.intStats = true;
                 this.clock.tick(1); // Simulate time passing for dynamic config update
     
                 statsbeat = this._core.getStatsBeat();
-                QUnit.assert.ok(statsbeat, "Statsbeat is initialized after enabling disableStatsBeat");
-                QUnit.assert.ok(statsbeat.isInitialized(), "Statsbeat is marked as initialized after enabling disableStatsBeat");
+                QUnit.assert.ok(statsbeat, "Statsbeat is initialized after enabling _sdk.intStats");
+                QUnit.assert.ok(statsbeat.isInitialized(), "Statsbeat is marked as initialized after enabling _sdk.intStats");
     
                 // Dynamically disable Statsbeat again
-                this._core.config.disableStatsBeat = true;
+                this._core.config._sdk.intStats = false;
                 this.clock.tick(1); // Simulate time passing for dynamic config update
     
                 statsbeat = this._core.getStatsBeat();

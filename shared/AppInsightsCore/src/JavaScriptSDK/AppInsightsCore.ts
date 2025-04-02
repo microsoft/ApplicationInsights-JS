@@ -78,7 +78,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
-    diagnosticLogInterval: UNDEFINED_VALUE
+    diagnosticLogInterval: UNDEFINED_VALUE,
+    _sdk: {intStats:false}
 });
 
 /**
@@ -360,11 +361,14 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     }
 
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
-                    if (config.disableStatsBeat === false){
+                    
+                    // uncomment this until throttle is implemented
+                    if (config._sdk.intStats === true){
                         _statsBeat = _statsBeat || new Statsbeat();
                     } else {
                         _statsBeat = null;
                     }
+
                     // app Insights core only handle ikey and endpointurl, aisku will handle cs
                     let ikey = rootCfg.instrumentationKey;
                     let endpointUrl = rootCfg.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
