@@ -406,7 +406,7 @@ function updatePublishConfig(package, newVersion) {
         }
 
         // Set the publishing tag
-        if (details.type === "nightly" || details.type === "dev" || details.type === "beta" || details.type === "alpha") {
+        if (details.type === "nightly" || details.type === "nightlybeta" || details.type === "dev" || details.type === "beta" || details.type === "alpha") {
             console.log(`   Type - [${details.type}] - ${majorVersion}`);
             package.publishConfig.tag = details.type + (majorVersion !== "0" ? majorVersion : "");
         } else {
