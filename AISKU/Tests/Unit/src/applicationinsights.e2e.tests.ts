@@ -793,7 +793,7 @@ export class ApplicationInsightsTests extends AITestClass {
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
             steps: [() => {
-                // Use pubic endpoint for V2
+                // Use public endpoint for V2
                 let random = utcNow();
                 // Under Cors Mode, Options request will be triggered
                 fetch(`https://js.monitor.azure.com/scripts/b/ai.2.gbl.min.js?${random}`, {
