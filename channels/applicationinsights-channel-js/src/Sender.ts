@@ -297,6 +297,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             version: EnvelopeCreator.Version
                         } as IStatsBeatConfig;
                         _statsBeat.initialize(core, statsBeatConfig);
+                    }
                     let corsPolicy = senderConfig.corsPolicy;
                     if (corsPolicy){
                         if (corsPolicy === "same-origin" || corsPolicy === "same-site" || corsPolicy === "cross-origin") {
@@ -696,7 +697,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 return;
                             }
                             _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
-                            onComplete(response.status, payload.headers, response.statusText);
+                            onComplete(-Math.abs(response.status), payload.headers, response.statusText);
                             return;
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
@@ -705,7 +706,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 return;
                             }
                             _xhrReadyStateChange(request, payloadArr, payloadArr.length);
-                            oncomplete(request.status, payload.headers, getResponseText(request));
+                            oncomplete(-Math.abs(request.status), payload.headers, getResponseText(request));
                             return;
                             
                         },
@@ -955,12 +956,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
+                    if (status >= 0){
+                        _getOnComplete(payload, status, headers, response);
+                    }
+                    status = Math.abs(status);
                     let statsbeat = _core.getStatsBeat();
                     if (statsbeat) {
                         var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                         statsbeat.count(status, payloadData, endpointHost);
                     }
-                    return _getOnComplete(payload, status, headers, response);
+                    return;
                 }
                 let payloadData = _getPayload(payload);
                 if (payloadData) {
