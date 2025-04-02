@@ -2740,6 +2740,77 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
+            name: 'Users could set the cross-origin header via request',
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                let id = this._sender.identifier;
+                let coreConfig = {
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: true,
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            corsPolicy: "cross-origin",
+                        }
+                    }
+                }
+                core.initialize(coreConfig, [this._sender]);
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                    this.clock.tick(30000);
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+                const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
+                let headers = this._getXhrRequests()[0].requestHeaders;
+                QUnit.assert.ok(headers.hasOwnProperty(CrossOriginResourcePolicyHeader));  
+                QUnit.assert.equal(headers[CrossOriginResourcePolicyHeader], 'cross-origin');
+                QUnit.assert.notOk(this._getXhrRequests()[0].requestHeaders.hasOwnProperty('testHeader'));
+
+                // dynamic change
+                core.config.extensionConfig[this._sender.identifier].corsPolicy = "same-origin";
+                this.clock.tick(1);
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                    this.clock.tick(30000);
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+                headers = this._getXhrRequests()[1].requestHeaders;                
+                QUnit.assert.ok(headers.hasOwnProperty(CrossOriginResourcePolicyHeader));  
+                QUnit.assert.equal(headers[CrossOriginResourcePolicyHeader], 'same-origin');
+                QUnit.assert.notOk(this._getXhrRequests()[1].requestHeaders.hasOwnProperty('testHeader'));
+
+                // dynamic change to null
+                core.config.extensionConfig[this._sender.identifier].corsPolicy = null;
+                this.clock.tick(1);
+                try {
+                    this._sender.processTelemetry(telemetryItem);
+                    this.clock.tick(30000);
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+                headers = this._getXhrRequests()[2].requestHeaders;                
+                QUnit.assert.notOk(this._getXhrRequests()[2].requestHeaders.hasOwnProperty(CrossOriginResourcePolicyHeader));
+            }
+        });
+
+        this.testCase({
             name: 'Users are allowed to add customHeaders when endpointUrl is not Breeze.',
             test: () => {
                 let sendBeaconCalled = false;
