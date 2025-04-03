@@ -29,6 +29,7 @@ import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotification
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
@@ -51,6 +52,7 @@ import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain
 } from "./ProcessTelemetryContext";
+import { Statsbeat } from "./StatsBeat";
 import { _getPluginState, createDistributedTraceContext, initializePlugins, sortPlugins } from "./TelemetryHelpers";
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
@@ -76,7 +78,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
-    diagnosticLogInterval: UNDEFINED_VALUE
+    diagnosticLogInterval: UNDEFINED_VALUE,
+    _sdk: {intStats:false}
 });
 
 /**
@@ -275,6 +278,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _logger: IDiagnosticLogger;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
+        let _statsBeat: IStatsBeat | null;
         let _perfManager: IPerfManager | null;
         let _cfgPerfManager: IPerfManager | null;
         let _cookieManager: ICookieMgr | null;
@@ -357,6 +361,14 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     }
 
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
+                    
+                    // uncomment this until throttle is implemented
+                    if (config._sdk.intStats === true){
+                        _statsBeat = _statsBeat || new Statsbeat();
+                    } else {
+                        _statsBeat = null;
+                    }
+
                     // app Insights core only handle ikey and endpointurl, aisku will handle cs
                     let ikey = rootCfg.instrumentationKey;
                     let endpointUrl = rootCfg.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
@@ -610,6 +622,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             _self.getPerfMgr = (): IPerfManager => {
                 return _perfManager || _cfgPerfManager || getGblPerfMgr();
+            };
+
+            _self.getStatsBeat = (): IStatsBeat => {
+                return _statsBeat;
             };
 
             _self.setPerfMgr = (perfMgr: IPerfManager) => {
@@ -1012,6 +1028,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
                 _perfManager = null;
+                _statsBeat = null;
                 _cfgPerfManager = null;
                 runTargetUnload(_cookieManager, false);
                 _cookieManager = null;
@@ -1420,6 +1437,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     public getPerfMgr(): IPerfManager {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public getStatsBeat(): IStatsBeat {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
