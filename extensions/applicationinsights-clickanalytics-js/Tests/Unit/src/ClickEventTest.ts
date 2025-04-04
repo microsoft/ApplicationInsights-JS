@@ -74,6 +74,7 @@ export class ClickEventTest extends AITestClass {
                 Assert.equal(extConfig.dropInvalidEvents, false, "dropInvalidEvents should be false by default");
                 Assert.equal(extConfig.urlCollectHash, false, "urlCollectHash should be false by default");
                 Assert.equal(extConfig.urlCollectQuery, false, "urlCollectQuery should be false by default");
+                Assert.equal(extConfig.shouldCaptureElement, null, "shouldCaptureElement should not be set by default");
                 Assert.deepEqual(extConfig.dataTags, dataTagsDefault, "udataTags should be set by default");
                 Assert.deepEqual(extConfig.coreData, coreDataDefault, "udataTags should be set by default");
 
@@ -91,13 +92,16 @@ export class ClickEventTest extends AITestClass {
                 Assert.equal(bhvVal(), "", "behaviorValidator should return ''");
                 Assert.equal(bhvVal(1), 1, "behaviorValidator should return key");
 
+                const shouldCaptureAllElements = () => true;
+
                 //config(non-Object) changes
                 let config = {
                     urlCollectHash: true,
                     urlCollectQuery: true,
                     dropInvalidEvents: true,
                     autoCapture: true,
-                    defaultRightClickBhvr: "click"
+                    defaultRightClickBhvr: "click",
+                    shouldCaptureElement: shouldCaptureAllElements
                 }
                 core.config.extensionConfig[id] = config;
                 this.clock.tick(1);
@@ -107,6 +111,7 @@ export class ClickEventTest extends AITestClass {
                 Assert.equal(extConfig.dropInvalidEvents, true, "dropInvalidEvents should be updated");
                 Assert.equal(extConfig.autoCapture, true, "autoCapture should be updated");
                 Assert.equal(extConfig.defaultRightClickBhvr, "click", "defaultRightClickBhvrshould be updated");
+                Assert.deepEqual(extConfig.shouldCaptureElement, shouldCaptureAllElements, "shouldCaptureElement be updated");
 
                 
                 //config(object) changes
@@ -216,6 +221,158 @@ export class ClickEventTest extends AITestClass {
                 Assert.equal("value2", calledEvent.data["properties"]["pageTags"].key2);
             }
 
+        });
+        
+        this.testCase({
+            name: "click on element with default tagname (A) is captured when no clickCaptureElements is provided",
+            test: () => {
+                let config = {
+                    coreData: {},
+                    callback: {
+                        pageActionPageTags: () => ({ key2: "value2" })
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:"ha-",
+                        customDataPrefix: "data-ha-",
+                        aiBlobAttributeTag: "blob",
+                        parentDataTag: "parent",
+                        dntDataTag: "donotTrack"
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+               
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"] ? core.config["extensionConfig"] : {};
+               
+                const element = window.document.createElement("a");
+                window.document.body.appendChild(element);
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+
+
+                const mouseEvent = new MouseEvent("mousedown", {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    button: 1
+                });
+                
+                element.dispatchEvent(mouseEvent);
+
+                Assert.equal(true, spy.called);
+            }
+        });
+
+        this.testCase({
+            name: "click on element with non-default tagname (DIV) is not captured when no clickCaptureElements is provided",
+            test: () => {
+                let config = {
+                    coreData: {},
+                    callback: {
+                        pageActionPageTags: () => ({ key2: "value2" })
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:"ha-",
+                        customDataPrefix: "data-ha-",
+                        aiBlobAttributeTag: "blob",
+                        parentDataTag: "parent",
+                        dntDataTag: "donotTrack"
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+               
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"] ? core.config["extensionConfig"] : {};
+               
+                const element = window.document.createElement("div");
+                window.document.body.appendChild(element);
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+
+                const mouseEvent = new MouseEvent("mousedown", {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    button: 1
+                });
+                
+                element.dispatchEvent(mouseEvent);
+
+                Assert.equal(false, spy.called);
+            }
+        });
+
+        this.testCase({
+            name: "click on element with non-default tagname (DIV) is captured when custom clickCaptureElements returns true",
+            test: () => {
+                let config = {
+                    coreData: {},
+                    callback: {
+                        pageActionPageTags: () => ({ key2: "value2" })
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:"ha-",
+                        customDataPrefix: "data-ha-",
+                        aiBlobAttributeTag: "blob",
+                        parentDataTag: "parent",
+                        dntDataTag: "donotTrack"
+                    },
+                    shouldCaptureElement: (e: Element) => (e.tagName.toUpperCase() === "DIV"),
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+               
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.config["extensionConfig"] =  core.config["extensionConfig"]?  core.config["extensionConfig"] : {};
+               
+                const element = window.document.createElement("div");
+                window.document.body.appendChild(element);
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+
+                const mouseEvent = new MouseEvent("mousedown", {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    button: 1
+                });
+                
+                element.dispatchEvent(mouseEvent);
+
+                Assert.equal(true, spy.called);
+            }
         });
 
         this.testCase({
