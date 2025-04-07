@@ -11,7 +11,7 @@ import {
     ITelemetryUnloadState, IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager,
     TransportType, _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean,
     cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr,
-    formatErrorMessageXhr, getExceptionName, getIEVersion, getResponseText, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined,
+    formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined,
     mergeEvtNamespace, objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
@@ -687,7 +687,28 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            // xdr could not pass in status code unless change the function signature
+                            console.log("XDR onComplete", xdr, payloadArr);
+                            const responseText = _getResponseText(xdr);
+                            let statsbeat = _core.getStatsBeat();
+                            var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                            if (xdr && (responseText + "" === "200" || responseText === "")) {
+                                _consecutiveErrors = 0;
+                                if (statsbeat) {
+                                    statsbeat.count(200, payload, endpointHost);
+                                }
+                            } else {
+                                const results = parseResponse(responseText);
+                    
+                                if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
+                                    && !_isRetryDisabled) {
+                                    if (statsbeat) {
+                                        statsbeat.count(201, payload, endpointHost);
+                                    }
+                                } else {
+                                    statsbeat.count(201, payload, endpointHost);
+                                }
+                            }
+
                             return _xdrOnLoad(xdr, payloadArr);
                            
                         },
@@ -696,24 +717,35 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
-                            onComplete(-Math.abs(response.status), payload.headers, response.statusText);
-                            return;
+                            console.log("Fetch onComplete", response, payloadArr);
+                            let statsbeat = _core.getStatsBeat();
+                            if (statsbeat) {
+                                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                                statsbeat.count(response.status, payload, endpointHost);
+                            }
+                            return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
                             let payloadArr = _getPayloadArr(payload);
                             if (!payloadArr) {
                                 return;
                             }
-                            _xhrReadyStateChange(request, payloadArr, payloadArr.length);
-                            oncomplete(-Math.abs(request.status), payload.headers, getResponseText(request));
-                            return;
-                            
+                            console.log("XHR onComplete", request, payloadArr);
+                            let statsbeat = _core.getStatsBeat();
+                            if (statsbeat && request.readyState === 4) {
+                                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                                statsbeat.count(request.status, payload, endpointHost);
+                            }
+                            return _xhrReadyStateChange(request, payloadArr, payloadArr.length);
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
-                            _onBeaconRetry(data, onComplete, canSend);
-                            onComplete(-1, data.headers); // don't know status code here, but we know it's already a failued request
-                            return;
+                            let statsbeat = _core.getStatsBeat();
+                            if (statsbeat) {
+                                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                                statsbeat.count(-1, data, endpointHost);
+                            }
+                            console.log("Beacon onRetry", data, canSend);
+                            return _onBeaconRetry(data, onComplete, canSend);
                         }
     
                     } as _ISenderOnComplete;
@@ -956,16 +988,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    if (status >= 0){
-                        _getOnComplete(payload, status, headers, response);
-                    }
-                    status = Math.abs(status);
                     let statsbeat = _core.getStatsBeat();
                     if (statsbeat) {
                         var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                         statsbeat.count(status, payloadData, endpointHost);
                     }
-                    return;
+                    return _getOnComplete(payload, status, headers, response);
                 }
                 let payloadData = _getPayload(payload);
                 if (payloadData) {
