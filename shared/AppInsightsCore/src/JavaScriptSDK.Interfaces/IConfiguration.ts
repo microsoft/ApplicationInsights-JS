@@ -229,5 +229,5 @@ export interface IInternalSdkConfiguration {
      * [Optional] Enable Internal StatsBeat
      * @internal
      */
-    intStats?: boolean;
+    stats?: boolean;
 }

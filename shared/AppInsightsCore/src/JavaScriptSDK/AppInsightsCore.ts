@@ -79,7 +79,7 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
     diagnosticLogInterval: UNDEFINED_VALUE,
-    _sdk: {intStats:false}
+    _sdk: {stats:false}
 });
 
 /**
@@ -363,7 +363,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
                     
                     // uncomment this until throttle is implemented
-                    if (config._sdk.intStats === true){
+                    if (config._sdk.stats === true){
                         _statsBeat = _statsBeat || new Statsbeat();
                     } else {
                         _statsBeat = null;

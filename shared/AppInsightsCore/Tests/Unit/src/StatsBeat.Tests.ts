@@ -23,7 +23,7 @@ export class StatsBeatTests extends AITestClass {
             instrumentationKey: "Test-iKey",
             disableInstrumentationKeyValidation: true,
             _sdk: {
-                intStats: true  // Enable statsbeat by default
+                stats: true  // Enable statsbeat by default
             }
         };
         
@@ -187,7 +187,7 @@ export class StatsBeatTests extends AITestClass {
 if (!this._core.config._sdk) {
                 this._core.config._sdk = {};
                 }
-                this._core.config._sdk.intStats = false;
+                this._core.config._sdk.stats = false;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
                 // Verify that statsbeat is removed
@@ -195,7 +195,7 @@ if (!this._core.config._sdk) {
                 Assert.ok(!updatedStatsbeat, "Statsbeat should be removed when disabled");
                 
                 // Re-enable statsbeat
-                this._core.config._sdk.intStats = true;
+                this._core.config._sdk.stats = true;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
                 // Verify that statsbeat is created again

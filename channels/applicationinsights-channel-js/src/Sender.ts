@@ -290,7 +290,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
 
-                    if (config._sdk && config._sdk.intStats === true && _statsBeat && !_statsBeat.isInitialized()) {
+                    if (config._sdk && config._sdk.stats === true && _statsBeat && !_statsBeat.isInitialized()) {
                         let statsBeatConfig = {
                             ikey: senderConfig.instrumentationKey,
                             endpoint: urlParseUrl(senderConfig.endpointUrl).hostname,
@@ -687,7 +687,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            console.log("XDR onComplete", xdr, payloadArr);
                             const responseText = _getResponseText(xdr);
                             let statsbeat = _core.getStatsBeat();
                             var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
@@ -717,7 +716,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            console.log("Fetch onComplete", response, payloadArr);
                             let statsbeat = _core.getStatsBeat();
                             if (statsbeat) {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
@@ -730,7 +728,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            console.log("XHR onComplete", request, payloadArr);
                             let statsbeat = _core.getStatsBeat();
                             if (statsbeat && request.readyState === 4) {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
