@@ -267,7 +267,7 @@ export interface IChannelConfiguration {
      * [Optional] If set to false and the CompressionStream API is available, the payload will be compressed using the CompressionStream API.
      * Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied.
      * Note: if user set payloadPreprocessor, this zip compression will not be applied.
-     * @default true 
+     * @default true
      * @since 4.3.7
      * Starting from minor version 4.4, the default will be changed to false (compression enabled by default).
     */
