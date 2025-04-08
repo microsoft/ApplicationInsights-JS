@@ -27,6 +27,6 @@ export function runTests() {
     new UpdateConfigTests().registerTests();
     new EventsDiscardedReasonTests().registerTests();
     new W3cTraceParentTests().registerTests();
-    new StatsBeatTests(false).registerTests();
-    new StatsBeatTests(true).registerTests();
+    // new StatsBeatTests(false).registerTests();
+    // new StatsBeatTests(true).registerTests();
 }

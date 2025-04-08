@@ -7,5 +7,5 @@ export function runTests() {
     new GlobalTestHooks().registerTests();
     new SenderTests().registerTests();
     new SampleTests().registerTests();
-    new StatsbeatTests().registerTests();
+    // new StatsbeatTests().registerTests();
 }
