@@ -1059,17 +1059,14 @@ export class HttpManager {
             }
 
             function _preparePayload(callback: (processedPayload: IPayloadData) => void, payload: IPayloadData, isSync: boolean) {
-                if (_disableZip || isSync) {
+                if (_disableZip || isSync || !payload.data) {
+                    // If body is null or undefined, we don't need to compress it
                     callback(payload);
                     return;
                 }
+
                 const CompressionStream = (window as any).CompressionStream;
 
-                if (!payload.data){
-                    // If body is null, fallback to uncompressed
-                    callback(payload);
-                    return;
-                }
                 // Compression logic
                 const uint8Data = typeof payload.data === "string"
                     ? new TextEncoder().encode(payload.data)
@@ -1081,41 +1078,37 @@ export class HttpManager {
                         controller.close();
                     }
                 });
-
-                if (body) {
-                    const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
-                    const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
-                    const chunks: Uint8Array[] = [];
-                    let totalLength = 0;
-            
-                    return reader.read().then(function processChunk({ done, value }: { done: boolean, value?: Uint8Array }): IPromise<void> {
-                        if (done) {
-                            // Combine all chunks into a single Uint8Array
-                            const combined = new Uint8Array(totalLength);
-                            let offset = 0;
-                            for (const chunk of chunks) {
-                                combined.set(chunk, offset);
-                                offset += chunk.length;
-                            }
-                            payload.data = combined;
-                            payload.headers["Content-Encoding"] = "gzip";
-                            callback(payload);
-                            const resolvedPromise: IPromise<void> = createPromise((resolve, reject) => {
-                                resolve();
-                            });
-                            return resolvedPromise;
-                        } else {
-                            chunks.push(value);
-                            totalLength += value.length;
-                            return reader.read().then(processChunk);
+    
+                const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
+                const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
+                const chunks: Uint8Array[] = [];
+                let totalLength = 0;
+        
+                return reader.read().then(function processChunk({ done, value }: { done: boolean, value?: Uint8Array }): IPromise<void> {
+                    if (done) {
+                        // Combine all chunks into a single Uint8Array
+                        const combined = new Uint8Array(totalLength);
+                        let offset = 0;
+                        for (const chunk of chunks) {
+                            combined.set(chunk, offset);
+                            offset += chunk.length;
                         }
-                    }).catch(() => {
-                        // Fallback to sending uncompressed data
+                        payload.data = combined;
+                        payload.headers["Content-Encoding"] = "gzip";
                         callback(payload);
-                    });
-                }
-                // If body is null, fallback to uncompressed
-                callback(payload);
+                        const resolvedPromise: IPromise<void> = createPromise((resolve, reject) => {
+                            resolve();
+                        });
+                        return resolvedPromise;
+                    } else {
+                        chunks.push(value);
+                        totalLength += value.length;
+                        return reader.read().then(processChunk);
+                    }
+                }).catch(() => {
+                    // Fallback to sending uncompressed data
+                    callback(payload);
+                });
             }
 
             function _addEventCompletedTimings(theEvents: IPostTransmissionTelemetryItem[], sendEventCompleted: number) {
