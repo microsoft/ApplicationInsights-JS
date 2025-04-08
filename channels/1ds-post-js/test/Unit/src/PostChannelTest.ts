@@ -1890,8 +1890,8 @@ export class PostChannelTest extends AITestClass {
                 this.clock.tick(1);
                 let data = sentRequests[0].payload.data.split('\n');
                 QUnit.assert.equal(data.length, 100, 'There should be 100 events per batch');
-                QUnit.assert.equal(sendEvents.length, 6, '6 request should now have been sent');
-                QUnit.assert.equal(sentRequests.length, 6, '6 request should now have been sent');
+                QUnit.assert.equal(sendEvents.length, 6, '6 requests should now have been sent');
+                QUnit.assert.equal(sentRequests.length, 6, '6 requests should now have been sent');
                 QUnit.assert.equal(discardEvents.length, 0, 'Nothing should have been discarded as the events are scheduled to be sent');
             }
         });
