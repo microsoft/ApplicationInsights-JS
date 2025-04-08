@@ -40,6 +40,12 @@ export interface IChannelConfiguration {
     eventsLimitInMem?: number;
 
     /**
+     * [Optional] The max number of events that can be kept in each event batch to be sent out. By default, this is 500.
+     * Available for versions after 4.3.6
+     */
+    maxEventsPerBatch?: number;
+
+    /**
      * [Optional] Sets the maximum number of immediate latency events that will be cached in memory before the SDK starts to drop other
      * immediate events only, does not drop normal and real time latency events as immediate events have their own internal queue. Under
      * normal situations immediate events are scheduled to be sent in the next Javascript execution cycle, so the typically number of
