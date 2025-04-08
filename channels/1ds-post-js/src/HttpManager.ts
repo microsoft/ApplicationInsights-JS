@@ -12,6 +12,7 @@ import {
     getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
     isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
+import { IPromise, createPromise } from "@nevware21/ts-async";
 import { arrAppend } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
@@ -1057,31 +1058,64 @@ export class HttpManager {
                 }
             }
 
-            function _preparePayload(callback, payload, isSync) {
+            function _preparePayload(callback: (processedPayload: IPayloadData) => void, payload: IPayloadData, isSync: boolean) {
                 if (_disableZip || isSync) {
                     callback(payload);
                     return;
                 }
                 const CompressionStream = (window as any).CompressionStream;
+
+                if (!payload.data){
+                    // If body is null, fallback to uncompressed
+                    callback(payload);
+                    return;
+                }
                 // Compression logic
-                let body = new Response(payload.data).body;
+                const uint8Data = typeof payload.data === "string"
+                    ? new TextEncoder().encode(payload.data)
+                    : payload.data;
+
+                let body = new ReadableStream<Uint8Array>({
+                    start(controller) {
+                        controller.enqueue(uint8Data);
+                        controller.close();
+                    }
+                });
+
                 if (body) {
                     const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
-                    return new Response(compressedStream)
-                        .arrayBuffer()
-                        .then((bytes) => {
-                            payload.data = new Uint8Array(bytes); // Update the payload data
-                            payload.headers["Content-Encoding"] = "gzip"; // Update headers
+                    const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
+                    const chunks: Uint8Array[] = [];
+                    let totalLength = 0;
+            
+                    return reader.read().then(function processChunk({ done, value }: { done: boolean, value?: Uint8Array }): IPromise<void> {
+                        if (done) {
+                            // Combine all chunks into a single Uint8Array
+                            const combined = new Uint8Array(totalLength);
+                            let offset = 0;
+                            for (const chunk of chunks) {
+                                combined.set(chunk, offset);
+                                offset += chunk.length;
+                            }
+                            payload.data = combined;
+                            payload.headers["Content-Encoding"] = "gzip";
                             callback(payload);
-                        })
-                        .catch(() => {
-                            // Fallback to sending uncompressed data
-                            callback(payload);
-                        });
+                            const resolvedPromise: IPromise<void> = createPromise((resolve, reject) => {
+                                resolve();
+                            });
+                            return resolvedPromise;
+                        } else {
+                            chunks.push(value);
+                            totalLength += value.length;
+                            return reader.read().then(processChunk);
+                        }
+                    }).catch(() => {
+                        // Fallback to sending uncompressed data
+                        callback(payload);
+                    });
                 }
                 // If body is null, fallback to uncompressed
                 callback(payload);
-
             }
 
             function _addEventCompletedTimings(theEvents: IPostTransmissionTelemetryItem[], sendEventCompleted: number) {
