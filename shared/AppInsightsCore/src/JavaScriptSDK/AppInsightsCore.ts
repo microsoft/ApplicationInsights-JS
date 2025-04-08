@@ -52,7 +52,7 @@ import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain
 } from "./ProcessTelemetryContext";
-import { Statsbeat } from "./StatsBeat";
+// import { Statsbeat } from "./StatsBeat";
 import { _getPluginState, createDistributedTraceContext, initializePlugins, sortPlugins } from "./TelemetryHelpers";
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
