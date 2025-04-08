@@ -362,9 +362,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         _statsBeat = null;
                     }
 
-                    // app Insights core only handle ikey and endpointurl, aisku will handle cs
-                    let ikey = rootCfg.instrumentationKey;
-                    let endpointUrl = rootCfg.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
                     _handleIKeyEndpointPromises(rootCfg);
 
                     // Mark the extensionConfig and all first level keys as referenced
