@@ -14,7 +14,7 @@ import {
     isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
     prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise } from "@nevware21/ts-async";
+import { IPromise, createPromise } from "@nevware21/ts-async";
 import {
     ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine, scheduleTimeout
 } from "@nevware21/ts-utils";
@@ -79,7 +79,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     transports: UNDEFINED_VALUE,
     retryCodes: UNDEFINED_VALUE,
     corsPolicy: UNDEFINED_VALUE,
-    maxRetryCnt: {isVal: isNumber, v:10}
+    maxRetryCnt: {isVal: isNumber, v:10},
+    disableZip: true
 });
 
 const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
@@ -186,6 +187,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _disableBeaconSplit: boolean;
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
+        let _disableZip: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -285,6 +287,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
 
+                    const CompressionStream = (window as any).CompressionStream;
+                    console.log("senderConfig.disableZip", senderConfig.disableZip);
+                    _disableZip = !!senderConfig.disableZip;
+                    if (typeof CompressionStream !== "function") {
+                        _disableZip = true;
+                    }
                     let corsPolicy = senderConfig.corsPolicy;
                     if (corsPolicy){
                         if (corsPolicy === "same-origin" || corsPolicy === "same-site" || corsPolicy === "cross-origin") {
@@ -947,9 +955,71 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _self._buffer.markAsSent(payload);
                     }
 
+                    _preparePayload((processedPayload: IPayloadData) => {
+                        try {
+                            sendPostFunc(processedPayload, onComplete, !isAsync);
+                        } catch (ex) {
+                            _warnToConsole(_self.diagLog(), "Unexpected exception sending payload. Ex:" + dumpObj(ex));
+                        }
+                    }, payloadData, isAsync);
+
                     return sendPostFunc(payloadData, onComplete, !isAsync);
                 }
                 return null;
+            }
+
+            function _preparePayload(callback: (processedPayload: IPayloadData) => void, payload: IPayloadData, isAsync: boolean) {
+                console.log("Sender._preparePayload", payload, isAsync);
+                if (_disableZip || !isAsync || !payload.data) {
+                    // If body is null or undefined, we don't need to compress it
+                    callback(payload);
+                    return;
+                }
+
+                const CompressionStream = (window as any).CompressionStream;
+
+                // Compression logic
+                const uint8Data = typeof payload.data === "string"
+                    ? new TextEncoder().encode(payload.data)
+                    : payload.data;
+
+                let body = new ReadableStream<Uint8Array>({
+                    start(controller) {
+                        controller.enqueue(uint8Data);
+                        controller.close();
+                    }
+                });
+    
+                const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
+                const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
+                const chunks: Uint8Array[] = [];
+                let totalLength = 0;
+        
+                return reader.read().then(function processChunk({ done, value }: { done: boolean, value?: Uint8Array }): IPromise<void> {
+                    if (done) {
+                        // Combine all chunks into a single Uint8Array
+                        const combined = new Uint8Array(totalLength);
+                        let offset = 0;
+                        for (const chunk of chunks) {
+                            combined.set(chunk, offset);
+                            offset += chunk.length;
+                        }
+                        payload.data = combined;
+                        payload.headers["Content-Encoding"] = "gzip";
+                        callback(payload);
+                        const resolvedPromise: IPromise<void> = createPromise((resolve) => {
+                            resolve();
+                        });
+                        return resolvedPromise;
+                    } else {
+                        chunks.push(value);
+                        totalLength += value.length;
+                        return reader.read().then(processChunk);
+                    }
+                }).catch(() => {
+                    // Fallback to sending uncompressed data
+                    callback(payload);
+                });
             }
 
             function _getPayload(payload: IInternalStorageItem[]): IInternalPayloadData {
