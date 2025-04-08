@@ -67,7 +67,7 @@ export const ConfigurationSelection = (
     React.useEffect(() => {
         try {
             doAwait(chrome.storage.local.get([customConfigurationStorageKey]), (savedValue: any) => {
-                if (savedValue) {
+                if (savedValue && savedValue[customConfigurationStorageKey]) {
                     setCustomConfiguration(savedValue[customConfigurationStorageKey]);
                 }
                 if (textAreaRef.current) {

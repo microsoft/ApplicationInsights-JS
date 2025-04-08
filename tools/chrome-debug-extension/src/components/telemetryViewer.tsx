@@ -18,7 +18,7 @@ interface ITelemetryViewerProps {
     onShowConfigurationSelection: () => void;
 }
 
-const filterSettingsCacheKey = "filterSettings";
+const filterSettingsCacheKey = "filterSettingsCacheKey";
 
 function getDefaultFilterSettings(configuration: IConfiguration): IFilterSettings {
     return {
@@ -112,7 +112,7 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
     React.useEffect(() => {
         try {
             doAwait(chrome.storage.local.get([filterSettingsCacheKey]), (json: any) => {
-                if (json) {
+                if (json && json[filterSettingsCacheKey]) {
                     // Make sure we have any defaults set
                     let settings: IFilterSettings = {
                         ...getDefaultFilterSettings(props.session.configuration),
@@ -120,6 +120,9 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
                     };
     
                     setFilterSettings(settings);
+                } else {
+                    // Default is OK
+                    setFilterSettings(getDefaultFilterSettings(props.session.configuration));
                 }
             });
         } catch {

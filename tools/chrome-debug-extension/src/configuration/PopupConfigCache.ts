@@ -14,7 +14,7 @@ export function getPopupSettings() : IPopupSettings {
     };
 
     doAwait(chrome.storage.local.get([popupWindowSettingsCacheKey]), (popupSettings: any) => {
-        if (popupSettings) {
+        if (popupSettings && popupSettings[popupWindowSettingsCacheKey]) {
             try {
                 settings = JSON.parse(popupSettings[popupWindowSettingsCacheKey]);
             } catch (e) {

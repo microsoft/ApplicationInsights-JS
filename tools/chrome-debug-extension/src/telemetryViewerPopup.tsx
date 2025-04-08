@@ -47,7 +47,7 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
         if (configurationTypeToLoad === "Custom") {
             try {
                 doAwait(chrome.storage.local.get([customConfigurationStorageKey]), (savedValue: any) => {
-                    if (savedValue) {
+                    if (savedValue && savedValue[customConfigurationStorageKey]) {
                         const newConfiguration = JSON.parse(savedValue[customConfigurationStorageKey]) as IConfiguration;
                         let newSession = new Session(newConfiguration, session);
                         session && session.dispose();
@@ -119,7 +119,7 @@ export const TelemetryViewerPopup = (): React.ReactElement => {
         let configurationTypeToSet: ConfigurationType = undefined;
         try {
             doAwait(chrome.storage.local.get([configurationTypeStorageKey]), (savedValue: any) => {
-                if (savedValue && Object.keys(ConfigurationURLs).includes(savedValue)) {
+                if (savedValue && Object.keys(ConfigurationURLs).includes(savedValue) && savedValue[configurationTypeStorageKey]) {
                     configurationTypeToSet = savedValue[configurationTypeStorageKey] as ConfigurationType;
                 }
                 setConfigurationType(configurationTypeToSet);
