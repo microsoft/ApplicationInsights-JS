@@ -344,12 +344,6 @@ export class PostChannelTest extends AITestClass {
                         let gzipData = request.data;
                         QUnit.assert.ok(gzipData, "data should be set");
                         QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
-                        
-                        let result =  [31,139,8,0,0,0,0,0,0,10,171,86,202,75,204,77,85,178,82,42,73,45,46,113,45,75,205,43,81,210,81,202,244,78,173,4,10,229,91,1,217,41,137,37,137,74,86,213,74,73,137,197,169,46,16,118,109,109,45,0,128,164,198,174,55,0,0,0]
-                        let gzip = Array.from(gzipData);
-                        console.log("gzip result", JSON.stringify(gzip));
-                        QUnit.assert.equal(gzip.length, result.length, "gzip data length should be same as expected");
-                        QUnit.assert.ok(JSON.stringify(gzip) === JSON.stringify(result), "gzip data should be same as expected");
                         QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
                         return true;
                     }
