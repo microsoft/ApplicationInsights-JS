@@ -38,7 +38,7 @@ jobs:
       - run: npm install grunt-cli
       - run: npm install
       - run: node common/scripts/install-run-rush.js check
-      - run: node common/scripts/install-run-rush.js install
+      - run: node common/scripts/install-run-rush.js update --full --recheck
       - run: npm run build --verbose
         timeout-minutes: 20
       - name: doc generate

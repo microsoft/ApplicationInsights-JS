@@ -14,7 +14,7 @@ import {
 import { IPostTransmissionTelemetryItem } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { STR_EMPTY } from "./InternalConstants";
-import { strSubstr } from "@nevware21/ts-utils";
+import { mathMin, strSubstr } from "@nevware21/ts-utils";
 
 /**
  * Note: This is an optimization for V8-based browsers. When V8 concatenates a string,
@@ -33,7 +33,7 @@ const _MAX_STRING_JOINS = 20;
 const RequestSizeLimitBytes = 3984588;  // approx 3.8 Mb
 const BeaconRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 const MaxRecordSize = 2000000; // approx 2 Mb
-const MaxBeaconRecordSize = Math.min(MaxRecordSize, BeaconRequestSizeLimitBytes);
+const MaxBeaconRecordSize = mathMin(MaxRecordSize, BeaconRequestSizeLimitBytes);
 const metadata = "metadata";
 const f = "f";
 const rCheckDot = /\./;
@@ -434,9 +434,9 @@ export class Serializer {
 
     /**
      * Append the batched events into the payload
-     * @param payload The serialized payload detail object
-     * @param theBatch The batched events to append to the payload
-     * @param maxEventsPerBatch The maximum number of events to allow in the payload
+     * @param payload - The serialized payload detail object
+     * @param theBatch - The batched events to append to the payload
+     * @param maxEventsPerBatch - The maximum number of events to allow in the payload
      * @returns True if the events from the new batch where attempted to be added to the payload otherwise false
      */
     public appendPayload(payload: ISerializedPayload, theBatch: EventBatch, maxEventsPerBatch: number): boolean {

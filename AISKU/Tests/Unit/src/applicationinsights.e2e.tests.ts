@@ -8,7 +8,16 @@ import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
 import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
+import { IStackFrame } from '@microsoft/applicationinsights-common/src/Interfaces/Contracts/IStackFrame';
+import { utcNow } from '@nevware21/ts-utils';
 
+function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame,  index: number) {
+    Assert.equal(expectedFrame.assembly, actualFrame.assembly, index + ") Assembly is not as expected");
+    Assert.equal(expectedFrame.fileName, actualFrame.fileName, index + ") FileName is not as expected");
+    Assert.equal(expectedFrame.line, actualFrame.line, index + ") Line is not as expected");
+    Assert.equal(expectedFrame.method, actualFrame.method, index + ") Method is not as expected");
+    Assert.equal(expectedFrame.level, actualFrame.level, index + ") Level is not as expected");    
+}
 
 export class ApplicationInsightsTests extends AITestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -70,7 +79,7 @@ export class ApplicationInsightsTests extends AITestClass {
             disablePageUnloadEvents: [ "beforeunload" ],
             extensionConfig: {
                 ["AppInsightsCfgSyncPlugin"]: {
-                    cfgUrl: ""
+                    //cfgUrl: ""
                 }
             }
         };
@@ -152,6 +161,7 @@ export class ApplicationInsightsTests extends AITestClass {
         this.addDependencyPluginTests();
         this.addPropertiesPluginTests();
         this.addCDNOverrideTests();
+        this.addCdnMonitorTests();
     }
 
     public addGenericE2ETests(): void {
@@ -717,6 +727,154 @@ export class ApplicationInsightsTests extends AITestClass {
         });
     }
 
+    public addCdnMonitorTests(): void {
+        this.testCaseAsync({
+            name: "E2E.GenericTests: Fetch Current CDN V3",
+            stepDelay: 1,
+            useFakeServer: false,
+            useFakeFetch: false,
+            fakeFetchAutoRespond: false,
+            steps: [() => {
+                // Use beta endpoint to pre-test any changes before public V3 cdn
+                let random = utcNow();
+                // Under Cors Mode, Options request will be auto-triggered
+                try {
+                    fetch(`https://js.monitor.azure.com/beta/ai.3.gbl.min.js?${random}`, {
+                        method: "GET"
+                    }).then((res) => {
+                        this._ctx.res = res;
+                        res.text().then((val) => {
+                            this._ctx.val = val;
+                        });
+                    });
+                } catch (e) {
+                    Assert.ok(false, "Fetch Error: " + e);
+                }
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+
+                if (this._ctx && this._ctx.res && this._ctx.val) {
+                    let res = this._ctx.res;
+                    let status = res.status;
+                    if (status === 200) {
+                        // for Response headers:
+                        // content-type: text/javascript; charset=utf-8
+                        // x-ms-meta-aijssdksrc: should present
+                        // x-ms-meta-aijssdkver should present
+                        let headers = res.headers;
+                        let headerCnt = 0;
+                        headers.forEach((val, key) => {
+                            if (key === "content-type") {
+                                Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
+                                headerCnt ++;
+                            }
+                            if (key === "x-ms-meta-aijssdksrc") {
+                                Assert.ok(val, "should have sdk src response header");
+                                headerCnt ++;
+                            }
+                            if (key === "x-ms-meta-aijssdkver") {
+                                Assert.ok(val, "should have version number for response header");
+                                headerCnt ++;
+                            }
+                        });
+                        Assert.equal(headerCnt, 3, "all expected headers should be present");
+                        return true;
+                    }
+                    return false;
+                }
+                return false;
+            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "E2E.GenericTests: Fetch Current CDN V2",
+            stepDelay: 1,
+            useFakeServer: false,
+            useFakeFetch: false,
+            fakeFetchAutoRespond: false,
+            steps: [() => {
+                // Use public endpoint for V2
+                let random = utcNow();
+                // Under Cors Mode, Options request will be triggered
+                fetch(`https://js.monitor.azure.com/scripts/b/ai.2.gbl.min.js?${random}`, {
+                    method: "GET"
+                }).then((res) => {
+                    this._ctx.res = res;
+                    res.text().then((val) => {
+                        this._ctx.val = val;
+                    });
+                });
+
+            }].concat(PollingAssert.createPollingAssert(() => {
+                if (this._ctx && this._ctx.res && this._ctx.val) {
+                    let res = this._ctx.res;
+                    let status = res.status;
+                    if (status === 200) {
+                        // for Response headers:
+                        // content-type: text/javascript; charset=utf-8
+                        // x-ms-meta-aijssdksrc: should present
+                        // x-ms-meta-aijssdkver should present
+                        let headers = res.headers;
+                        let headerCnt = 0;
+                        headers.forEach((val, key) => {
+                            if (key === "content-type") {
+                                Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
+                                headerCnt ++;
+                            }
+                            if (key === "x-ms-meta-aijssdksrc") {
+                                Assert.ok(val, "should have sdk src response header");
+                                headerCnt ++;
+                            }
+                            if (key === "x-ms-meta-aijssdkver") {
+                                Assert.ok(val, "should have version number for response header");
+                                headerCnt ++;
+                            }
+                        });
+                        Assert.equal(headerCnt, 3, "all expected headers should be present");
+                        return true;
+                    }
+                    return false;
+                }
+                return false;
+            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "E2E.GenericTests: Fetch Static Web CDN V3",
+            stepDelay: 1,
+            useFakeServer: false,
+            useFakeFetch: false,
+            fakeFetchAutoRespond: false,
+            steps: [() => {
+                // Use beta endpoint to pre-test any changes before public V3 cdn
+                let random = utcNow();
+                // Under Cors Mode, Options request will be auto-triggered
+                try {
+                    fetch(`https://js0.tst.applicationinsights.io/scripts/b/ai.3.gbl.min.js?${random}`, {
+                        method: "GET"
+                    }).then((res) => {
+                        this._ctx.res = res;
+                        if (res.ok) {
+                            res.text().then((val) => {
+                                this._ctx.val = val;
+                            });
+                        }
+                    }).catch((e) => {
+                        this._ctx.err = e.message;
+                    })
+                } catch (e) {
+                    this._ctx.err = e;
+                }
+            }].concat(PollingAssert.createPollingAssert(() => {
+
+                if (this._ctx && this._ctx.err) {
+                    return true;
+                }
+                return false;
+            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
+        });
+    }
+
     public addAsyncTests(): void {
         this.testCaseAsync({
             name: "E2E.GenericTests: Send events with offline support",
@@ -1057,6 +1215,193 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
             })
         });
+
+        this.testCaseAsync({
+            name: "E2E.GenericTests: trackException with multiple stack frame formats",
+            stepDelay: 1,
+            steps: [() => {
+                let errObj = {
+                    name: "E2E.GenericTests",
+                    reason:{
+                        message: "Test_Error_Throwing_Inside_UseCallback",
+                        stack: "Error: Test_Error_Throwing_Inside_UseCallback\n" +
+                            "at http://localhost:3000/static/js/main.206f4846.js:2:296748\n" +                      // Anonymous function with no function name attribution (firefox/ios)
+                            "at Object.Re (http://localhost:3000/static/js/main.206f4846.js:2:16814)\n" +           // With class.function attribution
+                            "at je (http://localhost:3000/static/js/main.206f4846.js:2:16968)\n" +                  // With function name attribution
+                            "at Object.<anonymous> (http://localhost:3000/static/js/main.206f4846.js:2:42819)\n" +  // With Object.<anonymous> attribution
+                            "at Object.<anonymous> (../localfile.js:2:1234)\n" +                                    // With Object.<anonymous> attribution and local file                  
+                            "at (anonymous) @ VM60:1\n" +                                                           // With (anonymous) attribution            
+                            "at [native code]\n" +                                                                  // With [native code] attribution
+                            "at (at eval at <anonymous> (http://localhost:3000/static/js/main.206f4846.js:2:296748), <anonymous>:1:1)\n" + // With eval attribution
+                            "at Object.eval (http://localhost:3000/static/js/main.206f4846.js:2:296748)\n" +        // With eval attribution
+                            "at eval (http://localhost:3000/static/js/main.206f4846.js:2:296748)\n" +               // With eval attribution
+                            "at eval (webpack-internal:///./src/App.tsx:1:1)\n" +                                   // With eval attribution
+                            "at [arguments not available])@file://localhost/stacktrace.js:21\n" +                   // With arguments not available attribution
+                            "at file://C:/Temp/stacktrace.js:27:1\n" +                                              // With file://localhost attribution
+                            " Line 21 of linked script file://localhost/C:/Temp/stacktrace.js\n" +                  // With Line 21 of linked script attribution
+                            " Line 11 of inline#1 script in http://localhost:3000/static/js/main.206f4846.js:2:296748\n" + // With Line 11 of inline#1 script attribution
+                            " Line 68 of inline#2 script in file://localhost/teststack.html\n" +                    // With Line 68 of inline#2 script attribution
+                            "at Function.Module._load (module.js:407:3)\n" +
+                            " at Function.Module.runMain (module.js:575:10)\n"+ 
+                            " at startup (node.js:159:18)\n" +
+                            "at Global code (http://example.com/stacktrace.js:11:1)\n" +
+                            "at Object.Module._extensions..js (module.js:550:10)\n" +
+                            "   at c@http://example.com/stacktrace.js:9:3\n" +
+                            "   at b@http://example.com/stacktrace.js:6:3\n" +
+                            "   at a@http://example.com/stacktrace.js:3:3\n" +
+                            "http://localhost:3000/static/js/main.206f4846.js:2:296748\n" +                      // Anonymous function with no function name attribution (firefox/ios)
+                            "   c@http://example.com/stacktrace.js:9:3\n" +
+                            "   b@http://example.com/stacktrace.js:6:3\n" +
+                            "   a@http://example.com/stacktrace.js:3:3\n" +
+                            "  at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)"
+                    }
+                };
+
+                let exception = Exception.CreateAutoException("Test_Error_Throwing_Inside_UseCallback",
+                    "url",
+                    9,
+                    0,
+                    errObj
+                );
+                this._ai.trackException({ exception: exception }, { custom: "custom value" });
+            }].concat(this.asserts(1)).concat(() => {
+
+                const expectedParsedStack: IStackFrame[] = [
+                    { level: 0, method: "<no_method>", assembly: "at http://localhost:3000/static/js/main.206f4846.js:2:296748", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 1, method: "Object.Re", assembly: "at Object.Re (http://localhost:3000/static/js/main.206f4846.js:2:16814)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 2, method: "je", assembly: "at je (http://localhost:3000/static/js/main.206f4846.js:2:16968)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 3, method: "Object.<anonymous>", assembly: "at Object.<anonymous> (http://localhost:3000/static/js/main.206f4846.js:2:42819)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 4, method: "Object.<anonymous>", assembly: "at Object.<anonymous> (../localfile.js:2:1234)", fileName: "../localfile.js", line: 2 },
+                    { level: 5, method: "<anonymous>", assembly: "at (anonymous) @ VM60:1", fileName: "VM60", line: 1 },
+                    { level: 6, method: "<no_method>", assembly: "at [native code]", fileName: "", line: 0 },
+                    { level: 7, method: "<no_method>", assembly: "at (at eval at <anonymous> (http://localhost:3000/static/js/main.206f4846.js:2:296748), <anonymous>:1:1)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 8, method: "Object.eval", assembly: "at Object.eval (http://localhost:3000/static/js/main.206f4846.js:2:296748)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 9, method: "eval", assembly: "at eval (http://localhost:3000/static/js/main.206f4846.js:2:296748)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 10, method: "eval", assembly: "at eval (webpack-internal:///./src/App.tsx:1:1)", fileName: "webpack-internal:///./src/App.tsx", line: 1 },
+                    { level: 11, method: "<no_method>", assembly: "at [arguments not available])@file://localhost/stacktrace.js:21", fileName: "file://localhost/stacktrace.js", line: 21 },
+                    { level: 12, method: "<no_method>", assembly: "at file://C:/Temp/stacktrace.js:27:1", fileName: "file://C:/Temp/stacktrace.js", line: 27 },
+                    { level: 13, method: "<no_method>", assembly: "Line 21 of linked script file://localhost/C:/Temp/stacktrace.js", fileName: "file://localhost/C:/Temp/stacktrace.js", line: 0 },
+                    { level: 14, method: "<no_method>", assembly: "Line 11 of inline#1 script in http://localhost:3000/static/js/main.206f4846.js:2:296748", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 15, method: "<no_method>", assembly: "Line 68 of inline#2 script in file://localhost/teststack.html", fileName: "file://localhost/teststack.html", line: 0 },
+                    { level: 16, method: "Function.Module._load", assembly: "at Function.Module._load (module.js:407:3)", fileName: "module.js", line: 407 },
+                    { level: 17, method: "Function.Module.runMain", assembly: "at Function.Module.runMain (module.js:575:10)", fileName: "module.js", line: 575 },
+                    { level: 18, method: "startup", assembly: "at startup (node.js:159:18)", fileName: "node.js", line: 159 },
+                    { level: 19, method: "<no_method>", assembly: "at Global code (http://example.com/stacktrace.js:11:1)", fileName: "http://example.com/stacktrace.js", line: 11 },
+                    { level: 20, method: "Object.Module._extensions..js", assembly: "at Object.Module._extensions..js (module.js:550:10)", fileName: "module.js", line: 550 },
+                    { level: 21, method: "c", assembly: "at c@http://example.com/stacktrace.js:9:3", fileName: "http://example.com/stacktrace.js", line: 9 },
+                    { level: 22, method: "b", assembly: "at b@http://example.com/stacktrace.js:6:3", fileName: "http://example.com/stacktrace.js", line: 6 },
+                    { level: 23, method: "a", assembly: "at a@http://example.com/stacktrace.js:3:3", fileName: "http://example.com/stacktrace.js", line: 3 },
+                    { level: 24, method: "<no_method>", assembly: "http://localhost:3000/static/js/main.206f4846.js:2:296748", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
+                    { level: 25, method: "c", assembly: "c@http://example.com/stacktrace.js:9:3", fileName: "http://example.com/stacktrace.js", line: 9 },
+                    { level: 26, method: "b", assembly: "b@http://example.com/stacktrace.js:6:3", fileName: "http://example.com/stacktrace.js", line: 6 },
+                    { level: 27, method: "a", assembly: "a@http://example.com/stacktrace.js:3:3", fileName: "http://example.com/stacktrace.js", line: 3 },
+                    { level: 28, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)", fileName: "http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 53058 }
+                ];
+
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            Assert.ok(ex.message.indexOf("Test_Error_Throwing_Inside_UseCallback") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.equal(ex.parsedStack.length, 29);
+                            for (let lp = 0; lp < ex.parsedStack.length; lp++) {
+                                _checkExpectedFrame(expectedParsedStack[lp], ex.parsedStack[lp], lp);
+                            }                            
+
+                            Assert.ok(baseData.properties, "Has BaseData properties");
+                            Assert.equal(baseData.properties.custom, "custom value");
+
+                        }
+                    }
+                }
+            })
+        })
+
+        this.testCaseAsync({
+            name: "E2E.GenericTests: trackException with multiple line message",
+            stepDelay: 1,
+            steps: [() => {
+                let message = "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n" +
+                            "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
+                            "2. You might be breaking the Rules of Hooks\n" +
+                            "3. You might have more than one copy of React in the same app\n" + 
+                            "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.";
+                let errObj = {
+                    typeName: "Error",
+                    reason:{
+                        message: "Error: " + message,
+                        stack: "Error: " + message + "\n" +
+                            "    at Object.throwInvalidHookError (https://localhost:44365/static/js/bundle.js:201419:13)\n" +
+                            "    at useContext (https://localhost:44365/static/js/bundle.js:222943:25)\n" +
+                            "    at useTenantContext (https://localhost:44365/static/js/bundle.js:5430:68)\n" +
+                            "    at https://localhost:44365/static/js/bundle.js:4337:72\n" +
+                            "    at _ZoneDelegate.invoke (https://localhost:44365/static/js/bundle.js:227675:158)\n" +
+                            "    at ZoneImpl.run (https://localhost:44365/static/js/bundle.js:227446:35)\n" +
+                            "    at https://localhost:44365/static/js/bundle.js:229764:30\n" +
+                            "    at _ZoneDelegate.invokeTask (https://localhost:44365/static/js/bundle.js:227700:171)\n" +
+                            "    at ZoneImpl.runTask (https://localhost:44365/static/js/bundle.js:227499:37)\n" +
+                            "    at ZoneImpl.patchRunTask (https://localhost:44365/static/js/bundle.js:144112:27)"
+                    }
+                };
+
+                let exception = Exception.CreateAutoException(message,
+                    "url",
+                    9,
+                    0,
+                    errObj
+                );
+                this._ai.trackException({ exception: exception }, { custom: "custom value" });
+            }].concat(this.asserts(1)).concat(() => {
+
+                const expectedParsedStack: IStackFrame[] = [
+                    { level: 0, method: "Object.throwInvalidHookError", assembly: "at Object.throwInvalidHookError (https://localhost:44365/static/js/bundle.js:201419:13)", fileName: "https://localhost:44365/static/js/bundle.js", line: 201419 },
+                    { level: 1, method: "useContext", assembly: "at useContext (https://localhost:44365/static/js/bundle.js:222943:25)", fileName: "https://localhost:44365/static/js/bundle.js", line: 222943 },
+                    { level: 2, method: "useTenantContext", assembly: "at useTenantContext (https://localhost:44365/static/js/bundle.js:5430:68)", fileName: "https://localhost:44365/static/js/bundle.js", line: 5430 },
+                    { level: 3, method: "<no_method>", assembly: "at https://localhost:44365/static/js/bundle.js:4337:72", fileName: "https://localhost:44365/static/js/bundle.js", line: 4337 },
+                    { level: 4, method: "_ZoneDelegate.invoke", assembly: "at _ZoneDelegate.invoke (https://localhost:44365/static/js/bundle.js:227675:158)", fileName: "https://localhost:44365/static/js/bundle.js", line: 227675 },
+                    { level: 5, method: "ZoneImpl.run", assembly: "at ZoneImpl.run (https://localhost:44365/static/js/bundle.js:227446:35)", fileName: "https://localhost:44365/static/js/bundle.js", line: 227446 },
+                    { level: 6, method: "<no_method>", assembly: "at https://localhost:44365/static/js/bundle.js:229764:30", fileName: "https://localhost:44365/static/js/bundle.js", line: 229764 },
+                    { level: 7, method: "_ZoneDelegate.invokeTask", assembly: "at _ZoneDelegate.invokeTask (https://localhost:44365/static/js/bundle.js:227700:171)", fileName: "https://localhost:44365/static/js/bundle.js", line: 227700 },
+                    { level: 8, method: "ZoneImpl.runTask", assembly: "at ZoneImpl.runTask (https://localhost:44365/static/js/bundle.js:227499:37)", fileName: "https://localhost:44365/static/js/bundle.js", line: 227499 },
+                    { level: 9, method: "ZoneImpl.patchRunTask", assembly: "at ZoneImpl.patchRunTask (https://localhost:44365/static/js/bundle.js:144112:27)", fileName: "https://localhost:44365/static/js/bundle.js", line: 144112 }
+                ];
+
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            Assert.ok(ex.message.indexOf("Invalid hook call") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.equal(ex.parsedStack.length, 10);
+                            for (let lp = 0; lp < ex.parsedStack.length; lp++) {
+                                _checkExpectedFrame(expectedParsedStack[lp], ex.parsedStack[lp], lp);
+                            }                            
+
+                            Assert.ok(baseData.properties, "Has BaseData properties");
+                            Assert.equal(baseData.properties.custom, "custom value");
+
+                        }
+                    }
+                }
+            })
+        })
 
         this.testCaseAsync({
             name: "TelemetryContext: track metric",

@@ -8,10 +8,10 @@ import { NonOverrideCfg } from "./Interfaces/ICfgSyncConfig";
 
 /**
  * Delete a config key in the given cfg, if the config key exists in nonOverrideConfigs and its value is set to true
- * @param cfg cfg to modify
- * @param nonOverrideConfigs nonOverrideConfigs
- * @param curLevel cur config level, starting at 0
- * @param maxLevel max config level
+ * @param cfg - cfg to modify
+ * @param nonOverrideConfigs - nonOverrideConfigs
+ * @param curLevel - cur config level, starting at 0
+ * @param maxLevel - max config level
  * @returns new copy of modified configs
  */
 export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverrideCfg>(cfg: T , nonOverrideConfigs: T1, curLevel: number, maxLevel: number): T {

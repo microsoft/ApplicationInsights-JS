@@ -81,8 +81,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
 
 /**
  * Helper to create the default performance manager
- * @param core
- * @param notificationMgr
+ * @param core - The AppInsightsCore instance
+ * @param notificationMgr - The notification manager
  */
 function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
     return new PerfManager(notificationMgr);
@@ -348,121 +348,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 // This will be "re-run" if the referenced config properties are changed
                 _addUnloadHook(_configHandler.watch((details) => {
                     let rootCfg = details.cfg;
-                  
-                    let isPending = _activeStatus === eActiveStatus.PENDING;
-                    
-                    if (isPending){
-                        // means waiting for previous promises to be resolved, won't apply new changes
-                        return;
-                    }
 
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
-                    // app Insights core only handle ikey and endpointurl, aisku will handle cs
-                    let ikey = rootCfg.instrumentationKey;
-                    let endpointUrl = rootCfg.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
+                    
+                    _handleIKeyEndpointPromises(rootCfg);
 
-                    if (isNullOrUndefined(ikey)) {
-                        _instrumentationKey = null;
-                        // if new ikey is null, set status to be inactive, all new events will be saved in memory or dropped
-                        _activeStatus = ActiveStatus.INACTIVE;
-                        let msg = "Please provide instrumentation key";
-
-                        if (!_isInitialized) {
-                            // only throw error during initialization
-                            throwError(msg);
-                        } else {
-                            _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, msg);
-                            _releaseQueues();
-                        }
-                        return;
-                      
-                    }
-
-                    let promises: IPromise<string>[] = [];
-                    if (isPromiseLike(ikey)) {
-                        promises.push(ikey);
-                        _instrumentationKey = null; // reset current local ikey variable (otherwise it will always be the previous ikeys if timeout is called before promise cb)
-                    } else {
-                        // string
-                        _instrumentationKey = ikey;
-                    }
-
-                    if (isPromiseLike(endpointUrl)) {
-                        promises.push(endpointUrl);
-                        _endpoint = null; // reset current local endpoint variable (otherwise it will always be the previous urls if timeout is called before promise cb)
-                    } else {
-                        // string or null
-                        _endpoint = endpointUrl;
-                    }
-
-                    // at least have one promise
-                    if (promises.length) {
-                        // reset to false for new dynamic changes
-                        _isStatusSet = false;
-                        _activeStatus = eActiveStatus.PENDING;
-                        let initTimeout = isNotNullOrUndefined(rootCfg.initTimeOut)?  rootCfg.initTimeOut : maxInitTimeout; // rootCfg.initTimeOut could be 0
-                        let allPromises = createSyncAllSettledPromise<string>(promises);
-                        _initTimer = scheduleTimeout(() => {
-                            // set _isStatusSet to true
-                            // set active status
-                            // release queues
-                            _initTimer = null;
-                            if (!_isStatusSet) {
-                                _setStatus();
-                            }
-                           
-                        }, initTimeout);
-                   
-                        doAwaitResponse(allPromises, (response) => {
-                            try {
-                                if (_isStatusSet) {
-                                    // promises take too long to resolve, ignore them
-                                    // active status should be set by timeout already
-                                    return;
-                                }
-
-                                if (!response.rejected) {
-                                    let values = response.value;
-                                    if (values && values.length) {
-                                        // ikey
-                                        let ikeyRes = values[0];
-                                        _instrumentationKey = ikeyRes && ikeyRes.value;
-
-                                        // endpoint
-                                        if (values.length > 1) {
-                                            let endpointRes = values[1];
-                                            _endpoint = endpointRes &&  endpointRes.value;
-                                            
-                                        }
-
-                                    }
-                                    if (_instrumentationKey) {
-                                        // if ikey is null, no need to trigger extra dynamic changes for extensions
-                                        config.instrumentationKey = _instrumentationKey; // set config.instrumentationKey for extensions to consume
-                                        config.endpointUrl = _endpoint; // set config.endpointUrl for extensions to consume
-                                    }
-
-                                }
-
-                                // set _isStatusSet to true
-                                // set active status
-                                // release queues
-                                _setStatus();
-
-                            } catch (e) {
-                                if (!_isStatusSet){
-                                    _setStatus();
-                                }
-                            }
-
-                        });
-                    } else {
-                        // means no promises
-                        _setStatus();
-                       
-                    }
-
-                    //_instrumentationKey = details.cfg.instrumentationKey;
                     // Mark the extensionConfig and all first level keys as referenced
                     // This is so that calls to getExtCfg() will always return the same object
                     // Even when a user may "re-assign" the plugin properties (or it's unloaded/reloaded)
@@ -470,8 +360,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     objForEachKey(extCfg, (key) => {
                         details.ref(extCfg, key);
                     });
-
-                  
                 }));
 
                 _notificationManager = notificationManager;
@@ -590,7 +478,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_notificationManager) {
                     _notificationManager.removeNotificationListener(listener);
                 }
-            }
+            };
         
             _self.getCookieMgr = (): ICookieMgr => {
                 if (!_cookieManager) {
@@ -647,6 +535,124 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 return _startLogPoller(true);
             };
 
+            function _handleIKeyEndpointPromises(theConfig: IConfiguration) {
+                // app Insights core only handle ikey and endpointurl, aisku will handle cs
+                // But we want to reference these config values so that if any future changes are made
+                // this will trigger the re-run of the watch function
+                // and the ikey and endpointUrl will be set to the new values
+                let ikey = theConfig.instrumentationKey;
+                let endpointUrl = theConfig.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
+
+                // Check if we are waiting for previous promises to be resolved, won't apply new changes
+                if (_activeStatus !== eActiveStatus.PENDING) {
+                    if (isNullOrUndefined(ikey)) {
+                        _instrumentationKey = null;
+
+                        // if new ikey is null, set status to be inactive, all new events will be saved in memory or dropped
+                        _activeStatus = ActiveStatus.INACTIVE;
+                        let msg = "Please provide instrumentation key";
+
+                        if (!_isInitialized) {
+                            // only throw error during initialization
+                            throwError(msg);
+                        } else {
+                            _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, msg);
+                            _releaseQueues();
+                        }
+
+                        return;
+                    }
+
+                    let promises: IPromise<string>[] = [];
+                    if (isPromiseLike(ikey)) {
+                        promises.push(ikey);
+                        _instrumentationKey = null; // reset current local ikey variable (otherwise it will always be the previous ikeys if timeout is called before promise cb)
+                    } else {
+                        // string
+                        _instrumentationKey = ikey;
+                    }
+
+                    if (isPromiseLike(endpointUrl)) {
+                        promises.push(endpointUrl);
+                        _endpoint = null; // reset current local endpoint variable (otherwise it will always be the previous urls if timeout is called before promise cb)
+                    } else {
+                        // string or null
+                        _endpoint = endpointUrl;
+                    }
+
+                    // at least have one promise
+                    if (promises.length) {
+                        _waitForInitPromises(theConfig, promises);
+                    } else {
+                        // means no promises
+                        _setStatus();
+                    }
+                }
+            }
+
+            function _waitForInitPromises(theConfig: IConfiguration, promises: IPromise<string>[]) {
+                // reset to false for new dynamic changes
+                _isStatusSet = false;
+                _activeStatus = eActiveStatus.PENDING;
+                let initTimeout = isNotNullOrUndefined(theConfig.initTimeOut)?  theConfig.initTimeOut : maxInitTimeout; // theConfig.initTimeOut could be 0
+                let allPromises = createSyncAllSettledPromise<string>(promises);
+
+                if (_initTimer) {
+                    // Stop any previous timer
+                    _initTimer.cancel();
+                }
+
+                _initTimer = scheduleTimeout(() => {
+                    // set _isStatusSet to true
+                    // set active status
+                    // release queues
+                    _initTimer = null;
+                    if (!_isStatusSet) {
+                        _setStatus();
+                    }
+                }, initTimeout);
+            
+                doAwaitResponse(allPromises, (response) => {
+                    try {
+                        if (_isStatusSet) {
+                            // promises take too long to resolve, ignore them
+                            // active status should be set by timeout already
+                            return;
+                        }
+
+                        if (!response.rejected) {
+                            let values = response.value;
+                            if (values && values.length) {
+                                // ikey
+                                let ikeyRes = values[0];
+                                _instrumentationKey = ikeyRes && ikeyRes.value;
+
+                                // endpoint
+                                if (values.length > 1) {
+                                    let endpointRes = values[1];
+                                    _endpoint = endpointRes &&  endpointRes.value;
+                                }
+                            }
+
+                            if (_instrumentationKey) {
+                                // if ikey is null, no need to trigger extra dynamic changes for extensions
+                                theConfig.instrumentationKey = _instrumentationKey; // set config.instrumentationKey for extensions to consume
+                                theConfig.endpointUrl = _endpoint; // set config.endpointUrl for extensions to consume
+                            }
+                        }
+
+                        // set _isStatusSet to true
+                        // set active status
+                        // release queues
+                        _setStatus();
+                    } catch (e) {
+                        if (!_isStatusSet){
+                            _setStatus();
+                        }
+                    }
+                });
+            }
+    
             function _setStatus() {
                 _isStatusSet = true;
                 if (isNullOrUndefined(_instrumentationKey)) {
@@ -708,7 +714,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _forceStopInternalLogPoller = true;
                 _internalLogPoller && _internalLogPoller.cancel();
                 _flushInternalLogs();
-            }
+            };
 
             // Add addTelemetryInitializer
             proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
@@ -729,7 +735,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     reason: TelemetryUnloadReason.SdkUnload,
                     isAsync: isAsync,
                     flushComplete: false
-                }
+                };
 
                 let result: IPromise<ITelemetryUnloadState>;
                 if (isAsync && !unloadComplete) {
@@ -1563,7 +1569,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
      * handler will be recalled.
-     * @param handler
+     * @param handler - The watcher handler to call when the config changes
      * @returns A watcher handler instance that can be used to remove itself when being unloaded
      */
     public onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook {

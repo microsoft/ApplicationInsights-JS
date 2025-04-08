@@ -13,7 +13,9 @@ import {
     eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
-import { ITimerHandler, arrSlice, isFunction, isString, objDeepFreeze, objForEachKey, scheduleTimeout } from "@nevware21/ts-utils";
+import {
+    ITimerHandler, arrSlice, isFunction, isString, mathFloor, mathMax, mathMin, objDeepFreeze, objForEachKey, scheduleTimeout
+} from "@nevware21/ts-utils";
 import {
     EVT_DISCARD_STR, EVT_SENT_STR, EVT_STORE_STR, batchDropNotification, callNotification, isGreaterThanZero, isValidPersistenceLevel
 } from "./Helpers/Utils";
@@ -442,8 +444,8 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 let isOnline = _offlineListener && _offlineListener.isOnline();
            
                 if(!_sendNextBatchTimer) {
-                    let retryInterval = _retryAt ? Math.max(0, _retryAt - dateNow()) : 0;
-                    let timerValue = Math.max(_maxBatchInterval, retryInterval);
+                    let retryInterval = _retryAt ? mathMax(0, _retryAt - dateNow()) : 0;
+                    let timerValue = mathMax(_maxBatchInterval, retryInterval);
                     _sendNextBatchTimer = scheduleTimeout(() => {
                         if (isOnline) {
                             // is no isCompletelyIdle function is available, assume we can send
@@ -522,9 +524,9 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
                 } else {
                     const backOffSlot = (Math.pow(2, _consecutiveErrors) - 1) / 2;
                     // tslint:disable-next-line:insecure-random
-                    let backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                    let backOffDelay = mathFloor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
                     backOffDelay = linearFactor * backOffDelay;
-                    delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
+                    delayInSeconds = mathMax(mathMin(backOffDelay, 3600), SlotDelayInSeconds);
                 }
         
                 // TODO: Log the backoff time like the C# version does.

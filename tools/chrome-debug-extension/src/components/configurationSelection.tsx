@@ -46,7 +46,7 @@ export const ConfigurationSelection = (
     function updateCustomConfiguration(newCustomConfiguration: string): void {
         setCustomConfigurationDirty(true);
         setCustomConfiguration(newCustomConfiguration);
-        chrome.storage.local.set({ customConfigurationStorageKey: newCustomConfiguration });
+        chrome.storage.local.set({ [customConfigurationStorageKey]: newCustomConfiguration });
 
     }
 
@@ -66,9 +66,9 @@ export const ConfigurationSelection = (
 
     React.useEffect(() => {
         try {
-            doAwait(chrome.storage.local.get(customConfigurationStorageKey), (savedValue: any) => {
+            doAwait(chrome.storage.local.get([customConfigurationStorageKey]), (savedValue: any) => {
                 if (savedValue) {
-                    setCustomConfiguration(savedValue);
+                    setCustomConfiguration(savedValue[customConfigurationStorageKey]);
                 }
                 if (textAreaRef.current) {
                     textAreaRef.current.setAttribute("aria-labelledby", "customConfigurationLabel");

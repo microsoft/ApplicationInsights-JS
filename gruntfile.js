@@ -234,7 +234,7 @@ module.exports = function (grunt) {
     // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
     // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
     // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions=["3.3.4"];
+    const perfTestVersions=["3.3.6"];
 
     function buildConfig(modules) {
         var buildCmds = {
@@ -784,18 +784,16 @@ module.exports = function (grunt) {
                         { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js", dest: `./tools/applicationinsights-web-snippet/build/output/originSnippet.min.js` }
                        ]
                 },
-                "snippet": {
+                "snippetToDistEs5": {
                     files: [
-                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js` },
-                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.js.map` },
-                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js` },
-                        { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js.map", dest: `./tools/applicationinsights-web-snippet/dist-es5/snippet.min.js.map` }
+                        { expand: true, cwd: "./tools/applicationinsights-web-snippet/build/output/", src: "snippet.**", dest: "./tools/applicationinsights-web-snippet/dist-es5/" },
+                        { expand: true, cwd: "./tools/applicationinsights-web-snippet/build/output/common/", src: "**", dest: "./tools/applicationinsights-web-snippet/dist-es5/common/" },
                        ]
                 },
 
                 "web-snippet": {
                     files: [  
-                        { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` },
+                        { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` }
                     ]
                 },
                 config: {
@@ -924,7 +922,7 @@ module.exports = function (grunt) {
         grunt.registerTask("chromedebugextension-restore", restoreTasks("chrome-debug-extension"));
 
         grunt.registerTask("websnippet", tsBuildActions("applicationinsights-web-snippet"));
-        grunt.registerTask("snippetCopy", ["copy:snippet"]);
+        grunt.registerTask("snippetCopy", ["copy:snippetToDistEs5"]);
         grunt.registerTask("originSnippetCopy", ["copy:originSnippet"]);
         grunt.registerTask("websnippetReplace", ["string-replace:generate-expanded-JS", "copy:web-snippet", "string-replace:generate-expanded-min", "string-replace:generate-snippet-ikey", "string-replace:generate-snippet-connString", "string-replace:generate-snippet-origin"]);
 

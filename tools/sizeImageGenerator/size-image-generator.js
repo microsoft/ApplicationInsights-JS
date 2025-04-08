@@ -1,8 +1,8 @@
 const fsPromise = require('fs').promises;
 const fs = require('fs');
-const http = require('http');
+// const http = require('http');
 const request = require('request');
-const zlib = require('zlib');
+// const zlib = require('zlib');
 
 async function generateSizeBadge(path, fileSize, isGzip = false, maxSize = 35, minSize = 30) {
     try {

@@ -8,8 +8,6 @@ import { ITelemetryPlugin } from "./ITelemetryPlugin";
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 import { IPayloadData } from "./IXHROverride";
 
-"use strict";
-
 /**
  * Internal Interface
  */

@@ -103,12 +103,27 @@ function _chkDiagLevel(value: number) {
     return value && value > 0;
 }
 
+function _parseCs(config: IConfiguration & IConfig, configCs: string | IPromise<string>) {
+    return createSyncPromise<ConnectionString>((resolve, reject) => {
+        doAwaitResponse(configCs, (res) => {
+            let curCs = res && res.value;
+            let parsedCs = null;
+            if (!res.rejected && curCs) {
+                // replace cs with resolved values in case of circular promises
+                config.connectionString = curCs;
+                parsedCs = parseConnectionString(curCs);
+            }
+            
+            // if can't resolve cs promise, null will be returned
+            resolve(parsedCs);
+        });
+    });
+}
+
 /**
  * Application Insights API
  * @group Entrypoint
  * @group Classes
- * @class Initialization
- * @implements {IApplicationInsights}
  */
 export class AppInsightsSku implements IApplicationInsights {
     public snippet: Snippet;
@@ -200,60 +215,47 @@ export class AppInsightsSku implements IApplicationInsights {
 
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
-                let configCs =  _config.connectionString;
-
-                function _parseCs() {
-                    return createSyncPromise<ConnectionString>((resolve, reject) => {
-                        doAwaitResponse(configCs, (res) => {
-                            let curCs = res && res.value;
-                            let parsedCs = null;
-                            if (!res.rejected && curCs) {
-                                // replace cs with resolved values in case of circular promises
-                                _config.connectionString = curCs;
-                                parsedCs = parseConnectionString(curCs);
-                            }
-                            // if can't resolve cs promise, null will be returned
-                            resolve(parsedCs);
-                        });
-                    });
-
-                }
+                let configCs = _config.connectionString;
                 
                 if (isPromiseLike(configCs)) {
                     let ikeyPromise = createSyncPromise<string>((resolve, reject) => {
-                        _parseCs().then((cs) => {
-                            let ikey = _config.instrumentationKey;
-                            ikey = cs && cs.instrumentationkey || ikey;
-                            resolve(ikey);
-                        }).catch((e) => {
-                            // parseCs will always resolve(unless timeout)
-                            // return null in case any error happens
-                            resolve(null);
+                        doAwaitResponse(_parseCs(_config, configCs), (rsp) => {
+                            if (!rsp.rejected) {
+                                let ikey = _config.instrumentationKey;
+                                let cs = rsp.value;
+                                ikey = cs && cs.instrumentationkey || ikey;
+                                resolve(ikey);
+                            } else {
+                                // parseCs will always resolve(unless timeout)
+                                // return null in case any error happens
+                                resolve(null);
+                            }
                         });
-
                     });
                     
                     let url: IPromise<string> | string = _config.userOverrideEndpointUrl;
                     if (isNullOrUndefined(url)) {
                         url = createSyncPromise<string>((resolve, reject) => {
-                            _parseCs().then((cs) => {
-                                let url = _config.endpointUrl;
-                                let ingest = cs && cs.ingestionendpoint;
-                                url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
-                                resolve(url);
-                            }).catch((e) => {
-                                // parseCs will always resolve(unless timeout)
-                                // return null in case any error happens
-                                resolve(null);
+                            doAwaitResponse(_parseCs(_config, configCs), (rsp) => {
+                                if (!rsp.rejected) {
+                                    let url = _config.endpointUrl;
+                                    let cs = rsp.value;
+                                    let ingest = cs && cs.ingestionendpoint;
+                                    url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
+                                    resolve(url);
+                                } else {
+                                    // parseCs will always resolve(unless timeout)
+                                    // return null in case any error happens
+                                    resolve(null);
+                                }
                             });
-    
                         });
                     }
 
                     _config.instrumentationKey = ikeyPromise;
                     _config.endpointUrl = url;
-                    
                 }
+
                 if (isString(configCs) && configCs) {
                     // confirm if promiselike function present
                     // handle cs promise here
@@ -373,19 +375,18 @@ export class AppInsightsSku implements IApplicationInsights {
                             _throttleMgr.onReadyState(true);
                         }
 
-                        var result;
                         if (!_iKeySentMessage && !_config.connectionString && isFeatureEnabled(IKEY_USAGE, _config)) {
-                            result = _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "See Instrumentation key support at aka.ms/IkeyMigrate");
+                            _throttleMgr.sendMessage( _eInternalMessageId.InstrumentationKeyDeprecation, "See Instrumentation key support at aka.ms/IkeyMigrate");
                             _iKeySentMessage = true;
                         }
 
                         if (!_cdnSentMessage && _self.context.internal.sdkSrc && _self.context.internal.sdkSrc.indexOf("az416426") != -1 && isFeatureEnabled(CDN_USAGE, _config)) {
-                            result = _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "See Cdn support notice at aka.ms/JsActiveCdn");
+                            _throttleMgr.sendMessage( _eInternalMessageId.CdnDeprecation, "See Cdn support notice at aka.ms/JsActiveCdn");
                             _cdnSentMessage = true;
                         }
                        
                         if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled(SDK_LOADER_VER, _config)) {
-                            result = _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
+                            _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
                             _sdkVerSentMessage = true;
                         }
                         
@@ -758,7 +759,7 @@ export class AppInsightsSku implements IApplicationInsights {
 
     /**
      * Log a dependency call (e.g. ajax)
-     * @param dependencyData dependency data object
+     * @param dependencyData - dependency data object
      */
     public trackDependencyData(dependency: IDependencyTelemetry): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

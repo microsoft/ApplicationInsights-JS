@@ -63,7 +63,7 @@ export interface ISenderConfig {
     isBeaconApiDisabled: boolean;
 
     /**
-     * Don't use XMLHttpRequest or XDomainRequest (for IE < 9) by default instead attempt to use fetch() or sendBeacon.
+     * Don't use XMLHttpRequest or XDomainRequest (for IE \< 9) by default instead attempt to use fetch() or sendBeacon.
      * If no other transport is available it will still use XMLHttpRequest
      */
     disableXhr: boolean;
@@ -166,6 +166,20 @@ export interface ISenderConfig {
      * @since 3.2.0
      */
     maxRetryCnt?: number;
+
+    /**
+     * [Optional] Specifies the Cross-Origin Resource Policy (CORP) for the endpoint.
+     * This value is included in the response header as `Cross-Origin-Resource-Policy`,
+     * which helps control how resources can be shared across different origins.
+     *
+     * Possible values:
+     * - `same-site`: Allows access only from the same site.
+     * - `same-origin`: Allows access only from the same origin (protocol, host, and port).
+     * - `cross-origin`: Allows access from any origin.
+     *
+     * @since 3.3.7
+     */
+    corsPolicy?: string;
 }
 
 export interface IBackendResponse {

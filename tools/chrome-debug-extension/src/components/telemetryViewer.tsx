@@ -39,7 +39,7 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
 
     const handleNewFilterSettings = (newFilterSettings: IFilterSettings): void => {
         try {
-            chrome.storage.local.set({ filterSettingsCacheKey: JSON.stringify(newFilterSettings) });
+            chrome.storage.local.set({ [filterSettingsCacheKey]: JSON.stringify(newFilterSettings) });
         } catch {
             // Default is OK
         }
@@ -111,12 +111,12 @@ export const TelemetryViewer = (props: ITelemetryViewerProps): React.ReactElemen
 
     React.useEffect(() => {
         try {
-            doAwait(chrome.storage.local.get(filterSettingsCacheKey), (json: any) => {
+            doAwait(chrome.storage.local.get([filterSettingsCacheKey]), (json: any) => {
                 if (json) {
                     // Make sure we have any defaults set
                     let settings: IFilterSettings = {
                         ...getDefaultFilterSettings(props.session.configuration),
-                        ...(JSON.parse(json))
+                        ...(JSON.parse(json[filterSettingsCacheKey]))
                     };
     
                     setFilterSettings(settings);

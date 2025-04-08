@@ -14,7 +14,7 @@ import {
     setProcessTelemetryTimings
 } from "@microsoft/1ds-core-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
-import { ITimerHandler, isPromiseLike, objDeepFreeze } from "@nevware21/ts-utils";
+import { ITimerHandler, isPromiseLike, mathCeil, mathMax, mathMin, objDeepFreeze } from "@nevware21/ts-utils";
 import {
     BE_PROFILE, EventBatchNotificationReason, IChannelConfiguration, IPostChannel, IPostTransmissionTelemetryItem, NRT_PROFILE, RT_PROFILE
 } from "./DataModels";
@@ -501,7 +501,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                         // we round up so that it becomes a multiple.
                         if (profileValue[1] > 0 && profileValue[0] > 0) {
                             let timerMultiplier = profileValue[0] / profileValue[1];
-                            profileValue[0] = Math.ceil(timerMultiplier) * profileValue[1];
+                            profileValue[0] = mathCeil(timerMultiplier) * profileValue[1];
                         }
 
                         // Add back the direct profile timeout
@@ -943,8 +943,8 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                     }, () => ({ latency, sendType, sendReason }), !isAsync);
                 } else {
                     // remember the min latency so that we can re-trigger later
-                    _delayedBatchSendLatency = _delayedBatchSendLatency >= 0 ? Math.min(_delayedBatchSendLatency, latency) : latency;
-                    _delayedBatchReason = Math.max(_delayedBatchReason, sendReason);
+                    _delayedBatchSendLatency = _delayedBatchSendLatency >= 0 ? mathMin(_delayedBatchSendLatency, latency) : latency;
+                    _delayedBatchReason = mathMax(_delayedBatchReason, sendReason);
                 }
 
                 return eventsQueued;
@@ -1139,7 +1139,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
             function _setAutoLimits() {
                 if (!_disableAutoBatchFlushLimit) {
-                    _autoFlushBatchLimit = Math.max(MaxNumberEventPerBatch * (MaxConnections + 1), _queueSizeLimit / 6);
+                    _autoFlushBatchLimit = mathMax(MaxNumberEventPerBatch * (MaxConnections + 1), _queueSizeLimit / 6);
                 } else {
                     _autoFlushBatchLimit = 0;
                 }
