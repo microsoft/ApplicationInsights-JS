@@ -12,7 +12,7 @@ import {
     getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
     isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
-import { AwaitResponse, IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { AwaitResponse, doAwaitResponse } from "@nevware21/ts-async";
 import { arrAppend, isFunction, isString } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
@@ -227,7 +227,7 @@ export class HttpManager {
                         const CompressionStream = (window as any).CompressionStream;
 
                         _disableZip = !!channelConfig.disableZip;
-                        if (isFunction(CompressionStream) || _sendHook) {
+                        if (!isFunction(CompressionStream) || _sendHook) {
                             _disableZip = true;
                         }
 
