@@ -333,7 +333,7 @@ export class PostChannelTest extends AITestClass {
                         name: 'testEvent',
                         sync: false,
                         latency: EventLatency.Normal,
-                        iKey: 'testIkey'   // if comment this out, test will fail, but why?
+                        iKey: 'testIkey'
                     };
                     this.postChannel.processTelemetry(event);
                     this.postChannel.flush();
@@ -384,44 +384,44 @@ export class PostChannelTest extends AITestClass {
                 }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
             });
 
-            // this.testCaseAsync({
-            //     name: "test dynamic zip config",
-            //     stepDelay: 10,
-            //     useFakeTimers: true,
-            //     useFakeServer: true,
-            //     steps: [
-            //         () => {
-            //             this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
-            //             this.config.extensionConfig[this.postChannel.identifier] = {
-            //                 httpXHROverride: this.xhrOverride
-            //             };
-            //             this.core.initialize(this.config, [this.postChannel]);
-            //             var event: IPostTransmissionTelemetryItem = {
-            //                 name: 'testEvent',
-            //                 sync: false,
-            //                 latency: EventLatency.Normal,
-            //                 iKey: 'testIkey'
-            //             };
-            //             this.postChannel.processTelemetry(event);
-            //             this.postChannel.flush();
-            //             this.clock.tick(10);
-            //             this.core.config.extensionConfig[this.postChannel.identifier].disableZip = true;
-            //             this.clock.tick(1);
-            //             this.core.track(event);
-            //             this.postChannel.flush();
-            //             this.clock.tick(10);
-            //         }].concat(PollingAssert.createPollingAssert(() => {
-            //             if (this.genericSpy.callCount === 2) {
-            //                 let request = this.genericSpy.getCall(0).args[0];
-            //                 QUnit.assert.equal(request.headers["Content-Encoding"], undefined, "header should not be added");
-            //                 QUnit.assert.ok(JSON.stringify(request.data).includes("testEvent"), "telemetry should not be encoded");
-            //                 let request2 = this.genericSpy.getCall(1).args[0];
-            //                 QUnit.assert.equal(request2.headers["Content-Encoding"], "gzip", "Telemetry should be gzip encoded after disableZip is set to false");
-            //                 return true;
-            //             }
-            //             return false;
-            //         }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-            //     });
+            this.testCaseAsync({
+                name: "test dynamic zip config",
+                stepDelay: 10,
+                useFakeTimers: true,
+                useFakeServer: true,
+                steps: [
+                    () => {
+                        this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                        this.config.extensionConfig[this.postChannel.identifier] = {
+                            httpXHROverride: this.xhrOverride
+                        };
+                        this.core.initialize(this.config, [this.postChannel]);
+                        var event: IPostTransmissionTelemetryItem = {
+                            name: 'testEvent',
+                            sync: false,
+                            latency: EventLatency.Normal,
+                            iKey: 'testIkey'
+                        };
+                        this.postChannel.processTelemetry(event);
+                        this.postChannel.flush();
+                        this.clock.tick(10);
+                        this.core.config.extensionConfig[this.postChannel.identifier].disableZip = false;
+                        this.clock.tick(1);
+                        this.core.track(event);
+                        this.postChannel.flush();
+                        this.clock.tick(10);
+                    }].concat(PollingAssert.createPollingAssert(() => {
+                        if (this.genericSpy.callCount === 2) {
+                            let request = this.genericSpy.getCall(0).args[0];
+                            QUnit.assert.equal(request.headers["Content-Encoding"], undefined, "header should not be added");
+                            QUnit.assert.ok(JSON.stringify(request.data).includes("testEvent"), "telemetry should not be encoded");
+                            let request2 = this.genericSpy.getCall(1).args[0];
+                            QUnit.assert.equal(request2.headers["Content-Encoding"], "gzip", "Telemetry should be gzip encoded after disableZip is set to false");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                });
            
 
 
