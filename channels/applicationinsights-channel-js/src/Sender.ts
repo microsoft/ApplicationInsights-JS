@@ -14,7 +14,7 @@ import {
     isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
     prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise, createPromise } from "@nevware21/ts-async";
+import { AwaitResponse, IPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
     ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine, scheduleTimeout
 } from "@nevware21/ts-utils";
@@ -978,14 +978,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                 const CompressionStream = (window as any).CompressionStream;
 
-                // Compression logic
-                const uint8Data = typeof payload.data === "string"
-                    ? new TextEncoder().encode(payload.data)
-                    : payload.data;
-
+                // Create a readable stream from the uint8 data
                 let body = new ReadableStream<Uint8Array>({
                     start(controller) {
-                        controller.enqueue(uint8Data);
+                        controller.enqueue(isString(payload.data) ? new TextEncoder().encode(payload.data) : payload.data);
                         controller.close();
                     }
                 });
@@ -994,32 +990,49 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
                 const chunks: Uint8Array[] = [];
                 let totalLength = 0;
-        
-                return reader.read().then(function processChunk({ done, value }: { done: boolean, value?: Uint8Array }): IPromise<void> {
-                    if (done) {
-                        // Combine all chunks into a single Uint8Array
+                let callbackCalled = false;
+
+                // Process each chunk from the compressed stream reader
+                doAwaitResponse(reader.read(), function processChunk(response: AwaitResponse<ReadableStreamReadResult<Uint8Array>>) {
+                    if (!callbackCalled && !response.rejected) {
+                        // Process the chunk and continue reading
+                        const result = response.value;
+                        if (!result.done) {
+                            // Add current chunk and continue reading
+                            chunks.push(result.value);
+                            totalLength += result.value.length;
+                            return doAwaitResponse(reader.read(), processChunk);
+                        }
+
+                        // We are complete so combine all chunks
                         const combined = new Uint8Array(totalLength);
                         let offset = 0;
                         for (const chunk of chunks) {
                             combined.set(chunk, offset);
                             offset += chunk.length;
                         }
+                        
+                        // Update payload with compressed data
                         payload.data = combined;
                         payload.headers["Content-Encoding"] = "gzip";
-                        callback(payload);
-                        const resolvedPromise: IPromise<void> = createPromise((resolve) => {
-                            resolve();
-                        });
-                        return resolvedPromise;
-                    } else {
-                        chunks.push(value);
-                        totalLength += value.length;
-                        return reader.read().then(processChunk);
                     }
-                }).catch(() => {
-                    // Fallback to sending uncompressed data
-                    callback(payload);
+
+                    if (!callbackCalled) {
+                        // Send the processed payload to the callback, if not already called
+                        // If the response was rejected, we will call the callback with the original payload
+                        // As it only gets "replaced" if the compression was successful
+                        callbackCalled = true;
+                        callback(payload);
+                    }
+
+                    // We don't need to return anything as this will cause the calling chain to be resolved and closed
                 });
+
+                // returning the reader to allow the caller to cancel the stream if needed
+                // This is not a requirement but allows for better control over the stream, like if we detect that we are unloading
+                // we could use reader.cancel() to stop the stream and avoid sending the request, but this may still be an asynchronous operation
+                // and may not be possible to cancel the stream in time
+                return reader;
             }
 
             function _getPayload(payload: IInternalStorageItem[]): IInternalPayloadData {
