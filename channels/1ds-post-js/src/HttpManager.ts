@@ -178,7 +178,6 @@ export class HttpManager {
         let _excludeCsMetaData: boolean;
         let _sendPostMgr: SenderPostManager;
         let _fetchCredentials: RequestCredentials;
-        let _maxEvtsPerBatch: number;
 
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
@@ -214,7 +213,6 @@ export class HttpManager {
                         _urlString = endpointUrl + UrlQueryString;
                         _useHeaders = !isUndefined(channelConfig.avoidOptions) ? !channelConfig.avoidOptions : true;
                         _enableEventTimings = !channelConfig.disableEventTimings;
-                        _maxEvtsPerBatch = channelConfig.maxEventsPerBatch || maxEventsPerBatch;
     
                         let valueSanitizer = channelConfig.valueSanitizer;
                         let stringifyObjects = channelConfig.stringifyObjects;
@@ -367,7 +365,7 @@ export class HttpManager {
                         let theBatch = theBatches.shift();
                         if (theBatch && theBatch.count() > 0) {
                             thePayload = thePayload || _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
-                            _serializer.appendPayload(thePayload, theBatch, _maxEvtsPerBatch);
+                            _serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch);
                         }
                     }
 
@@ -489,8 +487,6 @@ export class HttpManager {
                 _isInitialized = false;
                 _timeoutWrapper = createTimeoutWrapper();
                 _excludeCsMetaData = false;
-                _sendPostMgr = null;
-                _maxEvtsPerBatch = maxEventsPerBatch;
             }
 
             function _fetchOnComplete(response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) {
@@ -779,7 +775,7 @@ export class HttpManager {
                                     thePayload = thePayload || _serializer.createPayload(retryCount, isTeardown, isSynchronous, isReducedPayload, sendReason, sendType);
                                     
                                     // Add the batch to the current payload
-                                    if (!_serializer.appendPayload(thePayload, theBatch, _maxEvtsPerBatch)) {
+                                    if (!_serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)) {
                                         // Entire batch was not added so send the payload and retry adding this batch
                                         _doPayloadSend(thePayload, serializationStart, getTime(), sendReason);
                                         serializationStart = getTime();

@@ -177,8 +177,7 @@ export class PostChannelTest extends AITestClass {
                     maxEventRetryAttempts: 6,
                     maxUnloadEventRetryAttempts: 2,
                     addNoResponse: undefValue,
-                    excludeCsMetaData: undefValue,
-                    maxEventsPerBatch: 500
+                    excludeCsMetaData: undefValue
                 };
                 let actaulConfig =  postChannel["_getDbgPlgTargets"]()[1];
                 QUnit.assert.deepEqual(expectedConfig, actaulConfig, "default config should be set");
@@ -197,13 +196,11 @@ export class PostChannelTest extends AITestClass {
                 core.config.extensionConfig[identifier].eventsLimitInMem = 100;
                 core.config.extensionConfig[identifier].maxEventRetryAttempts = 10;
                 core.config.extensionConfig[identifier].httpXHROverride = this.xhrOverride;
-                core.config.extensionConfig[identifier].maxEventsPerBatch = 100;
                 this.clock.tick(1);
                 actaulConfig = postChannel["_getDbgPlgTargets"]()[1];
                 QUnit.assert.deepEqual(actaulConfig.eventsLimitInMem, 100, "eventsLimitInMem should be changed dynamically");
                 QUnit.assert.deepEqual(actaulConfig.maxEventRetryAttempts, 10, "maxEventRetryAttempt should should be changed dynamically");
                 QUnit.assert.deepEqual(actaulConfig.httpXHROverride, this.xhrOverride, "xhrOverride should be changed dynamically");
-                QUnit.assert.deepEqual(actaulConfig.maxEventsPerBatch, 100, "maxEventPerBatch should be changed dynamically");
             }
         });
 
@@ -1820,79 +1817,6 @@ export class PostChannelTest extends AITestClass {
                 QUnit.assert.equal(sendEvents.length, 4, '4 send events should have been sent yet');
                 QUnit.assert.equal(sentEvents.length, 2, '2 sent (completed) events should have been sent yet');
                 QUnit.assert.equal(discardEvents.length, 0, 'No discard events should have been sent yet');
-            }
-        });
-
-        // TODO: add more tests
-        this.testCase({
-            name: "Test event number per batch when maxEventsPerBatch is set",
-            useFakeTimers: true,
-            test: () => {
-                let sentRequests = [];
-                let sentEvents = [];
-                let discardEvents = [];
-                let sendEvents = [];
-
-                this.config.extensionConfig[this.postChannel.identifier] = {
-                    httpXHROverride: {
-                        sendPOST: (payload: IPayloadData,
-                            oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) => {
-                                sentRequests.push({
-                                    payload: payload,
-                                    isSync: sync,
-                                    oncomplete: oncomplete
-                                });
-                            }
-                    },
-                    maxEventsPerBatch: 100
-                };
-
-                let extConfig = this.config.extensionConfig[this.postChannel.identifier] || {};
-                this.config.extensionConfig[this.postChannel.identifier] = extConfig;
-
-                this.core.initialize(this.config, [this.postChannel]);
-                this.core.addNotificationListener({
-                    eventsSent: (events: ITelemetryItem[]) => {
-                        sentEvents.push(events);
-                    },
-                    eventsDiscarded: (events: ITelemetryItem[], reason: number) => {
-                        discardEvents.push({
-                            events: events,
-                            reason: reason
-                        });
-                    },
-                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
-                        sendEvents.push({
-                            sendReason: sendReason,
-                            isAsync: isAsync
-                        });
-                    }
-                });
-
-                // Send 600 events
-                for (let lp = 0; lp < 600; lp++) {
-                    this.postChannel.processTelemetry({
-                        name: 'testEvent-' + lp,
-                        latency: EventLatency.Normal,
-                        iKey: 'testIkey'
-                    } as IPostTransmissionTelemetryItem);
-                }
-             
-                // No Events should yet be sent for "normal" events
-                QUnit.assert.equal(sentRequests.length, 0, 'No events should have been triggered yet');
-                QUnit.assert.equal(sendEvents.length, 0, 'No send events should have been sent yet');
-                QUnit.assert.equal(sentEvents.length, 0, 'No sent events should have been sent yet');
-                QUnit.assert.equal(discardEvents.length, 0, 'No discard events should have been sent yet');
-
-                this.postChannel.flush(false);
-                QUnit.assert.equal(sentRequests.length, 6, "should have 6 requests sent out");
-
-                this.clock.tick(1);
-                let data = sentRequests[0].payload.data.split('\n');
-                QUnit.assert.equal(data.length, 100, 'There should be 100 events per batch');
-                QUnit.assert.equal(sendEvents.length, 6, '6 requests should now have been sent');
-                QUnit.assert.equal(sentRequests.length, 6, '6 requests should now have been sent');
-                QUnit.assert.equal(discardEvents.length, 0, 'Nothing should have been discarded as the events are scheduled to be sent');
             }
         });
 

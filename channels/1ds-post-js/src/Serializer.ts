@@ -30,7 +30,8 @@ import { mathMin, strSubstr } from "@nevware21/ts-utils";
  */
 const _MAX_STRING_JOINS = 20;
 
-const RequestSizeLimitBytes = 3984588;  // approx 3.8 Mb
+// Max Size set by One Collector: https://msazure.visualstudio.com/OneDsCollector/_git/Collector?path=/Services/Azure/CollectorWorkerRoleAzure/ServiceConfiguration.Cloud.cscfg
+const RequestSizeLimitBytes = 3145728; // approx 3.15 Mb
 const BeaconRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 const MaxRecordSize = 2000000; // approx 2 Mb
 const MaxBeaconRecordSize = mathMin(MaxRecordSize, BeaconRequestSizeLimitBytes);
@@ -181,7 +182,8 @@ export class Serializer {
                 };
             };
 
-            _self.appendPayload = (payload: ISerializedPayload, theBatch: EventBatch, maxEventsPerBatch: number): boolean => {
+            _self.appendPayload = (payload: ISerializedPayload, theBatch: EventBatch, maxEventsPerBatch: number): boolean => { // TODO: change pars to a object
+                // TODO: add two config, maxSizePerEvt and requestMaxSize(both sync and async)
                 let canAddEvents = payload && theBatch && !payload.overflow;
                 if (canAddEvents) {
                     doPerf(perfManager, () => "Serializer:appendPayload", () => {
@@ -192,8 +194,10 @@ export class Serializer {
                         let sizeExceeded: IPostTransmissionTelemetryItem[] = [];
                         let failedEvts: IPostTransmissionTelemetryItem[] = [];
                         let isBeaconPayload = payload.isBeacon;
-                        let requestMaxSize = isBeaconPayload ? BeaconRequestSizeLimitBytes : RequestSizeLimitBytes;
-                        let recordMaxSize = isBeaconPayload ? MaxBeaconRecordSize : MaxRecordSize;
+                        // TODO: add one collector link here (both sync and async)
+                        let requestMaxSize = isBeaconPayload ? BeaconRequestSizeLimitBytes : RequestSizeLimitBytes;// TODO: we should change this, change the upper limit to current one
+                        // TODO: (both sync and async)
+                        let recordMaxSize  = isBeaconPayload ? MaxBeaconRecordSize : MaxRecordSize; // TODO: we should change this
 
                         let lp = 0;
                         let joinCount = 0;

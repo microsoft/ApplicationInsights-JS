@@ -59,7 +59,6 @@ interface IPostChannelBatchQueue {
 const defaultPostChannelConfig: IConfigDefaults<IChannelConfiguration> = objDeepFreeze({
     eventsLimitInMem: { isVal: isGreaterThanZero, v: MaxEventsLimitInMem },
     immediateEventLimit: { isVal: isGreaterThanZero, v: 500 },
-    maxEventsPerBatch: { isVal: isGreaterThanZero, v: MaxNumberEventPerBatch },
     autoFlushEventsLimit: { isVal: isGreaterThanZero, v: 0 },
     disableAutoBatchFlushLimit: false,
     httpXHROverride: { isVal: isOverrideFn, v: undefValue },
@@ -145,7 +144,6 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
         let _unloadHandlersAdded: boolean;
         let _overrideInstrumentationKey: string;
         let _disableTelemetry: boolean;
-        let _maxEvtPerBatch: number;
 
         dynamicProto(PostChannel, this, (_self, _base) => {
             _initDefaults();
@@ -169,7 +167,6 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                             let ctx = createProcessTelemetryContext(null, coreConfig, core);
                             _postConfig = ctx.getExtCfg<IChannelConfiguration>(_self.identifier, defaultPostChannelConfig);
                             _timeoutWrapper = createTimeoutWrapper(_postConfig.setTimeoutOverride, _postConfig.clearTimeoutOverride);
-                            _maxEvtPerBatch = _postConfig.maxEventsPerBatch;
         
                             // Only try and use the optimizeObject() if this appears to be a chromium based browser and it has not been explicitly disabled
                             _optimizeObject = !_postConfig.disableOptimizeObj && isChromium();
@@ -680,7 +677,6 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 _paused = false;
                 _immediateQueueSize = 0;
                 _immediateQueueSizeLimit = 500;
-                _maxEvtPerBatch = MaxNumberEventPerBatch;
                 _queueSize = 0;
                 _queueSizeLimit = MaxEventsLimitInMem;
                 _profiles = {};
@@ -1142,7 +1138,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
             function _setAutoLimits() {
                 if (!_disableAutoBatchFlushLimit) {
-                    _autoFlushBatchLimit = mathMax(_maxEvtPerBatch * (MaxConnections + 1), _queueSizeLimit / 6);
+                    _autoFlushBatchLimit = mathMax(MaxNumberEventPerBatch * (MaxConnections + 1), _queueSizeLimit / 6);
                 } else {
                     _autoFlushBatchLimit = 0;
                 }
