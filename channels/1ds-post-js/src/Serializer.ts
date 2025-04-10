@@ -182,8 +182,7 @@ export class Serializer {
                 };
             };
 
-            _self.appendPayload = (payload: ISerializedPayload, theBatch: EventBatch, maxEventsPerBatch: number): boolean => { // TODO: change pars to a object
-                // TODO: add two config, maxSizePerEvt and requestMaxSize(both sync and async)
+            _self.appendPayload = (payload: ISerializedPayload, theBatch: EventBatch, maxEventsPerBatch: number): boolean => {
                 let canAddEvents = payload && theBatch && !payload.overflow;
                 if (canAddEvents) {
                     doPerf(perfManager, () => "Serializer:appendPayload", () => {
@@ -194,10 +193,7 @@ export class Serializer {
                         let sizeExceeded: IPostTransmissionTelemetryItem[] = [];
                         let failedEvts: IPostTransmissionTelemetryItem[] = [];
                         let isBeaconPayload = payload.isBeacon;
-                        // TODO: add one collector link here (both sync and async)
-                        let requestMaxSize = isBeaconPayload ? BeaconRequestSizeLimitBytes : RequestSizeLimitBytes;// TODO: we should change this, change the upper limit to current one
-                        // TODO: (both sync and async)
-                        let recordMaxSize  = isBeaconPayload ? MaxBeaconRecordSize : MaxRecordSize; // TODO: we should change this
+                        let recordMaxSize  = isBeaconPayload ? MaxBeaconRecordSize : MaxRecordSize;
 
                         let lp = 0;
                         let joinCount = 0;
