@@ -16,7 +16,8 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
-    ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine, scheduleTimeout
+    ITimerHandler, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
+    scheduleTimeout
 } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
@@ -79,7 +80,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     transports: UNDEFINED_VALUE,
     retryCodes: UNDEFINED_VALUE,
     corsPolicy: UNDEFINED_VALUE,
-    maxRetryCnt: {isVal: isNumber, v:10}
+    maxRetryCnt: {isVal: isNumber, v:10},
+    disableZip: true
 });
 
 const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
@@ -186,6 +188,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _disableBeaconSplit: boolean;
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
+        let _disableZip: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -285,6 +288,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
 
+                    const CompressionStream = (window as any).CompressionStream;
+                    _disableZip = !!senderConfig.disableZip;
+                    if (!isFunction(CompressionStream)) {
+                        _disableZip = true;
+                    }
                     let corsPolicy = senderConfig.corsPolicy;
                     if (corsPolicy){
                         if (corsPolicy === "same-origin" || corsPolicy === "same-site" || corsPolicy === "cross-origin") {
@@ -410,7 +418,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     } else {
                         _sendPostMgr.SetConfig(sendPostConfig);
                     }
-
                     let customInterface = senderConfig.httpXHROverride;
                     let httpInterface: IXHROverride = null;
                     let syncInterface: IXHROverride = null;
@@ -947,7 +954,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _self._buffer.markAsSent(payload);
                     }
 
-                    return sendPostFunc(payloadData, onComplete, !isAsync);
+                    _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
+                        return sendPostFunc(processedPayload, onComplete, !isAsync);
+                    }, _disableZip, payloadData, !isAsync);
                 }
                 return null;
             }

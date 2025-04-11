@@ -12,7 +12,7 @@ import {
     getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
     isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
-import { AwaitResponse, doAwaitResponse } from "@nevware21/ts-async";
+import { AwaitResponse, IPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { arrAppend, isFunction, isString } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
@@ -978,7 +978,7 @@ export class HttpManager {
                                 };
 
                                 let isSync = thePayload.isTeardown || thePayload.isSync;
-                                _preparePayload((processedPayload: IPayloadData) => {
+                                _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
                                     try {
                                         sendInterface.sendPOST(processedPayload, onComplete, isSync);
                                         if (_sendListener) {
@@ -989,7 +989,7 @@ export class HttpManager {
                                         _doOnComplete(onComplete, 0, {});
                                         _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
                                     }
-                                }, payload, isSync);
+                                }, _disableZip, payload, isSync);
                             };
                         }
 
@@ -1059,71 +1059,6 @@ export class HttpManager {
                 }
             }
 
-            function _preparePayload(callback: (processedPayload: IPayloadData) => void, payload: IPayloadData, isSync: boolean) {
-                if (_disableZip || isSync || !payload.data) {
-                    // If the request is synchronous, the body is null or undefined or Compression is not supported, we don't need to compress it
-                    callback(payload);
-                    return;
-                }
-
-                const CompressionStream = (window as any).CompressionStream;
-
-                // Create a readable stream from the uint8 data
-                let body = new ReadableStream<Uint8Array>({
-                    start(controller) {
-                        controller.enqueue(isString(payload.data) ? new TextEncoder().encode(payload.data) : payload.data);
-                        controller.close();
-                    }
-                });
-    
-                const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
-                const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
-                const chunks: Uint8Array[] = [];
-                let totalLength = 0;
-                let callbackCalled = false;
-
-                // Process each chunk from the compressed stream reader
-                doAwaitResponse(reader.read(), function processChunk(response: AwaitResponse<ReadableStreamReadResult<Uint8Array>>) {
-                    if (!callbackCalled && !response.rejected) {
-                        // Process the chunk and continue reading
-                        const result = response.value;
-                        if (!result.done) {
-                            // Add current chunk and continue reading
-                            chunks.push(result.value);
-                            totalLength += result.value.length;
-                            return doAwaitResponse(reader.read(), processChunk);
-                        }
-
-                        // We are complete so combine all chunks
-                        const combined = new Uint8Array(totalLength);
-                        let offset = 0;
-                        for (const chunk of chunks) {
-                            combined.set(chunk, offset);
-                            offset += chunk.length;
-                        }
-                        
-                        // Update payload with compressed data
-                        payload.data = combined;
-                        payload.headers["Content-Encoding"] = "gzip";
-                    }
-
-                    if (!callbackCalled) {
-                        // Send the processed payload to the callback, if not already called
-                        // If the response was rejected, we will call the callback with the original payload
-                        // As it only gets "replaced" if the compression was successful
-                        callbackCalled = true;
-                        callback(payload);
-                    }
-
-                    // We don't need to return anything as this will cause the calling chain to be resolved and closed
-                });
-
-                // returning the reader to allow the caller to cancel the stream if needed
-                // This is not a requirement but allows for better control over the stream, like if we detect that we are unloading
-                // we could use reader.cancel() to stop the stream and avoid sending the request, but this may still be an asynchronous operation
-                // and may not be possible to cancel the stream in time
-                return reader;
-            }
 
             function _addEventCompletedTimings(theEvents: IPostTransmissionTelemetryItem[], sendEventCompleted: number) {
                 if (_enableEventTimings) {
