@@ -12,8 +12,7 @@ import {
     getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
     isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
-import { AwaitResponse, IPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { arrAppend, isFunction, isString } from "@nevware21/ts-utils";
+import { arrAppend, isFunction } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
 import {
