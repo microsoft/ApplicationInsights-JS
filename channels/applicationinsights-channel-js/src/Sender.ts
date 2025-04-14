@@ -188,7 +188,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _disableBeaconSplit: boolean;
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
-        let _core: IAppInsightsCore;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -264,7 +263,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 let diagLog = _self.diagLog();
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace("Sender"), core.evtNamespace && core.evtNamespace());
                 _offlineListener = createOfflineListener(_evtNamespace);
-                _core = core;
                 // This function will be re-called whenever any referenced configuration is changed
                 _self._addHook(onConfigChange(config, (details) => {
                     let config = details.cfg;
@@ -661,6 +659,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             }
 
+            function _getStatsBeat() {
+                return _self.core.getStatsBeat();
+            }
+
             function _xdrOnLoad (xdr: IXDomainRequest, payload: IInternalStorageItem[]) {
                 const responseText = _getResponseText(xdr);
                 if (xdr && (responseText + "" === "200" || responseText === "")) {
@@ -688,7 +690,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 return;
                             }
                             const responseText = _getResponseText(xdr);
-                            let statsbeat = _core.getStatsBeat();
+                            let statsbeat = _getStatsBeat();
                             var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                             if (xdr && (responseText + "" === "200" || responseText === "")) {
                                 _consecutiveErrors = 0;
@@ -716,7 +718,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            let statsbeat = _core.getStatsBeat();
+                            let statsbeat = _getStatsBeat();
                             if (statsbeat) {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                                 statsbeat.count(response.status, payload, endpointHost);
@@ -728,7 +730,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            let statsbeat = _core.getStatsBeat();
+                            let statsbeat = _getStatsBeat();
                             if (statsbeat && request.readyState === 4) {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                                 statsbeat.count(request.status, payload, endpointHost);
@@ -736,7 +738,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             return _xhrReadyStateChange(request, payloadArr, payloadArr.length);
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
-                            let statsbeat = _core.getStatsBeat();
+                            let statsbeat = _getStatsBeat();
                             if (statsbeat) {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                                 statsbeat.count(-1, data, endpointHost);
@@ -985,7 +987,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    let statsbeat = _core.getStatsBeat();
+                    let statsbeat = _getStatsBeat();
                     if (statsbeat) {
                         var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                         statsbeat.count(status, payloadData, endpointHost);

@@ -184,8 +184,8 @@ export class StatsBeatTests extends AITestClass {
                 Assert.ok(statsbeat, "Statsbeat should be created");
                 
                 // Update configuration to disable statsbeat
-if (!this._core.config._sdk) {
-                this._core.config._sdk = {};
+                if (!this._core.config._sdk) {
+                    this._core.config._sdk = {};
                 }
                 this._core.config._sdk.stats = false;
                 this.clock.tick(1); // Allow time for config changes to propagate
