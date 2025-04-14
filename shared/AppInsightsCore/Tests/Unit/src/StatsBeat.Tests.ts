@@ -140,6 +140,7 @@ export class StatsBeatTests extends AITestClass {
 
         this.testCase({
             name: "StatsBeat: does not send metrics for different endpoints",
+            useFakeTimers: true,
             test: () => {
                 // Initialize StatsBeat for a specific endpoint
                 this._statsbeat.initialize(this._core, {
@@ -165,7 +166,9 @@ export class StatsBeatTests extends AITestClass {
                 
                 // Count metrics for a different endpoint
                 this._statsbeat.count(200, payloadData, "https://different.endpoint.com");
-                
+
+                // Verify that trackStatsbeats is called when the timer fires
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL + 1);
                 // The count method was called, but it should return early
                 Assert.equal(1, countSpy.callCount, "count method should be called");
                 Assert.equal(0, this._trackSpy.callCount, "track should not be called for different endpoint");
