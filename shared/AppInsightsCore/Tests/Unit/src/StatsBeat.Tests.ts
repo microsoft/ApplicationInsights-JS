@@ -186,10 +186,6 @@ export class StatsBeatTests extends AITestClass {
                 const statsbeat = this._core.getStatsBeat();
                 Assert.ok(statsbeat, "Statsbeat should be created");
                 
-                // Update configuration to disable statsbeat
-                if (!this._core.config._sdk) {
-                    this._core.config._sdk = {};
-                }
                 this._core.config._sdk.stats = false;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
@@ -204,6 +200,27 @@ export class StatsBeatTests extends AITestClass {
                 // Verify that statsbeat is created again
                 const reenabledStatsbeat = this._core.getStatsBeat();
                 Assert.ok(reenabledStatsbeat, "Statsbeat should be recreated when re-enabled");
+
+                // Test that statsbeat is not created when disabled with undefined
+                this._core.config._sdk.stats = undefined;
+                this.clock.tick(1); // Allow time for config changes to propagate
+                
+                // Verify that statsbeat is removed
+                Assert.ok(!this._core.getStatsBeat(), "Statsbeat should be removed when disabled");
+
+                // Re-enable statsbeat
+                this._core.config._sdk.stats = true;
+                this.clock.tick(1); // Allow time for config changes to propagate
+                
+                // Verify that statsbeat is created again
+                Assert.ok( this._core.getStatsBeat(), "Statsbeat should be recreated when re-enabled");
+
+                // Test that statsbeat is not created when disabled with null value
+                this._core.config._sdk.stats = null;
+                this.clock.tick(1); // Allow time for config changes to propagate
+                
+                // Verify that statsbeat is removed
+                Assert.ok(!this._core.getStatsBeat(), "Statsbeat should be removed when disabled");
             }
         });
     }
