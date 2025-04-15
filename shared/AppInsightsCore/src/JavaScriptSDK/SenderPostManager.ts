@@ -3,7 +3,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AwaitResponse, IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { arrForEach, dumpObj, getNavigator, getWindow, isFunction, isString, objKeys } from "@nevware21/ts-utils";
+import { arrForEach, dumpObj, getInst, getNavigator, getWindow, isFunction, isString, objKeys } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { SendRequestReason, TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -141,77 +141,74 @@ export class SenderPostManager {
                     callback(payload);
                     return;
                 }
-
-                let CompressionStream: any;
-                try {
-                    CompressionStream = (window as any).CompressionStream;
-                    if (typeof CompressionStream !== "function") {
-                        // CompressionStream exists but isn't usable
+                
+                try{
+                    let csStream: any = getInst("CompressionStream");
+                    if (!isFunction(csStream)) {
                         callback(payload);
                         return;
                     }
+
+                    // Create a readable stream from the uint8 data
+                    let body = new ReadableStream<Uint8Array>({
+                        start(controller) {
+                            controller.enqueue(isString(payload.data) ? new TextEncoder().encode(payload.data) : payload.data);
+                            controller.close();
+                        }
+                    });
+        
+                    const compressedStream = body.pipeThrough(new csStream("gzip"));
+                    const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
+                    const chunks: Uint8Array[] = [];
+                    let totalLength = 0;
+                    let callbackCalled = false;
+
+                    // Process each chunk from the compressed stream reader
+                    doAwaitResponse(reader.read(), function processChunk(response: AwaitResponse<ReadableStreamReadResult<Uint8Array>>): undefined | IPromise<ReadableStreamReadResult<Uint8Array>> {
+                        if (!callbackCalled && !response.rejected) {
+                            // Process the chunk and continue reading
+                            const result = response.value;
+                            if (!result.done) {
+                                // Add current chunk and continue reading
+                                chunks.push(result.value);
+                                totalLength += result.value.length;
+                                return doAwaitResponse(reader.read(), processChunk) as any;
+                            }
+
+                            // We are complete so combine all chunks
+                            const combined = new Uint8Array(totalLength);
+                            let offset = 0;
+                            for (const chunk of chunks) {
+                                combined.set(chunk, offset);
+                                offset += chunk.length;
+                            }
+                            
+                            // Update payload with compressed data
+                            payload.data = combined;
+                            payload.headers["Content-Encoding"] = "gzip";
+                        }
+
+                        if (!callbackCalled) {
+                            // Send the processed payload to the callback, if not already called
+                            // If the response was rejected, we will call the callback with the original payload
+                            // As it only gets "replaced" if the compression was successful
+                            callbackCalled = true;
+                            callback(payload);
+                        }
+
+                        // We don't need to return anything as this will cause the calling chain to be resolved and closed
+                    });
+
+                    // returning the reader to allow the caller to cancel the stream if needed
+                    // This is not a requirement but allows for better control over the stream, like if we detect that we are unloading
+                    // we could use reader.cancel() to stop the stream and avoid sending the request, but this may still be an asynchronous operation
+                    // and may not be possible to cancel the stream in time
+                    return reader;
                 } catch (error) {
                     // CompressionStream is not available at all
                     callback(payload);
                     return;
                 }
-
-
-                // Create a readable stream from the uint8 data
-                let body = new ReadableStream<Uint8Array>({
-                    start(controller) {
-                        controller.enqueue(isString(payload.data) ? new TextEncoder().encode(payload.data) : payload.data);
-                        controller.close();
-                    }
-                });
-    
-                const compressedStream = body.pipeThrough(new CompressionStream("gzip"));
-                const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
-                const chunks: Uint8Array[] = [];
-                let totalLength = 0;
-                let callbackCalled = false;
-
-                // Process each chunk from the compressed stream reader
-                doAwaitResponse(reader.read(), function processChunk(response: AwaitResponse<ReadableStreamReadResult<Uint8Array>>): undefined | IPromise<ReadableStreamReadResult<Uint8Array>> {
-                    if (!callbackCalled && !response.rejected) {
-                        // Process the chunk and continue reading
-                        const result = response.value;
-                        if (!result.done) {
-                            // Add current chunk and continue reading
-                            chunks.push(result.value);
-                            totalLength += result.value.length;
-                            return doAwaitResponse(reader.read(), processChunk) as any;
-                        }
-
-                        // We are complete so combine all chunks
-                        const combined = new Uint8Array(totalLength);
-                        let offset = 0;
-                        for (const chunk of chunks) {
-                            combined.set(chunk, offset);
-                            offset += chunk.length;
-                        }
-                        
-                        // Update payload with compressed data
-                        payload.data = combined;
-                        payload.headers["Content-Encoding"] = "gzip";
-                    }
-
-                    if (!callbackCalled) {
-                        // Send the processed payload to the callback, if not already called
-                        // If the response was rejected, we will call the callback with the original payload
-                        // As it only gets "replaced" if the compression was successful
-                        callbackCalled = true;
-                        callback(payload);
-                    }
-
-                    // We don't need to return anything as this will cause the calling chain to be resolved and closed
-                });
-
-                // returning the reader to allow the caller to cancel the stream if needed
-                // This is not a requirement but allows for better control over the stream, like if we detect that we are unloading
-                // we could use reader.cancel() to stop the stream and avoid sending the request, but this may still be an asynchronous operation
-                // and may not be possible to cancel the stream in time
-                return reader;
             };
 
             /**

@@ -16,7 +16,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
-    ITimerHandler, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
+    ITimerHandler, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
     scheduleTimeout
 } from "@nevware21/ts-utils";
 import {
@@ -287,10 +287,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             senderConfig.endpointUrl = coreUrl;
                         }
                     }
-
-                    const CompressionStream = (window as any).CompressionStream;
+                    const csStream = getInst("CompressionStream");
                     _disableZip = !!senderConfig.disableZip;
-                    if (!isFunction(CompressionStream)) {
+                    if (!isFunction(csStream)) {
                         _disableZip = true;
                     }
                     let corsPolicy = senderConfig.corsPolicy;
