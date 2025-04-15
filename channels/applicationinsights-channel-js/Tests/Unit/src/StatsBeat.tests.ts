@@ -1,5 +1,5 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IPayloadData, ITelemetryItem, TransportType } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, getWindow, IPayloadData, ITelemetryItem, TransportType } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "../../../src/Sender";
 import { SinonSpy, SinonStub } from "sinon";
 import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
@@ -122,10 +122,11 @@ export class StatsbeatTests extends AITestClass {
         this.testCaseAsync({
             name: "Statsbeat increments success count when fetch sender is called once",
             useFakeTimers: true,
+            useFakeServer: true,
             stepDelay: 100,
             steps: [
                 () => {
-                    this.fetchStub = this.sandbox.stub(window, "fetch").callsFake(() => {
+                    this.fetchStub = this.sandbox.stub(window, "fetch").callsFake(() => { // only fetch is supported to stub, why?
                         return Promise.resolve(new Response("{}", { status: 200, statusText: "OK" }));
                     });
 
@@ -140,6 +141,7 @@ export class StatsbeatTests extends AITestClass {
                     };
 
                     this.processTelemetryAndFlush(sender, telemetryItem);
+                    
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
                 if (this.statsbeatCountSpy.called && this.fetchStub.called) {
@@ -181,37 +183,7 @@ export class StatsbeatTests extends AITestClass {
             }, "Waiting for fetch sender and Statsbeat count to be called") as any)
         });
 
-    
-
-        // this.testCaseAsync({
-        //     name: "Statsbeat increments success count for xhr sender",useFakeTimers: true,
-        //     stepDelay: 100,
-        //     steps: [
-        //         () => {
-        //             let config = this.createSenderConfig(TransportType.Xhr) && {disableSendBeaconSplit: true};
-        //             const { sender } = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000");
-
-        //             const telemetryItem: ITelemetryItem = {
-        //                 name: "fake item",
-        //                 iKey: "testIkey2;ingestionendpoint=testUrl1",
-        //                 baseType: "some type",
-        //                 baseData: {}
-        //             };
-        //             this.processTelemetryAndFlush(sender, telemetryItem);
-        //             QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
-
-        //         }
-        //     ].concat(PollingAssert.createPollingAssert(() => {
-        //         if (this.statsbeatCountSpy.called) {
-        //             // this.assertStatsbeatCall(200, "Request_Success_Count");
-        //             console.log("Statsbeat count called with success count for xhr sender");
-        //             return true;
-        //         }
-        //         return false;
-        //     }, "Waiting for xhr sender and Statsbeat count to be called", 60, 1000) as any)
-        // });
-
-            this.testCaseAsync({
+        this.testCaseAsync({
             name: "Statsbeat increments success count for beacon sender",
             useFakeTimers: true,
             stepDelay: 100,
@@ -242,5 +214,42 @@ export class StatsbeatTests extends AITestClass {
                 return false;
             }, "Waiting for beacon sender and Statsbeat count to be called") as any)
         });
-    }
+    
+
+    this.testCaseAsync({
+        name: "Statsbeat increments success count for xhr sender",
+        useFakeTimers: true,
+        useFakeServer: true,
+        stepDelay: 100,
+        fakeServerAutoRespond: true,
+        steps: [
+            () => {
+                let window = getWindow();
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest; // why we do this?
+                let config = this.createSenderConfig(TransportType.Xhr) && {disableSendBeaconSplit: true};
+                const { sender } = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000");
+                console.log("xhr sender called", this._getXhrRequests().length);
+
+                const telemetryItem: ITelemetryItem = {
+                    name: "fake item",
+                    iKey: "testIkey2;ingestionendpoint=testUrl1",
+                    baseType: "some type",
+                    baseData: {}
+                };
+                this.processTelemetryAndFlush(sender, telemetryItem);
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
+                console.log("xhr sender is called", this._getXhrRequests().length);
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+
+            }
+        ].concat(PollingAssert.createPollingAssert(() => {
+            if (this.statsbeatCountSpy.called) {
+                this.assertStatsbeatCall(200, "Request_Success_Count");
+                console.log("Statsbeat count called with success count for xhr sender");
+                return true;
+            }
+            return false;
+        }, "Waiting for xhr sender and Statsbeat count to be called", 60, 1000) as any)
+    });
+}
 }
