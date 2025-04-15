@@ -585,6 +585,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 "Telemetry transmission failed, some telemetry will be lost: " + getExceptionName(e),
                                 { exception: dumpObj(e) });
                         }
+                        // potential place to call countException q3
                     }
                 }
 
@@ -691,24 +692,24 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             }
                             const responseText = _getResponseText(xdr);
                             let statsbeat = _getStatsBeat();
-                            var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                            if (xdr && (responseText + "" === "200" || responseText === "")) {
-                                _consecutiveErrors = 0;
-                                if (statsbeat) {
+                            if (statsbeat) {
+                                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
+                                if (xdr && (responseText + "" === "200" || responseText === "")) {
+                                    _consecutiveErrors = 0;
                                     statsbeat.count(200, payload, endpointHost);
-                                }
-                            } else {
-                                const results = parseResponse(responseText);
-                    
-                                if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                                    && !_isRetryDisabled) {
-                                    if (statsbeat) {
-                                        statsbeat.count(201, payload, endpointHost);
-                                    }
                                 } else {
-                                    statsbeat.count(201, payload, endpointHost);
+                                    const results = parseResponse(responseText);
+                        
+                                    if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
+                                        && !_isRetryDisabled) {
+                                        statsbeat.count(206, payload, endpointHost);
+                                    } else {
+                                        // should count error code here, but we don't have  error code ?q1
+                                    }
                                 }
                             }
+
+                           
 
                             return _xdrOnLoad(xdr, payloadArr);
                            
@@ -741,9 +742,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             let statsbeat = _getStatsBeat();
                             if (statsbeat) {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                                statsbeat.count(-1, data, endpointHost);
+                                statsbeat.count(-1, data, endpointHost); // do not have error code here ?q2
                             }
-                            console.log("Beacon onRetry", data, canSend);
                             return _onBeaconRetry(data, onComplete, canSend);
                         }
     
