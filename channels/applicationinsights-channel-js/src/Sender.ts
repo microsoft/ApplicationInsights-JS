@@ -273,7 +273,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
                     let curExtUrl = senderConfig.endpointUrl;
-                    _statsBeat = core.getStatsBeat();
+                    _statsBeat = _getStatsBeat();
                     
                     // if it is not inital change (_endpointUrl has value)
                     // if current sender endpoint url is not changed directly
