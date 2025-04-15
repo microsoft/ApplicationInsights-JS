@@ -142,7 +142,20 @@ export class SenderPostManager {
                     return;
                 }
 
-                const CompressionStream = (window as any).CompressionStream;
+                let CompressionStream: any;
+                try {
+                    CompressionStream = (window as any).CompressionStream;
+                    if (typeof CompressionStream !== "function") {
+                        // CompressionStream exists but isn't usable
+                        callback(payload);
+                        return;
+                    }
+                } catch (error) {
+                    // CompressionStream is not available at all
+                    callback(payload);
+                    return;
+                }
+
 
                 // Create a readable stream from the uint8 data
                 let body = new ReadableStream<Uint8Array>({
