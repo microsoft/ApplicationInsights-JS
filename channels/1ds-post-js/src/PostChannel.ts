@@ -105,7 +105,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
     public identifier = "PostChannel";
     public priority = 1011;
-    public version = "#version#";
+    public version = '4.3.6';
 
     constructor() {
         super();

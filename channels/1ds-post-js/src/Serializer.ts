@@ -193,6 +193,7 @@ export class Serializer {
                         let sizeExceeded: IPostTransmissionTelemetryItem[] = [];
                         let failedEvts: IPostTransmissionTelemetryItem[] = [];
                         let isBeaconPayload = payload.isBeacon;
+                        let requestMaxSize = isBeaconPayload ? BeaconRequestSizeLimitBytes : RequestSizeLimitBytes;
                         let recordMaxSize  = isBeaconPayload ? MaxBeaconRecordSize : MaxRecordSize;
 
                         let lp = 0;
