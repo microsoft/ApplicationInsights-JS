@@ -22,7 +22,6 @@ export class Statsbeat implements IStatsBeat {
         let _language: string;
         let _sdkVersion: string;
         let _os: string;
-        let _runTimeVersion: string;
         dynamicProto(Statsbeat, this, (_self, _base) => {
             _self.initialize = (core: IAppInsightsCore, statsBeatConfig: IStatsBeatConfig) => {
                 _core = core;
@@ -58,7 +57,9 @@ export class Statsbeat implements IStatsBeat {
                 _setupTimer();
             };
 
-            
+            _self.getEndpoint = (): string => {
+                return _networkCounter?_networkCounter.host:null;
+            }
             
             _self.countException = (endpoint: string, exceptionType: string) => {
                 if (!_isEnabled || !_checkEndpoint(endpoint)) {
@@ -193,4 +194,10 @@ export class Statsbeat implements IStatsBeat {
     public countException(endpoint: string, exceptionType: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
+    public getEndpoint(): string {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
 }

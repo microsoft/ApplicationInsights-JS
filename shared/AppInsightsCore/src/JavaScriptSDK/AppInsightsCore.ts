@@ -30,7 +30,7 @@ import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotification
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { IStatsBeat } from "../JavaScriptSDK.Interfaces/IStatsBeat";
+import { IStatsBeat, IStatsBeatConfig } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
@@ -359,11 +359,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
                     
                     // uncomment this until throttle is implemented
-                    // if (config._sdk.stats === true){
-                    //     _statsBeat = _statsBeat || new Statsbeat();
-                    // } else {
-                    //     _statsBeat = null;
-                    // }
+                    if (config._sdk.stats === true){
+                        _statsBeat = _statsBeat || new Statsbeat();
+                    } else {
+                        _statsBeat = null;
+                    }
 
                     _handleIKeyEndpointPromises(rootCfg);
 
@@ -514,7 +514,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 return _perfManager || _cfgPerfManager || getGblPerfMgr();
             };
 
-            _self.getStatsBeat = (): IStatsBeat => {
+            _self.getStatsBeat = (statsBeatConfig?: IStatsBeatConfig): IStatsBeat => {
+                // create a new statsbeat if not initialize yet or the endpoint is different
+                // otherwise, return the existing one, or null
+                if (statsBeatConfig && _statsBeat && _statsBeat.getEndpoint() !== statsBeatConfig.endpoint) {
+                    // _statsBeat = new Statsbeat();
+                    _statsBeat.initialize(this, statsBeatConfig);
+                }
                 return _statsBeat;
             };
 
@@ -1449,7 +1455,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         return null;
     }
 
-    public getStatsBeat(): IStatsBeat {
+    public getStatsBeat(statsBeatConfig?: IStatsBeatConfig): IStatsBeat {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

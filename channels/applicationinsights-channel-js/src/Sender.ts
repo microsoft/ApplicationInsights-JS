@@ -2,17 +2,17 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Event, Exception, IConfig, IEnvelope, IOfflineListener, ISample,
     IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace,
-    createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, urlParseUrl, utlCanUseSessionStorage, utlSetStoragePrefix
+    createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     ActiveStatus, BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration,
     IDiagnosticLogger, IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, IStatsBeat, IStatsBeatConfig, IStatsBeatEvent, ITelemetryItem, ITelemetryPluginChain,
-    ITelemetryUnloadState, IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager,
-    TransportType, _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean,
-    cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr,
-    formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined,
-    mergeEvtNamespace, objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
+    IProcessTelemetryUnloadContext, IStatsBeatConfig, IStatsBeatEvent, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
+    IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType,
+    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
+    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr,
+    getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend,
+    onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
@@ -164,7 +164,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _offlineListener: IOfflineListener;
         let _evtNamespace: string | string[];
         let _endpointUrl: string;
-        let _statsBeat: IStatsBeat;
         let _orgEndpointUrl: string;
         let _maxBatchSizeInBytes: number;
         let _beaconSupported: boolean;
@@ -273,7 +272,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // getExtCfg only finds undefined values from core
                     let senderConfig = ctx.getExtCfg(identifier, defaultAppInsightsChannelConfig);
                     let curExtUrl = senderConfig.endpointUrl;
-                    _statsBeat = _getStatsBeat();
                     
                     // if it is not inital change (_endpointUrl has value)
                     // if current sender endpoint url is not changed directly
@@ -316,14 +314,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _endpointUrl = _orgEndpointUrl = senderConfig.endpointUrl;
                     }
 
-                    if (config._sdk && config._sdk.stats === true && _statsBeat && !_statsBeat.isInitialized()) {
-                        let statsBeatConfig = {
-                            ikey: senderConfig.instrumentationKey,
-                            endpoint: _endpointUrl,
-                            version: EnvelopeCreator.Version
-                        } as IStatsBeatConfig;
-                        _statsBeat.initialize(core, statsBeatConfig);
-                    }
+                    _getStatsBeat(); // first call will initialize the statsbeat object
 
                     // or is not string
                     if (core.activeStatus() === ActiveStatus.PENDING) {
@@ -662,7 +653,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             }
 
             function _getStatsBeat() {
-                return _self.core.getStatsBeat();
+                let statsBeatConfig = {
+                    ikey: _self._senderConfig.instrumentationKey,
+                    endpoint: _endpointUrl,
+                    version: EnvelopeCreator.Version
+                } as IStatsBeatConfig;
+                return _self.core.getStatsBeat(statsBeatConfig);
             }
 
             function _xdrOnLoad (xdr: IXDomainRequest, payload: IInternalStorageItem[]) {
@@ -694,7 +690,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             const responseText = _getResponseText(xdr);
                             let statsbeat = _getStatsBeat();
                             if (statsbeat) {
-                                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                                 if (xdr && (responseText + "" === "200" || responseText === "")) {
                                     _consecutiveErrors = 0;
                                     statsbeat.count(200, payload, _endpointUrl);
@@ -733,7 +728,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             }
                             let statsbeat = _getStatsBeat();
                             if (statsbeat && request.readyState === 4) {
-                                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                                 statsbeat.count(request.status, payload, _endpointUrl);
                             }
                             return _xhrReadyStateChange(request, payloadArr, payloadArr.length);
@@ -988,7 +982,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
                     let statsbeat = _getStatsBeat();
                     if (statsbeat) {
-                        var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                         statsbeat.count(status, payloadData, _endpointUrl);
                     }
                     return _getOnComplete(payload, status, headers, response);

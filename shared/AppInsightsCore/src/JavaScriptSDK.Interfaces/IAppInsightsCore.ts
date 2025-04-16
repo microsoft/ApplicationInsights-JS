@@ -16,7 +16,7 @@ import { INotificationListener } from "./INotificationListener";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
-import { IStatsBeat } from "./IStatsBeat";
+import { IStatsBeat, IStatsBeatConfig } from "./IStatsBeat";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
@@ -125,7 +125,7 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
 
     pollInternalLogs?(eventName?: string): ITimerHandler;
 
-    getStatsBeat?(): IStatsBeat;
+    getStatsBeat?(statsBeatConfig?: IStatsBeatConfig): IStatsBeat;
 
     stopPollingInternalLogs?(): void;
 
