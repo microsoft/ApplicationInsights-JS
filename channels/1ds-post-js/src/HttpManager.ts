@@ -365,7 +365,7 @@ export class HttpManager {
                         let theBatch = theBatches.shift();
                         if (theBatch && theBatch.count() > 0) {
                             thePayload = thePayload || _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
-                            _serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch);
+                            _serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)
                         }
                     }
 
@@ -487,6 +487,7 @@ export class HttpManager {
                 _isInitialized = false;
                 _timeoutWrapper = createTimeoutWrapper();
                 _excludeCsMetaData = false;
+                _sendPostMgr = null;
             }
 
             function _fetchOnComplete(response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) {
@@ -773,7 +774,6 @@ export class HttpManager {
 
                                     // Make sure we have a payload object
                                     thePayload = thePayload || _serializer.createPayload(retryCount, isTeardown, isSynchronous, isReducedPayload, sendReason, sendType);
-                                    
                                     // Add the batch to the current payload
                                     if (!_serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)) {
                                         // Entire batch was not added so send the payload and retry adding this batch
