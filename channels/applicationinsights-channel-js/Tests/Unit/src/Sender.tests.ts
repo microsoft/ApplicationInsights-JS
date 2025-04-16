@@ -7,7 +7,7 @@ import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, No
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
 import { createAsyncResolvedPromise } from "@nevware21/ts-async";
-
+import { SinonSpy } from 'sinon';
 
 
 const BUFFER_KEY = "AI_buffer_1";
@@ -16,6 +16,8 @@ export class SenderTests extends AITestClass {
     private _sender: Sender;
     private _instrumentationKey = 'iKey';
     private _offline: IOfflineListener;
+    private genericSpy: SinonSpy;
+    private xhrOverride: IXHROverride;
 
     protected _getBuffer(key: string, logger: DiagnosticLogger, namePrefix?: string): IInternalStorageItem[] {
         let prefixedKey = key;
@@ -41,6 +43,8 @@ export class SenderTests extends AITestClass {
     public testInitialize() {
         this._sender = new Sender();
         this._offline = createOfflineListener("SenderTests");
+        this.xhrOverride = new AutoCompleteXhrOverride();
+
         // Reset the cached isBeacons supported
         isBeaconsSupported(false);
     }
@@ -127,6 +131,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, defaultSenderConfig.alwaysUseXhrOverride, "Channel default alwaysUseXhrOverride config is set");
                 QUnit.assert.equal(true, defaultSenderConfig.disableSendBeaconSplit, "Channel default disableSendBeaconSplit config is set");
                 QUnit.assert.equal(10, defaultSenderConfig.maxRetryCnt, "Channel default maxRetryCnt config is set");
+                QUnit.assert.equal(true, defaultSenderConfig.disableZip, "Channel default disableZip config is set");
 
                 //check dynamic config
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -142,7 +147,8 @@ export class SenderTests extends AITestClass {
                     samplingPercentage: 90,
                     customHeaders: [{header: "header1",value:"value1"}],
                     alwaysUseXhrOverride: true,
-                    disableSendBeaconSplit: false
+                    disableSendBeaconSplit: false,
+                    disableZip: false
                 }
                 core.config.extensionConfig[id] = config;
                 this.clock.tick(1);
@@ -158,7 +164,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual([{header: "header1",value:"value1"}], curSenderConfig.customHeaders, "Channel customHeaders config is dynamically set");
                 QUnit.assert.deepEqual(true, curSenderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is dynamically set");
                 QUnit.assert.equal(false, curSenderConfig.disableSendBeaconSplit, "Channel disableSendBeaconSplit config is dynamically set");
-
+                QUnit.assert.equal(false, curSenderConfig.disableZip, "Channel disableZip config is dynamically set");
                 core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = undefined;
                 core.config.extensionConfig[this._sender.identifier].endpointUrl = undefined;
                 this.clock.tick(1);
@@ -166,6 +172,51 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false,  this._sender._senderConfig.emitLineDelimitedJson, "Channel default emitLineDelimitedJson config is set");
             }
         });
+
+        this.testCaseAsync({
+            name: "zip test: gzip encode is working and content-encode header is set",
+            stepDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            steps: [
+                () => {
+                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                    let core = new AppInsightsCore();
+                   
+                    let coreConfig = {
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                httpXHROverride: this.xhrOverride,
+                                alwaysUseXhrOverride: true,
+                                disableZip: false,
+                            }
+                        }
+                    }
+            
+                    core.initialize(coreConfig, [this._sender]);
+        
+                    const telemetryItem: ITelemetryItem = {
+                        name: 'fake item with some really long name to take up space quickly',
+                        iKey: 'iKey',
+                        baseType: 'some type',
+                        baseData: {}
+                    };
+                    this._sender.processTelemetry(telemetryItem);
+                    this._sender.flush();
+                    this.clock.tick(10);
+                }].concat(PollingAssert.createPollingAssert(() => {
+                    if (this.genericSpy.called){
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
+                        QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            });
 
         this.testCase({
             name: "Channel Config: Endpoint Url can be set from root dynamically",
@@ -4081,5 +4132,11 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(1024, appInsightsEnvelope.tags["ai.operation.name"].length, "The ai.operation.name should have been truncated to the maximum");
             }
         });
+    }
+}
+
+class AutoCompleteXhrOverride {
+    public sendPOST(payload: IPayloadData, oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) {
+        oncomplete(200, null);
     }
 }
