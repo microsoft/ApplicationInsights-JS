@@ -288,14 +288,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
 
-                    if (config._sdk && config._sdk.stats === true && _statsBeat && !_statsBeat.isInitialized()) {
-                        let statsBeatConfig = {
-                            ikey: senderConfig.instrumentationKey,
-                            endpoint: urlParseUrl(senderConfig.endpointUrl).hostname,
-                            version: EnvelopeCreator.Version
-                        } as IStatsBeatConfig;
-                        _statsBeat.initialize(core, statsBeatConfig);
-                    }
                     let corsPolicy = senderConfig.corsPolicy;
                     if (corsPolicy){
                         if (corsPolicy === "same-origin" || corsPolicy === "same-site" || corsPolicy === "cross-origin") {
@@ -322,6 +314,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             // TODO: add doc to remind users to flush before changing endpoint, otherwise all unsent payload will be sent to new endpoint
                         }
                         _endpointUrl = _orgEndpointUrl = senderConfig.endpointUrl;
+                    }
+
+                    if (config._sdk && config._sdk.stats === true && _statsBeat && !_statsBeat.isInitialized()) {
+                        let statsBeatConfig = {
+                            ikey: senderConfig.instrumentationKey,
+                            endpoint: _endpointUrl,
+                            version: EnvelopeCreator.Version
+                        } as IStatsBeatConfig;
+                        _statsBeat.initialize(core, statsBeatConfig);
                     }
 
                     // or is not string
@@ -696,15 +697,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
                                 if (xdr && (responseText + "" === "200" || responseText === "")) {
                                     _consecutiveErrors = 0;
-                                    statsbeat.count(200, payload, endpointHost);
+                                    statsbeat.count(200, payload, _endpointUrl);
                                 } else {
                                     const results = parseResponse(responseText);
                         
                                     if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
                                         && !_isRetryDisabled) {
-                                        statsbeat.count(206, payload, endpointHost);
+                                        statsbeat.count(206, payload, _endpointUrl);
                                     } else {
-                                        statsbeat.count(499, payload, endpointHost);
+                                        statsbeat.count(499, payload, _endpointUrl);
                                     }
                                 }
                             }
@@ -721,8 +722,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             }
                             let statsbeat = _getStatsBeat();
                             if (statsbeat) {
-                                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                                statsbeat.count(response.status, payload, endpointHost);
+                                statsbeat.count(response.status, payload, _endpointUrl);
                             }
                             return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
                         },
@@ -734,15 +734,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             let statsbeat = _getStatsBeat();
                             if (statsbeat && request.readyState === 4) {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                                statsbeat.count(request.status, payload, endpointHost);
+                                statsbeat.count(request.status, payload, _endpointUrl);
                             }
                             return _xhrReadyStateChange(request, payloadArr, payloadArr.length);
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
                             let statsbeat = _getStatsBeat();
                             if (statsbeat) {
-                                var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                                statsbeat.count(499, data, endpointHost);
+                                statsbeat.count(499, data, _endpointUrl);
                             }
                             return _onBeaconRetry(data, onComplete, canSend);
                         }
@@ -990,7 +989,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let statsbeat = _getStatsBeat();
                     if (statsbeat) {
                         var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                        statsbeat.count(status, payloadData, endpointHost);
+                        statsbeat.count(status, payloadData, _endpointUrl);
                     }
                     return _getOnComplete(payload, status, headers, response);
                 }
