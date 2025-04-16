@@ -704,7 +704,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                         && !_isRetryDisabled) {
                                         statsbeat.count(206, payload, endpointHost);
                                     } else {
-                                        // should count error code here, but we don't have  error code ?q1
+                                        statsbeat.count(499, payload, endpointHost);
                                     }
                                 }
                             }
@@ -742,7 +742,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             let statsbeat = _getStatsBeat();
                             if (statsbeat) {
                                 var endpointHost = urlParseUrl(_self._senderConfig.endpointUrl).hostname;
-                                statsbeat.count(-1, data, endpointHost); // do not have error code here ?q2
+                                statsbeat.count(499, data, endpointHost);
                             }
                             return _onBeaconRetry(data, onComplete, canSend);
                         }

@@ -153,7 +153,7 @@ export class StatsbeatTests extends AITestClass {
         });
 
         this.testCaseAsync({
-            name: "Statsbeat increments retry count when fetch sender is called once",
+            name: "Statsbeat increments throttle count when fetch sender is called with status 439",
             useFakeTimers: true,
             stepDelay: 100,
             steps: [
@@ -176,7 +176,7 @@ export class StatsbeatTests extends AITestClass {
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
                 if (this.statsbeatCountSpy.called && this.fetchStub.called) {
-                    this.assertStatsbeatCall(400, "failure");
+                    this.assertStatsbeatCall(439, "Throttle_Count");
                     return true;
                 }
                 return false;
