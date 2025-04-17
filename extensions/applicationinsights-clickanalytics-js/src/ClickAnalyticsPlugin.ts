@@ -52,7 +52,8 @@ const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFree
     defaultRightClickBhvr: cfgDfString(),
     dropInvalidEvents : false,
     urlCollectHash: false,
-    urlCollectQuery: false
+    urlCollectQuery: false,
+    trackElementTypes: undefined
 });
 
 function _dataPrefixChk(val: any) {
