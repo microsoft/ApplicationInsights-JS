@@ -359,11 +359,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
                     
                     // uncomment this until throttle is implemented
-                    if (config._sdk.stats === true){
-                        _statsBeat = _statsBeat || new Statsbeat();
-                    } else {
-                        _statsBeat = null;
-                    }
+                    // if (config._sdk.stats === true){
+                    //     _statsBeat = _statsBeat || new Statsbeat();
+                    // } else {
+                    //     _statsBeat = null;
+                    // }
 
                     _handleIKeyEndpointPromises(rootCfg);
 
