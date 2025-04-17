@@ -211,4 +211,23 @@ export interface IConfiguration {
      * @since 3.3.2
      */
     expCfg?: IExceptionConfig;
+
+
+    /**
+     * [Optional] Internal SDK configuration for developers
+     * @internal
+     */
+    _sdk?: IInternalSdkConfiguration;
+}
+
+/**
+ * Internal SDK configuration options
+ * @internal
+ */
+export interface IInternalSdkConfiguration {
+    /**
+     * [Optional] Enable Internal StatsBeat
+     * @internal
+     */
+    stats?: boolean;
 }
