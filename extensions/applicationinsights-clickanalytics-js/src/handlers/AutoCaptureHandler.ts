@@ -58,7 +58,13 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         
             // Process click event
             function _processClick(clickEvent: any) {
-                var clickCaptureElements = { A: true, BUTTON: true, AREA: true, INPUT: true };
+                var clickCaptureElements: Record<string, boolean> = { A: true, BUTTON: true, AREA: true, INPUT: true };
+
+                if (_self._config.trackElementTypes) {
+                    _self._config.trackElementTypes.forEach(function(elementType) {
+                        clickCaptureElements[elementType.toUpperCase()] = true;
+                    });
+                }
                 let win = getWindow();
                 if (isNullOrUndefined(clickEvent) && win) {
                     clickEvent = win.event; // IE 8 does not pass the event

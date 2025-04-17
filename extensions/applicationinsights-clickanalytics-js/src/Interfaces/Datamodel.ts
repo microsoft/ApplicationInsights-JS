@@ -51,6 +51,12 @@ export interface IClickAnalyticsConfiguration {
     * Enables the logging of the query string of the URL. Default is "false."
     */
     urlCollectQuery?: boolean;
+
+    /**
+     * A list of element types to track. Default is "undefined" which means defualt elements ["a", "button", "area", "input"] are tracked.
+     * If set, it will combine with the default element types.
+    */ 
+    trackElementTypes?: string[];
 }
 
 /**
