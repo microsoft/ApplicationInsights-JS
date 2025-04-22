@@ -101,8 +101,6 @@ export class CfgSyncHelperTests extends AITestClass {
                     extensions:[{isFlushInvoked:false,isTearDownInvoked:false,isResumeInvoked:false,isPauseInvoked:false,identifier:"Sender",priority:1001}],
                     channels:[],
                     extensionConfig:{},
-                    _sdk: {
-                        stats: false},
                     enableDebug: false
                 }
                
