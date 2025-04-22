@@ -314,8 +314,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _endpointUrl = _orgEndpointUrl = senderConfig.endpointUrl;
                     }
 
-                    _getStatsBeat(); // first call will initialize the statsbeat object
-
                     // or is not string
                     if (core.activeStatus() === ActiveStatus.PENDING) {
                         // waiting for core promises to be resolved

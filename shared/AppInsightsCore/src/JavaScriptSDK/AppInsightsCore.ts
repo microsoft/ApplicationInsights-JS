@@ -517,10 +517,12 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             _self.getStatsBeat = (statsBeatConfig?: IStatsBeatConfig): IStatsBeat => {
                 // create a new statsbeat if not initialize yet or the endpoint is different
                 // otherwise, return the existing one, or null
-                if (statsBeatConfig && _statsBeat && _statsBeat.getEndpoint() !== statsBeatConfig.endpoint) {
-                    // _statsBeat = new Statsbeat();
-                    _statsBeat.initialize(this, statsBeatConfig);
-                }
+
+                // uncomment this until throttle is implemented
+                // if (statsBeatConfig && this.config._sdk.stats === true && _statsBeat && _statsBeat.getEndpoint() !== statsBeatConfig.endpoint) {
+                //     _statsBeat = new Statsbeat();
+                //     _statsBeat.initialize(this, statsBeatConfig);
+                // }
                 return _statsBeat;
             };
 
