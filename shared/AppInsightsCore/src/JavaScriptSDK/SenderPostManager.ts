@@ -490,11 +490,12 @@ export class SenderPostManager {
                                     }
 
                                 } catch (e) {
-                                    if (response.status){
-                                        _handleError(dumpObj(e), response.status);
-                                    } else {
-                                        _handleError(dumpObj(e), 499);
-                                    }
+                                    // if (response.status){
+                                    //     _handleError(dumpObj(e), response.status);
+                                    // } else {
+                                    //     _handleError(dumpObj(e), 499);
+                                    // }
+                                    _handleError(dumpObj(e), 499);
                                     rejectFunc && rejectFunc(e);
                                 }
                                 
