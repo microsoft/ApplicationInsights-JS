@@ -782,7 +782,7 @@ export class HttpManager {
 
                                     // Make sure we have a payload object
                                     thePayload = thePayload || _serializer.createPayload(retryCount, isTeardown, isSynchronous, isReducedPayload, sendReason, sendType);
-
+                                    
                                     // Add the batch to the current payload
                                     if (!_serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)) {
                                         // Entire batch was not added so send the payload and retry adding this batch
