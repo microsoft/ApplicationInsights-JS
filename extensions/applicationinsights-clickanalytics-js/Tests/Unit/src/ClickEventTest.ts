@@ -420,7 +420,13 @@ export class ClickEventTest extends AITestClass {
                     defaultRightClickBhvr: "",
                     dropInvalidEvents : false,
                     urlCollectHash: false,
-                    urlCollectQuery: false
+                    urlCollectQuery: false,
+                    trackElementTypes: {
+                        "A": true,
+                        "BUTTON": true,
+                        "AREA": true,
+                        "INPUT": true
+                    }
                 }, core.config.extensionConfig[clickAnalyticsPlugin.identifier]);
 
             }
