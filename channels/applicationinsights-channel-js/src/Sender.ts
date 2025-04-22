@@ -11,7 +11,7 @@ import {
     OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete,
     _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
     createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion,
-    isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
+    isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
     prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
@@ -288,7 +288,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
                     const csStream = getInst("CompressionStream");
-                    _zipPayload = (senderConfig.zipPayload === true); // if _zipPayload is not set before, _zipPayload set to false
+                    // before fetch from cdn, _zipPayload is false; after fetch from cdn, _zipPayload is defined by onCfg (which will be set to true)
+                    // user could turn off the compression by setting zipPayload to false in config or by setting feature flag to disable
+                    // if user want to manually turn on the feature when we set onCfg to false (which only happens in 2025.5-current), they need to set feature flag to be true but url to be theirs (turn on this feature will be difficult)
+                    _zipPayload = isFeatureEnabled("zipPayload", config) && (senderConfig.zipPayload === true); // if _zipPayload is not set before, _zipPayload set to false
                     if (!isFunction(csStream)) {
                         _zipPayload = false;
                     }

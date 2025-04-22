@@ -13,6 +13,7 @@ import {
     isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
 import { arrAppend, getInst, isFunction } from "@nevware21/ts-utils";
+import { isFeatureEnabled } from "../../../shared/AppInsightsCore/types/applicationinsights-core-js";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
 import {
@@ -30,7 +31,6 @@ import { KillSwitch } from "./KillSwitch";
 import { retryPolicyGetMillisToBackoffForRetry, retryPolicyShouldRetryForStatus } from "./RetryPolicy";
 import { ISerializedPayload, Serializer } from "./Serializer";
 import { ITimeoutOverrideWrapper, createTimeoutWrapper } from "./TimeoutOverrideWrapper";
-import { isFeatureEnabled } from "../../../shared/AppInsightsCore/types/applicationinsights-core-js";
 
 const strSendAttempt = "sendAttempt";
 
