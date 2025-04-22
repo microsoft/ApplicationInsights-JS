@@ -433,7 +433,7 @@ export class SenderPostManager {
                     // In case there is an error in the request. Set the status to 0 for 1ds and 400 for appInsights
                     // so that the events can be retried later.
                     if (statusCode) {
-                        _doOnComplete(oncomplete, statusCode, {}, _isOneDs? STR_EMPTY: res);
+                        _doOnComplete(oncomplete, _isOneDs? 0 : statusCode, {}, _isOneDs? STR_EMPTY: res);
                     } else {
                         _doOnComplete(oncomplete, _isOneDs? 0 : 400, {}, _isOneDs? STR_EMPTY: res);
                     }
@@ -490,12 +490,11 @@ export class SenderPostManager {
                                     }
 
                                 } catch (e) {
-                                    // if (response.status){
-                                    //     _handleError(dumpObj(e), response.status);
-                                    // } else {
-                                    //     _handleError(dumpObj(e), 499);
-                                    // }
-                                    _handleError(dumpObj(e), 499);
+                                    if (response.status){
+                                        _handleError(dumpObj(e), response.status);
+                                    } else {
+                                        _handleError(dumpObj(e), 499);
+                                    }
                                     rejectFunc && rejectFunc(e);
                                 }
                                 
