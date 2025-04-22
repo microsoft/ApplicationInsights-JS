@@ -81,7 +81,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     retryCodes: UNDEFINED_VALUE,
     corsPolicy: UNDEFINED_VALUE,
     maxRetryCnt: {isVal: isNumber, v:10},
-    disableZip: UNDEFINED_VALUE
+    zipPayload: UNDEFINED_VALUE
 });
 
 const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
@@ -188,7 +188,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _disableBeaconSplit: boolean;
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
-        let _disableZip: boolean;
+        let _zipPayload: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -288,9 +288,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
                     const csStream = getInst("CompressionStream");
-                    _disableZip = !(senderConfig.disableZip === false); // if disableZip is not set before, _disableZip set to true
+                    _zipPayload = (senderConfig.zipPayload === true); // if _zipPayload is not set before, _zipPayload set to false
                     if (!isFunction(csStream)) {
-                        _disableZip = true;
+                        _zipPayload = false;
                     }
                     let corsPolicy = senderConfig.corsPolicy;
                     if (corsPolicy){
@@ -955,7 +955,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
                         return sendPostFunc(processedPayload, onComplete, !isAsync);
-                    }, _disableZip, payloadData, !isAsync);
+                    }, _zipPayload, payloadData, !isAsync);
                 }
                 return null;
             }

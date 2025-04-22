@@ -136,17 +136,17 @@ export class CdnThrottle extends AITestClass {
                         "throttleMgrCfg.106.disabled":true,
                         "throttleMgrCfg.109.disabled":true,
                     }},
-                    ["disableZip"]: {
+                    ["zipPayload"]: {
                         mode: CdnFeatureMode.enable, 
-                        onCfg: {["extensionConfig.AppInsightsChannelPlugin.disableZip"]: false}, 
-                        offCfg: {["extensionConfig.AppInsightsChannelPlugin.disableZip"]: true}},
+                        onCfg: {["extensionConfig.AppInsightsChannelPlugin.zipPayload"]: true}, 
+                        offCfg: {["extensionConfig.AppInsightsChannelPlugin.zipPayload"]: false}},
                 },
                 config: {
                     maxMessageLimit: 10,
                     throttleMgrCfg: throttleCfgDisable,
                     extensionConfig: {
                         AppInsightsChannelPlugin: {
-                            disableZip: true
+                            zipPayload: false
                         }
                     }
                 }
@@ -283,8 +283,8 @@ export class CdnThrottle extends AITestClass {
             }].concat(PollingAssert.createPollingAssert(() => {
                 if (this.fetchStub.called){
                     let newCfg = this._ai.config;
-                    Assert.equal(newCfg.featureOptIn["disableZip"]["mode"], FeatureOptInMode.enable); // aisku default is none, overwrite to true by cdn config
-                    Assert.equal(newCfg.extensionConfig["AppInsightsChannelPlugin"]["disableZip"], false);
+                    Assert.equal(newCfg.featureOptIn["zipPayload"]["mode"], FeatureOptInMode.enable); // aisku default is none, overwrite to true by cdn config
+                    Assert.equal(newCfg.extensionConfig["AppInsightsChannelPlugin"]["zipPayload"], true);
                     return true;
                 }
                 return false;

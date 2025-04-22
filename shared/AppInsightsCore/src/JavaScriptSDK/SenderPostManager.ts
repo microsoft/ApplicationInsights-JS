@@ -135,8 +135,8 @@ export class SenderPostManager {
                 _initDefaults();
             };
 
-            _self.preparePayload = (callback: (processedPayload: IPayloadData) => void, disableZip: boolean, payload: IPayloadData, isSync: boolean) => {
-                if (disableZip || isSync || !payload.data) {
+            _self.preparePayload = (callback: (processedPayload: IPayloadData) => void, zipPayload: boolean, payload: IPayloadData, isSync: boolean) => {
+                if (!zipPayload || isSync || !payload.data) {
                     // If the request is synchronous, the body is null or undefined or Compression is not supported, we don't need to compress it
                     callback(payload);
                     return;
@@ -742,7 +742,7 @@ export class SenderPostManager {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public preparePayload(callback: (processedPayload: IPayloadData) => void, disableZip: boolean, payload: IPayloadData, isSync: boolean): void {
+    public preparePayload(callback: (processedPayload: IPayloadData) => void, zipPayload: boolean, payload: IPayloadData, isSync: boolean): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

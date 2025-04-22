@@ -30,6 +30,7 @@ import { KillSwitch } from "./KillSwitch";
 import { retryPolicyGetMillisToBackoffForRetry, retryPolicyShouldRetryForStatus } from "./RetryPolicy";
 import { ISerializedPayload, Serializer } from "./Serializer";
 import { ITimeoutOverrideWrapper, createTimeoutWrapper } from "./TimeoutOverrideWrapper";
+import { isFeatureEnabled } from "../../../shared/AppInsightsCore/types/applicationinsights-core-js";
 
 const strSendAttempt = "sendAttempt";
 
@@ -165,7 +166,7 @@ export class HttpManager {
         let _isUnloading: boolean;
         let _useHeaders: boolean;
         let _xhrTimeout: number;
-        let _disableZip: boolean;
+        let _zipPayload: boolean;
         let _disableXhrSync: boolean;
         let _disableFetchKeepAlive: boolean;
         let _canHaveReducedPayload: boolean;
@@ -225,9 +226,13 @@ export class HttpManager {
                         _xhrTimeout = channelConfig.xhrTimeout;
                         
                         const csStream = getInst("CompressionStream");
-                        _disableZip = !!channelConfig.disableZip;
+
+                        // 1. user didn't set anything, then zipPayload should be default value set in postchannel, which is false now
+                        // 2. user set zipPayload = true, then we should use it
+                        // 3. user set featureOptIn = { zipPayload = false} as the guide provided in ai-channel
+                        _zipPayload = isFeatureEnabled("zipPayload", coreConfig) && channelConfig.zipPayload;
                         if (!isFunction(csStream) || _sendHook) {
-                            _disableZip = true;
+                            _zipPayload = false;
                         }
 
                         _disableXhrSync = !!channelConfig.disableXhrSync;
@@ -988,7 +993,7 @@ export class HttpManager {
                                         _doOnComplete(onComplete, 0, {});
                                         _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
                                     }
-                                }, _disableZip, payload, isSync);
+                                }, _zipPayload, payload, isSync);
                             };
                         }
 

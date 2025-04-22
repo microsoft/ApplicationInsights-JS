@@ -178,7 +178,7 @@ export class PostChannelTest extends AITestClass {
                     maxUnloadEventRetryAttempts: 2,
                     addNoResponse: undefValue,
                     excludeCsMetaData: undefValue,
-                    disableZip: true
+                    zipPayload: false
                 };
                 let actaulConfig =  postChannel["_getDbgPlgTargets"]()[1];
                 QUnit.assert.deepEqual(expectedConfig, actaulConfig, "default config should be set");
@@ -326,7 +326,7 @@ export class PostChannelTest extends AITestClass {
                     this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
                     this.config.extensionConfig[this.postChannel.identifier] = {
                         httpXHROverride: this.xhrOverride,
-                        disableZip: false
+                        zipPayload: true
                     };
                     this.core.initialize(this.config, [this.postChannel]);
                     var event: IPostTransmissionTelemetryItem = {
@@ -405,7 +405,7 @@ export class PostChannelTest extends AITestClass {
                         this.postChannel.processTelemetry(event);
                         this.postChannel.flush();
                         this.clock.tick(10);
-                        this.core.config.extensionConfig[this.postChannel.identifier].disableZip = false;
+                        this.core.config.extensionConfig[this.postChannel.identifier].zipPayload = true;
                         this.clock.tick(1);
                         this.core.track(event);
                         this.postChannel.flush();
@@ -416,7 +416,7 @@ export class PostChannelTest extends AITestClass {
                             QUnit.assert.equal(request.headers["Content-Encoding"], undefined, "header should not be added");
                             QUnit.assert.ok(JSON.stringify(request.data).includes("testEvent"), "telemetry should not be encoded");
                             let request2 = this.genericSpy.getCall(1).args[0];
-                            QUnit.assert.equal(request2.headers["Content-Encoding"], "gzip", "Telemetry should be gzip encoded after disableZip is set to false");
+                            QUnit.assert.equal(request2.headers["Content-Encoding"], "gzip", "Telemetry should be gzip encoded after zipPayload is set to true");
                             return true;
                         }
                         return false;

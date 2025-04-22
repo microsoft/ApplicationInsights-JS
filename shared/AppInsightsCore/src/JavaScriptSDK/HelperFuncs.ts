@@ -358,7 +358,7 @@ export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feat
     if (feature && ft) {
         let mode = ft.mode;
         // NOTE: None will be considered as true
-        rlt = (mode == FeatureOptInMode.enable) || (mode == FeatureOptInMode.none);
+        rlt = (mode == FeatureOptInMode.enable);
     }
     return rlt;
 }
