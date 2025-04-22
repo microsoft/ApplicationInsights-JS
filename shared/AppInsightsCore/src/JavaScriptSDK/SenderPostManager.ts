@@ -470,7 +470,11 @@ export class SenderPostManager {
                                      */
                                     if (!_isOneDs && !response.ok) {
                                         // this is for appInsights only
-                                        _handleError(response.statusText, response.status);
+                                        if (response.status){
+                                            _handleError(response.statusText, response.status);
+                                        } else {
+                                            _handleError(response.statusText, 499);
+                                        }
                                         resolveFunc && resolveFunc(false);
                                     } else {
                                         if (_isOneDs && !response.body) {
@@ -486,7 +490,11 @@ export class SenderPostManager {
                                     }
 
                                 } catch (e) {
-                                    _handleError(dumpObj(e), response.status);
+                                    if (response.status){
+                                        _handleError(dumpObj(e), response.status);
+                                    } else {
+                                        _handleError(dumpObj(e), 499);
+                                    }
                                     rejectFunc && rejectFunc(e);
                                 }
                                 
