@@ -55,8 +55,8 @@ export interface IClickAnalyticsConfiguration {
     /**
      * A list of element types to track. Default is "undefined" which means default elements ["a", "button", "area", "input"] are tracked.
      * If set, it will combine with the default element types.
-    */ 
-    trackElementTypes?: string[];
+    */
+    trackElementTypes?: { [name: string]: boolean };
 }
 
 /**
