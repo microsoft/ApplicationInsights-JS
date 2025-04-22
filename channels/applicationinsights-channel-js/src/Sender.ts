@@ -81,7 +81,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     retryCodes: UNDEFINED_VALUE,
     corsPolicy: UNDEFINED_VALUE,
     maxRetryCnt: {isVal: isNumber, v:10},
-    disableZip: true
+    disableZip: UNDEFINED_VALUE
 });
 
 const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
@@ -288,7 +288,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
                     const csStream = getInst("CompressionStream");
-                    _disableZip = !!senderConfig.disableZip;
+                    _disableZip = !(senderConfig.disableZip === false); // if disableZip is not set before, _disableZip set to true
                     if (!isFunction(csStream)) {
                         _disableZip = true;
                     }

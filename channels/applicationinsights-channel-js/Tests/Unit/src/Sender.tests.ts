@@ -131,7 +131,7 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, defaultSenderConfig.alwaysUseXhrOverride, "Channel default alwaysUseXhrOverride config is set");
                 QUnit.assert.equal(true, defaultSenderConfig.disableSendBeaconSplit, "Channel default disableSendBeaconSplit config is set");
                 QUnit.assert.equal(10, defaultSenderConfig.maxRetryCnt, "Channel default maxRetryCnt config is set");
-                QUnit.assert.equal(true, defaultSenderConfig.disableZip, "Channel default disableZip config is set");
+                QUnit.assert.equal(undefined, defaultSenderConfig.disableZip, "Channel default disableZip config is set");
 
                 //check dynamic config
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
