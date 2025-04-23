@@ -490,7 +490,7 @@ export class SenderPostManager {
                                     }
 
                                 } catch (e) {
-                                    if (response.status){
+                                    if (response && response.status){
                                         _handleError(dumpObj(e), response.status);
                                     } else {
                                         _handleError(dumpObj(e), 499);
