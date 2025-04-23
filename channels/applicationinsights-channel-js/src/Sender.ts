@@ -288,9 +288,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         }
                     }
                     const csStream = getInst("CompressionStream");
-                    // before fetch from cdn, _zipPayload is false; after fetch from cdn, _zipPayload is defined by onCfg (which will be set to true)
-                    // user could turn off the compression by setting zipPayload to false in config or by setting feature flag to disable
-                    // if user want to manually turn on the feature when we set onCfg to false (which only happens in 2025.5-current), they need to set feature flag to be true but url to be theirs (turn on this feature will be difficult)
+                    // Determine whether to enable payload compression (zipping).
+                    // 
+                    // Version 3.3.7 behavior:
+                    //      _zipPayload will be true only if user set flag to be none and senderConfig.zipPayload to true (featureOptIn mode on cdn will be none)
+                    // Later versions:
+                    //      _zipPayload will be false only when user disable feature flag (featureOptIn mode on cdn will be enabled)
                     _zipPayload = isFeatureEnabled("zipPayload", config) && (senderConfig.zipPayload === true); // if _zipPayload is not set before, _zipPayload set to false
                     if (!isFunction(csStream)) {
                         _zipPayload = false;

@@ -227,9 +227,15 @@ export class HttpManager {
                         
                         const csStream = getInst("CompressionStream");
 
-                        // 1. user didn't set anything, then zipPayload should be default value set in postchannel, which is false now
-                        // 2. user set zipPayload = true, then we should use it
-                        // 3. user set featureOptIn = { zipPayload = false} as the guide provided in ai-channel
+                        // Controls whether payload compression (gzip) is enabled.
+                        //
+                        // - In 1ds-post-js, the "zipPayload" feature is enabled by default.
+                        // - For version 3.3.7:
+                        //     - Compression is only enabled if the user explicitly sets `config.zipPayload = true`.
+                        // - For later versions:
+                        //     - Compression is enabled by default unless:
+                        //         a) The user sets `config.zipPayload = false`, or
+                        //         b) The "zipPayload" feature flag is turned off.
                         _zipPayload = isFeatureEnabled("zipPayload", coreConfig) && channelConfig.zipPayload;
                         if (!isFunction(csStream) || _sendHook) {
                             _zipPayload = false;
