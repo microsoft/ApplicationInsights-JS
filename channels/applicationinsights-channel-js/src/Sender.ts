@@ -656,6 +656,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     endpoint: _endpointUrl,
                     version: EnvelopeCreator.Version
                 } as IStatsBeatConfig;
+                return _self.core.getStatsBeat(statsBeatConfig);
+            }
+
+            function _getStatsBeat() {
+                let statsBeatConfig = {
+                    ikey: _self._senderConfig.instrumentationKey,
+                    endpoint: _endpointUrl,
+                    version: EnvelopeCreator.Version
+                } as IStatsBeatConfig;
 
                 let core = _self.core;
 
