@@ -103,6 +103,8 @@ abstract class BaseSendBuffer {
                 if (!isNullOrUndefined(_maxRetryCnt)) {
                     if (payload.cnt > _maxRetryCnt) {
                         // TODO: add log here on dropping payloads
+                        // will log statsbeat exception later here
+                        
                         return;
                     }
                 }

@@ -8,6 +8,7 @@ import {
     ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
     isPromiseLike, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
+import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
 import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
@@ -21,7 +22,7 @@ import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateRea
 import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IChannelControlsHost } from "../JavaScriptSDK.Interfaces/IChannelControlsHost";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IConfiguration, IInternalSdkConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
@@ -29,6 +30,7 @@ import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotification
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { IStatsBeat, IStatsBeatConfig } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
@@ -51,6 +53,7 @@ import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain
 } from "./ProcessTelemetryContext";
+import { Statsbeat } from "./StatsBeat";
 import { _getPluginState, createDistributedTraceContext, initializePlugins, sortPlugins } from "./TelemetryHelpers";
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
@@ -76,7 +79,10 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
-    diagnosticLogInterval: UNDEFINED_VALUE
+    diagnosticLogInterval: UNDEFINED_VALUE,
+    _sdk: cfgDfMerge<IInternalSdkConfiguration>({
+        stats: false
+    })
 });
 
 /**
@@ -275,6 +281,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _logger: IDiagnosticLogger;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
+        let _statsBeat: IStatsBeat | null;
         let _perfManager: IPerfManager | null;
         let _cfgPerfManager: IPerfManager | null;
         let _cookieManager: ICookieMgr | null;
@@ -351,6 +358,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
                     
+                    // uncomment this until throttle is implemented
+                    // if (config._sdk.stats === true){
+                    //     _statsBeat = _statsBeat || new Statsbeat();
+                    // } else {
+                    //     _statsBeat = null;
+                    // }
+
                     _handleIKeyEndpointPromises(rootCfg);
 
                     // Mark the extensionConfig and all first level keys as referenced
@@ -498,6 +512,18 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             _self.getPerfMgr = (): IPerfManager => {
                 return _perfManager || _cfgPerfManager || getGblPerfMgr();
+            };
+
+            _self.getStatsBeat = (statsBeatConfig?: IStatsBeatConfig): IStatsBeat => {
+                // create a new statsbeat if not initialize yet or the endpoint is different
+                // otherwise, return the existing one, or null
+
+                // uncomment this until throttle is implemented
+                // if (statsBeatConfig && this.config._sdk.stats === true && _statsBeat && _statsBeat.getEndpoint() !== statsBeatConfig.endpoint) {
+                //     _statsBeat = new Statsbeat();
+                //     _statsBeat.initialize(this, statsBeatConfig);
+                // }
+                return _statsBeat;
             };
 
             _self.setPerfMgr = (perfMgr: IPerfManager) => {
@@ -1018,6 +1044,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
                 _perfManager = null;
+                _statsBeat = null;
                 _cfgPerfManager = null;
                 runTargetUnload(_cookieManager, false);
                 _cookieManager = null;
@@ -1426,6 +1453,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     public getPerfMgr(): IPerfManager {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public getStatsBeat(statsBeatConfig?: IStatsBeatConfig): IStatsBeat {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
