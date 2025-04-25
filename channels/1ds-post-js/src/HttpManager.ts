@@ -230,7 +230,7 @@ export class HttpManager {
                         //
                         // - In 1ds-post-js, the "zipPayload" feature is enabled by default.
                         // - For version 3.3.7:
-                        //     - Compression is only enabled if the user explicitly sets `channelConfig.zipPayload = true`. and set featureOptin be true (without using current cdn)
+                        //     - Compression is only enabled if the user explicitly sets `channelConfig.zipPayload = true`. and set featureOptin be true (cfg src should not be current cdn)
                         // - For later versions:
                         //     - Compression is enabled by default unless:
                         //         a) The user sets `config.zipPayload = false`, or

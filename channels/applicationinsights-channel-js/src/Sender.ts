@@ -11,8 +11,8 @@ import {
     OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete,
     _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
     createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion,
-    isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
-    prependTransports, runTargetUnload
+    isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange,
+    parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
@@ -291,10 +291,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // Determine whether to enable payload compression (zipping).
                     // 
                     // Version 3.3.7 behavior:
-                    //      _zipPayload will be true only if user set flag to be none and senderConfig.zipPayload to true (featureOptIn mode on cdn will be none)
+                    //      _zipPayload will be true only if user set flag to be true and senderConfig.zipPayload to true (cfg src should not be current cdn)
                     // Later versions:
                     //      _zipPayload will be false only when user disable feature flag (featureOptIn mode on cdn will be enabled)
-                    _zipPayload = isFeatureEnabled("zipPayload", config) && (senderConfig.zipPayload === true); // if _zipPayload is not set before, _zipPayload set to false
+                    _zipPayload = isFeatureEnabled("zipPayload", config) && (senderConfig.zipPayload === true); // if senderConfig.zipPayload is not set before, _zipPayload set to false
                     if (!isFunction(csStream)) {
                         _zipPayload = false;
                     }

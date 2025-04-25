@@ -174,7 +174,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCaseAsync({
-            name: "zip test: gzip encode is working and content-encode header is set",
+            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in and zipPayload is true)",
             stepDelay: 10,
             useFakeTimers: true,
             useFakeServer: true,
@@ -185,6 +185,7 @@ export class SenderTests extends AITestClass {
                    
                     let coreConfig = {
                         instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        featureOptIn : {["zipPayload"]: {mode: 3}},
                         extensionConfig: {
                             [this._sender.identifier]: {
                                 httpXHROverride: this.xhrOverride,
@@ -217,6 +218,50 @@ export class SenderTests extends AITestClass {
                     return false;
                 }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
             });
+
+            this.testCaseAsync({
+                name: "zip test: gzip encode is disabled (feature opt-in not set and zipPayload is true)",
+                stepDelay: 10,
+                useFakeTimers: true,
+                useFakeServer: true,
+                steps: [
+                    () => {
+                        this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                        let core = new AppInsightsCore();
+                       
+                        let coreConfig = {
+                            instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                            extensionConfig: {
+                                [this._sender.identifier]: {
+                                    httpXHROverride: this.xhrOverride,
+                                    alwaysUseXhrOverride: true,
+                                    zipPayload: true,
+                                }
+                            }
+                        }
+                
+                        core.initialize(coreConfig, [this._sender]);
+            
+                        const telemetryItem: ITelemetryItem = {
+                            name: 'fake item with some really long name to take up space quickly',
+                            iKey: 'iKey',
+                            baseType: 'some type',
+                            baseData: {}
+                        };
+                        this._sender.processTelemetry(telemetryItem);
+                        this._sender.flush();
+                        this.clock.tick(10);
+                    }].concat(PollingAssert.createPollingAssert(() => {
+                        if (this.genericSpy.called){
+                            let request = this.genericSpy.getCall(0).args[0];
+                            let gzipData = request.data;
+                            QUnit.assert.ok(gzipData, "data should be set");
+                            QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
+                            QUnit.assert.ok(!("Content-Encoding" in request.headers), "telemetry should not be gzip encoded");                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                });
 
         this.testCase({
             name: "Channel Config: Endpoint Url can be set from root dynamically",
