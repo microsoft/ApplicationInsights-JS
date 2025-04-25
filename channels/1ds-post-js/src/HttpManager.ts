@@ -9,11 +9,10 @@ import {
     ITelemetryItem, IUnloadHook, IXDomainRequest, IXHROverride, OnCompleteCallback, SendRequestReason, SenderPostManager, TransportType,
     _IInternalXhrOverride, _ISendPostMgrConfig, _ISenderOnComplete, _eExtendedInternalMessageId, _eInternalMessageId, _getAllResponseHeaders,
     _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend, getCommonSchemaMetaData, getNavigator,
-    getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
-    isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
+    getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, isReactNative,
+    isUndefined, isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
 import { arrAppend, getInst, isFunction } from "@nevware21/ts-utils";
-import { isFeatureEnabled } from "../../../shared/AppInsightsCore/types/applicationinsights-core-js";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
 import {
@@ -231,7 +230,7 @@ export class HttpManager {
                         //
                         // - In 1ds-post-js, the "zipPayload" feature is enabled by default.
                         // - For version 3.3.7:
-                        //     - Compression is only enabled if the user explicitly sets `config.zipPayload = true`.
+                        //     - Compression is only enabled if the user explicitly sets `channelConfig.zipPayload = true`. and set featureOptin be true (without using current cdn)
                         // - For later versions:
                         //     - Compression is enabled by default unless:
                         //         a) The user sets `config.zipPayload = false`, or

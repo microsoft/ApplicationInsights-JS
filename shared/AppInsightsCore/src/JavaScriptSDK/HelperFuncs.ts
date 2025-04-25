@@ -353,14 +353,18 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
 export const asString = asString21;
 
 export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T): boolean {
-    let rlt = false;
     let ft = cfg && cfg.featureOptIn && cfg.featureOptIn[feature];
     if (feature && ft) {
         let mode = ft.mode;
         // NOTE: None will be considered as true
-        rlt = (mode == FeatureOptInMode.enable);
+        if (mode === FeatureOptInMode.enable) {
+            return true
+        } else if (mode === FeatureOptInMode.disable) {
+            return false;
+        }
+        return undefined;
     }
-    return rlt;
+    return undefined;
 }
 
 export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {

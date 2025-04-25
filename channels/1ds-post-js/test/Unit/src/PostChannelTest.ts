@@ -53,6 +53,7 @@ export class PostChannelTest extends AITestClass {
         this.config = {
             instrumentationKey: 'testIkey',
             endpointUrl: 'https://testEndpoint',
+            featureOptIn : {["zipPayload"]: {mode: 3}},
             extensionConfig: []
         };
         this.postChannel = new PostChannel();
@@ -178,7 +179,7 @@ export class PostChannelTest extends AITestClass {
                     maxUnloadEventRetryAttempts: 2,
                     addNoResponse: undefValue,
                     excludeCsMetaData: undefValue,
-                    zipPayload: false
+                    zipPayload: false,
                 };
                 let actaulConfig =  postChannel["_getDbgPlgTargets"]()[1];
                 QUnit.assert.deepEqual(expectedConfig, actaulConfig, "default config should be set");
