@@ -325,7 +325,7 @@ export class SenderPostManager {
                             
                         } else {
                             // if can send
-                            _onSuccess(STR_EMPTY, oncomplete);
+                            _onSuccess(STR_EMPTY, oncomplete); // if success, onComplete is called with status code 200
                         }
                     }
 
@@ -505,12 +505,14 @@ export class SenderPostManager {
                 }
 
                 
-                function _handleError(res?: string) {
+                function _handleError(res?: string, statusCode?: number) {
                     // In case there is an error in the request. Set the status to 0 for 1ds and 400 for appInsights
                     // so that the events can be retried later.
-                    
-                    _doOnComplete(oncomplete, _isOneDs? 0 : 400, {}, _isOneDs? STR_EMPTY: res);
-                    
+                    if (statusCode) {
+                        _doOnComplete(oncomplete, _isOneDs? 0 : statusCode, {}, _isOneDs? STR_EMPTY: res);
+                    } else {
+                        _doOnComplete(oncomplete, _isOneDs? 0 : 400, {}, _isOneDs? STR_EMPTY: res);
+                    }
                 }
 
                 function _onFetchComplete(response: Response, payload?: IPayloadData, value?: string) {
@@ -544,7 +546,11 @@ export class SenderPostManager {
                                      */
                                     if (!_isOneDs && !response.ok) {
                                         // this is for appInsights only
-                                        _handleError(response.statusText);
+                                        if (response.status){
+                                            _handleError(response.statusText, response.status);
+                                        } else {
+                                            _handleError(response.statusText, 499);
+                                        }
                                         resolveFunc && resolveFunc(false);
                                     } else {
                                         if (_isOneDs && !response.body) {
@@ -560,19 +566,23 @@ export class SenderPostManager {
                                     }
 
                                 } catch (e) {
-                                    _handleError(dumpObj(e));
+                                    if (response && response.status){
+                                        _handleError(dumpObj(e), response.status);
+                                    } else {
+                                        _handleError(dumpObj(e), 499);
+                                    }
                                     rejectFunc && rejectFunc(e);
                                 }
                                 
                             } else {
-                                _handleError(result.reason && result.reason.message);
+                                _handleError(result.reason && result.reason.message, 499);
                                 rejectFunc && rejectFunc(result.reason);
                             }
                         }
                     });
                 } catch (e) {
                     if (!responseHandled) {
-                        _handleError(dumpObj(e));
+                        _handleError(dumpObj(e), 499);
                         rejectFunc && rejectFunc(e);
                     }
                 }
