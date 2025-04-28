@@ -656,7 +656,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     endpoint: _endpointUrl,
                     version: EnvelopeCreator.Version
                 } as IStatsBeatConfig;
-                return _self.core.getStatsBeat(statsBeatConfig);
+
+                let core = _self.core;
+
+                // During page unload the core may have been cleared and some async events may not have been sent yet
+                // resulting in the core being null. In this case we don't want to create a statsbeat instance
+                return core ? core.getStatsBeat(statsBeatConfig) : null;
             }
 
             function _xdrOnLoad (xdr: IXDomainRequest, payload: IInternalStorageItem[]) {
@@ -1304,12 +1309,21 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             // Using function lookups for backward compatibility as the getNotifyMgr() did not exist until after v2.5.6
             function _getNotifyMgr() : INotificationManager {
                 const func = "getNotifyMgr";
-                if (_self.core[func]) {
-                    return _self.core[func]();
+                let result: INotificationManager;
+                let core = _self.core;
+                if (core) {
+                    // During page unload the core may have been cleared and some async events may not have been sent yet
+                    // resulting in the core being null. In this case we don't want to create a statsbeat instance
+
+                    if (core[func]) {
+                        result = core[func]();
+                    } else {
+                        // using _self.core['_notificationManager'] for backward compatibility
+                        result = (core as any)["_notificationManager"];
+                    }
                 }
 
-                // using _self.core['_notificationManager'] for backward compatibility
-                return _self.core["_notificationManager"];
+                return result;
             }
 
             function _notifySendRequest(sendRequest: SendRequestReason, isAsync: boolean) {
@@ -1469,7 +1483,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
     /**
      * error handler
-     * @Internal
+     * @internal
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onError(payload: string[] | IInternalStorageItem[], message: string, event?: ErrorEvent) {
@@ -1478,7 +1492,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
     /**
      * partial success handler
-     * @Internal
+     * @internal
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onPartialSuccess(payload: string[] | IInternalStorageItem[], results: IBackendResponse) {
@@ -1487,7 +1501,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
     /**
      * success handler
-     * @Internal
+     * @internal
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
     public _onSuccess(payload: string[] | IInternalStorageItem[], countOfItemsInPayload: number) {
