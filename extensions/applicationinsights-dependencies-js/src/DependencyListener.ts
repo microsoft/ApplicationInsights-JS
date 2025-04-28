@@ -73,8 +73,9 @@ export interface IDependencyListenerHandler extends IDependencyHandler {
 
 export interface IDependencyListenerContainer {
     /**
-     * Add an ajax listener which is called just prior to the request being sent and before the correlation headers are added, to allow you
-     * to access the headers and modify the values used to generate the distributed tracing correlation headers or drop the correlation. (added in v2.8.4)
+     * Add an ajax listener which is called just prior to the request being sent and before the correlation headers are added.
+     * This allows you to access the headers and modify the values used to generate the distributed tracing correlation headers (added in v2.8.4),
+     * or to drop the correlation (added in v3.3.7).
      * @param dependencyListener - The Telemetry Initializer function
      * @returns - A IDependencyListenerHandler to enable the initializer to be removed
      */

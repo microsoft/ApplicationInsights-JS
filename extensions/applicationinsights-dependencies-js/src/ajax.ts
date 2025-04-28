@@ -410,10 +410,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             _self.includeCorrelationHeaders = (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
                 // Test Hook to allow the overriding of the location host
                 let currentWindowHost = _self["_currentWindowHost"] || _currentWindowHost;
-
-                let canBeProcessed = _processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init);
-
-                if (canBeProcessed === true) {
+                
+                if (_processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init)) {
                     if (input || input === "") { // Fetch
                         if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                             if (!init) {
