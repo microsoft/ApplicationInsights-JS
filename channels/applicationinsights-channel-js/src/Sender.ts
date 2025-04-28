@@ -656,7 +656,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     endpoint: _endpointUrl,
                     version: EnvelopeCreator.Version
                 } as IStatsBeatConfig;
-                return _self.core.getStatsBeat(statsBeatConfig);
+
+                let core = _self.core;
+
+                // During page unload the core may have been cleared and some async events may not have been sent yet
+                // resulting in the core being null. In this case we don't want to create a statsbeat instance
+                return core ? core.getStatsBeat(statsBeatConfig) : null;
             }
 
             function _getStatsBeat() {
