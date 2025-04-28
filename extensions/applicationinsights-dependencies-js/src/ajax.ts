@@ -244,8 +244,9 @@ function _processDependencyContainer<F extends Function, D>(core: IAppInsightsCo
     return result;
 }
 
-function _processDependencyListeners(listeners: _IInternalDependencyHandler<DependencyListenerFunction>[], core: IAppInsightsCore, ajaxData: ajaxRecord, xhr: XMLHttpRequest, input?: Request | string, init?: RequestInit): void {
+function _processDependencyListeners(listeners: _IInternalDependencyHandler<DependencyListenerFunction>[], core: IAppInsightsCore, ajaxData: ajaxRecord, xhr: XMLHttpRequest, input?: Request | string, init?: RequestInit): boolean {
     var initializersCount = listeners.length;
+    let result = true;
     if (initializersCount > 0) {
         let details: IDependencyListenerDetails = {
             core: core,
@@ -259,13 +260,15 @@ function _processDependencyListeners(listeners: _IInternalDependencyHandler<Depe
             aborted: !!ajaxData.aborted
         };
     
-        _processDependencyContainer(core, listeners, details, "listener");
+        result = _processDependencyContainer(core, listeners, details, "listener");
 
         ajaxData.traceID = details.traceId;
         ajaxData.spanID = details.spanId;
         ajaxData.traceFlags = details.traceFlags;
         ajaxData.context = details.context;
     }
+    
+    return result;
 }
 
 export interface XMLHttpRequestData {
@@ -408,95 +411,97 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 // Test Hook to allow the overriding of the location host
                 let currentWindowHost = _self["_currentWindowHost"] || _currentWindowHost;
 
-                _processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init);
+                let canBeProcessed = _processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init);
 
-                if (input || input === "") { // Fetch
-                    if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
-                        if (!init) {
-                            init = {};
-                        }
-
-                        // init headers override original request headers
-                        // so, if they exist use only them, otherwise use request's because they should have been applied in the first place
-                        // not using original request headers will result in them being lost
-                        let headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
-                        if (_isUsingAIHeaders) {
-                            const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
-                            headers.set(RequestHeaders[eRequestHeaders.requestIdHeader], id);
-                            if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
-                            }
-                        }
-                        const appId: string = _appId ||(_context && _context.appId());
-                        if (appId) {
-                            headers.set(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
-                            if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestContextHeader]] = RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId;
-                            }
-                        }
-                        if (_isUsingW3CHeaders) {
-                            let traceFlags = ajaxData.traceFlags;
-                            if (isNullOrUndefined(traceFlags)) {
-                                traceFlags = 0x01;
+                if (canBeProcessed === true) {
+                    if (input || input === "") { // Fetch
+                        if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
+                            if (!init) {
+                                init = {};
                             }
 
-                            const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, traceFlags));
-                            headers.set(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
-                            if (_enableRequestHeaderTracking) {
-                                ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
-                            }
-                        }
-
-                        init.headers = headers;
-                    }
-
-                    return init;
-                } else if (xhr) { // XHR
-                    if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
-                        if (_isUsingAIHeaders) {
-                            if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.requestIdHeader])) {
+                            // init headers override original request headers
+                            // so, if they exist use only them, otherwise use request's because they should have been applied in the first place
+                            // not using original request headers will result in them being lost
+                            let headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
+                            if (_isUsingAIHeaders) {
                                 const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
-                                xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestIdHeader], id);
+                                headers.set(RequestHeaders[eRequestHeaders.requestIdHeader], id);
                                 if (_enableRequestHeaderTracking) {
                                     ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
                                 }
-                            } else {
-                                _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
-                                    "Unable to set [" + RequestHeaders[eRequestHeaders.requestIdHeader] + "] as it has already been set by another instance");
                             }
-                        }
-                        const appId = _appId || (_context && _context.appId());
-                        if (appId) {
-                            if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.requestContextHeader])) {
-                                xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
+                            const appId: string = _appId ||(_context && _context.appId());
+                            if (appId) {
+                                headers.set(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
                                 if (_enableRequestHeaderTracking) {
                                     ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestContextHeader]] = RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId;
                                 }
-                            } else {
-                                _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
-                                    "Unable to set [" + RequestHeaders[eRequestHeaders.requestContextHeader] + "] as it has already been set by another instance");
                             }
-                        }
-                        if (_isUsingW3CHeaders) {
-                            let traceFlags = ajaxData.traceFlags;
-                            if (isNullOrUndefined(traceFlags)) {
-                                traceFlags = 0x01;
-                            }
+                            if (_isUsingW3CHeaders) {
+                                let traceFlags = ajaxData.traceFlags;
+                                if (isNullOrUndefined(traceFlags)) {
+                                    traceFlags = 0x01;
+                                }
 
-                            if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.traceParentHeader])) {
                                 const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, traceFlags));
-                                xhr.setRequestHeader(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
+                                headers.set(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
                                 if (_enableRequestHeaderTracking) {
                                     ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
                                 }
-                            } else {
-                                _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
-                                    "Unable to set [" + RequestHeaders[eRequestHeaders.traceParentHeader] + "] as it has already been set by another instance");
+                            }
+
+                            init.headers = headers;
+                        }
+
+                        return init;
+                    } else if (xhr) { // XHR
+                        if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
+                            if (_isUsingAIHeaders) {
+                                if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.requestIdHeader])) {
+                                    const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
+                                    xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestIdHeader], id);
+                                    if (_enableRequestHeaderTracking) {
+                                        ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
+                                    }
+                                } else {
+                                    _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
+                                        "Unable to set [" + RequestHeaders[eRequestHeaders.requestIdHeader] + "] as it has already been set by another instance");
+                                }
+                            }
+                            const appId = _appId || (_context && _context.appId());
+                            if (appId) {
+                                if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.requestContextHeader])) {
+                                    xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
+                                    if (_enableRequestHeaderTracking) {
+                                        ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestContextHeader]] = RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId;
+                                    }
+                                } else {
+                                    _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
+                                        "Unable to set [" + RequestHeaders[eRequestHeaders.requestContextHeader] + "] as it has already been set by another instance");
+                                }
+                            }
+                            if (_isUsingW3CHeaders) {
+                                let traceFlags = ajaxData.traceFlags;
+                                if (isNullOrUndefined(traceFlags)) {
+                                    traceFlags = 0x01;
+                                }
+
+                                if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.traceParentHeader])) {
+                                    const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, traceFlags));
+                                    xhr.setRequestHeader(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
+                                    if (_enableRequestHeaderTracking) {
+                                        ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
+                                    }
+                                } else {
+                                    _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
+                                        "Unable to set [" + RequestHeaders[eRequestHeaders.traceParentHeader] + "] as it has already been set by another instance");
+                                }
                             }
                         }
-                    }
 
-                    return xhr;
+                        return xhr;
+                    }
                 }
 
                 return undefined;
