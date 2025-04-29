@@ -5,28 +5,21 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, FeatureOptInMode, IConfigDefaults, IConfiguration, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, IPlugin,
-    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction,
-    cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
+    AppInsightsCore, FeatureOptInMode, IConfigDefaults, IConfiguration, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin,
+    IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler,
+    WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
 
 const UNDEFINED_VALUE: undefined = undefined;
-const IKEY_USAGE = "iKeyUsage";
-const CDN_USAGE = "CdnUsage";
-const SDK_LOADER_VER = "SdkLoaderVer";
-const ZIP_PAYLOAD = "zipPayload";
 const defaultConfigValues: IConfigDefaults<IConfiguration> = {
     diagnosticLogInterval: cfgDfValidate(_chkDiagLevel, 10000),
     connectionString: UNDEFINED_VALUE,
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
     featureOptIn:{
-        [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //for versions after 3.1.2 (>= 3.2.0)
-        [CDN_USAGE]: {mode: FeatureOptInMode.disable},
-        [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable},
-        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none}
+        ["zipPayload"]: {mode: FeatureOptInMode.none}
     },
     extensionConfig: {}
 };
