@@ -49,6 +49,8 @@ export class ClickEventTest extends AITestClass {
                     pageType: ""
                 };
 
+                const defaultElementTypes = "A,BUTTON,AREA,INPUT"; 
+
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
@@ -76,6 +78,7 @@ export class ClickEventTest extends AITestClass {
                 Assert.equal(extConfig.urlCollectQuery, false, "urlCollectQuery should be false by default");
                 Assert.deepEqual(extConfig.dataTags, dataTagsDefault, "udataTags should be set by default");
                 Assert.deepEqual(extConfig.coreData, coreDataDefault, "udataTags should be set by default");
+                Assert.deepEqual(extConfig.trackElementTypes, defaultElementTypes, "trackElementTypes should be set by default");
 
                 Assert.ok(extConfig.callback, "callback should be set by default");
                 let callbacks = extConfig.callback;
@@ -421,14 +424,53 @@ export class ClickEventTest extends AITestClass {
                     dropInvalidEvents : false,
                     urlCollectHash: false,
                     urlCollectQuery: false,
-                    trackElementTypes: {
-                        "A": true,
-                        "BUTTON": true,
-                        "AREA": true,
-                        "INPUT": true
-                    }
+                    trackElementTypes: "A,BUTTON,AREA,INPUT"
                 }, core.config.extensionConfig[clickAnalyticsPlugin.identifier]);
 
+            }
+        });
+        this.testCase({
+            name: "trackElementTypes: validate empty string, string with spaces, lowercase, and dynamic changes",
+            useFakeTimers: true,
+            test: () => {
+                const config = {
+                    trackElementTypes: "A,BUTTON,AREA,INPUT"
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig: {
+                        [clickAnalyticsPlugin.identifier]: config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+        
+                let currentConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes;
+                // Validate default value
+                Assert.equal("A,BUTTON,AREA,INPUT", currentConfig, "Default trackElementTypes should be 'A,BUTTON,AREA,INPUT'");
+        
+                // Test empty string
+                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes = "";
+                this.clock.tick(1);
+                currentConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes;
+                Assert.equal("A,BUTTON,AREA,INPUT", currentConfig, "empty string will not be accepted");
+        
+                // Test string with spaces
+                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes = "    ";
+                this.clock.tick(1);
+                currentConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes;
+                Assert.equal("A,BUTTON,AREA,INPUT", currentConfig, "spaces string will not be accepted");
+        
+                // Test dynamic change
+                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes = "A,BUTTON,AREA,INPUT,TEST";
+                this.clock.tick(1);
+                currentConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes;
+                Assert.equal("A,BUTTON,AREA,INPUT,TEST", currentConfig, "spaces and lowercase string will be converted to uppercase and trimmed");
             }
         });
 
