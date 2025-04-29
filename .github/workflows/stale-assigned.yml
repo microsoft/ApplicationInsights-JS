@@ -1,0 +1,30 @@
+name: 'Stale issue handler'
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * *'
+
+permissions:
+  actions: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        id: stale
+        with:
+          stale-issue-message: 'This Issue will be closed in 30 days. Please remove the "Stale" label or comment to avoid closure with no action.'
+          stale-pr-message: 'This PR will be closed in 30 days. Please remove the "Stale" label or comment to avoid closure with no action.'
+          operations-per-run: 200
+          days-before-stale: 360
+          days-before-close: 30
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          close-issue-label: 'closed'
+          close-pr-label: 'closed'
+          exempt-issue-labels: 'bug,enhancement,documentation,waiting,keep'
+          exempt-pr-labels: 'waiting,keep'
+          include-only-assigned: true
