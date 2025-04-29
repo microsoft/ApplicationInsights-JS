@@ -53,7 +53,7 @@ const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFree
     dropInvalidEvents : false,
     urlCollectHash: false,
     urlCollectQuery: false,
-    trackElementTypes: {}
+    trackElementTypes: cfgDfString()
 });
 
 function _dataPrefixChk(val: any) {
@@ -149,18 +149,10 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     let metaTags = _contentHandler.getMetadata();
                     _pageAction = new PageAction(_self, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
 
-                    
-                    const defaultClickCaptureElements: Record<string, boolean> = {
-                        A: true,
-                        BUTTON: true,
-                        AREA: true,
-                        INPUT: true
-                    };
-                    
-                    for (const tag in defaultClickCaptureElements) {
-                        if (!_config.trackElementTypes.hasOwnProperty(tag)) {
-                            _config.trackElementTypes[tag] = defaultClickCaptureElements[tag];
-                        }
+                    const defaultElementTypes = "A,BUTTON,AREA,INPUT";
+                    // Use user-defined or fallback to default
+                    if (!_config.trackElementTypes || !_config.trackElementTypes.trim()) {
+                        _config.trackElementTypes = defaultElementTypes;
                     }
     
                     // Default to DOM autoCapture handler
