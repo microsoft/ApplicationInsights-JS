@@ -50,6 +50,7 @@ const _ignoreUpdateSnippetProperties = [
 const IKEY_USAGE = "iKeyUsage";
 const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
+const STATSBEAT = "StatsBeat";
 
 const UNDEFINED_VALUE: undefined = undefined;
 
@@ -80,14 +81,16 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
     featureOptIn:{
         [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //for versions after 3.1.2 (>= 3.2.0)
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
-        [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable}
+        [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable},
+        [STATSBEAT]: {mode: FeatureOptInMode.none}
     },
     throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
         {
             [_eInternalMessageId.DefaultThrottleMsgKey]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
             [_eInternalMessageId.InstrumentationKeyDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
             [_eInternalMessageId.SdkLdrUpdate]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
-            [_eInternalMessageId.CdnDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config)
+            [_eInternalMessageId.CdnDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
+            [_eInternalMessageId.StatsBeat]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config)
         }
     ),
     extensionConfig: cfgDfMerge<{[key: string]: any}>({
@@ -388,6 +391,13 @@ export class AppInsightsSku implements IApplicationInsights {
                         if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled(SDK_LOADER_VER, _config)) {
                             _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
                             _sdkVerSentMessage = true;
+                        }
+
+                        if (isFeatureEnabled(STATSBEAT, _config)) {
+                            if (!_throttleMgr.canThrottle(_eInternalMessageId.StatsBeat)){ // use the message id as the key to get throttleMgr control
+                                // statsBeat should be disabled
+                                _config.featureOptIn[STATSBEAT] = {mode: FeatureOptInMode.disable};
+                            }
                         }
                         
                     }));

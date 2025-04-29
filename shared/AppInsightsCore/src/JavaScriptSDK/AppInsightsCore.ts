@@ -44,7 +44,7 @@ import { createCookieMgr } from "./CookieMgr";
 import { createUniqueNamespace } from "./DataCacheHelper";
 import { getDebugListener } from "./DbgExtensionUtils";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
+import { getSetValue, isFeatureEnabled, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
 import {
     STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
 } from "./InternalConstants";
@@ -359,11 +359,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
                     
                     // uncomment this until throttle is implemented
-                    // if (config._sdk.stats === true){
-                    //     _statsBeat = _statsBeat || new Statsbeat();
-                    // } else {
-                    //     _statsBeat = null;
-                    // }
+                    if (config._sdk.stats === true && isFeatureEnabled("StatsBeat", config)){
+                        _statsBeat = _statsBeat || new Statsbeat();
+                    } else {
+                        _statsBeat = null;
+                    }
 
                     _handleIKeyEndpointPromises(rootCfg);
 
@@ -517,12 +517,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             _self.getStatsBeat = (statsBeatConfig?: IStatsBeatConfig): IStatsBeat => {
                 // create a new statsbeat if not initialize yet or the endpoint is different
                 // otherwise, return the existing one, or null
-
-                // uncomment this until throttle is implemented
-                // if (statsBeatConfig && this.config._sdk.stats === true && _statsBeat && _statsBeat.getEndpoint() !== statsBeatConfig.endpoint) {
-                //     _statsBeat = new Statsbeat();
-                //     _statsBeat.initialize(this, statsBeatConfig);
-                // }
+                if (statsBeatConfig && this.config._sdk.stats === true && isFeatureEnabled("Statsbeat", this.config) && _statsBeat && _statsBeat.getEndpoint() !== statsBeatConfig.endpoint) {
+                    _statsBeat = new Statsbeat();
+                    _statsBeat.initialize(this, statsBeatConfig);
+                }
                 return _statsBeat;
             };
 
