@@ -50,6 +50,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                 eventOff(getWindow(), null, null, _evtNamespace);
                 eventOff(getDocument(), null, null, _evtNamespace);
                 unloadHandler && unloadHandler.rm();
+                unloadHandler = null;
             };
 
             function _capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
