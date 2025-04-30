@@ -14,13 +14,7 @@
             }
         },
         "zipPayload": {
-            "mode": 1,
-            "onCfg": { 
-                "extensionConfig.AppInsightsChannelPlugin.zipPayload": false
-            },
-            "offCfg": { 
-                "extensionConfig.AppInsightsChannelPlugin.zipPayload": false
-            }
+            "mode": 1
         },
         "CdnUsage": {
             "mode": 4,
@@ -36,11 +30,6 @@
         }
     },
     "config": {
-        "extensionConfig": {
-            "AppInsightsChannelPlugin": {
-                "zipPayload": false
-            }
-        },
         "throttleMgrCfg": {
             "109": { 
                 "disabled": false,
