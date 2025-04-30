@@ -64,6 +64,7 @@ export interface IChannelConfiguration {
      * [Optional] Sets the record and request size limit in bytes for serializer.
      * Default for record size (sync) is 65000, record size (async) is 2000000.
      * Default for request size (sync) is 65000, request size (async) is 3145728.
+     * @since 3.3.7
      */
     requestLimit?: IRequestSizeLimit;
 
