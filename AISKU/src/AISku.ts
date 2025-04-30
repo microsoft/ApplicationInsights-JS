@@ -50,6 +50,7 @@ const _ignoreUpdateSnippetProperties = [
 const IKEY_USAGE = "iKeyUsage";
 const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
+const ZIP_PAYLOAD = "zipPayload";
 
 const UNDEFINED_VALUE: undefined = undefined;
 
@@ -80,7 +81,8 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
     featureOptIn:{
         [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //for versions after 3.1.2 (>= 3.2.0)
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
-        [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable}
+        [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable},
+        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none}
     },
     throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
         {
