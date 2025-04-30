@@ -460,7 +460,9 @@ You can use the `featureOptIn` configuration to enable or customize specific SDK
 
 | Name        | Default | Description                                  | Note |
 |-------------|---------|----------------------------------------------|------------|
-| `zipPayload` | `none`  | Enables compression using the Compression API to zip telemetry payloads. |If this feature is turned on and the CompressionStream API is available, the payload will be compressed using the CompressionStream API. Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied. Note: if user set payloadPreprocessor, this zip compression will not be applied.|
+| `zipPayload` | `none`*(version 3.3.7)  | Enables compression using the Compression API to zip telemetry payloads. |If this feature is turned on and the CompressionStream API is available, the payload will be compressed using the CompressionStream API. Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied. Note: if user set payloadPreprocessor, this zip compression will not be applied.|
+
+* A default value of none means the SDK may automatically enable this feature in the future. To explicitly prevent this, set the feature to disable using FeatureOptInMode.disable.
 
 #### How to Enable a Feature
 
@@ -473,7 +475,7 @@ const appInsights = new ApplicationInsights({
         // Other configuration options...
         featureOptIn: {
             zipPayload: {
-                mode: FeatureOptInMode.disable, // Set the opt-in status for the feature
+                mode: FeatureOptInMode.enable, // Set the opt-in status for the feature
                 blockCdnCfg: false,             // Define whether to block changes from CDN config
             } as IFeatureOptInDetails
         }

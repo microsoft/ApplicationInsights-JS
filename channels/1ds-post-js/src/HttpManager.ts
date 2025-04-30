@@ -228,6 +228,8 @@ export class HttpManager {
 
                         // Controls whether payload compression (gzip) is enabled.
                         _zipPayload = isFeatureEnabled("zipPayload", coreConfig);
+                        // if user has payload processor (_sendHook), they may compress the payload themselves
+                        // to avoid double compression, we should disable the zipPayload
                         if (!isFunction(csStream) || _sendHook) {
                             _zipPayload = false;
                         }
@@ -1059,7 +1061,6 @@ export class HttpManager {
                     _sendBatchesNotification(thePayload.failedEvts, EventBatchNotificationReason.InvalidEvent, thePayload.sendType);
                 }
             }
-
 
             function _addEventCompletedTimings(theEvents: IPostTransmissionTelemetryItem[], sendEventCompleted: number) {
                 if (_enableEventTimings) {
