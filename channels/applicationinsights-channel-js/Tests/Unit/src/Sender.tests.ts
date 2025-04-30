@@ -131,7 +131,6 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, defaultSenderConfig.alwaysUseXhrOverride, "Channel default alwaysUseXhrOverride config is set");
                 QUnit.assert.equal(true, defaultSenderConfig.disableSendBeaconSplit, "Channel default disableSendBeaconSplit config is set");
                 QUnit.assert.equal(10, defaultSenderConfig.maxRetryCnt, "Channel default maxRetryCnt config is set");
-                QUnit.assert.equal(undefined, defaultSenderConfig.zipPayload, "Channel default zipPayload config is set");
 
                 //check dynamic config
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -148,7 +147,6 @@ export class SenderTests extends AITestClass {
                     customHeaders: [{header: "header1",value:"value1"}],
                     alwaysUseXhrOverride: true,
                     disableSendBeaconSplit: false,
-                    zipPayload: true
                 }
                 core.config.extensionConfig[id] = config;
                 this.clock.tick(1);
@@ -164,7 +162,6 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual([{header: "header1",value:"value1"}], curSenderConfig.customHeaders, "Channel customHeaders config is dynamically set");
                 QUnit.assert.deepEqual(true, curSenderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is dynamically set");
                 QUnit.assert.equal(false, curSenderConfig.disableSendBeaconSplit, "Channel disableSendBeaconSplit config is dynamically set");
-                QUnit.assert.equal(true, curSenderConfig.zipPayload, "Channel zipPayload config is dynamically set");
                 core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = undefined;
                 core.config.extensionConfig[this._sender.identifier].endpointUrl = undefined;
                 this.clock.tick(1);

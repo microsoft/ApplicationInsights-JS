@@ -227,12 +227,6 @@ export class HttpManager {
                         const csStream = getInst("CompressionStream");
 
                         // Controls whether payload compression (gzip) is enabled.
-                        //
-                        // - In 1ds-post-js, the "zipPayload" feature is enabled by default.
-                        // - For version 3.3.7:
-                        //     - Compression is only enabled if the user explicitly sets featureOptin be true (cfg src should not be current cdn)
-                        // - For later versions:
-                        //     - Compression is enabled by default unless The "zipPayload" feature flag is turned off.
                         _zipPayload = isFeatureEnabled("zipPayload", coreConfig);
                         if (!isFunction(csStream) || _sendHook) {
                             _zipPayload = false;

@@ -81,8 +81,7 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     transports: UNDEFINED_VALUE,
     retryCodes: UNDEFINED_VALUE,
     corsPolicy: UNDEFINED_VALUE,
-    maxRetryCnt: {isVal: isNumber, v:10},
-    zipPayload: UNDEFINED_VALUE
+    maxRetryCnt: {isVal: isNumber, v:10}
 });
 
 const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
@@ -290,11 +289,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
                     const csStream = getInst("CompressionStream");
                     // Determine whether to enable payload compression (zipping).
-                    //
-                    // Version 3.3.7 behavior:
-                    //      _zipPayload will be true only if user set flag to be true and senderConfig.zipPayload to true (cfg src should not be current cdn)
-                    // Later versions:
-                    //      _zipPayload will be false only when user disable feature flag (featureOptIn mode on cdn will be enabled)
                     _zipPayload = isFeatureEnabled("zipPayload", config);
                     if (!isFunction(csStream)) {
                         _zipPayload = false;

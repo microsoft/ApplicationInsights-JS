@@ -458,9 +458,9 @@ You can use the `featureOptIn` configuration to enable or customize specific SDK
 
 #### Available Feature Flags
 
-| Name        | Default | Description                                  |
-|-------------|---------|----------------------------------------------|
-| `zipPayload` | `none`  | Enables compression using the Compression API to zip telemetry payloads. |
+| Name        | Default | Description                                  | Note |
+|-------------|---------|----------------------------------------------|------------|
+| `zipPayload` | `none`  | Enables compression using the Compression API to zip telemetry payloads. |If this feature is turned on and the CompressionStream API is available, the payload will be compressed using the CompressionStream API. Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied. Note: if user set payloadPreprocessor, this zip compression will not be applied.|
 
 #### How to Enable a Feature
 
