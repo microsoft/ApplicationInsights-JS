@@ -53,7 +53,7 @@ export class PostChannelTest extends AITestClass {
         this.config = {
             instrumentationKey: 'testIkey',
             endpointUrl: 'https://testEndpoint',
-            featureOptIn : {["zipPayload"]: {mode: 3}},
+            featureOptIn : {["zipPayload"]: {mode: 1}},
             extensionConfig: []
         };
         this.postChannel = new PostChannel();
