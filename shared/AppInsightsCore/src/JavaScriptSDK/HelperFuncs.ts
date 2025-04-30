@@ -9,7 +9,7 @@ import { FeatureOptInMode } from "../JavaScriptSDK.Enums/FeatureOptInEnums";
 import { TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
-import { STR_EMPTY } from "./InternalConstants";
+import { STR_EMPTY, UNDEFINED_VALUE } from "./InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 
@@ -352,7 +352,7 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
 
 export const asString = asString21;
 
-export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T): boolean {
+export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T): boolean|undefined {
     let ft = cfg && cfg.featureOptIn && cfg.featureOptIn[feature];
     if (feature && ft) {
         let mode = ft.mode;
@@ -362,9 +362,9 @@ export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feat
         } else if (mode === FeatureOptInMode.disable) {
             return false;
         }
-        return undefined;
+        return UNDEFINED_VALUE;
     }
-    return undefined;
+    return UNDEFINED_VALUE;
 }
 
 export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {

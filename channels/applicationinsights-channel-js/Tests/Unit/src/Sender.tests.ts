@@ -174,7 +174,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCaseAsync({
-            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in and zipPayload is true)",
+            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
             stepDelay: 10,
             useFakeTimers: true,
             useFakeServer: true,
@@ -190,7 +190,6 @@ export class SenderTests extends AITestClass {
                             [this._sender.identifier]: {
                                 httpXHROverride: this.xhrOverride,
                                 alwaysUseXhrOverride: true,
-                                zipPayload: true,
                             }
                         }
                     }
@@ -220,7 +219,7 @@ export class SenderTests extends AITestClass {
             });
 
             this.testCaseAsync({
-                name: "zip test: gzip encode is disabled (feature opt-in not set and zipPayload is true)",
+                name: "zip test: gzip encode is disabled (feature opt-in not set)",
                 stepDelay: 10,
                 useFakeTimers: true,
                 useFakeServer: true,
@@ -235,7 +234,6 @@ export class SenderTests extends AITestClass {
                                 [this._sender.identifier]: {
                                     httpXHROverride: this.xhrOverride,
                                     alwaysUseXhrOverride: true,
-                                    zipPayload: true,
                                 }
                             }
                         }

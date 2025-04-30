@@ -137,18 +137,12 @@ export class CdnThrottle extends AITestClass {
                         "throttleMgrCfg.109.disabled":true,
                     }},
                     ["zipPayload"]: {
-                        mode: CdnFeatureMode.enable, 
-                        onCfg: {["extensionConfig.AppInsightsChannelPlugin.zipPayload"]: true}, 
-                        offCfg: {["extensionConfig.AppInsightsChannelPlugin.zipPayload"]: false}},
+                        mode: CdnFeatureMode.enable},
                 },
                 config: {
                     maxMessageLimit: 10,
                     throttleMgrCfg: throttleCfgDisable,
-                    extensionConfig: {
-                        AppInsightsChannelPlugin: {
-                            zipPayload: false
-                        }
-                    }
+                    
                 }
             } as ICfgSyncConfig;
             doc["res"] = new (doc as any).Response(JSON.stringify(cdnCfg), {
@@ -284,7 +278,6 @@ export class CdnThrottle extends AITestClass {
                 if (this.fetchStub.called){
                     let newCfg = this._ai.config;
                     Assert.equal(newCfg.featureOptIn["zipPayload"]["mode"], FeatureOptInMode.enable); // aisku default is none, overwrite to true by cdn config
-                    Assert.equal(newCfg.extensionConfig["AppInsightsChannelPlugin"]["zipPayload"], true);
                     return true;
                 }
                 return false;

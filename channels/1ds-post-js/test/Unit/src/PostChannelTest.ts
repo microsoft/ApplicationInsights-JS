@@ -325,9 +325,9 @@ export class PostChannelTest extends AITestClass {
             steps: [
                 () => {
                     this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                    this.config.featureOptIn = {["zipPayload"]: {mode: 3}};
                     this.config.extensionConfig[this.postChannel.identifier] = {
                         httpXHROverride: this.xhrOverride,
-                        zipPayload: true
                     };
                     this.core.initialize(this.config, [this.postChannel]);
                     var event: IPostTransmissionTelemetryItem = {
@@ -406,7 +406,7 @@ export class PostChannelTest extends AITestClass {
                         this.postChannel.processTelemetry(event);
                         this.postChannel.flush();
                         this.clock.tick(10);
-                        this.core.config.extensionConfig[this.postChannel.identifier].zipPayload = true;
+                        this.core.config.featureOptIn = {["zipPayload"]: {mode: 3}};
                         this.clock.tick(1);
                         this.core.track(event);
                         this.postChannel.flush();

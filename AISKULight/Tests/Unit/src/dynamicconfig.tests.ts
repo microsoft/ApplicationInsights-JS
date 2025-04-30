@@ -141,7 +141,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
         });
 
         this.testCaseAsync({
-            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in and zipPayload is true)",
+            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
             stepDelay: 10,
             useFakeTimers: true,
             useFakeServer: true,
@@ -151,8 +151,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.config.featureOptIn["zipPayload"] = { mode: 3 };
                     this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
                         httpXHROverride: this.xhrOverride,
-                                alwaysUseXhrOverride: true,
-                                zipPayload: true,
+                                alwaysUseXhrOverride: true
                     }
                     this.clock.tick(10);
                     const telemetryItem: ITelemetryItem = {
@@ -188,8 +187,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                         this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
                         this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
                             httpXHROverride: this.xhrOverride,
-                                    alwaysUseXhrOverride: true,
-                                    zipPayload: true,
+                                    alwaysUseXhrOverride: true
                         }
                         this.clock.tick(10);
                         const telemetryItem: ITelemetryItem = {
