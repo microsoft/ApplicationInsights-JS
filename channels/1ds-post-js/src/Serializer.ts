@@ -30,7 +30,8 @@ import { mathMin, strSubstr } from "@nevware21/ts-utils";
  */
 const _MAX_STRING_JOINS = 20;
 
-const RequestSizeLimitBytes = 3984588;  // approx 3.8 Mb
+// Max Size set by One Collector: https://msazure.visualstudio.com/OneDsCollector/_git/Collector?path=/Services/Azure/CollectorWorkerRoleAzure/ServiceConfiguration.Cloud.cscfg
+const RequestSizeLimitBytes = 3145728; // approx 3.15 Mb
 const BeaconRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, Firefox and Chrome max limit)
 const MaxRecordSize = 2000000; // approx 2 Mb
 const MaxBeaconRecordSize = mathMin(MaxRecordSize, BeaconRequestSizeLimitBytes);
