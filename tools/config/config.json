@@ -13,6 +13,9 @@
                 "throttleMgrCfg.106.disabled": true
             }
         },
+        "zipPayload": {
+            "mode": 1
+        },
         "CdnUsage": {
             "mode": 4,
             "onCfg": { 

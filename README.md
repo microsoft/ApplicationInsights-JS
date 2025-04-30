@@ -447,10 +447,42 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | disableIkeyDeprecationMessage | boolean | true | [Optional]  Disable instrumentation Key deprecation error message. If true, error message will NOT be sent. **Note: instrumentation key support will end soon**, see aka.ms/IkeyMigrate for more details.
 | bufferOverride <br/><sub>since 2.8.12</sub> | IStorageBuffer | undefined | [Optional] Identifies a simple interface to allow you to override the storage mechanism used for tracking unsent and unacknowledged events, when not provided defaults to using SessionStorage interface. You MUST supply both the `getItem` and `setItem` functions when defined.
 | storagePrefix | string[] | undefined | [Optional] An optional value that will be added as name prefix for storage name. |
-| featureOptIn <br/><sub>since 3.0.3</sub> | IFeatureOptIn | undefined | [Optional]  Set Feature opt in details. |
+| featureOptIn (#feature)<br/><sub>since 3.0.3</sub> | IFeatureOptIn | undefined | [Optional]  Set Feature opt in details. |
 | throttleMgrCfg <br/><sub>since 3.0.3</sub> | `{[key: number]: IThrottleMgrConfig}` | undefined | [Optional]  Set throttle mgr configuration by key. |
 | retryCodes | number[] | undefined | Identifies the status codes that will cause event batches to be resent, when `null` or `undefined` the SDK will use it's defaults `[401, 408, 429, 500, 502, 503, 504]`. `403` was removed in version 3.1.1. |
 | expCfg <br/><sub>since 3.3.1</sub>| [`IExceptionConfig`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCommon/src/Interfaces/IExceptionTelemetry.ts) | undefined | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
+
+### Feature
+
+You can use the `featureOptIn` configuration to enable or customize specific SDK features.
+
+#### Available Feature Flags
+
+| Name        | Default | Description                                  | Note |
+|-------------|---------|----------------------------------------------|------------|
+| `zipPayload` | `none`*(version 3.3.7)  | Enables compression using the Compression API to zip telemetry payloads. |If this feature is turned on and the CompressionStream API is available, the payload will be compressed using the CompressionStream API. Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied. Note: if user set payloadPreprocessor, this zip compression will not be applied.|
+
+* A default value of none means the SDK may automatically enable this feature in the future. To explicitly prevent this, set the feature to disable using FeatureOptInMode.disable.
+
+#### How to Enable a Feature
+
+To enable a feature such as `zipPayload`, set the `featureOptIn` property in the SDK configuration as shown below:
+
+```javascript
+const appInsights = new ApplicationInsights({
+    config: {
+        connectionString: "YOUR_CONNECTION_STRING",
+        // Other configuration options...
+        featureOptIn: {
+            zipPayload: {
+                mode: FeatureOptInMode.enable, // Set the opt-in status for the feature
+                blockCdnCfg: false,             // Define whether to block changes from CDN config
+            } as IFeatureOptInDetails
+        }
+    }
+});
+```
+See [feature opt-in status](https://microsoft.github.io/ApplicationInsights-JS/WebConfig) for more details.
 
 
 ### ExtensionConfig

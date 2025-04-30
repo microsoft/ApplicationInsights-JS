@@ -9,10 +9,10 @@ import {
     ITelemetryItem, IUnloadHook, IXDomainRequest, IXHROverride, OnCompleteCallback, SendRequestReason, SenderPostManager, TransportType,
     _IInternalXhrOverride, _ISendPostMgrConfig, _ISenderOnComplete, _eExtendedInternalMessageId, _eInternalMessageId, _getAllResponseHeaders,
     _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend, getCommonSchemaMetaData, getNavigator,
-    getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
-    isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
+    getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, isReactNative,
+    isUndefined, isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
-import { arrAppend } from "@nevware21/ts-utils";
+import { arrAppend, getInst, isFunction } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
 import {
@@ -165,6 +165,7 @@ export class HttpManager {
         let _isUnloading: boolean;
         let _useHeaders: boolean;
         let _xhrTimeout: number;
+        let _zipPayload: boolean;
         let _disableXhrSync: boolean;
         let _disableFetchKeepAlive: boolean;
         let _canHaveReducedPayload: boolean;
@@ -222,6 +223,17 @@ export class HttpManager {
                         }
     
                         _xhrTimeout = channelConfig.xhrTimeout;
+                        
+                        const csStream = getInst("CompressionStream");
+
+                        // Controls whether payload compression (gzip) is enabled.
+                        _zipPayload = isFeatureEnabled("zipPayload", coreConfig);
+                        // if user has payload processor (_sendHook), they may compress the payload themselves
+                        // to avoid double compression, we should disable the zipPayload
+                        if (!isFunction(csStream) || _sendHook) {
+                            _zipPayload = false;
+                        }
+
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
@@ -969,17 +981,18 @@ export class HttpManager {
                                 };
 
                                 let isSync = thePayload.isTeardown || thePayload.isSync;
-                                try {
-                                    sendInterface.sendPOST(payload, onComplete, isSync);
-                                    if (_sendListener) {
-                                        // Send the original payload to the listener
-                                        _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
+                                _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
+                                    try {
+                                        sendInterface.sendPOST(processedPayload, onComplete, isSync);
+                                        if (_sendListener) {
+                                            // Send the original payload to the listener
+                                            _sendListener(orgPayloadData, processedPayload, isSync, thePayload.isBeacon);
+                                        }
+                                    } catch (ex) {
+                                        _doOnComplete(onComplete, 0, {});
+                                        _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
                                     }
-                                } catch (ex) {
-                                    _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
-
-                                    _doOnComplete(onComplete, 0, {});
-                                }
+                                }, _zipPayload, payload, isSync);
                             };
                         }
 
