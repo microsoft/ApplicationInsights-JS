@@ -4,10 +4,10 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, createUniqueNamespace, eventOff, eventOn, getDocument,
-    getWindow, isNullOrUndefined, mergeEvtNamespace
+    IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IUnloadHook, createUniqueNamespace, eventOff, eventOn,
+    getDocument, getWindow, isNullOrUndefined, mergeEvtNamespace, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
-import { strTrim } from "@nevware21/ts-utils";
+import { arrMap, strTrim } from "@nevware21/ts-utils";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
 import { ActionType } from "../Enums";
 import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IPageActionOverrideValues } from "../Interfaces/Datamodel";
@@ -24,11 +24,12 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
      */
     constructor(protected _analyticsPlugin: ClickAnalyticsPlugin, protected _config: IClickAnalyticsConfiguration, protected _pageAction: PageAction,
         protected _traceLogger: IDiagnosticLogger) {
-
         let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("AutoCaptureHandler"), (_analyticsPlugin as any)._evtNamespace);
-
+        let unloadHandler: IUnloadHook = onConfigChange(_config, () => {
+            _clickCaptureElements =  arrMap(_config.trackElementTypes.toUpperCase().split(","), tag => strTrim(tag));
+        });
+        let _clickCaptureElements: string[];
         dynamicProto(AutoCaptureHandler, this, (_self) => {
-
             _self.click = () => {
                 let win = getWindow();
                 let doc = getDocument();
@@ -48,6 +49,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
             _self._doUnload = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState, asyncCallback?: () => void): void | boolean => {
                 eventOff(getWindow(), null, null, _evtNamespace);
                 eventOff(getDocument(), null, null, _evtNamespace);
+                unloadHandler && unloadHandler.rm();
             };
 
             function _capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
@@ -59,7 +61,6 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         
             // Process click event
             function _processClick(clickEvent: any) {
-                let clickCaptureElements = _self._config.trackElementTypes.toUpperCase().split(",").map(tag => strTrim(tag));
                 let win = getWindow();
                 if (isNullOrUndefined(clickEvent) && win) {
                     clickEvent = win.event; // IE 8 does not pass the event
@@ -90,11 +91,11 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                     while (element && element.tagName) {
                         // control property will be available for <label> elements with 'for' attribute, only use it when is a
                         // valid JSLL capture element to avoid infinite loops
-                        if (element.control && clickCaptureElements[element.control.tagName.toUpperCase()]) {
+                        if (element.control && _clickCaptureElements[element.control.tagName.toUpperCase()]) {
                             element = element.control;
                         }
                         const tagNameUpperCased = element.tagName.toUpperCase();
-                        if (!clickCaptureElements[tagNameUpperCased]) {
+                        if (!_clickCaptureElements[tagNameUpperCased]) {
                             element = element.parentElement || element.parentNode;
                             continue;
                         } else {

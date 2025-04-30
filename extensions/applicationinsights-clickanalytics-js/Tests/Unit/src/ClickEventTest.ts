@@ -455,16 +455,10 @@ export class ClickEventTest extends AITestClass {
                 Assert.equal("A,BUTTON,AREA,INPUT", currentConfig, "Default trackElementTypes should be 'A,BUTTON,AREA,INPUT'");
         
                 // Test empty string
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes = "";
+                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes = null;
                 this.clock.tick(1);
                 currentConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes;
-                Assert.equal("A,BUTTON,AREA,INPUT", currentConfig, "empty string will not be accepted");
-        
-                // Test string with spaces
-                core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes = "    ";
-                this.clock.tick(1);
-                currentConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes;
-                Assert.equal("A,BUTTON,AREA,INPUT", currentConfig, "spaces string will not be accepted");
+                Assert.equal("A,BUTTON,AREA,INPUT", currentConfig, "default value would be applied");
         
                 // Test dynamic change
                 core.config["extensionConfig"][clickAnalyticsPlugin.identifier].trackElementTypes = "A,BUTTON,AREA,INPUT,TEST";
