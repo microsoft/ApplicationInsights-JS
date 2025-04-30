@@ -163,10 +163,10 @@ export class Serializer {
         let _excludeCsMetaData: boolean = !!excludeCsMetaData;
         let _getEncodedType: SerializerGetEncodedType = getEncodedTypeOverride || getCommonSchemaMetaData;
         let _sizeCfg = _getSizeLimtCfg(cfg);
-        let _requestSizeLimitBytes = _validateSizeLimit(_sizeCfg.requestLimit, RequestSizeLimitBytes, false);
-        let _beaconRequestSizeLimitBytes = _validateSizeLimit(_sizeCfg.requestLimit, BeaconRequestSizeLimitBytes, true);
-        let _maxRecordSize =  _validateSizeLimit(_sizeCfg.recordLimit, MaxRecordSize, false);
-        let _maxBeaconRecordSize =  Math.min(_validateSizeLimit(_sizeCfg.recordLimit, MaxBeaconRecordSize, true), _beaconRequestSizeLimitBytes);
+        let _requestSizeLimitBytes = _validateSizeLimit(_sizeCfg.requestLimit, RequestSizeLimitBytes, 0);
+        let _beaconRequestSizeLimitBytes = _validateSizeLimit(_sizeCfg.requestLimit, BeaconRequestSizeLimitBytes, 1);
+        let _maxRecordSize =  _validateSizeLimit(_sizeCfg.recordLimit, MaxRecordSize, 0);
+        let _maxBeaconRecordSize =  Math.min(_validateSizeLimit(_sizeCfg.recordLimit, MaxBeaconRecordSize, 1), _beaconRequestSizeLimitBytes);
 
         dynamicProto(Serializer, this, (_self) => {
 
@@ -486,14 +486,12 @@ export class Serializer {
 
 }
 
-function _validateSizeLimit(cfgVal: number[], defaultVal: number, sync?: boolean): number {
-    if (!isArray(cfgVal)){
-        return defaultVal;
-    }
-    let idx = !!sync ? 1 : 0;
-    let val = cfgVal[idx];
-    if (val && val > 0 && val <= defaultVal) {
-        return val;
+function _validateSizeLimit(cfgVal: number[], defaultVal: number, idx: number): number {
+    if (isArray(cfgVal)){
+        let val = cfgVal[idx];
+        if (val > 0 && val <= defaultVal) {
+            return val;
+        }
     }
     return defaultVal;
 }
