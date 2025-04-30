@@ -52,7 +52,8 @@ const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFree
     defaultRightClickBhvr: cfgDfString(),
     dropInvalidEvents : false,
     urlCollectHash: false,
-    urlCollectQuery: false
+    urlCollectQuery: false,
+    trackElementTypes: cfgDfString("A,BUTTON,AREA,INPUT")
 });
 
 function _dataPrefixChk(val: any) {
@@ -147,7 +148,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                     _contentHandler = new DomContentHandler(_config, logger);
                     let metaTags = _contentHandler.getMetadata();
                     _pageAction = new PageAction(_self, _config, _contentHandler, _config.callback.pageActionPageTags, metaTags, logger);
-    
+
                     // Default to DOM autoCapture handler
                     if (_autoCaptureHandler) {
                         _autoCaptureHandler._doUnload();
