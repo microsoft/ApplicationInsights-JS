@@ -11,7 +11,7 @@ import {
     SendRequestReason, arrIndexOf, doPerf, getCommonSchemaMetaData, getTenantId, isArray, isValueAssigned, objForEachKey, sanitizeProperty,
     strStartsWith
 } from "@microsoft/1ds-core-js";
-import { IPostTransmissionTelemetryItem } from "./DataModels";
+import { IChannelConfiguration, IPostTransmissionTelemetryItem, IRequestSizeLimit } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { STR_EMPTY } from "./InternalConstants";
 import { mathMin, strSubstr } from "@nevware21/ts-utils";
@@ -149,8 +149,9 @@ export class Serializer {
      * @param enableCompoundKey - Should compound keys be enabled (defaults to false)
      * @param getEncodedTypeOverride - The callback to get the encoded type for a property defaults to ({@link getCommonSchemaMetaData }(...))
      * @param excludeCsMetaData - (!DANGER!) Should metadata be populated when encoding the event blob (defaults to false) - PII data will NOT be tagged as PII for backend processing
+     * @param cfg channel cfg for setting request and record size limit
      */
-    constructor(perfManager?: IPerfManagerProvider, valueSanitizer?: IValueSanitizer, stringifyObjects?: boolean, enableCompoundKey?: boolean, getEncodedTypeOverride?: SerializerGetEncodedType, excludeCsMetaData?: boolean) {
+    constructor(perfManager?: IPerfManagerProvider, valueSanitizer?: IValueSanitizer, stringifyObjects?: boolean, enableCompoundKey?: boolean, getEncodedTypeOverride?: SerializerGetEncodedType, excludeCsMetaData?: boolean, cfg?: IChannelConfiguration) {
         const strData = "data";
         const strBaseData = "baseData";
         const strExt = "ext";
@@ -161,6 +162,11 @@ export class Serializer {
         let _isReservedCache = {};
         let _excludeCsMetaData: boolean = !!excludeCsMetaData;
         let _getEncodedType: SerializerGetEncodedType = getEncodedTypeOverride || getCommonSchemaMetaData;
+        let _sizeCfg = _getSizeLimtCfg(cfg);
+        let _requestSizeLimitBytes = _validateSizeLimit(_sizeCfg.requestLimit, RequestSizeLimitBytes);
+        let _beaconRequestSizeLimitBytes = _validateSizeLimit(_sizeCfg.requestLimitSync, BeaconRequestSizeLimitBytes);
+        let _maxRecordSize =  _validateSizeLimit(_sizeCfg.recordLimit, MaxRecordSize);
+        let _maxBeaconRecordSize =  Math.min(_validateSizeLimit(_sizeCfg.recordLimit, MaxBeaconRecordSize), _beaconRequestSizeLimitBytes);
 
         dynamicProto(Serializer, this, (_self) => {
 
@@ -193,8 +199,8 @@ export class Serializer {
                         let sizeExceeded: IPostTransmissionTelemetryItem[] = [];
                         let failedEvts: IPostTransmissionTelemetryItem[] = [];
                         let isBeaconPayload = payload.isBeacon;
-                        let requestMaxSize = isBeaconPayload ? BeaconRequestSizeLimitBytes : RequestSizeLimitBytes;
-                        let recordMaxSize = isBeaconPayload ? MaxBeaconRecordSize : MaxRecordSize;
+                        let requestMaxSize = isBeaconPayload ? _beaconRequestSizeLimitBytes : _requestSizeLimitBytes;
+                        let recordMaxSize = isBeaconPayload ? _maxBeaconRecordSize : _maxRecordSize;
 
                         let lp = 0;
                         let joinCount = 0;
@@ -479,6 +485,22 @@ export class Serializer {
     }
 
 }
+
+function _validateSizeLimit(cfgVal: number, defaultVal: number) {
+    if (cfgVal && cfgVal > 0 && cfgVal <= defaultVal) {
+        return cfgVal;
+    }
+    return defaultVal;
+}
+
+function _getSizeLimtCfg(cfg?: IChannelConfiguration) {
+    let defaultCfg = {} as IRequestSizeLimit;
+    if (cfg && cfg.requestLimit) {
+        return cfg.requestLimit;
+    }
+    return defaultCfg;
+}
+
 
 /**
  * @ignore

@@ -177,7 +177,8 @@ export class PostChannelTest extends AITestClass {
                     maxEventRetryAttempts: 6,
                     maxUnloadEventRetryAttempts: 2,
                     addNoResponse: undefValue,
-                    excludeCsMetaData: undefValue
+                    excludeCsMetaData: undefValue,
+                    requestLimit: {}
                 };
                 let actaulConfig =  postChannel["_getDbgPlgTargets"]()[1];
                 QUnit.assert.deepEqual(expectedConfig, actaulConfig, "default config should be set");
