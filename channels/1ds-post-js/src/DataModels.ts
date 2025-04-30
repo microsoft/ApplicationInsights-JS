@@ -335,21 +335,15 @@ export interface ICollectorWebResult {
 
 export interface IRequestSizeLimit {
     /**
-     * Async request size limit in bytes for serializer.
+     * Request size limit in bytes for serializer.
+     * The value should be two numbers array, with format [async request size limit, sync request size limit]
      */
-    requestLimit?: number;
-    /**
-     * Sync request size limit in bytes for serializer.
-     */
-    requestLimitSync?: number;
+    requestLimit?: number[];
      /**
-     * Async record size limit in bytes for serializer.
+     * Record size limit in bytes for serializer.
+     * The value should be two numbers array, with format [async record size limit, sync record size limit]
      */
-    recordLimit?: number;
-     /**
-     * Sync record size limit in bytes for serializer.
-     */
-    recordLimitSync?: number;
+    recordLimit?: number[];
 }
 
 /**

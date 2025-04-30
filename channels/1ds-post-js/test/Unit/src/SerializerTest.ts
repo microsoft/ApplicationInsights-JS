@@ -42,10 +42,8 @@ export class SerializerTest extends AITestClass {
             test: () => {
                 let cfg = {
                     requestLimit: {
-                        recordLimit: 200,
-                        recordLimitSync: 200,
-                        requestLimit: 200,
-                        requestLimitSync: 200
+                        requestLimit: [200, 200],
+                        recordLimit: [200,200]
                     }
                 } as IChannelConfiguration
                 let serializer = new Serializer(null, null, null, false, null, null, cfg);
@@ -89,10 +87,8 @@ export class SerializerTest extends AITestClass {
             test: () => {
                 let cfg = {
                     requestLimit: {
-                        recordLimit: 100,
-                        recordLimitSync: 100,
-                        requestLimit: 100,
-                        requestLimitSync: 100
+                        recordLimit: [100,100],
+                        requestLimit: [100, 100]
                     }
                 } as IChannelConfiguration
                 let serializer = new Serializer(null, null, null, false, null, null, cfg);
@@ -135,10 +131,8 @@ export class SerializerTest extends AITestClass {
             test: () => {
                 let cfg = {
                     requestLimit: {
-                        recordLimit: 100,
-                        recordLimitSync: 100,
-                        requestLimit: 100,
-                        requestLimitSync: 100
+                        recordLimit: [100,100],
+                        requestLimit: [100, 100]
                     }
                 } as IChannelConfiguration
                 let serializer = new Serializer(null, null, null, false, null, null, cfg);
