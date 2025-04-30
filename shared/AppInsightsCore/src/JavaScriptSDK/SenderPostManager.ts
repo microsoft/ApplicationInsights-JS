@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { arrForEach, dumpObj, getNavigator, getWindow, isFunction, objKeys } from "@nevware21/ts-utils";
+import { AwaitResponse, IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { arrForEach, dumpObj, getInst, getNavigator, getWindow, isFunction, isString, objKeys } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { SendRequestReason, TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -133,6 +133,82 @@ export class SenderPostManager {
         
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _initDefaults();
+            };
+
+            _self.preparePayload = (callback: (processedPayload: IPayloadData) => void, zipPayload: boolean, payload: IPayloadData, isSync: boolean) => {
+                if (!zipPayload || isSync || !payload.data) {
+                    // If the request is synchronous, the body is null or undefined or Compression is not supported, we don't need to compress it
+                    callback(payload);
+                    return;
+                }
+                
+                try{
+                    let csStream: any = getInst("CompressionStream");
+                    if (!isFunction(csStream)) {
+                        callback(payload);
+                        return;
+                    }
+
+                    // Create a readable stream from the uint8 data
+                    let body = new ReadableStream<Uint8Array>({
+                        start(controller) {
+                            controller.enqueue(isString(payload.data) ? new TextEncoder().encode(payload.data) : payload.data);
+                            controller.close();
+                        }
+                    });
+        
+                    const compressedStream = body.pipeThrough(new csStream("gzip"));
+                    const reader = (compressedStream.getReader() as ReadableStreamDefaultReader<Uint8Array>);
+                    const chunks: Uint8Array[] = [];
+                    let totalLength = 0;
+                    let callbackCalled = false;
+
+                    // Process each chunk from the compressed stream reader
+                    doAwaitResponse(reader.read(), function processChunk(response: AwaitResponse<ReadableStreamReadResult<Uint8Array>>): undefined | IPromise<ReadableStreamReadResult<Uint8Array>> {
+                        if (!callbackCalled && !response.rejected) {
+                            // Process the chunk and continue reading
+                            const result = response.value;
+                            if (!result.done) {
+                                // Add current chunk and continue reading
+                                chunks.push(result.value);
+                                totalLength += result.value.length;
+                                return doAwaitResponse(reader.read(), processChunk) as any;
+                            }
+
+                            // We are complete so combine all chunks
+                            const combined = new Uint8Array(totalLength);
+                            let offset = 0;
+                            for (const chunk of chunks) {
+                                combined.set(chunk, offset);
+                                offset += chunk.length;
+                            }
+                            
+                            // Update payload with compressed data
+                            payload.data = combined;
+                            payload.headers["Content-Encoding"] = "gzip";
+                        }
+
+                        if (!callbackCalled) {
+                            // Send the processed payload to the callback, if not already called
+                            // If the response was rejected, we will call the callback with the original payload
+                            // As it only gets "replaced" if the compression was successful
+                            callbackCalled = true;
+                            callback(payload);
+                        }
+
+                        // We don't need to return anything as this will cause the calling chain to be resolved and closed
+                    });
+
+                    // returning the reader to allow the caller to cancel the stream if needed
+                    // This is not a requirement but allows for better control over the stream, like if we detect that we are unloading
+                    // we could use reader.cancel() to stop the stream and avoid sending the request, but this may still be an asynchronous operation
+                    // and may not be possible to cancel the stream in time
+                    return reader;
+                } catch (error) {
+                    // CompressionStream is not available at all
+                    callback(payload);
+                    return;
+                }
             };
 
             /**
@@ -675,4 +751,10 @@ export class SenderPostManager {
     public _doTeardown (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
+    public preparePayload(callback: (processedPayload: IPayloadData) => void, zipPayload: boolean, payload: IPayloadData, isSync: boolean): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+
 }
