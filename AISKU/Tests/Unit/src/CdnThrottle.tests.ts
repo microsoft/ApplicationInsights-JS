@@ -135,11 +135,14 @@ export class CdnThrottle extends AITestClass {
                     offCfg: {
                         "throttleMgrCfg.106.disabled":true,
                         "throttleMgrCfg.109.disabled":true,
-                    }
-                }},
+                    }},
+                    ["zipPayload"]: {
+                        mode: CdnFeatureMode.enable},
+                },
                 config: {
                     maxMessageLimit: 10,
-                    throttleMgrCfg: throttleCfgDisable
+                    throttleMgrCfg: throttleCfgDisable,
+                    
                 }
             } as ICfgSyncConfig;
             doc["res"] = new (doc as any).Response(JSON.stringify(cdnCfg), {
@@ -242,6 +245,42 @@ export class CdnThrottle extends AITestClass {
                 }
                 return false;
                 
+            }, "response received", 60, 1000) as any)
+        });
+
+        this.testCaseAsync({
+            name: "CfgSyncPlugin: customer didn't set feature opt in, successfully get aisku default and fetch from config url, get disable zip config to be true",
+            stepDelay: 10,
+            useFakeTimers: true,
+            steps: [ () => {
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res2"]);
+                    }, 0);
+                });
+
+                let noSetconfig = {
+                    instrumentationKey: TestInstrumentationKey,
+                    extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
+                        syncMode: ICfgSyncMode.Receive,
+                        cfgUrl: "testurl"
+                    }}
+                };
+
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this.init = new ApplicationInsights({
+                    config: noSetconfig,
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+            }].concat(PollingAssert.createPollingAssert(() => {
+                if (this.fetchStub.called){
+                    let newCfg = this._ai.config;
+                    Assert.equal(newCfg.featureOptIn["zipPayload"]["mode"], FeatureOptInMode.enable); // aisku default is none, overwrite to true by cdn config
+                    return true;
+                }
+                return false;
             }, "response received", 60, 1000) as any)
         });
 

@@ -1,9 +1,9 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { IConfig } from "@microsoft/applicationinsights-common";
-import { IConfiguration, isString, newId } from "@microsoft/applicationinsights-core-js";
+import { IConfiguration, IPayloadData, isString, ITelemetryItem, IXHROverride, newId } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights, ISenderConfig } from "../../../src/index";
 import { createAsyncResolvedPromise } from "@nevware21/ts-async";
-
+import { SinonSpy } from 'sinon';
 export class ApplicationInsightsDynamicConfigTests extends AITestClass {
     private static readonly _instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
     private static readonly _connectionString = `InstrumentationKey=${ApplicationInsightsDynamicConfigTests._instrumentationKey}`;
@@ -11,8 +11,9 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
     private _sessionPrefix: string = newId();
     private _config: IConfiguration & IConfig;
     static registerTests: any;
+    private genericSpy: SinonSpy;
     private _ctx: any;
-
+    private xhrOverride: IXHROverride;
     constructor(testName?: string) {
         super(testName || "AISKU Dynamic Config");
     }
@@ -30,6 +31,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
 
             this._ai = new ApplicationInsights(this._config);
             this._ctx = {};
+            this.xhrOverride = new AutoCompleteXhrOverride();
         } catch (e) {
             console.error("Failed to initialize", e);
         }
@@ -137,6 +139,80 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                 return false;
             }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
         });
+
+        this.testCaseAsync({
+            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
+            stepDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            steps: [
+                () => {
+                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                    this._ai.config.featureOptIn["zipPayload"] = { mode: 3 };
+                    this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
+                        httpXHROverride: this.xhrOverride,
+                                alwaysUseXhrOverride: true
+                    }
+                    this.clock.tick(10);
+                    const telemetryItem: ITelemetryItem = {
+                        name: 'fake item with some really long name to take up space quickly',
+                        iKey: 'iKey',
+                        baseType: 'some type',
+                        baseData: {}
+                    };
+
+                    this._ai.track(telemetryItem);
+                    this._ai.flush();
+                    this.clock.tick(10);
+                }].concat(PollingAssert.createPollingAssert(() => {
+                    if (this.genericSpy.called){
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
+                        QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            });
+
+            this.testCaseAsync({
+                name: "zip test: gzip encode will not working (feature opt-in is not set)",
+                stepDelay: 10,
+                useFakeTimers: true,
+                useFakeServer: true,
+                steps: [
+                    () => {
+                        this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                        this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
+                            httpXHROverride: this.xhrOverride,
+                                    alwaysUseXhrOverride: true
+                        }
+                        this.clock.tick(10);
+                        const telemetryItem: ITelemetryItem = {
+                            name: 'fake item with some really long name to take up space quickly',
+                            iKey: 'iKey',
+                            baseType: 'some type',
+                            baseData: {}
+                        };
+    
+                        this._ai.track(telemetryItem);
+                        this._ai.flush();
+                        this.clock.tick(10);
+                    }].concat(PollingAssert.createPollingAssert(() => {
+                        if (this.genericSpy.called){
+                            let request = this.genericSpy.getCall(0).args[0];
+                            let gzipData = request.data;
+                            QUnit.assert.ok(gzipData, "data should be set");
+                            QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
+                            QUnit.assert.equal(request.headers["Content-Encoding"], undefined, "telemetry should not be gzip encoded");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                });
+
     }
 
     public addApiTests(): void {
@@ -153,4 +229,12 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
         });
     }
 
+}
+
+class AutoCompleteXhrOverride {
+    
+    public sendPOST(payload: IPayloadData, oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) {
+        console.log("AutoCompleteXhrOverride.sendPOST called with payload: ", payload);
+        oncomplete(200, null);
+    }
 }

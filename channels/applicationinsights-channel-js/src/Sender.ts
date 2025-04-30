@@ -11,12 +11,13 @@ import {
     IXDomainRequest, IXHROverride, OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType,
     _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
     createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr,
-    getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend,
-    onConfigChange, parseResponse, prependTransports, runTargetUnload
+    getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace,
+    objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import {
-    ITimerHandler, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine, scheduleTimeout
+    ITimerHandler, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
+    scheduleTimeout
 } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator,
@@ -187,6 +188,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _disableBeaconSplit: boolean;
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
+        let _zipPayload: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -285,7 +287,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             senderConfig.endpointUrl = coreUrl;
                         }
                     }
-
+                    const csStream = getInst("CompressionStream");
+                    // Determine whether to enable payload compression (zipping).
+                    _zipPayload = isFeatureEnabled("zipPayload", config);
+                    if (!isFunction(csStream)) {
+                        _zipPayload = false;
+                    }
                     let corsPolicy = senderConfig.corsPolicy;
                     if (corsPolicy){
                         if (corsPolicy === "same-origin" || corsPolicy === "same-site" || corsPolicy === "cross-origin") {
@@ -411,7 +418,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     } else {
                         _sendPostMgr.SetConfig(sendPostConfig);
                     }
-
                     let customInterface = senderConfig.httpXHROverride;
                     let httpInterface: IXHROverride = null;
                     let syncInterface: IXHROverride = null;
@@ -1001,7 +1007,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _self._buffer.markAsSent(payload);
                     }
 
-                    return sendPostFunc(payloadData, onComplete, !isAsync);
+                    _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
+                        return sendPostFunc(processedPayload, onComplete, !isAsync);
+                    }, _zipPayload, payloadData, !isAsync);
                 }
                 return null;
             }
