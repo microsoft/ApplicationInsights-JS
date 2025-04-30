@@ -7,6 +7,7 @@ import {
     IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, createUniqueNamespace, eventOff, eventOn, getDocument,
     getWindow, isNullOrUndefined, mergeEvtNamespace
 } from "@microsoft/applicationinsights-core-js";
+import { strTrim } from "@nevware21/ts-utils";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
 import { ActionType } from "../Enums";
 import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IPageActionOverrideValues } from "../Interfaces/Datamodel";
@@ -58,7 +59,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         
             // Process click event
             function _processClick(clickEvent: any) {
-                let clickCaptureElements = _self._config.trackElementTypes.toUpperCase().split(",").map(tag => tag.trim());
+                let clickCaptureElements = _self._config.trackElementTypes.toUpperCase().split(",").map(tag => strTrim(tag));
                 let win = getWindow();
                 if (isNullOrUndefined(clickEvent) && win) {
                     clickEvent = win.event; // IE 8 does not pass the event

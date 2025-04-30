@@ -151,7 +151,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
 
                     const defaultElementTypes = "A,BUTTON,AREA,INPUT";
                     // Use user-defined or fallback to default
-                    if (!_config.trackElementTypes || !_config.trackElementTypes.trim()) {
+                    if (!_config.trackElementTypes || !strTrim(_config.trackElementTypes)) {
                         _config.trackElementTypes = defaultElementTypes;
                     }
     
