@@ -61,6 +61,14 @@ export interface IChannelConfiguration {
     disableAutoBatchFlushLimit?: boolean;
 
     /**
+     * [Optional] Sets the record and request size limit in bytes for serializer.
+     * Default for record size (sync) is 65000, record size (async) is 2000000.
+     * Default for request size (sync) is 65000, request size (async) is 3145728.
+     * @since 3.3.7
+     */
+    requestLimit?: IRequestSizeLimit;
+
+    /**
      * [Optional] The HTTP override that should be used to send requests, as an IXHROverride object.
      * By default during the unload of a page or if the event specifies that it wants to use sendBeacon() or sync fetch (with keep-alive),
      * this override will NOT be called. You can now change this behavior by enabling the 'alwaysUseXhrOverride' configuration value.
@@ -324,6 +332,19 @@ export interface ICollectorWebResult {
      * Auth Login URL.
      */
     authLoginUrl?: string;
+}
+
+export interface IRequestSizeLimit {
+    /**
+     * Request size limit in bytes for serializer.
+     * The value should be two numbers array, with format [async request size limit, sync request size limit]
+     */
+    requestLimit?: number[];
+     /**
+     * Record size limit in bytes for serializer.
+     * The value should be two numbers array, with format [async record size limit, sync record size limit]
+     */
+    recordLimit?: number[];
 }
 
 /**

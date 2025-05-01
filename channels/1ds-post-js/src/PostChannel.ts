@@ -16,7 +16,8 @@ import {
 import { IPromise, createPromise } from "@nevware21/ts-async";
 import { ITimerHandler, isPromiseLike, mathCeil, mathMax, mathMin, objDeepFreeze } from "@nevware21/ts-utils";
 import {
-    BE_PROFILE, EventBatchNotificationReason, IChannelConfiguration, IPostChannel, IPostTransmissionTelemetryItem, NRT_PROFILE, RT_PROFILE
+    BE_PROFILE, EventBatchNotificationReason, IChannelConfiguration, IPostChannel, IPostTransmissionTelemetryItem, IRequestSizeLimit,
+    NRT_PROFILE, RT_PROFILE
 } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { HttpManager } from "./HttpManager";
@@ -88,7 +89,8 @@ const defaultPostChannelConfig: IConfigDefaults<IChannelConfiguration> = objDeep
     maxEventRetryAttempts: { isVal: isNumber, v: MaxSendAttempts },
     maxUnloadEventRetryAttempts: { isVal: isNumber, v: MaxSyncUnloadSendAttempts},
     addNoResponse: undefValue,
-    excludeCsMetaData: undefValue
+    excludeCsMetaData: undefValue,
+    requestLimit: {} as IRequestSizeLimit
 });
 
 function isOverrideFn(httpXHROverride: any) {
