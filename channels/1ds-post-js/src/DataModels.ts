@@ -69,6 +69,12 @@ export interface IChannelConfiguration {
     requestLimit?: IRequestSizeLimit;
 
     /**
+     * [Optional] Sets the limit number of events per batch.
+     * Default is 500
+     */
+    maxNumberEvtPerBatch?: number
+
+    /**
      * [Optional] The HTTP override that should be used to send requests, as an IXHROverride object.
      * By default during the unload of a page or if the event specifies that it wants to use sendBeacon() or sync fetch (with keep-alive),
      * this override will NOT be called. You can now change this behavior by enabling the 'alwaysUseXhrOverride' configuration value.
