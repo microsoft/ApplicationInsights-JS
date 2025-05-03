@@ -227,7 +227,7 @@ export class HttpManager {
                         const csStream = getInst("CompressionStream");
 
                         // Controls whether payload compression (gzip) is enabled.
-                        _zipPayload = isFeatureEnabled("zipPayload", coreConfig);
+                        _zipPayload = isFeatureEnabled("zipPayload", coreConfig, false);
                         // if user has payload processor (_sendHook), they may compress the payload themselves
                         // to avoid double compression, we should disable the zipPayload
                         if (!isFunction(csStream) || _sendHook) {
