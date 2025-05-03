@@ -71,6 +71,7 @@ export interface IChannelConfiguration {
     /**
      * [Optional] Sets the limit number of events per batch.
      * Default is 500
+     * @since 3.3.7
      */
     maxNumberEvtPerBatch?: number
 
