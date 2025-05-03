@@ -406,7 +406,102 @@ export class HelperFuncTests extends AITestClass {
                 cfg = {config1: "test", featureOptIn:{}} as IConfig & IConfiguration;
                 rlt = isFeatureEnabled("field", cfg);
                 Assert.equal(rlt, undefined, "feature is not enable case 10");
+            }
+        });
 
+        this.testCase({
+            name: "isFeatureEnable: empty field and optInMap - default to disabled",
+            test: () => {
+                let rlt = isFeatureEnabled(undefined, undefined, false);
+                Assert.equal(rlt, false, "feature is disabled case 1");
+
+                rlt = isFeatureEnabled("", undefined, false);
+                Assert.equal(rlt, false, "feature is disabled case 2");
+
+                rlt = isFeatureEnabled("", {}, false);
+                Assert.equal(rlt, false, "feature is disabled case 3");
+
+                rlt = isFeatureEnabled(undefined, {}, false);
+                Assert.equal(rlt, false, "feature is disabled case 4");
+
+                rlt = isFeatureEnabled(undefined, {featureOptIn:{"field":{}}}, false);
+                Assert.equal(rlt, false, "feature is disabled case 5");
+
+                rlt = isFeatureEnabled("field", undefined, false);
+                Assert.equal(rlt, false, "feature is disabled case 6");
+
+                rlt = isFeatureEnabled("field1", {featureOptIn:{}}, false);
+                Assert.equal(rlt, false, "feature is disabled case 7");
+
+                rlt = isFeatureEnabled("field1", {featureOptIn:{"field":{}}}, false);
+                Assert.equal(rlt, false, "feature is not enable case 8");
+
+                rlt = isFeatureEnabled("field", {featureOptIn:{"field":{}}}, false);
+                Assert.equal(rlt, false, "feature is disabled case 9");
+
+                let cfg = {featureOptIn:{}} as IConfiguration;
+                rlt = isFeatureEnabled("field", cfg, false);
+                Assert.equal(rlt, false, "feature is disabled case 10");
+
+                cfg = {featureOptIn: {"field":{}}} as IConfiguration;
+                rlt = isFeatureEnabled("field", cfg, false);
+                Assert.equal(rlt, false, "feature is disabled case 11");
+
+                interface IConfig {
+                    config1: string;
+                    config2?: string;
+                }
+                cfg = {config1: "test", featureOptIn:{}} as IConfig & IConfiguration;
+                rlt = isFeatureEnabled("field", cfg, false);
+                Assert.equal(rlt, false, "feature is disabled case 10");
+            }
+        });
+
+        this.testCase({
+            name: "isFeatureEnable: empty field and optInMap - default to enabled",
+            test: () => {
+                let rlt = isFeatureEnabled(undefined, undefined, true);
+                Assert.equal(rlt, true, "feature is enabled case 1");
+
+                rlt = isFeatureEnabled("", undefined, true);
+                Assert.equal(rlt, true, "feature is enabled case 2");
+
+                rlt = isFeatureEnabled("", {}, true);
+                Assert.equal(rlt, true, "feature is enabled case 3");
+
+                rlt = isFeatureEnabled(undefined, {}, true);
+                Assert.equal(rlt, true, "feature is enabled case 4");
+
+                rlt = isFeatureEnabled(undefined, {featureOptIn:{"field":{}}}, true);
+                Assert.equal(rlt, true, "feature is enabled case 5");
+
+                rlt = isFeatureEnabled("field", undefined, true);
+                Assert.equal(rlt, true, "feature is enabled case 6");
+
+                rlt = isFeatureEnabled("field1", {featureOptIn:{}}, true);
+                Assert.equal(rlt, true, "feature is enabled case 7");
+
+                rlt = isFeatureEnabled("field1", {featureOptIn:{"field":{}}}, true);
+                Assert.equal(rlt, true, "feature is enabled case 8");
+
+                rlt = isFeatureEnabled("field", {featureOptIn:{"field":{}}}, true);
+                Assert.equal(rlt, true, "feature is enabled case 9");
+
+                let cfg = {featureOptIn:{}} as IConfiguration;
+                rlt = isFeatureEnabled("field", cfg, true);
+                Assert.equal(rlt, true, "feature is enabled case 10");
+
+                cfg = {featureOptIn: {"field":{}}} as IConfiguration;
+                rlt = isFeatureEnabled("field", cfg, true);
+                Assert.equal(rlt, true, "feature is enabled case 11");
+
+                interface IConfig {
+                    config1: string;
+                    config2?: string;
+                }
+                cfg = {config1: "test", featureOptIn:{}} as IConfig & IConfiguration;
+                rlt = isFeatureEnabled("field", cfg, true);
+                Assert.equal(rlt, true, "feature is enabled case 10");
             }
         });
 
