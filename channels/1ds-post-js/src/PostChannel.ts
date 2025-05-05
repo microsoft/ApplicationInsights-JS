@@ -108,7 +108,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
     public identifier = "PostChannel";
     public priority = 1011;
-    public version = "#version#";
+    public version = '4.3.6';
 
     constructor() {
         super();
@@ -183,7 +183,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                             _maxEventSendAttempts = _postConfig.maxEventRetryAttempts;
                             _maxUnloadEventSendAttempts = _postConfig.maxUnloadEventRetryAttempts;
                             _disableAutoBatchFlushLimit = _postConfig.disableAutoBatchFlushLimit;
-                            _maxEvtPerBatch = _postConfig.maxNumberEvtPerBatch;
+                            _maxEvtPerBatch = _postConfig.maxEvtPerBatch;
 
                             if (isPromiseLike(coreConfig.endpointUrl)) {
                                 _self.pause();

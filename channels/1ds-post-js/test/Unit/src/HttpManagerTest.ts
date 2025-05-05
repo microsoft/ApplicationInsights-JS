@@ -272,7 +272,7 @@ export class HttpManagerTest extends AITestClass {
                 });
                 const hookSpy = this.sandbox.spy(_sendHook);
                 this.core.config.extensionConfig = this.core.config.extensionConfig || {};
-                this.core.config.extensionConfig[this.postManager.identifier].maxNumberEvtPerBatch = 3;
+                this.core.config.extensionConfig[this.postManager.identifier].maxEvtPerBatch = 3;
                 this.core.config.extensionConfig[this.postManager.identifier].payloadPreprocessor = hookSpy;
                 this.core.config.extensionConfig[this.postManager.identifier].httpXHROverride = xhrOverride;
                 
@@ -311,7 +311,7 @@ export class HttpManagerTest extends AITestClass {
                     drop: _dropNotification
                 });
                 this.core.config.extensionConfig = this.core.config.extensionConfig || {};
-                this.core.config.extensionConfig[this.postManager.identifier].maxNumberEvtPerBatch = 0;
+                this.core.config.extensionConfig[this.postManager.identifier].maxEvtPerBatch = 0;
                 manager.initialize(this.core.config, this.core, this.postManager);
                 let maxNumberEvtPerBatch = manager["_getDbgPlgTargets"]()[6];
                 QUnit.assert.equal(maxNumberEvtPerBatch, 500, "max number of events per batch should be 500");
@@ -322,7 +322,7 @@ export class HttpManagerTest extends AITestClass {
                     sent: _sentNotification,
                     drop: _dropNotification
                 });
-                this.core.config.extensionConfig[this.postManager.identifier].maxNumberEvtPerBatch = 1000;
+                this.core.config.extensionConfig[this.postManager.identifier].maxEvtPerBatch = 1000;
                 manager1.initialize(this.core.config, this.core, this.postManager);
                 maxNumberEvtPerBatch = manager1["_getDbgPlgTargets"]()[6];
                 QUnit.assert.equal(maxNumberEvtPerBatch, 500, "max number of events per batch should be 500 test1");
