@@ -2,7 +2,9 @@
 * @copyright Microsoft 2020
 */
 
-import { getDocument, getLocation, getWindow, hasDocument, isFunction } from "@microsoft/applicationinsights-core-js";
+import {
+    IConfiguration, fieldRedaction, getDocument, getLocation, getWindow, hasDocument, isFunction
+} from "@microsoft/applicationinsights-core-js";
 import { scheduleTimeout } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration, IOverrideValues } from "./Interfaces/Datamodel";
 import { findClosestAnchor, isValueAssigned } from "./common/Utils";
@@ -36,7 +38,7 @@ export function getImageHref(element: HTMLImageElement): string {
  * Get click target
  * @returns Click target URI
  */
-export function getClickTarget(element: any) {
+export function getClickTarget(element: any, config?: IConfiguration) {
     var clickTarget = "";
     switch (element.tagName) {
     case "A":
@@ -50,6 +52,9 @@ export function getClickTarget(element: any) {
         var type = element.type;
         if (type && (clickCaptureInputTypes[type.toUpperCase()])) {
             let loc = getLocation() || ({} as Location);
+            if (loc && config?.redactionEnabled){
+                loc = fieldRedaction(loc);
+            }
             if (element.form) {
                 clickTarget = element.form.action || (loc.pathname || "");
             } else {

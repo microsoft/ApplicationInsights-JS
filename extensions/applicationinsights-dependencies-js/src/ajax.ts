@@ -12,8 +12,8 @@ import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,
     IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
     InstrumentFunc, InstrumentProto, _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace,
-    dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
-    isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
+    dumpObj, eLoggingSeverity, eventOn, fieldRedaction, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation,
+    getPerformance, isFunction, isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf, strSplit, strSubstr } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
@@ -545,6 +545,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         
             function _initDefaults() {
                 let location = getLocation();
+                if (location && _self?.core?.config?.redactionEnabled) {
+                    location = fieldRedaction(location);
+                }
                 _fetchInitialized = false;      // fetch monitoring initialized
                 _xhrInitialized = false;        // XHR monitoring initialized
                 _polyfillInitialized = false;   // polyfill monitoring initialized
@@ -1166,7 +1169,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 })();
             }
 
-            function _createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
+            function _createFetchRecord(input?: Request | string, init?: RequestInit, config?: IConfiguration): ajaxRecord {
                 let distributedTraceCtx: IDistributedTraceContext = _getDistributedTraceCtx();
 
                 const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
@@ -1184,7 +1187,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     requestUrl = input;
                 }
                 if (requestUrl === "" ) {
-                    const location = getLocation();
+                    //const location = getLocation();
+                    let location = getLocation();
+                    if (location && config?.redactionEnabled) {
+                        // If redaction is enabled, we need to sanitize the location object
+                        location = fieldRedaction(location);
+                    }
                     if (location && location.href) {
                         requestUrl = strSplit(location.href, "#")[0];
                     }

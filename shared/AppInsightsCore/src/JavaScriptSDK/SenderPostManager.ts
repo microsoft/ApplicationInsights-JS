@@ -14,9 +14,10 @@ import {
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
 import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "../JavaScriptSDK.Interfaces/IXHROverride";
+import { IConfiguration } from "../applicationinsights-core-js";
 import { DisabledPropertyName } from "./Constants";
 import { _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
+import { fieldRedaction, getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
 import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "./HelperFuncs";
 
 const STR_EMPTY = "";
@@ -101,6 +102,9 @@ export class SenderPostManager {
     
                     if (_disableCredentials) {
                         let location = getLocation();
+                        if (location && (config as IConfiguration)?.redactionEnabled) {
+                            location = fieldRedaction(location);
+                        }
                         if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
                             // Special case where a local html file fails with a CORS error on Chromium browsers
                             _sendCredentials = false;

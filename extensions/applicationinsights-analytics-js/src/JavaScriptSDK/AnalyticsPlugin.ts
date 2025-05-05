@@ -17,9 +17,9 @@ import {
     IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent,
     TelemetryInitializerFunction, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId,
-    getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString,
-    isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
+    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, fieldRedaction, findAllScripts,
+    generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined,
+    isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
@@ -382,6 +382,10 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         
                     if (typeof url !== "string") {
                         let loc = getLocation();
+                        if (loc && _extConfig?.redactionEnabled) {
+                            loc = fieldRedaction(loc);
+                        }
+                        
                         url = loc && loc.href || "";
                     }
         
@@ -706,7 +710,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             function _updateExceptionTracking() {
                 let _window = getWindow();
                 let locn = getLocation(true);
-
+                if (locn && _extConfig?.redactionEnabled) {
+                    locn = fieldRedaction(locn);
+                }
                 _self._addHook(onConfigChange(_extConfig, () => {
                     _disableExceptionTracking = _extConfig.disableExceptionTracking;
                     if (!_disableExceptionTracking && !_autoExceptionInstrumented && !_extConfig.autoExceptionInstrumented) {
@@ -738,7 +744,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             function _updateLocationChange() {
                 let win = getWindow();
                 let locn = getLocation(true);
-
+                if (locn && _extConfig?.redactionEnabled) {
+                    locn = fieldRedaction(locn);
+                }
                 _self._addHook(onConfigChange(_extConfig, () => {
                     _enableAutoRouteTracking = _extConfig.enableAutoRouteTracking === true;
 
@@ -910,6 +918,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);
+                if (location && _extConfig?.redactionEnabled) {
+                    location = fieldRedaction(location);
+                }
                 _prevUri = location && location.href || "";
                 _currUri = null;
                 _evtNamespace = null;

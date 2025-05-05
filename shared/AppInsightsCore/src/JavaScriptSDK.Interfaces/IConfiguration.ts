@@ -211,4 +211,11 @@ export interface IConfiguration {
      * @since 3.3.2
      */
     expCfg?: IExceptionConfig;
+
+    /**
+     * [Optional] A flag to enable or disable the use of the field redaction for urls.
+     * @defaultValue true
+     */
+    redactionEnabled?: boolean;
+    
 }

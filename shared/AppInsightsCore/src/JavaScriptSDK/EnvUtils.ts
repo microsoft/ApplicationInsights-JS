@@ -30,6 +30,13 @@ const strMsie = "msie";
 const strTrident = "trident/";
 const strXMLHttpRequest = "XMLHttpRequest";
 
+const SENSITIVE_QUERY_PARAMS = [
+    "sig",
+    "Signature",
+    "AWSAccessKeyId",
+    "X-Goog-Signature"
+] as const;
+
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
 let _enableMocks = false;
@@ -353,4 +360,48 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
         }
     }
     return false;
+}
+
+/**
+ * Redacts sensitive information from the URL, including credentials and specific query parameters.
+ * @param location - The location object to be redacted.
+ * @returns The redacted location object.
+ */
+export function fieldRedaction(location: Location): Location {
+    if (!location?.href) {
+        return location;
+    }
+
+    try {
+        const parsedUrl = new URL(location.href);
+        let isUrlModified = false;
+        // Handle credentials
+        if (parsedUrl.username || parsedUrl.password) {
+            if (parsedUrl.username) {
+                parsedUrl.username = "REDACTED";
+                isUrlModified = true;
+            }
+            if (parsedUrl.password) {
+                parsedUrl.password = "REDACTED";
+                isUrlModified = true;
+            }
+        }
+
+        // Handle sensitive query parameters
+        for (const param of SENSITIVE_QUERY_PARAMS) {
+            if (parsedUrl.searchParams.has(param)) {
+                parsedUrl.searchParams.set(param, "REDACTED");
+                isUrlModified = true;
+            }
+        }
+
+        // Only modify location if changes were made
+        if (isUrlModified) {
+            location.href = parsedUrl.href;
+        }
+
+        return location;
+    } catch (e) {
+        return location;
+    }
 }

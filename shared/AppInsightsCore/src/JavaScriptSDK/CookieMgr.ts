@@ -15,7 +15,7 @@ import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICooki
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
 import { _throwInternal } from "./DiagnosticLogger";
-import { getLocation, isIE } from "./EnvUtils";
+import { fieldRedaction, getLocation, isIE } from "./EnvUtils";
 import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
 import { STR_DOMAIN, STR_EMPTY, STR_PATH, UNDEFINED_VALUE } from "./InternalConstants";
 
@@ -253,6 +253,9 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 }
             
                 let location = getLocation();
+                if (location && rootConfig?.redactionEnabled){
+                    location = fieldRedaction(location);
+                }
                 if (location && location.protocol === "https:") {
                     setValue(values, "secure", null, null, isUndefined);
 

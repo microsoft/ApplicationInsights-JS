@@ -3,7 +3,7 @@ import { SinonSpy } from 'sinon';
 import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence } from '@microsoft/applicationinsights-common';
-import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode, fieldRedaction } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
@@ -81,7 +81,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 ["AppInsightsCfgSyncPlugin"]: {
                     //cfgUrl: ""
                 }
-            }
+            },
+            redactionEnabled: false
         };
 
         return config;
@@ -716,6 +717,39 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public addAnalyticsApiTests(): void {
+        this.testCase({
+            name: "E2E.AnalyticsApiTests: fieldRedaction should handle actual endpoint URLs",
+            test: () => {
+                // Use the actual endpoint URL from the config
+                const location = {
+                    href: this._ai.config.endpointUrl
+                } as Location;
+                this._config = this._getTestConfig(this._sessionPrefix);
+                if (this._config.redactionEnabled){
+                    const redactedLocation = fieldRedaction(location);
+                    Assert.ok(redactedLocation.href, "Redacted URL should exist");
+                    Assert.equal(redactedLocation.href, this._ai.config.endpointUrl, "Should preserve the endpoint URL when no credentials exist");
+                }
+            }
+        });
+        
+        this.testCase({
+            name: "E2E.AnalyticsApiTests: fieldRedaction should handle live diagnostic endpoint",
+            test: () => {
+                // Add the actual live endpoint URL if configured
+                if (this._ai.config["liveEndpoint"]) {
+                    const location = {
+                        href: this._ai.config["liveEndpoint"]
+                    } as Location;
+        
+                    const redactedLocation = fieldRedaction(location);
+                    Assert.ok(redactedLocation.href, "Redacted URL should exist");
+                    Assert.ok(redactedLocation.href.indexOf("REDACTED") === -1, 
+                        "Should preserve the live endpoint URL when no credentials exist");
+                }
+            }
+        });
+        
         this.testCase({
             name: 'E2E.AnalyticsApiTests: Public Members exist',
             test: () => {

@@ -7,7 +7,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
-    arrForEach, dumpObj, eLoggingSeverity, getDocument, getExceptionName, getLocation, isNullOrUndefined
+    arrForEach, dumpObj, eLoggingSeverity, fieldRedaction, getDocument, getExceptionName, getLocation, isNullOrUndefined
 } from "@microsoft/applicationinsights-core-js";
 import { ITimerHandler, getPerformance, isUndefined, isWebWorker, scheduleTimeout } from "@nevware21/ts-utils";
 import { PageViewPerformanceManager } from "./PageViewPerformanceManager";
@@ -94,6 +94,9 @@ export class PageViewManager {
                 let uri = pageView.uri;
                 if (isNullOrUndefined(uri) || typeof uri !== "string") {
                     let location = getLocation();
+                    if (location && core?.config?.redactionEnabled) {
+                        location = fieldRedaction(location);
+                    }
                     uri = pageView.uri = location && location.href || "";
                 }
 

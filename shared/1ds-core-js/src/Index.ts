@@ -42,7 +42,7 @@ export {
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
     isReactNative, getConsole, dumpObj, isIE, getIEVersion, strUndefined, strObject, strPrototype, strFunction,
-    setEnableEnvMocks, strUndefined as Undefined,
+    setEnableEnvMocks, strUndefined as Undefined, fieldRedaction,
     // Random
     randomValue, random32,
     // Cookie Handling
