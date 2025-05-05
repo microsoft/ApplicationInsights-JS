@@ -183,6 +183,7 @@
       }
     },
     "node_modules/@eslint-community/eslint-utils": {
+
       "version": "4.7.0",
       "resolved": "https://registry.npmjs.org/@eslint-community/eslint-utils/-/eslint-utils-4.7.0.tgz",
       "integrity": "sha512-dyybb3AcajC7uha6CvhdVRJqaKyn7w2YKqKyAN37NKYgZT36w+iRb0Dymmc5qEJ549c/S31cMMSFd75bteCpCw==",
@@ -1378,7 +1379,7 @@
     "node_modules/@rush-temp/applicationinsights-web-basic": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web-basic.tgz",
-      "integrity": "sha512-UouzLYljf5hLoXdmck4c0HXm/qJJV19pzFfWTLZVO9G+RDhDSRTuO0/1XgWoetx9O8bWWxreUIz+Ruyv05/eHQ==",
+      "integrity": "sha512-HWEBIm0CAomDS1KYHHNb1v3pAvqIgqvbaBx/uES4A9vsZa9muMU5366c8l3zh0UL3baB4U/LdB/RTulptWp2WA==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1398,6 +1399,7 @@
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-sourcemaps": "^0.6.3",
+        "sinon": "^7.3.1",
         "tslib": "^2.0.0",
         "typedoc": "^0.26.6",
         "typescript": "^4.9.3"
@@ -3827,19 +3829,6 @@
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz",
       "integrity": "sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw=="
-    },
-    "node_modules/fsevents": {
-      "version": "2.3.3",
-      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
-      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
-      "hasInstallScript": true,
-      "optional": true,
-      "os": [
-        "darwin"
-      ],
-      "engines": {
-        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
-      }
     },
     "node_modules/function-bind": {
       "version": "1.1.2",

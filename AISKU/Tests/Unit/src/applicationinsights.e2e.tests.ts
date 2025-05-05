@@ -155,7 +155,7 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public registerTests() {
-        this.addDynamicConfigTests()
+        this.addDynamicConfigTests();
         this.addGenericE2ETests();
         this.addAnalyticsApiTests();
         this.addAsyncTests();

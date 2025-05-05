@@ -1,9 +1,10 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { HttpManager } from '../../../src/HttpManager';
-import { AppInsightsCore, EventLatency, IEventProperty } from '@microsoft/1ds-core-js';
+import { AppInsightsCore, EventLatency, EventSendType, IEventProperty, SendRequestReason } from '@microsoft/1ds-core-js';
 import { PostChannel, IXHROverride, IPayloadData } from '../../../src/Index';
-import { IPostTransmissionTelemetryItem, EventBatchNotificationReason } from '../../../src/DataModels';
+import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from '../../../src/DataModels';
 import { Serializer } from '../../../src/Serializer';
+import { EventBatch } from "../../../src/EventBatch";
 
 
 export class SerializerTest extends AITestClass {
@@ -33,6 +34,138 @@ export class SerializerTest extends AITestClass {
                 let serializedEvent = serializer.getEventBlob(event);
 
                 QUnit.assert.equal(serializedEvent, '{\"name\":\"testEvent\",\"iKey\":\"o:1234\",\"data\":{\"baseData\":{},\"testObject\":{\"testProperty\":456}}}');
+            }
+        });
+
+        this.testCase({
+            name: "Append payload with size limit channel config",
+            test: () => {
+                let cfg = {
+                    requestLimit: {
+                        requestLimit: [200, 200],
+                        recordLimit: [200,200]
+                    }
+                } as IChannelConfiguration
+                let serializer = new Serializer(null, null, null, false, null, null, cfg);
+                let ikey = "1234-5678";
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+                let event1: IPostTransmissionTelemetryItem = {
+                    name: "testEvent1",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+    
+                let payload = serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                let batch = EventBatch.create(ikey, [event, event1]);
+                serializer.appendPayload(payload, batch, 100);
+                let evts = payload.payloadBlob;
+                let expectedPayload = "{\"name\":\"testEvent\",\"iKey\":\"o:1234\",\"data\":{\"baseData\":{},\"testObject.testProperty\":456}}" + "\n" +
+                "{\"name\":\"testEvent1\",\"iKey\":\"o:1234\",\"data\":{\"baseData\":{},\"testObject.testProperty\":456}}"
+                QUnit.assert.equal(evts, expectedPayload, "should contain both events");
+                let overflow = payload.overflow;
+                QUnit.assert.equal(overflow, null, "should not have overflow batch");
+                let sizeExceed = payload.sizeExceed;
+                QUnit.assert.equal(sizeExceed.length, 0, "should not have size exceed batch");
+            }
+        });
+
+
+        this.testCase({
+            name: "Append overflow payload with size limit channel config",
+            test: () => {
+                let cfg = {
+                    requestLimit: {
+                        recordLimit: [100,100],
+                        requestLimit: [100, 100]
+                    }
+                } as IChannelConfiguration
+                let serializer = new Serializer(null, null, null, false, null, null, cfg);
+                let ikey = "1234-5678";
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+                let event1: IPostTransmissionTelemetryItem = {
+                    name: "testEvent1",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+    
+                let payload = serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                let batch = EventBatch.create(ikey, [event, event1]);
+                serializer.appendPayload(payload, batch, 100);
+                let evts = payload.payloadBlob;
+                QUnit.assert.equal(evts, "{\"name\":\"testEvent\",\"iKey\":\"o:1234\",\"data\":{\"baseData\":{},\"testObject.testProperty\":456}}", "should contain only one event");
+                let overflow = payload.overflow;
+                QUnit.assert.equal(overflow.count(), 1, "should have only one overflow batch");
+                let overflowEvts = overflow.events();
+                QUnit.assert.equal(overflowEvts.length, 1, "should have only one overflow event");
+                QUnit.assert.equal(overflowEvts[0], event1, "overflow should have event1");
+            }
+        });
+
+
+        this.testCase({
+            name: "Append exceed size payload with size limit channel config",
+            test: () => {
+                let cfg = {
+                    requestLimit: {
+                        recordLimit: [100,100],
+                        requestLimit: [100, 100]
+                    }
+                } as IChannelConfiguration
+                let serializer = new Serializer(null, null, null, false, null, null, cfg);
+                let ikey = "1234-5678";
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+                let largEvent: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": new Array(100).join("a")
+                    },
+                    baseData: {}
+                };
+                let payload = serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                let largeBatch = EventBatch.create(ikey, [event, largEvent]);
+                serializer.appendPayload(payload, largeBatch, 100);
+                let evts = payload.payloadBlob;
+                QUnit.assert.equal(evts, "{\"name\":\"testEvent\",\"iKey\":\"o:1234\",\"data\":{\"baseData\":{},\"testObject.testProperty\":456}}", "should have only one overflow batch");
+                let sizeExceed = payload.sizeExceed;
+                QUnit.assert.equal(sizeExceed.length, 1, "should have only one payload with size exceed");
+                let sizeExceedBatch = sizeExceed[0];
+                QUnit.assert.equal(sizeExceedBatch.count(), 1, "exceed Batch should have only one event");
+                let sizeExceedEvts = sizeExceedBatch.events();
+                QUnit.assert.equal(sizeExceedEvts[0], largEvent, "exceed batch should only contain large event")
             }
         });
 
