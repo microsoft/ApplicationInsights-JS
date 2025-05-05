@@ -162,7 +162,7 @@ export class SenderPostManager {
                     const chunks: Uint8Array[] = [];
                     let totalLength = 0;
                     let callbackCalled = false;
-
+                    
                     // Process each chunk from the compressed stream reader
                     doAwaitResponse(reader.read(), function processChunk(response: AwaitResponse<ReadableStreamReadResult<Uint8Array>>): undefined | IPromise<ReadableStreamReadResult<Uint8Array>> {
                         if (!callbackCalled && !response.rejected) {
@@ -186,6 +186,7 @@ export class SenderPostManager {
                             // Update payload with compressed data
                             payload.data = combined;
                             payload.headers["Content-Encoding"] = "gzip";
+                            (payload as any)._chunkCount = chunks.length;
                         }
 
                         if (!callbackCalled) {
