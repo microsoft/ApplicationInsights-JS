@@ -19,7 +19,7 @@ jobs:
           stale-issue-message: 'This Issue will be closed in 30 days. Please remove the "Stale" label or comment to avoid closure with no action.'
           stale-pr-message: 'This PR will be closed in 30 days. Please remove the "Stale" label or comment to avoid closure with no action.'
           operations-per-run: 200
-          days-before-stale: 300
+          days-before-stale: 240
           days-before-close: 30
           stale-issue-label: 'stale'
           stale-pr-label: 'stale'
