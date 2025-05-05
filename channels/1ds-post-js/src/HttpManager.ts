@@ -215,7 +215,7 @@ export class HttpManager {
                         _urlString = endpointUrl + UrlQueryString;
                         _useHeaders = !isUndefined(channelConfig.avoidOptions) ? !channelConfig.avoidOptions : true;
                         _enableEventTimings = !channelConfig.disableEventTimings;
-                        let maxEvtCfg = channelConfig.maxNumberEvtPerBatch;
+                        let maxEvtCfg = channelConfig.maxEvtPerBatch;
                         _maxEvtPerBatch = maxEvtCfg && maxEvtCfg <= maxEventsPerBatch? maxEvtCfg : maxEventsPerBatch;
     
                         let valueSanitizer = channelConfig.valueSanitizer;

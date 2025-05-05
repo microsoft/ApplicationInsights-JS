@@ -73,7 +73,7 @@ export interface IChannelConfiguration {
      * Default is 500
      * @since 3.3.7
      */
-    maxNumberEvtPerBatch?: number
+    maxEvtPerBatch?: number
 
     /**
      * [Optional] The HTTP override that should be used to send requests, as an IXHROverride object.

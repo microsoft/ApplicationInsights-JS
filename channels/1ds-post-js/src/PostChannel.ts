@@ -89,7 +89,7 @@ const defaultPostChannelConfig: IConfigDefaults<IChannelConfiguration> = objDeep
     maxEventRetryAttempts: { isVal: isNumber, v: MaxSendAttempts },
     maxUnloadEventRetryAttempts: { isVal: isNumber, v: MaxSyncUnloadSendAttempts},
     addNoResponse: undefValue,
-    maxNumberEvtPerBatch: {isVal: isNumber, v: MaxNumberEventPerBatch},
+    maxEvtPerBatch: {isVal: isNumber, v: MaxNumberEventPerBatch},
     excludeCsMetaData: undefValue,
     requestLimit: {} as IRequestSizeLimit
 });
@@ -108,7 +108,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
     public identifier = "PostChannel";
     public priority = 1011;
-    public version = "#version#";
+    public version = '4.3.6';
 
     constructor() {
         super();
