@@ -187,7 +187,15 @@ const NODE_MODULES_SRC = {
     "tools/shims": "https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/refs/tags/{rootVersion}/tools/shims{path}"
 };
 
-function getSourceMapPathTransformer(distPath, theNameSpace) {
+/**
+ * Creates a source map path transformer function.
+ * 
+ * @param distPath - The distribution path to be used in the transformation.
+ * @param theNameSpace - The namespace for the source map paths.
+ * @param isDebug - If true, enables debug logging for the transformation process.
+ * @returns A function that transforms source map paths.
+ */
+function getSourceMapPathTransformer(distPath, theNameSpace, isDebug) {
     let rDistPath = /(.*[\\\/](dist|browser)(.es\d)?)([\\\/].*)$/;
 
     let lastIdx = (theNameSpace.replace(/\\/g, "/")).lastIndexOf("/");
@@ -198,7 +206,9 @@ function getSourceMapPathTransformer(distPath, theNameSpace) {
 
     return (sourcePath) => {
         let normalizedPath = sourcePath.replace(/\\/g, "/");
-        console.log(`NormalizedPath: ${normalizedPath}, distPath: ${distPath}, ns: ${theNameSpace}, dirname: ${__dirname}`);
+        if (isDebug) {
+            console.log(`NormalizedPath: ${normalizedPath}, distPath: ${distPath}, ns: ${theNameSpace}, dirname: ${__dirname}`);
+        }
 
         // The resolved path that we will return as the "node" path
         let resolvedPath = null;
@@ -212,13 +222,22 @@ function getSourceMapPathTransformer(distPath, theNameSpace) {
         // const absoluteSourcePath = resolve(distPath, sourcePath).replace(/\\/g, "/");
         const absPath = resolve(distPath, normalizedPath).replace(/\\/g, "/");
         if (!resolvedPath) {
-            console.log(` -- Absolute: ${absPath}`);
+            if (isDebug) {
+                console.log(` -- Absolute: ${absPath}`);
+            }
+
             let idx = absPath.indexOf("node_modules");
             if (idx != -1) {
-                console.log(` -- NodeModule: ${absPath}`);
+                if (isDebug) {
+                    console.log(` -- NodeModule: ${absPath}`);
+                }
+
                 let ver = getPackageVer(absPath);
                 if (ver) {
-                    console.log(` -- PackageVer: ${ver.name}@${ver.ver}`);
+                    if (isDebug) {
+                        console.log(` -- PackageVer: ${ver.name}@${ver.ver}`);
+                    }
+
                     let src = NODE_MODULES_SRC[ver.name];
                     if (src) {
                         resolvedPath = src.replace("{rootVersion}", rootVersion).replace("{version}", ver.ver).replace("{path}", ver.path);
@@ -266,7 +285,10 @@ function getSourceMapPathTransformer(distPath, theNameSpace) {
             resolvedPath = sourcePath;
         }
 
-        console.log(` -- resolvedPath: ${resolvedPath}`);
+        if (isDebug) {
+            console.log(` -- resolvedPath: ${resolvedPath}`);
+        }
+        
         return resolvedPath;
     };
 }
