@@ -252,6 +252,85 @@ export class HttpManagerTest extends AITestClass {
         });
 
         this.testCase({
+            name: "Http Manager with maxNumberEvtPerBatch config set",
+            useFakeTimers: true,
+            test: () => {
+                var xhrOverride: IXHROverride = {
+                    sendPOST: (payload: IPayloadData,
+                        oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) => {
+                        oncomplete(200, null);
+                    }
+                };
+
+                let testBatch = EventBatch.create("testToken", [this._createEvent()]);
+
+                var manager: HttpManager = new HttpManager(500, 2, 1, {
+                    requeue: _requeueNotification,
+                    send: _sendNotification,
+                    sent: _sentNotification,
+                    drop: _dropNotification
+                });
+                const hookSpy = this.sandbox.spy(_sendHook);
+                this.core.config.extensionConfig = this.core.config.extensionConfig || {};
+                this.core.config.extensionConfig[this.postManager.identifier].maxEvtPerBatch = 3;
+                this.core.config.extensionConfig[this.postManager.identifier].payloadPreprocessor = hookSpy;
+                this.core.config.extensionConfig[this.postManager.identifier].httpXHROverride = xhrOverride;
+                
+                manager.initialize(this.core.config, this.core, this.postManager);
+                let maxNumberEvtPerBatch = manager["_getDbgPlgTargets"]()[6];
+                QUnit.assert.equal(maxNumberEvtPerBatch, 3, "max number of events per batch should be 3");
+                let serializer = manager["_getDbgPlgTargets"]()[2];
+                let spy = this.sandbox.spy(serializer, "appendPayload");
+                QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0]._transport, undefined, "Make sure that no transport value is defined");
+
+                QUnit.assert.ok(hookSpy.notCalled); // precondition
+                QUnit.assert.equal(this._sendEvents.length, 0, "No batches sent yet");
+                QUnit.assert.equal(this._sentEvents.length, 0, "No batches Completed yet");
+                QUnit.assert.ok(spy.notCalled, "appendPayload should not be called yet");
+                manager.sendSynchronousBatch(testBatch);
+                QUnit.assert.ok(spy.calledOnce, "appendPayload should be called when the manager makes an HTTP request");
+                let appendPayloadArgs = spy.args[0][2];
+                QUnit.assert.equal(appendPayloadArgs, 3, "appendPayload should be called with max number of events per batch");
+                QUnit.assert.ok(hookSpy.calledOnce, "preprocessor should be called when the manager makes an HTTP request");
+                QUnit.assert.ok(hookSpy.args[0][2], "preprocessor should have been told its a sync request");
+                QUnit.assert.equal(this._sendEvents.length, 1, "batches sent");
+                QUnit.assert.equal(this._sentEvents.length, 1, "batches Completed");
+
+            }
+        });
+
+        this.testCase({
+            name: "Http Manager with maxNumberEvtPerBatch config set to 0 or large than the default value",
+            useFakeTimers: true,
+            test: () => {
+
+                var manager: HttpManager = new HttpManager(500, 2, 1, {
+                    requeue: _requeueNotification,
+                    send: _sendNotification,
+                    sent: _sentNotification,
+                    drop: _dropNotification
+                });
+                this.core.config.extensionConfig = this.core.config.extensionConfig || {};
+                this.core.config.extensionConfig[this.postManager.identifier].maxEvtPerBatch = 0;
+                manager.initialize(this.core.config, this.core, this.postManager);
+                let maxNumberEvtPerBatch = manager["_getDbgPlgTargets"]()[6];
+                QUnit.assert.equal(maxNumberEvtPerBatch, 500, "max number of events per batch should be 500");
+
+                var manager1: HttpManager = new HttpManager(500, 2, 1, {
+                    requeue: _requeueNotification,
+                    send: _sendNotification,
+                    sent: _sentNotification,
+                    drop: _dropNotification
+                });
+                this.core.config.extensionConfig[this.postManager.identifier].maxEvtPerBatch = 1000;
+                manager1.initialize(this.core.config, this.core, this.postManager);
+                maxNumberEvtPerBatch = manager1["_getDbgPlgTargets"]()[6];
+                QUnit.assert.equal(maxNumberEvtPerBatch, 500, "max number of events per batch should be 500 test1");
+            }
+        });
+
+
+        this.testCase({
             name: "payloadPreprocessor with override",
             useFakeTimers: true,
             test: () => {
