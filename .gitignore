@@ -275,3 +275,4 @@ ai.tests.d.ts
 # Generated Docs
 docs/webSdk/applicationinsights*/**
 docs/webSdk/1ds*/**
+docs/webSdk/otel*/**

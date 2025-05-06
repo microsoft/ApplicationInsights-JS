@@ -72,7 +72,7 @@ export function strContains(value: string, search: string): boolean {
  * Convert a date to I.S.O. format in IE8
  */
 export function toISOString(date: Date) {
-    return date && date.toISOString() || "";
+    return date && date.toISOString() || STR_EMPTY;
 }
 
 export const deepFreeze: <T>(obj: T) => T = objDeepFreeze;
@@ -388,7 +388,7 @@ export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
 
 export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
     if (xdr) {
-        return "XDomainRequest,Response:" + getResponseText(xdr) || "";
+        return "XDomainRequest,Response:" + getResponseText(xdr) || STR_EMPTY;
     }
 
     return message;
@@ -396,7 +396,7 @@ export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): s
 
 export function formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
     if (xhr) {
-        return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + getResponseText(xhr) || xhr.response || "";
+        return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + getResponseText(xhr) || xhr.response || STR_EMPTY;
     }
 
     return message;

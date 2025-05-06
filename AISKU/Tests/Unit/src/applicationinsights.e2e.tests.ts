@@ -1,10 +1,10 @@
 import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
-import { ApplicationInsights } from '../../../src/applicationinsights-web'
+import { ApplicationInsights } from '../../../src/index'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence } from '@microsoft/applicationinsights-common';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
-import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
+import { IPropTelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
 import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
@@ -1788,7 +1788,7 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    const context = (this._ai.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10001');
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
@@ -1819,7 +1819,7 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    const context = (this._ai.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10001', 'account123');
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
@@ -1849,7 +1849,7 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    const context = (this._ai.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext("\u0428", "\u0429");
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
@@ -1879,7 +1879,7 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    const context = (this._ai.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10002', 'account567');
                     context.user.clearAuthenticatedUserContext();
                     this._ai.trackTrace({ message: 'authUserContext test' });
@@ -1910,7 +1910,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext does not set the cookie by default',
             test: () => {
                 // Setup
-                const context = (this._ai.context) as TelemetryContext;
+                const context = (this._ai.context) as IPropTelemetryContext;
                 const authSpy: SinonSpy = this.sandbox.spy(context.user, 'setAuthenticatedUserContext');
                 let cookieMgr = this._ai.getCookieMgr();
                 const cookieSpy: SinonSpy = this.sandbox.spy(cookieMgr, 'set');

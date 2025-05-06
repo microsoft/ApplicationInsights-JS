@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
+import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
+import { IOTelConfig } from "../OpenTelemetry/interfaces/config/IOTelConfig";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
@@ -9,9 +11,6 @@ import { IFeatureOptIn } from "./IFeatureOptIn";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
-
-//import { IStatsBeatConfig } from "./IStatsBeat";
-"use strict";
 
 /**
  * Configuration provided to SDK core
@@ -157,7 +156,7 @@ export interface IConfiguration {
      * [Optional] An array of the page unload events that you would like to be ignored, special note there must be at least one valid unload
      * event hooked, if you list all or the runtime environment only supports a listed "disabled" event it will still be hooked, if required by the SDK.
      * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide".
-     * 
+     *
      * This can be used to avoid jQuery 3.7.1+ deprecation warnings and Chrome warnings about the unload event:
      * @example
      * ```javascript
@@ -165,7 +164,7 @@ export interface IConfiguration {
      *   disablePageUnloadEvents: ["unload"]
      * }
      * ```
-     * 
+     *
      * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html).
      */
     disablePageUnloadEvents?: string[];
@@ -174,14 +173,14 @@ export interface IConfiguration {
      * [Optional] An array of page show events that you would like to be ignored, special note there must be at lease one valid show event
      * hooked, if you list all or the runtime environment only supports a listed (disabled) event it will STILL be hooked, if required by the SDK.
      * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state).
-     * 
+     *
      * @example
      * ```javascript
      * {
      *   disablePageShowEvents: ["pageshow"]
      * }
      * ```
-     * 
+     *
      * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html).
      */
     disablePageShowEvents?: string[];
@@ -232,12 +231,24 @@ export interface IConfiguration {
      */
     expCfg?: IExceptionConfig;
 
-
     ///**
     // * [Optional] Internal SDK configuration for developers
     // * @internal
     // */
     //_sdk?: IInternalSdkConfiguration;
+
+    /**
+     * [Optional] Controls if the SDK should look for the `traceparent` and/or `tracestate` values from
+     * the service timing headers or meta tags from the initial page load.
+     * @defaultValue eTraceHeadersMode.All
+     */
+    traceHdrMode?: eTraceHeadersMode;
+
+    /**
+     * [Optional] OpenTelemetry specific configuration
+     * @since 4.0.0
+     */
+    otelCfg?: IOTelConfig;
 }
 
 ///**

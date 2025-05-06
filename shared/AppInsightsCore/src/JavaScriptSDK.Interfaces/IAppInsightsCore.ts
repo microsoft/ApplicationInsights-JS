@@ -7,6 +7,7 @@ import { WatcherFunction } from "../Config/IDynamicWatcher";
 import { eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
+import { IOTelContextManager } from "../OpenTelemetry/interfaces/context/IOTelContextManager";
 import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
@@ -66,6 +67,11 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * The formatted string of the installed plugins that contain a version number
      */
     readonly pluginVersionString: string;
+
+    /**
+     * The root {@link IOTelContextManager} for this instance of the Core.
+     */
+    readonly context: IOTelContextManager;
  
     /**
      * Returns a value that indicates whether the instance has already been previously initialized.
@@ -221,7 +227,7 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
     flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number): boolean | void;
 
     /**
-     * Gets the current distributed trace context for this instance if available
+     * Gets the current distributed trace active context for this instance
      * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to true
      */
     getTraceCtx(createNew?: boolean): IDistributedTraceContext | null;
@@ -259,5 +265,4 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * @since 3.3.0
      */
     _setPendingStatus?: () => void;
-
 }

@@ -51,8 +51,8 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
 }    
 
 export class FileSizeCheckTest extends AITestClass {
-    private readonly MAX_BUNDLE_SIZE = 69;
-    private readonly MAX_DEFLATE_SIZE = 29;
+    private readonly MAX_BUNDLE_SIZE = 80;
+    private readonly MAX_DEFLATE_SIZE = 34;
     private readonly bundleFilePath = "../bundle/es5/ms.core.min.js";
 
     public testInitialize() {

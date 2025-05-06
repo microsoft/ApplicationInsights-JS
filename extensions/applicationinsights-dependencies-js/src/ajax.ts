@@ -907,10 +907,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             function _getDistributedTraceCtx(): IDistributedTraceContext {
                 let distributedTraceCtx: IDistributedTraceContext = null;
                 if (_self.core && _self.core.getTraceCtx) {
-                    distributedTraceCtx = _self.core.getTraceCtx(false);
+                    distributedTraceCtx = _self.core.getTraceCtx();
                 }
 
-                // Fall back
+                // Fall back if running on an older version of the core
                 if (!distributedTraceCtx && _context && _context.telemetryTrace) {
                     distributedTraceCtx = createDistributedTraceContextFromTrace(_context.telemetryTrace);
                 }

@@ -39,4 +39,4 @@ export default createConfig(banner,
       outputName: browserOutputName
     }
   },
-  [ "applicationinsights-perfmarkmeasure-js" ]);
+  [ "applicationinsights-perfmarkmeasure-js", "index" ]);

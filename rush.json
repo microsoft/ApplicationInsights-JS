@@ -153,6 +153,11 @@
       "packageName": "@microsoft/1ds-post-js",
       "projectFolder": "channels/1ds-post-js",
       "shouldPublish": true
+    },
+    {
+      "packageName": "@microsoft/otel-core-js",
+      "projectFolder": "shared/OpenTelemetry",
+      "shouldPublish": true
     }
   ]
 }

@@ -12,18 +12,21 @@ import {
     IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, _InternalLogMessage,
     getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
 } from "@microsoft/applicationinsights-core-js";
+import {
+    createDeferredCachedValue, fnCall, isFunction, isUndefined, objDefine, objDefineProps, strLetterCase
+} from "@nevware21/ts-utils";
 import { Application } from "./Context/Application";
 import { Device } from "./Context/Device";
 import { Internal } from "./Context/Internal";
 import { Location } from "./Context/Location";
 import { Session, _SessionManager } from "./Context/Session";
-import { TelemetryTrace } from "./Context/TelemetryTrace";
 import { User } from "./Context/User";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 import { IPropertiesConfig } from "./Interfaces/IPropertiesConfig";
 
 const strExt = "ext";
 const strTags = "tags";
+let UNDEF_VALUE: undefined;
 
 function _removeEmpty(target: any, name: string) {
     if (target && target[name] && objKeys(target[name]).length === 0) {
@@ -35,11 +38,135 @@ function _nullResult(): string {
     return null;
 }
 
+function _createTelemetryTrace(core: IAppInsightsCore): ITelemetryTrace {
+    let coreTraceCtx: IDistributedTraceContext | null = core ? core.getTraceCtx() : null;
+    let trace: any = {};
+
+    function _getTraceCtx<T>(name: keyof IDistributedTraceContext extends string ? keyof IDistributedTraceContext : never): T {
+        let value: T;
+        let ctx = core ? core.getTraceCtx() : null;
+        if (coreTraceCtx && ctx !== coreTraceCtx) {
+            // It appears that the coreTraceCtx has been updated, so clear the local trace context
+            trace = {};
+        }
+
+        if (!isUndefined(trace[name])) {
+            // has local value
+            value = trace[name];
+        } else if (ctx) {
+            if (name in ctx) {
+                // has property
+                value = (ctx as any)[name] as T;
+            } else {
+                let fnName = "get" + strLetterCase(name);
+                if (isFunction((ctx as any)[fnName])) {
+                    value = (ctx as any)[fnName];
+                }
+            }
+
+            if (isFunction(value)) {
+                // The return values was a function, call it
+                value = fnCall(value as any, ctx);
+            }
+        }
+
+        return value;
+    }
+
+    function _setTraceCtx<V>(name: keyof IDistributedTraceContext extends string ? keyof IDistributedTraceContext : never, value: V, checkFn?: () => V) {
+        let ctx = core ? core.getTraceCtx() : null;
+        if (coreTraceCtx && ctx !== coreTraceCtx) {
+            // It appears that the coreTraceCtx has been updated, so clear the local trace context
+            trace = {};
+        }
+
+        if (ctx) {
+            if (name in ctx) {
+                if (isFunction((ctx as any)[name])) {
+                    // The return values was a function, call it
+                    fnCall((ctx as any)[name], ctx, [value]);
+                } else {
+                    (ctx as any)[name] = value;
+                }
+            } else {
+                let fnName = "set" + strLetterCase(name);
+                if (isFunction((ctx as any)[fnName])) {
+                    (ctx as any)[fnName](value);
+                }
+            }
+
+            // For backward compatability, we need to support invalid values for historic reasons,
+            // moving forward we have marked the usage of the telemetryTrace as deprecated and will be removed in a future version.
+            // We will only set the value in the local trace context if it is a valid trace ID or a string, otherwise we will remove it
+            trace[name] = UNDEF_VALUE;
+            if (value && isString(value)) {
+                // If the value is null or undefined, remove it from the local trace context
+                if (checkFn && checkFn() !== value) {
+                    // If the values doesn't match (most likely because the value is invalid), set the value in the local trace context
+                    coreTraceCtx = ctx;
+                    trace[name] = value;
+                }
+            }
+        }
+    }
+
+    function _getTraceId() {
+        return _getTraceCtx<string>("traceId");
+    }
+
+    function _getParentId() {
+        return _getTraceCtx<string>("spanId");
+    }
+
+    function _getTraceFlags() {
+        return _getTraceCtx("traceFlags");
+    }
+
+    function _getName() {
+        return dataSanitizeString(core ? core.logger : null, _getTraceCtx("getName") || _getTraceCtx("pageName"));
+    }
+
+    function _setValue<V = string>(name: keyof IDistributedTraceContext extends string ? keyof IDistributedTraceContext : never, checkFn?: () => V): (value: V) => void {
+        return function (value: V) {
+            _setTraceCtx(name, value, checkFn);
+        };
+    }
+
+    return objDefineProps<ITelemetryTrace>({}, {
+        traceID: {
+            g: _getTraceId,
+            s: _setValue("traceId", _getTraceId)},
+        parentID: {
+            g: _getParentId,
+            s: _setValue("spanId", _getParentId)
+        },
+        traceFlags: {
+            g: _getTraceFlags,
+            s: _setValue("traceFlags", _getTraceFlags)
+        },
+        name: {
+            g: _getName,
+            s: _setValue("pageName", _getName)
+        }
+    });
+}
+
 export class TelemetryContext implements IPropTelemetryContext {
 
     public application: IApplication; // The object describing a component tracked by this object - legacy
     public device: IDevice; // The object describing a device tracked by this object.
     public location: ILocation; // The object describing a location tracked by this object -legacy
+
+    /**
+     * The object describing a telemetry operation tracked by this object, values applied to this object will be
+     * applied to the telemetry being processed and the values will override the values in the {@link IAppInsightsCore.getTraceCtx}
+     * property, thus any new {@link IDistributedTraceContext} values will be ignored.
+     * @deprecated (since v3.4.0) This property is now being marked as deprecated and provided in the current releases for backward
+     * compatability only, it will be removed in a future version. Use the {@link IAppInsightsCore.getTraceCtx} property
+     * instead.
+     * @remarks Any "updates" to the telemetryTrace will NOT be reflected in the {@link IAppInsightsCore.getTraceCtx} property, however, if no values
+     * are set on the telemetryTrace, the {@link IAppInsightsCore.getTraceCtx} property will be used to get the values.
+     */
     public telemetryTrace: ITelemetryTrace; // The object describing a operation tracked by this object.
     public user: IUserContext; // The object describing a user tracked by this object.
     public internal: IInternal; // legacy
@@ -50,7 +177,7 @@ export class TelemetryContext implements IPropTelemetryContext {
     public appId: () => string;
     public getSessionId: () => string;
 
-    constructor(core: IAppInsightsCore, defaultConfig: IPropertiesConfig, previousTraceCtx?: IDistributedTraceContext, unloadHookContainer?: IUnloadHookContainer) {
+    constructor(core: IAppInsightsCore, defaultConfig: IPropertiesConfig, unloadHookContainer?: IUnloadHookContainer) {
         let logger = core.logger
 
         dynamicProto(TelemetryContext, this, (_self) => {
@@ -63,17 +190,11 @@ export class TelemetryContext implements IPropTelemetryContext {
                 _self.device = new Device();
                 _self.location = new Location();
                 _self.user = new User(defaultConfig, core, unloadHookContainer);
-
-                let traceId: string;
-                let parentId: string;
-                let name: string;
-                if (previousTraceCtx) {
-                    traceId = previousTraceCtx.getTraceId();
-                    parentId = previousTraceCtx.getSpanId();
-                    name = previousTraceCtx.getName();
-                }
-                _self.telemetryTrace = new TelemetryTrace(traceId, parentId, name, logger);
                 _self.session = new Session();
+                
+                objDefine(_self, "telemetryTrace", {
+                    l: createDeferredCachedValue(() => _createTelemetryTrace(core))
+                });
             }
 
             _self.getSessionId = () => {

@@ -58,7 +58,7 @@ export { ISample } from "./Interfaces/Context/ISample";
 export { IOperatingSystem } from "./Interfaces/Context/IOperatingSystem";
 export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 export { IUser, IUserContext } from "./Interfaces/Context/IUser";
-export { ITelemetryTrace, ITraceState } from "./Interfaces/Context/ITelemetryTrace";
+export { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
 export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";

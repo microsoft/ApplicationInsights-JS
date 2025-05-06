@@ -18,8 +18,8 @@ import { DisabledPropertyName } from "./Constants";
 import { _throwInternal, _warnToConsole } from "./DiagnosticLogger";
 import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
 import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "./HelperFuncs";
+import { STR_EMPTY } from "./InternalConstants";
 
-const STR_EMPTY = "";
 const STR_NO_RESPONSE_BODY = "NoResponseBody";
 const _noResponseQs =  "&" + STR_NO_RESPONSE_BODY + "=true";
 const STR_POST_METHOD = "POST";
@@ -654,7 +654,7 @@ export class SenderPostManager {
         
                 // XDomainRequest requires the same protocol as the hosting page.
                 // If the protocol doesn't match, we can't send the telemetry :(.
-                const hostingProtocol = _window && _window.location && _window.location.protocol || "";
+                const hostingProtocol = _window && _window.location && _window.location.protocol || STR_EMPTY;
                 let endpoint = payload.urlString;
                 if (!endpoint) {
                     _onNoPayloadUrl(oncomplete);
@@ -670,7 +670,7 @@ export class SenderPostManager {
                     return;
                 }
         
-                const endpointUrl = _isOneDs? endpoint : endpoint.replace(/^(https?:)/, "");
+                const endpointUrl = _isOneDs? endpoint : endpoint.replace(/^(https?:)/, STR_EMPTY);
                 xdr.open(STR_POST_METHOD, endpointUrl);
                 if (payload.timeout) {
                     xdr.timeout = payload.timeout;

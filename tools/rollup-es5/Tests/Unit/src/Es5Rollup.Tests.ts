@@ -22,7 +22,7 @@ export class Es5RollupTests extends AITestClass {
         return value;
     }
 
-    private testPolyNoChange(options:any, input:string, id:string = null) {
+    private testPolyNoChange(options:any, input:string, id: string | null = null) {
         let plugin = es5Poly(options);
 
         QUnit.assert.equal(plugin.name, "ai-rollup-es5poly");
@@ -46,7 +46,7 @@ export class Es5RollupTests extends AITestClass {
         QUnit.assert.equal(plugin.transform(input, "testId"), null);
     }
 
-    public testImportCheckFail(options:any, input:string, renderExpected:string, transformExpected:string = null) {
+    public testImportCheckFail(options:any, input:string, renderExpected:string, transformExpected: string | null = null) {
         let plugin = importCheck(options);
 
         QUnit.assert.equal(plugin.name, "ai-rollup-importcheck");
@@ -70,7 +70,7 @@ export class Es5RollupTests extends AITestClass {
         QUnit.assert.equal(result != null ? result.code : null, expected, this.visibleNewlines(result != null ? result.code : null));
     }
 
-    private testError(plugin:any, message:string, input:string, renderExpected:string, transformExpected:string = null) {
+    private testError(plugin:any, message:string | null, input:string, renderExpected:string, transformExpected: string | null = null) {
         QUnit.assert.throws(() => {
             plugin.renderChunk(input, { filename: "test.js" });
         }, new Error(renderExpected), "renderChunk:" + (message || input));

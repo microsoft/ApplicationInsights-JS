@@ -4,8 +4,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
-    isPromiseLike, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
+    ILazyValue, ITimerHandler, arrAppend, arrForEach, arrIndexOf, createDeferredCachedValue, createTimeout, deepExtend, hasDocument,
+    isFunction, isNullOrUndefined, isPlainObject, isPromiseLike, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn,
+    scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -17,6 +18,8 @@ import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/Lo
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
+import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
+import { eW3CTraceFlags } from "../JavaScriptSDK.Enums/W3CTraceFlags";
 import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IChannelControlsHost } from "../JavaScriptSDK.Interfaces/IChannelControlsHost";
@@ -35,6 +38,14 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { createContextManager } from "../OpenTelemetry/context/contextManager";
+import { IOTelContextManager } from "../OpenTelemetry/interfaces/context/IOTelContextManager";
+import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
+import { IOTelTracer } from "../OpenTelemetry/interfaces/trace/IOTelTracer";
+import { IOTelTracerOptions } from "../OpenTelemetry/interfaces/trace/IOTelTracerOptions";
+import { IOTelTracerProvider } from "../OpenTelemetry/interfaces/trace/IOTelTracerProvider";
+import { createOTelSpanContext } from "../OpenTelemetry/trace/spanContext";
+import { createOTelTraceState } from "../OpenTelemetry/trace/traceState";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
@@ -54,6 +65,8 @@ import { _getPluginState, createDistributedTraceContext, initializePlugins, sort
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
+import { findW3cTraceParent } from "./W3cTraceParent";
+import { findW3cTraceState } from "./W3cTraceState";
 
 // import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 // import { IStatsMgr } from "../JavaScriptSDK.Interfaces/IStatsMgr";
@@ -94,8 +107,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
-    diagnosticLogInterval: UNDEFINED_VALUE
-    // _sdk: { rdOnly: true, ref: true, v: defaultSdkConfig }
+    diagnosticLogInterval: UNDEFINED_VALUE,
+    traceHdrMode: eTraceHeadersMode.All
 });
 
 /**
@@ -114,7 +127,7 @@ function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number,
 
     // Check if any two extensions have the same priority, then warn to console
     // And extract the local extensions from the
-    let extPriorities = {};
+    let extPriorities: any = {};
 
     // Extension validation
     arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
@@ -259,11 +272,29 @@ function _createUnloadHook(unloadHook: IUnloadHook): IUnloadHook {
     }, "toJSON", { v: () => "aicore::onCfgChange<" + JSON.stringify(unloadHook) + ">" });
 }
 
+function _getParentTraceCtx(mode: eTraceHeadersMode): IOTelSpanContext | null {
+    let spanContext: IOTelSpanContext | null = null;
+    const parentTrace = (mode & eTraceHeadersMode.TraceParent) ? findW3cTraceParent() : null;
+    const parentTraceState = (mode & eTraceHeadersMode.TraceState) ? findW3cTraceState() : null;
+    
+    if (parentTrace || parentTraceState) {
+        spanContext = createOTelSpanContext({
+            traceId: parentTrace ? parentTrace.traceId : null,
+            spanId: parentTrace ? parentTrace.spanId : null,
+            traceFlags: parentTrace ? parentTrace.traceFlags : eW3CTraceFlags.None,
+            isRemote: true,  // Mark as remote since it's from an external source
+            traceState: parentTraceState ? createOTelTraceState(parentTraceState) : null
+        });
+    }
+
+    return spanContext;
+}
+
 /**
  * @group Classes
  * @group Entrypoint
  */
-export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> implements IAppInsightsCore<CfgType> {
+export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> implements IAppInsightsCore<CfgType>, IOTelTracerProvider {
     public config: CfgType;
     public logger: IDiagnosticLogger;
 
@@ -287,6 +318,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
      */
     public getWParam: () => number;
 
+    /**
+     * The root {@link IOTelContextManager} for this instance of the Core.
+     */
+    public readonly context: IOTelContextManager;
+
     constructor() {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
         let _configHandler: IDynamicConfigHandler<CfgType>;
@@ -305,12 +341,16 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _channels: IChannelControls[] | null;
         let _isUnloading: boolean;
         let _telemetryInitializerPlugin: TelemetryInitializerPlugin;
+        let _otelContext: ILazyValue<IOTelContextManager>;
+        let _serverOTelCtx: IOTelSpanContext | null;
+        let _serverTraceHdrMode: eTraceHeadersMode;
         let _internalLogsEventName: string | null;
         let _evtNamespace: string;
         let _unloadHandlers: IUnloadHandlerContainer;
         let _hookContainer: IUnloadHookContainer;
         let _debugListener: INotificationListener | null;
         let _traceCtx: IDistributedTraceContext | null;
+        let _rootTraceCtx: IDistributedTraceContext | null;
         let _instrumentationKey: string | null;
         let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType>}[];
         let _extensions: IPlugin[];
@@ -381,6 +421,12 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     objForEachKey(extCfg, (key) => {
                         details.ref(extCfg, key);
                     });
+
+                    if (rootCfg.traceHdrMode !== _serverTraceHdrMode) {
+                        // Create a new trace context if it doesn't exist and the mode is not None
+                        _serverOTelCtx = _getParentTraceCtx(rootCfg.traceHdrMode);
+                        _serverTraceHdrMode = rootCfg.traceHdrMode;
+                    }
                 }));
 
                 _notificationManager = notificationManager;
@@ -585,8 +631,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         // new one for msg ikey
                         _throwInternal(_logger, eLoggingSeverity.WARNING, _eInternalMessageId.FailedToSendQueuedTelemetry, "core init status is not active");
                     }
-
-               
                 }
             };
 
@@ -608,6 +652,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 // Check if we are waiting for previous promises to be resolved, won't apply new changes
                 if (_activeStatus !== eActiveStatus.PENDING) {
+
                     if (isNullOrUndefined(ikey)) {
                         _instrumentationKey = null;
 
@@ -781,6 +826,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             // Add addTelemetryInitializer
             proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
+
+            objDefine(_self, "context", {
+                g: () => _otelContext.v
+            });
 
             _self.unload = (isAsync: boolean = true, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> => {
                 if (!_isInitialized) {
@@ -958,8 +1007,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             _self.flush = _flushChannels;
         
             _self.getTraceCtx = (createNew?: boolean): IDistributedTraceContext | null => {
-                if (!_traceCtx) {
-                    _traceCtx = createDistributedTraceContext();
+
+                if (!_traceCtx && createNew !== false) {
+                    _traceCtx = createDistributedTraceContext(_serverOTelCtx);
                 }
 
                 return _traceCtx;
@@ -1083,6 +1133,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 arrAppend(cfgExtensions, _extensions);
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
+                _otelContext = createDeferredCachedValue(() => createContextManager());
+                _serverOTelCtx = null;
+                _serverTraceHdrMode = eTraceHeadersMode.None;
                 _eventQueue = [];
                 runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
@@ -1620,7 +1673,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
      * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
      * If the caller doesn't return true the caller should assume that it may never be called.
      * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
-     * @returns - true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
+     * @returns true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
      */
     public flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1684,6 +1737,19 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         return null;
     }
 
+    /**
+     * Returns a Tracer, creating one if one with the given name and version
+     * if one has not already created.
+     *
+     * @param name - The name of the tracer or instrumentation library.
+     * @param version - The version of the tracer or instrumentation library.
+     * @param options - The options of the tracer or instrumentation library.
+     * @returns Tracer A Tracer with the given name and version
+     */
+    public getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
 
     protected releaseQueue() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

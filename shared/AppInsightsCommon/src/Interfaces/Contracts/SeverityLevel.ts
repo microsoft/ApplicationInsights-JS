@@ -17,12 +17,12 @@ export const enum eSeverityLevel {
 /**
  * Defines the level of severity for the event.
  */
-export const SeverityLevel = createEnumStyle<typeof eSeverityLevel>({
+export const SeverityLevel = (/* @__PURE__ */createEnumStyle<typeof eSeverityLevel>({
     Verbose: eSeverityLevel.Verbose,
     Information: eSeverityLevel.Information,
     Warning: eSeverityLevel.Warning,
     Error: eSeverityLevel.Error,
     Critical: eSeverityLevel.Critical
-});
+}));
 
 export type SeverityLevel = number | eSeverityLevel;

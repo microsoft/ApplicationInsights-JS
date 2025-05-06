@@ -4,6 +4,7 @@
             "constEnums": [
                 "_eSetDynamicPropertyFlags",
                 "CallbackType",
+                "eTraceStateKeyType",
                 "eEventsDiscardedReason",
                 "eBatchDiscardedReason",
                 "FeatureOptInMode",
@@ -15,7 +16,12 @@
                 "TransportType",
                 "eStatsType",
                 "TelemetryUnloadReason",
-                "TelemetryUpdateReason"
+                "TelemetryUpdateReason",
+                "eTraceHeadersMode",
+                "eW3CTraceFlags",
+                "eOTelSamplingDecision",
+                "eOTelSpanKind",
+                "eOTelSpanStatusCode"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
@@ -107,6 +113,12 @@
         },
         "@microsoft/applicationinsights-osplugin-js": {
             "constEnums": []
+        },
+        "@microsoft/otel-core-js": {
+            "constEnums": [
+                "AddAttributeResult",
+                "eValueType"
+            ]
         }
     }
 }

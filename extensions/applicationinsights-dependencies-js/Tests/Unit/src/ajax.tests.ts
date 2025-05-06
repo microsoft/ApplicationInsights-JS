@@ -10,7 +10,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
 import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework";
-import { setBypassLazyCache, strLeft } from "@nevware21/ts-utils";
+import { dumpObj, isNullOrUndefined, setBypassLazyCache, strLeft } from "@nevware21/ts-utils";
 
 const AJAX_DATA_CONTAINER = "_ajaxData";
 
@@ -1581,6 +1581,18 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+
+                let expectedsysProperties = {
+                    trace: {
+                        traceID: traceCtx.getTraceId(),
+                        parentID: traceCtx.getSpanId()
+                    } as any
+                };
+
+                if (!isNullOrUndefined(traceCtx.getTraceFlags())) {
+                    expectedsysProperties.trace.traceFlags = traceCtx.getTraceFlags();
+                }
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1592,7 +1604,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(false, throwSpy.called, "We should not have failed internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
+                    Assert.deepEqual(expectedsysProperties, dependencyFields[0].sysProperties, "system properties - " + dumpObj(expectedsysProperties));
 
                     fetch(undefined, null).then(() => {
                         // Assert
@@ -1600,7 +1612,7 @@ export class AjaxTests extends AITestClass {
                         Assert.equal(false, throwSpy.called, "We should still not have failed internally");
                         Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called");
                         Assert.ok(dependencyFields[1].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                        Assert.equal(undefined, dependencyFields[1].sysProperties, "no system properties");
+                        Assert.deepEqual(expectedsysProperties, dependencyFields[1].sysProperties, "system properties - " + dumpObj(expectedsysProperties));
                         testContext.testDone();
                     }, () => {
                         Assert.ok(false, "fetch failed!");
@@ -1712,6 +1724,18 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+
+                let expectedsysProperties = {
+                    trace: {
+                        traceID: traceCtx.getTraceId(),
+                        parentID: traceCtx.getSpanId()
+                    } as any
+                };
+
+                if (!isNullOrUndefined(traceCtx.getTraceFlags())) {
+                    expectedsysProperties.trace.traceFlags = traceCtx.getTraceFlags();
+                }
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1723,7 +1747,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(false, throwSpy.called, "We should not have failed internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
+                    Assert.deepEqual(expectedsysProperties, dependencyFields[0].sysProperties, "system properties - " + dumpObj(dependencyFields[0].sysProperties));
                     Assert.equal(window.location.href.split("#")[0], dependencyFields[0].dependency.target, "Target is captured.");
 
                     // Assert that the HTTP method was preserved

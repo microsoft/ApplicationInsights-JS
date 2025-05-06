@@ -30,7 +30,12 @@ export {
     INotificationManager,
     IProcessTelemetryContext,
     Tags,
-    ILoadedPlugin
+    ILoadedPlugin,
+    IOTelContextManager,
+    IOTelContext,
+    IOTelSpan,
+    IOTelSpanContext,
+    IOTelSpanOptions
 } from "@microsoft/applicationinsights-core-js";
 export {
     IConfig,

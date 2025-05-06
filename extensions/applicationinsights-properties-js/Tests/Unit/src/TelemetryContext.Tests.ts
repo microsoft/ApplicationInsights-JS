@@ -44,21 +44,24 @@ export class TelemetryContextTests extends AITestClass {
         this.testCase({
             name: 'TelemetryContext: applyOperationContext - default',
             test: () => {
+                let coreParentId = this.core.getTraceCtx()?.getSpanId();
+                let coreTraceId = this.core.getTraceCtx()?.getTraceId();
                 let context = new TelemetryContext(this.core, this._config.extensionConfig!.AppInsightsPropertiesPlugin);
                 let theEvent = {} as any;
 
                 context.applyOperationContext(theEvent);
 
                 Assert.equal(context.telemetryTrace.traceID, theEvent.ext.trace.traceID, "Validate traceId");
-                Assert.equal(undefined, theEvent.ext.trace.parentID, "No ParentID");
+                Assert.equal(coreTraceId, theEvent.ext.trace.traceID, "Validate traceId");
+                Assert.equal(coreParentId, theEvent.ext.trace.parentID, "ParentID matches the core spanId");
             }
-
         });
 
         this.testCase({
             name: 'TelemetryContext: applyOperationContext - does not override traceId',
             test: () => {
 
+                Assert.ok(this.core, "Core is not null");
                 let context = new TelemetryContext(this.core, this._config.extensionConfig!.AppInsightsPropertiesPlugin);
                 let theEvent = {
                     ext: {
@@ -69,7 +72,9 @@ export class TelemetryContextTests extends AITestClass {
                 } as any;
 
                 context.telemetryTrace.traceID = "defaultTraceId";
+                Assert.equal("defaultTraceId", context.telemetryTrace.traceID, "traceId should be defaultTraceId");
                 context.telemetryTrace.parentID = "defaultParentId";
+                Assert.equal("defaultParentId", context.telemetryTrace.parentID, "parentId should be defaultParentId");
 
                 context.applyOperationContext(theEvent);
 
