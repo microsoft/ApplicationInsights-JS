@@ -177,6 +177,7 @@ export class PostChannelTest extends AITestClass {
                     fetchCredentials: undefValue,
                     maxEventRetryAttempts: 6,
                     maxUnloadEventRetryAttempts: 2,
+                    maxEvtPerBatch: 500,
                     addNoResponse: undefValue,
                     excludeCsMetaData: undefValue,
                     requestLimit: {}
