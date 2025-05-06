@@ -103,7 +103,7 @@ export class SenderPostManager {
                     if (_disableCredentials) {
                         let location = getLocation();
                         if (location && (config as IConfiguration)?.redactionEnabled) {
-                            location = fieldRedaction(location);
+                            location.href = fieldRedaction(location);
                         }
                         if (location && location.protocol && location.protocol.toLowerCase() === "file:") {
                             // Special case where a local html file fails with a CORS error on Chromium browsers

@@ -1916,19 +1916,19 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "should redact basic auth credentials from URL",
             test: () => {
                 let config = {
-                    redactionEnabled: false
+                    redactionEnabled: true
                 } as IConfiguration;
                
                 const location = {
                     href: "https://user:password@example.com"
                 } as Location;
                 
-                let redactedLocation = location;
                 if (config.redactionEnabled){
-                    redactedLocation = fieldRedaction(location);
-                    Assert.equal(redactedLocation.href, "https://REDACTED:REDACTED@example.com/");
+                    const redactedLocation = fieldRedaction(location);
+                    console.log(location.href);
+                    Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/");
                 }
-                Assert.notEqual(redactedLocation.href, "https://REDACTED:REDACTED@example.com/");
+                Assert.notEqual(location.href, "https://REDACTED:REDACTED@example.com/");
                 
             }
         });
@@ -1941,7 +1941,9 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 } as Location;
         
                 const redactedLocation = fieldRedaction(location);
-                Assert.equal(redactedLocation.href, "https://example.com/path");
+                location.href = redactedLocation;
+                console.log(location.href);
+                Assert.equal(redactedLocation, "https://example.com/path");
             }
         });
         
@@ -1954,7 +1956,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         
                 const redactedLocation = fieldRedaction(location);
                 Assert.equal(
-                    redactedLocation.href, 
+                    redactedLocation,
                     "https://REDACTED@example.com/",
                     "Expected URL to have username redacted");
             }
@@ -1968,12 +1970,14 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 } as Location;
         
                 const redactedLocation = fieldRedaction(location);
-                Assert.equal(redactedLocation.href, "https://www.example.com/path?color=blue&sig=REDACTED");
+                location.href = redactedLocation;
+                console.log(location.href);
+                Assert.equal(redactedLocation, "https://www.example.com/path?color=blue&sig=REDACTED");
             }
         });
 
         this.testCase({
-            name: "should preserve query parameters while redacting auth",
+            name: "should preserve query parameters while redacting auth - AWSAccessKeyId",
             test: () => {
                 let config = {
                     redactionEnabled: false
@@ -1984,7 +1988,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 
                 if (config.redactionEnabled){
                     const redactedLocation = fieldRedaction(location);
-                    Assert.equal(redactedLocation.href, "https://www.example.com/path?color=blue&sig=REDACTED");
+                    Assert.equal(redactedLocation, "https://www.example.com/path?color=blue&sig=REDACTED");
                 }
                 Assert.notEqual(location.href, "https://www.example.com/path?color=blue&sig=REDACTED");
             }
@@ -1998,7 +2002,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 } as Location;
         
                 const redactedLocation = fieldRedaction(location);
-                Assert.equal(redactedLocation.href, "invalid-url");
+                Assert.equal(redactedLocation, "invalid-url");
             }
         });
         
@@ -2010,7 +2014,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 } as Location;
         
                 const redactedLocation = fieldRedaction(location);
-                Assert.equal(redactedLocation.href, "https://REDACTED:REDACTED@example.com/",
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/",
                     "URL should have encoded credentials redacted");
             }
         });
@@ -2023,7 +2027,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 } as Location;
         
                 const redactedLocation = fieldRedaction(location);
-                Assert.equal(redactedLocation.href, "https://REDACTED:REDACTED@example.com/path@somewhere");
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/path@somewhere");
             }
         });
 

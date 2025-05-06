@@ -254,7 +254,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             
                 let location = getLocation();
                 if (location && rootConfig?.redactionEnabled){
-                    location = fieldRedaction(location);
+                    location.href = fieldRedaction(location);
                 }
                 if (location && location.protocol === "https:") {
                     setValue(values, "secure", null, null, isUndefined);

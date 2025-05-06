@@ -95,7 +95,7 @@ export class PageViewManager {
                 if (isNullOrUndefined(uri) || typeof uri !== "string") {
                     let location = getLocation();
                     if (location && core?.config?.redactionEnabled) {
-                        location = fieldRedaction(location);
+                        location.href = fieldRedaction(location);
                     }
                     uri = pageView.uri = location && location.href || "";
                 }

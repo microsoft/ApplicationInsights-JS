@@ -18,7 +18,7 @@ export class TelemetryTrace implements ITelemetryTrace {
         _self.parentID = parentId;
         let location = getLocation();
         if (location && config?.redactionEnabled) {
-            location = fieldRedaction(location);
+            location.href = fieldRedaction(location);
         }
         if (!name && location && location.pathname) {
             name = location.pathname;

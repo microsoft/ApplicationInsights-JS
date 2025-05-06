@@ -367,14 +367,15 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
  * @param location - The location object to be redacted.
  * @returns The redacted location object.
  */
-export function fieldRedaction(location: Location): Location {
+export function fieldRedaction(location: Location): string {
     if (!location?.href) {
-        return location;
+        return location?.href || "";
     }
 
     try {
         const parsedUrl = new URL(location.href);
         let isUrlModified = false;
+        
         // Handle credentials
         if (parsedUrl.username || parsedUrl.password) {
             if (parsedUrl.username) {
@@ -395,13 +396,9 @@ export function fieldRedaction(location: Location): Location {
             }
         }
 
-        // Only modify location if changes were made
-        if (isUrlModified) {
-            location.href = parsedUrl.href;
-        }
-
-        return location;
+        // Return the modified URL string
+        return isUrlModified ? parsedUrl.href : location.href;
     } catch (e) {
-        return location;
+        return location.href || "";
     }
 }

@@ -383,7 +383,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     if (typeof url !== "string") {
                         let loc = getLocation();
                         if (loc && _extConfig?.redactionEnabled) {
-                            loc = fieldRedaction(loc);
+                            loc.href = fieldRedaction(loc);
                         }
                         
                         url = loc && loc.href || "";
@@ -711,7 +711,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 let _window = getWindow();
                 let locn = getLocation(true);
                 if (locn && _extConfig?.redactionEnabled) {
-                    locn = fieldRedaction(locn);
+                    locn.href = fieldRedaction(locn);
                 }
                 _self._addHook(onConfigChange(_extConfig, () => {
                     _disableExceptionTracking = _extConfig.disableExceptionTracking;
@@ -745,7 +745,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 let win = getWindow();
                 let locn = getLocation(true);
                 if (locn && _extConfig?.redactionEnabled) {
-                    locn = fieldRedaction(locn);
+                    locn.href = fieldRedaction(locn);
                 }
                 _self._addHook(onConfigChange(_extConfig, () => {
                     _enableAutoRouteTracking = _extConfig.enableAutoRouteTracking === true;
@@ -919,7 +919,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);
                 if (location && _extConfig?.redactionEnabled) {
-                    location = fieldRedaction(location);
+                    location.href = fieldRedaction(location);
                 }
                 _prevUri = location && location.href || "";
                 _currUri = null;

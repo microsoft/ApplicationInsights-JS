@@ -549,7 +549,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             function _initDefaults() {
                 let location = getLocation();
                 if (location && _self?.core?.config?.redactionEnabled) {
-                    location = fieldRedaction(location);
+                    location.href = fieldRedaction(location);
                 }
                 _fetchInitialized = false;      // fetch monitoring initialized
                 _xhrInitialized = false;        // XHR monitoring initialized
@@ -1194,7 +1194,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     let location = getLocation();
                     if (location && config?.redactionEnabled) {
                         // If redaction is enabled, we need to sanitize the location object
-                        location = fieldRedaction(location);
+                        location.href = fieldRedaction(location);
                     }
                     if (location && location.href) {
                         requestUrl = strSplit(location.href, "#")[0];

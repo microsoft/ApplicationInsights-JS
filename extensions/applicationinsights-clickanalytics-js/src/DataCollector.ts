@@ -53,7 +53,7 @@ export function getClickTarget(element: any, config?: IConfiguration) {
         if (type && (clickCaptureInputTypes[type.toUpperCase()])) {
             let loc = getLocation() || ({} as Location);
             if (loc && config?.redactionEnabled){
-                loc = fieldRedaction(loc);
+                loc.href = fieldRedaction(loc);
             }
             if (element.form) {
                 clickTarget = element.form.action || (loc.pathname || "");
