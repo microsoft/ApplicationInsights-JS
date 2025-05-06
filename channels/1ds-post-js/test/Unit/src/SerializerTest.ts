@@ -38,6 +38,86 @@ export class SerializerTest extends AITestClass {
         });
 
         this.testCase({
+            name: "Append payload with max number per batch",
+            test: () => {
+                let maxNumberEvtPerBatch = 3;
+                let serializer = new Serializer(null, null, null, false, null, null);
+                let ikey = "1234-5678";
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+                let event1: IPostTransmissionTelemetryItem = {
+                    name: "testEvent1",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+    
+                let payload = serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                let batch = EventBatch.create(ikey, [event, event1]);
+                serializer.appendPayload(payload, batch, maxNumberEvtPerBatch);
+                let evts = payload.payloadBlob;
+                let expectedPayload = "{\"name\":\"testEvent\",\"iKey\":\"o:1234\",\"data\":{\"baseData\":{},\"testObject.testProperty\":456}}" + "\n" +
+                "{\"name\":\"testEvent1\",\"iKey\":\"o:1234\",\"data\":{\"baseData\":{},\"testObject.testProperty\":456}}"
+                QUnit.assert.equal(evts, expectedPayload, "should contain both events");
+                let overflow = payload.overflow;
+                QUnit.assert.equal(overflow, null, "should not have overflow batch");
+                let sizeExceed = payload.sizeExceed;
+                QUnit.assert.equal(sizeExceed.length, 0, "should not have size exceed batch");
+            }
+        });
+
+        this.testCase({
+            name: "Append payload with exceed max number per batch",
+            test: () => {
+                let maxNumberEvtPerBatch = 1;
+                let serializer = new Serializer(null, null, null, false, null, null);
+                let ikey = "1234-5678";
+                let event: IPostTransmissionTelemetryItem = {
+                    name: "testEvent",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+                let event1: IPostTransmissionTelemetryItem = {
+                    name: "testEvent1",
+                    iKey: ikey,
+                    latency: EventLatency.Normal,       // Should not get serialized
+                    data: {
+                        "testObject.testProperty": 456
+                    },
+                    baseData: {}
+                };
+    
+                let payload = serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+                let batch = EventBatch.create(ikey, [event, event1]);
+                serializer.appendPayload(payload, batch, maxNumberEvtPerBatch);
+                let evts = payload.payloadBlob;
+                let expectedPayload = "{\"name\":\"testEvent\",\"iKey\":\"o:1234\",\"data\":{\"baseData\":{},\"testObject.testProperty\":456}}";
+                QUnit.assert.equal(evts, expectedPayload, "should contain both events");
+                let overflow = payload.overflow;
+                QUnit.assert.equal(overflow.count(), 1, "should have only one overflow batch");
+                let overflowEvts = overflow.events();
+                QUnit.assert.equal(overflowEvts.length, 1, "should have only one overflow event");
+                QUnit.assert.equal(overflowEvts[0], event1, "overflow should have event1");
+                let sizeExceed = payload.sizeExceed;
+                QUnit.assert.equal(sizeExceed.length, 0, "should not have size exceed batch");
+            }
+        });
+
+        this.testCase({
             name: "Append payload with size limit channel config",
             test: () => {
                 let cfg = {

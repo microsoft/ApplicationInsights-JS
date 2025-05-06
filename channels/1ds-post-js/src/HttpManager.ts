@@ -179,6 +179,7 @@ export class HttpManager {
         let _excludeCsMetaData: boolean;
         let _sendPostMgr: SenderPostManager;
         let _fetchCredentials: RequestCredentials;
+        let _maxEvtPerBatch: number = maxEventsPerBatch; // Sets default value in case the value is null
 
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
@@ -214,6 +215,8 @@ export class HttpManager {
                         _urlString = endpointUrl + UrlQueryString;
                         _useHeaders = !isUndefined(channelConfig.avoidOptions) ? !channelConfig.avoidOptions : true;
                         _enableEventTimings = !channelConfig.disableEventTimings;
+                        let maxEvtCfg = channelConfig.maxEvtPerBatch;
+                        _maxEvtPerBatch = maxEvtCfg && maxEvtCfg <= maxEventsPerBatch? maxEvtCfg : maxEventsPerBatch;
     
                         let valueSanitizer = channelConfig.valueSanitizer;
                         let stringifyObjects = channelConfig.stringifyObjects;
@@ -377,7 +380,7 @@ export class HttpManager {
                         let theBatch = theBatches.shift();
                         if (theBatch && theBatch.count() > 0) {
                             thePayload = thePayload || _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
-                            _serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)
+                            _serializer.appendPayload(thePayload, theBatch, _maxEvtPerBatch)
                         }
                     }
 
@@ -426,7 +429,7 @@ export class HttpManager {
             }
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces, _getSendPostMgrConfig(), _urlString];
+                return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces, _getSendPostMgrConfig(), _urlString, _maxEvtPerBatch];
             };
 
             function _getSendPostMgrConfig(): _ISendPostMgrConfig {
@@ -500,6 +503,7 @@ export class HttpManager {
                 _timeoutWrapper = createTimeoutWrapper();
                 _excludeCsMetaData = false;
                 _sendPostMgr = null;
+                _maxEvtPerBatch = null;
             }
 
             function _fetchOnComplete(response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) {
@@ -788,7 +792,7 @@ export class HttpManager {
                                     thePayload = thePayload || _serializer.createPayload(retryCount, isTeardown, isSynchronous, isReducedPayload, sendReason, sendType);
                                     
                                     // Add the batch to the current payload
-                                    if (!_serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)) {
+                                    if (!_serializer.appendPayload(thePayload, theBatch, _maxEvtPerBatch)) {
                                         // Entire batch was not added so send the payload and retry adding this batch
                                         _doPayloadSend(thePayload, serializationStart, getTime(), sendReason);
                                         serializationStart = getTime();
