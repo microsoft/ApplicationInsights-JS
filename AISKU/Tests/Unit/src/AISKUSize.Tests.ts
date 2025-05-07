@@ -60,7 +60,7 @@ export class AISKUSizeCheck extends AITestClass {
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 59;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web.min.js";
     // Automatically updated by version scripts
-    private readonly currentVer = "3.3.6";
+    private readonly currentVer = "3.3.7";
     private readonly prodFilePath = `../browser/es5/ai.${this.currentVer[0]}.min.js`;
 
     public testInitialize() {
