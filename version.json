@@ -58,7 +58,7 @@
         },
         "@microsoft/applicationinsights-chrome-debug-extension": {
             "package": "tools/chrome-debug-extension/package.json",
-            "release": "0.8.1"
+            "release": "0.8.0"
         },
         "applicationinsights-web-config": {
             "package": "tools/config/package.json",

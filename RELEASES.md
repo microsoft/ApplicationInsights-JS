@@ -4,6 +4,10 @@
 
 ## 3.3.7 (May 7th, 2025)
 
+### Potential breaking change
+
+This release contains a potential breaking change due to the new compress api feaure added. If you are using a Proxy to redirect your telemetry to your own endpoint or are relying on the events to be uncompressed (this feature is initially disabled and it is intended to be enabled by the service in the near future), it is recommended to either update collection endpoint to support GZip or to explicitly disable the feature. See more details [here](https://github.com/Microsoft/ApplicationInsights-JS?tab=readme-ov-file#feature).
+
 ### Changelog
 
 - #2518 Remove Generated docs from the repo
@@ -20,7 +24,7 @@
 - #2504 [main] [Click analytics] not logging no native html input elements
   - **Note**: `trackElementTypes` is added to `IClickAnalyticsConfiguration` to allow additional, configurable HTML element types to be tracked in addition to the default set
 - #2451 [main] enable compress api in 1ds-post-channel and applicationinsights-channel
-  - **Note**: Using compress api feature is added through feature flag `zipPayload` and is currently disabled by default. See [more details](https://github.com/microsoft/ApplicationInsights-JS/blob/123ba4cd38f1478e91547d36c41668599834c734/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IConfiguration.ts#L192)
+  - **Note**: Using compress api feature is added through feature flag `zipPayload` and is currently disabled by default. See [how to enable this feature](https://github.com/Microsoft/ApplicationInsights-JS?tab=readme-ov-file#feature) and [more details](https://github.com/microsoft/ApplicationInsights-JS/blob/123ba4cd38f1478e91547d36c41668599834c734/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IConfiguration.ts#L192).
 - #2489 [main][stats beat] implement stats beat in application insights
 
 ## 3.3.6 (March 4th, 2025)
