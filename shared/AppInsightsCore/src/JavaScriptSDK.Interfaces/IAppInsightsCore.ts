@@ -16,7 +16,6 @@ import { INotificationListener } from "./INotificationListener";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
-import { IStatsBeat, IStatsBeatConfig } from "./IStatsBeat";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";

@@ -42,7 +42,6 @@ export interface IStatsBeat {
      * @param exceptionType - The type of the exception.
      */
     countException(endpoint: string, exceptionType: string): void;
-    getEndpoint(): string;
 }
 
 /**

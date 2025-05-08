@@ -21,7 +21,7 @@ import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateRea
 import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IChannelControlsHost } from "../JavaScriptSDK.Interfaces/IChannelControlsHost";
-import { IConfiguration, IInternalSdkConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
@@ -29,7 +29,6 @@ import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotification
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { IStatsBeat, IStatsBeatConfig } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
@@ -52,7 +51,6 @@ import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain
 } from "./ProcessTelemetryContext";
-import { Statsbeat } from "./StatsBeat";
 import { _getPluginState, createDistributedTraceContext, initializePlugins, sortPlugins } from "./TelemetryHelpers";
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
@@ -522,18 +520,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
             _self.getPerfMgr = (): IPerfManager => {
                 return _perfManager || _cfgPerfManager || getGblPerfMgr();
-            };
-
-            _self.getStatsBeat = (statsBeatConfig?: IStatsBeatConfig): IStatsBeat => {
-                // create a new statsbeat if not initialize yet or the endpoint is different
-                // otherwise, return the existing one, or null
-
-                // uncomment this until throttle is implemented
-                // if (statsBeatConfig && this.config._sdk.stats === true && _statsBeat && _statsBeat.getEndpoint() !== statsBeatConfig.endpoint) {
-                //     _statsBeat = new Statsbeat();
-                //     _statsBeat.initialize(this, statsBeatConfig);
-                // }
-                return _statsBeat;
             };
 
             _self.setPerfMgr = (perfMgr: IPerfManager) => {

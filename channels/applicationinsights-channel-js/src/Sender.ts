@@ -302,15 +302,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         delete _headers[CrossOriginResourcePolicyHeader];
                     }
 
-                    let corsPolicy = senderConfig.corsPolicy;
-                    if (corsPolicy){
-                        if (corsPolicy === "same-origin" || corsPolicy === "same-site" || corsPolicy === "cross-origin") {
-                            this.addHeader(CrossOriginResourcePolicyHeader, corsPolicy);
-                        }
-                    } else {
-                        delete _headers[CrossOriginResourcePolicyHeader];
-                    }
-
                     if(isPromiseLike(senderConfig.instrumentationKey)) {
                         // if it is promise, means the endpoint url is from core.endpointurl
                         senderConfig.instrumentationKey = config.instrumentationKey as any;
@@ -663,20 +654,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
                 return _xdrOnLoad(xdr, payload as IInternalStorageItem[]);
 
-            }
-
-            function _getStatsBeat() {
-                let statsBeatConfig = {
-                    ikey: _self._senderConfig.instrumentationKey,
-                    endpoint: _endpointUrl,
-                    version: EnvelopeCreator.Version
-                } as IStatsBeatConfig;
-
-                let core = _self.core;
-
-                // During page unload the core may have been cleared and some async events may not have been sent yet
-                // resulting in the core being null. In this case we don't want to create a statsbeat instance
-                return core ? core.getStatsBeat(statsBeatConfig) : null;
             }
 
             // function _getStatsBeat() {

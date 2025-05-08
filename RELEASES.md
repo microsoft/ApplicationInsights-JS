@@ -6,7 +6,7 @@
 
 ### Potential breaking change
 
-This release contains a potential breaking change due to the new compress api feaure added. If you are using a Proxy to redirect your telemetry to your own endpoint or are relying on the events to be uncompressed (this feature is initially disabled and it is intended to be enabled by the service in the near future), it is recommended to either update collection endpoint to support GZip or to explicitly disable the feature. See more details [here](https://github.com/Microsoft/ApplicationInsights-JS?tab=readme-ov-file#feature).
+This release contains a potential breaking change due to the new compress api feature added. If you are using a Proxy to redirect your telemetry to your own endpoint or are relying on the events to be uncompressed (this feature is initially disabled and it is intended to be enabled by the service in the near future), it is recommended to either update collection endpoint to support GZip or to explicitly disable the feature. See more details [here](https://github.com/Microsoft/ApplicationInsights-JS?tab=readme-ov-file#feature).
 
 ### Changelog
 

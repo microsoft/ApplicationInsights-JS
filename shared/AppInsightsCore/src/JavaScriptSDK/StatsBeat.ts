@@ -18,7 +18,6 @@ import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
 import { isFeatureEnabled } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
-const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
 const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute
 const STATSBEAT_LANGUAGE = "JavaScript";
@@ -74,23 +73,7 @@ function _isMatchEndpoint(endpoint: string, urlMatch: string): boolean {
         if (regex.test(endpoint)) {
             return true;
         }
-                if (payloadData && payloadData["statsBeatData"] && payloadData["statsBeatData"]["startTime"]) {
-                    _networkCounter.totalRequest = (_networkCounter.totalRequest || 0) + 1;
-                    _networkCounter.requestDuration += utcNow() - payloadData["statsBeatData"]["startTime"];
     }
-                let retryArray = [401, 403, 408, 429, 500, 502, 503, 504];
-                let throttleArray = [402, 439];
-                if (status >= 200 && status < 300) {
-                    _networkCounter.success++;
-                } else if (retryArray.indexOf(status) !== -1) {
-                    _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
-                } else if (throttleArray.indexOf(status) !== -1) {
-                    _networkCounter.throttle[status] = (_networkCounter.throttle[status] || 0) + 1;
-                } else if (status !== 307 && status !== 308) {
-                    _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
-                }
-                _setupTimer();
-            };
 
     return false;
 }
@@ -112,9 +95,6 @@ function _createNetworkStatsbeat(host: string): INetworkStatsbeat {
         requestDuration: 0
     };
 }
-                _networkCounter.exception[exceptionType] = (_networkCounter.exception[exceptionType] || 0) + 1;
-                _setupTimer();
-            }
 
 /**
  * Creates a new IStatsBeat instance with the specified manager callbacks and statsbeat state.
@@ -203,7 +183,6 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
             }
 
             let statsbeatEvent: ITelemetryItem = {
-                    iKey: INSTRUMENTATION_KEY,
                 name: name,
                 baseData: {
                     name: name,
