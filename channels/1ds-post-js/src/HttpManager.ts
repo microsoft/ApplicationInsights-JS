@@ -9,10 +9,10 @@ import {
     ITelemetryItem, IUnloadHook, IXDomainRequest, IXHROverride, OnCompleteCallback, SendRequestReason, SenderPostManager, TransportType,
     _IInternalXhrOverride, _ISendPostMgrConfig, _ISenderOnComplete, _eExtendedInternalMessageId, _eInternalMessageId, _getAllResponseHeaders,
     _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend, getCommonSchemaMetaData, getNavigator,
-    getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFetchSupported, isNullOrUndefined, isReactNative, isUndefined,
-    isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
+    getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, isReactNative,
+    isUndefined, isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
 } from "@microsoft/1ds-core-js";
-import { arrAppend } from "@nevware21/ts-utils";
+import { arrAppend, getInst, isFunction } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { ClockSkewManager } from "./ClockSkewManager";
 import {
@@ -165,6 +165,7 @@ export class HttpManager {
         let _isUnloading: boolean;
         let _useHeaders: boolean;
         let _xhrTimeout: number;
+        let _zipPayload: boolean;
         let _disableXhrSync: boolean;
         let _disableFetchKeepAlive: boolean;
         let _canHaveReducedPayload: boolean;
@@ -178,6 +179,7 @@ export class HttpManager {
         let _excludeCsMetaData: boolean;
         let _sendPostMgr: SenderPostManager;
         let _fetchCredentials: RequestCredentials;
+        let _maxEvtPerBatch: number = maxEventsPerBatch; // Sets default value in case the value is null
 
         dynamicProto(HttpManager, this, (_self) => {
             _initDefaults();
@@ -213,6 +215,8 @@ export class HttpManager {
                         _urlString = endpointUrl + UrlQueryString;
                         _useHeaders = !isUndefined(channelConfig.avoidOptions) ? !channelConfig.avoidOptions : true;
                         _enableEventTimings = !channelConfig.disableEventTimings;
+                        let maxEvtCfg = channelConfig.maxEvtPerBatch;
+                        _maxEvtPerBatch = maxEvtCfg && maxEvtCfg <= maxEventsPerBatch? maxEvtCfg : maxEventsPerBatch;
     
                         let valueSanitizer = channelConfig.valueSanitizer;
                         let stringifyObjects = channelConfig.stringifyObjects;
@@ -222,6 +226,17 @@ export class HttpManager {
                         }
     
                         _xhrTimeout = channelConfig.xhrTimeout;
+                        
+                        const csStream = getInst("CompressionStream");
+
+                        // Controls whether payload compression (gzip) is enabled.
+                        _zipPayload = isFeatureEnabled("zipPayload", coreConfig, false);
+                        // if user has payload processor (_sendHook), they may compress the payload themselves
+                        // to avoid double compression, we should disable the zipPayload
+                        if (!isFunction(csStream) || _sendHook) {
+                            _zipPayload = false;
+                        }
+
                         _disableXhrSync = !!channelConfig.disableXhrSync;
                         _disableFetchKeepAlive = !!channelConfig.disableFetchKeepAlive;
                         _addNoResponse = channelConfig.addNoResponse !== false;
@@ -234,7 +249,7 @@ export class HttpManager {
                         }
             
                         _useBeacons = !isReactNative(); // Only use beacons if not running in React Native
-                        _serializer = new Serializer(_core, valueSanitizer, stringifyObjects, enableCompoundKey, getCommonSchemaMetaData, _excludeCsMetaData);
+                        _serializer = new Serializer(_core, valueSanitizer, stringifyObjects, enableCompoundKey, getCommonSchemaMetaData, _excludeCsMetaData, channelConfig);
         
                         if (!isNullOrUndefined(channelConfig.useSendBeacon)) {
                             _useBeacons = !!channelConfig.useSendBeacon;
@@ -365,7 +380,7 @@ export class HttpManager {
                         let theBatch = theBatches.shift();
                         if (theBatch && theBatch.count() > 0) {
                             thePayload = thePayload || _serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
-                            _serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)
+                            _serializer.appendPayload(thePayload, theBatch, _maxEvtPerBatch)
                         }
                     }
 
@@ -414,7 +429,7 @@ export class HttpManager {
             }
 
             _self["_getDbgPlgTargets"] = () => {
-                return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces, _getSendPostMgrConfig(), _urlString];
+                return [_sendInterfaces[EventSendType.Batched], _killSwitch, _serializer, _sendInterfaces, _getSendPostMgrConfig(), _urlString, _maxEvtPerBatch];
             };
 
             function _getSendPostMgrConfig(): _ISendPostMgrConfig {
@@ -488,6 +503,7 @@ export class HttpManager {
                 _timeoutWrapper = createTimeoutWrapper();
                 _excludeCsMetaData = false;
                 _sendPostMgr = null;
+                _maxEvtPerBatch = null;
             }
 
             function _fetchOnComplete(response: Response, onComplete: OnCompleteCallback, resValue?: string, payload?: IPayloadData) {
@@ -776,7 +792,7 @@ export class HttpManager {
                                     thePayload = thePayload || _serializer.createPayload(retryCount, isTeardown, isSynchronous, isReducedPayload, sendReason, sendType);
                                     
                                     // Add the batch to the current payload
-                                    if (!_serializer.appendPayload(thePayload, theBatch, maxEventsPerBatch)) {
+                                    if (!_serializer.appendPayload(thePayload, theBatch, _maxEvtPerBatch)) {
                                         // Entire batch was not added so send the payload and retry adding this batch
                                         _doPayloadSend(thePayload, serializationStart, getTime(), sendReason);
                                         serializationStart = getTime();
@@ -969,17 +985,18 @@ export class HttpManager {
                                 };
 
                                 let isSync = thePayload.isTeardown || thePayload.isSync;
-                                try {
-                                    sendInterface.sendPOST(payload, onComplete, isSync);
-                                    if (_sendListener) {
-                                        // Send the original payload to the listener
-                                        _sendListener(orgPayloadData, payload, isSync, thePayload.isBeacon);
+                                _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
+                                    try {
+                                        sendInterface.sendPOST(processedPayload, onComplete, isSync);
+                                        if (_sendListener) {
+                                            // Send the original payload to the listener
+                                            _sendListener(orgPayloadData, processedPayload, isSync, thePayload.isBeacon);
+                                        }
+                                    } catch (ex) {
+                                        _doOnComplete(onComplete, 0, {});
+                                        _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
                                     }
-                                } catch (ex) {
-                                    _warnToConsole(_logger, "Unexpected exception sending payload. Ex:" + dumpObj(ex));
-
-                                    _doOnComplete(onComplete, 0, {});
-                                }
+                                }, _zipPayload, payload, isSync);
                             };
                         }
 

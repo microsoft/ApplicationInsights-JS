@@ -16,7 +16,8 @@ import {
 import { IPromise, createPromise } from "@nevware21/ts-async";
 import { ITimerHandler, isPromiseLike, mathCeil, mathMax, mathMin, objDeepFreeze } from "@nevware21/ts-utils";
 import {
-    BE_PROFILE, EventBatchNotificationReason, IChannelConfiguration, IPostChannel, IPostTransmissionTelemetryItem, NRT_PROFILE, RT_PROFILE
+    BE_PROFILE, EventBatchNotificationReason, IChannelConfiguration, IPostChannel, IPostTransmissionTelemetryItem, IRequestSizeLimit,
+    NRT_PROFILE, RT_PROFILE
 } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { HttpManager } from "./HttpManager";
@@ -88,7 +89,9 @@ const defaultPostChannelConfig: IConfigDefaults<IChannelConfiguration> = objDeep
     maxEventRetryAttempts: { isVal: isNumber, v: MaxSendAttempts },
     maxUnloadEventRetryAttempts: { isVal: isNumber, v: MaxSyncUnloadSendAttempts},
     addNoResponse: undefValue,
-    excludeCsMetaData: undefValue
+    maxEvtPerBatch: {isVal: isNumber, v: MaxNumberEventPerBatch},
+    excludeCsMetaData: undefValue,
+    requestLimit: {} as IRequestSizeLimit
 });
 
 function isOverrideFn(httpXHROverride: any) {
@@ -144,6 +147,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
         let _unloadHandlersAdded: boolean;
         let _overrideInstrumentationKey: string;
         let _disableTelemetry: boolean;
+        let _maxEvtPerBatch: number;
 
         dynamicProto(PostChannel, this, (_self, _base) => {
             _initDefaults();
@@ -179,6 +183,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                             _maxEventSendAttempts = _postConfig.maxEventRetryAttempts;
                             _maxUnloadEventSendAttempts = _postConfig.maxUnloadEventRetryAttempts;
                             _disableAutoBatchFlushLimit = _postConfig.disableAutoBatchFlushLimit;
+                            _maxEvtPerBatch = _postConfig.maxEvtPerBatch;
 
                             if (isPromiseLike(coreConfig.endpointUrl)) {
                                 _self.pause();
@@ -699,8 +704,10 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 _maxUnloadEventSendAttempts = MaxSyncUnloadSendAttempts;
                 _evtNamespace = null;
                 _overrideInstrumentationKey = null;
+                _maxEvtPerBatch = null;
                 _disableTelemetry = false;
                 _timeoutWrapper = createTimeoutWrapper();
+                // httpManager init should use the default value, because _maxEvtPerBatch is null currently
                 _httpManager = new HttpManager(MaxNumberEventPerBatch, MaxConnections, MaxRequestRetriesBeforeBackoff, {
                     requeue: _requeueEvents,
                     send: _sendingEvent,
@@ -1138,7 +1145,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
             function _setAutoLimits() {
                 if (!_disableAutoBatchFlushLimit) {
-                    _autoFlushBatchLimit = mathMax(MaxNumberEventPerBatch * (MaxConnections + 1), _queueSizeLimit / 6);
+                    _autoFlushBatchLimit = mathMax(_maxEvtPerBatch * (MaxConnections + 1), _queueSizeLimit / 6);
                 } else {
                     _autoFlushBatchLimit = 0;
                 }
