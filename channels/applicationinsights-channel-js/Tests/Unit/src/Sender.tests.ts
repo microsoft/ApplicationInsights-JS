@@ -170,40 +170,40 @@ export class SenderTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
-            stepDelay: 10,
+            pollDelay: 10,
             useFakeTimers: true,
             useFakeServer: true,
-            steps: [
-                () => {
-                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
-                    let core = new AppInsightsCore();
-                   
-                    let coreConfig = {
-                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
-                        featureOptIn : {["zipPayload"]: {mode: 3}},
-                        extensionConfig: {
-                            [this._sender.identifier]: {
-                                httpXHROverride: this.xhrOverride,
-                                alwaysUseXhrOverride: true,
-                            }
+            test: () => {
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                let core = new AppInsightsCore();
+
+                let coreConfig = {
+                    instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                    featureOptIn : {["zipPayload"]: {mode: 3}},
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true,
                         }
                     }
-            
-                    core.initialize(coreConfig, [this._sender]);
+                }
         
-                    const telemetryItem: ITelemetryItem = {
-                        name: 'fake item with some really long name to take up space quickly',
-                        iKey: 'iKey',
-                        baseType: 'some type',
-                        baseData: {}
-                    };
-                    this._sender.processTelemetry(telemetryItem);
-                    this._sender.flush();
-                    this.clock.tick(10);
-                }].concat(PollingAssert.createPollingAssert(() => {
-                    if (this.genericSpy.called){
+                core.initialize(coreConfig, [this._sender]);
+    
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem);
+                this._sender.flush();
+                this.clock.tick(10);
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    if (this.genericSpy.called) {
                         let request = this.genericSpy.getCall(0).args[0];
                         let gzipData = request.data;
                         QUnit.assert.ok(gzipData, "data should be set");
@@ -212,51 +212,54 @@ export class SenderTests extends AITestClass {
                         return true;
                     }
                     return false;
-                }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-            });
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
+        });
 
-            this.testCaseAsync({
-                name: "zip test: gzip encode is disabled (feature opt-in not set)",
-                stepDelay: 10,
-                useFakeTimers: true,
-                useFakeServer: true,
-                steps: [
-                    () => {
-                        this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
-                        let core = new AppInsightsCore();
-                       
-                        let coreConfig = {
-                            instrumentationKey: "000e0000-e000-0000-a000-000000000000",
-                            extensionConfig: {
-                                [this._sender.identifier]: {
-                                    httpXHROverride: this.xhrOverride,
-                                    alwaysUseXhrOverride: true,
-                                }
-                            }
-                        }
+        this.testCase({
+            name: "zip test: gzip encode is disabled (feature opt-in not set)",
+            pollDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                let core = new AppInsightsCore();
                 
-                        core.initialize(coreConfig, [this._sender]);
-            
-                        const telemetryItem: ITelemetryItem = {
-                            name: 'fake item with some really long name to take up space quickly',
-                            iKey: 'iKey',
-                            baseType: 'some type',
-                            baseData: {}
-                        };
-                        this._sender.processTelemetry(telemetryItem);
-                        this._sender.flush();
-                        this.clock.tick(10);
-                    }].concat(PollingAssert.createPollingAssert(() => {
-                        if (this.genericSpy.called){
-                            let request = this.genericSpy.getCall(0).args[0];
-                            let gzipData = request.data;
-                            QUnit.assert.ok(gzipData, "data should be set");
-                            QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
-                            QUnit.assert.ok(!("Content-Encoding" in request.headers), "telemetry should not be gzip encoded");                            return true;
+                let coreConfig = {
+                    instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true,
                         }
-                        return false;
-                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-                });
+                    }
+                }
+        
+                core.initialize(coreConfig, [this._sender]);
+    
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem);
+                this._sender.flush();
+                this.clock.tick(10);
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    if (this.genericSpy.called){
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
+                        QUnit.assert.ok(!("Content-Encoding" in request.headers), "telemetry should not be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
+        });
 
         this.testCase({
             name: "Channel Config: Endpoint Url can be set from root dynamically",
@@ -286,11 +289,10 @@ export class SenderTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Channel Init: init with promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
 
                 let core = new AppInsightsCore();
                 let ikeyPromise = createAsyncResolvedPromise("testIkey");
@@ -306,23 +308,23 @@ export class SenderTests extends AITestClass {
                 let status = core.activeStatus && core.activeStatus();
                 QUnit.assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this._sender.core;
+                    let activeStatus = core.activeStatus && core.activeStatus();
                 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this._sender.core;
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    QUnit.assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    QUnit.assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
-                    // getExtCfg only finds undefined values from core
-                    let senderConfig = this._sender._senderConfig;
-                    QUnit.assert.equal("testIkey", senderConfig.instrumentationKey, "sender ikey should be set");
-                    QUnit.assert.equal("testUrl", senderConfig.endpointUrl ,"sender endpoint shoule be set");
-                    
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        QUnit.assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                        QUnit.assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                        // getExtCfg only finds undefined values from core
+                        let senderConfig = this._sender._senderConfig;
+                        QUnit.assert.equal("testIkey", senderConfig.instrumentationKey, "sender ikey should be set");
+                        QUnit.assert.equal("testUrl", senderConfig.endpointUrl ,"sender endpoint shoule be set");
+                        
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
         this.testCase({
@@ -396,7 +398,6 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual("test", payload.iKey, "httpXHROverride should send expected payload test1");
                 sync = sentPayloadData[1].sync;
                 QUnit.assert.equal(true, sync, "Channel httpXHROverride sync is called with true during send test2 (sender interface should be opposite with the sender)");
-                
             }
         });
 

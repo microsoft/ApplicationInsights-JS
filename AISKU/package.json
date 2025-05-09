@@ -40,7 +40,7 @@
         "finalhandler": "^1.1.1",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
-        "grunt-contrib-qunit": "^6.2.1",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x", 
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "globby": "^11.0.0",
@@ -57,7 +57,7 @@
         "typedoc": "^0.26.6",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
-        "puppeteer": "22.12.1"
+        "puppeteer": "24.8.2"
     },
     "peerDependencies": {
         "tslib": ">= 1.0.0"

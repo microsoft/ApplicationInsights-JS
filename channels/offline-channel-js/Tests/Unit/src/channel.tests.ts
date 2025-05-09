@@ -399,11 +399,11 @@ export class ChannelTests extends AITestClass {
         });
 
        
-        this.testCaseAsync({
+        this.testCase({
             name: "Channel: Process Telemetry with indexed db provider",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            pollDelay: 100,
+            test: () => {
                 let window = getGlobalInst("window");
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
                 let sendChannel = new TestChannel();
@@ -492,24 +492,23 @@ export class ChannelTests extends AITestClass {
                 channel.teardown();
 
                 (window as any).XMLHttpRequest = fakeXMLHttpRequest;
-
       
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let item = this.ctx.called;
+                    if (item == 2) {
+                        Assert.equal(this.evtDiscard, 0, "discard listener notification should not be called test1");
+                        Assert.equal(this.evtStore, 3, "store listener notification should be called twice test1");
+                        // only wait one 15000 interval, so sent notification should be sent twice only
+                        Assert.equal(this.evtSent, 2, "sent listener notification should not called twice test1");
+                        let evts = this.ctx.sent;
+                        Assert.ok(evts[0].indexOf(evts[1]) < 0, "events should be different");
+                        Assert.equal(this.batchDrop, 0, "batch drop listener notification should not be called test1");
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let item = this.ctx.called;
-                if (item == 2) {
-                    Assert.equal(this.evtDiscard, 0, "discard listener notification should not be called test1");
-                    Assert.equal(this.evtStore, 3, "store listener notification should be called twice test1");
-                    // only wait one 15000 interval, so sent notification should be sent twice only
-                    Assert.equal(this.evtSent, 2, "sent listener notification should not called twice test1");
-                    let evts = this.ctx.sent;
-                    Assert.ok(evts[0].indexOf(evts[1]) < 0, "events should be different");
-                    Assert.equal(this.batchDrop, 0, "batch drop listener notification should not be called test1");
-
-                    return true;
-                }
-                return false;
-            }, "Wait for fetch response" + new Date().toISOString(), 200, 1000) as any)
+                        return true;
+                    }
+                    return false;
+                }, "Wait for fetch response " + new Date().toISOString(), 200, 1000));
+            }
         });
 
         this.testCase({
