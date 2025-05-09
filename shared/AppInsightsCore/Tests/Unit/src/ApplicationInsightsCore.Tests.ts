@@ -1,11 +1,15 @@
 import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName, random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager, OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, dumpObj, onConfigChange, createProcessTelemetryContext } from "../../../src/applicationinsights-core-js"
+import { 
+    IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName,
+    random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager,
+    OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig
+} from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
 import { _eInternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
 import { ActiveStatus } from "../../../src/JavaScriptSDK.Enums/InitActiveStatusEnum";
-import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createTimeoutPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createPromise, createTimeoutPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 
 const AIInternalMessagePrefix = "AITR_";
 const MaxInt32 = 0xFFFFFFFF;
@@ -1032,11 +1036,10 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey resolved promise, endpoint url resolved promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1056,36 +1059,37 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 core.initialize(
                     config,
                     [trackPlugin, channelPlugin]);
-          
+        
 
                 Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
                 Assert.ok(core.eventCnt() == 1, "Event should be queued");
                 let activeStatus = core.activeStatus();
                 Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
-                    Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
-                    Assert.ok(channelSpy.calledOnce, "channel should be called once");
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    let evt = channelSpy.args[0][0];
-                    Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                // Returns a promise
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy;
+                
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
+                        Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
+                        Assert.ok(channelSpy.calledOnce, "channel should be called once");
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        let evt = channelSpy.args[0][0];
+                        Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey resolved promise, endpoint url rejected promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1105,36 +1109,37 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 core.initialize(
                     config,
                     [trackPlugin, channelPlugin]);
-          
+        
 
                 Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
                 Assert.ok(core.eventCnt() == 1, "Event should be queued");
                 let activeStatus = core.activeStatus();
                 Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
-                    Assert.equal(core.config.endpointUrl, null, "channel endpoint should not be changed");
-                    Assert.ok(channelSpy.calledOnce, "channel should be called once");
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    let evt = channelSpy.args[0][0];
-                    Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                // Returns a promise
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(()=> {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy
+                
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
+                        Assert.equal(core.config.endpointUrl, null, "channel endpoint should not be changed");
+                        Assert.ok(channelSpy.calledOnce, "channel should be called once");
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        let evt = channelSpy.args[0][0];
+                        Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey rejected promise, endpoint url rejected promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1164,29 +1169,31 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let activeStatus = core.activeStatus();
                 Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-                let ikeyPromise = this.ctx.ikeyPromise;
-                let urlPromise = this.ctx.urlPromise;
-            
-                if (activeStatus === ActiveStatus.INACTIVE) {
-                    Assert.deepEqual(core.config.instrumentationKey, ikeyPromise, "channel testIkey should not be changed");
-                    Assert.deepEqual(core.config.endpointUrl, urlPromise, "channel endpoint should not be changed");
-                    Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                // Returns a promise
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy
+                    let ikeyPromise = this.ctx.ikeyPromise;
+                    let urlPromise = this.ctx.urlPromise;
+                
+                    if (activeStatus === ActiveStatus.INACTIVE) {
+                        Assert.deepEqual(core.config.instrumentationKey, ikeyPromise, "channel testIkey should not be changed");
+                        Assert.deepEqual(core.config.endpointUrl, urlPromise, "channel endpoint should not be changed");
+                        Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        return true;
+                    }
+
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000))
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey promise chain, endpoint url promise chain",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1229,31 +1236,30 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(core.eventCnt() == 1, "Event should be queued");
                 let activeStatus = core.activeStatus();
                 Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
-
-
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
-                    Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
-                    Assert.ok(channelSpy.calledOnce, "channel should be called once");
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    let evt = channelSpy.args[0][0];
-                    Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy
+                
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
+                        Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
+                        Assert.ok(channelSpy.calledOnce, "channel should be called once");
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        let evt = channelSpy.args[0][0];
+                        Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey mutiple layer promise chain, endpoint url mutiple layer promise chain",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1299,32 +1305,29 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let activeStatus = core.activeStatus();
                 Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
 
-
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
-                    Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
-                    Assert.ok(channelSpy.calledOnce, "channel should be called once");
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    let evt = channelSpy.args[0][0];
-                    Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy;
+                
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
+                        Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
+                        Assert.ok(channelSpy.calledOnce, "channel should be called once");
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        let evt = channelSpy.args[0][0];
+                        Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
-
-
         
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey string, endpoint url string, dynamic changed with resolved promises",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1362,30 +1365,30 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.equal(activeStatus, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 //Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(core.config.instrumentationKey, "testIkey1", "channel testIkey should not be changed");
-                    Assert.equal(core.config.endpointUrl, "testUrl1", "channel endpoint should be changed");
-                    core.track({name: "test2"});
-                    Assert.ok(core.eventCnt() == 0, "Event should not be queued test1");
-                    let evt = channelSpy.args[1][0];
-                    Assert.equal(evt.name, "test2", "event name should be set test2");
-                    Assert.equal(evt.iKey, "testIkey1", "event ikey should be set test1");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy
+                
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(core.config.instrumentationKey, "testIkey1", "channel testIkey should not be changed");
+                        Assert.equal(core.config.endpointUrl, "testUrl1", "channel endpoint should be changed");
+                        core.track({name: "test2"});
+                        Assert.ok(core.eventCnt() == 0, "Event should not be queued test1");
+                        let evt = channelSpy.args[1][0];
+                        Assert.equal(evt.name, "test2", "event name should be set test2");
+                        Assert.equal(evt.iKey, "testIkey1", "event ikey should be set test1");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey resolved promise, endpoint url resolved promise, dynamic change with promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1411,56 +1414,55 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(core.eventCnt() == 1, "Event should be queued");
                 let activeStatus = core.activeStatus();
                 Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
+                
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy;
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(activeStatus, ActiveStatus.ACTIVE, "active status should be set to active");
+                        Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
+                        Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
+                        Assert.ok(channelSpy.calledOnce, "channel should be called once");
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        let evt = channelSpy.args[0][0];
+                        Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
 
+                        let ikeyPromise = createAsyncResolvedPromise("testIkey1");
+                        let urlPromise = createAsyncResolvedPromise("testUrl1");
+                        core.config.instrumentationKey = ikeyPromise;
+                        core.config.endpointUrl = urlPromise;
+                        this.ctx.secondCall = true;
+                        //Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending test1");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise first response" + new Date().toISOString(), 60, 1000)).concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy;
+            
+                    if (this.ctx.secondCall && activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(activeStatus, ActiveStatus.ACTIVE, "active status should be set to active test1");
+                        Assert.equal(core.config.instrumentationKey, "testIkey1", "channel testIkey should not be changed test1");
+                        Assert.equal(core.config.endpointUrl, "testUrl1", "channel endpoint should be changed test1");
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        core.track({name: "test1"});
+                        let evt = channelSpy.args[1][0];
+                        Assert.equal(evt.name, "test1", "event name should be set test2");
+                        Assert.equal(evt.iKey, "testIkey1", "event ikey should be set test1");
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy;
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(activeStatus, ActiveStatus.ACTIVE, "active status should be set to active");
-                    Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
-                    Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
-                    Assert.ok(channelSpy.calledOnce, "channel should be called once");
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    let evt = channelSpy.args[0][0];
-                    Assert.equal(evt.iKey, "testIkey", "event ikey should be set");
-
-                    let ikeyPromise = createAsyncResolvedPromise("testIkey1");
-                    let urlPromise = createAsyncResolvedPromise("testUrl1");
-                    core.config.instrumentationKey = ikeyPromise;
-                    core.config.endpointUrl = urlPromise;
-                    this.ctx.secondCall = true;
-                    //Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending test1");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise first response" + new Date().toISOString(), 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy;
-           
-                if (this.ctx.secondCall && activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(activeStatus, ActiveStatus.ACTIVE, "active status should be set to active test1");
-                    Assert.equal(core.config.instrumentationKey, "testIkey1", "channel testIkey should not be changed test1");
-                    Assert.equal(core.config.endpointUrl, "testUrl1", "channel endpoint should be changed test1");
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    core.track({name: "test1"});
-                    let evt = channelSpy.args[1][0];
-                    Assert.equal(evt.name, "test1", "event name should be set test2");
-                    Assert.equal(evt.iKey, "testIkey1", "event ikey should be set test1");
-
-                    return true;
-                }
-                return false;
-            }, "Wait for promise second response" + new Date().toISOString(), 60, 1000) as any)
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise second response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey promise, endpoint url promise, dynamic changed with strings",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1498,36 +1500,35 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 // status is pending, following changes should not be applied
                 core.config.instrumentationKey = "testIkey1";
                 core.config.endpointUrl = "testUrl1";
-               
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
-                    Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
-                    Assert.ok(core.eventCnt() == 0, "Event should not be queued test1");
-                    let evt1 = channelSpy.args[0][0];
-                    Assert.equal(evt1.iKey, "testIkey", "event ikey should be set test1");
-                    this.clock.tick(1);
-                    core.track({name: "test2"});
-                    let evt2 = channelSpy.args[1][0];
-                    Assert.equal(evt2.name, "test2", "event name should be set test2");
-                    Assert.equal(evt2.iKey, "testIkey", "event ikey should be set test1");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy;
+                
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
+                        Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
+                        Assert.ok(core.eventCnt() == 0, "Event should not be queued test1");
+                        let evt1 = channelSpy.args[0][0];
+                        Assert.equal(evt1.iKey, "testIkey", "event ikey should be set test1");
+                        this.clock.tick(1);
+                        core.track({name: "test2"});
+                        let evt2 = channelSpy.args[1][0];
+                        Assert.equal(evt2.name, "test2", "event name should be set test2");
+                        Assert.equal(evt2.iKey, "testIkey", "event ikey should be set test1");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey promise, endpoint url promise, dynamic changed with strings while waiting promises",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1568,34 +1569,34 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.equal(activeStatus, ActiveStatus.PENDING, "default should be pending status");
 
                 resolveFunc("testIkey");
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy
                 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
-                    Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
-                    Assert.ok(core.eventCnt() == 0, "Event should not be queued test1");
-                    let evt1 = channelSpy.args[0][0];
-                    Assert.equal(evt1.iKey, "testIkey", "event ikey should be set test1");
-                    this.clock.tick(1);
-                    core.track({name: "test2"});
-                    let evt2 = channelSpy.args[1][0];
-                    Assert.equal(evt2.name, "test2", "event name should be set test2");
-                    Assert.equal(evt2.iKey, "testIkey", "event ikey should be set test1");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal(core.config.instrumentationKey, "testIkey", "channel testIkey should not be changed");
+                        Assert.equal(core.config.endpointUrl, "testUrl", "channel endpoint should be changed");
+                        Assert.ok(core.eventCnt() == 0, "Event should not be queued test1");
+                        let evt1 = channelSpy.args[0][0];
+                        Assert.equal(evt1.iKey, "testIkey", "event ikey should be set test1");
+                        this.clock.tick(1);
+                        core.track({name: "test2"});
+                        let evt2 = channelSpy.args[1][0];
+                        Assert.equal(evt2.name, "test2", "event name should be set test2");
+                        Assert.equal(evt2.iKey, "testIkey", "event ikey should be set test1");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey and endpoint timeout promises",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let trackPlugin = new TrackPlugin();
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -1622,25 +1623,25 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let activeStatus = core.activeStatus();
                 Assert.equal(activeStatus, ActiveStatus.PENDING, "active status should be set to pending");
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy;
-            
-                if (activeStatus === ActiveStatus.INACTIVE) {
-                    Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy;
+                
+                    if (activeStatus === ActiveStatus.INACTIVE) {
+                        Assert.ok(!channelSpy.calledOnce, "channel should not be called once");
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "ApplicationInsightsCore Init: init with ikey timeout promises and endpoint promises",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
                 let core = new AppInsightsCore();
@@ -1665,23 +1666,20 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.ok(!channelSpy.calledOnce, "channel should not be called");
                 core.track({name: "testEvent"});
 
-
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this.ctx.core;
-                let activeStatus = core.activeStatus();
-                let channelSpy = this.ctx.channelSpy
-            
-                if (activeStatus === ActiveStatus.INACTIVE) {
-                    Assert.ok(core.eventCnt() == 0, "Event should be released");
-                    Assert.ok(!channelSpy.called, "channel should not be called");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let core = this.ctx.core;
+                    let activeStatus = core.activeStatus();
+                    let channelSpy = this.ctx.channelSpy
+                
+                    if (activeStatus === ActiveStatus.INACTIVE) {
+                        Assert.ok(core.eventCnt() == 0, "Event should be released");
+                        Assert.ok(!channelSpy.called, "channel should not be called");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
-
-
-
 
         this.testCase({
             name: 'newId tests length',

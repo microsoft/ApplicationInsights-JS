@@ -52,7 +52,6 @@
         "@nevware21/ts-async": ">= 0.5.4 < 2.x",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
-        "grunt-contrib-qunit": "^6.2.1",
         "globby": "^11.0.0",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
