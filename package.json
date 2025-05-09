@@ -70,12 +70,11 @@
         "grunt-cli": "^1.4.3",
         "grunt-contrib-connect": "^3.0.0",
         "grunt-contrib-copy": "^1.0.0",
-        "grunt-contrib-qunit": "^6.2.1",
         "grunt-contrib-uglify": "^5.2.1",
-        "puppeteer": "22.12.1",
+        "eventemitter2": "6.4.9",
+        "puppeteer": "24.8.2",
         "typedoc": "^0.26.6",
         "typescript": "^4.9.3",
-        "whatwg-fetch": "^3.6.2",
-        "request": "^2.88.2"
+        "whatwg-fetch": "^3.6.2"
     }
 }

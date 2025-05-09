@@ -1,6 +1,7 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { AppInsightsInitPerfTestClass } from "./AISKUPerf";
 import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { createTimeoutPromise, doAwait } from "@nevware21/ts-async";
 
 function isNullOrUndefined(value: any): boolean {
     return value === undefined || value === null;
@@ -165,11 +166,10 @@ export class AISKUPerf extends AITestClass {
     }
     
     public addPerfTest(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: "AppInsights AISKU perf Test",
-            stepDelay: 10000,
             assertNoHooks: false,
-            steps: [() => {
+            test: () => {
                 Assert.ok(window["appInsightsInitPerftest"], "global appInsightsInitPerftest exists");
                 Assert.ok(window["oneDS"], "oneDS exists");
                 Assert.ok(this.perfMgr, "perfMgr exists");
@@ -195,9 +195,11 @@ export class AISKUPerf extends AITestClass {
                     Assert.ok(false, "load snippet error: " + e);
                 }
 
-            }].concat(() => {
-               Assert.ok(true, "test version: " + this.AISKUPerfTest.version);
-            })
+                // Wait for 10 seconds to allow the script to load and then check if the appInsights object is available
+                return this._delay(10000, () => {
+                   Assert.ok(true, "test version: " + this.AISKUPerfTest.version);
+                });
+            }
         });
     }
 

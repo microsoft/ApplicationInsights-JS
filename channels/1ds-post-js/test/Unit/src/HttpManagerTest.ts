@@ -1,4 +1,4 @@
-import { AITestClass } from "@microsoft/ai-test-framework";
+import { AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { HttpManager } from "../../../src/HttpManager";
 import { AppInsightsCore, BaseTelemetryPlugin, EventSendType, IAppInsightsCore, IConfiguration, IExtendedConfiguration, IPlugin, IProcessTelemetryContext, ITelemetryItem, SendRequestReason, TransportType, isBeaconsSupported} from "@microsoft/1ds-core-js";
 import { PostChannel, IXHROverride, IPayloadData } from "../../../src/Index";
@@ -2244,42 +2244,48 @@ export class HttpManagerTest extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "retry not synchronous event",
-            stepDelay: 6000,
-            steps: [
-                () => {
-                    var xhrOverride: IXHROverride = {
-                        sendPOST: (payload: IPayloadData,
-                            oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) => {
-                            //Error code
-                            oncomplete(299, null);
-                        }
-                    };
-                        var manager: HttpManager = new HttpManager(500, 2, 1, {
-                        requeue: _requeueNotification,
-                        send: _sendNotification,
-                        sent: _sentNotification,
-                        drop: _dropNotification
-                    });
-                    
-                    manager.addBatch(EventBatch.create("testToken", [this._createEvent()]));
-                    this.xhrOverrideSpy = this.sandbox.spy(xhrOverride, "sendPOST");
+            test: () => {
+                var xhrOverride: IXHROverride = {
+                    sendPOST: (payload: IPayloadData,
+                        oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) => {
+                        //Error code
+                        oncomplete(299, null);
+                    }
+                };
+                    var manager: HttpManager = new HttpManager(500, 2, 1, {
+                    requeue: _requeueNotification,
+                    send: _sendNotification,
+                    sent: _sentNotification,
+                    drop: _dropNotification
+                });
+                
+                manager.addBatch(EventBatch.create("testToken", [this._createEvent()]));
+                this.xhrOverrideSpy = this.sandbox.spy(xhrOverride, "sendPOST");
 
-                    this.core.config.extensionConfig![this.postManager.identifier].httpXHROverride = xhrOverride;
-                    this.core.config.endpointUrl = "testEndpoint";
-                    manager.initialize(this.core.config, this.core, this.postManager);
-                    QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0], xhrOverride, "Make sure that the override is used as the internal transport");
-                    QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0]._transport, undefined, "Make sure that no transport value is defined");
+                this.core.config.extensionConfig![this.postManager.identifier].httpXHROverride = xhrOverride;
+                this.core.config.endpointUrl = "testEndpoint";
+                manager.initialize(this.core.config, this.core, this.postManager);
+                QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0], xhrOverride, "Make sure that the override is used as the internal transport");
+                QUnit.assert.equal(manager["_getDbgPlgTargets"]()[0]._transport, undefined, "Make sure that no transport value is defined");
 
-                    manager.sendQueuedRequests();
-                }]
-                .concat(() => {
+                manager.sendQueuedRequests();
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    if (!this.xhrOverrideSpy.called || this.xhrOverrideSpy.callCount < 2) {
+                        // Wait for the expectations to be met
+                        return false;
+                    }
+
                     QUnit.assert.equal(this.xhrOverrideSpy.called, true);
                     QUnit.assert.equal(this.xhrOverrideSpy.callCount, 2);
                     var secondEventArg = this.xhrOverrideSpy.getCall(1).args[0].urlString;
                     QUnit.assert.notEqual(secondEventArg, null);
-                })
+
+                    return true;
+                }, "Wait for events to send ", 10));
+            }
         });
 
         if (!this.isEmulatingIe) {
