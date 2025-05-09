@@ -1966,13 +1966,27 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "should preserve query parameters while redacting auth",
             test: () => {
                 const location = {
-                    href: "https://www.example.com/path?color=blue&sig=X-Goog-Signature"
+                    href: "https://www.example.com/path?color=blue&X-Goog-Signature=secret"
                 } as Location;
         
                 const redactedLocation = fieldRedaction(location);
                 location.href = redactedLocation;
                 console.log(location.href);
-                Assert.equal(redactedLocation, "https://www.example.com/path?color=blue&sig=REDACTED");
+                Assert.equal(redactedLocation, "https://www.example.com/path?color=blue&X-Goog-Signature=REDACTED");
+            }
+        });
+
+        this.testCase({
+            name: "should preserve query parameters while redacting auth when the query string is not in the set values",
+            test: () => {
+                const location = {
+                    href: "https://www.example.com/path?color=blue&query=secret"
+                } as Location;
+        
+                const redactedLocation = fieldRedaction(location);
+                location.href = redactedLocation;
+                console.log(location.href, redactedLocation);
+                Assert.notEqual(redactedLocation, "https://www.example.com/path?color=blue&query=REDACTED");
             }
         });
 
@@ -1980,17 +1994,18 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "should preserve query parameters while redacting auth - AWSAccessKeyId",
             test: () => {
                 let config = {
-                    redactionEnabled: false
+                    redactionEnabled: true
                 } as IConfiguration;
                 const location = {
-                    href: "https://www.example.com/path?color=blue&sig=AWSAccessKeyId"
+                    href: "https://www.example.com/path?color=blue&AWSAccessKeyId=secret"
                 } as Location;
                 
                 if (config.redactionEnabled){
                     const redactedLocation = fieldRedaction(location);
-                    Assert.equal(redactedLocation, "https://www.example.com/path?color=blue&sig=REDACTED");
+                    console.log(redactedLocation)
+                    Assert.equal(redactedLocation, "https://www.example.com/path?color=blue&AWSAccessKeyId=REDACTED");
                 }
-                Assert.notEqual(location.href, "https://www.example.com/path?color=blue&sig=REDACTED");
+                Assert.notEqual(location.href, "https://www.example.com/path?color=blue&AWSAccessKeyId=REDACTED");
             }
         });
         

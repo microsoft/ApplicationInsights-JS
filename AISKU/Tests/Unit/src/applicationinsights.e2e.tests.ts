@@ -81,8 +81,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 ["AppInsightsCfgSyncPlugin"]: {
                     //cfgUrl: ""
                 }
-            },
-            redactionEnabled: false
+            }
         };
 
         return config;
