@@ -11,7 +11,8 @@ import { UpdateConfigTests } from "./UpdateConfig.Tests";
 import { EventsDiscardedReasonTests } from "./EventsDiscardedReason.Tests";
 import { W3cTraceParentTests } from "./W3cTraceParentTests";
 import { DynamicConfigTests } from "./DynamicConfig.Tests";
-import { StatsBeatTests } from './StatsBeat.Tests';
+import { SendPostManagerTests } from './SendPostManager.Tests';
+// import { StatsBeatTests } from './StatsBeat.Tests';
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -29,4 +30,5 @@ export function runTests() {
     new W3cTraceParentTests().registerTests();
     // new StatsBeatTests(false).registerTests();
     // new StatsBeatTests(true).registerTests();
+    new SendPostManagerTests().registerTests();
 }

@@ -10,6 +10,7 @@ import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 
+//import { IStatsBeatConfig } from "./IStatsBeat";
 "use strict";
 
 /**
@@ -213,21 +214,21 @@ export interface IConfiguration {
     expCfg?: IExceptionConfig;
 
 
-    /**
-     * [Optional] Internal SDK configuration for developers
-     * @internal
-     */
-    _sdk?: IInternalSdkConfiguration;
+    ///**
+    // * [Optional] Internal SDK configuration for developers
+    // * @internal
+    // */
+    //_sdk?: IInternalSdkConfiguration;
 }
 
-/**
- * Internal SDK configuration options
- * @internal
- */
-export interface IInternalSdkConfiguration {
-    /**
-     * [Optional] Enable Internal StatsBeat
-     * @internal
-     */
-    stats?: boolean;
-}
+///**
+// * Internal SDK configuration options
+// * @internal
+// */
+//export interface IInternalSdkConfiguration {
+//    /**
+//     * [Optional] Enable Internal StatsBeat
+//     * @internal
+//     */
+//    stats?: IStatsBeatConfig;
+//}

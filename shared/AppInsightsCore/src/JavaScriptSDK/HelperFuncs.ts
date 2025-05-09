@@ -352,15 +352,28 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
 
 export const asString = asString21;
 
-export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T): boolean {
-    let rlt = false;
+/**
+ * Checks if the feature is enabled on not. If the feature is not defined, it will return the default state if provided or undefined.
+ * If the feature is defined, it will check the mode and return true if the mode is enable or false if the mode is disable.
+ * @param feature - The feature name to check
+ * @param cfg - The configuration object to check the feature state against
+ * @param sdkDefaultState - Optional default state to return if the feature is not defined
+ * @returns True if the feature is enabled, false if the feature is disabled, or undefined if the feature is not defined and no default state is provided.
+ */
+export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T, sdkDefaultState?: boolean): boolean | undefined {
     let ft = cfg && cfg.featureOptIn && cfg.featureOptIn[feature];
     if (feature && ft) {
         let mode = ft.mode;
         // NOTE: None will be considered as true
-        rlt = (mode == FeatureOptInMode.enable) || (mode == FeatureOptInMode.none);
+        if (mode === FeatureOptInMode.enable) {
+            return true
+        } else if (mode === FeatureOptInMode.disable) {
+            return false;
+        }
     }
-    return rlt;
+
+    // Return the default state if provided or undefined
+    return sdkDefaultState;
 }
 
 export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
