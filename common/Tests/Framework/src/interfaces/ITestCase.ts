@@ -1,3 +1,6 @@
+import { IPromise } from "@nevware21/ts-async";
+import { IAsyncQueue } from "./IASyncQueue";
+
 /** Defines a test case */
 export interface ITestCase {
     /** Name to use for the test case */
@@ -13,10 +16,22 @@ export interface ITestCase {
     useFakeTimers?: boolean;
 
     /** Test case method */
-    test: () => void|any|PromiseLike<any>;
+    test: () => void | PromiseLike<any> | IAsyncQueue;
 
-    /** We expect the test to complete within this interval (defaults to 5 seconds) */
+    /**
+     * Timeout in milliseconds for the test case to complete (defaults to 30000 milliseconds),
+     * this is the time that the test case is expected to complete in.
+     * If the test case does not complete within this time, then the test case will be failed.
+     * This value is ignored if the test case returns a promise and the skipTimeout flag is set to true.
+     * @default 30000
+     * @see skipTimeout
+     * @see ITestCaseAsync.timeout
+     * @see ITestCaseAsync.skipTimeout
+     * */
     timeout?: number;
+
+    /** The polling asserts should use this as the real ms between attempts */
+    pollDelay?: number;
 
     /** Used for debugging, set this value to ignore the automatic timeout for tests that return a promise */
     skipTimeout? : boolean;
