@@ -1,6 +1,6 @@
 /// <reference path="../../External/qunit.d.ts" />
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { arrForEach, dumpObj, getGlobal, isArray, objDefineProp, objForEachKey, objGetPrototypeOf, setBypassLazyCache, strStartsWith, throwError, getNavigator, getPerformance, strSubstr, strContains } from "@nevware21/ts-utils";
+import { arrForEach, dumpObj, getGlobal, isArray, objDefineProp, objForEachKey, objGetPrototypeOf, setBypassLazyCache, strStartsWith, throwError, getNavigator, getPerformance, strSubstr, strContains, getDocument, ITimerHandler, isFunction, isPromiseLike } from "@nevware21/ts-utils";
 import { SinonSandbox, SinonSpy, SinonStub, SinonMock, useFakeTimers, stub, createSandbox, useFakeXMLHttpRequest, assert as sinonAssert } from "sinon";
 import { Assert } from "./Assert";
 import { ITestCaseAsync } from "./interfaces/ITestCaseAsync";
@@ -10,7 +10,8 @@ import { StepResult } from "./StepResult";
 import { IFakeXMLHttpRequest } from "./interfaces/FakeXMLHttpRequest";
 import { IFetchRequest } from "./interfaces/IFetchRequest";
 import { IBeaconRequest } from "./interfaces/IBeaconRequest";
-import { createSyncPromise } from "@nevware21/ts-async";
+import { createPromise, createSyncPromise, createTaskScheduler, createTimeoutPromise, doAwait, doAwaitResponse, FinallyPromiseHandler, IPromise, RejectedPromiseHandler, ResolvedPromiseHandler } from "@nevware21/ts-async";
+import { AITestQueueTask, IAsyncQueue } from "./interfaces/IASyncQueue";
 
 const stepRetryCnt = "retryCnt";
 
@@ -56,6 +57,45 @@ function _formatNamespace(namespaces: string | string[]) {
     return namespaces || "";
 }
 
+/**
+ * @internal
+ * This is HIGHLY specific to the QUnit test framework (and possibly the version) and should be updated for other frameworks
+ * @param name - The new test name to set
+ * @param message - The message to log to the console
+ */
+function _updateQUnitTestName(name: string, message: string) {
+    // Mark the test as asynchronous by updating the QUnit test name
+    // This is specific to the QUnit test framework and may need to be updated for other frameworks
+    const currentTest: any = QUnit.config && QUnit.config.current;
+    if (currentTest) {
+        if ("testName" in currentTest) {
+            currentTest.testName = name;
+        }
+
+        if ("testReport" in currentTest) {
+            if ("name" in currentTest.testReport) {
+                currentTest.testReport.name = name;
+            }
+
+            if ("fullName" in currentTest.testReport && isArray(currentTest.testReport.fullName) && currentTest.testReport.fullName.length == 2) {
+                currentTest.testReport.fullName[1] = name;
+            }
+        }
+
+        // Update the HTML report to include the updated test name
+        let doc = getDocument();
+        let parentElm = doc.getElementById("qunit-test-output-" + currentTest.testId);
+        if (parentElm) {
+            let testName: HTMLElement = parentElm.querySelector(".test-name");
+            if (testName) {
+                testName.innerText = name;
+            }
+        }
+    }
+
+    QUnit.assert.ok(true, message || ("Updating test name to: " + name));
+}
+
 export class AITestClass {
     public static orgSetTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => NodeJS.Timeout;
     public static orgClearTimeout: (timeoutId: NodeJS.Timeout) => void;
@@ -66,6 +106,7 @@ export class AITestClass {
     /** The instance of the currently running suite. */
     public static currentTestClass: AITestClass;
     public static currentTestInfo: ITestCase | ITestCaseAsync;
+    private static _currentTestContext: ITestContext | null = null;
 
     /**
      * Find a named base class for the provided class instance, using an instance so that any dynamicProto() implementations have been resolved.
@@ -191,6 +232,21 @@ export class AITestClass {
         return activeRequests;
     }
 
+    protected get _testContext(): ITestContext {
+        if (AITestClass._currentTestContext) {
+            return AITestClass._currentTestContext;
+        }
+
+        return {
+            name: AITestClass.currentTestInfo ? AITestClass.currentTestInfo.name : "<undefined>",
+            context: {},
+            pollDelay: 100,
+            testDone: () => { },
+            clock: AITestClass.currentTestClass ? AITestClass.currentTestClass.clock : null,
+            finished: true
+        };
+    }
+
     /** Method called before the start of each test method */
     public testInitialize() {
     }
@@ -216,7 +272,13 @@ export class AITestClass {
     public registerTests() {
     }
 
-    /** Register an async Javascript unit testcase. */
+    /**
+     * Register an async Javascript unit testcase.
+     * @deprecated Use the normal {@link AITestClass.testCase} method instead and return a Promise from the test method,
+     * this will be automatically detected and handled as an asynchronous test case. For Polling test cases instead of
+     * using {@link PollingAssert.createPollingAssert} use {@link AITestClass._asyncQueue} {@link PollingAssert.asyncTaskPollingAssert}
+     * which will use Promise(s) that will resolve immediately once the polling has completed.
+     */
     public testCaseAsync(testInfo: ITestCaseAsync) {
         if (!testInfo.name) {
             throwError("Must specify name in testInfo context in registerTestcase call");
@@ -337,11 +399,15 @@ export class AITestClass {
                 };
     
                 let testContext: ITestContext = {
+                    name: testInfo.name,
                     context: {},
-                    retryCnt: 0,
+                    pollDelay: testInfo.stepDelay || 100,
                     testDone: testDone,
-                    clock: testInfo.useFakeTimers ? self.clock : null
+                    clock: testInfo.useFakeTimers ? self.clock : null,
+                    finished: false
                 };
+
+                AITestClass._currentTestContext = testContext;
 
                 if (testInfo.skipTimeout !== true && testInfo.timeOut !== undefined) {
                     timeOutTimer = AITestClass.orgSetTimeout(() => {
@@ -376,13 +442,13 @@ export class AITestClass {
                                 if (step[AITestClass.isPollingStepFlag]) {
                                     step.call(this, testContext, nextTestStepTrigger);
                                 } else {
-                                    testContext.retryCnt = step[stepRetryCnt] || 0;
+                                    step[stepRetryCnt] = step[stepRetryCnt] || 0;
     
                                     let result = step.call(this, testContext);
                                     if (result === StepResult.Retry || result === false) {
                                         // The step requested itself to be retried
-                                        Assert.ok(false, "Retrying Step - " + stepIndex + " - Attempt #" + testContext.retryCnt);
-                                        step[stepRetryCnt] = testContext.retryCnt + 1;
+                                        Assert.ok(false, "Retrying Step - " + stepIndex + " - Attempt #" + step[stepRetryCnt]);
+                                        step[stepRetryCnt] = step[stepRetryCnt] + 1;
                                         steps.unshift(step);
                                         stepIndex--;
                                     } else if (result === StepResult.Repeat) {
@@ -524,37 +590,82 @@ export class AITestClass {
                 testInfo.assertNoHooks = this.assertNoHooks;
             }
 
+            let testContext = {
+                name: testInfo.name,
+                context: {},
+                pollDelay: testInfo.pollDelay,
+                testDone: () => {
+                    _testFinished(true);
+                },
+                clock: testInfo.useFakeTimers ? self.clock : null,
+                finished: false
+            };
+
+            let testTimeout: any
+
             // Run the test.
             try {
                 this._testStarting();
 
+                if (testInfo.skipTimeout !== true) {
+                    // Default timeout for tests has been set to 30 seconds
+                    let timeout = testInfo.timeout || 30000;
+                    testTimeout = AITestClass.orgSetTimeout(() => {
+                        if (!testContext.finished) {
+                            QUnit.assert.ok(false, "Timeout: Aborting as the Promise returned from the test method did not resolve within " + timeout + " ms");
+                            testTimeout = null;
+                        }
+
+                        _testFinished(true);
+                    }, timeout);
+                }
+
+                AITestClass._currentTestContext = testContext;
+
+                // Call the test method directly
                 let result = testInfo.test.call(this);
+
+                if (result && result.waitComplete) {
+                    // looks like an IAsyncQueue object
+                    result = result.waitComplete();
+                }
+
                 // Check if the result is present and looks like a Promise
                 if (result && result.then) {
-                    let promiseTimeout: any = null;
-                    if (testInfo.skipTimeout !== true) {
-                        let timeout = testInfo.timeout || 5000;
-                        promiseTimeout = AITestClass.orgSetTimeout(() => {
-                            QUnit.assert.ok(false, "Timeout: Aborting as the Promise returned from the test method did not resolve within " + timeout + " ms");
-                            _testFinished(true);
-                        }, timeout);
-                    }
+                    // Append "(Async)" to the test name to indicate that this is an async test"
+                    _updateQUnitTestName((this.isEmulatingIe ? "(IE) " : "") + testInfo.name + " - (Async)", " -=( Async test detected -- updating test name )=-");
                     result.then(() => {
-                        promiseTimeout && orgClearTimeout(promiseTimeout);
+                        if (!testContext.finished) {
+                            testTimeout && AITestClass.orgClearTimeout(testTimeout);
+                            testTimeout = null;
+                            QUnit.assert.ok(true, "Returned Promise resolved");
+                        }
+
                         _testFinished();
                     });
                     result.catch && result.catch((reason: any) => {
-                        promiseTimeout && orgClearTimeout(promiseTimeout);
-                        QUnit.assert.ok(false, "Returned Promise rejected: " + reason);
+                        if (!testContext.finished) {
+                            testTimeout && AITestClass.orgClearTimeout(testTimeout);
+                            testTimeout = null;
+                            QUnit.assert.ok(false, "Returned Promise rejected: " + reason);
+                        }
+
                         _testFinished(true);
                     });
                 } else {
+                    testTimeout && AITestClass.orgClearTimeout(testTimeout);
+                    testTimeout = null;
                     _testFinished();
                 }
             } catch (ex) {
-                // tslint:disable-next-line:no-console
-                console && console.error("Failed: Unexpected Exception: " + dumpObj(ex));
-                Assert.ok(false, "Unexpected Exception: " + dumpObj(ex));
+                if (!testContext.finished) {
+                    // tslint:disable-next-line:no-console
+                    console && console.error("Failed: Unexpected Exception: " + dumpObj(ex));
+                    Assert.ok(false, "Unexpected Exception: " + dumpObj(ex));
+                    testTimeout && AITestClass.orgClearTimeout(testTimeout);
+                    testTimeout = null;
+                }
+
                 _testFinished(true);
             }
         };
@@ -639,6 +750,70 @@ export class AITestClass {
         Assert.ok(false, msg);
     }
         
+    protected _asyncQueue(): IAsyncQueue {
+        let testContext = this._testContext;
+        // This is an async task, so we need to wait for it to complete
+        let scheduler = createTaskScheduler(createPromise, testContext.name);
+
+        function _addTask(theTask: AITestQueueTask, taskName?: string, timeout?: number): IAsyncQueue {
+            if (theTask) {
+                scheduler.queue((taskName: string) => {
+                    if (!testContext.finished) {
+                        QUnit.assert.ok(true, "Task: " + taskName);
+                        return theTask.call(this, testContext);
+                    }
+                }, taskName || theTask.name || "", timeout);
+            }
+
+            return theAsyncTasks;
+        }
+
+        function _doAwait<T, TResult1 = T, TResult2 = never>(value: T | PromiseLike<T>,  resolveFn: ResolvedPromiseHandler<T, TResult1>, rejectFn?: RejectedPromiseHandler<TResult2>, finallyFn?: FinallyPromiseHandler): IAsyncQueue {
+            scheduler.queue((taskName: string) => {
+                if (!testContext.finished) {
+                    QUnit.assert.ok(true, "Await: " + taskName);
+                    let result = doAwait(value, resolveFn, rejectFn, finallyFn);
+                    if (isPromiseLike(result)) {
+                        return result as IPromise<any>;
+                    }
+                }
+            });
+            
+            return theAsyncTasks;
+        }
+
+        let theAsyncTasks: IAsyncQueue = {
+            add: _addTask,
+            concat: _addTask,
+            doAwait: _doAwait,
+            waitComplete: () => {
+                // Wait for the scheduler to complete
+                return scheduler.queue(() => {
+                    if (!testContext.finished) {
+                        QUnit.assert.ok(true, "Async Tasks complete");
+                    }
+                }, "Async Tasks complete");
+            }
+        };
+
+        return theAsyncTasks;
+    }
+
+    protected _delay(ms: number, nextTask: AITestQueueTask): IPromise<void> {
+        let testContext = this._testContext;
+        return createTimeoutPromise(ms, true).then(() => {
+            if (testContext && testContext.finished) {
+                return;
+            }
+
+            if (testContext && testContext.clock) {
+                testContext.clock.tick(ms);
+            }
+
+            return nextTask(testContext);
+        });
+    }
+
     protected onDone(cleanupFn: VoidFunction) {
         if (cleanupFn && this._onDoneFuncs) {
             this._onDoneFuncs.push(cleanupFn);
@@ -1112,6 +1287,12 @@ export class AITestClass {
 
     /** Called when the test is completed. */
     private _testCompleted(failed?: boolean) {
+        if (AITestClass._currentTestContext) {
+            // Tag the test context as finished so we don't try and call the testDone function again
+            AITestClass._currentTestContext.finished = true;
+            AITestClass._currentTestContext.failed = failed;
+        }
+
         this._unhookXhr();
         this._unhookFetch();
 
@@ -1165,6 +1346,7 @@ export class AITestClass {
         // Clear the instance of the currently running suite.
         AITestClass.currentTestClass = null;
         AITestClass.currentTestInfo = null;
+        AITestClass._currentTestContext = null;
 
         AITestClass.orgSetTimeout = null;
         AITestClass.orgClearTimeout = null;

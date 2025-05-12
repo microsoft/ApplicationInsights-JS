@@ -1,7 +1,16 @@
 import { StepResult } from "../StepResult";
 import { ITestContext } from "./ITestContext";
 
-/** Defines a test case */
+/**
+ * Defines an asynchronous test case
+ * @deprecated This interface is deprecated and will be removed in future versions. Use ITestCase instead
+ * and use {@link AITestClass._asyncQueue} or return a Promise from the test case function instead of using
+ * the steps array, this will allow for better performance and error handling, reporting and is automatically
+ * detected by the
+ * test framework as an asynchronous test case.
+ * @see ITestCase
+ * @see ITestContext
+ */
 export interface ITestCaseAsync {
     /** Name to use for the test case */
     name: string;
