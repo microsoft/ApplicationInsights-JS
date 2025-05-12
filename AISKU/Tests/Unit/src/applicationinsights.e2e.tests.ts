@@ -315,7 +315,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any).concat(PollingAssert.createPollingAssert(() => {
+            }, "Wait for promise response" + new Date().toISOString(), 60) as any).concat(PollingAssert.createPollingAssert(() => {
                 let core = this._ai.core
                 let activeStatus = core.activeStatus && core.activeStatus();
             
@@ -325,7 +325,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for new string response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for new string response" + new Date().toISOString(), 60) as any)
         });
 
         this.testCaseAsync({
@@ -380,7 +380,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
         });
 
 
@@ -443,7 +443,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
         });
 
 
@@ -484,7 +484,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
         });
 
         this.testCaseAsync({
@@ -538,7 +538,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
         });
 
 
@@ -783,7 +783,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return false;
                 }
                 return false;
-            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for response" + new Date().toISOString(), 60) as any)
         });
 
         this.testCaseAsync({
@@ -836,7 +836,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return false;
                 }
                 return false;
-            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for response" + new Date().toISOString(), 60) as any)
         });
 
         this.testCaseAsync({
@@ -871,7 +871,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return true;
                 }
                 return false;
-            }, "Wait for response" + new Date().toISOString(), 60, 1000) as any)
+            }, "Wait for response" + new Date().toISOString(), 60) as any)
         });
     }
 
@@ -910,7 +910,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     return true
                 }
                 return false
-            }, "Wait for init" + new Date().toISOString(), 60, 1000) as any).concat(this.asserts(1)).concat(() => {
+            }, "Wait for init" + new Date().toISOString(), 60) as any).concat(this.asserts(1)).concat(() => {
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
@@ -2023,7 +2023,7 @@ export class ApplicationInsightsTests extends AITestClass {
             }
 
             return false;
-        }, "sender succeeded", 60, 1000))
+        }, "sender succeeded", 60))
     ];
 }
 

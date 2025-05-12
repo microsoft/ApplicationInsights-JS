@@ -82,106 +82,108 @@ export class SenderE2ETests extends AITestClass {
 
     private addRetryTests() {
         let handle;
-        this.testCaseAsync({
+        this.testCase({
             name: 'Offline: offline telemetry is retried',
-            stepDelay: this.delay,
-            steps: [
-                () => {
-                    handle = setInterval(() => {this._ai.trackTrace({message: 'intermittent message'})}, 500);
-                    Assert.ok(true, 'sent event');
-                }
-            ]
-            .concat(this.waitForResponse())
-            .concat(this.boilerPlateAsserts)
-            .concat(PollingAssert.createPollingAssert(() => {
-                let currentCount: number = 0;
+            pollDelay: this.delay,
+            test: () => {
+                handle = setInterval(() => {this._ai.trackTrace({message: 'intermittent message'})}, 500);
+                Assert.ok(true, 'sent event');
 
-                if (this.successSpy.called) {
-                    this.successSpy.args.forEach(call => {
-                        const acceptedItems = call[1];
-                        currentCount += acceptedItems; // number of accepted items
+                return this._asyncQueue()
+                    .concat(this.waitForResponse())
+                    .concat(this.boilerPlateAsserts)
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                        let currentCount: number = 0;
+
+                        if (this.successSpy.called) {
+                            this.successSpy.args.forEach(call => {
+                                const acceptedItems = call[1];
+                                currentCount += acceptedItems; // number of accepted items
+                            });
+                            console.log('currentCount', currentCount);
+                            return currentCount >= 20;
+                        }
+
+                        return false;
+                    }, 'All items are sent', 600, 1000) as any)
+                    .concat(() => {
+                        clearInterval(handle);
+                        Assert.ok(true, 'handle cleared');
                     });
-                    console.log('currentCount', currentCount);
-                    return currentCount >= 20;
-                }
-
-                return false;
-            }, 'All items are sent', 600, 1000) as any)
-            .concat(() => {
-                clearInterval(handle);
-                Assert.ok(true, 'handle cleared');
-            })
+            }
         });
     }
 
     private addAsyncTests(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: 'SendBuffer: Session storage is cleared after a send',
-            stepDelay: this.delay,
-            steps: [
-                () => {
-                    this._ai.trackTrace({message: 'test trace'});
-                }
-            ]
-            .concat(this.waitForResponse())
-            .concat(this.boilerPlateAsserts)
-            .concat(PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionSentEmpty(), "SentBuffer Session storage is empty", 15, 1000) as any)
-            .concat(PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionEmpty(), "Buffer Session storage is empty", 15, 1000) as any)
+            pollDelay: this.delay,
+            timeout: 30000,
+            test: () => {
+                this._ai.trackTrace({message: 'test trace'});
+
+                return this._asyncQueue()
+                    .concat(this.waitForResponse())
+                    .concat(this.boilerPlateAsserts)
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => this.successSpy.called && this.isSessionSentEmpty(), "SentBuffer Session storage is empty", 15, 1000))
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => this.successSpy.called && this.isSessionEmpty(), "Buffer Session storage is empty", 15, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'SendBuffer: Session storage is cleared after a send with cs promise',
-            stepDelay: this.delay,
-            steps: [
-                () => {
-                    if (this._ai && this._ai.unload) {
-                        this._ai.unload(false);
-                    }
+            pollDelay: this.delay,
+            test: () => {
+                if (this._ai && this._ai.unload) {
+                    this._ai.unload(false);
+                }
 
-                    let csPromise = createAsyncResolvedPromise(`InstrumentationKey=${this._instrumentationKey}`);
-                    let  init = new ApplicationInsights({
-                        config: {
-                            connectionString: csPromise,
-                            loggingLevelConsole: 999,
-                            extensionConfig: {
-                                'AppInsightsChannelPlugin': {
-                                    maxBatchInterval: 2000,
-                                    maxBatchSizeInBytes: 10*1024*1024 // 10 MB
-                                },
-                                ["AppInsightsCfgSyncPlugin"]: {
-                                    cfgUrl: ""
-                                }
-                                
+                let csPromise = createAsyncResolvedPromise(`InstrumentationKey=${this._instrumentationKey}`);
+                let  init = new ApplicationInsights({
+                    config: {
+                        connectionString: csPromise,
+                        loggingLevelConsole: 999,
+                        extensionConfig: {
+                            'AppInsightsChannelPlugin': {
+                                maxBatchInterval: 2000,
+                                maxBatchSizeInBytes: 10*1024*1024 // 10 MB
+                            },
+                            ["AppInsightsCfgSyncPlugin"]: {
+                                cfgUrl: ""
                             }
-                        },
-                        queue: [],
-                        version: 2.0
-                    });
-                    this._ai = init.loadAppInsights();
-        
-                    // Setup Sinon stuff
-                    this._sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
-                    this._sender._buffer.clear();
-                    this.errorSpy = this.sandbox.spy(this._sender, '_onError');
-                    this.successSpy = this.sandbox.spy(this._sender, '_onSuccess');
-                    this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');
-                    this.clearSpy = this.sandbox.spy(this._sender._buffer, 'clearSent');
-                    this._ai.trackTrace({message: 'test trace'});
-                }
-            ].concat(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.appInsights.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE ) {
-                    Assert.equal(this._instrumentationKey, core.config.instrumentationKey, "ikey should be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-            .concat(this.waitForResponse())
-            .concat(this.boilerPlateAsserts)
-            .concat(PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionSentEmpty(), "SentBuffer Session storage is empty", 15, 1000) as any)
-            .concat(PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionEmpty(), "Buffer Session storage is empty", 15, 1000) as any)
+                            
+                        }
+                    },
+                    queue: [],
+                    version: 2.0
+                });
+                this._ai = init.loadAppInsights();
+    
+                // Setup Sinon stuff
+                this._sender = this._ai.getPlugin<Sender>(BreezeChannelIdentifier).plugin;
+                this._sender._buffer.clear();
+                this.errorSpy = this.sandbox.spy(this._sender, '_onError');
+                this.successSpy = this.sandbox.spy(this._sender, '_onSuccess');
+                this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');
+                this.clearSpy = this.sandbox.spy(this._sender._buffer, 'clearSent');
+                this._ai.trackTrace({message: 'test trace'});
+
+                return this._asyncQueue()
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                        let core = this._ai.appInsights.core
+                        let activeStatus = core.activeStatus && core.activeStatus();
+                    
+                        if (activeStatus === ActiveStatus.ACTIVE ) {
+                            Assert.equal(this._instrumentationKey, core.config.instrumentationKey, "ikey should be set");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000))
+                    .concat(this.waitForResponse())
+                    .concat(this.boilerPlateAsserts)
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => this.successSpy.called && this.isSessionSentEmpty(), "SentBuffer Session storage is empty", 15, 1000))
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => this.successSpy.called && this.isSessionEmpty(), "Buffer Session storage is empty", 15, 1000));
+            }
         });
     }
 
@@ -189,44 +191,46 @@ export class SenderE2ETests extends AITestClass {
         const SENT_ITEMS: number = 100;
         const SENT_TYPES: number = 4;
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'EndpointTests: telemetry sent to endpoint fills to maxBatchSize',
-            stepDelay: this.delay,
-            steps: [
-                () => {
-                    for (let i = 0; i < SENT_ITEMS; i++) {
-                        this._ai.trackException({error: new Error()});
-                        this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
-                        this._ai.trackTrace({message: "test"});
-                        this._ai.trackTrace({message: "test2"});
-                    }
-                }
-            ]
-            .concat(this.waitForResponse())
-            .concat(this.boilerPlateAsserts)
-            .concat(PollingAssert.createPollingAssert(() => {
-                let currentCount: number = 0;
-
-                if (this.successSpy.called) {
-                    this.successSpy.args.forEach(call => {
-                        const acceptedItems = call[1];
-                        currentCount += acceptedItems; // number of accepted items
-                    });
-                    return currentCount === SENT_ITEMS * SENT_TYPES;
+            pollDelay: this.delay,
+            test: () => {
+                for (let i = 0; i < SENT_ITEMS; i++) {
+                    this._ai.trackException({error: new Error()});
+                    this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
+                    this._ai.trackTrace({message: "test"});
+                    this._ai.trackTrace({message: "test2"});
                 }
 
-                return false;
-            }, `Backend accepts ${SENT_ITEMS} items`, 15, 1000) as any)
-            .concat(PollingAssert.createPollingAssert(() => {
-                return this.successSpy.calledOnce;
-            }, "Tracks are sent in ONE batch", 15, 1000) as any)
+                // Wait for the response
+                return this._asyncQueue()
+                    .concat(this.waitForResponse())
+                    .concat(this.boilerPlateAsserts)
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                        let currentCount: number = 0;
+
+                        if (this.successSpy.called) {
+                            this.successSpy.args.forEach(call => {
+                                const acceptedItems = call[1];
+                                currentCount += acceptedItems; // number of accepted items
+                            });
+                            return currentCount === SENT_ITEMS * SENT_TYPES;
+                        }
+
+                        return false;
+                    }, `Backend accepts ${SENT_ITEMS} items`, 15, 1000))
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                        return this.successSpy.calledOnce;
+                    }, "Tracks are sent in ONE batch", 15, 1000));
+                }
         });
     }
 
     private waitForResponse() {
-        return PollingAssert.createPollingAssert(() => {
+        // Wait for the successSpy or errorSpy to be called
+        return PollingAssert.asyncTaskPollingAssert(() => {
             return (this.successSpy.called || this.errorSpy.called);
-        }, "Wait for response" + new Date().toISOString(), 15, 1000) as any
+        }, "Wait for response" + new Date().toISOString(), 15, 1000);
     }
 
     private boilerPlateAsserts() {
