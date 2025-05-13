@@ -76,7 +76,7 @@ export class PollingAssert {
                     }
 
                     try {
-                        if (assertionFunctionReturnsBoolean.apply(pollContext)) {
+                        if (assertionFunctionReturnsBoolean.call(this, pollContext)) {
                             Assert.ok(true, assertDescription + " [" + (AITestClass.currentTestInfo ? AITestClass.currentTestInfo.name : "<null>") + "]");
                             resolve();
                             return;
