@@ -27,7 +27,6 @@
     "devDependencies": {
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
-        "grunt-contrib-qunit": "^6.2.1",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@rollup/plugin-commonjs": "^24.0.0",
