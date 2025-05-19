@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
+import dynamicProto from "@microsoft/dynamicproto-js";
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import {
     getDocument, getInst, getNavigator, getPerformance, hasDocument, hasNavigator, hasWindow, isFunction, isString, isUndefined, mathMax, strIndexOf
@@ -393,9 +394,28 @@ export function isServerSideRender(): boolean {
 }
 
 /**
- * Checks if the environment supports dynamic proto functionality
- * @returns {boolean} True if dynamicProto is supported in this environment
+ * Safe wrapper for dynamicProto that handles SSR environments properly
+ * This provides the same API as dynamicProto but works around property
+ * redefinition issues in environments like Cloudflare Workers
+ * 
+ * @param theClass - The class definition to extract the functions from
+ * @param target - The target instance to apply the functions
+ * @param delegateFunc - The callback function that will populate the prototype methods
+ * @param options - Additional options that can be passed to customize the proxy creation process
  */
-export function supportsDynamicProto(): boolean {
-    return !isServerSideRender();
+export function safeDynamicProto(theClass: any, target: any, delegateFunc: (target: any, base?: any) => void, options?: any): void {
+    if (isServerSideRender()) {
+        // In SSR environments like Cloudflare Workers, we need to be careful with property redefinition
+        // Instead of using dynamicProto's normal behavior, we'll manually apply the delegate function
+        try {
+            // Just directly call the delegate function on the target
+            // This avoids the property redefinition that causes issues in Cloudflare Workers
+            delegateFunc(target, theClass.prototype);
+        } catch (e) {
+            // Silently handle errors to prevent breaking the application
+        }
+    } else {
+        // In normal browser environments, use the full dynamicProto functionality
+        dynamicProto(theClass, target, delegateFunc, options);
+    }
 }

@@ -61,7 +61,7 @@ export {
     isReactNative, getConsole, isIE, getIEVersion, isSafari,
     setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported,
     findMetaTag, findNamedServerTiming, sendCustomEvent, dispatchEvent, createCustomDomEvent,
-    isServerSideRender, supportsDynamicProto
+    isServerSideRender, safeDynamicProto
 } from "./JavaScriptSDK/EnvUtils";
 export {
     getGlobal,

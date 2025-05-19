@@ -19,7 +19,7 @@ import {
     _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
     createDynamicConfig, createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray,
     isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
-    removePageHideEventListener, removePageUnloadEventListener, isServerSideRender
+    removePageHideEventListener, removePageUnloadEventListener, safeDynamicProto
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -167,27 +167,8 @@ export class AppInsightsSku implements IApplicationInsights {
         let _iKeySentMessage: boolean;
         let _cdnSentMessage: boolean;
         let _sdkVerSentMessage: boolean;
-        
-        // Check if we're in a server-side rendering environment (like Cloudflare Workers)
-        // If so, we need to avoid using dynamicProto which causes issues with property redefinition
-        if (isServerSideRender()) {
-            // In SSR, just define minimal required functions without using dynamicProto
-            this.snippet = snippet;
-            objDefine(this, "config", {
-                g: () => snippet.config
-            });
-            
-            // Define no-op methods for SSR environment
-            this.flush = () => {};
-            this.onunloadFlush = () => {};
-            this.getSender = () => null;
-            this.loadAppInsights = () => this;
-            this.getPlugin = () => null;
-            
-            return; // Exit early - don't initialize the SDK in SSR environments
-        }
 
-        dynamicProto(AppInsightsSku, this, (_self) => {
+        safeDynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
 
             objDefine(_self, "config", {
