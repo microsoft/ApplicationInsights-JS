@@ -20,6 +20,7 @@ Modern browsers and frameworks are deprecating or changing how some page unload 
 - **jQuery 3.7.1+** has deprecated the use of the `unload` event, showing warning messages when it's used.
 - Some modern browsers are changing the behavior of `beforeunload` event for better performance and reduced tracking potential.
 - The `pagehide` event and `visibilitychange` events are becoming the recommended alternatives.
+- The SDK is designed to handle cases where certain events are unavailable or behave differently across browsers, gracefully adapting to the environment to ensure telemetry is sent.
 
 ## Configuration Options
 
@@ -96,7 +97,9 @@ The SDK implements a robust fallback mechanism to ensure that telemetry can be s
 
 1. The SDK first tries to use all available unload events except those listed in `disablePageUnloadEvents`.
 2. If no events can be registered (either because all are disabled or not supported), the SDK will ignore the `disablePageUnloadEvents` setting and force registration of at least one event.
-3. This ensures that critical telemetry data is always sent, even in constrained environments.
+3. Even when the SDK attempts to hook events that may be missing in certain browsers, it's designed to gracefully handle these cases without errors.
+4. The SDK includes internal logic to detect when hooked events aren't firing as expected and will utilize alternative approaches to send telemetry.
+5. This ensures that critical telemetry data is always sent, even in constrained environments or when browser implementations change.
 
 ## Use Cases
 
