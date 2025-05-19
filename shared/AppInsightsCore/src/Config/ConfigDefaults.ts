@@ -8,7 +8,7 @@ import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } fr
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 
 function _isConfigDefaults<C, T>(value: any): value is IConfigDefaultCheck<C, C[keyof C], T> {
-    return (value && isObject(value) && (value.isVal || value.fb || objHasOwn(value, "v") || objHasOwn(value, "mrg") || objHasOwn(value, "ref") || value.set));
+    return (value && isObject(value) && !isArray(value) && (value.isVal || value.fb || objHasOwn(value, "v") || objHasOwn(value, "mrg") || objHasOwn(value, "ref") || value.set));
 }
 
 function _getDefault<C, T>(dynamicHandler: IDynamicConfigHandler<T>, theConfig: C, cfgDefaults: IConfigDefaultCheck<C, C[keyof C], T>): C[keyof C] | IConfigDefaults<C[keyof C], C> {
