@@ -371,8 +371,6 @@ The differences between a telemetry initializer and a dependency initializer are
 - When a dependency initializer returns `false` to drop the event the event does NOT count against the `maxAjaxCallsPerView` as this blocks the event call from being tracked, and while returning `false` from a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) will also stop the event from being reported because this is further down the processing pipeline the dependency event IS counted against the `maxAjaxCallsPerView` limit.
 - It has access to an optional "context" `{ [key: string]: any }` object that is also available to the Dependency Listeners. This allows a listener to add additional details to the context (before the XHR/fetch request is sent), and the initializer will be called after the request has completed.
 
-
-
 ### Advanced Setting Using Config/Extensions
 - [How to add more details in my Exception Telemetry?](https://microsoft.github.io/ApplicationInsights-JS/exceptionTelemetry) 
 

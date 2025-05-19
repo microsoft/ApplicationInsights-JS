@@ -175,7 +175,6 @@ export interface IConfiguration {
      * hooked, if you list all or the runtime environment only supports a listed (disabled) event it will STILL be hooked, if required by the SDK.
      * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state).
      * 
-     * Example usage:
      * @example
      * ```javascript
      * {
