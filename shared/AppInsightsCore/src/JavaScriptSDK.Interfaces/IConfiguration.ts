@@ -159,6 +159,7 @@ export interface IConfiguration {
      * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide".
      * 
      * This can be used to avoid jQuery 3.7.1+ deprecation warnings and Chrome warnings about the unload event:
+     * @example
      * ```javascript
      * {
      *   disablePageUnloadEvents: ["unload"]
@@ -175,6 +176,7 @@ export interface IConfiguration {
      * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state).
      * 
      * Example usage:
+     * @example
      * ```javascript
      * {
      *   disablePageShowEvents: ["pageshow"]
