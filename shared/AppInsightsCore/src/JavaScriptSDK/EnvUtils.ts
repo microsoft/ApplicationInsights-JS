@@ -405,17 +405,31 @@ export function isServerSideRender(): boolean {
  */
 export function safeDynamicProto(theClass: any, target: any, delegateFunc: (target: any, base?: any) => void, options?: any): void {
     if (isServerSideRender()) {
-        // In SSR environments like Cloudflare Workers, we need to be careful with property redefinition
-        // Instead of using dynamicProto's normal behavior, we'll manually apply the delegate function
+        // The core issue in Cloudflare Workers is with dynamicProto attempting to redefine properties
+        // on functions that are non-configurable in strict mode (particularly the 'name' property).
+        // To work around this while still using dynamicProto, we create a custom options object
+        // that disables instance function setting, which is the part that tries to redefine properties.
+        
+        // Start with default options and any provided options
+        const ssrOptions = options ? { ...options } : {};
+        
+        // Disable property and function name redefinition
+        ssrOptions.setInstFuncs = false;
+        
+        // Still use dynamicProto but with special options to avoid property redefinition errors
         try {
-            // Just directly call the delegate function on the target
-            // This avoids the property redefinition that causes issues in Cloudflare Workers
-            delegateFunc(target, theClass.prototype);
+            dynamicProto(theClass, target, delegateFunc, ssrOptions);
         } catch (e) {
-            // Silently handle errors to prevent breaking the application
+            // As a fallback if dynamicProto still fails, directly call the delegate function
+            // without any of the property manipulation that causes issues
+            try {
+                delegateFunc(target, theClass.prototype);
+            } catch (innerError) {
+                // Silently handle errors to prevent breaking the application
+            }
         }
     } else {
-        // In normal browser environments, use the full dynamicProto functionality
+        // In normal browser environments, use the standard dynamicProto functionality
         dynamicProto(theClass, target, delegateFunc, options);
     }
 }
