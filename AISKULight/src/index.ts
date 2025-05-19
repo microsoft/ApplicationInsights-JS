@@ -7,7 +7,7 @@ import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/
 import {
     AppInsightsCore, FeatureOptInMode, IConfigDefaults, IConfiguration, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin,
     IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler,
-    WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
+    WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions, isServerSideRender
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
@@ -50,6 +50,20 @@ export class ApplicationInsights {
             (isNullOrUndefined(config.instrumentationKey) && isNullOrUndefined(config.connectionString))
         ) {
             throwError("Invalid input configuration");
+        }
+
+        // Check if we're in a server-side rendering environment (like Cloudflare Workers)
+        // If so, we need to avoid using dynamicProto which causes issues with property redefinition
+        if (isServerSideRender()) {
+            // In SSR, just define the minimal properties needed without using dynamicProto
+            objDefine(this, "config", {
+                g: () => config
+            });
+            this.initialize = () => {}; // No-op function
+            this.track = (item: ITelemetryItem) => {}; // No-op function
+            this.flush = () => {}; // No-op function
+            
+            return; // Exit early - don't initialize the SDK in SSR environments
         }
 
         dynamicProto(ApplicationInsights, this, (_self) => {
