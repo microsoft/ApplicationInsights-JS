@@ -49,7 +49,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 
 - [Create an Issue](https://github.com/microsoft/ApplicationInsights-JS/issues/new/choose)
 - [ES3 Support](./es3_Support.md)
-- [Page Unload Event Handling](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html)
+- [Page Unload Event Handling](./PageUnloadEvents.md)
 - [V2 Upgrade Guide](./upgrade/v2_UpgradeGuide.md)
 - [V3 Breaking Changes](./upgrade/v3_BreakingChanges.md)
 
