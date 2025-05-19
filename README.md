@@ -371,6 +371,25 @@ The differences between a telemetry initializer and a dependency initializer are
 - When a dependency initializer returns `false` to drop the event the event does NOT count against the `maxAjaxCallsPerView` as this blocks the event call from being tracked, and while returning `false` from a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) will also stop the event from being reported because this is further down the processing pipeline the dependency event IS counted against the `maxAjaxCallsPerView` limit.
 - It has access to an optional "context" `{ [key: string]: any }` object that is also available to the Dependency Listeners. This allows a listener to add additional details to the context (before the XHR/fetch request is sent), and the initializer will be called after the request has completed.
 
+#### Example: Disabling jQuery 3.7.1+ Unload Event Deprecation Warnings
+
+If you're using jQuery 3.7.1 or newer and seeing deprecation warnings related to the 'unload' event, you can configure the SDK to not use this deprecated event:
+
+```js
+const appInsights = new ApplicationInsights({
+  config: {
+    connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
+    // Disable the deprecated 'unload' event to avoid jQuery deprecation warnings
+    disablePageUnloadEvents: ["unload"],
+    /* ...Other Configuration Options... */
+  }
+});
+appInsights.loadAppInsights();
+appInsights.trackPageView();
+```
+
+This will prevent the SDK from attempting to listen to the deprecated 'unload' event while still maintaining functionality through the other page unload events ('beforeunload', 'pagehide', and 'visibilitychange').
+
 ### Advanced Setting Using Config/Extensions
 - [How to add more details in my Exception Telemetry?](https://microsoft.github.io/ApplicationInsights-JS/exceptionTelemetry) 
 
@@ -450,6 +469,8 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | featureOptIn (#feature)<br/><sub>since 3.0.3</sub> | IFeatureOptIn | undefined | [Optional]  Set Feature opt in details. |
 | throttleMgrCfg <br/><sub>since 3.0.3</sub> | `{[key: number]: IThrottleMgrConfig}` | undefined | [Optional]  Set throttle mgr configuration by key. |
 | retryCodes | number[] | undefined | Identifies the status codes that will cause event batches to be resent, when `null` or `undefined` the SDK will use it's defaults `[401, 408, 429, 500, 502, 503, 504]`. `403` was removed in version 3.1.1. |
+| disablePageUnloadEvents | string[] | undefined | [Optional] An array of the page unload events that you would like to be ignored. Note there must be at least one valid unload event hooked - if you list all events or if the runtime environment only supports a listed "disabled" event, it will still be hooked if required by the SDK. Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide". This can be used to avoid jQuery 3.7.1+ deprecation warnings by configuring as `disablePageUnloadEvents: ["unload"]`. |
+| disablePageShowEvents | string[] | undefined | [Optional] An array of page show events that you would like to be ignored. Note there must be at least one valid show event hooked - if you list all events or if the runtime environment only supports a listed (disabled) event, it will still be hooked if required by the SDK. Page Show events include "pageshow" and "visibilitychange" (with 'visible' state). |
 | expCfg <br/><sub>since 3.3.1</sub>| [`IExceptionConfig`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCommon/src/Interfaces/IExceptionTelemetry.ts) | undefined | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
 
 ### Feature
