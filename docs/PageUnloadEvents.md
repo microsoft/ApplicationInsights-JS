@@ -30,17 +30,6 @@ The SDK provides configuration options to control which page lifecycle events ar
 
 This configuration option allows you to specify which page unload events should not be used by the SDK.
 
-**JavaScript Example:**
-```javascript
-const appInsights = new ApplicationInsights({
-  config: {
-    connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
-    disablePageUnloadEvents: ["unload"],
-    /* ...Other Configuration Options... */
-  }
-});
-```
-
 **TypeScript Example:**
 ```typescript
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
@@ -66,17 +55,6 @@ Similarly, this configuration option controls which page show events are not use
 
 1. **pageshow** - Fired when a page is shown, or when navigating to a page using browser's back/forward functionality
 2. **visibilitychange** (with 'visible' state) - Fired when a tab becomes visible
-
-**JavaScript Example:**
-```javascript
-const appInsights = new ApplicationInsights({
-  config: {
-    connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
-    disablePageShowEvents: ["pageshow"],
-    /* ...Other Configuration Options... */
-  }
-});
-```
 
 **TypeScript Example:**
 ```typescript
@@ -107,17 +85,6 @@ The SDK implements a robust fallback mechanism to ensure that telemetry can be s
 
 If you're using jQuery 3.7.1 or newer, you'll encounter deprecation warnings when the 'unload' event is used. Configure the SDK to not use this deprecated event:
 
-**JavaScript Example:**
-```javascript
-const appInsights = new ApplicationInsights({
-  config: {
-    connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
-    // Disable the deprecated 'unload' event to avoid jQuery deprecation warnings
-    disablePageUnloadEvents: ["unload"],
-  }
-});
-```
-
 **TypeScript Example:**
 ```typescript
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
@@ -134,17 +101,6 @@ const appInsights = new ApplicationInsights({
 ### Optimizing for Modern Browsers
 
 For the best experience in modern browsers, you might want to prioritize newer events:
-
-**JavaScript Example:**
-```javascript
-const appInsights = new ApplicationInsights({
-  config: {
-    connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
-    // Use only modern events
-    disablePageUnloadEvents: ["unload", "beforeunload"],
-  }
-});
-```
 
 **TypeScript Example:**
 ```typescript
@@ -164,19 +120,6 @@ Note that the SDK will still use an older event if none of the modern events are
 ### Using Both Configuration Options Together
 
 You can configure both unload and show events simultaneously for fine-grained control:
-
-**JavaScript Example:**
-```javascript
-const appInsights = new ApplicationInsights({
-  config: {
-    connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
-    // Disable specific unload events
-    disablePageUnloadEvents: ["unload"],
-    // Disable specific show events
-    disablePageShowEvents: ["pageshow"],
-  }
-});
-```
 
 **TypeScript Example:**
 ```typescript
