@@ -41,6 +41,33 @@ export class ApplicationInsights {
      * @param config - The configuration to use for this ApplicationInsights instance
      */
     constructor(config: IConfiguration & IConfig) {
+        // Check for SSR environments like Cloudflare Workers
+        if (isServerSideRender()) {
+            // In SSR, provide a minimal implementation that won't break rendering
+            const noopFunc = () => {};
+            
+            // Define minimal required methods to prevent errors
+            this.initialize = noopFunc;
+            this.track = noopFunc;
+            this.flush = noopFunc;
+            this.pollInternalLogs = noopFunc;
+            this.stopPollingInternalLogs = noopFunc;
+            this.unload = (() => null) as any;
+            this.getPlugin = (() => null) as any;
+            this.addPlugin = noopFunc;
+            this.evtNamespace = (() => "") as any;
+            this.addUnloadCb = noopFunc;
+            this.getTraceCtx = (() => null) as any;
+            this.updateCfg = noopFunc;
+            this.onCfgChange = (() => null) as any;
+            this.addTelemetryInitializer = (() => null) as any;
+            
+            // Set a dummy config to prevent errors
+            (this as any).config = { instrumentationKey: "", connectionString: "" };
+            
+            return;
+        }
+
         let core = new AppInsightsCore();
         let _config: IConfiguration & IConfig;
 
