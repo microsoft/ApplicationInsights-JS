@@ -25,10 +25,10 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
     constructor(protected _analyticsPlugin: ClickAnalyticsPlugin, protected _config: IClickAnalyticsConfiguration, protected _pageAction: PageAction,
         protected _traceLogger: IDiagnosticLogger) {
         let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("AutoCaptureHandler"), (_analyticsPlugin as any)._evtNamespace);
+        let _clickCaptureElements: string[];
         let unloadHandler: IUnloadHook = onConfigChange(_config, () => {
             _clickCaptureElements =  arrMap(_config.trackElementTypes.toUpperCase().split(","), tag => strTrim(tag));
         });
-        let _clickCaptureElements: string[];
         dynamicProto(AutoCaptureHandler, this, (_self) => {
             _self.click = () => {
                 let win = getWindow();
