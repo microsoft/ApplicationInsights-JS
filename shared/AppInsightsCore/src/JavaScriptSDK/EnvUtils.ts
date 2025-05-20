@@ -365,22 +365,22 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
 }
 
 /**
- * Redacts sensitive information from the URL, including credentials and specific query parameters.
- * @param location - The location object to be redacted.
- * @returns The redacted location object.
+ * Redacts sensitive information from a URL string, including credentials and specific query parameters.
+ * @param input - The URL string to be redacted.
+ * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
 export function fieldRedaction(input: string): string {
-    let url = "";
-    if (typeof input === "string") {
-        url = input;
-    }
-    
-    if (!url) {
-        return url || "";
+    if (!input) {
+        return input || "";
     }
 
+    // Skip URL parsing for inputs that clearly aren't URLs
+    if (!input.includes('://') && !input.startsWith('//')) {
+        return input;
+    }
+    
     try {
-        const parsedUrl = new URL(url);
+        const parsedUrl = new URL(input);
         let isUrlModified = false;
         
         // Handle credentials
@@ -404,8 +404,8 @@ export function fieldRedaction(input: string): string {
         }
 
         // Return the modified URL string
-        return isUrlModified ? parsedUrl.href : url;
+        return isUrlModified ? parsedUrl.href : input;
     } catch (e) {
-        return url;
+        return input;
     }
 }
