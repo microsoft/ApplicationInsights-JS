@@ -459,9 +459,9 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 Application Insights SDK uses page lifecycle events to reliably send telemetry data before your page closes or navigates away. These events are essential for ensuring no telemetry data is lost during navigation, page refreshes, or tab/browser closures.
 
 **What these configurations do:**
-- Control which browser events the SDK uses to detect when to send pending telemetry
+- Control which browser events the SDK uses to detect when the browser is about to unload, navigate away, become unresponsive, or get hibernated (especially on mobile)
+- Ensure all batched events are sent and not lost due to the browser closing or the user navigating away
 - Affect ALL telemetry types (page views, events, dependencies, exceptions, etc.)
-- Determine when "flush" operations occur to send queued telemetry data
 - Allow you to avoid deprecated event warnings (from jQuery 3.7.1+ or Chrome) while maintaining functionality
 
 **About visibility state:**
