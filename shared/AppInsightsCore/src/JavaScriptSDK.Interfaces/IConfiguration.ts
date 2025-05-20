@@ -219,6 +219,13 @@ export interface IConfiguration {
     // * @internal
     // */
     //_sdk?: IInternalSdkConfiguration;
+
+    /**
+     * [Optional] A flag to enable or disable the use of the field redaction for urls.
+     * @defaultValue true
+     */
+    redactionEnabled?: boolean;
+
 }
 
 ///**
