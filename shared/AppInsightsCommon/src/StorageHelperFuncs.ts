@@ -24,6 +24,53 @@ function _getLocalStorageObject(): Storage {
 }
 
 /**
+ * Safely checks if storage object (localStorage or sessionStorage) is available and accessible
+ * This helps prevent SecurityError in some browsers (e.g., Safari) when cookies are blocked
+ * @param storageType - Type of storage
+ * @returns {boolean} Returns whether storage object is safely accessible
+ */
+function _canSafelyAccessStorage(storageType: StorageType): boolean {
+    const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
+    
+    try {
+        // First, check if window exists
+        if (isNullOrUndefined(getGlobal())) {
+            return false;
+        }
+        
+        // Try to indirectly check if the property exists and is accessible
+        // This avoids direct property access that might throw in Safari with "Block All Cookies" enabled
+        const gbl: any = getGlobal();
+        
+        // Some browsers throw when accessing the property descriptors with getOwnPropertyDescriptor
+        // Others throw when directly accessing the storage objects
+        // This approach tries both methods safely
+        try {
+            // Method 1: Try using property descriptor - safer in Safari with cookies blocked
+            const descriptor = Object.getOwnPropertyDescriptor(gbl, storageTypeName);
+            if (!descriptor || !descriptor.get) {
+                return false;
+            }
+        } catch (e) {
+            // If the above fails, attempt a direct access inside a try-catch
+            try {
+                const storage = gbl[storageTypeName];
+                if (!storage) {
+                    return false;
+                }
+            } catch (e) {
+                // If both approaches fail, storage cannot be safely accessed
+                return false;
+            }
+        }
+        
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
  * Tests storage object (localStorage or sessionStorage) to verify that it is usable
  * More details here: https://mathiasbynens.be/notes/localstorage-pattern
  * @param storageType - Type of storage
@@ -31,20 +78,30 @@ function _getLocalStorageObject(): Storage {
  */
 function _getVerifiedStorageObject(storageType: StorageType): Storage {
     try {
-        if (isNullOrUndefined(getGlobal())) {
+        // First check if we can safely access the storage object
+        if (!_canSafelyAccessStorage(storageType)) {
             return null;
         }
-        let uid = (new Date).toString();
-        let storage: Storage = getGlobalInst(storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage");
-        let name:string = _storagePrefix + uid;
-        storage.setItem(name, uid);
-        let fail = storage.getItem(name) !== uid;
-        storage.removeItem(name);
-        if (!fail) {
-            return storage;
+        
+        const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
+        
+        // Now we can safely try to use the storage
+        try {
+            let uid = (new Date).toString();
+            let storage: Storage = getGlobalInst(storageTypeName);
+            let name:string = _storagePrefix + uid;
+            storage.setItem(name, uid);
+            let fail = storage.getItem(name) !== uid;
+            storage.removeItem(name);
+            if (!fail) {
+                return storage;
+            }
+        } catch (exception) {
+            // Storage exists but can't be used (quota exceeded, etc.)
+            return null;
         }
     } catch (exception) {
-        // eslint-disable-next-line no-empty
+        // Catch any unexpected errors
     }
 
     return null;
