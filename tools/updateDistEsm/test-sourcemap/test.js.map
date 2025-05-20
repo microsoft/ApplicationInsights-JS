@@ -1,0 +1,1 @@
+{"version":3,"file":"test.js.map","sourceRoot":"","sources":["../src/example.ts"],"names":[],"mappings":"AAAA;AACA;AACA;AACA","sourcesContent":["// Original TypeScript content\nfunction greet(): void {\n    console.log('Hello, world!');\n}"]}
