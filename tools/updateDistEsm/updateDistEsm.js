@@ -345,16 +345,43 @@ const updateDistEsmFiles = (
         src = src.trim();
         if (orgSrc !== src) {
             fs.writeFileSync(inputFile, src);
-            if (mapFile) {
+            if (mapFile && fs.existsSync(mapFile)) {
+                // Read the existing source map to preserve original TypeScript sources
+                const existingMapContent = fs.readFileSync(mapFile, "utf8");
+                let existingMap;
+                try {
+                    existingMap = JSON.parse(existingMapContent);
+                } catch (e) {
+                    console.error(`Error parsing source map ${mapFile}: ${e}`);
+                }
+
+                // Generate new source map
                 var newMap = theString.generateMap({
-                    source: inputFile.toString(),
                     file: mapFile,
                     includeContent: true,
                     hires: false
                 });
 
+                // Preserve the original sources if available
+                if (existingMap && existingMap.sources && existingMap.sources.length > 0) {
+                    const parsedMap = JSON.parse(newMap.toString());
+                    
+                    // Replace the sources with the original TypeScript sources
+                    if (parsedMap.sources && parsedMap.sources.length > 0) {
+                        console.log(`Preserving original sources in map: ${existingMap.sources.join(', ')}`);
+                        parsedMap.sources = existingMap.sources;
+                        
+                        // Preserve sourcesContent if available
+                        if (existingMap.sourcesContent && existingMap.sourcesContent.length > 0) {
+                            parsedMap.sourcesContent = existingMap.sourcesContent;
+                        }
+                        
+                        newMap = JSON.stringify(parsedMap);
+                    }
+                }
+
                 console.log("Rewriting Map file - " + mapFile);
-                fs.writeFileSync(mapFile, newMap.toString());
+                fs.writeFileSync(mapFile, typeof newMap === 'string' ? newMap : newMap.toString());
             }
         }
     });
