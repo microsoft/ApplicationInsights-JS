@@ -1,0 +1,1 @@
+{"version":3,"file":"test3.js.map","sourceRoot":"","sources":["/home/runner/work/ApplicationInsights-JS/ApplicationInsights-JS/tools/updateDistEsm/test-sourcemap/test3.js"],"names":[],"mappings":"AAAA;AACA;AACA;AACA","sourcesContent":["// Test JS file 3\nfunction greet3() {\n    console.log('Hello corrupt map!');\n}\n//# sourceMappingURL=test3.js.map"]}
