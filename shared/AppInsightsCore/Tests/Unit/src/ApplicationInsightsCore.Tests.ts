@@ -2010,7 +2010,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle empty URLS",
+            name: "should handle empty URLs",
             test: () => {
                 const url = " ";
                 const redactedLocation = fieldRedaction(url);
