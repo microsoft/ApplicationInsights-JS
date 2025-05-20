@@ -370,7 +370,10 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
  * @returns The redacted location object.
  */
 export function fieldRedaction(input: string): string {
-    let url = input;
+    let url = "";
+    if (typeof input === "string") {
+        url = input;
+    }
     
     if (!url) {
         return url || "";
