@@ -456,7 +456,16 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 
 ### Page Unload and Visibility Event Handling
 
-Application Insights SDK tracks various page lifecycle events to ensure telemetry data is sent before a page unloads or changes visibility state. Modern browsers and frameworks like jQuery 3.7.1+ are changing or deprecating some of these events.
+Application Insights SDK uses page lifecycle events to reliably send telemetry data before your page closes or navigates away. These events are essential for ensuring no telemetry data is lost during navigation, page refreshes, or tab/browser closures.
+
+**What these configurations do:**
+- Control which browser events the SDK uses to detect when to send pending telemetry
+- Affect ALL telemetry types (page views, events, dependencies, exceptions, etc.)
+- Determine when "flush" operations occur to send queued telemetry data
+- Allow you to avoid deprecated event warnings (from jQuery 3.7.1+ or Chrome) while maintaining functionality
+
+**About visibility state:**
+When a browser tab becomes hidden (switching to another tab) or visible (returning to the tab), the browser fires "visibilitychange" events with document.visibilityState changing to "hidden" or "visible". The SDK uses these events to optimize telemetry sending.
 
 ```js
 const appInsights = new ApplicationInsights({
