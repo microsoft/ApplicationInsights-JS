@@ -1921,7 +1921,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     const redactedLocation = fieldRedaction(url);
                     Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/");
                 }
-                Assert.notEqual(location.href, "https://REDACTED:REDACTED@example.com/");
+                Assert.notEqual(url, "https://REDACTED:REDACTED@example.com/");
                 
             }
         });
