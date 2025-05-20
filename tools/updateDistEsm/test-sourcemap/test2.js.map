@@ -1,0 +1,1 @@
+{"version":3,"file":"test2.js.map","sourceRoot":"","sources":["/home/runner/work/ApplicationInsights-JS/ApplicationInsights-JS/tools/updateDistEsm/test-sourcemap/test2.js"],"names":[],"mappings":"AAAA;AACA;AACA;AACA","sourcesContent":["// Test JS file 2\nfunction greet2() {\n    console.log('Hello again!');\n}\n//# sourceMappingURL=test2.js.map"]}
