@@ -37,6 +37,8 @@ const SENSITIVE_QUERY_PARAMS = [
     "X-Goog-Signature"
 ] as const;
 
+const STR_REDACTED = "REDACTED";
+
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
 let _enableMocks = false;
@@ -367,23 +369,25 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
  * @param location - The location object to be redacted.
  * @returns The redacted location object.
  */
-export function fieldRedaction(location: Location): string {
-    if (!location?.href) {
-        return location?.href || "";
+export function fieldRedaction(input: string): string {
+    let url = input;
+    
+    if (!url) {
+        return url || "";
     }
 
     try {
-        const parsedUrl = new URL(location.href);
+        const parsedUrl = new URL(url);
         let isUrlModified = false;
         
         // Handle credentials
         if (parsedUrl.username || parsedUrl.password) {
             if (parsedUrl.username) {
-                parsedUrl.username = "REDACTED";
+                parsedUrl.username = STR_REDACTED
                 isUrlModified = true;
             }
             if (parsedUrl.password) {
-                parsedUrl.password = "REDACTED";
+                parsedUrl.password = STR_REDACTED
                 isUrlModified = true;
             }
         }
@@ -391,14 +395,14 @@ export function fieldRedaction(location: Location): string {
         // Handle sensitive query parameters
         for (const param of SENSITIVE_QUERY_PARAMS) {
             if (parsedUrl.searchParams.has(param)) {
-                parsedUrl.searchParams.set(param, "REDACTED");
+                parsedUrl.searchParams.set(param, STR_REDACTED);
                 isUrlModified = true;
             }
         }
 
         // Return the modified URL string
-        return isUrlModified ? parsedUrl.href : location.href;
+        return isUrlModified ? parsedUrl.href : url;
     } catch (e) {
-        return location.href || "";
+        return url;
     }
 }
