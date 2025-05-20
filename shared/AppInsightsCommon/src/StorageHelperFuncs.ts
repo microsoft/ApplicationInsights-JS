@@ -5,6 +5,7 @@ import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, dumpObj, eLoggingSeverity, getExceptionName, getGlobal, getGlobalInst,
     isNullOrUndefined, objForEachKey
 } from "@microsoft/applicationinsights-core-js";
+import { objGetOwnPropertyDescriptor } from "@nevware21/ts-utils";
 import { StorageType } from "./Enums";
 
 let _canUseLocalStorage: boolean = undefined;
@@ -33,21 +34,21 @@ function _canSafelyAccessStorage(storageType: StorageType): boolean {
     const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
     
     try {
-        // First, check if window exists
-        if (isNullOrUndefined(getGlobal())) {
+        // First, check if window exists and get the global object once
+        const gbl: any = getGlobal();
+        if (isNullOrUndefined(gbl)) {
             return false;
         }
         
         // Try to indirectly check if the property exists and is accessible
         // This avoids direct property access that might throw in Safari with "Block All Cookies" enabled
-        const gbl: any = getGlobal();
         
         // Some browsers throw when accessing the property descriptors with getOwnPropertyDescriptor
         // Others throw when directly accessing the storage objects
         // This approach tries both methods safely
         try {
             // Method 1: Try using property descriptor - safer in Safari with cookies blocked
-            const descriptor = Object.getOwnPropertyDescriptor(gbl, storageTypeName);
+            const descriptor = objGetOwnPropertyDescriptor(gbl, storageTypeName);
             if (!descriptor || !descriptor.get) {
                 return false;
             }
