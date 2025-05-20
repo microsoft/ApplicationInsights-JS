@@ -30,6 +30,15 @@ const strMsie = "msie";
 const strTrident = "trident/";
 const strXMLHttpRequest = "XMLHttpRequest";
 
+const SENSITIVE_QUERY_PARAMS = [
+    "sig",
+    "Signature",
+    "AWSAccessKeyId",
+    "X-Goog-Signature"
+] as const;
+
+const STR_REDACTED = "REDACTED";
+
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
 let _enableMocks = false;
@@ -353,4 +362,45 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
         }
     }
     return false;
+}
+
+/**
+ * Redacts sensitive information from a URL string, including credentials and specific query parameters.
+ * @param input - The URL string to be redacted.
+ * @returns The redacted URL string or the original string if no redaction was needed or possible.
+ */
+export function fieldRedaction(input: string): string {
+    if (!input) {
+        return input || "";
+    }
+
+    try {
+        const parsedUrl = new URL(input);
+        let isUrlModified = false;
+        
+        // Handle credentials
+        if (parsedUrl.username || parsedUrl.password) {
+            if (parsedUrl.username) {
+                parsedUrl.username = STR_REDACTED
+                isUrlModified = true;
+            }
+            if (parsedUrl.password) {
+                parsedUrl.password = STR_REDACTED
+                isUrlModified = true;
+            }
+        }
+
+        // Handle sensitive query parameters
+        for (const param of SENSITIVE_QUERY_PARAMS) {
+            if (parsedUrl.searchParams.has(param)) {
+                parsedUrl.searchParams.set(param, STR_REDACTED);
+                isUrlModified = true;
+            }
+        }
+
+        // Return the modified URL string
+        return isUrlModified ? parsedUrl.href : input;
+    } catch (e) {
+        return input;
+    }
 }
