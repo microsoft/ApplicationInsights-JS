@@ -4,7 +4,7 @@
 
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import {
-    getDocument, getInst, getNavigator, getPerformance, hasDocument, hasNavigator, hasWindow, isFunction, isString, isUndefined, mathMax, strIndexOf
+    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, mathMax, strIndexOf
 } from "@nevware21/ts-utils";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
@@ -352,42 +352,5 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
             // eslint-disable-next-line no-empty
         }
     }
-    return false;
-}
-
-/**
- * Detects if the code is running in a server-side rendering environment.
- * This checks for Node.js-like environments (including Cloudflare Workers)
- * where certain browser APIs might be unavailable or restricted.
- * @returns {boolean} True if running in a server-side rendering environment
- */
-export function isServerSideRender(): boolean {
-    try {
-        // Check if we're in a Node.js or Worker environment (no window/document)
-        if (!hasWindow() || !hasDocument()) {
-            return true;
-        }
-
-        // Additional check for Cloudflare Worker environment
-        // Cloudflare Workers have specific restrictions
-        if (typeof self !== 'undefined' && 
-            typeof self.addEventListener === 'function' && 
-            typeof self.fetch === 'function' && 
-            typeof window === 'undefined') {
-            return true;
-        }
-        
-        // Check for navigator details that might indicate a Cloudflare Worker
-        let nav = getNavigator();
-        if (nav && nav.userAgent && 
-            (nav.userAgent.indexOf('cloudflare-worker') !== -1 || 
-             nav.userAgent.indexOf('Cloudflare-Workers') !== -1)) {
-            return true;
-        }
-    } catch (e) {
-        // If we can't determine the environment, assume it's safe (not SSR)
-        return false;
-    }
-    
     return false;
 }
