@@ -19,7 +19,7 @@ import {
     _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
     createDynamicConfig, createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray,
     isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
-    removePageHideEventListener, removePageUnloadEventListener, safeDynamicProto
+    removePageHideEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -168,7 +168,7 @@ export class AppInsightsSku implements IApplicationInsights {
         let _cdnSentMessage: boolean;
         let _sdkVerSentMessage: boolean;
 
-        safeDynamicProto(AppInsightsSku, this, (_self) => {
+        dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
 
             objDefine(_self, "config", {

@@ -50,11 +50,14 @@
         "@microsoft/rush": "5.153.1",
         "@nevware21/grunt-eslint-ts": "^0.2.2",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
+        "@typescript-eslint/eslint-plugin": "^5.46.1",
+        "@typescript-eslint/parser": "^5.46.1",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
-        "@typescript-eslint/eslint-plugin": "^5.46.1",
-        "@typescript-eslint/parser": "^5.46.1",
+        "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-sourcemaps": "^0.6.3",
         "archiver": "^5.3.0",
         "connect": "^3.7.0",
         "eslint": "^7.29.0",
@@ -63,22 +66,16 @@
         "eslint-plugin-node": "^11.1.0",
         "eslint-plugin-promise": "^5.1.0",
         "eslint-plugin-security": "^1.4.0",
-        "eventemitter2": "6.4.9",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-connect": "^3.0.0",
         "grunt-contrib-copy": "^1.0.0",
         "grunt-contrib-uglify": "^5.2.1",
+        "eventemitter2": "6.4.9",
         "puppeteer": "24.8.2",
-        "request": "^2.88.2",
-        "rollup": "^3.20.0",
-        "rollup-plugin-cleanup": "^3.2.1",
-        "rollup-plugin-sourcemaps": "^0.6.3",
         "typedoc": "^0.26.6",
-        "typescript": "^4.9.5",
-        "whatwg-fetch": "^3.6.2"
-    },
-    "dependencies": {
-        "@microsoft/dynamicproto-js": "^2.0.3"
+        "typescript": "^4.9.3",
+        "whatwg-fetch": "^3.6.2",
+        "request": "^2.88.2"
     }
 }

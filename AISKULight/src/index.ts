@@ -7,7 +7,7 @@ import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/
 import {
     AppInsightsCore, FeatureOptInMode, IConfigDefaults, IConfiguration, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin,
     IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler,
-    WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions, safeDynamicProto
+    WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
@@ -52,7 +52,7 @@ export class ApplicationInsights {
             throwError("Invalid input configuration");
         }
 
-        safeDynamicProto(ApplicationInsights, this, (_self) => {
+        dynamicProto(ApplicationInsights, this, (_self) => {
             
             // Define _self.config
             objDefine(_self, "config", {

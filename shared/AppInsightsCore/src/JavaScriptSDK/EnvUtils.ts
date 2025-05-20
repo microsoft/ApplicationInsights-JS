@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 "use strict";
 
-import dynamicProto from "@microsoft/dynamicproto-js";
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import {
-    getDocument, getInst, getNavigator, getPerformance, hasDocument, hasNavigator, hasWindow, isFunction, isString, isUndefined, mathMax, strIndexOf
+    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, mathMax, strIndexOf
 } from "@nevware21/ts-utils";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
@@ -354,82 +353,4 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
         }
     }
     return false;
-}
-
-/**
- * Detects if the code is running in a server-side rendering environment.
- * This checks for Node.js-like environments (including Cloudflare Workers)
- * where dynamicProto can cause issues with property redefinition.
- * @returns {boolean} True if running in a server-side rendering environment
- */
-export function isServerSideRender(): boolean {
-    try {
-        // Check if we're in a Node.js or Worker environment
-        if (!hasWindow() || !hasDocument()) {
-            return true;
-        }
-
-        // Additional check for Cloudflare Worker environment
-        // Cloudflare Workers don't allow redefining name property
-        if (typeof self !== 'undefined' && 
-            typeof self.addEventListener === 'function' && 
-            typeof self.fetch === 'function' && 
-            typeof window === 'undefined') {
-            return true;
-        }
-        
-        // Check for navigator details that might indicate a Cloudflare Worker
-        let nav = getNavigator();
-        if (nav && nav.userAgent && 
-            (nav.userAgent.indexOf('cloudflare-worker') !== -1 || 
-             nav.userAgent.indexOf('Cloudflare-Workers') !== -1)) {
-            return true;
-        }
-    } catch (e) {
-        // If we can't determine the environment, assume it's safe (not SSR)
-        return false;
-    }
-    
-    return false;
-}
-
-/**
- * Safe wrapper for dynamicProto that handles SSR environments properly
- * This provides the same API as dynamicProto but works around property
- * redefinition issues in environments like Cloudflare Workers
- * 
- * @param theClass - The class definition to extract the functions from
- * @param target - The target instance to apply the functions
- * @param delegateFunc - The callback function that will populate the prototype methods
- * @param options - Additional options that can be passed to customize the proxy creation process
- */
-export function safeDynamicProto(theClass: any, target: any, delegateFunc: (target: any, base?: any) => void, options?: any): void {
-    if (isServerSideRender()) {
-        // The core issue in Cloudflare Workers is with dynamicProto attempting to redefine properties
-        // on functions that are non-configurable in strict mode (particularly the 'name' property).
-        // To work around this while still using dynamicProto, we create a custom options object
-        // that disables instance function setting, which is the part that tries to redefine properties.
-        
-        // Start with default options and any provided options
-        const ssrOptions = options ? { ...options } : {};
-        
-        // Disable property and function name redefinition
-        ssrOptions.setInstFuncs = false;
-        
-        // Still use dynamicProto but with special options to avoid property redefinition errors
-        try {
-            dynamicProto(theClass, target, delegateFunc, ssrOptions);
-        } catch (e) {
-            // As a fallback if dynamicProto still fails, directly call the delegate function
-            // without any of the property manipulation that causes issues
-            try {
-                delegateFunc(target, theClass.prototype);
-            } catch (innerError) {
-                // Silently handle errors to prevent breaking the application
-            }
-        }
-    } else {
-        // In normal browser environments, use the standard dynamicProto functionality
-        dynamicProto(theClass, target, delegateFunc, options);
-    }
 }
