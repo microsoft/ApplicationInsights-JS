@@ -27,11 +27,10 @@ function _getLocalStorageObject(): Storage {
 /**
  * Safely checks if storage object (localStorage or sessionStorage) is available and accessible
  * This helps prevent SecurityError in some browsers (e.g., Safari) when cookies are blocked
- * @param storageType - Type of storage
+ * @param storageTypeName - Name of storage type ("localStorage" or "sessionStorage")
  * @returns {boolean} Returns whether storage object is safely accessible
  */
-function _canSafelyAccessStorage(storageType: StorageType): boolean {
-    const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
+function _canSafelyAccessStorage(storageTypeName: string): boolean {
     let result = true;
     
     try {
@@ -82,10 +81,11 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
     let result = null;
     
     try {
+        // Determine storage type name once
+        const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
+        
         // First check if we can safely access the storage object
-        if (_canSafelyAccessStorage(storageType)) {
-            const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
-            
+        if (_canSafelyAccessStorage(storageTypeName)) {
             // Now we can safely try to use the storage
             try {
                 let uid = (new Date).toString();
