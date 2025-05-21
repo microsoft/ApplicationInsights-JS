@@ -32,43 +32,44 @@ function _getLocalStorageObject(): Storage {
  */
 function _canSafelyAccessStorage(storageType: StorageType): boolean {
     const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
+    let result = true;
     
     try {
         // First, check if window exists and get the global object once
         const gbl: any = getGlobal();
         if (isNullOrUndefined(gbl)) {
-            return false;
-        }
-        
-        // Try to indirectly check if the property exists and is accessible
-        // This avoids direct property access that might throw in Safari with "Block All Cookies" enabled
-        
-        // Some browsers throw when accessing the property descriptors with getOwnPropertyDescriptor
-        // Others throw when directly accessing the storage objects
-        // This approach tries both methods safely
-        try {
-            // Method 1: Try using property descriptor - safer in Safari with cookies blocked
-            const descriptor = objGetOwnPropertyDescriptor(gbl, storageTypeName);
-            if (!descriptor || !descriptor.get) {
-                return false;
-            }
-        } catch (e) {
-            // If the above fails, attempt a direct access inside a try-catch
+            result = false;
+        } else {
+            // Try to indirectly check if the property exists and is accessible
+            // This avoids direct property access that might throw in Safari with "Block All Cookies" enabled
+            
+            // Some browsers throw when accessing the property descriptors with getOwnPropertyDescriptor
+            // Others throw when directly accessing the storage objects
+            // This approach tries both methods safely
             try {
-                const storage = gbl[storageTypeName];
-                if (!storage) {
-                    return false;
+                // Method 1: Try using property descriptor - safer in Safari with cookies blocked
+                const descriptor = objGetOwnPropertyDescriptor(gbl, storageTypeName);
+                if (!descriptor || !descriptor.get) {
+                    result = false;
                 }
             } catch (e) {
-                // If both approaches fail, storage cannot be safely accessed
-                return false;
+                // If the above fails, attempt a direct access inside a try-catch
+                try {
+                    const storage = gbl[storageTypeName];
+                    if (!storage) {
+                        result = false;
+                    }
+                } catch (e) {
+                    // If both approaches fail, storage cannot be safely accessed
+                    result = false;
+                }
             }
         }
-        
-        return true;
     } catch (e) {
-        return false;
+        result = false;
     }
+    
+    return result;
 }
 
 /**
@@ -78,34 +79,33 @@ function _canSafelyAccessStorage(storageType: StorageType): boolean {
  * @returns {Storage} Returns storage object verified that it is usable
  */
 function _getVerifiedStorageObject(storageType: StorageType): Storage {
+    let result = null;
+    
     try {
         // First check if we can safely access the storage object
-        if (!_canSafelyAccessStorage(storageType)) {
-            return null;
-        }
-        
-        const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
-        
-        // Now we can safely try to use the storage
-        try {
-            let uid = (new Date).toString();
-            let storage: Storage = getGlobalInst(storageTypeName);
-            let name:string = _storagePrefix + uid;
-            storage.setItem(name, uid);
-            let fail = storage.getItem(name) !== uid;
-            storage.removeItem(name);
-            if (!fail) {
-                return storage;
+        if (_canSafelyAccessStorage(storageType)) {
+            const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
+            
+            // Now we can safely try to use the storage
+            try {
+                let uid = (new Date).toString();
+                let storage: Storage = getGlobalInst(storageTypeName);
+                let name:string = _storagePrefix + uid;
+                storage.setItem(name, uid);
+                let fail = storage.getItem(name) !== uid;
+                storage.removeItem(name);
+                if (!fail) {
+                    result = storage;
+                }
+            } catch (exception) {
+                // Storage exists but can't be used (quota exceeded, etc.)
             }
-        } catch (exception) {
-            // Storage exists but can't be used (quota exceeded, etc.)
-            return null;
         }
     } catch (exception) {
         // Catch any unexpected errors
     }
 
-    return null;
+    return result;
 }
 
 /**
