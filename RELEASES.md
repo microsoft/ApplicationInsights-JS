@@ -9,10 +9,8 @@ This release contains an important fix for a change introduced in v3.3.7 that ca
 ### Changelog
 
 - #2524 Update Components to address governance issues
-- #2514 Address issues with isFeatureEnabled changes
-- #2517 Update Components to address governance issues
-- #2501 [Main][Task]31233527:Change Default RequestSizeLimitBytes
-- #2507 [main] Handle race condition during unload
+- #2536 Fix ReferenceError in Click Analytics v3.3.7 by reordering variable declaration
+- #2530 Add negative isArray check to _isConfigDefaults
 
 ## 3.3.7 (May 7th, 2025)
 
@@ -23,8 +21,21 @@ This release contains a potential breaking change due to the new compress api fe
 ### Changelog
 
 - #2518 Remove Generated docs from the repo
-- #2536 Fix ReferenceError in Click Analytics v3.3.7 by reordering variable declaration
-- #2530 Add negative isArray check to _isConfigDefaults
+- #2514 Address issues with isFeatureEnabled changes
+- #2517 Update Components to address governance issues
+- #2501 [Main][Task]31233527:Change Default RequestSizeLimitBytes
+- #2507 [main] Handle race condition during unload
+- #2513 [Main][Task]32698211: Add a Config to Allow Users to Change Max Number of Events Per Batch
+  - **Note**: New Config `maxEvtPerBatch` is added to the post channel `IChannelConfiguration`.
+- #2511 [Main][Task]31233527: Add a Config to Allow Users to Change RequestSizeLimitBytes
+  - **Note**: New Config `requestLimit` is added to the post channel `IChannelConfiguration`.
+- #2506 Drop correlation header to be passed on the dependency
+  - **Note**: Option to drop the enrichment of correlation header during dependency processing is added to `DependencyListenerFunction`
+- #2504 [main] [Click analytics] not logging no native html input elements
+  - **Note**: `trackElementTypes` is added to `IClickAnalyticsConfiguration` to allow additional, configurable HTML element types to be tracked in addition to the default set
+- #2451 [main] enable compress api in 1ds-post-channel and applicationinsights-channel
+  - **Note**: Using compress api feature is added through feature flag `zipPayload` and is currently disabled by default. See [how to enable this feature](https://github.com/Microsoft/ApplicationInsights-JS?tab=readme-ov-file#feature) and [more details](https://github.com/microsoft/ApplicationInsights-JS/blob/123ba4cd38f1478e91547d36c41668599834c734/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IConfiguration.ts#L192).
+- #2489 [main][stats beat] implement stats beat in application insights
 
 ## 3.3.6 (March 4th, 2025)
 
