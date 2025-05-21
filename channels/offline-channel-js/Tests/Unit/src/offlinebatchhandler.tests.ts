@@ -66,7 +66,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Offline Batch Handler: init with IndexedDB storge provider",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime: 1 } as IOfflineChannelConfiguration;
@@ -112,7 +111,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Store Batch: store batch with web storge provider",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true } as IOfflineChannelConfiguration;
@@ -140,17 +138,28 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     result.push(res);
                 }
                 let evt = TestHelper.mockEvent(endpoint, 1, false);
-                doAwait(batchHandler.storeBatch(evt, cb) as any,(res) => {
-                    this.ctx.storeBatch = true;
-                    this.ctx.result = result;
+                
+                return this._asyncQueue().add(() => {
+                    doAwait(batchHandler.storeBatch(evt, cb) as any,(res) => {
+                        this.ctx.storeBatch = true;
+                        this.ctx.result = result;
+                    }, (reason) => {
+                        Assert.ok(false, "init error");
+                    });
+
+                }).add(() => {
                     doAwait(batchHandler.hasStoredBatch(),(res) => {
                         this.ctx.hasBatch = res;
-                        doAwait( batchHandler.teardown(), () => {
-                            this.ctx.isclosed = true;
-                        });
+                    }, (reason) => {
+                        Assert.ok(false, "hasStoreBatch error")
                     });
-                });
-                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+
+                }).add(() => {
+                    doAwait( batchHandler.teardown(), () => {
+                        this.ctx.isclosed = true;
+                    });
+
+                }).concat(PollingAssert.asyncTaskPollingAssert(() => {
                     let storeBatch = this.ctx.storeBatch;
                     if (storeBatch) {
                         let res = this.ctx.result[0];
@@ -188,7 +197,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Store Batch: store batch with indexedDB storge provider",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as IOfflineChannelConfiguration;
@@ -201,32 +209,40 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     endpoint: endpoint
                 }
                 let batchHandler = new OfflineBatchHandler();
-                doAwait(batchHandler.initialize(providerCxt),(res) => {
-                    this.ctx.isInit = true;
-                    let items = batchHandler["_getDbgPlgTargets"]();
-                    let provider = items[0];
-                    let isInit = items[1];
-                    Assert.ok(provider, "provider is initialized");
-                    Assert.ok(isInit, "initialization is successful");
-                    let result:any[] = [];
-                    let cb = (res) => {
-                        this.ctx.storeBatch = true;
-                        result.push(res);
-                    }
-                    let evt = TestHelper.mockEvent(endpoint, 1, false);
-                    batchHandler.storeBatch(evt, cb);
+                let result:any[] = [];
+                let cb = (res) => {
+                    this.ctx.storeBatch = true;
+                    result.push(res);
+                }
+                let evt = TestHelper.mockEvent(endpoint, 1, false);
+                
+                return this._asyncQueue().add(() => {
+                    doAwait(batchHandler.initialize(providerCxt),(res) => {
+                        this.ctx.isInit = true;
+                        let items = batchHandler["_getDbgPlgTargets"]();
+                        let provider = items[0];
+                        let isInit = items[1];
+                        Assert.ok(provider, "provider is initialized");
+                        Assert.ok(isInit, "initialization is successful");
+                    });
+
+                }).add(() => {
                     doAwait(batchHandler.storeBatch(evt, cb) as any,(res) => {
                         this.ctx.storeBatch = true;
                         this.ctx.result = result;
-                        doAwait(batchHandler.hasStoredBatch(),(res) => {
-                            this.ctx.hasBatch = res;
-                            doAwait( batchHandler.teardown(), () => {
-                                this.ctx.isclosed = true;
-                            });
-                        });
                     });
-                });
-                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+
+                }).add(() => {
+                    doAwait(batchHandler.hasStoredBatch(),(res) => {
+                        this.ctx.hasBatch = res;
+                    });
+
+                }).add(() => {
+                    doAwait( batchHandler.teardown(), () => {
+                        this.ctx.isclosed = true;
+                    });
+
+                }).concat(PollingAssert.asyncTaskPollingAssert(() => {
                     let isInit = this.ctx.isInit;
                     if (isInit) {
                         return true;
@@ -290,43 +306,53 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let cb = (res) => {
                     result.push(res);
                 }
+                let cb1 = (res) => {
+                    this.ctx.hasBatch = res;
+                }
+                let cb2 = (res) => {
+                    this.ctx.cleanBatch = true;
+                    this.ctx.cleanBatchRes = res;
+                }
                 let evt = TestHelper.mockEvent(endpoint, 1, false);
-                doAwait(batchHandler.storeBatch(evt, cb) as any,(res) => {
-                    this.ctx.storeBatch = 1;
-                    this.ctx.result = result;
-                    
-                    let evt1 = TestHelper.mockEvent(endpoint, 2, false);
+                let evt1 = TestHelper.mockEvent(endpoint, 2, false);
+                let evt2 = TestHelper.mockEvent(endpoint, 3, false);
+
+                return this._asyncQueue().add(() => {
+                    doAwait(batchHandler.storeBatch(evt, cb) as any,(res) => {
+                        this.ctx.storeBatch = 1;
+                        this.ctx.result = result;
+                    });
+
+                }).add(() => {
                     doAwait(batchHandler.storeBatch(evt1, cb) as any,(res) => {
                         this.ctx.storeBatch = 2;
                         this.ctx.result = result;
-                        let evt2 = TestHelper.mockEvent(endpoint, 3, false);
-                        doAwait(batchHandler.storeBatch(evt2, cb) as any,(res) => {
-                            this.ctx.storeBatch = 3;
-                            this.ctx.result = result;
-                            let storageKey = "AIOffline_1_dc.services.visualstudio.com";
-                            let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
-                            let storageObject = JSON.parse(storageStr);
-                            let storageEvts = storageObject.evts;
-                            Assert.deepEqual(Object.keys(storageEvts).length, 3, "storage should have three events");
-
-                            let cb1 = (res) => {
-                                this.ctx.hasBatch = res;
-                            }
-                            doAwait(batchHandler.hasStoredBatch(cb1),(res) => {
-                                let cb2 = (res) => {
-                                    this.ctx.cleanBatch = true;
-                                    this.ctx.cleanBatchRes = res;
-                                }
-                                doAwait(batchHandler.cleanStorage(cb2) as any,(res) => {
-                                    doAwait( batchHandler.teardown(), () => {
-                                        this.ctx.isclosed = true;
-                                    });
-                                });
-                            });
-                        });
                     });
-                });
-                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+
+                }).add(() => {
+                    doAwait(batchHandler.storeBatch(evt2, cb) as any,(res) => {
+                        this.ctx.storeBatch = 3;
+                        this.ctx.result = result;
+                        let storageKey = "AIOffline_1_dc.services.visualstudio.com";
+                        let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
+                        let storageObject = JSON.parse(storageStr);
+                        let storageEvts = storageObject.evts;
+                        Assert.deepEqual(Object.keys(storageEvts).length, 3, "storage should have three events");
+                    });
+
+                }).add(() => {
+                    doAwait(batchHandler.hasStoredBatch(cb1),(res) => {
+                    });
+
+                }).add(() => {
+                    doAwait(batchHandler.cleanStorage(cb2) as any,(res) => {});
+
+                }).add(() => {
+                    doAwait( batchHandler.teardown(), () => {
+                        this.ctx.isclosed = true;
+                    });
+
+                }).concat(PollingAssert.asyncTaskPollingAssert(() => {
                     let storeBatch = this.ctx.storeBatch;
                     if (storeBatch && storeBatch > 2) {
                         Assert.equal(storeBatch, 3, "should have three response");
@@ -366,7 +392,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Clean Batch: clean batch with IndexedDB storge provider",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: true, inStorageMaxTime:1} as IOfflineChannelConfiguration;
@@ -381,57 +406,61 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 }
                 let batchHandler = new OfflineBatchHandler();
                 let provider;
-                doAwait(batchHandler.initialize(providerCxt),(res) => {
-                    this.ctx.isInit = true;
-                    let items = batchHandler["_getDbgPlgTargets"]();
-                    provider = items[0];
-                    let isInit = items[1];
-                    Assert.ok(provider, "provider is initialized");
-                    Assert.ok(isInit, "initialization is successful");
-                    let result:any[] = [];
-                    let cb = (res) => {
-                        result.push(res);
-                    }
-                    let evt = TestHelper.mockEvent(endpoint, 1, false);
-                    doAwait(batchHandler.storeBatch(evt, cb),(res) => {
+                let result:any[] = [];
+                let cb = (res) => {
+                    result.push(res);
+                }
+                let cb1 = (res) => {
+                    this.ctx.hasBatch = res;
+                }
+                let cb2 = (res) => {
+                    this.ctx.cleanBatch = true;
+                    this.ctx.cleanBatchRes = res;
+                }
+                let cb3 = (res) => {
+                    this.ctx.hasBatch1Called = true;
+                    this.ctx.hasBatch1 = res;
+                }
+                let evt = TestHelper.mockEvent(endpoint, 1, false);
+                let evt1 = TestHelper.mockEvent(endpoint, 2, false);
+                let evt2 = TestHelper.mockEvent(endpoint, 3, false);
+                
+                return this._asyncQueue().add(() => {
+                    doAwait(batchHandler.initialize(providerCxt),(res) => {
+                        this.ctx.isInit = true;
+                        let items = batchHandler["_getDbgPlgTargets"]();
+                        provider = items[0];
+                        let isInit = items[1];
+                        Assert.ok(provider, "provider is initialized");
+                        Assert.ok(isInit, "initialization is successful");
+                    });
+
+                }).add(() => {
+                    doAwait(batchHandler.storeBatch(evt, cb) as any,(res) => {
                         this.ctx.storeBatch = 1;
                         this.ctx.result = result;
-                        let evt1 = TestHelper.mockEvent(endpoint, 2, false);
-                        doAwait(batchHandler.storeBatch(evt1, cb),(res) => {
-                            this.ctx.storeBatch = 2;
-                            this.ctx.result = result;
-                            let evt2 = TestHelper.mockEvent(endpoint, 3, false);
-                            doAwait(batchHandler.storeBatch(evt2, cb),(res) => {
-                                this.ctx.storeBatch = 3;
-                                this.ctx.result = result;
-                                let cb1 = (res) => {
-                                    this.ctx.hasBatch = res;
-                                }
-                                doAwait(batchHandler.hasStoredBatch(cb1),(res) => {
-                                    let cb2 = (res) => {
-                                        this.ctx.cleanBatch = true;
-                                        this.ctx.cleanBatchRes = res;
-                                    }
-                                    doAwait(batchHandler.cleanStorage(cb2),(res) => {
-                                        let cb3 = (res) => {
-                                            this.ctx.hasBatch1Called = true;
-                                            this.ctx.hasBatch1 = res;
-                                        }
-                                        doAwait(batchHandler.hasStoredBatch(cb3),(res) => {
-                                            doAwait( batchHandler.teardown(), () => {
-                                                this.ctx.isclosed = true;
-                                            });
-                                        });
-                                        
-                                    });
-                                    
-                                });
-                                
-                            });
-                        });
                     });
-                });
-                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                }).add(() => {
+                    doAwait(batchHandler.storeBatch(evt1, cb) as any,(res) => {
+                        this.ctx.storeBatch = 2;
+                        this.ctx.result = result;
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.storeBatch(evt2, cb) as any,(res) => {
+                        this.ctx.storeBatch = 3;
+                        this.ctx.result = result;
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.hasStoredBatch(cb1),(res) => {});
+                }).add(() => {
+                    doAwait(batchHandler.cleanStorage(cb2) as any,(res) => {});
+                }).add(() => {
+                    doAwait(batchHandler.hasStoredBatch(cb3),(res) => {});
+                }).add(() => {
+                    doAwait(batchHandler.teardown(), () => {
+                        this.ctx.isclosed = true;
+                    });
+                }).concat(PollingAssert.asyncTaskPollingAssert(() => {
                     let isInit = this.ctx.isInit;
                     if (isInit) {
                         return true;
@@ -480,7 +509,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Send Next Batch: send Next Batch with web storge provider",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
@@ -506,71 +534,81 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let evt = TestHelper.mockEvent(endpoint, 1, false);
                 let evt1 = TestHelper.mockEvent(endpoint, 2, false);
                 let evt2 = TestHelper.mockEvent(endpoint, 3, false);
-                doAwait(batchHandler.storeBatch(evt),(res) => {
-                    this.ctx.storeBatch = 1;
-                    doAwait(batchHandler.storeBatch(evt1),(res) => {
-                        this.ctx.storeBatch = 2;
-                        doAwait(batchHandler.storeBatch(evt2),(res) => {
-                            this.ctx.storeBatch = 3;
-                            let sender1Payload: any[] = []
-                            let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
-                                sender1Payload.push(payload);
-                                oncomplete(400, {});
-                            }
-                            // 200 should be called first, in some case, re-try will be added back (sender2) and event2 will be returned again
-                            // This is to guarantee the test gets events in order
-                            let sender2Payload: any[] = []
-                            let sender2 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
-                                sender2Payload.push(payload);
-                                oncomplete(200, {});
-                            }
-                            let sender3Payload: any[] = []
-                            let sender3 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
-                                sender3Payload.push(payload);
-                                oncomplete(500, {});
-                            }
 
-                            let res1: any[] = [];
-                            let cb1 = (res) =>  {
-                                res1.push(res);
-                            }
-                            doAwait(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any,(res) => {
-                                this.ctx.sendBatch1 = true;
-                                this.ctx.sendBatch1Res = res1;
-                                this.ctx.sendBatch1Pd =  sender1Payload;
-                                let res2: any[] = [];
-                                let cb2 = (res) =>  {
-                                    res2.push(res);
-                                }
-                                
-                                doAwait(batchHandler.sendNextBatch(cb2, false, {sendPOST: sender2}) as any,(res) => {
-                                    this.ctx.sendBatch2 = true;
-                                    this.ctx.sendBatch2Res = res2;
-                                    this.ctx.sendBatch2Pd =  sender2Payload;
-                                    let res3: any[] = [];
-                                    let cb3 = (res) =>  {
-                                        res3.push(res);
-                                    }
-                                    doAwait(batchHandler.sendNextBatch(cb3, false, {sendPOST: sender3}) as any,(res) => {
-                                        this.ctx.sendBatch3 = true;
-                                        this.ctx.sendBatch3Res = res3;
-                                        this.ctx.sendBatch3Pd =  sender3Payload;
-                                        let cb4 = (res) => {
-                                            this.ctx.hasBatch1Called = true;
-                                            this.ctx.hasBatch1 = res && res.length >= 1;
-                                        }
-                                        doAwait(batchHandler.hasStoredBatch(cb4),(res) => {
-                                            doAwait( batchHandler.teardown(), () => {
-                                                this.ctx.isclosed = true;
-                                            });
-                                        });
-                                    });
-                                });
-                            });
-                        });
+                let sender1Payload: any[] = []
+                let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender1Payload.push(payload);
+                    oncomplete(400, {});
+                }
+                let sender2Payload: any[] = []
+                let sender2 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender2Payload.push(payload);
+                    oncomplete(200, {});
+                }
+                let sender3Payload: any[] = []
+                let sender3 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sender3Payload.push(payload);
+                    oncomplete(500, {});
+                }
+
+                let res1: any[] = [];
+                let cb1 = (res) =>  {
+                    res1.push(res);
+                }
+                let res2: any[] = [];
+                let cb2 = (res) =>  {
+                    res2.push(res);
+                }
+                let res3: any[] = [];
+                let cb3 = (res) =>  {
+                    res3.push(res);
+                }
+                let cb4 = (res) => {
+                    this.ctx.hasBatch1Called = true;
+                    this.ctx.hasBatch1 = res && res.length >= 1;
+                }
+                
+                return this._asyncQueue().add(() => {
+                    doAwait(batchHandler.storeBatch(evt), (res) => {
+                        this.ctx.storeBatch = 1;
                     });
-                });
-                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                }).add(() => {
+                    doAwait(batchHandler.storeBatch(evt1), (res) => {
+                        this.ctx.storeBatch = 2;
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.storeBatch(evt2), (res) => {
+                        this.ctx.storeBatch = 3;
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any, (res) => {
+                        this.ctx.sendBatch1 = true;
+                        this.ctx.sendBatch1Res = res1;
+                        this.ctx.sendBatch1Pd = sender1Payload;
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.sendNextBatch(cb2, false, {sendPOST: sender2}) as any, (res) => {
+                        // 200 should be called first, in some case, re-try will be added back (sender2) and event2 will be returned again
+                        // This is to guarantee the test gets events in order
+                        this.ctx.sendBatch2 = true;
+                        this.ctx.sendBatch2Res = res2;
+                        this.ctx.sendBatch2Pd = sender2Payload;
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.sendNextBatch(cb3, false, {sendPOST: sender3}) as any, (res) => {
+                        this.ctx.sendBatch3 = true;
+                        this.ctx.sendBatch3Res = res3;
+                        this.ctx.sendBatch3Pd = sender3Payload;
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.hasStoredBatch(cb4), (res) => {
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.teardown(), () => {
+                        this.ctx.isclosed = true;
+                    });
+
+                }).concat(PollingAssert.asyncTaskPollingAssert(() => {
                     let storeBatch = this.ctx.storeBatch;
                     if (storeBatch && storeBatch == 3) {
                         return true;
@@ -651,10 +689,8 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 
         });
 
-
         this.testCase({
             name: "Send Next Batch: send Next Batch with IndexedDB provider",
-            pollDelay: 1000,
             test: ()=> {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.IndexedDb], autoClean: false, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
@@ -681,43 +717,46 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let evt = TestHelper.mockEvent(endpoint, 1, false);
                 let evt1 = TestHelper.mockEvent(endpoint, 2, false);
                 let evt2 = TestHelper.mockEvent(endpoint, 3, false);
-                doAwait(batchHandler.storeBatch(evt),(res) => {
-                    this.ctx.storeBatch = 1;
-                    doAwait(batchHandler.storeBatch(evt1),(res) => {
+                
+                return this._asyncQueue().add(() => {
+                    doAwait(batchHandler.storeBatch(evt), (res) => {
+                        this.ctx.storeBatch = 1;
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.storeBatch(evt1), (res) => {
                         this.ctx.storeBatch = 2;
-                        doAwait(batchHandler.storeBatch(evt2),(res) => {
-                            this.ctx.storeBatch = 3;
-                            let sender1Payload: any[] = []
-                            let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
-                                sender1Payload.push(payload);
-                                oncomplete(400, {});
-                            }
-                            let res1: any[] = [];
-                        
-                            let cb1 = (res) =>  {
-                                res1.push(res);
-                            }
-                        
-                            doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any,(res) => {
-                                this.ctx.sendBatch1 = true;
-                                this.ctx.sendBatch1Res = res1;
-                                this.ctx.sendBatch1Pd =  sender1Payload;
-                                Assert.equal(res.value.state, eBatchSendStatus.Drop, "should have drop status");
-                                doAwaitResponse(provider.getAllEvents(), (res)=> {
-                                    this.ctx.getAll = true;
-                                    let val = res.value;
-                                    Assert.equal(val && val.length, 2, "should have 2 events");
-                                    let sentcriticalCnt = res1[0].data.criticalCnt;
-                                    arrForEach(val, (item) => {
-                                        Assert.ok(sentcriticalCnt !== item.criticalCnt, "should not contain deleted item");
-                                    });
-                                });
-                            
+                    });
+                }).add(() => {
+                    doAwait(batchHandler.storeBatch(evt2), (res) => {
+                        this.ctx.storeBatch = 3;
+                    });
+                }).add(() => {
+                    let sender1Payload: any[] = [];
+                    let sender1 = (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                        sender1Payload.push(payload);
+                        oncomplete(400, {});
+                    };
+                    let res1: any[] = [];
+                    let cb1 = (res) => {
+                        res1.push(res);
+                    };
+                    doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any, (res) => {
+                        this.ctx.sendBatch1 = true;
+                        this.ctx.sendBatch1Res = res1;
+                        this.ctx.sendBatch1Pd = sender1Payload;
+                        Assert.equal(res.value.state, eBatchSendStatus.Drop, "should have drop status");
+                        doAwaitResponse(provider.getAllEvents(), (res)=> {
+                            this.ctx.getAll = true;
+                            let val = res.value;
+                            Assert.equal(val && val.length, 2, "should have 2 events");
+                            let sentcriticalCnt = res1[0].data.criticalCnt;
+                            arrForEach(val, (item) => {
+                                Assert.ok(sentcriticalCnt !== item.criticalCnt, "should not contain deleted item");
                             });
                         });
+                        
                     });
-                });
-                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                }).concat(PollingAssert.asyncTaskPollingAssert(() => {
                     let storeBatch = this.ctx.storeBatch;
                     if (storeBatch && storeBatch == 3) {
                         return true;
@@ -746,7 +785,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Send Next Batch: send Next Batch with IndexedDB provider test1 with retry code",
-            pollDelay: 1000,
             test: () => {
                 let batchHandler = this.batchHandler;
                 this.ctx.isInit = true;
@@ -813,7 +851,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Send Next Batch: send Next Batch with IndexedDB provider test1 with 200",
-            pollDelay: 1000,
             test: () => {
                 let batchHandler = this.batchHandler;
                 this.ctx.isInit = true;
@@ -831,7 +868,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
                     oncomplete(200, {});
                 }
            
-
                 let res1: any[] = [];
                 let cb1 = (res) =>  {
                     res1.push(res);
@@ -873,7 +909,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Send Next Batch: send Next Batch with IndexedDB provider test1 with unload events",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageKey = "AIOffline_1_dc.services.visualstudio.com";
@@ -953,7 +988,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Send Next Batch: Error handle store batch",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
@@ -1010,7 +1044,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Send Next Batch: Error handle clean batch",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
@@ -1067,7 +1100,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Send Next Batch: Error handle add batch with remove error",
-            pollDelay: 1000,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
@@ -1132,7 +1164,6 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
         this.testCase({
             name: "Send Next Batch: Error handle add batch",
-            pollDelay: 100,
             test: () => {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
