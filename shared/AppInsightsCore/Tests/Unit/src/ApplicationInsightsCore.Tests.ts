@@ -2018,6 +2018,56 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
 
+        this.testCase({
+            name: "should properly redact URLs with ports",
+            test: () => {
+                const url = "https://user:pass@example.com:8080/path";
+                const redactedLocation = fieldRedaction(url);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com:8080/path",
+                    "URL with port should have credentials redacted while preserving port");
+            }
+        });
+
+        this.testCase({
+            name: "should properly redact URLs with fragments",
+            test: () => {
+                const url = "https://user:pass@example.com/path?param=value#section";
+                const redactedLocation = fieldRedaction(url);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/path?param=value#section",
+                    "URL with fragment should have credentials redacted while preserving fragment");
+            }
+        });
+
+        this.testCase({
+            name: "should handle port-only URLs without credentials",
+            test: () => {
+                const url = "https://example.com:8080/api";
+                const redactedLocation = fieldRedaction(url);
+                Assert.equal(redactedLocation, "https://example.com:8080/api",
+                    "URL with port but no credentials should remain unchanged");
+            }
+        });
+
+        this.testCase({
+            name: "should handle URLs with IP addresses, ports and credentials",
+            test: () => {
+                const url = "https://admin:secret@192.168.1.1:8443/admin";
+                const redactedLocation = fieldRedaction(url);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@192.168.1.1:8443/admin",
+                    "URL with IP address and port should have credentials redacted");
+            }
+        });
+
+        this.testCase({
+            name: "should handle complex URLs with port, query parameters and fragment",
+            test: () => {
+                const url = "https://username:password@example.com:8443/path/to/resource?sig=secret&color=blue#section2";
+                const redactedLocation = fieldRedaction(url);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com:8443/path/to/resource?sig=REDACTED&color=blue#section2",
+                    "Complex URL should have credentials and sensitive query parameters redacted while preserving other components");
+            }
+        });
+
         function _createBuckets(num: number) {
             // Using helper function as TypeScript 2.5.3 is complaining about new Array<number>(100).fill(0);
             let buckets: number[] = [];
