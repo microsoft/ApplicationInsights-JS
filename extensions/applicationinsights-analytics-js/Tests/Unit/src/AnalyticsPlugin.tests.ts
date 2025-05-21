@@ -1110,7 +1110,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
                 
                 return this._asyncQueue()
-                    .concat(this.waitForExceptionPromise(1))
+                    .add(this.waitForExceptionPromise(1))
                     .add(() => {
                         let isLocal = window.location.protocol === "file:";
                         let exp = this.trackSpy.args[0];
@@ -1193,7 +1193,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     Assert.ok(!this.throwInternalSpy.called, "No internal errors");
                 
                     return this._asyncQueue()
-                        .concat(this.waitForExceptionPromise(1))
+                        .add(this.waitForExceptionPromise(1))
                         .add(() => {
                             let exp = this.trackSpy.args[0];
                             const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
@@ -1268,7 +1268,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
                 
                 return this._asyncQueue()
-                    .concat(this.waitForExceptionPromise(1))
+                    .add(this.waitForExceptionPromise(1))
                     .add(() => {
                         let isLocal = window.location.protocol === "file:";
                         let exp = this.trackSpy.args[0];
@@ -1351,7 +1351,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
                 
                 return this._asyncQueue()
-                    .concat(this.waitForExceptionPromise(1))
+                    .add(this.waitForExceptionPromise(1))
                     .add(() => {
                         let isLocal = window.location.protocol === "file:";
                         let exp = this.trackSpy.args[0];
