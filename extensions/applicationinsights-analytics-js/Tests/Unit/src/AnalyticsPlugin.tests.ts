@@ -2172,19 +2172,20 @@ export class AnalyticsPluginTests extends AITestClass {
     // waitForExceptionPromise for use with _asyncQueue that returns a promise
     private waitForExceptionPromise(expectedCount: number, action: string = "", includeInit: boolean = false) {
         const testContext = this._testContext;
+        const self = this; // Capture 'this' context to use in the polling function
         
-        return PollingAssert.asyncTaskPollingAssert(this, function () {
+        return PollingAssert.asyncTaskPollingAssert(function () {
             const message = "polling: " + new Date().toISOString() + " " + action;
             Assert.ok(true, message);
             console.log(message);
-            this.checkNoInternalErrors();
+            self.checkNoInternalErrors();
             if (testContext && testContext.clock) {
                 testContext.clock.tick(500);
             }
             
             let argCount = 0;
-            if (this.trackSpy.called) {
-                this.trackSpy.args.forEach(call => {
+            if (self.trackSpy && self.trackSpy.called) {
+                self.trackSpy.args.forEach(call => {
                     argCount += call.length;
                 });
             }
@@ -2192,31 +2193,31 @@ export class AnalyticsPluginTests extends AITestClass {
             Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking spy " + new Date().toISOString());
             try {
                 if (argCount >= expectedCount) {
-                    let payloads: any = [];
-                    this.trackSpy.args[0][0].forEach(item => {
-                        payloads.push(item.item);
-                    });
-                    const payload = JSON.parse(payloads);
-                    const baseType = payload.data.baseType;
-                    // call the appropriate Validate depending on the baseType
-                    switch (baseType) {
-                        case Event.dataType:
-                            return EventValidator.EventValidator.Validate(payload, baseType);
-                        case Trace.dataType:
-                            return TraceValidator.TraceValidator.Validate(payload, baseType);
-                        case Exception.dataType:
-                            return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                        case Metric.dataType:
-                            return MetricValidator.MetricValidator.Validate(payload, baseType);
-                        case PageView.dataType:
-                            return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                        case PageViewPerformance.dataType:
-                            return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                        case RemoteDependencyData.dataType:
-                            return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
-    
-                        default:
-                            return EventValidator.EventValidator.Validate(payload, baseType);
+                    // Use the existing getPayloadMessages method to extract payload data properly
+                    const payloadStr: string[] = self.getPayloadMessages(self.trackSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const baseType = payload.data.baseType;
+                        // call the appropriate Validate depending on the baseType
+                        switch (baseType) {
+                            case Event.dataType:
+                                return EventValidator.EventValidator.Validate(payload, baseType);
+                            case Trace.dataType:
+                                return TraceValidator.TraceValidator.Validate(payload, baseType);
+                            case Exception.dataType:
+                                return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
+                            case Metric.dataType:
+                                return MetricValidator.MetricValidator.Validate(payload, baseType);
+                            case PageView.dataType:
+                                return PageViewValidator.PageViewValidator.Validate(payload, baseType);
+                            case PageViewPerformance.dataType:
+                                return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
+                            case RemoteDependencyData.dataType:
+                                return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
+        
+                            default:
+                                return EventValidator.EventValidator.Validate(payload, baseType);
+                        }
                     }
                 }
             } finally {
