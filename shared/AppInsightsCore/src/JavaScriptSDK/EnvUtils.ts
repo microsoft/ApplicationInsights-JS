@@ -371,7 +371,7 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
  */
 export function fieldRedaction(input: string): string {
     if (!input) {
-        return input === undefined ? "" : input;
+        return "";
     }
 
     try {
