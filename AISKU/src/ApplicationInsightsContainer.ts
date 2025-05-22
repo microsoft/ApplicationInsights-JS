@@ -1,7 +1,44 @@
-import { throwUnsupported } from "@nevware21/ts-utils";
+import { hasWindow, isUndefined, throwUnsupported } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "./AISku";
 import { IApplicationInsights } from "./IApplicationInsights";
 import { Snippet } from "./Snippet";
+
+/**
+ * Detects if the current environment is a server-side rendering environment.
+ * This is used to prevent the SDK from initializing in environments like
+ * Angular SSR in Cloudflare Workers where certain operations are prohibited.
+ * @returns {boolean} True if the environment appears to be server-side rendering
+ */
+export function isServerSideRenderingEnvironment(): boolean {
+    // Check for typical SSR environments:
+    // 1. No window object (Node.js, most SSR)
+    // 2. Window exists but document is not fully initialized (some hybrid SSR)
+    // 3. Process exists and is running in a Node-like environment
+
+    // Check if we're in a non-browser environment
+    if (!hasWindow()) {
+        return true;
+    }
+
+    // Check for Angular Universal/SSR specific indicators
+    const win = window as any;
+    if (win && typeof win === 'object') {
+        // Angular Universal might have these properties
+        if (win["process"] && win["process"]["browser"] === false) {
+            return true;
+        }
+    }
+
+    // Check for CloudFlare worker environment
+    if (typeof self !== 'undefined' && typeof self.WorkerGlobalScope !== 'undefined') {
+        // Additional CloudFlare worker check
+        if (self instanceof self.WorkerGlobalScope) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 export class ApplicationInsightsContainer {
 
