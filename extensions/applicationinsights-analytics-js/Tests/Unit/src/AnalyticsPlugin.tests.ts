@@ -2174,15 +2174,16 @@ export class AnalyticsPluginTests extends AITestClass {
         const testContext = this._testContext;
         const self = this; // Capture 'this' context to use in the polling function
         
+        // Execute initial setup actions outside of the polling function
+        const message = "polling: " + new Date().toISOString() + " " + action;
+        Assert.ok(true, message);
+        console.log(message);
+        self.checkNoInternalErrors();
+        if (testContext && testContext.clock) {
+            testContext.clock.tick(500);
+        }
+        
         return PollingAssert.asyncTaskPollingAssert(function () {
-            const message = "polling: " + new Date().toISOString() + " " + action;
-            Assert.ok(true, message);
-            console.log(message);
-            self.checkNoInternalErrors();
-            if (testContext && testContext.clock) {
-                testContext.clock.tick(500);
-            }
-            
             let argCount = 0;
             if (self.trackSpy && self.trackSpy.called) {
                 self.trackSpy.args.forEach(call => {
