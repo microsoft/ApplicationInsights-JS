@@ -295,15 +295,16 @@ export class DomContentHandler implements IContentHandler {
             }
 
             function _getHtmlIdAndContentName(element:Element) {
-                let dataTags = (_self._config || {}).dataTags;
-                let callback = (_self._config || {}).callback;
+                let dataTags = (_self._config || {}).dataTags || {};
+                let callback = (_self._config || {}).callback || {};
                 let htmlContent: any = {};
                 if(!element) {
                     return htmlContent;
                 }
 
                 if (dataTags.useDefaultContentNameOrId) {
-                    const customizedContentName = callback.contentName ? callback.contentName(element, dataTags.useDefaultContentNameOrId) : "";
+                    let contentNameFn = callback.contentName;
+                    const customizedContentName = contentNameFn ? contentNameFn(element, dataTags.useDefaultContentNameOrId) : "";
                     const defaultContentName = _getDefaultContentName(element, dataTags.useDefaultContentNameOrId);
 
                     htmlContent = {
