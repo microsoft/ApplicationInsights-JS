@@ -49,11 +49,8 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                 }
             } catch (e) {
                 // If descriptor check fails, try direct access
-                try {
-                    canAccessStorage = !!gbl[storageTypeName];
-                } catch (e) {
-                    // Both checks failed, storage is not accessible
-                }
+                // This will be caught by the outer try-catch if it fails
+                canAccessStorage = !!gbl[storageTypeName];
             }
         }
         
