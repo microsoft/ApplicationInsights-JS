@@ -32,70 +32,53 @@ function _getLocalStorageObject(): Storage {
  */
 function _getVerifiedStorageObject(storageType: StorageType): Storage {
     let result = null;
+    const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
     
     try {
-        // Determine storage type name once
-        const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
+        // Default to false - assume storage is not available
+        let canAccessStorage = false;
+        const gbl = getGlobal();
         
-        // Check if we can safely access the storage object
-        let canAccessStorage = true;
-        
-        try {
-            // First, check if window exists and get the global object once
-            const gbl: any = getGlobal();
-            if (isNullOrUndefined(gbl)) {
-                canAccessStorage = false;
-            } else {
-                // Try to indirectly check if the property exists and is accessible
-                // This avoids direct property access that might throw in Safari with "Block All Cookies" enabled
-                
-                // Some browsers throw when accessing the property descriptors with getOwnPropertyDescriptor
-                // Others throw when directly accessing the storage objects
-                // This approach tries both methods safely
+        // Only proceed if we have a global object
+        if (!isNullOrUndefined(gbl)) {
+            // Try the safest method first (property descriptor)
+            try {
+                const descriptor = objGetOwnPropertyDescriptor(gbl, storageTypeName);
+                if (descriptor && descriptor.get) {
+                    canAccessStorage = true;
+                }
+            } catch (e) {
+                // If descriptor check fails, try direct access
                 try {
-                    // Method 1: Try using property descriptor - safer in Safari with cookies blocked
-                    const descriptor = objGetOwnPropertyDescriptor(gbl, storageTypeName);
-                    if (!descriptor || !descriptor.get) {
-                        canAccessStorage = false;
-                    }
+                    canAccessStorage = !!gbl[storageTypeName];
                 } catch (e) {
-                    // If the above fails, attempt a direct access inside a try-catch
-                    try {
-                        const storage = gbl[storageTypeName];
-                        if (!storage) {
-                            canAccessStorage = false;
-                        }
-                    } catch (e) {
-                        // If both approaches fail, storage cannot be safely accessed
-                        canAccessStorage = false;
-                    }
+                    // Both checks failed, storage is not accessible
                 }
             }
-        } catch (e) {
-            canAccessStorage = false;
         }
         
-        // Only proceed if storage can be safely accessed
+        // If we determined storage might be accessible, verify it works
         if (canAccessStorage) {
-            // Now we can safely try to use the storage
             try {
-                let uid = (new Date).toString();
-                let storage: Storage = getGlobalInst(storageTypeName);
-                let name:string = _storagePrefix + uid;
+                const uid = (new Date).toString();
+                const storage: Storage = getGlobalInst(storageTypeName);
+                const name = _storagePrefix + uid;
+                
                 storage.setItem(name, uid);
-                let fail = storage.getItem(name) !== uid;
+                const success = storage.getItem(name) === uid;
                 storage.removeItem(name);
-                if (!fail) {
+                
+                if (success) {
                     result = storage;
                 }
-            } catch (exception) {
+            } catch (e) {
                 // Storage exists but can't be used (quota exceeded, etc.)
             }
         }
-    } catch (exception) {
+    } catch (e) {
         // Catch any unexpected errors
     }
-
+    
     return result;
 }
 
