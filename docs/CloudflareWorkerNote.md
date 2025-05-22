@@ -46,3 +46,13 @@ private async lazyLoadAppInsights(connectionString: string) {
 ```
 
 This conditional initialization approach prevents the SDK from being instantiated during server-side rendering, avoiding the property redefinition issues.
+
+## Reproducing the Issue
+
+To better understand and diagnose this issue, we've created reproduction scripts in the `/docs/reproduction/` directory. These scripts provide:
+
+1. An automated setup for an Angular + Cloudflare Worker environment
+2. Analysis tools to inspect how esbuild processes the code
+3. Implementation of various workarounds to test their effectiveness
+
+You can use these scripts to reproduce the issue and test different solutions in your environment.
