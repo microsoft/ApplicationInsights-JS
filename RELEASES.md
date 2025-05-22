@@ -2,6 +2,16 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.3.8 (May 22nd, 2025)
+
+This release contains an important fix for a change introduced in v3.3.7 that caused a ReferenceError exception to be thrown when running in strict mode. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2529).
+
+### Changelog
+
+- #2524 Update Components to address governance issues
+- #2536 Fix ReferenceError in Click Analytics v3.3.7 by reordering variable declaration
+- #2530 Add negative isArray check to _isConfigDefaults
+
 ## 3.3.7 (May 7th, 2025)
 
 ### Potential breaking change
