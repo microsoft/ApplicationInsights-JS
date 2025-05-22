@@ -332,10 +332,12 @@ export class AppInsightsSku implements IApplicationInsights {
                     if (logger) {
                         logger.warnToConsole("Application Insights SDK is not initializing in server-side rendering environment. " +
                             "This is by design to avoid issues in Angular SSR and similar environments. " +
+                            "The SDK may cause errors related to 'name' property in Cloudflare Workers environment. " +
                             "To disable this check, set the feature flag 'ssr_disabled' to true in the config.");
                     } else if (typeof console !== "undefined" && console) {
                         console.warn("Application Insights SDK is not initializing in server-side rendering environment. " +
                             "This is by design to avoid issues in Angular SSR and similar environments. " +
+                            "The SDK may cause errors related to 'name' property in Cloudflare Workers environment. " +
                             "To disable this check, set the feature flag 'ssr_disabled' to true in the config.");
                     }
                     return _self;

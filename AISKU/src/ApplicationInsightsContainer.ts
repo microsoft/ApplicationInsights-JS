@@ -27,6 +27,17 @@ export function isServerSideRenderingEnvironment(): boolean {
         if (win["process"] && win["process"]["browser"] === false) {
             return true;
         }
+
+        // Check for restricted properties in environment (like name property in Cloudflare Workers)
+        // that would cause the SDK to fail
+        try {
+            // Test for the ability to redefine properties like 'name' which is not allowed in Cloudflare Workers
+            const testObj = {};
+            Object.defineProperty(testObj, 'name', { value: 'test' });
+        } catch (e) {
+            // If we can't define properties, we're likely in a restricted environment
+            return true;
+        }
     }
 
     // Check for CloudFlare worker environment
