@@ -30,13 +30,12 @@ import { IPromise, createPromise, createSyncPromise, doAwaitResponse } from "@ne
 import { arrForEach, arrIndexOf, isPromiseLike, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
-    CONFIG_ENDPOINT_URL, SSR_DISABLED_FEATURE, STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR,
+    CONFIG_ENDPOINT_URL, STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR,
     STR_GET_PLUGIN, STR_POLL_INTERNAL_LOGS, STR_SET_AUTHENTICATED_USER_CONTEXT, STR_SNIPPET, STR_START_TRACK_EVENT, STR_START_TRACK_PAGE,
     STR_STOP_TRACK_EVENT, STR_STOP_TRACK_PAGE, STR_TRACK_DEPENDENCY_DATA, STR_TRACK_EVENT, STR_TRACK_EXCEPTION, STR_TRACK_METRIC,
     STR_TRACK_PAGE_VIEW, STR_TRACK_TRACE
 } from "./InternalConstants";
 import { Snippet } from "./Snippet";
-import { isServerSideRenderingEnvironment } from "./ApplicationInsightsContainer";
 
 export { IRequestHeaders };
 
@@ -83,8 +82,7 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //for versions after 3.1.2 (>= 3.2.0)
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable},
-        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none},
-        [SSR_DISABLED_FEATURE]: {mode: FeatureOptInMode.disable} // By default, restrictions check is enabled (so this feature is disabled)
+        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none}
     },
     throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
         {
@@ -322,27 +320,6 @@ export class AppInsightsSku implements IApplicationInsights {
             _self.loadAppInsights = (legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights => {
                 if (legacyMode) {
                     throwUnsupported("Legacy Mode is no longer supported")
-                }
-
-                // Check for environments with property redefinition restrictions (like Cloudflare Workers)
-                const hasRestrictions = isServerSideRenderingEnvironment();
-                const ssrDisabled = isFeatureEnabled(SSR_DISABLED_FEATURE, _config, false);
-                if (hasRestrictions && !ssrDisabled) {
-                    // Log a message (if logger is available) explaining why initialization is skipped
-                    if (logger) {
-                        logger.warnToConsole("Application Insights SDK initialization skipped due to environment restrictions. " +
-                            "This is likely because you're running in a Cloudflare Worker or similar environment " +
-                            "that prohibits property redefinition (specifically the 'name' property). " +
-                            "To force initialization despite these restrictions, set the feature flag " + 
-                            "'ssr_disabled' to true in the config.");
-                    } else if (typeof console !== "undefined" && console) {
-                        console.warn("Application Insights SDK initialization skipped due to environment restrictions. " +
-                            "This is likely because you're running in a Cloudflare Worker or similar environment " +
-                            "that prohibits property redefinition (specifically the 'name' property). " +
-                            "To force initialization despite these restrictions, set the feature flag " + 
-                            "'ssr_disabled' to true in the config.");
-                    }
-                    return _self;
                 }
 
                 function _updateSnippetProperties(snippet: Snippet) {
