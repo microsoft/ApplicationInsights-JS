@@ -309,7 +309,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'DataSanitizerTests: dataSanitizerUrl handles invalid URLs',
             test: () => {
                 // Invalid URL that will cause URL constructor to throw
-                const invalidUrl = "not-a-valid-url";
+                const invalidUrl = 123545;
                 
                 // Act & Assert
                 const result = dataSanitizeUrl(this.logger, invalidUrl);
@@ -344,10 +344,10 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // Act & Assert
                 const nullResult = dataSanitizeUrl(this.logger, null);
-                Assert.equal("", nullResult, "Null input should return empty string");
+                Assert.equal(null, nullResult, "Null input should return null");
                 
                 const undefinedResult = dataSanitizeUrl(this.logger, undefined);
-                Assert.equal("", undefinedResult, "Undefined input should return empty string");
+                Assert.equal(undefined, undefinedResult, "Undefined input should return undefined");
             }
         });
         this.testCase({

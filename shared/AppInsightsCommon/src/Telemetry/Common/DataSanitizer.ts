@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, fieldRedaction, getJSON, hasJSON, isObject, objForEachKey, strTrim
+    IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, fieldRedaction, getJSON, hasJSON, isObject, objForEachKey,
+    strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { asString, strSubstr, strSubstring } from "@nevware21/ts-utils";
 
@@ -99,7 +100,9 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
 }
 
 export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any) {
-    url = fieldRedaction(url);
+    if (typeof url === "string"){
+        url = fieldRedaction(url);
+    }
     return dataSanitizeInput(logger, url, DataSanitizerValues.MAX_URL_LENGTH, _eInternalMessageId.UrlTooLong);
 }
 
