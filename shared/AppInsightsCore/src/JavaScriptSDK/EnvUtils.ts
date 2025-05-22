@@ -8,6 +8,7 @@ import {
 } from "@nevware21/ts-utils";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
+import { IConfiguration } from "../applicationinsights-core-js";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
 declare var XDomainRequest: any;
@@ -367,11 +368,22 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
 /**
  * Redacts sensitive information from a URL string, including credentials and specific query parameters.
  * @param input - The URL string to be redacted.
+ * @param config - Configuration object that contain redactionEnabled setting.
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
-export function fieldRedaction(input: string): string {
+export function fieldRedaction(input: string, config: IConfiguration): string {
     if (!input) {
         return input === undefined ? "" : input;
+    }
+
+    // Check if redaction is enabled in the configuration
+    const isRedactionEnabled = !!(
+        config && config.redactionEnabled === true
+    );
+
+    // If redaction is not enabled, return the original input
+    if (!isRedactionEnabled) {
+        return input;
     }
 
     try {
