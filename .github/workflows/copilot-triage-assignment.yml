@@ -1,0 +1,57 @@
+name: Assign Copilot to Triage
+
+on:
+  issues:
+    types: [labeled]
+  pull_request:
+    types: [labeled]
+
+jobs:
+  assign-copilot:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.label.name == 'triage-copilot' }}
+    steps:
+      - name: Check if actor is a code owner
+        id: check_actor
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const isTeamMember = await github.rest.teams.getMembershipForUserInOrg({
+              org: 'microsoft',
+              team_slug: 'ApplicationInsights-JS-owners',
+              username: context.actor
+            }).catch(() => false);
+            
+            const isTeamMember2 = await github.rest.teams.getMembershipForUserInOrg({
+              org: 'microsoft',
+              team_slug: 'ApplicationInsights-JS-CodeOwners',
+              username: context.actor
+            }).catch(() => false);
+            
+            return isTeamMember || isTeamMember2;
+          result-encoding: string
+
+      - name: Assign GitHub Copilot
+        if: ${{ steps.check_actor.outputs.result == 'true' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issueOrPR = context.payload.issue || context.payload.pull_request;
+            
+            if (issueOrPR) {
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueOrPR.number,
+                assignees: ['github-actions[bot]']
+              });
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueOrPR.number,
+                body: 'GitHub Copilot has been assigned to assist with this task.'
+              });
+              
+              console.log(`GitHub Copilot has been assigned to ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);
+            }
