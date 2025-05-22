@@ -84,7 +84,7 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable},
         [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none},
-        [SSR_DISABLED_FEATURE]: {mode: FeatureOptInMode.disable} // By default, SSR detection is enabled (so this feature is disabled)
+        [SSR_DISABLED_FEATURE]: {mode: FeatureOptInMode.disable} // By default, restrictions check is enabled (so this feature is disabled)
     },
     throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
         {
@@ -324,21 +324,23 @@ export class AppInsightsSku implements IApplicationInsights {
                     throwUnsupported("Legacy Mode is no longer supported")
                 }
 
-                // Check for Server-Side Rendering environments and skip initialization if detected
-                const isServerSideEnv = isServerSideRenderingEnvironment();
+                // Check for environments with property redefinition restrictions (like Cloudflare Workers)
+                const hasRestrictions = isServerSideRenderingEnvironment();
                 const ssrDisabled = isFeatureEnabled(SSR_DISABLED_FEATURE, _config, false);
-                if (isServerSideEnv && !ssrDisabled) {
-                    // Log a message (if logger is available) mentioning the SDK is not loading in SSR mode
+                if (hasRestrictions && !ssrDisabled) {
+                    // Log a message (if logger is available) explaining why initialization is skipped
                     if (logger) {
-                        logger.warnToConsole("Application Insights SDK is not initializing in server-side rendering environment. " +
-                            "This is by design to avoid issues in Angular SSR and similar environments. " +
-                            "The SDK may cause errors related to 'name' property in Cloudflare Workers environment. " +
-                            "To disable this check, set the feature flag 'ssr_disabled' to true in the config.");
+                        logger.warnToConsole("Application Insights SDK initialization skipped due to environment restrictions. " +
+                            "This is likely because you're running in a Cloudflare Worker or similar environment " +
+                            "that prohibits property redefinition (specifically the 'name' property). " +
+                            "To force initialization despite these restrictions, set the feature flag " + 
+                            "'ssr_disabled' to true in the config.");
                     } else if (typeof console !== "undefined" && console) {
-                        console.warn("Application Insights SDK is not initializing in server-side rendering environment. " +
-                            "This is by design to avoid issues in Angular SSR and similar environments. " +
-                            "The SDK may cause errors related to 'name' property in Cloudflare Workers environment. " +
-                            "To disable this check, set the feature flag 'ssr_disabled' to true in the config.");
+                        console.warn("Application Insights SDK initialization skipped due to environment restrictions. " +
+                            "This is likely because you're running in a Cloudflare Worker or similar environment " +
+                            "that prohibits property redefinition (specifically the 'name' property). " +
+                            "To force initialization despite these restrictions, set the feature flag " + 
+                            "'ssr_disabled' to true in the config.");
                     }
                     return _self;
                 }

@@ -32,4 +32,4 @@ export const STR_TRACK_DEPENDENCY_DATA = _TRACK + "DependencyData" as "trackDepe
 export const STR_SET_AUTHENTICATED_USER_CONTEXT = "set" + _AUTHENTICATED_USER_CONTEXT as "setAuthenticatedUserContext";
 export const STR_CLEAR_AUTHENTICATED_USER_CONTEXT = "clear" + _AUTHENTICATED_USER_CONTEXT as "clearAuthenticatedUserContext";
 export const CONFIG_ENDPOINT_URL = "https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json";
-export const SSR_DISABLED_FEATURE = "ssr_disabled"; // Feature flag to disable SSR detection
+export const SSR_DISABLED_FEATURE = "ssr_disabled"; // Feature flag to bypass property redefinition restrictions check
