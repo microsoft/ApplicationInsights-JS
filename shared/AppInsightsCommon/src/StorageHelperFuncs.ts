@@ -8,20 +8,21 @@ import {
 import { ICachedValue, createCachedValue, objGetOwnPropertyDescriptor } from "@nevware21/ts-utils";
 import { StorageType } from "./Enums";
 
-let _canUseLocalStorage: boolean = null;
-let _canUseSessionStorage: boolean = null;
 let _storagePrefix: string = "";
 
 // Create cached values for verified storage objects to avoid repeated checks
-let _verifiedLocalStorage: ICachedValue<Storage> = createCachedValue<Storage>(null);
-let _verifiedSessionStorage: ICachedValue<Storage> = createCachedValue<Storage>(null);
+let _verifiedLocalStorage: ICachedValue<Storage> = null;
+let _verifiedSessionStorage: ICachedValue<Storage> = null;
 
 /**
  * Gets the localStorage object if available
  * @returns {Storage} - Returns the storage object if available else returns null
  */
 function _getLocalStorageObject(): Storage {
-    return _verifiedLocalStorage.value(() => _getVerifiedStorageObject(StorageType.LocalStorage));
+    if (!_verifiedLocalStorage) {
+        _verifiedLocalStorage = createCachedValue(_getVerifiedStorageObject(StorageType.LocalStorage));
+    }
+    return _verifiedLocalStorage.v;
 }
 
 /**
@@ -66,7 +67,87 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                 storage.removeItem(name);
                 
                 if (success) {
-                    result = storage;
+                    // Create a wrapped storage object that handles errors
+                    const originalStorage = storage;
+                    const wrappedStorage = {
+                        getItem: function(key: string): string {
+                            try {
+                                return originalStorage.getItem(key);
+                            } catch (e) {
+                                // Reset the cached storage on error
+                                if (storageType === StorageType.LocalStorage) {
+                                    _verifiedLocalStorage = null;
+                                } else {
+                                    _verifiedSessionStorage = null;
+                                }
+                                return null;
+                            }
+                        },
+                        setItem: function(key: string, value: string): void {
+                            try {
+                                originalStorage.setItem(key, value);
+                            } catch (e) {
+                                // Reset the cached storage on error
+                                if (storageType === StorageType.LocalStorage) {
+                                    _verifiedLocalStorage = null;
+                                } else {
+                                    _verifiedSessionStorage = null;
+                                }
+                            }
+                        },
+                        removeItem: function(key: string): void {
+                            try {
+                                originalStorage.removeItem(key);
+                            } catch (e) {
+                                // Reset the cached storage on error
+                                if (storageType === StorageType.LocalStorage) {
+                                    _verifiedLocalStorage = null;
+                                } else {
+                                    _verifiedSessionStorage = null;
+                                }
+                            }
+                        },
+                        clear: function(): void {
+                            try {
+                                originalStorage.clear();
+                            } catch (e) {
+                                // Reset the cached storage on error
+                                if (storageType === StorageType.LocalStorage) {
+                                    _verifiedLocalStorage = null;
+                                } else {
+                                    _verifiedSessionStorage = null;
+                                }
+                            }
+                        },
+                        key: function(index: number): string {
+                            try {
+                                return originalStorage.key(index);
+                            } catch (e) {
+                                // Reset the cached storage on error
+                                if (storageType === StorageType.LocalStorage) {
+                                    _verifiedLocalStorage = null;
+                                } else {
+                                    _verifiedSessionStorage = null;
+                                }
+                                return null;
+                            }
+                        },
+                        get length(): number {
+                            try {
+                                return originalStorage.length;
+                            } catch (e) {
+                                // Reset the cached storage on error
+                                if (storageType === StorageType.LocalStorage) {
+                                    _verifiedLocalStorage = null;
+                                } else {
+                                    _verifiedSessionStorage = null;
+                                }
+                                return 0;
+                            }
+                        }
+                    };
+                    
+                    result = wrappedStorage as Storage;
                 }
             } catch (e) {
                 // Storage exists but can't be used (quota exceeded, etc.)
@@ -84,7 +165,10 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
  * @returns {Storage} - Returns the storage object if available else returns null
  */
 function _getSessionStorageObject(): Storage {
-    return _verifiedSessionStorage.value(() => _getVerifiedStorageObject(StorageType.SessionStorage));
+    if (!_verifiedSessionStorage) {
+        _verifiedSessionStorage = createCachedValue(_getVerifiedStorageObject(StorageType.SessionStorage));
+    }
+    return _verifiedSessionStorage.v;
 }
 
 /**
@@ -102,8 +186,7 @@ function _safeStorageOperation<T>(storageFn: () => T, storageType: StorageType, 
     } catch (e) {
         // If operation fails, invalidate the cache
         if (storageType === StorageType.LocalStorage) {
-            _canUseLocalStorage = false;
-            _verifiedLocalStorage = createCachedValue(null);
+            _verifiedLocalStorage = null;
             
             // Log error if logger is provided
             if (logger && errorMessageId) {
@@ -116,8 +199,7 @@ function _safeStorageOperation<T>(storageFn: () => T, storageType: StorageType, 
                 );
             }
         } else {
-            _canUseSessionStorage = false;
-            _verifiedSessionStorage = createCachedValue(null);
+            _verifiedSessionStorage = null;
             
             // Log error if logger is provided
             if (logger && errorMessageId) {
@@ -138,8 +220,6 @@ function _safeStorageOperation<T>(storageFn: () => T, storageType: StorageType, 
  * Disables the global SDK usage of local or session storage if available
  */
 export function utlDisableStorage() {
-    _canUseLocalStorage = false;
-    _canUseSessionStorage = false;
     _verifiedLocalStorage = createCachedValue(null);
     _verifiedSessionStorage = createCachedValue(null);
 }
@@ -147,18 +227,19 @@ export function utlDisableStorage() {
 export function utlSetStoragePrefix(storagePrefix: string) {
     _storagePrefix = storagePrefix || "";
     // Reset the cached storage instances since prefix changed
-    _verifiedLocalStorage = createCachedValue(null);
-    _verifiedSessionStorage = createCachedValue(null);
+    _verifiedLocalStorage = null;
+    _verifiedSessionStorage = null;
 }
 
 /**
  * Re-enables the global SDK usage of local or session storage if available
  */
 export function utlEnableStorage() {
-    _verifiedLocalStorage = createCachedValue(null);
-    _verifiedSessionStorage = createCachedValue(null);
-    _canUseLocalStorage = utlCanUseLocalStorage(true);
-    _canUseSessionStorage = utlCanUseSessionStorage(true);
+    _verifiedLocalStorage = null;
+    _verifiedSessionStorage = null;
+    // Force recheck of storage availability
+    utlCanUseLocalStorage(true);
+    utlCanUseSessionStorage(true);
 }
 
 /**
@@ -167,15 +248,11 @@ export function utlEnableStorage() {
  * @param reset - Should the usage be reset and determined only based on whether LocalStorage is available
  */
 export function utlCanUseLocalStorage(reset?: boolean): boolean {
-    if (reset || _canUseLocalStorage === null) {
-        const storage = _getVerifiedStorageObject(StorageType.LocalStorage);
-        _canUseLocalStorage = !!storage;
-        if (_canUseLocalStorage && !_verifiedLocalStorage.v) {
-            _verifiedLocalStorage = createCachedValue(storage);
-        }
+    if (reset || !_verifiedLocalStorage) {
+        _verifiedLocalStorage = createCachedValue(_getVerifiedStorageObject(StorageType.LocalStorage));
     }
 
-    return _canUseLocalStorage;
+    return !!(_verifiedLocalStorage && _verifiedLocalStorage.v);
 }
 
 export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): string {
@@ -232,15 +309,11 @@ export function utlRemoveStorage(logger: IDiagnosticLogger, name: string): boole
 }
 
 export function utlCanUseSessionStorage(reset?: boolean): boolean {
-    if (reset || _canUseSessionStorage === null) {
-        const storage = _getVerifiedStorageObject(StorageType.SessionStorage);
-        _canUseSessionStorage = !!storage;
-        if (_canUseSessionStorage && !_verifiedSessionStorage.v) {
-            _verifiedSessionStorage = createCachedValue(storage);
-        }
+    if (reset || !_verifiedSessionStorage) {
+        _verifiedSessionStorage = createCachedValue(_getVerifiedStorageObject(StorageType.SessionStorage));
     }
 
-    return _canUseSessionStorage;
+    return !!(_verifiedSessionStorage && _verifiedSessionStorage.v);
 }
 
 export function utlGetSessionStorageKeys(): string[] {
