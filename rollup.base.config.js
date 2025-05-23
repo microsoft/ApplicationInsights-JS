@@ -182,7 +182,8 @@ function getLocalPackageVer(source, absPath) {
 }
 
 const NODE_MODULES_SRC = {
-    //"@nevware21/ts-async": "https://raw.githubusercontent.com/nevware21/ts-async/refs/tags/{version}{path}",
+    "@nevware21/ts-async": "https://raw.githubusercontent.com/nevware21/ts-async/refs/tags/{version}/src{path}",
+    "@nevware21/ts-utils": "https://raw.githubusercontent.com/nevware21/ts-utils/refs/tags/{version}/src{path}",
     "@microsoft/dynamicproto-js": "https://raw.githubusercontent.com/microsoft/dynamicproto-js/refs/tags/{version}/lib{path}",
     "tools/shims": "https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/refs/tags/{rootVersion}/tools/shims{path}"
 };
@@ -226,13 +227,32 @@ function getSourceMapPathTransformer(distPath, theNameSpace, isDebug) {
                 console.log(` -- Absolute: ${absPath}`);
             }
 
-            let idx = absPath.indexOf("node_modules");
-            if (idx != -1) {
-                if (isDebug) {
-                    console.log(` -- NodeModule: ${absPath}`);
+            // Special handling for @nevware21 packages that may be referenced in sourcemaps
+            if (normalizedPath.indexOf("@nevware21/") !== -1 && (normalizedPath.indexOf("build/es5/") !== -1 || normalizedPath.indexOf("/mod/") !== -1)) {
+                const packageName = normalizedPath.match(/@nevware21\/([^\/]+)/)?.[0];
+                if (packageName && NODE_MODULES_SRC[packageName]) {
+                    // Extract version from path or use latest if not found
+                    const version = packageName === "@nevware21/ts-async" ? "0.4.0" : "0.11.3"; // Default versions if not found
+                    const srcPath = normalizedPath
+                        .replace(/.*@nevware21\/[^\/]+\/build\/es5\/mod\//, "/src/")
+                        .replace(/.*@nevware21\/[^\/]+\/build\/es5\//, "/src/")
+                        .replace(/\.js$/, ".ts");
+                    
+                    resolvedPath = NODE_MODULES_SRC[packageName].replace("{version}", version).replace("{path}", srcPath);
+                    if (isDebug) {
+                        console.log(` -- Resolved @nevware21 path: ${resolvedPath}`);
+                    }
                 }
+            }
 
-                let ver = getPackageVer(absPath);
+            if (!resolvedPath) {
+                let idx = absPath.indexOf("node_modules");
+                if (idx != -1) {
+                    if (isDebug) {
+                        console.log(` -- NodeModule: ${absPath}`);
+                    }
+
+                    let ver = getPackageVer(absPath);
                 if (ver) {
                     if (isDebug) {
                         console.log(` -- PackageVer: ${ver.name}@${ver.ver}`);
@@ -240,7 +260,14 @@ function getSourceMapPathTransformer(distPath, theNameSpace, isDebug) {
 
                     let src = NODE_MODULES_SRC[ver.name];
                     if (src) {
-                        resolvedPath = src.replace("{rootVersion}", rootVersion).replace("{version}", ver.ver).replace("{path}", ver.path);
+                        // For @nevware21 packages, adjust the path to handle build/es5 references
+                        if (ver.name.indexOf("@nevware21/") === 0 && ver.path.indexOf("/build/es5/") !== -1) {
+                            // Replace build/es5 path with appropriate source path for sourcemap references
+                            let newPath = ver.path.replace("/build/es5/mod/", "/src/");
+                            resolvedPath = src.replace("{rootVersion}", rootVersion).replace("{version}", ver.ver).replace("{path}", newPath);
+                        } else {
+                            resolvedPath = src.replace("{rootVersion}", rootVersion).replace("{version}", ver.ver).replace("{path}", ver.path);
+                        }
                     }
 
                     if (!resolvedPath) {
