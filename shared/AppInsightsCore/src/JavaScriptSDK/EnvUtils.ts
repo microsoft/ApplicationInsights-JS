@@ -6,6 +6,7 @@ import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@m
 import {
     getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, mathMax, strIndexOf
 } from "@nevware21/ts-utils";
+import { IConfiguration } from "../applicationinsights-core-js";
 import { strContains } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
@@ -365,41 +366,134 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
 }
 
 /**
+ * Redacts user information from a URL
+ * @param url - The URL string to redact
+ * @returns The URL with user information redacted
+ */
+function redactUserInfo(url: string): string {
+    const schemeEndIndex = url.indexOf(":");
+    if (schemeEndIndex === -1) {
+        // not a valid url
+        return url;
+    }
+    const len = url.length;
+    if (len <= schemeEndIndex + 2
+        || url.charAt(schemeEndIndex + 1) !== "/"
+        || url.charAt(schemeEndIndex + 2) !== "/") {
+        // has no authority component
+        return url;
+    }
+    // look for the end of the authority component:
+    //   '/', '?', '#' ==> start of path
+    let index: number;
+    let atIndex = -1;
+    for (index = schemeEndIndex + 3; index < len; index++) {
+        const c = url.charAt(index);
+
+        if (c === "@") {
+            atIndex = index;
+        }
+
+        if (c === "/" || c === "?" || c === "#") {
+            break;
+        }
+    }
+    if (atIndex === -1 || atIndex === len - 1) {
+        return url;
+    }
+    return url.substring(0, schemeEndIndex + 3) + "REDACTED:REDACTED" + url.substring(atIndex);
+}
+
+/**
+ * Redacts sensitive query parameters from a URL
+ * @param url - The URL string to redact
+ * @returns The URL with sensitive query parameters redacted
+ */
+function redactQueryParameters(url: string): string {
+    const questionMarkIndex = url.indexOf("?");
+    if (questionMarkIndex === -1 || !containsParamToRedact(url)) {
+        return url;
+    }
+    let urlAfterQuestionMark = "";
+    // To build a parameter name until we reach the '=' character
+    // If the parameter name is a one to redact, we will redact the value
+    let currentParamName = "";
+    for (let i = questionMarkIndex + 1; i < url.length; i++) {
+        const currentChar = url.charAt(i);
+        if (currentChar === "=") {
+            urlAfterQuestionMark += "=";
+            if ((SENSITIVE_QUERY_PARAMS as readonly string[]).indexOf(currentParamName) !== -1) {
+                // Redact the value
+                urlAfterQuestionMark += STR_REDACTED;
+                
+                // Skip over the original parameter value
+                let nextIndex = i + 1;
+                while (nextIndex < url.length) {
+                    const c = url.charAt(nextIndex);
+                    if (c === "&" || c === "#") {
+                        break;
+                    }
+                    nextIndex++;
+                }
+                // Update the loop counter to point to the character just before
+                // the next parameter or fragment start
+                i = nextIndex - 1;
+            }
+        } else if (currentChar === "&") {
+            urlAfterQuestionMark += currentChar;
+            currentParamName = "";
+        } else if (currentChar === "#") {
+            urlAfterQuestionMark += url.substring(i);
+            break;
+        } else {
+            if (currentChar === "=" || currentChar === "&" || i === url.length - 1) {
+                // Reset param name at delimiters or end of string
+                currentParamName = "";
+            } else {
+                // Only build the param name before we see a '='
+                currentParamName += currentChar;
+            }
+            urlAfterQuestionMark += currentChar;
+        }
+    }
+    return url.substring(0, questionMarkIndex) + "?" + urlAfterQuestionMark;
+}
+
+/**
+ * Checks if the URL contains any parameters that need to be redacted
+ * @param urlpart - The URL or URL part to check
+ * @returns True if the URL contains parameters that need redaction, false otherwise
+ */
+function containsParamToRedact(urlpart: string): boolean {
+    for (let i = 0; i < SENSITIVE_QUERY_PARAMS.length; i++) {
+        if (urlpart.indexOf(SENSITIVE_QUERY_PARAMS[i]) !== -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Redacts sensitive information from a URL string, including credentials and specific query parameters.
  * @param input - The URL string to be redacted.
+ * @param config - Configuration object that contain redactionEnabled setting.
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
-export function fieldRedaction(input: string): string {
+export function fieldRedaction(input: string, config: IConfiguration): string {
     if (!input) {
         return "";
     }
-
+    if (input.indexOf(" ") !== -1) {
+        return input; // URLs with spaces are likely not valid URLs
+    }
+    const isRedactionDisabled = config && config.redactionEnabled === false;
+    if (isRedactionDisabled) {
+        return input;
+    }
     try {
-        const parsedUrl = new URL(input);
-        let isUrlModified = false;
-        
-        // Handle credentials
-        if (parsedUrl.username || parsedUrl.password) {
-            if (parsedUrl.username) {
-                parsedUrl.username = STR_REDACTED
-                isUrlModified = true;
-            }
-            if (parsedUrl.password) {
-                parsedUrl.password = STR_REDACTED
-                isUrlModified = true;
-            }
-        }
-
-        // Handle sensitive query parameters
-        for (const param of SENSITIVE_QUERY_PARAMS) {
-            if (parsedUrl.searchParams.has(param)) {
-                parsedUrl.searchParams.set(param, STR_REDACTED);
-                isUrlModified = true;
-            }
-        }
-
-        // Return the modified URL string
-        return isUrlModified ? parsedUrl.href : input;
+        let parsedUrl = redactUserInfo(input);
+        parsedUrl = redactQueryParameters(parsedUrl);
+        return parsedUrl;
     } catch (e) {
         return input;
     }
