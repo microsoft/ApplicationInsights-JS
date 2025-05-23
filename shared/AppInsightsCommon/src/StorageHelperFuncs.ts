@@ -8,24 +8,20 @@ import {
 import { ICachedValue, createCachedValue, objGetOwnPropertyDescriptor } from "@nevware21/ts-utils";
 import { StorageType } from "./Enums";
 
-let _canUseLocalStorage: boolean = undefined;
-let _canUseSessionStorage: boolean = undefined;
+let _canUseLocalStorage: boolean = null;
+let _canUseSessionStorage: boolean = null;
 let _storagePrefix: string = "";
 
 // Create cached values for verified storage objects to avoid repeated checks
-const _verifiedLocalStorage: ICachedValue<Storage> = createCachedValue<Storage>(null);
-const _verifiedSessionStorage: ICachedValue<Storage> = createCachedValue<Storage>(null);
+let _verifiedLocalStorage: ICachedValue<Storage> = createCachedValue<Storage>(null);
+let _verifiedSessionStorage: ICachedValue<Storage> = createCachedValue<Storage>(null);
 
 /**
  * Gets the localStorage object if available
  * @returns {Storage} - Returns the storage object if available else returns null
  */
 function _getLocalStorageObject(): Storage {
-    if (utlCanUseLocalStorage()) {
-        return _verifiedLocalStorage.value(() => _getVerifiedStorageObject(StorageType.LocalStorage));
-    }
-
-    return null;
+    return _verifiedLocalStorage.value(() => _getVerifiedStorageObject(StorageType.LocalStorage));
 }
 
 /**
@@ -88,11 +84,7 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
  * @returns {Storage} - Returns the storage object if available else returns null
  */
 function _getSessionStorageObject(): Storage {
-    if (utlCanUseSessionStorage()) {
-        return _verifiedSessionStorage.value(() => _getVerifiedStorageObject(StorageType.SessionStorage));
-    }
-
-    return null;
+    return _verifiedSessionStorage.value(() => _getVerifiedStorageObject(StorageType.SessionStorage));
 }
 
 /**
@@ -111,7 +103,7 @@ function _safeStorageOperation<T>(storageFn: () => T, storageType: StorageType, 
         // If operation fails, invalidate the cache
         if (storageType === StorageType.LocalStorage) {
             _canUseLocalStorage = false;
-            _verifiedLocalStorage.reset();
+            _verifiedLocalStorage = createCachedValue(null);
             
             // Log error if logger is provided
             if (logger && errorMessageId) {
@@ -125,7 +117,7 @@ function _safeStorageOperation<T>(storageFn: () => T, storageType: StorageType, 
             }
         } else {
             _canUseSessionStorage = false;
-            _verifiedSessionStorage.reset();
+            _verifiedSessionStorage = createCachedValue(null);
             
             // Log error if logger is provided
             if (logger && errorMessageId) {
@@ -148,23 +140,23 @@ function _safeStorageOperation<T>(storageFn: () => T, storageType: StorageType, 
 export function utlDisableStorage() {
     _canUseLocalStorage = false;
     _canUseSessionStorage = false;
-    _verifiedLocalStorage.reset();
-    _verifiedSessionStorage.reset();
+    _verifiedLocalStorage = createCachedValue(null);
+    _verifiedSessionStorage = createCachedValue(null);
 }
 
 export function utlSetStoragePrefix(storagePrefix: string) {
     _storagePrefix = storagePrefix || "";
     // Reset the cached storage instances since prefix changed
-    _verifiedLocalStorage.reset();
-    _verifiedSessionStorage.reset();
+    _verifiedLocalStorage = createCachedValue(null);
+    _verifiedSessionStorage = createCachedValue(null);
 }
 
 /**
  * Re-enables the global SDK usage of local or session storage if available
  */
 export function utlEnableStorage() {
-    _verifiedLocalStorage.reset();
-    _verifiedSessionStorage.reset();
+    _verifiedLocalStorage = createCachedValue(null);
+    _verifiedSessionStorage = createCachedValue(null);
     _canUseLocalStorage = utlCanUseLocalStorage(true);
     _canUseSessionStorage = utlCanUseSessionStorage(true);
 }
@@ -175,10 +167,11 @@ export function utlEnableStorage() {
  * @param reset - Should the usage be reset and determined only based on whether LocalStorage is available
  */
 export function utlCanUseLocalStorage(reset?: boolean): boolean {
-    if (reset || _canUseLocalStorage === undefined) {
-        _canUseLocalStorage = !!_getVerifiedStorageObject(StorageType.LocalStorage);
-        if (_canUseLocalStorage) {
-            _verifiedLocalStorage.reset(); // Force recalculation if needed
+    if (reset || _canUseLocalStorage === null) {
+        const storage = _getVerifiedStorageObject(StorageType.LocalStorage);
+        _canUseLocalStorage = !!storage;
+        if (_canUseLocalStorage && !_verifiedLocalStorage.v) {
+            _verifiedLocalStorage = createCachedValue(storage);
         }
     }
 
@@ -239,10 +232,11 @@ export function utlRemoveStorage(logger: IDiagnosticLogger, name: string): boole
 }
 
 export function utlCanUseSessionStorage(reset?: boolean): boolean {
-    if (reset || _canUseSessionStorage === undefined) {
-        _canUseSessionStorage = !!_getVerifiedStorageObject(StorageType.SessionStorage);
-        if (_canUseSessionStorage) {
-            _verifiedSessionStorage.reset(); // Force recalculation if needed
+    if (reset || _canUseSessionStorage === null) {
+        const storage = _getVerifiedStorageObject(StorageType.SessionStorage);
+        _canUseSessionStorage = !!storage;
+        if (_canUseSessionStorage && !_verifiedSessionStorage.v) {
+            _verifiedSessionStorage = createCachedValue(storage);
         }
     }
 
