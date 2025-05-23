@@ -70,7 +70,7 @@ module.exports = function (grunt) {
                 replacements: function() {
                
                     var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
-                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
+                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.jsonc").trim();
 
                     while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
                         snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
@@ -110,7 +110,7 @@ module.exports = function (grunt) {
                 replacements: function() {
                
                     var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.js");
-                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.js").trim();
+                    var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.jsonc").trim();
                     while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
                         snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
                     }

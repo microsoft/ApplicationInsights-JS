@@ -9,8 +9,6 @@ paths-ignore:
   - '**/dist-history/'
   - '**/rollup.config.js'
   - '**/docs/webSdk/'
-
-query-filters:
-  - exclude:
-      paths:
-        - tools/applicationinsights-web-snippet/src/snippet-config.js
+  - '**/tools/**/*.jsonc'
+  - '**/node_modules/'
+  - '**/*.d.ts'
