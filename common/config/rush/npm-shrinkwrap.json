@@ -2858,9 +2858,9 @@
       "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.5.155",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.155.tgz",
-      "integrity": "sha512-ps5KcGGmwL8VaeJlvlDlu4fORQpv3+GIcF5I3f9tUKUlJ/wsysh6HU8P5L1XWRYeXfA0oJd4PyM8ds8zTFf6Ng=="
+      "version": "1.5.157",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.157.tgz",
+      "integrity": "sha512-/0ybgsQd1muo8QlnuTpKwtl0oX5YMlUGbm8xyqgDU00motRkKFFbUJySAQBWcY79rVqNLWIWa87BGVGClwAB2w=="
     },
     "node_modules/emoji-regex": {
       "version": "8.0.0",
@@ -6224,9 +6224,9 @@
       }
     },
     "node_modules/tar-fs": {
-      "version": "3.0.8",
-      "resolved": "https://registry.npmjs.org/tar-fs/-/tar-fs-3.0.8.tgz",
-      "integrity": "sha512-ZoROL70jptorGAlgAYiLoBLItEKw/fUxg9BSYK/dF/GAGYFJOJJJMvjPAKDJraCXFwadD456FCuvLWgfhMsPwg==",
+      "version": "3.0.9",
+      "resolved": "https://registry.npmjs.org/tar-fs/-/tar-fs-3.0.9.tgz",
+      "integrity": "sha512-XF4w9Xp+ZQgifKakjZYmFdkLoSWd34VGKcsTCwlNWM7QG3ZbaxnTsaBwnjFZqHRf/rROxaR8rXnbtwdvaDI+lA==",
       "dependencies": {
         "pump": "^3.0.0",
         "tar-stream": "^3.1.5"
@@ -6819,9 +6819,9 @@
       }
     },
     "node_modules/zod": {
-      "version": "3.25.17",
-      "resolved": "https://registry.npmjs.org/zod/-/zod-3.25.17.tgz",
-      "integrity": "sha512-8hQzQ/kMOIFbwOgPrm9Sf9rtFHpFUMy4HvN0yEB0spw14aYi0uT5xG5CE2DB9cd51GWNsz+DNO7se1kztHMKnw==",
+      "version": "3.25.23",
+      "resolved": "https://registry.npmjs.org/zod/-/zod-3.25.23.tgz",
+      "integrity": "sha512-Od2bdMosahjSrSgJtakrwjMDb1zM1A3VIHCPGveZt/3/wlrTWBya2lmEh2OYe4OIu8mPTmmr0gnLHIWQXdtWBg==",
       "funding": {
         "url": "https://github.com/sponsors/colinhacks"
       }
