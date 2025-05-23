@@ -11,6 +11,9 @@ permissions:
   issues: write
   pull-requests: write
 
+env:
+  COPILOT_USERNAMES: ${{ vars.COPILOT_USERNAMES }}
+
 jobs:
   assign-copilot:
     runs-on: ubuntu-latest
