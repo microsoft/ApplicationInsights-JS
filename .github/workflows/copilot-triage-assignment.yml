@@ -73,7 +73,7 @@ jobs:
                 let assigneeUsername = '';
                 
                 // Try multiple possible usernames for Copilot
-                const possibleCopilotUsers = ['copilot', 'github-copilot', 'copilot-ai'];
+                const possibleCopilotUsers = process.env.COPILOT_USERNAMES.split(',').map(u => u.trim());
                 
                 for (const username of possibleCopilotUsers) {
                   try {
