@@ -6,52 +6,114 @@ on:
   pull_request:
     types: [labeled]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   assign-copilot:
     runs-on: ubuntu-latest
     if: ${{ github.event.label.name == 'triage-copilot' }}
     steps:
-      - name: Check if actor is a code owner
-        id: check_actor
+      - name: Check if actor is authorized
+        id: check_auth
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const isTeamMember = await github.rest.teams.getMembershipForUserInOrg({
-              org: 'microsoft',
-              team_slug: 'ApplicationInsights-JS-owners',
-              username: context.actor
-            }).catch(() => false);
+            // Check if the user has admin/write permissions (this will work regardless of team membership)
+            try {
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor
+              });
+              
+              // Admin or write permission is sufficient
+              if (permission.data.permission === 'admin' || permission.data.permission === 'write') {
+                console.log(`${context.actor} has ${permission.data.permission} permissions - authorized`);
+                return true;
+              }
+            } catch (error) {
+              console.log(`Error checking permissions: ${error.message}`);
+            }
             
-            const isTeamMember2 = await github.rest.teams.getMembershipForUserInOrg({
-              org: 'microsoft',
-              team_slug: 'ApplicationInsights-JS-CodeOwners',
-              username: context.actor
-            }).catch(() => false);
+            // Also check direct mention in CODEOWNERS file
+            try {
+              const codeownersContent = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: 'CODEOWNERS'
+              });
+              
+              const content = Buffer.from(codeownersContent.data.content, 'base64').toString();
+              if (content.includes(`@${context.actor}`)) {
+                console.log(`${context.actor} is directly mentioned in CODEOWNERS - authorized`);
+                return true;
+              }
+            } catch (error) {
+              console.log(`Error checking CODEOWNERS: ${error.message}`);
+            }
             
-            return isTeamMember || isTeamMember2;
+            console.log(`${context.actor} is not authorized to assign Copilot`);
+            return false;
           result-encoding: string
 
       - name: Assign GitHub Copilot
-        if: ${{ steps.check_actor.outputs.result == 'true' }}
+        if: ${{ steps.check_auth.outputs.result == 'true' }}
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issueOrPR = context.payload.issue || context.payload.pull_request;
             
             if (issueOrPR) {
-              await github.rest.issues.addAssignees({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueOrPR.number,
-                assignees: ['github-actions[bot]']
-              });
-              
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueOrPR.number,
-                body: 'GitHub Copilot has been assigned to assist with this task.'
-              });
-              
-              console.log(`GitHub Copilot has been assigned to ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);
+              try {
+                // First, try to assign directly to GitHub Copilot
+                try {
+                  await github.rest.issues.addAssignees({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueOrPR.number,
+                    assignees: ['github-copilot']
+                  });
+                  
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueOrPR.number,
+                    body: 'GitHub Copilot has been assigned to assist with this task.'
+                  });
+                  
+                  console.log(`GitHub Copilot has been assigned to ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);
+                  return;
+                } catch (error) {
+                  console.log(`Couldn't assign to github-copilot: ${error.message}`);
+                  // Continue to alternative approach
+                }
+                
+                // If that fails, add a comment with mention instead
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueOrPR.number,
+                  body: 'GitHub Copilot, please assist with this task.'
+                });
+                
+                console.log(`GitHub Copilot has been mentioned in ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);
+              } catch (error) {
+                console.log(`Error in Copilot assignment: ${error.message}`);
+                
+                try {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueOrPR.number,
+                    body: `⚠️ Error assigning/mentioning GitHub Copilot: ${error.message}`
+                  });
+                } catch (commentError) {
+                  console.log(`Error posting comment: ${commentError.message}`);
+                }
+              }
             }
