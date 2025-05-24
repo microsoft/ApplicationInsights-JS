@@ -67,17 +67,33 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                 storage.removeItem(name);
                 
                 if (success) {
-                    // Create a wrapped storage object that handles errors
+                    // Create a wrapped storage object that protects write operations
                     const originalStorage = storage;
                     const wrappedStorage = {
+                        // Read operations - don't reset cache on error
                         getItem: function(key: string): string {
                             try {
                                 return originalStorage.getItem(key);
                             } catch (e) {
-                                // Don't reset on get operations
                                 return null;
                             }
                         },
+                        key: function(index: number): string {
+                            try {
+                                return originalStorage.key(index);
+                            } catch (e) {
+                                return null;
+                            }
+                        },
+                        get length(): number {
+                            try {
+                                return originalStorage.length;
+                            } catch (e) {
+                                return 0;
+                            }
+                        },
+                        
+                        // Write operations - reset cache on error
                         setItem: function(key: string, value: string): void {
                             try {
                                 originalStorage.setItem(key, value);
@@ -113,22 +129,6 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                                     _verifiedSessionStorage = null;
                                 }
                             }
-                        },
-                        key: function(index: number): string {
-                            try {
-                                return originalStorage.key(index);
-                            } catch (e) {
-                                // Don't reset on get operations
-                                return null;
-                            }
-                        },
-                        get length(): number {
-                            try {
-                                return originalStorage.length;
-                            } catch (e) {
-                                // Don't reset on get operations
-                                return 0;
-                            }
                         }
                     };
                     
@@ -156,50 +156,7 @@ function _getSessionStorageObject(): Storage {
     return _verifiedSessionStorage.v;
 }
 
-/**
- * Helper function to safely wrap storage operations in try/catch
- * and reset cache if an operation fails
- * @param storageFn - Function that performs a storage operation
- * @param storageType - Type of storage being accessed
- * @param fallbackValue - Value to return if operation fails
- * @param logger - Optional logger for error reporting
- * @returns Result of the storage operation or the fallback value
- */
-function _safeStorageOperation<T>(storageFn: () => T, storageType: StorageType, fallbackValue: T, logger?: IDiagnosticLogger, errorMessageId?: _eInternalMessageId, errorMessage?: string): T {
-    try {
-        return storageFn();
-    } catch (e) {
-        // If operation fails, invalidate the cache
-        if (storageType === StorageType.LocalStorage) {
-            _verifiedLocalStorage = null;
-            
-            // Log error if logger is provided
-            if (logger && errorMessageId) {
-                _throwInternal(
-                    logger,
-                    eLoggingSeverity.WARNING,
-                    errorMessageId,
-                    errorMessage + " " + getExceptionName(e),
-                    { exception: dumpObj(e) }
-                );
-            }
-        } else {
-            _verifiedSessionStorage = null;
-            
-            // Log error if logger is provided
-            if (logger && errorMessageId) {
-                _throwInternal(
-                    logger,
-                    eLoggingSeverity.WARNING,
-                    errorMessageId,
-                    errorMessage + " " + getExceptionName(e),
-                    { exception: dumpObj(e) }
-                );
-            }
-        }
-        return fallbackValue;
-    }
-}
+
 
 /**
  * Disables the global SDK usage of local or session storage if available
@@ -241,56 +198,59 @@ export function utlCanUseLocalStorage(reset?: boolean): boolean {
 }
 
 export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): string {
-    return _safeStorageOperation<string>(
-        () => {
-            const storage = _getLocalStorageObject();
-            if (storage !== null) {
-                return storage.getItem(name);
-            }
-            return null;
-        }, 
-        StorageType.LocalStorage,
-        null,
-        logger,
-        _eInternalMessageId.BrowserCannotReadLocalStorage,
-        "Browser failed read of local storage."
-    );
+    try {
+        const storage = _getLocalStorageObject();
+        if (storage !== null) {
+            return storage.getItem(name);
+        }
+    } catch (e) {
+        _throwInternal(
+            logger,
+            eLoggingSeverity.WARNING,
+            _eInternalMessageId.BrowserCannotReadLocalStorage,
+            "Browser failed read of local storage. " + getExceptionName(e),
+            { exception: dumpObj(e) }
+        );
+    }
+    return null;
 }
 
 export function utlSetLocalStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-    return _safeStorageOperation<boolean>(
-        () => {
-            const storage = _getLocalStorageObject();
-            if (storage !== null) {
-                storage.setItem(name, data);
-                return true;
-            }
-            return false;
-        },
-        StorageType.LocalStorage,
-        false,
-        logger,
-        _eInternalMessageId.BrowserCannotWriteLocalStorage,
-        "Browser failed write to local storage."
-    );
+    try {
+        const storage = _getLocalStorageObject();
+        if (storage !== null) {
+            storage.setItem(name, data);
+            return true;
+        }
+    } catch (e) {
+        _throwInternal(
+            logger,
+            eLoggingSeverity.WARNING,
+            _eInternalMessageId.BrowserCannotWriteLocalStorage,
+            "Browser failed write to local storage. " + getExceptionName(e),
+            { exception: dumpObj(e) }
+        );
+    }
+    return false;
 }
 
 export function utlRemoveStorage(logger: IDiagnosticLogger, name: string): boolean {
-    return _safeStorageOperation<boolean>(
-        () => {
-            const storage = _getLocalStorageObject();
-            if (storage !== null) {
-                storage.removeItem(name);
-                return true;
-            }
-            return false;
-        },
-        StorageType.LocalStorage,
-        false,
-        logger,
-        _eInternalMessageId.BrowserFailedRemovalFromLocalStorage,
-        "Browser failed removal of local storage item."
-    );
+    try {
+        const storage = _getLocalStorageObject();
+        if (storage !== null) {
+            storage.removeItem(name);
+            return true;
+        }
+    } catch (e) {
+        _throwInternal(
+            logger,
+            eLoggingSeverity.WARNING,
+            _eInternalMessageId.BrowserFailedRemovalFromLocalStorage,
+            "Browser failed removal of local storage item. " + getExceptionName(e),
+            { exception: dumpObj(e) }
+        );
+    }
+    return false;
 }
 
 export function utlCanUseSessionStorage(reset?: boolean): boolean {
@@ -302,70 +262,73 @@ export function utlCanUseSessionStorage(reset?: boolean): boolean {
 }
 
 export function utlGetSessionStorageKeys(): string[] {
-    return _safeStorageOperation<string[]>(
-        () => {
-            const keys: string[] = [];
-            if (utlCanUseSessionStorage()) {
-                objForEachKey(getGlobalInst<any>("sessionStorage"), (key) => {
-                    keys.push(key);
-                });
-            }
-            return keys;
-        },
-        StorageType.SessionStorage,
-        []
-    );
+    try {
+        const keys: string[] = [];
+        if (utlCanUseSessionStorage()) {
+            objForEachKey(getGlobalInst<any>("sessionStorage"), (key) => {
+                keys.push(key);
+            });
+        }
+        return keys;
+    } catch (e) {
+        // Invalidate session storage on any error
+        _verifiedSessionStorage = null;
+        return [];
+    }
 }
 
 export function utlGetSessionStorage(logger: IDiagnosticLogger, name: string): string {
-    return _safeStorageOperation<string>(
-        () => {
-            const storage = _getSessionStorageObject();
-            if (storage !== null) {
-                return storage.getItem(name);
-            }
-            return null;
-        },
-        StorageType.SessionStorage,
-        null,
-        logger,
-        _eInternalMessageId.BrowserCannotReadSessionStorage,
-        "Browser failed read of session storage."
-    );
+    try {
+        const storage = _getSessionStorageObject();
+        if (storage !== null) {
+            return storage.getItem(name);
+        }
+    } catch (e) {
+        _throwInternal(
+            logger,
+            eLoggingSeverity.WARNING,
+            _eInternalMessageId.BrowserCannotReadSessionStorage,
+            "Browser failed read of session storage. " + getExceptionName(e),
+            { exception: dumpObj(e) }
+        );
+    }
+    return null;
 }
 
 export function utlSetSessionStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-    return _safeStorageOperation<boolean>(
-        () => {
-            const storage = _getSessionStorageObject();
-            if (storage !== null) {
-                storage.setItem(name, data);
-                return true;
-            }
-            return false;
-        },
-        StorageType.SessionStorage,
-        false,
-        logger,
-        _eInternalMessageId.BrowserCannotWriteSessionStorage,
-        "Browser failed write to session storage."
-    );
+    try {
+        const storage = _getSessionStorageObject();
+        if (storage !== null) {
+            storage.setItem(name, data);
+            return true;
+        }
+    } catch (e) {
+        _throwInternal(
+            logger,
+            eLoggingSeverity.WARNING,
+            _eInternalMessageId.BrowserCannotWriteSessionStorage,
+            "Browser failed write to session storage. " + getExceptionName(e),
+            { exception: dumpObj(e) }
+        );
+    }
+    return false;
 }
 
 export function utlRemoveSessionStorage(logger: IDiagnosticLogger, name: string): boolean {
-    return _safeStorageOperation<boolean>(
-        () => {
-            const storage = _getSessionStorageObject();
-            if (storage !== null) {
-                storage.removeItem(name);
-                return true;
-            }
-            return false;
-        },
-        StorageType.SessionStorage,
-        false,
-        logger,
-        _eInternalMessageId.BrowserFailedRemovalFromSessionStorage,
-        "Browser failed removal of session storage item."
-    );
+    try {
+        const storage = _getSessionStorageObject();
+        if (storage !== null) {
+            storage.removeItem(name);
+            return true;
+        }
+    } catch (e) {
+        _throwInternal(
+            logger,
+            eLoggingSeverity.WARNING,
+            _eInternalMessageId.BrowserFailedRemovalFromSessionStorage,
+            "Browser failed removal of session storage item. " + getExceptionName(e),
+            { exception: dumpObj(e) }
+        );
+    }
+    return false;
 }
