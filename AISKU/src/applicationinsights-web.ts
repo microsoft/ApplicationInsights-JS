@@ -2,7 +2,7 @@ export { Snippet } from "./Snippet";
 export { IApplicationInsights } from "./IApplicationInsights";
 export { AppInsightsSku as ApplicationInsights } from "./AISku";
 
-export { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
+export { ApplicationInsightsContainer, isServerSideRenderingEnvironment } from "./ApplicationInsightsContainer";
 
 // Re-exports
 export {
