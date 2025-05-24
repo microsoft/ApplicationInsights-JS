@@ -12,8 +12,8 @@ import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,
     IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
     InstrumentFunc, InstrumentProto, _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace,
-    dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
-    isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
+    dumpObj, eLoggingSeverity, eventOn, fieldRedaction, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation,
+    getPerformance, isFunction, isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf, strSplit, strSubstr } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
@@ -1192,7 +1192,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         requestUrl = strSplit(location.href, "#")[0];
                     }
                 }
-
+                if (_self.core && _self.core.config && _self.core.config.redactionEnabled && requestUrl) {
+                    requestUrl = fieldRedaction(requestUrl);
+                }
                 ajaxData.requestUrl = requestUrl;
 
                 let method = "GET";

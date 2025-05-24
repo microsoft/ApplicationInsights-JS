@@ -2,7 +2,9 @@
 * @copyright Microsoft 2020
 */
 
-import { getDocument, getLocation, getWindow, hasDocument, isFunction } from "@microsoft/applicationinsights-core-js";
+import {
+    IConfiguration, fieldRedaction, getDocument, getLocation, getWindow, hasDocument, isFunction
+} from "@microsoft/applicationinsights-core-js";
 import { scheduleTimeout } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration, IOverrideValues } from "./Interfaces/Datamodel";
 import { findClosestAnchor, isValueAssigned } from "./common/Utils";
@@ -126,20 +128,23 @@ export function getPageName(config: IClickAnalyticsConfiguration, overrideValues
  * @param location - window.location or document.location
  * @returns Flag indicating if an element is market PII.
  */
-export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Location): string {
+export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Location, extConfig?: IConfiguration): string {
     if (!location) {
         return null;
     }
     var url = location.protocol + "//" + (location.hostname || location.host) +         // location.hostname is not supported on Opera and Opera for Android
         (isValueAssigned(location.port) ? ":" + location.port : "") +
         location.pathname;
-        
     if (!!config.urlCollectHash) { // false by default
         url += (isValueAssigned(location.hash)? location.hash : "");
     }
 
     if (!!config.urlCollectQuery) { // false by default
         url += (isValueAssigned(location.search)? location.search : "");
+    }
+
+    if (extConfig && extConfig.redactionEnabled && url) {
+        url = fieldRedaction(url);
     }
 
     return url;
