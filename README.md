@@ -450,7 +450,38 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | featureOptIn (#feature)<br/><sub>since 3.0.3</sub> | IFeatureOptIn | undefined | [Optional]  Set Feature opt in details. |
 | throttleMgrCfg <br/><sub>since 3.0.3</sub> | `{[key: number]: IThrottleMgrConfig}` | undefined | [Optional]  Set throttle mgr configuration by key. |
 | retryCodes | number[] | undefined | Identifies the status codes that will cause event batches to be resent, when `null` or `undefined` the SDK will use it's defaults `[401, 408, 429, 500, 502, 503, 504]`. `403` was removed in version 3.1.1. |
+| [disablePageUnloadEvents](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IConfiguration.html#disablePageUnloadEvents) | string[] | undefined | [Optional] An array of the page unload events that you would like to be ignored. [See detailed documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html). Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide". This can be used to avoid jQuery 3.7.1+ deprecation warnings by configuring as `disablePageUnloadEvents: ["unload"]`. |
+| [disablePageShowEvents](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IConfiguration.html#disablePageShowEvents) | string[] | undefined | [Optional] An array of page show events that you would like to be ignored. [See detailed documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html). Page Show events include "pageshow" and "visibilitychange" (with 'visible' state). |
 | expCfg <br/><sub>since 3.3.1</sub>| [`IExceptionConfig`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCommon/src/Interfaces/IExceptionTelemetry.ts) | undefined | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
+
+### Page Unload and Visibility Event Handling
+
+Application Insights SDK uses page lifecycle events to reliably send telemetry data before your page closes or navigates away. These events are essential for ensuring no telemetry data is lost during navigation, page refreshes, or tab/browser closures.
+
+**What these configurations do:**
+- Control which browser events the SDK uses to detect when the browser is about to unload, navigate away, become unresponsive, or get hibernated (especially on mobile)
+- Ensure all batched events are sent and not lost due to the browser closing or the user navigating away
+- Affect ALL telemetry types (page views, events, dependencies, exceptions, etc.)
+- Allow you to avoid deprecated event warnings (from jQuery 3.7.1+ or Chrome) while maintaining functionality
+
+**About visibility state:**
+When a browser tab becomes hidden (switching to another tab) or visible (returning to the tab), the browser fires "visibilitychange" events with document.visibilityState changing to "hidden" or "visible". The SDK uses these events to optimize telemetry sending.
+
+```js
+const appInsights = new ApplicationInsights({
+  config: {
+    connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
+    // Disable the deprecated 'unload' event to avoid jQuery 3.7.1+ deprecation warnings
+    // This also prevents Chrome's warnings about the unload event
+    disablePageUnloadEvents: ["unload"],
+    /* ...Other Configuration Options... */
+  }
+});
+appInsights.loadAppInsights();
+appInsights.trackPageView();
+```
+
+For more detailed information about browser compatibility and configuration options, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html).
 
 ### Feature
 

@@ -1,4 +1,5 @@
-import { AITestClass } from "@microsoft/ai-test-framework";
+// Import the local version of AITestClass to ensure compatibility
+import { AITestClass } from "../../../../../common/Tests/Framework/src/ai-test-framework";
 import { es5Check, es5Poly, importCheck } from "../../../src/applicationinsights-rollup-es5";
 
 export class Es5RollupTests extends AITestClass {
