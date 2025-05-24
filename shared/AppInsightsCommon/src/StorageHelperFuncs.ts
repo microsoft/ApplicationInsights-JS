@@ -190,11 +190,11 @@ export function utlEnableStorage() {
  * @param reset - Should the usage be reset and determined only based on whether LocalStorage is available
  */
 export function utlCanUseLocalStorage(reset?: boolean): boolean {
-    if (reset || !_verifiedLocalStorage) {
-        _verifiedLocalStorage = createCachedValue(_getVerifiedStorageObject(StorageType.LocalStorage));
+    if (reset) {
+        _verifiedLocalStorage = null;
     }
-
-    return !!(_verifiedLocalStorage && _verifiedLocalStorage.v);
+    
+    return !!_getLocalStorageObject();
 }
 
 export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): string {
@@ -254,11 +254,11 @@ export function utlRemoveStorage(logger: IDiagnosticLogger, name: string): boole
 }
 
 export function utlCanUseSessionStorage(reset?: boolean): boolean {
-    if (reset || !_verifiedSessionStorage) {
-        _verifiedSessionStorage = createCachedValue(_getVerifiedStorageObject(StorageType.SessionStorage));
+    if (reset) {
+        _verifiedSessionStorage = null;
     }
-
-    return !!(_verifiedSessionStorage && _verifiedSessionStorage.v);
+    
+    return !!_getSessionStorageObject();
 }
 
 export function utlGetSessionStorageKeys(): string[] {
