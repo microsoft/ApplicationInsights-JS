@@ -74,12 +74,7 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                             try {
                                 return originalStorage.getItem(key);
                             } catch (e) {
-                                // Reset the cached storage on error
-                                if (storageType === StorageType.LocalStorage) {
-                                    _verifiedLocalStorage = null;
-                                } else {
-                                    _verifiedSessionStorage = null;
-                                }
+                                // Don't reset on get operations
                                 return null;
                             }
                         },
@@ -123,12 +118,7 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                             try {
                                 return originalStorage.key(index);
                             } catch (e) {
-                                // Reset the cached storage on error
-                                if (storageType === StorageType.LocalStorage) {
-                                    _verifiedLocalStorage = null;
-                                } else {
-                                    _verifiedSessionStorage = null;
-                                }
+                                // Don't reset on get operations
                                 return null;
                             }
                         },
@@ -136,12 +126,7 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                             try {
                                 return originalStorage.length;
                             } catch (e) {
-                                // Reset the cached storage on error
-                                if (storageType === StorageType.LocalStorage) {
-                                    _verifiedLocalStorage = null;
-                                } else {
-                                    _verifiedSessionStorage = null;
-                                }
+                                // Don't reset on get operations
                                 return 0;
                             }
                         }
