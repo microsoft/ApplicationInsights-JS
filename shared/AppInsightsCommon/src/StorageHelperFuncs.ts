@@ -69,67 +69,38 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                 if (success) {
                     // Create a wrapped storage object that protects write operations
                     const originalStorage = storage;
+                    
+                    // Helper to create storage operation methods with consistent error handling
+                    const _createStorageOperation = function<T>(operationName: string, resetOnError: boolean, defaultValue?: T): Function {
+                        return function(...args: any[]): T {
+                            try {
+                                return originalStorage[operationName].apply(originalStorage, args);
+                            } catch (e) {
+                                // Reset cache on error for write operations only
+                                if (resetOnError) {
+                                    if (storageType === StorageType.LocalStorage) {
+                                        _verifiedLocalStorage = null;
+                                    } else {
+                                        _verifiedSessionStorage = null;
+                                    }
+                                }
+                                return defaultValue;
+                            }
+                        };
+                    }
+                    
                     const wrappedStorage = {
                         // Read operations - don't reset cache on error
-                        getItem: function(key: string): string {
-                            try {
-                                return originalStorage.getItem(key);
-                            } catch (e) {
-                                return null;
-                            }
-                        },
-                        key: function(index: number): string {
-                            try {
-                                return originalStorage.key(index);
-                            } catch (e) {
-                                return null;
-                            }
-                        },
-                        get length(): number {
-                            try {
-                                return originalStorage.length;
-                            } catch (e) {
-                                return 0;
-                            }
+                        getItem: _createStorageOperation<string>("getItem", false, null),
+                        key: _createStorageOperation<string>("key", false, null),
+                        get length(): number { 
+                            return _createStorageOperation<number>("length", false, 0)();
                         },
                         
                         // Write operations - reset cache on error
-                        setItem: function(key: string, value: string): void {
-                            try {
-                                originalStorage.setItem(key, value);
-                            } catch (e) {
-                                // Reset the cached storage on error
-                                if (storageType === StorageType.LocalStorage) {
-                                    _verifiedLocalStorage = null;
-                                } else {
-                                    _verifiedSessionStorage = null;
-                                }
-                            }
-                        },
-                        removeItem: function(key: string): void {
-                            try {
-                                originalStorage.removeItem(key);
-                            } catch (e) {
-                                // Reset the cached storage on error
-                                if (storageType === StorageType.LocalStorage) {
-                                    _verifiedLocalStorage = null;
-                                } else {
-                                    _verifiedSessionStorage = null;
-                                }
-                            }
-                        },
-                        clear: function(): void {
-                            try {
-                                originalStorage.clear();
-                            } catch (e) {
-                                // Reset the cached storage on error
-                                if (storageType === StorageType.LocalStorage) {
-                                    _verifiedLocalStorage = null;
-                                } else {
-                                    _verifiedSessionStorage = null;
-                                }
-                            }
-                        }
+                        setItem: _createStorageOperation<void>("setItem", true),
+                        removeItem: _createStorageOperation<void>("removeItem", true),
+                        clear: _createStorageOperation<void>("clear", true)
                     };
                     
                     result = wrappedStorage as Storage;
@@ -198,57 +169,27 @@ export function utlCanUseLocalStorage(reset?: boolean): boolean {
 }
 
 export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): string {
-    try {
-        const storage = _getLocalStorageObject();
-        if (storage !== null) {
-            return storage.getItem(name);
-        }
-    } catch (e) {
-        _throwInternal(
-            logger,
-            eLoggingSeverity.WARNING,
-            _eInternalMessageId.BrowserCannotReadLocalStorage,
-            "Browser failed read of local storage. " + getExceptionName(e),
-            { exception: dumpObj(e) }
-        );
+    const storage = _getLocalStorageObject();
+    if (storage !== null) {
+        return storage.getItem(name);
     }
     return null;
 }
 
 export function utlSetLocalStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-    try {
-        const storage = _getLocalStorageObject();
-        if (storage !== null) {
-            storage.setItem(name, data);
-            return true;
-        }
-    } catch (e) {
-        _throwInternal(
-            logger,
-            eLoggingSeverity.WARNING,
-            _eInternalMessageId.BrowserCannotWriteLocalStorage,
-            "Browser failed write to local storage. " + getExceptionName(e),
-            { exception: dumpObj(e) }
-        );
+    const storage = _getLocalStorageObject();
+    if (storage !== null) {
+        storage.setItem(name, data);
+        return true;
     }
     return false;
 }
 
 export function utlRemoveStorage(logger: IDiagnosticLogger, name: string): boolean {
-    try {
-        const storage = _getLocalStorageObject();
-        if (storage !== null) {
-            storage.removeItem(name);
-            return true;
-        }
-    } catch (e) {
-        _throwInternal(
-            logger,
-            eLoggingSeverity.WARNING,
-            _eInternalMessageId.BrowserFailedRemovalFromLocalStorage,
-            "Browser failed removal of local storage item. " + getExceptionName(e),
-            { exception: dumpObj(e) }
-        );
+    const storage = _getLocalStorageObject();
+    if (storage !== null) {
+        storage.removeItem(name);
+        return true;
     }
     return false;
 }
@@ -262,73 +203,43 @@ export function utlCanUseSessionStorage(reset?: boolean): boolean {
 }
 
 export function utlGetSessionStorageKeys(): string[] {
-    try {
+    if (utlCanUseSessionStorage()) {
         const keys: string[] = [];
-        if (utlCanUseSessionStorage()) {
+        try {
             objForEachKey(getGlobalInst<any>("sessionStorage"), (key) => {
                 keys.push(key);
             });
+        } catch (e) {
+            // Invalidate session storage on any error
+            _verifiedSessionStorage = null;
         }
         return keys;
-    } catch (e) {
-        // Invalidate session storage on any error
-        _verifiedSessionStorage = null;
-        return [];
     }
+    return [];
 }
 
 export function utlGetSessionStorage(logger: IDiagnosticLogger, name: string): string {
-    try {
-        const storage = _getSessionStorageObject();
-        if (storage !== null) {
-            return storage.getItem(name);
-        }
-    } catch (e) {
-        _throwInternal(
-            logger,
-            eLoggingSeverity.WARNING,
-            _eInternalMessageId.BrowserCannotReadSessionStorage,
-            "Browser failed read of session storage. " + getExceptionName(e),
-            { exception: dumpObj(e) }
-        );
+    const storage = _getSessionStorageObject();
+    if (storage !== null) {
+        return storage.getItem(name);
     }
     return null;
 }
 
 export function utlSetSessionStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-    try {
-        const storage = _getSessionStorageObject();
-        if (storage !== null) {
-            storage.setItem(name, data);
-            return true;
-        }
-    } catch (e) {
-        _throwInternal(
-            logger,
-            eLoggingSeverity.WARNING,
-            _eInternalMessageId.BrowserCannotWriteSessionStorage,
-            "Browser failed write to session storage. " + getExceptionName(e),
-            { exception: dumpObj(e) }
-        );
+    const storage = _getSessionStorageObject();
+    if (storage !== null) {
+        storage.setItem(name, data);
+        return true;
     }
     return false;
 }
 
 export function utlRemoveSessionStorage(logger: IDiagnosticLogger, name: string): boolean {
-    try {
-        const storage = _getSessionStorageObject();
-        if (storage !== null) {
-            storage.removeItem(name);
-            return true;
-        }
-    } catch (e) {
-        _throwInternal(
-            logger,
-            eLoggingSeverity.WARNING,
-            _eInternalMessageId.BrowserFailedRemovalFromSessionStorage,
-            "Browser failed removal of session storage item. " + getExceptionName(e),
-            { exception: dumpObj(e) }
-        );
+    const storage = _getSessionStorageObject();
+    if (storage !== null) {
+        storage.removeItem(name);
+        return true;
     }
     return false;
 }
