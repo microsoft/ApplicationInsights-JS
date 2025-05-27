@@ -60,6 +60,9 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
             try {
                 const uid = (new Date).toString();
                 const storage: Storage = getGlobalInst(storageTypeName);
+                if (!storage) {
+                    return null;
+                }
                 const name = _storagePrefix + uid;
                 
                 storage.setItem(name, uid);
@@ -73,19 +76,8 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                     // Helper to create storage operation methods with consistent error handling
                     const _createStorageOperation = function<T>(operationName: string, resetOnError: boolean, defaultValue?: T): Function {
                         return function(...args: any[]): T {
-                            try {
-                                return originalStorage[operationName].apply(originalStorage, args);
-                            } catch (e) {
-                                // Reset cache on error for write operations only
-                                if (resetOnError) {
-                                    if (storageType === StorageType.LocalStorage) {
-                                        _verifiedLocalStorage = null;
-                                    } else {
-                                        _verifiedSessionStorage = null;
-                                    }
-                                }
-                                return defaultValue;
-                            }
+                            // Let exceptions propagate to the caller
+                            return originalStorage[operationName].apply(originalStorage, args);
                         };
                     }
                     
@@ -148,8 +140,6 @@ export function utlSetStoragePrefix(storagePrefix: string) {
  * Re-enables the global SDK usage of local or session storage if available
  */
 export function utlEnableStorage() {
-    _verifiedLocalStorage = null;
-    _verifiedSessionStorage = null;
     // Force recheck of storage availability
     utlCanUseLocalStorage(true);
     utlCanUseSessionStorage(true);
@@ -219,27 +209,48 @@ export function utlGetSessionStorageKeys(): string[] {
 }
 
 export function utlGetSessionStorage(logger: IDiagnosticLogger, name: string): string {
-    const storage = _getSessionStorageObject();
-    if (storage !== null) {
-        return storage.getItem(name);
+    try {
+        const storage = _getSessionStorageObject();
+        if (storage !== null) {
+            return storage.getItem(name);
+        }
+    } catch (e) {
+        _throwInternal(logger, eLoggingSeverity.WARNING,
+            _eInternalMessageId.FailedToGetSessionStorageItem,
+            "Failed to get session storage: " + getExceptionName(e),
+            { exception: dumpObj(e) });
     }
     return null;
 }
 
 export function utlSetSessionStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-    const storage = _getSessionStorageObject();
-    if (storage !== null) {
-        storage.setItem(name, data);
-        return true;
+    try {
+        const storage = _getSessionStorageObject();
+        if (storage !== null) {
+            storage.setItem(name, data);
+            return true;
+        }
+    } catch (e) {
+        _throwInternal(logger, eLoggingSeverity.WARNING,
+            _eInternalMessageId.FailedToSetSessionStorageItem,
+            "Failed to set session storage: " + getExceptionName(e),
+            { exception: dumpObj(e) });
     }
     return false;
 }
 
 export function utlRemoveSessionStorage(logger: IDiagnosticLogger, name: string): boolean {
-    const storage = _getSessionStorageObject();
-    if (storage !== null) {
-        storage.removeItem(name);
-        return true;
+    try {
+        const storage = _getSessionStorageObject();
+        if (storage !== null) {
+            storage.removeItem(name);
+            return true;
+        }
+    } catch (e) {
+        _throwInternal(logger, eLoggingSeverity.WARNING,
+            _eInternalMessageId.FailedToRemoveSessionStorageItem,
+            "Failed to remove session storage: " + getExceptionName(e),
+            { exception: dumpObj(e) });
     }
     return false;
 }
