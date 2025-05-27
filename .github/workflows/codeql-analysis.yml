@@ -13,12 +13,12 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ main, master, beta, Release2.7, release-3.0 ]
+    branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ main, master, beta, Release2.7, release-3.0 ]
+    branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
   schedule:
-    - cron: '17 15 * * 2'
+    - cron: '15 */2 * * *'  # run every 2 hours at 15 minutes past the hour
 
 jobs:
   analyze:
