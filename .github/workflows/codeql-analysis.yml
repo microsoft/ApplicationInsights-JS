@@ -17,8 +17,15 @@ on:
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
+  merge_group:
+    branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
   schedule:
     - cron: '15 */2 * * *'  # run every 2 hours at 15 minutes past the hour
+    
+# Ensure we don't have multiple identical workflow runs for the same merge group
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name == 'merge_group' && 'merge_group' || '' }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
@@ -84,14 +91,12 @@ jobs:
     - name: Build JavaScript
       # Only run the build for Typescript/JavaScript language match
       if: matrix.language == 'javascript-typescript'
-      run: npm run build
-
-    # Perform the CodeQL Analysis
+      run: npm run build    # Perform the CodeQL Analysis
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
-        upload-database: false
+        upload: true
         
     # Debug CodeQL configuration
     - name: Debug CodeQL configuration
