@@ -11,6 +11,9 @@ permissions:
   issues: write
   pull-requests: write
 
+env:
+  COPILOT_USERNAMES: ${{ vars.COPILOT_USERNAMES }}
+
 jobs:
   assign-copilot:
     runs-on: ubuntu-latest
@@ -69,51 +72,100 @@ jobs:
             const issueOrPR = context.payload.issue || context.payload.pull_request;
             
             if (issueOrPR) {
-              try {
-                // First, try to assign directly to GitHub Copilot
-                try {
-                  await github.rest.issues.addAssignees({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: issueOrPR.number,
-                    assignees: ['github-copilot']
-                  });
-                  
-                  await github.rest.issues.createComment({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: issueOrPR.number,
-                    body: 'GitHub Copilot has been assigned to assist with this task.'
-                  });
-                  
-                  console.log(`GitHub Copilot has been assigned to ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);
-                  return;
-                } catch (error) {
-                  console.log(`Couldn't assign to github-copilot: ${error.message}`);
-                  // Continue to alternative approach
+              try {                // First, let's verify if we can find a valid "copilot" user to assign
+                let assigneeUsername = '';
+                
+                // Try multiple possible usernames for Copilot
+                const possibleCopilotUsers = process.env.COPILOT_USERNAMES.split(',').map(u => u.trim());
+                
+                for (const username of possibleCopilotUsers) {
+                  try {
+                    // Check if user exists and can be assigned
+                    const userCheck = await github.rest.users.getByUsername({
+                      username: username
+                    });
+                    
+                    if (userCheck.status === 200) {
+                      assigneeUsername = username;
+                      console.log(`Found valid assignee: ${username}`);
+                      break;
+                    }
+                  } catch (userError) {
+                    console.log(`User ${username} not found or not available: ${userError.message}`);
+                  }
                 }
                 
-                // If that fails, add a comment with mention instead
+                // If we found a valid assignee, try to assign them
+                if (assigneeUsername) {
+                  try {
+                    const assignResult = await github.rest.issues.addAssignees({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueOrPR.number,
+                      assignees: [assigneeUsername]
+                    });
+                    
+                    // Verify assignment was successful by checking the response
+                    if (assignResult.status === 201 && assignResult.data.assignees.some(a => a.login === assigneeUsername)) {
+                      await github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: issueOrPR.number,
+                        body: `GitHub Copilot (${assigneeUsername}) has been assigned to assist with this task.`
+                      });
+                      
+                      console.log(`Successfully assigned ${assigneeUsername} to ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);
+                      return;
+                    } else {
+                      throw new Error("Assignment appeared to succeed but assignee was not added");
+                    }
+                  } catch (error) {
+                    console.log(`Assignment to ${assigneeUsername} failed: ${error.message}`);
+                    // Continue to alternative approach
+                  }
+                }
+                  // If assignment fails, add a special label and a more descriptive comment
+                // First add a "needs-copilot-attention" label
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueOrPR.number,
+                  labels: ['needs-copilot-attention']
+                });
+                
+                // Then add a detailed comment
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueOrPR.number,
-                  body: 'GitHub Copilot, please assist with this task.'
+                  body: '**Action Required**: Unable to directly assign GitHub Copilot to this task.\n\n' +
+                        'This issue has been labeled with `needs-copilot-attention` for review by the team.\n\n' +
+                        'To request GitHub Copilot assistance, please notify an administrator.'
                 });
                 
-                console.log(`GitHub Copilot has been mentioned in ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);
-              } catch (error) {
-                console.log(`Error in Copilot assignment: ${error.message}`);
+                console.log(`Added 'needs-copilot-attention' label to ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);              } catch (error) {
+                console.log(`Error in Copilot assignment workflow: ${error.message}`);
                 
                 try {
+                  // Add a label to indicate there was an error
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueOrPR.number,
+                    labels: ['copilot-assignment-error']
+                  }).catch(e => console.log(`Could not add error label: ${e.message}`));
+                  
+                  // Add a comment with detailed error information
                   await github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     issue_number: issueOrPR.number,
-                    body: `⚠️ Error assigning/mentioning GitHub Copilot: ${error.message}`
+                    body: `⚠️ **Error in Copilot Assignment Workflow**\n\n` +
+                          `There was an error while trying to assign GitHub Copilot to this task:\n\`\`\`\n${error.message}\n\`\`\`\n\n` +
+                          `Please contact a repository administrator for assistance.`
                   });
                 } catch (commentError) {
-                  console.log(`Error posting comment: ${commentError.message}`);
+                  console.log(`Error posting error comment: ${commentError.message}`);
                 }
               }
             }
