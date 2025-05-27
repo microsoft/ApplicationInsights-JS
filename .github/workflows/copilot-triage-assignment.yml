@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Check if actor is authorized
         id: check_auth
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -65,7 +65,7 @@ jobs:
 
       - name: Assign GitHub Copilot
         if: ${{ steps.check_auth.outputs.result == 'true' }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -81,14 +81,18 @@ jobs:
                 for (const username of possibleCopilotUsers) {
                   try {
                     // Check if user exists and can be assigned
-                    const userCheck = await github.rest.users.getByUsername({
+                    const user = await github.rest.users.getByUsername({
                       username: username
                     });
                     
-                    if (userCheck.status === 200) {
+                    if (user.data && user.data.login === username && user.data.type === "Bot") {
                       assigneeUsername = username;
                       console.log(`Found valid assignee: ${username}`);
                       break;
+                    } else if (user){
+                      console.log(`User ${username} is not a valid assignee - ${user.status}`);
+                    } else {
+                      console.log(`API Call failed for ${username} - ${user}`);
                     }
                   } catch (userError) {
                     console.log(`User ${username} not found or not available: ${userError.message}`);
@@ -104,6 +108,8 @@ jobs:
                       issue_number: issueOrPR.number,
                       assignees: [assigneeUsername]
                     });
+
+                    console.log(`AssignResult: ${assignResult.status}`);
                     
                     // Verify assignment was successful by checking the response
                     if (assignResult.status === 201 && assignResult.data.assignees.some(a => a.login === assigneeUsername)) {
@@ -139,8 +145,7 @@ jobs:
                   repo: context.repo.repo,
                   issue_number: issueOrPR.number,
                   body: '**Action Required**: Unable to directly assign GitHub Copilot to this task.\n\n' +
-                        'This issue has been labeled with `needs-copilot-attention` for review by the team.\n\n' +
-                        'To request GitHub Copilot assistance, please notify an administrator.'
+                        'This issue has been labeled with `needs-copilot-attention` for review by the team.'
                 });
                 
                 console.log(`Added 'needs-copilot-attention' label to ${context.repo.owner}/${context.repo.repo}#${issueOrPR.number}`);              } catch (error) {
