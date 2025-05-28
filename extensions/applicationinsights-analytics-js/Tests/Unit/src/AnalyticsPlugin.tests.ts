@@ -1063,11 +1063,10 @@ export class AnalyticsPluginTests extends AITestClass {
         });
 
 
-        this.testCaseAsync({
+        this.testCase({
             name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics",
-            stepDelay: 1,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 // setup
                 const sender: Sender = new Sender();
                 const core = new AppInsightsCore();
@@ -1109,48 +1108,49 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
-            }].concat(this.waitForException(1))
-            .concat(() => {
-                let isLocal = window.location.protocol === "file:";
-                let exp = this.trackSpy.args[0];
-                const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
-            
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            if (isLocal) {
-                                Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                Assert.equal("String", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
-                            } else {
-                                Assert.ok(ex.message.indexOf("ug is not a function") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                Assert.equal("TypeError", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
-                                Assert.ok(baseData.properties["columnNumber"], "has column number");
-                                Assert.ok(baseData.properties["lineNumber"], "has Line number");
-                            }
+                
+                return this._asyncQueue()
+                    .add(this.waitForExceptionPromise(1))
+                    .add(() => {
+                        let isLocal = window.location.protocol === "file:";
+                        let exp = this.trackSpy.args[0];
+                        const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                    
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok(data, "Has Data");
+                            if (data) {
+                                Assert.ok(data.baseData, "Has BaseData");
+                                let baseData = data.baseData;
+                                if (baseData) {
+                                    const ex = baseData.exceptions[0];
+                                    if (isLocal) {
+                                        Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                        Assert.equal("String", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
+                                } else {
+                                    Assert.ok(ex.message.indexOf("ug is not a function") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                    Assert.equal("TypeError", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
+                                    Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                    Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                }
 
-                            Assert.ok(ex.stack.length > 0, "Has stack");
-                            Assert.ok(ex.parsedStack, "Stack was parsed");
-                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                            Assert.ok(baseData.properties["url"], "has Url");
-                            Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                                Assert.ok(ex.stack.length > 0, "Has stack");
+                                Assert.ok(ex.parsedStack, "Stack was parsed");
+                                Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                Assert.ok(baseData.properties["url"], "has Url");
+                                Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                            }
                         }
                     }
-                }
-            })
-
+                });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics with a text exception",
-            stepDelay: 1,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 // setup
                 const sender: Sender = new Sender();
                 const core = new AppInsightsCore();
@@ -1167,63 +1167,65 @@ export class AnalyticsPluginTests extends AITestClass {
                                 enableSessionStorageBuffer: false,
                                 maxBatchInterval: 1
                             }
-                        }                
-                    },
-                    [sender]
-                );
-                const appInsights = new AnalyticsPlugin();
-                core.addPlugin(appInsights);
-                appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
-                    Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
-                });
+                            }                
+                        },
+                        [sender]
+                    );
+                    const appInsights = new AnalyticsPlugin();
+                    core.addPlugin(appInsights);
+                    appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
+                        Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
+                    });
 
-                this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:any[], isAsync:boolean) => {
-                    sender._onSuccess(payload, payload.length);
-                };
-                this.sandbox.spy()
-                this.trackSpy = this.sandbox.spy(sender, "_onSuccess");
+                    this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
+                    sender._sender = (payload:any[], isAsync:boolean) => {
+                        sender._onSuccess(payload, payload.length);
+                    };
+                    this.sandbox.spy()
+                    this.trackSpy = this.sandbox.spy(sender, "_onSuccess");
 
-                this.exceptionHelper.capture(appInsights);
-                this.causeException(() => {
-                    this.exceptionHelper.throw("Test Text Error!");
-                });
+                    this.exceptionHelper.capture(appInsights);
+                    this.causeException(() => {
+                        this.exceptionHelper.throw("Test Text Error!");
+                    });
 
-                Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
-                Assert.ok(!this.throwInternalSpy.called, "No internal errors");
-            }].concat(this.waitForException(1))
-            .concat(() => {
-                let exp = this.trackSpy.args[0];
-                const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                            Assert.ok(baseData.properties["columnNumber"], "has column number");
-                            Assert.ok(baseData.properties["lineNumber"], "has Line number");
-                            Assert.equal("String", ex.typeName, "Got the correct typename");
-                            Assert.ok(ex.stack.length > 0, "Has stack");
-                            Assert.ok(ex.parsedStack, "Stack was parsed");
-                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                            Assert.ok(baseData.properties["url"], "has Url");
-                            Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
-                        }
-                    }
-                }
-            })
+                    Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
+                    Assert.ok(!this.throwInternalSpy.called, "No internal errors");
+                
+                    return this._asyncQueue()
+                        .add(this.waitForExceptionPromise(1))
+                        .add(() => {
+                            let exp = this.trackSpy.args[0];
+                            const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                            if (payloadStr.length > 0) {
+                                const payload = JSON.parse(payloadStr[0]);
+                                const data = payload.data;
+                                Assert.ok(data, "Has Data");
+                                if (data) {
+                                    Assert.ok(data.baseData, "Has BaseData");
+                                    let baseData = data.baseData;
+                                    if (baseData) {
+                                        const ex = baseData.exceptions[0];
+                                        Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                        Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                        Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                        Assert.equal("String", ex.typeName, "Got the correct typename");
+                                        Assert.ok(ex.stack.length > 0, "Has stack");
+                                        Assert.ok(ex.parsedStack, "Stack was parsed");
+                                        Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                        Assert.ok(baseData.properties["url"], "has Url");
+                                        Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                                    }
+                                }
+                            }
+                        });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics with a custom direct exception",
-            stepDelay: 1,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 // setup
                 const sender: Sender = new Sender();
                 const core = new AppInsightsCore();
@@ -1264,48 +1266,49 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
-            }].concat(this.waitForException(1))
-            .concat(() => {
+                
+                return this._asyncQueue()
+                    .add(this.waitForExceptionPromise(1))
+                    .add(() => {
+                        let isLocal = window.location.protocol === "file:";
+                        let exp = this.trackSpy.args[0];
+                        const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok(data, "Has Data");
+                            if (data) {
+                                Assert.ok(data.baseData, "Has BaseData");
+                                let baseData = data.baseData;
+                                if (baseData) {
+                                    const ex = baseData.exceptions[0];
+                                    if (isLocal) {
+                                        Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                        Assert.equal("String", ex.typeName, "Got the correct typename");
+                                    } else {
+                                        Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                        Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                        Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                        Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                        Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                    }
 
-                let isLocal = window.location.protocol === "file:";
-                let exp = this.trackSpy.args[0];
-                const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            if (isLocal) {
-                                Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                Assert.equal("String", ex.typeName, "Got the correct typename");
-                            } else {
-                                Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
-                                Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
-                                Assert.ok(baseData.properties["columnNumber"], "has column number");
-                                Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                    Assert.ok(ex.stack.length > 0, "Has stack");
+                                    Assert.ok(ex.parsedStack, "Stack was parsed");
+                                    Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                    Assert.ok(baseData.properties["url"], "has Url");
+                                    Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                                }
                             }
-
-                            Assert.ok(ex.stack.length > 0, "Has stack");
-                            Assert.ok(ex.parsedStack, "Stack was parsed");
-                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                            Assert.ok(baseData.properties["url"], "has Url");
-                            Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
                         }
-                    }
-                }
-            })
+                    });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics with a strict custom direct exception",
-            stepDelay: 1,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 // setup
                 const sender: Sender = new Sender();
                 const core = new AppInsightsCore();
@@ -1346,41 +1349,43 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
-            }].concat(this.waitForException(1))
-            .concat(() => {
+                
+                return this._asyncQueue()
+                    .add(this.waitForExceptionPromise(1))
+                    .add(() => {
+                        let isLocal = window.location.protocol === "file:";
+                        let exp = this.trackSpy.args[0];
+                        const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok(data, "Has Data");
+                            if (data) {
+                                Assert.ok(data.baseData, "Has BaseData");
+                                let baseData = data.baseData;
+                                if (baseData) {
+                                    const ex = baseData.exceptions[0];
+                                    if (isLocal) {
+                                        Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                        Assert.equal("String", ex.typeName, "Got the correct typename");
+                                    } else {
+                                    Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                    Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                    Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                    Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                    Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                }
 
-                let isLocal = window.location.protocol === "file:";
-                let exp = this.trackSpy.args[0];
-                const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            if (isLocal) {
-                                Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                Assert.equal("String", ex.typeName, "Got the correct typename");
-                            } else {
-                                Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
-                                Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
-                                Assert.ok(baseData.properties["columnNumber"], "has column number");
-                                Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                Assert.ok(ex.stack.length > 0, "Has stack");
+                                Assert.ok(ex.parsedStack, "Stack was parsed");
+                                Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                Assert.ok(baseData.properties["url"], "has Url");
+                                Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
                             }
-
-                            Assert.ok(ex.stack.length > 0, "Has stack");
-                            Assert.ok(ex.parsedStack, "Stack was parsed");
-                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                            Assert.ok(baseData.properties["url"], "has Url");
-                            Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
                         }
                     }
-                }
-            })
+                });
+            }
         });
     }
 
@@ -2164,19 +2169,24 @@ export class AnalyticsPluginTests extends AITestClass {
         }
     }
 
-    private waitForException: any = (expectedCount:number, action: string = "", includeInit:boolean = false) => [
-        () => {
-            const message = "polling: " + new Date().toISOString() + " " + action;
-            Assert.ok(true, message);
-            console.log(message);
-            this.checkNoInternalErrors();
-            this.clock.tick(500);
-        },
-        (PollingAssert.createPollingAssert(() => {
-            this.checkNoInternalErrors();
+    // waitForExceptionPromise for use with _asyncQueue that returns a promise
+    private waitForExceptionPromise(expectedCount: number, action: string = "", includeInit: boolean = false) {
+        const testContext = this._testContext;
+        const self = this; // Capture 'this' context to use in the polling function
+        
+        // Execute initial setup actions outside of the polling function
+        const message = "polling: " + new Date().toISOString() + " " + action;
+        Assert.ok(true, message);
+        console.log(message);
+        self.checkNoInternalErrors();
+        if (testContext && testContext.clock) {
+            testContext.clock.tick(500);
+        }
+        
+        return PollingAssert.asyncTaskPollingAssert(function () {
             let argCount = 0;
-            if (this.trackSpy.called) {
-                this.trackSpy.args.forEach(call => {
+            if (self.trackSpy && self.trackSpy.called) {
+                self.trackSpy.args.forEach(call => {
                     argCount += call.length;
                 });
             }
@@ -2184,40 +2194,42 @@ export class AnalyticsPluginTests extends AITestClass {
             Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking spy " + new Date().toISOString());
             try {
                 if (argCount >= expectedCount) {
-                    let payloads: any = []
-                    this.trackSpy.args[0][0].forEach(item => {
-                        payloads.push(item.item)
-                    });
-                    const payload = JSON.parse(payloads);
-                    const baseType = payload.data.baseType;
-                    // call the appropriate Validate depending on the baseType
-                    switch (baseType) {
-                        case Event.dataType:
-                            return EventValidator.EventValidator.Validate(payload, baseType);
-                        case Trace.dataType:
-                            return TraceValidator.TraceValidator.Validate(payload, baseType);
-                        case Exception.dataType:
-                            return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                        case Metric.dataType:
-                            return MetricValidator.MetricValidator.Validate(payload, baseType);
-                        case PageView.dataType:
-                            return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                        case PageViewPerformance.dataType:
-                            return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                        case RemoteDependencyData.dataType:
-                            return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
-    
-                        default:
-                            return EventValidator.EventValidator.Validate(payload, baseType);
+                    // Use the existing getPayloadMessages method to extract payload data properly
+                    const payloadStr: string[] = self.getPayloadMessages(self.trackSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const baseType = payload.data.baseType;
+                        // call the appropriate Validate depending on the baseType
+                        switch (baseType) {
+                            case Event.dataType:
+                                return EventValidator.EventValidator.Validate(payload, baseType);
+                            case Trace.dataType:
+                                return TraceValidator.TraceValidator.Validate(payload, baseType);
+                            case Exception.dataType:
+                                return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
+                            case Metric.dataType:
+                                return MetricValidator.MetricValidator.Validate(payload, baseType);
+                            case PageView.dataType:
+                                return PageViewValidator.PageViewValidator.Validate(payload, baseType);
+                            case PageViewPerformance.dataType:
+                                return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
+                            case RemoteDependencyData.dataType:
+                                return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
+        
+                            default:
+                                return EventValidator.EventValidator.Validate(payload, baseType);
+                        }
                     }
                 }
             } finally {
-                this.clock.tick(500);
+                if (testContext && testContext.clock) {
+                    testContext.clock.tick(500);
+                }
             }
             
             return false;
-        }, "sender succeeded", 10, 1000))
-    ];
+        }, "sender succeeded", 10, 1000);
+    }
 }
 
 class ChannelPlugin implements IPlugin {
