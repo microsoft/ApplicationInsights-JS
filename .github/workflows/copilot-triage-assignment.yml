@@ -85,12 +85,12 @@ jobs:
                       username: username
                     });
                     
-                    if (user.data && user.data.login === username && user.data.type === "Bot") {
-                      assigneeUsername = username;
+                    if (user.data && user.data.login === username) {
+                      assigneeUsername = user.data.login;
                       console.log(`Found valid assignee: ${username}`);
                       break;
                     } else if (user){
-                      console.log(`User ${username} is not a valid assignee - ${user.status}`);
+                      console.log(`User ${username} is not a valid assignee - ${JSON.stringify(user)}`);
                     } else {
                       console.log(`API Call failed for ${username} - ${user}`);
                     }

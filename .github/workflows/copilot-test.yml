@@ -1,0 +1,108 @@
+name: Debug Copilot Assignment
+
+on:
+  pull_request:
+    branches: [ "*" ]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+env:
+  COPILOT_USERNAMES: ${{ vars.COPILOT_USERNAMES }}
+
+jobs:
+  debug-copilot-assignment:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Debug Copilot Assignment
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          console.log(`Repository: ${context.repo.owner}/${context.repo.repo}`);
+          console.log(`Possible Copilot usernames: ${process.env.COPILOT_USERNAMES}`);
+            
+          // Check if the issue/PR exists
+          try {
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 2567
+            });
+            console.log(`Issue/PR found: ${issue.data.title}`);
+          } catch (error) {
+            console.log(`Error finding issue/PR: ${error.message}`);
+          }
+
+          // Check if the issue/PR exists
+          try {
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 2523
+            });
+            console.log(`Issue/PR found: ${issue.data.title} - ${JSON.stringify(issue.data)}`);
+          } catch (error) {
+            console.log(`Error finding issue/PR: ${error.message}`);
+          }
+           
+          
+          let assigneeUsername = 'copilot[bot]';
+          
+          // Try to get information about each possible copilot user
+          const possibleCopilotUsers = process.env.COPILOT_USERNAMES.split(',').map(u => u.trim());
+            
+          //for (const username of possibleCopilotUsers) {
+          //  try {
+          //    // Check if user exists and can be assigned
+          //    const user = await github.rest.users.getByUsername({
+          //      username: username
+          //    });
+          //      
+          //    if (user.data && user.data.login === username) {
+          //      assigneeUsername = user.data.login;
+          //      console.log(`Found valid assignee: ${username} ${user.data.type}`);
+          //      break;
+          //   } else if (user){
+          //    console.log(`User ${username} is not a valid assignee - ${JSON.stringify(user)}`);
+          //    } else {
+          //      console.log(`API Call failed for ${username} - ${user}`);
+          //    }
+          //  } catch (userError) {
+          //    console.log(`User ${username} not found or not available: ${userError.message}`);
+          //  }
+          // }
+                            
+          // If we found a valid assignee, try to assign them
+          if (assigneeUsername) {
+            try {
+              // Test assignment
+              try {
+                console.log(`Testing assignment of ${assigneeUsername}...`);
+                const assignResult = await github.rest.issues.addAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: 2567,
+                  assignees: [assigneeUsername]
+                });
+                  
+                console.log(`Assignment result status: ${assignResult.status} - Assignees: ${JSON.stringify(assignResult.data)}`);
+                console.log(`Assignees: ${JSON.stringify(assignResult.data.assignees.map(a => a.login))}`);
+                  
+                // Remove test assignment
+                await github.rest.issues.removeAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: 2567,
+                  assignees: [assigneeUsername]
+                });
+              } catch (assignError) {
+                console.log(`Error assigning ${assigneeUsername}: ${assignError.message}`);
+              }
+            } catch (userError) {
+                console.log(`Error getting user info for ${assigneeUsername}: ${userError.message}`);
+            }
+          }
+          
