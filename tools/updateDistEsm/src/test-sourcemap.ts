@@ -1,15 +1,18 @@
 // Simple test to verify source map handling in updateDistEsm.js
+declare function require(name: string): any;
+declare const __dirname: string;
+
 const fs = require('fs');
 const path = require('path');
 
 // Create test directory
-const testDir = path.join(__dirname, 'test-sourcemap');
+const testDir = path.join(__dirname, '../test-sourcemap');
 if (!fs.existsSync(testDir)) {
     fs.mkdirSync(testDir);
 } else {
     // Clean up previous test files
     const files = fs.readdirSync(testDir);
-    files.forEach(file => {
+    files.forEach((file: string) => {
         fs.unlinkSync(path.join(testDir, file));
     });
 }
@@ -49,7 +52,7 @@ console.log('Original source map references:', JSON.parse(sourceMapContent).sour
 
 // 1. Read the source map
 const existingMapContent = fs.readFileSync(sourceMapPath, "utf8");
-let existingMap;
+let existingMap: any;
 try {
     existingMap = JSON.parse(existingMapContent);
 } catch (e) {
@@ -62,7 +65,7 @@ ${jsContent.replace("'Hello, world!'", "'Modified hello, world!'")}`;
 fs.writeFileSync(jsFilePath, modifiedJsContent);
 
 // 3. Create a simple source map
-const generatedMap = {
+const generatedMap: any = {
     version: 3,
     file: 'test.js.map',
     sourceRoot: '',
@@ -118,7 +121,7 @@ if (fs.existsSync(mapFile2)) {
 }
 
 // Generate a new map and write it
-const generatedMap2 = {
+const generatedMap2: any = {
     version: 3,
     file: 'test2.js.map',
     sourceRoot: '',
@@ -165,7 +168,7 @@ try {
 }
 
 // Generate a new valid map
-const generatedMap3 = {
+const generatedMap3: any = {
     version: 3,
     file: 'test3.js.map',
     sourceRoot: '',

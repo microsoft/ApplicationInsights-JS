@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "forceConsistentCasingInFileNames": true,
+    "alwaysStrict": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "dist",
+    "rootDir": "./src",
+    "removeComments": false,
+    "esModuleInterop": true,
+    "allowJs": true
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": ["./node_modules/**", "./dist/**", "./test-sourcemap/**"]
+}
