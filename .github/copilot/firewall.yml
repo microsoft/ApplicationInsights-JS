@@ -1,0 +1,6 @@
+allowList:
+  hosts:
+    - cdn.fwupd.org                                # Required for fwupdmgr
+    - googlechromelabs.github.io                  # Required for Chrome for Testing
+  urls:
+    - https://storage.googleapis.com/chrome-for-testing-public/**  # Required for Puppeteer/Chrome download

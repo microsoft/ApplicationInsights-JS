@@ -1,0 +1,2 @@
+setup:
+  - run: .github/copilot/setup.sh
