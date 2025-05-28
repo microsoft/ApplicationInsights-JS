@@ -176,6 +176,7 @@ out/
 coreSDK/node_modules
 build/
 dist-es*/
+test-es*/
 browser/
 types/
 dist/
