@@ -169,8 +169,19 @@ export function utlCanUseLocalStorage(reset?: boolean): boolean {
         _verifiedLocalStorage = null;
     }
     
-    const storage = _getLocalStorageObject();
-    return !!storage;
+    let canUse = false;
+    
+    try {
+        canUse = !!_getLocalStorageObject();
+    } catch (e) {
+        _throwInternal(null,
+            eLoggingSeverity.WARNING,
+            _eInternalMessageId.CannotAccessLocalStorage,
+            "Cannot access localStorage: " + getExceptionName(e),
+            { exception: dumpObj(e) });
+    }
+    
+    return canUse;
 }
 
 export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): string {
@@ -204,8 +215,19 @@ export function utlCanUseSessionStorage(reset?: boolean): boolean {
         _verifiedSessionStorage = null;
     }
     
-    const storage = _getSessionStorageObject();
-    return !!storage;
+    let canUse = false;
+    
+    try {
+        canUse = !!_getSessionStorageObject();
+    } catch (e) {
+        _throwInternal(null,
+            eLoggingSeverity.WARNING,
+            _eInternalMessageId.CannotAccessSessionStorage,
+            "Cannot access sessionStorage: " + getExceptionName(e),
+            { exception: dumpObj(e) });
+    }
+    
+    return canUse;
 }
 
 export function utlGetSessionStorageKeys(): string[] {
