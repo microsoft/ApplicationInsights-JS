@@ -76,8 +76,22 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
                     // Helper to create storage operation methods with consistent error handling
                     const _createStorageOperation = function<T>(operationName: string, resetOnError: boolean, defaultValue?: T): Function {
                         return function(...args: any[]): T {
-                            // Let exceptions propagate to the caller
-                            return originalStorage[operationName].apply(originalStorage, args);
+                            try {
+                                // Execute the operation but allow exceptions to propagate after handling
+                                return originalStorage[operationName].apply(originalStorage, args);
+                            } catch (e) {
+                                // Log or handle the error as needed
+                                if (resetOnError) {
+                                    // Reset the verified storage on write errors
+                                    if (storageType === StorageType.LocalStorage) {
+                                        _verifiedLocalStorage = null;
+                                    } else {
+                                        _verifiedSessionStorage = null;
+                                    }
+                                }
+                                // Rethrow the exception to the caller
+                                throw e;
+                            }
                         };
                     }
                     
@@ -155,7 +169,8 @@ export function utlCanUseLocalStorage(reset?: boolean): boolean {
         _verifiedLocalStorage = null;
     }
     
-    return !!_getLocalStorageObject();
+    const storage = _getLocalStorageObject();
+    return !!storage;
 }
 
 export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): string {
@@ -189,7 +204,8 @@ export function utlCanUseSessionStorage(reset?: boolean): boolean {
         _verifiedSessionStorage = null;
     }
     
-    return !!_getSessionStorageObject();
+    const storage = _getSessionStorageObject();
+    return !!storage;
 }
 
 export function utlGetSessionStorageKeys(): string[] {
