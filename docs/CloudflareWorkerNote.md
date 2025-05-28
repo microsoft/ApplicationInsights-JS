@@ -49,7 +49,7 @@ This conditional initialization approach prevents the SDK from being instantiate
 
 ## Reproducing the Issue
 
-To better understand and diagnose this issue, we've created reproduction scripts in the `/docs/reproduction/` directory. These scripts provide:
+To better understand and diagnose this issue, we've created reproduction scripts in the `/AISKU/Tests/CloudFlareWorkerRepro/` directory. These scripts provide:
 
 1. An automated setup for an Angular + Cloudflare Worker environment
 2. Analysis tools to inspect how esbuild processes the code
