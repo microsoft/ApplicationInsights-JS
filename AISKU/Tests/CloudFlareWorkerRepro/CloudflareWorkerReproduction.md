@@ -2,7 +2,7 @@
 
 This document outlines steps to reproduce the issues reported in [issue #2523](https://github.com/microsoft/ApplicationInsights-JS/issues/2523), where the ApplicationInsights SDK breaks Angular Server-Side Rendering in Cloudflare Workers environments.
 
-> **Note:** We've created automated reproduction scripts in the `/AISKU/Tests/CloudFlareWorkerRepro/` directory. These scripts set up a test environment and provide tools to analyze the issue in depth.
+> **Note:** We've created automated reproduction scripts in this directory. These scripts set up a test environment and provide tools to analyze the issue in depth.
 
 ## Issues Reported
 
