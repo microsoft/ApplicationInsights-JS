@@ -8,6 +8,8 @@ on:
     branches: [ main, master, beta, Release2.7, release-3.0 ]
   pull_request:
     branches: [ main, master, beta, Release2.7, release-3.0 ]
+  merge_group:
+    branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
 
 jobs:
   build:

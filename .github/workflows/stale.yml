@@ -29,3 +29,42 @@ jobs:
           exempt-pr-labels: 'waiting,keep'
           exempt-all-milestones: true
           exempt-all-assignees: true
+          
+  mark-abandoned:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        id: mark-abandoned
+        with:
+          days-before-stale: 30
+          days-before-close: -1
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          stale-pr-message: 'This PR has been inactive for 30 days and has been marked as abandoned. You can remove this label by commenting or pushing new changes. If it remains inactive with the abandoned label, it will eventually also be marked as stale and closed.'
+          stale-pr-label: 'abandoned'
+          exempt-pr-labels: 'keep,wontfix,stale'
+          operations-per-run: 100
+          remove-stale-when-updated: true
+          exempt-all-milestones: false
+          exempt-all-assignees: false
+
+  stale-wontfix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        id: stale-wontfix
+        with:
+          stale-issue-message: 'This Issue will be closed in 14 days. Please remove the "Stale" label or comment to avoid closure with no action.'
+          stale-pr-message: 'This PR will be closed in 14 days. Please remove the "Stale" label or comment to avoid closure with no action.'
+          operations-per-run: 100
+          days-before-stale: 14
+          days-before-close: 14
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          close-issue-label: 'closed'
+          close-pr-label: 'closed'
+          any-of-labels: 'wontfix,abandoned'
+          exempt-issue-labels: 'keep'
+          exempt-pr-labels: 'keep'
+          exempt-all-milestones: false
+          exempt-all-assignees: false
