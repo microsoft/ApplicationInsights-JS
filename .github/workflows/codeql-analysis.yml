@@ -17,6 +17,10 @@ on:
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
+  # The `merge_group` trigger runs CodeQL analysis on merge queue events.
+  # This ensures that code changes in the merge queue are analyzed before merging.
+  merge_group:
+    branches: [ "*" ]
   schedule:
     - cron: '15 */2 * * *'  # run every 2 hours at 15 minutes past the hour
 
