@@ -17,9 +17,9 @@ import {
     IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent,
     TelemetryInitializerFunction, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId,
-    getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString,
-    isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
+    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, fieldRedaction, findAllScripts,
+    generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined,
+    isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
@@ -264,6 +264,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self.trackPageView = (pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) => {
                 try {
                     let inPv = pageView || {};
+                    inPv.uri = fieldRedaction(inPv.uri, _extConfig);
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
         
                     if (_autoTrackPageVisitTime) {
@@ -289,6 +290,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (doc) {
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
+                pageView.refUri = fieldRedaction(pageView.refUri, _extConfig);
                 if (isNullOrUndefined(pageView.startTime)) {
                     // calculate the start time manually
                     let duration = ((properties || pageView.properties || {}).duration || 0);
@@ -385,7 +387,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         let loc = getLocation();
                         url = loc && loc.href || "";
                     }
-        
+                    url = fieldRedaction(url, _extConfig);
                     _pageTracking.stop(name, url, properties, measurement);
         
                     if (_autoTrackPageVisitTime) {
@@ -801,7 +803,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     } else {
                         _currUri = locn && locn.href || "";
                     }
-
+                    _currUri = fieldRedaction(_currUri, _extConfig);
                     if (_enableAutoRouteTracking) {
                         let distributedTraceCtx = _getDistributedTraceCtx();
                         if (distributedTraceCtx) {
@@ -912,6 +914,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);
                 _prevUri = location && location.href || "";
+                _prevUri = fieldRedaction(_prevUri, _extConfig);
                 _currUri = null;
                 _evtNamespace = null;
                 _extConfig = null;

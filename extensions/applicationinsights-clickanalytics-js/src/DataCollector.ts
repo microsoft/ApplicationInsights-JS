@@ -2,7 +2,7 @@
 * @copyright Microsoft 2020
 */
 
-import { getDocument, getLocation, getWindow, hasDocument, isFunction } from "@microsoft/applicationinsights-core-js";
+import { getDocument, getLocation, getWindow, hasDocument, isFunction, IConfiguration, fieldRedaction } from "@microsoft/applicationinsights-core-js";
 import { scheduleTimeout } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration, IOverrideValues } from "./Interfaces/Datamodel";
 import { findClosestAnchor, isValueAssigned } from "./common/Utils";
@@ -126,7 +126,7 @@ export function getPageName(config: IClickAnalyticsConfiguration, overrideValues
  * @param location - window.location or document.location
  * @returns Flag indicating if an element is market PII.
  */
-export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Location): string {
+export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Location, extConfig?: IConfiguration): string {
     if (!location) {
         return null;
     }
@@ -142,6 +142,7 @@ export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Loca
         url += (isValueAssigned(location.search)? location.search : "");
     }
 
+    url = fieldRedaction(url, extConfig);
     return url;
 }
 

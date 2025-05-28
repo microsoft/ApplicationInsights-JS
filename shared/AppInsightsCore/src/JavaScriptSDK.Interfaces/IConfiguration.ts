@@ -232,6 +232,11 @@ export interface IConfiguration {
      */
     expCfg?: IExceptionConfig;
 
+        /**
+     * [Optional] A flag to enable or disable the use of the field redaction for urls.
+     * @defaultValue true
+     */
+    redactionEnabled?: boolean;
 
     ///**
     // * [Optional] Internal SDK configuration for developers
