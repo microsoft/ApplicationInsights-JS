@@ -3,7 +3,7 @@
 
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IConfiguration } from "./IConfiguration";
-import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "./IStatsBeat";
+import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "./ISdkStats";
 import { IUnloadHook } from "./IUnloadHook";
 
 /**

@@ -10,7 +10,7 @@ import { eStatsType } from "../JavaScriptSDK.Enums/StatsType";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { INetworkStatsbeat } from "../JavaScriptSDK.Interfaces/INetworkStatsbeat";
-import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } from "../JavaScriptSDK.Interfaces/IStatsBeat";
+import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } from "../JavaScriptSDK.Interfaces/ISdkStats";
 import { IStatsMgr, IStatsMgrConfig } from "../JavaScriptSDK.Interfaces/IStatsMgr";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPayloadData } from "../JavaScriptSDK.Interfaces/IXHROverride";
